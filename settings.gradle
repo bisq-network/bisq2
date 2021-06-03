@@ -1,0 +1,29 @@
+rootProject.name = 'misq'
+
+include 'platforms:cli-platform'
+include 'platforms:common-platform'
+include 'platforms:grpc-platform'
+include 'platforms:web-platform'
+include 'platforms:test-platform'
+
+include 'api'
+include 'application'
+include 'cli'
+include 'common'
+include 'grpc'
+include 'jfx'
+include 'p2p'
+include 'web'
+
+import org.gradle.util.GradleVersion
+
+def minGradleVersion = GradleVersion.version("7.0.2")
+def minJavaVersion = JavaVersion.VERSION_16
+if (GradleVersion.current() >= minGradleVersion && JavaVersion.current().isCompatibleWith(minJavaVersion)) {
+    println "Building ${rootProject.name} module with ${GradleVersion.current()} and Java ${JavaVersion.current()}."
+} else {
+    throw new GradleException(
+            "${GradleVersion.current()} and Java ${minJavaVersion} are required to build ${rootProject.name}.")
+}
+
+

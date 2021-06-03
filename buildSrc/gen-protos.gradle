@@ -1,0 +1,18 @@
+// Shared protobuf generations task.
+// Usage: add one line to (sub) project build.gradle file:
+//      apply from: '../buildSrc/gen-protos.gradle'
+ext {
+    // Default generated src dirs.
+    generatedGrpcProtoSrcDir = 'build/generated/source/main/grpc'
+    generatedProtoSrcDir = 'build/generated/source/main/java'
+}
+
+sourceSets.main {
+    java.srcDirs += [generatedProtoSrcDir]
+}
+
+protobuf {
+    protoc { artifact = 'com.google.protobuf:protoc:3.12.4' }
+    generateProtoTasks { all() }
+    generatedFilesBaseDir = "$projectDir/build/generated/source"
+}
