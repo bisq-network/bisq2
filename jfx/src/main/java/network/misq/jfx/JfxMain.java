@@ -10,11 +10,11 @@ import org.slf4j.LoggerFactory;
 // Add JVM Opts to IDE Launcher:
 //  --module-path <path-to>/javafx-sdk-16/lib --add-modules=javafx.controls,javafx.graphics
 
-public class ApplicationMain extends Application {
-    private static final Logger log = LoggerFactory.getLogger(ApplicationMain.class);
+public class JfxMain extends Application {
+    private static final Logger log = LoggerFactory.getLogger(JfxMain.class);
 
     public static void main(String[] args) {
-        log.info("ApplicationMain");
+        log.info("JfxMain");
         launch(args);
     }
 
