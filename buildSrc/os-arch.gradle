@@ -1,4 +1,5 @@
 import static org.gradle.internal.os.OperatingSystem.current
+
 def operatingSystem = current()
 ext {
     osFamily = operatingSystem.familyName
