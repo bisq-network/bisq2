@@ -41,11 +41,12 @@ sourceSets.main {
 
 protobuf {
     protoc {
-        artifact = 'com.google.protobuf:protoc:3.12.4'
+        // Append 'osxArch' property to workaround M1 Mac bug.
+        artifact = "com.google.protobuf:protoc:3.12.4${osxArch}"
     }
     plugins {
         grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:1.38.0'
+            artifact = "io.grpc:protoc-gen-grpc-java:1.38.0${osxArch}"
         }
     }
     generateProtoTasks {
