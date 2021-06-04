@@ -12,7 +12,7 @@ repositories {
 apply from: '../buildSrc/misq-version.gradle'
 
 application {
-    project.mainClassName = 'network.misq.jfx.JfxMain'
+    project.mainClassName = 'network.misq.jfx.Main'
 }
 
 distributions {
@@ -25,7 +25,7 @@ tasks.named('jar') {
     manifest {
         attributes('Implementation-Title': project.name,
                 'Implementation-Version': project.version,
-                'Main-Class': 'network.misq.jfx.JfxMain')
+                'Main-Class': 'network.misq.jfx.Main')
     }
 }
 
