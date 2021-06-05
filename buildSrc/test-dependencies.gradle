@@ -1,0 +1,5 @@
+dependencies {
+    api platform(project(':platforms:test-platform'))
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}

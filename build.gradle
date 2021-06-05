@@ -1,0 +1,19 @@
+plugins {
+    id 'java'
+}
+
+group 'network.misq'
+
+repositories {
+    mavenCentral()
+}
+
+apply from: 'buildSrc/misq-version.gradle'
+apply from: 'buildSrc/os-arch.gradle'
+
+dependencies {
+}
+
+test {
+    useJUnitPlatform()
+}

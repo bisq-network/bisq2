@@ -1,0 +1,10 @@
+import static org.gradle.internal.os.OperatingSystem.current
+
+def operatingSystem = current()
+ext {
+    osFamily = operatingSystem.familyName
+    osArch = System.getProperty("os.arch")
+    // Extra OSX Arch property needed to workaround lack of protobuf support in M1 Mac system.
+    osxArch = System.getProperty('os.arch') == 'aarch64' ? ':osx-x86_64' : ''
+    osDescription = operatingSystem.toString()
+}

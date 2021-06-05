@@ -1,0 +1,11 @@
+plugins {
+    id 'java-platform'
+    id 'maven-publish'
+}
+
+dependencies {
+    constraints {
+        // Web app framework to be decided.
+    }
+}
+
