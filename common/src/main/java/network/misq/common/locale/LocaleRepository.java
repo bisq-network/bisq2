@@ -32,7 +32,7 @@ public class LocaleRepository {
     static {
         defaultLocale = Locale.getDefault();
         // On some systems there is no country defined, in that case we use en_US
-        if (CollectionUtils.isEmpty(defaultLocale.getCountry())) {
+        if (defaultLocale.getCountry() == null || defaultLocale.getCountry().isEmpty()) {
             defaultLocale = Locale.US;
         }
     }
