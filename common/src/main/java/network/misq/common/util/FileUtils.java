@@ -91,7 +91,7 @@ public class FileUtils {
         try (FileWriter fileWriter = new FileWriter(file.getAbsolutePath())) {
             fileWriter.write(string);
         } catch (IOException e) {
-            log.warn("Could not {} to file {}", string, file);
+            log.warn("Could not write {} to file {}", string, file);
             throw e;
         }
     }
