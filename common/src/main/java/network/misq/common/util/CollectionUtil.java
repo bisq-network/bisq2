@@ -29,6 +29,4 @@ public class CollectionUtil {
                 null :
                 new ArrayList<>(collection).get(new Random().nextInt(collection.size()));
     }
-
-
 }

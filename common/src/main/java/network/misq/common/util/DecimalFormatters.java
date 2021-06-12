@@ -27,7 +27,9 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 public class DecimalFormatters {
-    // Wrapper to make DecimalFormat immutable and expose only what we use.
+    /**
+     * Wrapper to make DecimalFormat immutable and expose only what we use.
+     */
     public record Format(java.text.DecimalFormat decimalFormat) {
 
         public final String format(long number) {
@@ -39,11 +41,17 @@ public class DecimalFormatters {
         }
     }
 
-    // Caches formatters which have the same parameters. We use formatters as stateless immutable objects.
+    /**
+     * Caches formatters which have the same parameters. We use formatters as stateless immutable objects.
+     */
     private static final LoadingCache<Couple<Locale, Integer>, Format> decimalFormatCache = CacheBuilder.newBuilder()
             .build(CacheLoader.from(DecimalFormatters::getDecimalFormat));
 
-    // Returns cached DecimalFormat object.
+    /**
+     * @param locale    The locale to be used
+     * @param precision The precision
+     * @return Returns cached DecimalFormat object.
+     */
     public static Format getDecimalFormat(Locale locale, int precision) {
         return decimalFormatCache.getUnchecked(new Couple<>(locale, precision));
     }
