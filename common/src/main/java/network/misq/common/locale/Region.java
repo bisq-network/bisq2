@@ -274,7 +274,7 @@ public record Region(String code, String name) {
         REGION_CODE_BY_COUNTRY_CODE.put("UZ", "AS"); // name=Uzbekistan / region=Asia / subregion=Central Asia
         REGION_CODE_BY_COUNTRY_CODE.put("VU", "OC"); // name=Vanuatu / region=Oceania / subregion=Melanesia
         REGION_CODE_BY_COUNTRY_CODE.put("VE", "AM"); // name=Venezuela (Bolivarian Republic of) / region=Americas / subregion=South America
-        REGION_CODE_BY_COUNTRY_CODE.put("VN", "AS"); // name=Viet Nam / region=Asia / subregion=South-Eastern Asia
+        REGION_CODE_BY_COUNTRY_CODE.put("VN", "AS"); // name=Vietnam / region=Asia / subregion=South-Eastern Asia
         REGION_CODE_BY_COUNTRY_CODE.put("WF", "OC"); // name=Wallis and Futuna / region=Oceania / subregion=Polynesia
         REGION_CODE_BY_COUNTRY_CODE.put("EH", "AF"); // name=Western Sahara / region=Africa / subregion=Northern Africa
         REGION_CODE_BY_COUNTRY_CODE.put("YE", "AS"); // name=Yemen / region=Asia / subregion=Western Asia
