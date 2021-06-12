@@ -1,0 +1,34 @@
+plugins {
+    id 'java-library'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+apply from: '../buildSrc/misq-version.gradle'
+apply from: '../buildSrc/logging-dependencies.gradle'
+apply from: '../buildSrc/test-dependencies.gradle'
+apply from: '../buildSrc/lombok-dependencies.gradle'
+
+dependencies {
+    api platform(project(':platforms:common-platform'))
+ 
+    implementation project(':common')
+    implementation project(':identity')
+    implementation project(':account')
+    implementation project(':contract')
+    implementation project(':network')
+    implementation project(':persistence')
+    implementation project(':wallets')
+
+    implementation 'com.google.guava:guava'
+    implementation 'io.reactivex.rxjava3:rxjava'
+    implementation 'com.google.code.gson:gson'
+    implementation("com.github.chimp1984:jsocks:567e1cd6")
+
+}
+test {
+    useJUnitPlatform()
+}
