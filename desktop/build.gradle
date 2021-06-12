@@ -1,0 +1,65 @@
+plugins {
+    id 'java-library'
+    id 'application'
+    id 'distribution'
+    id 'org.openjfx.javafxplugin' version '0.0.10'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+apply from: '../buildSrc/misq-version.gradle'
+
+application {
+    project.mainClassName = 'network.misq.desktop.Main'
+}
+
+distributions {
+    main {
+        distributionBaseName = 'jfx-dist'
+    }
+}
+
+tasks.named('jar') {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version,
+                'Main-Class': 'network.misq.desktop.Main')
+    }
+}
+
+javafx {
+    version = '16'
+    modules = ['javafx.base', 'javafx.controls', 'javafx.graphics']
+}
+
+apply from: '../buildSrc/logging-dependencies.gradle'
+apply from: '../buildSrc/test-dependencies.gradle'
+apply from: '../buildSrc/lombok-dependencies.gradle'
+
+dependencies {
+    api platform(project(':platforms:common-platform'))
+
+    implementation project(':common')
+    implementation project(':security')
+    implementation project(':network')
+    implementation project(':contract')
+    implementation project(':offer')
+    implementation project(':presentation')
+    implementation project(':api')
+    implementation project(':application')
+
+    implementation 'com.google.guava:guava'
+    implementation 'io.reactivex.rxjava3:rxjava'
+
+    implementation "com.jfoenix:jfoenix:9.0.10"
+    implementation "de.jensd:fontawesomefx:8.0.0"
+    implementation "de.jensd:fontawesomefx-commons:9.1.2"
+    implementation "de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2"
+    implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.0'
+}
+test {
+    useJUnitPlatform()
+}

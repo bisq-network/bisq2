@@ -1,0 +1,59 @@
+/*
+New css for misq.
+*/
+
+.navigation-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+    -fx-padding: 11;
+}
+
+.navigation-button .text {
+    -fx-font-size: 1.8em;
+    -fx-fill: -bs-rd-nav-deselected;
+}
+
+.navigation-button:selected {
+    -fx-background-color: -bs-background-color;
+    -fx-border-radius: 4;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 4, 0, 0, 0, 2);
+}
+
+.navigation-button:selected .text {
+    -fx-fill: -bs-rd-nav-selected;
+}
+
+
+/*
+.jfx-badge .badge-pane {
+    -fx-background-color: -bs-red;
+    -fx-background-radius: 15;
+    -fx-pref-width: 15;
+    -fx-pref-height: 15;
+}
+
+.jfx-badge.new .badge-pane {
+    -fx-pref-width: 30;
+}
+
+.jfx-badge.auto-conf .badge-pane {
+    -fx-background-color: -xmr-orange;
+    -fx-pref-width: -1;
+    -fx-padding: -1 10 0 10;
+}
+
+.jfx-badge .badge-pane .label {
+    -fx-font-weight: bold;
+    -fx-font-size: 0.692em;
+    -fx-text-fill: -bs-background-color;
+}
+
+.jfx-badge {
+    -fx-padding: -3 0 0 0;
+}
+
+.jfx-badge > .navigation-button {
+    -fx-translate-y: 1;
+}
+*/
+
