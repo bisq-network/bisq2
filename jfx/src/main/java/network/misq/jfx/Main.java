@@ -1,9 +1,0 @@
-package network.misq.jfx;
-
-public class Main {
-    // A class named Main is required as distribution's entry point.
-    // See https://github.com/javafxports/openjdk-jfx/issues/236
-    public static void main(String[] args) {
-        JfxMain.main(args);
-    }
-}
