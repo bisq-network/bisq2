@@ -21,17 +21,21 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class StatisticsUtils {
-    public static long medianFrom(Long[] list) {
-        if (list.length == 0) {
+    /**
+     * @param sortedArray Sorted array of long elements
+     * @return The median of the given list
+     */
+    public static long medianFrom(Long[] sortedArray) {
+        if (sortedArray.length == 0) {
             return 0L;
         }
 
-        int middle = list.length / 2;
+        int middle = sortedArray.length / 2;
         long median;
-        if (list.length % 2 == 1) {
-            median = list[middle];
+        if (sortedArray.length % 2 == 1) {
+            median = sortedArray[middle];
         } else {
-            median = MathUtils.roundDoubleToLong((list[middle - 1] + list[middle]) / 2.0);
+            median = MathUtils.roundDoubleToLong((sortedArray[middle - 1] + sortedArray[middle]) / 2.0);
         }
         return median;
     }
