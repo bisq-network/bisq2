@@ -1,0 +1,24 @@
+plugins {
+    id 'java-library'
+}
+
+repositories {
+    mavenCentral()
+}
+
+apply from: '../buildSrc/misq-version.gradle'
+apply from: '../buildSrc/logging-dependencies.gradle'
+apply from: '../buildSrc/test-dependencies.gradle'
+apply from: '../buildSrc/lombok-dependencies.gradle'
+
+dependencies {
+    api platform(project(':platforms:common-platform'))
+   
+    implementation project(':common')
+
+    implementation 'com.google.guava:guava'
+}
+
+test {
+    useJUnitPlatform()
+}
