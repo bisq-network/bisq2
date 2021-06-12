@@ -23,11 +23,13 @@ import java.util.Locale;
 
 public class OsUtils {
     public static File getUserDataDir() {
-        if (isWindows())
+        if (isWindows()) {
             return new File(System.getenv("APPDATA"));
+        }
 
-        if (isOSX())
+        if (isOSX()) {
             return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toFile();
+        }
 
         // *nix
         return Paths.get(System.getProperty("user.home"), ".local", "share").toFile();
@@ -54,7 +56,6 @@ public class OsUtils {
     }
 
     public static String getOSArchitecture() {
-        String osArch = System.getProperty("os.arch");
         if (isWindows()) {
             // See: Like always windows needs extra treatment
             // https://stackoverflow.com/questions/20856694/how-to-find-the-os-bit-type
@@ -63,14 +64,19 @@ public class OsUtils {
             return arch.endsWith("64")
                     || wow64Arch != null && wow64Arch.endsWith("64")
                     ? "64" : "32";
-        } else if (osArch.contains("arm")) {
-            // armv8 is 64 bit, armv7l is 32 bit
-            return osArch.contains("64") || osArch.contains("v8") ? "64" : "32";
-        } else if (isLinux()) {
-            return osArch.startsWith("i") ? "32" : "64";
-        } else {
-            return osArch.contains("64") ? "64" : osArch;
         }
+
+        String osArch = System.getProperty("os.arch");
+        // armv8 is 64 bit, armv7l is 32 bit
+        if (osArch.contains("arm")) {
+            return osArch.contains("64") || osArch.contains("v8") ? "64" : "32";
+        }
+
+        if (isLinux()) {
+            return osArch.startsWith("i") ? "32" : "64";
+        }
+
+        return osArch.contains("64") ? "64" : osArch;
     }
 
     public static String getOSName() {
