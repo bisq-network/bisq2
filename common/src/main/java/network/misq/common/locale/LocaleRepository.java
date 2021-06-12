@@ -280,7 +280,7 @@ public class LocaleRepository {
             new Locale("uz", "UZ"), // Uzbekistan / lang=Uzbek
             new Locale("bi", "VU"), // Vanuatu / lang=Bislama
             new Locale("es", "VE"), // Venezuela (Bolivarian Republic of) / lang=Spanish
-            new Locale("vi", "VN"), // Viet Nam / lang=Vietnamese
+            new Locale("vi", "VN"), // Vietnam / lang=Vietnamese
             new Locale("fr", "WF"), // Wallis and Futuna / lang=French
             new Locale("es", "EH"), // Western Sahara / lang=Spanish
             new Locale("ar", "YE"), // Yemen / lang=Arabic
