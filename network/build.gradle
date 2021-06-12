@@ -1,0 +1,38 @@
+plugins {
+    id 'java-library'
+    id 'com.google.protobuf' version '0.8.16'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+apply from: '../buildSrc/misq-version.gradle'
+apply from: '../buildSrc/logging-dependencies.gradle'
+apply from: '../buildSrc/lombok-dependencies.gradle'
+apply from: '../buildSrc/test-dependencies.gradle'
+apply from: '../buildSrc/gen-protos.gradle'
+
+dependencies {
+    api platform(project(':platforms:common-platform'))
+
+    implementation project(':common')
+  /*  implementation project(':tor')
+    implementation project(':i2p')
+    implementation project(':security')
+    implementation project(':persistence')*/
+
+    implementation 'com.google.guava:guava'
+    implementation 'io.reactivex.rxjava3:rxjava'
+    implementation 'com.google.protobuf:protobuf-gradle-plugin'
+    implementation 'com.google.protobuf:protobuf-java'
+    
+    implementation("com.github.chimp1984:jsocks:567e1cd6")
+    implementation("org.apache.httpcomponents:httpclient:4.5.13")
+}
+
+test {
+    useJUnitPlatform()
+    exclude '**/**Integration*'
+}

@@ -3,4 +3,4 @@ package grpc.proto;
 option java_package = "network.misq.grpc.proto";
 option java_multiple_files = true;
 
-import "p2p.proto";
+//import "network.proto";
