@@ -30,6 +30,7 @@ public class MapUtils {
     }
 
     public static void disposeAndRemoveAll(Map<String, ? extends Disposable> map) {
-        map.keySet().forEach(key -> disposeAndRemove(key, map));
+        map.keySet().forEach(Disposable::dispose);
+        map.clear();
     }
 }
