@@ -29,6 +29,7 @@ import java.security.PublicKey;
 import java.security.Security;
 import java.util.Arrays;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static network.misq.common.util.ByteArrayUtils.concat;
 
 /**
