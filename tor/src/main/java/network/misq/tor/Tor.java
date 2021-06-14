@@ -21,7 +21,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.runjva.sourceforge.jsocks.protocol.Authentication;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
-import com.sun.jdi.Bootstrap;
 import network.misq.common.util.ThreadingUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
