@@ -12,6 +12,9 @@ apply from: '../buildSrc/test-dependencies.gradle'
 apply from: '../buildSrc/lombok-dependencies.gradle'
 
 dependencies {
+    api platform(project(':platforms:common-platform'))
+
+    implementation 'com.google.guava:guava'
 }
 
 test {

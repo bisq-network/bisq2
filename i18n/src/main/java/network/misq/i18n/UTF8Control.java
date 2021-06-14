@@ -27,35 +27,37 @@ import java.util.Locale;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
-// Adds UTF8 support for property files
+import static com.google.common.base.Preconditions.checkNotNull;
+
+/**
+ * Adds UTF8 support for property files
+ */
 class UTF8Control extends ResourceBundle.Control {
     public ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload)
             throws IOException {
-        // Below is a copy of the default implementation.
-        final String bundleName = toBundleName(baseName, locale);
-        final String resourceName = toResourceName(bundleName, "properties");
-        ResourceBundle bundle = null;
-        InputStream stream = null;
-        if (reload) {
-            final URL url = loader.getResource(resourceName);
-            if (url != null) {
-                final URLConnection connection = url.openConnection();
-                if (connection != null) {
-                    connection.setUseCaches(false);
-                    stream = connection.getInputStream();
+        // Below is a copy following the default implementation.
+        String bundleName = toBundleName(baseName, locale);
+        try {
+            String resourceName = checkNotNull(toResourceName(bundleName, "properties"));
+            if (reload) {
+                URL url = checkNotNull(loader.getResource(resourceName));
+                URLConnection connection = checkNotNull(url.openConnection());
+                connection.setUseCaches(false);
+                try (InputStream stream = connection.getInputStream()) {
+                    return getBundle(stream);
+                }
+            } else {
+                try (InputStream stream = loader.getResourceAsStream(resourceName)) {
+                    return getBundle(stream);
                 }
             }
-        } else {
-            stream = loader.getResourceAsStream(resourceName);
+        } catch (Exception e) {
+            throw new IOException(e);
         }
-        if (stream != null) {
-            try {
-                // Only this line is changed to make it read properties files as UTF-8.
-                bundle = new PropertyResourceBundle(new InputStreamReader(stream, StandardCharsets.UTF_8));
-            } finally {
-                stream.close();
-            }
-        }
-        return bundle;
+    }
+
+    private ResourceBundle getBundle(InputStream stream) throws IOException {
+        // Only this line is changed to make it read properties files as UTF-8.
+        return new PropertyResourceBundle(new InputStreamReader(stream, StandardCharsets.UTF_8));
     }
 }
