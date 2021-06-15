@@ -47,7 +47,7 @@ public class ConfidentialData implements Serializable {
     @Override
     public String toString() {
         return "Sealed{" +
-                ",\r\n     hmac=" + Hex.encode(hmac) +
+                "\r\n     hmac=" + Hex.encode(hmac) +
                 ",\r\n     iv=" + Hex.encode(iv) +
                 ",\r\n     cypherText=" + Hex.encode(cypherText) +
                 ",\r\n     signature=" + Hex.encode(signature) +
