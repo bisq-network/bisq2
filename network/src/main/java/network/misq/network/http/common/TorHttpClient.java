@@ -108,7 +108,7 @@ public class TorHttpClient extends BaseHttpClient {
             try (CloseableHttpResponse httpResponse = closeableHttpClient.execute(request, context)) {
                 String response = inputStreamToString(httpResponse.getEntity().getContent());
                 int statusCode = httpResponse.getStatusLine().getStatusCode();
-                if (statusCode == 200) {
+                if (isSuccess(statusCode)) {
                     log.debug("Response from {} took {} ms. Data size:{}, response: {}, param: {}",
                             baseUrl,
                             System.currentTimeMillis() - ts,

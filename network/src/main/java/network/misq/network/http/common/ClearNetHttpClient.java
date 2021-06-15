@@ -77,7 +77,7 @@ public class ClearNetHttpClient extends BaseHttpClient {
             }
 
             int responseCode = connection.getResponseCode();
-            if (responseCode == 200) {
+            if (isSuccess(responseCode)) {
                 String response = inputStreamToString(connection.getInputStream());
                 log.debug("Response from {} with param {} took {} ms. Data size:{}, response: {}",
                         baseUrl,
