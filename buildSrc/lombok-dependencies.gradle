@@ -1,0 +1,8 @@
+// For declaration configuration types 'annotationProcessor' and 'testAnnotationProcessor', we cannot
+// get the recommended lombok version from a gradle 'platform', and must specify the lombok version here.
+dependencies {
+    compileOnly 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+    testCompileOnly 'org.projectlombok:lombok:1.18.20'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.20'
+}
