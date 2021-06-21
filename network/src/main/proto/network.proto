@@ -1,0 +1,4 @@
+syntax = "proto3";
+package network.proto;
+option java_package = "network.misq.network.proto";
+option java_multiple_files = true;

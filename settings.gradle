@@ -12,8 +12,8 @@ include 'cli'
 include 'common'
 include 'grpc'
 include 'i18n'
+include 'network'
 include 'jfx'
-include 'p2p'
 include 'web'
 
 import org.gradle.util.GradleVersion

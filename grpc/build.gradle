@@ -12,8 +12,6 @@ apply from: '../buildSrc/logging-dependencies.gradle'
 apply from: '../buildSrc/test-dependencies.gradle'
 
 dependencies {
-    implementation project(':p2p')
-
     api platform(project(':platforms:grpc-platform'))
 
     implementation 'javax.annotation:javax.annotation-api'

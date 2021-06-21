@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="CONSOLE_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%highlight(%d{MMM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{30}: %msg %xEx%n)</pattern>
+        </encoder>
+    </appender>
+
+    <root level="DEBUG">
+        <appender-ref ref="CONSOLE_APPENDER"/>
+    </root>
+    <logger name="network.misq.tor" level="INFO"/>
+    <logger name="org.berndpruenster" level="WARN"/>
+    <logger name="com.runjva.sourceforge.jsocks" level="WARN"/>
+
+
+</configuration>
