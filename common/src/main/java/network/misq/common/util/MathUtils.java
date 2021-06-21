@@ -18,14 +18,13 @@
 package network.misq.common.util;
 
 import com.google.common.math.DoubleMath;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+@Slf4j
 public class MathUtils {
-    private static final Logger log = LoggerFactory.getLogger(MathUtils.class);
 
     public static double roundDouble(double value, int precision) {
         return roundDouble(value, precision, RoundingMode.HALF_UP);

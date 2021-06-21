@@ -75,4 +75,8 @@ public abstract class BaseHttpClient implements HttpClient {
             return stringBuilder.toString();
         }
     }
+
+    protected boolean isSuccess(int statusCode) {
+        return statusCode >= 200 && statusCode < 300;
+    }
 }
