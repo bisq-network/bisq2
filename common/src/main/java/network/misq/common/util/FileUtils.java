@@ -68,6 +68,7 @@ public class FileUtils {
                 deleteDirectory(file);
             }
         }
+        //noinspection ResultOfMethodCallIgnored
         dir.delete();
     }
 
