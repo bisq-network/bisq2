@@ -35,7 +35,7 @@ class SocksSSLConnectionSocketFactory extends SSLConnectionSocketFactory {
 
     public SocksSSLConnectionSocketFactory(final SSLContext sslContext) {
 
-        // TODO check alternative to deprecated call
+        // TODO Check alternative to deprecated call.  Use DefaultHostnameVerifier with correct constructor arg.
         // Only allow connection's to site's with valid certs.
         super(sslContext, STRICT_HOSTNAME_VERIFIER);
 
@@ -47,7 +47,7 @@ class SocksSSLConnectionSocketFactory extends SSLConnectionSocketFactory {
      * creates an unconnected Socks Proxy socket
      */
     @Override
-    public Socket createSocket(final HttpContext context) throws IOException {
+    public Socket createSocket(final HttpContext context) {
         InetSocketAddress socksaddr = (InetSocketAddress) context.getAttribute("socks.address");
         Proxy proxy = new Proxy(Proxy.Type.SOCKS, socksaddr);
         return new Socket(proxy);
