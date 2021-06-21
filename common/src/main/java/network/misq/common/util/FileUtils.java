@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -126,7 +127,8 @@ public class FileUtils {
 
     public static void appendFromResource(PrintWriter printWriter, String pathname) {
         try (InputStream inputStream = FileUtils.class.getResourceAsStream(pathname);
-             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+             BufferedReader bufferedReader = new BufferedReader(
+                     new InputStreamReader(Objects.requireNonNull(inputStream)))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 printWriter.println(line);
