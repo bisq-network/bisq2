@@ -17,10 +17,9 @@
 
 package network.misq.tor;
 
+import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.TorControlConnection;
 import network.misq.common.util.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -33,8 +32,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static network.misq.tor.Constants.*;
 
+@Slf4j
 public class TorController {
-    private static final Logger log = LoggerFactory.getLogger(TorController.class);
 
     private final File cookieFile;
     @Nullable

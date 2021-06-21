@@ -17,17 +17,16 @@
 
 package network.misq.tor;
 
+import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.EventHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 public class TorEventHandler implements EventHandler {
-    private static final Logger log = LoggerFactory.getLogger(TorEventHandler.class);
 
     private final Map<String, Runnable> hiddenServiceReadyListeners = new ConcurrentHashMap<>();
 

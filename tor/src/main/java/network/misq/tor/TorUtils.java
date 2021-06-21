@@ -17,21 +17,20 @@
 
 package network.misq.tor;
 
+import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.FileUtils;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+@Slf4j
 public class TorUtils {
-    private static final Logger log = LoggerFactory.getLogger(TorUtils.class);
 
     public static void extractBinary(String torDirectory, OsType osType) throws IOException {
         InputStream archiveInputStream = FileUtils.getResourceAsStream(osType.getArchiveName());

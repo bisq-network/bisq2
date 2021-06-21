@@ -17,9 +17,8 @@
 
 package network.misq.tor;
 
+import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -31,8 +30,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static network.misq.tor.Constants.*;
 
+@Slf4j
 class Bootstrap {
-    private static final Logger log = LoggerFactory.getLogger(Bootstrap.class);
 
     private final List<String> bridgeConfig = new ArrayList<>();
     private final String torDirPath;

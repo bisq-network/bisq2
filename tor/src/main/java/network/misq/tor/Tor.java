@@ -21,9 +21,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.runjva.sourceforge.jsocks.protocol.Authentication;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
+import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.ThreadingUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.net.SocketFactory;
@@ -59,8 +58,8 @@ import static network.misq.tor.Constants.LOCALHOST;
  * <p>
  * Support for Android is not planned as long we do not target Android.
  */
+@Slf4j
 public class Tor {
-    private static final Logger log = LoggerFactory.getLogger(Tor.class);
     public static final String VERSION = "0.1.0";
 
     // We use one tor binary for one app

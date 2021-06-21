@@ -18,12 +18,11 @@
 package network.misq.tor;
 
 import com.google.common.util.concurrent.MoreExecutors;
+import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.TorControlConnection;
 import network.misq.common.util.FileUtils;
 import network.misq.common.util.NetworkUtils;
 import network.misq.common.util.ThreadingUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -39,8 +38,8 @@ import java.util.concurrent.ExecutorService;
 import static com.google.common.base.Preconditions.checkArgument;
 import static network.misq.tor.Constants.*;
 
+@Slf4j
 public class TorServerSocket extends ServerSocket {
-    private static final Logger log = LoggerFactory.getLogger(TorServerSocket.class);
 
     private final String hsDirPath;
     private final TorController torController;
