@@ -1,0 +1,36 @@
+plugins {
+    id 'java-library'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+apply from: '../buildSrc/misq-version.gradle'
+apply from: '../buildSrc/logging-dependencies.gradle'
+apply from: '../buildSrc/test-dependencies.gradle'
+apply from: '../buildSrc/lombok-dependencies.gradle'
+
+dependencies {
+    api platform(project(':platforms:common-platform'))
+    
+    implementation project(':common')
+
+    implementation 'com.google.guava:guava'
+    
+    implementation("org.apache.commons:commons-compress:1.6")
+
+    implementation("com.github.chimp1984:jsocks:567e1cd6")
+    implementation("com.github.chimp1984:jtorctl:9b5ba203")
+
+    implementation("com.github.bisq-network.tor-binary:tor-binary-geoip:b9c6227")
+    implementation("com.github.bisq-network.tor-binary:tor-binary-macos:b9c6227")
+    implementation("com.github.bisq-network.tor-binary:tor-binary-linux32:b9c6227")
+    implementation("com.github.bisq-network.tor-binary:tor-binary-linux64:b9c6227")
+    implementation("com.github.bisq-network.tor-binary:tor-binary-windows:b9c6227")
+}
+
+test {
+    useJUnitPlatform()
+}
