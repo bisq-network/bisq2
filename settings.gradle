@@ -31,7 +31,7 @@ include 'web'
 
 import org.gradle.util.GradleVersion
 
-def minGradleVersion = GradleVersion.version("7.0.2")
+def minGradleVersion = GradleVersion.version("7.1")
 def minJavaVersion = JavaVersion.VERSION_16
 if (GradleVersion.current() >= minGradleVersion && JavaVersion.current().isCompatibleWith(minJavaVersion)) {
     println "Building ${rootProject.name} module with ${GradleVersion.current()} and Java ${JavaVersion.current()}."
