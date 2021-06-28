@@ -16,6 +16,7 @@ apply from: '../buildSrc/gen-protos.gradle'
 
 dependencies {
     api platform(project(':platforms:common-platform'))
+    api platform(project(':platforms:network-platform'))
 
     implementation project(':common')
   /*  implementation project(':tor')
@@ -28,8 +29,8 @@ dependencies {
     implementation 'com.google.protobuf:protobuf-gradle-plugin'
     implementation 'com.google.protobuf:protobuf-java'
     
-    implementation("com.github.chimp1984:jsocks:567e1cd6")
-    implementation("org.apache.httpcomponents:httpclient:4.5.13")
+    implementation 'com.github.chimp1984:jsocks'
+    implementation 'org.apache.httpcomponents:httpclient'
 }
 
 test {
