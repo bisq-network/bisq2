@@ -3,6 +3,7 @@ rootProject.name = 'misq'
 include 'platforms:cli-platform'
 include 'platforms:common-platform'
 include 'platforms:grpc-platform'
+include 'platforms:network-platform'
 include 'platforms:web-platform'
 include 'platforms:test-platform'
 
