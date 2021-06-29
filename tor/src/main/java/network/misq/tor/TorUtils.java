@@ -62,7 +62,13 @@ public class TorUtils {
                 }
 
                 FileOutputStream fileOutputStream = new FileOutputStream(file);
-                tarArchiveInputStream.transferTo(fileOutputStream);
+                try {
+                    tarArchiveInputStream.transferTo(fileOutputStream);
+                } catch (IOException ex) {
+                    throw new IOException("Cannot transfer bytes to file " + file.getAbsolutePath(), ex);
+                } finally {
+                    fileOutputStream.close(); // Avoid "error=26, Text file busy" system error.
+                }
 
                 if (osType == OsType.OSX) {
                     if (!file.setExecutable(true, true)) {
