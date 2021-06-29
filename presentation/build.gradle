@@ -22,7 +22,7 @@ dependencies {
     implementation project(':offer')
 
     implementation 'com.google.guava:guava'
-    implementation 'io.reactivex.rxjava3:rxjava'
+    implementation 'io.reactivex.rxjava2:rxjava'
 }
 
 test {

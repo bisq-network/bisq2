@@ -15,7 +15,7 @@ apply from: '../buildSrc/lombok-dependencies.gradle'
 dependencies {
     api platform(project(':platforms:common-platform'))
     api platform(project(':platforms:network-platform'))
- 
+
     implementation project(':common')
     implementation project(':identity')
     implementation project(':account')
@@ -25,11 +25,11 @@ dependencies {
     implementation project(':wallets')
 
     implementation 'com.google.guava:guava'
-    implementation 'io.reactivex.rxjava3:rxjava'
+    implementation 'io.reactivex.rxjava2:rxjava'
     implementation 'com.google.code.gson:gson'
     implementation 'com.github.chimp1984:jsocks'
-
 }
+
 test {
     useJUnitPlatform()
 }
