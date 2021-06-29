@@ -19,7 +19,8 @@ dependencies {
     implementation project(':common')
 
     implementation 'com.google.guava:guava'
-    
+    implementation 'io.reactivex.rxjava2:rxjava'
+
     implementation 'org.apache.commons:commons-compress'
 
     implementation 'com.github.chimp1984:jsocks'
