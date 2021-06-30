@@ -19,8 +19,6 @@ package network.misq.contract;
 
 import lombok.Getter;
 
-import javax.management.relation.Role;
-
 /**
  * Defines the terms of the financial interaction with the counterparty/parties.
  */

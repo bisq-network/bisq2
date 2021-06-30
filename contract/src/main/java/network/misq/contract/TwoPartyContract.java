@@ -19,8 +19,6 @@ package network.misq.contract;
 
 import lombok.Getter;
 
-import javax.management.relation.Role;
-
 @Getter
 public class TwoPartyContract extends Contract {
     protected final Party counterParty;
