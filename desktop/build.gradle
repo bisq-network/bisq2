@@ -52,13 +52,13 @@ dependencies {
     implementation project(':application')
 
     implementation 'com.google.guava:guava'
-    implementation 'io.reactivex.rxjava3:rxjava'
+    implementation 'io.reactivex.rxjava2:rxjava'
 
-    implementation "com.jfoenix:jfoenix:9.0.10"
-    implementation "de.jensd:fontawesomefx:8.0.0"
-    implementation "de.jensd:fontawesomefx-commons:9.1.2"
-    implementation "de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2"
-    implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.0'
+    implementation 'com.jfoenix:jfoenix:9.0.10'
+    implementation 'de.jensd:fontawesomefx:8.0.0'
+    implementation 'de.jensd:fontawesomefx-commons:9.1.2'
+    implementation 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
+    implementation 'org.controlsfx:controlsfx:11.1.0'
 }
 test {
     useJUnitPlatform()
