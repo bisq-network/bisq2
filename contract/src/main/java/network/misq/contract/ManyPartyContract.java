@@ -2,7 +2,6 @@ package network.misq.contract;
 
 import lombok.Getter;
 
-import javax.management.relation.Role;
 import java.util.Map;
 
 @Getter

@@ -45,6 +45,7 @@ dependencies {
     implementation project(':common')
     implementation project(':security')
     implementation project(':network')
+    implementation project(':persistence')
     implementation project(':contract')
     implementation project(':offer')
     implementation project(':presentation')

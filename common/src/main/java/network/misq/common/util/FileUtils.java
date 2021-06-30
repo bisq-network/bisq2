@@ -53,13 +53,24 @@ public class FileUtils {
         return new String(read(fileName), Charsets.UTF_8);
     }
 
-    public static void makeDirIfNotExists(String dirName) throws IOException {
-        File dir = new File(dirName);
-        if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                throw new IOException("Cannot create directory " + dir.getAbsolutePath());
-            }
-        }
+    /**
+     * The `File.deleteOnExit` method is not suited for long running processes as it never removes the added files, thus leading to a memory leak.
+     * See: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6664633
+     * We added our own extended DeleteOnExitHook where we added a remove method. The client is responsible to call that
+     * `remove` method via `releaseTempFile` once the file should be deleted.
+     *
+     * @param file The file to add a shutdown hook for delete on exit
+     */
+    public static void deleteOnExit(File file) {
+        DeleteOnExitHook.add(file.getPath());
+    }
+
+    /**
+     * @param file The file to delete and to get removed from the `DeleteOnExitHook`.
+     */
+    public static void releaseTempFile(File file) {
+        DeleteOnExitHook.remove(file.getPath());
+        deleteFile(file);
     }
 
     public static void deleteDirectory(File dir) {
@@ -71,6 +82,14 @@ public class FileUtils {
         }
         //noinspection ResultOfMethodCallIgnored
         dir.delete();
+    }
+
+    public static void deleteFile(File file) {
+        if (file != null && file.exists()) {
+            if (!file.delete()) {
+                log.error("Cannot delete file {}", file);
+            }
+        }
     }
 
     public static void makeDirs(String dirPath) throws IOException {
@@ -173,6 +192,30 @@ public class FileUtils {
         } catch (IOException e) {
             log.error(e.toString(), e);
             return new HashSet<>();
+        }
+    }
+
+    public static File createNewFile(Path path) throws IOException {
+        File file = path.toFile();
+        if (!file.createNewFile()) {
+            throw new IOException("File with path exists already: " + path);
+        }
+        return file;
+    }
+
+    public static void renameFile(File oldFile, File newFile) throws IOException {
+        File target = newFile;
+        if (OsUtils.isWindows()) {
+            // Work around an issue on Windows whereby you can't rename over existing files.
+            target = newFile.getCanonicalFile();
+            if (target.exists() && !target.delete()) {
+                throw new IOException("Failed to delete canonical file for replacement with save");
+            }
+        }
+
+        boolean success = oldFile.renameTo(target);
+        if (!success) {
+            throw new IOException("Failed to rename " + oldFile + " to " + target);
         }
     }
 }
