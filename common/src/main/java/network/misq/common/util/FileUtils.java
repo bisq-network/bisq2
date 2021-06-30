@@ -53,15 +53,6 @@ public class FileUtils {
         return new String(read(fileName), Charsets.UTF_8);
     }
 
-    public static void makeDirIfNotExists(String dirName) throws IOException {
-        File dir = new File(dirName);
-        if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                throw new IOException("Cannot create directory " + dir.getAbsolutePath());
-            }
-        }
-    }
-
     /**
      * The `File.deleteOnExit` method is not suited for long running processes as it never removes the added files, thus leading to a memory leak.
      * See: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6664633
