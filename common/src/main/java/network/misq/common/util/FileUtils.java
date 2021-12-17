@@ -92,6 +92,15 @@ public class FileUtils {
         }
     }
 
+    public static void makeDirIfNotExists(String dirName) throws IOException {
+        File dir = new File(dirName);
+        if (!dir.exists()) {
+            if (!dir.mkdirs()) {
+                throw new IOException("Cannot create directory " + dir.getAbsolutePath());
+            }
+        }
+    }
+
     public static void makeDirs(String dirPath) throws IOException {
         makeDirs(new File(dirPath));
     }

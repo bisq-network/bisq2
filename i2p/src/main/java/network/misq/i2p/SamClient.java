@@ -155,7 +155,7 @@ public class SamClient {
     }
 
     public String getMyDestination(String sessionId) throws IOException {
-        FileUtils.makeDirs(dirPath);
+        FileUtils.makeDirIfNotExists(dirPath);
         String fileName = dirPath + File.separator + sessionId;
         String destinationFileName = fileName + ".destination";
         if (new File(destinationFileName).exists()) {
@@ -246,7 +246,7 @@ public class SamClient {
 
     private String loadOrRequestPrivateKey(SamConnection samConnection,
                                            String sessionId) throws IOException {
-        FileUtils.makeDirs(dirPath);
+        FileUtils.makeDirIfNotExists(dirPath);
         String fileName = dirPath + File.separator + sessionId;
         String privKeyFileName = fileName + ".priv_key";
         if (new File(privKeyFileName).exists()) {
