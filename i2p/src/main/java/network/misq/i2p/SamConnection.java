@@ -108,5 +108,6 @@ class SamConnection {
             socket.close();
         } catch (IOException ignore) {
         }
+        handShakeCompleted = false;
     }
 }
