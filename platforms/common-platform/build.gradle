@@ -49,13 +49,6 @@ dependencies {
         api('com.google.guava:listenablefuture') {
             version { require '9999.0-empty-to-avoid-conflict-with-guava' }
         }
-        
-        /////////////////////////////////////////////////////////////////////////////////
-        // Rx dependency constraints
-        /////////////////////////////////////////////////////////////////////////////////
-        api('io.reactivex.rxjava3:rxjava') {
-            version { require '3.0.13' }
-        }
 
         /////////////////////////////////////////////////////////////////////////////////
         // RxJava dependency constraints

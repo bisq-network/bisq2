@@ -17,6 +17,7 @@ dependencies {
     api platform(project(':platforms:network-platform'))
 
     implementation project(':common')
+    implementation project(':security')
     implementation project(':identity')
     implementation project(':account')
     implementation project(':contract')
@@ -32,4 +33,5 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    exclude '**/**Integration*'
 }
