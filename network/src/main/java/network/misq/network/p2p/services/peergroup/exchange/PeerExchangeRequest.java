@@ -15,13 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p;
+package network.misq.network.p2p.services.peergroup.exchange;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
+import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.services.peergroup.Peer;
 
-import java.util.Map;
+import java.util.Set;
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+record PeerExchangeRequest(int nonce, Set<Peer> peers) implements Message {
 }

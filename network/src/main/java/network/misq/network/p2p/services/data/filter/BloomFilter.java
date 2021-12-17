@@ -15,13 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p;
+package network.misq.network.p2p.services.data.filter;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
 
-import java.util.Map;
+public class BloomFilter implements DataFilter {
+  /*  public boolean matches(MapKey mapKey, MapValue value) {
+        return true;
+    }*/
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+    @Override
+    public String toString() {
+        return "BloomFilter{}";
+    }
 }

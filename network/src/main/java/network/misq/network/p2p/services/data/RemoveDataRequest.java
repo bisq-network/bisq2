@@ -15,13 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p;
+package network.misq.network.p2p.services.data;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.services.data.storage.MapKey;
 
-import java.util.Map;
+@EqualsAndHashCode
+@Getter
+public class RemoveDataRequest implements Message {
+    private final MapKey mapKey;
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+    public RemoveDataRequest(MapKey mapKey) {
+        this.mapKey = mapKey;
+    }
 }

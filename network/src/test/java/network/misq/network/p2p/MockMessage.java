@@ -17,11 +17,23 @@
 
 package network.misq.network.p2p;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import network.misq.network.p2p.message.Message;
 
-import java.util.Map;
+@EqualsAndHashCode
+@Getter
+public class MockMessage implements Message {
+    private final String msg;
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+    public MockMessage(String msg) {
+        this.msg = msg;
+    }
+
+    @Override
+    public String toString() {
+        return "MockMessage{" +
+                "\r\n     msg='" + msg + '\'' +
+                "\r\n}";
+    }
 }

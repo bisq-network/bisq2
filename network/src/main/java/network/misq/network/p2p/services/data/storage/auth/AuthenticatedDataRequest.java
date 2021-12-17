@@ -15,13 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p;
+package network.misq.network.p2p.services.data.storage.auth;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
+public interface AuthenticatedDataRequest {
+    int getSequenceNumber();
 
-import java.util.Map;
-
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+    long getCreated();
 }

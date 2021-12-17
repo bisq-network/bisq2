@@ -15,13 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p;
+package network.misq.network.p2p.node;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
+import java.net.Socket;
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+@Slf4j
+public class OutboundConnection extends Connection {
+
+    @Getter
+    private final Address address;
+
+    OutboundConnection(Socket socket,
+                       Address address,
+                       Capability peersCapability,
+                       Load peersLoad,
+                       Handler handler) {
+        super(socket, peersCapability, peersLoad, handler);
+
+        this.address = address;
+        log.debug("Create outboundConnection to {}", address);
+    }
+
+    @Override
+    public boolean isPeerAddressVerified() {
+        return true;
+    }
 }

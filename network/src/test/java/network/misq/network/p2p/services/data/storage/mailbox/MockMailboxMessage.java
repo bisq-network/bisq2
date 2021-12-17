@@ -15,13 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p;
+package network.misq.network.p2p.services.data.storage.mailbox;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import network.misq.network.p2p.services.data.storage.MetaData;
 
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+@EqualsAndHashCode
+@Getter
+public class MockMailboxMessage implements MailboxMessage {
+    private final String text;
+    private final MetaData metaData;
+
+    public MockMailboxMessage(String text) {
+        this.text = text;
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return metaData;
+    }
 }

@@ -22,7 +22,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.net.UnknownHostException;
 
 @Slf4j
@@ -30,7 +29,7 @@ public class Socks5ProxyProvider {
     @Getter
     private final Socks5Proxy socks5Proxy;
 
-    public Socks5ProxyProvider(Socks5Proxy socks5Proxy) throws IOException {
+    public Socks5ProxyProvider(Socks5Proxy socks5Proxy) {
         this.socks5Proxy = socks5Proxy;
     }
 

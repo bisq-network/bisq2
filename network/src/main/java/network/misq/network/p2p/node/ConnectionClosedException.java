@@ -15,13 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p;
+package network.misq.network.p2p.node;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
+import lombok.Getter;
 
-import java.util.Map;
+import java.util.concurrent.CompletionException;
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+public class ConnectionClosedException extends CompletionException {
+    @Getter
+    private final Connection connection;
+
+    public ConnectionClosedException(Connection connection) {
+        super("Connection has been already closed. Connection=" + connection);
+        this.connection = connection;
+    }
 }

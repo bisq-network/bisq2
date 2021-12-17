@@ -15,13 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p;
+package network.misq.network.p2p.services.peergroup.exchange;
 
-import network.misq.network.p2p.node.Address;
+import lombok.extern.slf4j.Slf4j;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
+import org.junit.jupiter.api.Test;
 
-import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+@Slf4j
+public class ClearNetPeerExchangeServiceTest extends BasePeerExchangeServiceTest {
+
+    @Test
+    void test_peerExchange() throws InterruptedException, ExecutionException {
+        super.test_peerExchange(getConfig(Transport.Type.CLEAR_NET));
+    }
+
+    @Override
+    protected long getTimeout() {
+        return 10;
+    }
 }

@@ -17,11 +17,18 @@
 
 package network.misq.network.p2p;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+// todo remove once p2p network API is stable and app has adopted it
+@Deprecated
+public interface INetworkService {
+    void addListener(MockNetworkService.Listener listener);
+
+    void removeListener(MockNetworkService.Listener listener);
+
+    Map<String, Serializable> getMap();
+
+    void addData(Serializable serializable);
 }

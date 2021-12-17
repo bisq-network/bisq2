@@ -15,13 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p;
+package network.misq.network.p2p.node;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
+import java.util.concurrent.CompletionException;
 
-import java.util.Map;
+public class ConnectionException extends CompletionException {
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+    public ConnectionException(String message) {
+        super(message);
+    }
+
+    public ConnectionException(Exception exception) {
+        super(exception);
+    }
 }

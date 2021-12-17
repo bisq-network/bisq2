@@ -15,13 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p;
+package network.misq.network.p2p.services.data.storage.append;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import network.misq.network.p2p.services.data.storage.MetaData;
 
-import java.util.Map;
+@EqualsAndHashCode
+@Getter
+public class MockAppendOnlyData implements AppendOnlyData {
+    private final String text;
+    final MetaData metaData;
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+    public MockAppendOnlyData(String text) {
+        this.text = text;
+        metaData = new MetaData(251, getClass().getSimpleName());
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return metaData;
+    }
+
+    @Override
+    public boolean isDataInvalid() {
+        return false;
+    }
 }

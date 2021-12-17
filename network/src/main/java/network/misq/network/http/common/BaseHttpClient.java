@@ -62,7 +62,8 @@ public abstract class BaseHttpClient implements HttpClient {
         return baseUrl;
     }
 
-    abstract protected String doRequest(String param, HttpMethod httpMethod,
+    abstract protected String doRequest(String param,
+                                        HttpMethod httpMethod,
                                         Optional<Pair<String, String>> optionalHeader) throws IOException;
 
     protected String inputStreamToString(InputStream inputStream) throws IOException {

@@ -15,13 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p;
+package network.misq.network.p2p.services.data.inventory;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
+import lombok.Getter;
 
-import java.util.Map;
+@Getter
+public class RequestInventoryResult {
+    private final Inventory inventory;
+    private final long duration;
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+    public RequestInventoryResult(Inventory inventory, long duration) {
+        this.inventory = inventory;
+        this.duration = duration;
+    }
 }

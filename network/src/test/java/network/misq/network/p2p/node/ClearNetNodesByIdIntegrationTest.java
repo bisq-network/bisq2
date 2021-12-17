@@ -15,13 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p;
+package network.misq.network.p2p.node;
 
-import network.misq.network.p2p.node.Address;
+import lombok.extern.slf4j.Slf4j;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
+import org.junit.jupiter.api.Test;
 
-import java.util.Map;
+@Slf4j
+public class ClearNetNodesByIdIntegrationTest extends BaseNodesByIdTest {
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+    @Test
+    void test_messageRoundTrip() throws InterruptedException {
+        super.test_messageRoundTrip(getConfig(Transport.Type.CLEAR_NET));
+    }
+
+    //fixme: BindException: Address already in use. Server port 1000 
+    // @Test
+    void test_initializeServer() throws InterruptedException {
+        super.test_initializeServer(getConfig(Transport.Type.CLEAR_NET));
+    }
+
+    @Override
+    protected long getTimeout() {
+        return 2;
+    }
 }

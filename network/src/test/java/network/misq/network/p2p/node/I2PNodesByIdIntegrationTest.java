@@ -15,13 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p;
+package network.misq.network.p2p.node;
 
-import network.misq.network.p2p.node.Address;
+import lombok.extern.slf4j.Slf4j;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.PubKey;
 
-import java.util.Map;
+// FIXME tests fail for unknown reasons (many changes in the code since test was written)
+@Slf4j
+public class I2PNodesByIdIntegrationTest extends BaseNodesByIdTest {
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey) {
+    // @Test
+    void test_messageRoundTrip() throws InterruptedException {
+        super.test_messageRoundTrip(getConfig(Transport.Type.I2P));
+    }
+
+    // @Test
+    void test_initializeServer() throws InterruptedException {
+        super.test_initializeServer(getConfig(Transport.Type.I2P));
+    }
+
+    @Override
+    protected long getTimeout() {
+        return numNodes * 30;
+    }
 }
