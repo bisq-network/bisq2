@@ -22,4 +22,5 @@ dependencies {
 }
 test {
     useJUnitPlatform()
+    exclude '**/**Integration*'
 }
