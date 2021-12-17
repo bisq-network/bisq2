@@ -19,5 +19,5 @@ package network.misq.common.data;
 
 import java.io.Serializable;
 
-public record Couple<A, B>(A first, B second) implements Serializable {
+public record Pair<A, B>(A first, B second) implements Serializable {
 }

@@ -18,7 +18,7 @@
 package network.misq.network.http.common;
 
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.data.Couple;
+import network.misq.common.data.Pair;
 import network.misq.common.util.StringUtils;
 
 import java.io.IOException;
@@ -53,7 +53,7 @@ public class ClearNetHttpClient extends BaseHttpClient {
     }
 
     @Override
-    protected String doRequest(String param, HttpMethod httpMethod, Optional<Couple<String, String>> optionalHeader) throws IOException {
+    protected String doRequest(String param, HttpMethod httpMethod, Optional<Pair<String, String>> optionalHeader) throws IOException {
         checkArgument(!hasPendingRequest, "We got called on the same HttpClient again while a request is still open.");
         hasPendingRequest = true;
 

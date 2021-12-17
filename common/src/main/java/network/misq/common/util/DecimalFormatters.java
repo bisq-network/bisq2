@@ -20,7 +20,7 @@ package network.misq.common.util;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import network.misq.common.data.Couple;
+import network.misq.common.data.Pair;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -44,7 +44,7 @@ public class DecimalFormatters {
     /**
      * Caches formatters which have the same parameters. We use formatters as stateless immutable objects.
      */
-    private static final LoadingCache<Couple<Locale, Integer>, Format> decimalFormatCache = CacheBuilder.newBuilder()
+    private static final LoadingCache<Pair<Locale, Integer>, Format> decimalFormatCache = CacheBuilder.newBuilder()
             .build(CacheLoader.from(DecimalFormatters::getDecimalFormat));
 
     /**
@@ -53,12 +53,12 @@ public class DecimalFormatters {
      * @return Returns cached DecimalFormat object.
      */
     public static Format getDecimalFormat(Locale locale, int precision) {
-        return decimalFormatCache.getUnchecked(new Couple<>(locale, precision));
+        return decimalFormatCache.getUnchecked(new Pair<>(locale, precision));
     }
 
-    private static Format getDecimalFormat(Couple<Locale, Integer> couple) {
-        Locale locale = couple.first();
-        int precision = couple.second();
+    private static Format getDecimalFormat(Pair<Locale, Integer> pair) {
+        Locale locale = pair.first();
+        int precision = pair.second();
         DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
         if (precision > 0) {
             decimalFormat.applyPattern(getPattern(precision));
