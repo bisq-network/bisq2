@@ -54,7 +54,8 @@ public class FileUtils {
     }
 
     /**
-     * The `File.deleteOnExit` method is not suited for long running processes as it never removes the added files, thus leading to a memory leak.
+     * The `File.deleteOnExit` method is not suited for long-running processes as it never removes the added files,
+     * thus leading to a memory leak.
      * See: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6664633
      * We added our own extended DeleteOnExitHook where we added a remove method. The client is responsible to call that
      * `remove` method via `releaseTempFile` once the file should be deleted.

@@ -15,20 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.common.util;
+package network.misq.common.threading;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class ThreadingUtils {
+public class ExecutorFactory {
+    public static final ExecutorService GLOBAL_WORK_STEALING_POOL = Executors.newWorkStealingPool();
+    public static final AtomicInteger counter = new AtomicInteger(0);
 
     public static void shutdownAndAwaitTermination(ExecutorService executor) {
-        MoreExecutors.shutdownAndAwaitTermination(executor, 10, TimeUnit.MILLISECONDS);
+        //noinspection UnstableApiUsage
+        MoreExecutors.shutdownAndAwaitTermination(executor, 100, TimeUnit.MILLISECONDS);
     }
 
     public static void shutdownAndAwaitTermination(ExecutorService executor, long timeout, TimeUnit unit) {
+        //noinspection UnstableApiUsage
         MoreExecutors.shutdownAndAwaitTermination(executor, timeout, unit);
     }
 
@@ -42,7 +47,7 @@ public class ThreadingUtils {
 
     public static ExecutorService getSingleThreadExecutor(String name) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name)
+                .setNameFormat(name + getId())
                 .setDaemon(true)
                 .build();
         return Executors.newSingleThreadExecutor(threadFactory);
@@ -54,12 +59,16 @@ public class ThreadingUtils {
                                                             long keepAliveTimeInSec,
                                                             BlockingQueue<Runnable> workQueue) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name)
+                .setNameFormat(name + getId())
                 .setDaemon(true)
                 .build();
         ThreadPoolExecutor executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
                 TimeUnit.SECONDS, workQueue, threadFactory);
         executor.allowCoreThreadTimeOut(true);
         return executor;
+    }
+
+    private static String getId() {
+        return "-" + counter.incrementAndGet();
     }
 }

@@ -17,10 +17,25 @@
 
 package network.misq.common.timer;
 
-public interface MisqTimer {
-    MisqTimer runLater(long delay, Runnable action);
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
-    MisqTimer runPeriodically(long interval, Runnable runnable);
+public interface TaskScheduler {
+    TaskScheduler withExecutor(ExecutorService executor);
+
+    TaskScheduler after(long delayMs);
+
+    TaskScheduler after(long delay, TimeUnit timeUnit);
+
+    TaskScheduler periodically(long delayMs);
+
+    TaskScheduler periodically(long delay, TimeUnit timeUnit);
+
+    TaskScheduler repeated(long delayMs, long cycles);
+
+    TaskScheduler repeated(long delay, TimeUnit timeUnit, long cycles);
 
     void stop();
+
+    long getCounter();
 }

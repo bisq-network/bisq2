@@ -32,11 +32,11 @@ public class DecimalFormatters {
      */
     public record Format(java.text.DecimalFormat decimalFormat) {
 
-        public final String format(long number) {
+        public String format(long number) {
             return decimalFormat.format(number);
         }
 
-        public final String format(double number) {
+        public String format(double number) {
             return decimalFormat.format(number);
         }
     }

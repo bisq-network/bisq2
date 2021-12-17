@@ -49,7 +49,7 @@ public class MonetaryTest {
         });
 
         assertEquals(12345678, Coin.parse("0.12345678 BTC").getValue());
-        // We do not check the crypto currency code as we do not want to be constrained
+        // We do not check the crypto-currency code as we do not want to be constrained
         assertEquals(12345678, Coin.parse("0.12345678 UNDEFINED").getValue());
         assertEquals(123456780000L, Coin.parse("0.12345678 XMR").getValue());
         Assertions.assertThrows(IllegalArgumentException.class, () -> {

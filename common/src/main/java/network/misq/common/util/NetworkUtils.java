@@ -36,6 +36,7 @@ public class NetworkUtils {
     }
 
     public static boolean isClearNetAddress(String host) {
+        //noinspection UnstableApiUsage
         return InetAddresses.isInetAddress(host);
     }
 
