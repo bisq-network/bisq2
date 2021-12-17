@@ -17,36 +17,29 @@
 
 package network.misq.tor;
 
-import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.TorControlConnection;
+import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.util.FileUtils;
 import network.misq.common.util.NetworkUtils;
-import network.misq.common.util.ThreadingUtils;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
+import java.util.Set;
+import java.util.concurrent.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static network.misq.tor.Constants.*;
 
 @Slf4j
 public class TorServerSocket extends ServerSocket {
-
     private final String hsDirPath;
     private final TorController torController;
-
+    private final Set<ExecutorService> executors = new CopyOnWriteArraySet<>();
     private Optional<OnionAddress> onionAddress = Optional.empty();
-    @Nullable
-    private ExecutorService executor;
 
     public TorServerSocket(String torDirPath, TorController torController) throws IOException {
         this.hsDirPath = torDirPath + File.separator + HS_DIR;
@@ -58,19 +51,17 @@ public class TorServerSocket extends ServerSocket {
     }
 
     public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort, String id) {
-        return bindAsync(hiddenServicePort, NetworkUtils.findFreeSystemPort(), id, getAndSetExecutor());
+        ExecutorService executor = ExecutorFactory.getSingleThreadExecutor("TorServerSocket.bindAsync");
+        executors.add(executor);
+        return bindAsync(hiddenServicePort, NetworkUtils.findFreeSystemPort(), id, executor);
     }
 
     public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort,
                                                      int localPort,
                                                      String id,
-                                                     @Nullable Executor executor) {
+                                                     Executor executor) {
         CompletableFuture<OnionAddress> future = new CompletableFuture<>();
-        if (executor == null) {
-            executor = MoreExecutors.directExecutor();
-        }
         executor.execute(() -> {
-            Thread.currentThread().setName("TorServerSocket.bind");
             try {
                 bind(hiddenServicePort, localPort, id);
                 checkArgument(onionAddress.isPresent(), "onionAddress must be present");
@@ -84,7 +75,6 @@ public class TorServerSocket extends ServerSocket {
 
     // Blocking
     public void bind(int hiddenServicePort, int localPort, String id) throws IOException, InterruptedException {
-        log.debug("Start bind TorServerSocket");
         long ts = System.currentTimeMillis();
         File dir = new File(hsDirPath, id);
         File hostNameFile = new File(dir.getCanonicalPath(), HOSTNAME);
@@ -139,17 +129,11 @@ public class TorServerSocket extends ServerSocket {
             } catch (IOException ignore) {
             }
         });
-        if (executor != null) {
-            ThreadingUtils.shutdownAndAwaitTermination(executor);
-        }
+
+        executors.forEach(ExecutorFactory::shutdownAndAwaitTermination);
     }
 
     public Optional<OnionAddress> getOnionAddress() {
         return onionAddress;
-    }
-
-    private ExecutorService getAndSetExecutor() {
-        executor = ThreadingUtils.getSingleThreadExecutor("TorServerSocket.bindAsync");
-        return executor;
     }
 }

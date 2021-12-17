@@ -46,7 +46,6 @@ class Bootstrap {
     private final OsType osType;
 
     private volatile boolean isStopped;
-    private final Object isStoppedLock = new Object();
 
     Bootstrap(String torDirPath) {
         this.torDirPath = torDirPath;
@@ -247,8 +246,6 @@ class Bootstrap {
     }
 
     void shutdown() {
-        synchronized (isStoppedLock) {
-            isStopped = true;
-        }
+        isStopped = true;
     }
 }

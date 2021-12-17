@@ -36,6 +36,8 @@ abstract class AbstractTorTest {
     protected static OnionAddress onionAddress;
     protected static boolean isShutdown = false;
     protected static String expectedMessage;
+    protected static long sendTs;
+    protected static long startConnectionTs;
 
     protected final Supplier<String> torTestDirPathSpec = () ->
             OsUtils.getUserDataDir() + File.separator + this.getClass().getSimpleName();
@@ -139,6 +141,7 @@ abstract class AbstractTorTest {
                         message,
                         connectionType.name().toLowerCase());
                 if (connectionType.equals(ConnectionType.INBOUND)) {
+                    log.info("Received message after {} ms", System.currentTimeMillis() - sendTs);
                     if (!message.equals(expectedMessage)) {
                         fail(format("Did not read expected message from input stream.  Was '%s', expected '%s'",
                                 expectedMessage,
@@ -165,6 +168,7 @@ abstract class AbstractTorTest {
 
     protected void sendViaSocket(Tor tor, OnionAddress onionAddress) {
         try {
+            startConnectionTs = System.currentTimeMillis();
             Socket socket = tor.getSocket(TEST_STREAM_ID);
             socket.connect(new InetSocketAddress(onionAddress.getHost(), onionAddress.getPort()));
             sendOnOutboundConnection(socket, "Message via Socket");
@@ -175,6 +179,7 @@ abstract class AbstractTorTest {
 
     protected void sendViaSocksSocket(Tor tor, OnionAddress onionAddress) {
         try {
+            startConnectionTs = System.currentTimeMillis();
             SocksSocket socket = tor.getSocksSocket(onionAddress.getHost(), onionAddress.getPort(), TEST_STREAM_ID);
             sendOnOutboundConnection(socket, "Message via SocksSocket");
         } catch (IOException ex) {
@@ -184,6 +189,7 @@ abstract class AbstractTorTest {
 
     protected void sendViaSocketFactory(Tor tor, OnionAddress onionAddress) {
         try {
+            startConnectionTs = System.currentTimeMillis();
             SocketFactory socketFactory = tor.getSocketFactory(TEST_STREAM_ID);
             Socket socket = socketFactory.createSocket(onionAddress.getHost(), onionAddress.getPort());
             sendOnOutboundConnection(socket, "Message via SocketFactory");
@@ -194,6 +200,7 @@ abstract class AbstractTorTest {
 
     protected void sendViaProxy(Tor tor, OnionAddress onionAddress) {
         try {
+            startConnectionTs = System.currentTimeMillis();
             Proxy proxy = tor.getProxy(TEST_STREAM_ID);
             Socket socket = new Socket(proxy);
             socket.connect(new InetSocketAddress(onionAddress.getHost(), onionAddress.getPort()));
@@ -204,8 +211,10 @@ abstract class AbstractTorTest {
     }
 
     protected void sendOnOutboundConnection(Socket socket, String message) {
+        log.info("Connection established after {} ms", System.currentTimeMillis() - startConnectionTs);
         log.info("sendOnOutboundConnection: '{}'", message);
         new Thread(() -> {
+            sendTs = System.currentTimeMillis();
             try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
                  ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream())) {
                 objectOutputStream.writeObject(message);

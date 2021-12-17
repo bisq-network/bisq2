@@ -17,20 +17,22 @@
 
 package network.misq;
 
-import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.FileUtils;
 import network.misq.common.util.OsUtils;
 import network.misq.tor.Constants;
 import network.misq.tor.Tor;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@Slf4j
+
 public class TorIntegrationTest {
+    private static final Logger log = LoggerFactory.getLogger(TorIntegrationTest.class);
 
     @Test
     public void testShutdownDuringStartup() {

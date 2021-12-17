@@ -43,7 +43,6 @@ public class TorController {
     private final TorEventHandler torEventHandler = new TorEventHandler();
     private boolean isStarted;
     private volatile boolean isStopped;
-    private final Object isStoppedLock = new Object();
     private volatile boolean isTorEventHandlerSet;
     private final Object isTorEventHandlerSetLock = new Object();
 
@@ -52,6 +51,7 @@ public class TorController {
     }
 
     void start(int controlPort) throws IOException {
+        isStopped = false;
         controlSocket = new Socket("127.0.0.1", controlPort);
         torControlConnection = new TorControlConnection(controlSocket);
         torControlConnection.authenticate(FileUtils.asBytes(cookieFile));
@@ -82,9 +82,7 @@ public class TorController {
     }
 
     void shutdown() {
-        synchronized (isStoppedLock) {
-            isStopped = true;
-        }
+        isStopped = true;
 
         try {
             if (torControlConnection != null) {
@@ -104,6 +102,7 @@ public class TorController {
             } finally {
                 controlSocket = null;
                 torControlConnection = null;
+                isTorEventHandlerSet = false;
             }
         }
     }
