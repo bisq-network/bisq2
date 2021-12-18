@@ -40,7 +40,7 @@ public class Scheduler implements TaskScheduler, TickEmitter.Listener {
     private volatile boolean stopped;
     private long startTs;
     private long interval;
-    private Optional<CompletableFuture<Void>> future = Optional.empty();
+    private Optional<Future<?>> future = Optional.empty();
 
     @Getter
     private long counter;
@@ -109,25 +109,16 @@ public class Scheduler implements TaskScheduler, TickEmitter.Listener {
             return;
         }
 
-        if (System.currentTimeMillis() - startTs >= interval) {
-            if (future.isPresent()) {
-                if (!future.get().isDone()) {
-                    return;
-                }
+        if (now - startTs >= interval) {
+            if (future.isPresent() && !future.get().isDone()) {
+                return;
             }
-
-            future = Optional.of(CompletableFuture.runAsync(() -> {
+            future = Optional.of(executor.submit(() -> {
                 if (stopped) {
                     return;
                 }
                 try {
                     task.run();
-                } catch (CancellationException ignore) {
-                } catch (CompletionException e) {
-                    stop();
-                } catch (Throwable t) {
-                    log.error("Running scheduled task failed", t);
-                    stop();
                 } finally {
                     counter++;
                     if (counter >= cycles) {
@@ -138,7 +129,7 @@ public class Scheduler implements TaskScheduler, TickEmitter.Listener {
                         startTs = System.currentTimeMillis();
                     }
                 }
-            }, executor));
+            }));
         }
     }
 }
