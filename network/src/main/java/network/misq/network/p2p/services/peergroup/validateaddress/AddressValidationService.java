@@ -112,12 +112,11 @@ public class AddressValidationService implements Node.Listener {
 
     @Override
     public void onDisconnect(Connection connection) {
-        Address peerAddress = connection.getPeerAddress();
         String key = connection.getId();
         if (requestHandlerMap.containsKey(key)) {
             requestHandlerMap.get(key).dispose();
             requestHandlerMap.remove(key);
-            requesters.remove(key);
         }
+        requesters.remove(key);
     }
 }

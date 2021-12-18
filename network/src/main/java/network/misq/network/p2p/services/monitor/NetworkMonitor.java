@@ -141,8 +141,8 @@ public class NetworkMonitor {
                 Transport.Type.CLEAR_NET, new PeerGroupService.Config(peerGroupConfig,
                         peerExchangeStrategyConfig,
                         keepAliveServiceConfig,
-                        TimeUnit.SECONDS.toMillis(10),   //bootstrapTime
-                        TimeUnit.SECONDS.toMillis(10),  //interval
+                        TimeUnit.SECONDS.toMillis(5),   //bootstrapTime
+                        TimeUnit.SECONDS.toMillis(5),  //interval
                         TimeUnit.SECONDS.toMillis(10),  //timeout
                         100,                        //maxReported
                         100,                        //maxPersisted

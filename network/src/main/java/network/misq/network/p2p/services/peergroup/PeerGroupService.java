@@ -178,9 +178,11 @@ public class PeerGroupService {
      */
     private CompletableFuture<List<Connection>> maybeCloseConnections() {
         // log.debug("Node {} called maybeCloseConnections", node);
-        int targetNumConnectedPeers = peerGroup.getTargetNumConnectedPeers();
+        int maxNumConnectedPeers = peerGroup.getMaxNumConnectedPeers();
         int numAllConnections = peerGroup.getNumConnections();
-        int exceeding = numAllConnections - targetNumConnectedPeers;
+        int exceedingTotal = numAllConnections - maxNumConnectedPeers;
+        int missingOutboundConnections = getMissingOutboundConnections();
+        int exceeding = Math.max(exceedingTotal, missingOutboundConnections);
         if (exceeding <= 0) {
             return CompletableFuture.completedFuture(new ArrayList<>());
         }
@@ -208,9 +210,9 @@ public class PeerGroupService {
             }
         }
         if (!candidates.isEmpty()) {
-            log.info("Node {} has {} connections. Our connections target is {}. " +
+            log.info("Node {} has {} connections. Our max connections target is {}. " +
                             "We close {} connections.",
-                    node, numAllConnections, targetNumConnectedPeers, candidates.size());
+                    node, numAllConnections, maxNumConnectedPeers, candidates.size());
         }
         return CompletableFutureUtils.allOf(candidates.stream()
                         .filter(Connection::isRunning)
@@ -224,10 +226,8 @@ public class PeerGroupService {
     private CompletableFuture<Void> maybeCreateConnections() {
         // log.debug("Node {} called maybeCreateConnections", node);
         int minNumConnectedPeers = peerGroup.getMinNumConnectedPeers();
-        int numOutboundConnections = peerGroup.getOutboundConnections().size();
         // We want to have at least 40% of our minNumConnectedPeers as outbound connections 
-        int missingOutboundConnections = MathUtils.roundDoubleToInt(minNumConnectedPeers * 0.4) - numOutboundConnections;
-        if (missingOutboundConnections <= 0) {
+        if (getMissingOutboundConnections() <= 0) {
             // We have enough outbound connections, lets check if we have sufficient connections in total
             int numAllConnections = peerGroup.getNumConnections();
             int missing = minNumConnectedPeers - numAllConnections;
@@ -242,6 +242,10 @@ public class PeerGroupService {
         log.info("Node {} has not sufficient connections and calls peerExchangeService.doFurtherPeerExchange", node);
         return peerExchangeService.doFurtherPeerExchange()
                 .orTimeout(config.timeout(), TimeUnit.MILLISECONDS);
+    }
+
+    private int getMissingOutboundConnections() {
+        return MathUtils.roundDoubleToInt(peerGroup.getMinNumConnectedPeers() * 0.4) - peerGroup.getOutboundConnections().size();
     }
 
     private void maybeRemoveReportedPeers() {

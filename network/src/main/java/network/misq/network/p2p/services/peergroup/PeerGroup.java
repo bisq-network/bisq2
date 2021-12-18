@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.network.p2p.node.*;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
@@ -112,6 +113,7 @@ public class PeerGroup {
     }
 
     public String getInfo() {
+
         int numSeedConnections = (int) getAllConnectionsAsStream()
                 .filter(connection -> isASeed(connection.getPeerAddress())).count();
         StringBuilder sb = new StringBuilder();
@@ -123,11 +125,23 @@ public class PeerGroup {
                 .append("\n").append("Num inbound connections: ").append(inboundConnections.size())
                 .append("\n").append("Num seed connections: ").append(numSeedConnections)
                 .append("\n").append("Connections: ").append("\n");
-        outboundConnections.values().forEach(connection -> sb.append(node).append(" --> ").append(connection.getPeerAddress()).append("\n"));
-        inboundConnections.values().forEach(connection -> sb.append(node).append(" <-- ").append(connection.getPeerAddress()).append("\n"));
+        outboundConnections.values().stream()
+                .sorted(Comparator.comparing(c -> c.getMetrics().getCreationDate()))
+                .forEach(connection -> printConnectionInfo(sb, connection, true));
+        inboundConnections.values().stream()
+                .sorted(Comparator.comparing(c -> c.getMetrics().getCreationDate()))
+                .forEach(connection -> printConnectionInfo(sb, connection, false));
         sb.append("\n").append("Reported peers: ").append(reportedPeers.stream().map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
         sb.append("\n").append("Persisted peers: ").append(persistedPeers.stream().map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
         return sb.append("\n").toString();
+    }
+
+    private void printConnectionInfo(StringBuilder sb, Connection connection, boolean isOutbound) {
+        String date = " at " + new SimpleDateFormat("HH:mm:ss.SSS").format(connection.getMetrics().getCreationDate());
+        String peerAddressVerified = connection.isPeerAddressVerified() ? " !]" : " ?]";
+        String peerAddress = connection.getPeerAddress().toString().replace("]", peerAddressVerified);
+        String dir = isOutbound ? " --> " : " <-- ";
+        sb.append(node).append(dir).append(peerAddress).append(date).append("\n");
     }
 
     // Delegates

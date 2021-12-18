@@ -32,6 +32,7 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.CompletableFutureUtils;
+import network.misq.common.util.MathUtils;
 import network.misq.common.util.StringUtils;
 import network.misq.desktop.common.threading.UIThread;
 import network.misq.network.NetworkService;
@@ -44,15 +45,16 @@ import network.misq.network.p2p.services.monitor.NetworkMonitor;
 import network.misq.network.p2p.services.peergroup.PeerGroup;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class NetworkMonitorUI extends Application {
-    private Address myAddress;
     private NetworkMonitor networkMonitor;
     private FlowPane seedsPane, nodesPane;
     private TextArea nodeInfoTextArea, eventTextArea;
@@ -190,39 +192,33 @@ public class NetworkMonitorUI extends Application {
 
                 @Override
                 public void onConnection(Connection connection) {
-                    UIThread.run(() -> {
-                        String dir = connection.isOutboundConnection() ? " -> " : " <- ";
-                        String info = "\n+ onConnection " + node + dir + connection.getPeerAddress();
-                        eventTextArea.appendText(info);
-
-                        Address key = node.findMyAddress().get();
-                        String prev = connectionInfoByAddress.get(key);
-                        if (prev == null) {
-                            prev = "";
-                        }
-                        connectionInfoByAddress.put(key, prev + info);
-                        refreshNodeInfo(node, networkService);
-                    });
+                    UIThread.run(() -> printConnectionInfo(connection, node, networkService, true));
                 }
 
                 @Override
                 public void onDisconnect(Connection connection) {
-                    UIThread.run(() -> {
-                        String dir = connection.isOutboundConnection() ? " -> " : " <- ";
-                        String info = "\n- onDisconnect " + node + dir + connection.getPeerAddress();
-                        eventTextArea.appendText(info);
-
-                        Address key = node.findMyAddress().get();
-                        String prev = connectionInfoByAddress.get(key);
-                        if (prev == null) {
-                            prev = "";
-                        }
-                        connectionInfoByAddress.put(key, prev + info);
-                        refreshNodeInfo(node, networkService);
-                    });
+                    UIThread.run(() -> printConnectionInfo(connection, node, networkService, false));
                 }
             });
         });
+    }
+
+    private void printConnectionInfo(Connection connection, Node node, NetworkService networkService, boolean calledFromOnConnection) {
+        String now = " at " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
+        String dir = connection.isOutboundConnection() ? " --> " : " <-- ";
+        String peerAddressVerified = connection.isPeerAddressVerified() ? " !]" : " ?]";
+        String peerAddress = connection.getPeerAddress().toString().replace("]", peerAddressVerified);
+        String tag = calledFromOnConnection ? "\n+ onConnection " : "\n- onDisconnect ";
+        String info = tag + node + dir + peerAddress + now;
+        eventTextArea.appendText(info);
+
+        Address key = node.findMyAddress().get();
+        String prev = connectionInfoByAddress.get(key);
+        if (prev == null) {
+            prev = "";
+        }
+        connectionInfoByAddress.put(key, prev + info);
+        refreshNodeInfo(node, networkService);
     }
 
     private CompletableFuture<Boolean> doStart(List<Address> addresses,
@@ -300,6 +296,7 @@ public class NetworkMonitorUI extends Application {
         start.setOnAction((event) -> {
             networkService.init();
             networkService.bootstrap(port);
+            setupConnectionListener(networkService);
         });
         MenuItem stop = new MenuItem("Stop");
         stop.setOnAction((event) -> {
@@ -310,7 +307,22 @@ public class NetworkMonitorUI extends Application {
 
         networkService.findDefaultNode(networkMonitor.getTransportType())
                 .flatMap(Node::findMyAddress)
-                .ifPresent(address -> nodeInfoTextArea.appendText("\nConnection History:" + connectionInfoByAddress.get(address)));
+                .ifPresent(address -> {
+                    String connectionInfo = connectionInfoByAddress.get(address);
+                    long nunOnConnection = Stream.of(connectionInfo.split("\\n")).filter(e -> e.startsWith("+ onConnection")).count();
+                    long numOnDisconnect = Stream.of(connectionInfo.split("\\n")).filter(e -> e.startsWith("- onDisconnect")).count();
+                    long open = nunOnConnection - numOnDisconnect;
+                    double churnRate = nunOnConnection != 0 ?
+                            100 - MathUtils.roundDouble(open / (double) nunOnConnection * 100, 2) :
+                            0;
+                    String churn = "\nChurn: Churn rate=" + churnRate +
+                            "%; Open connections=" + open +
+                            "; Num OnConnection=" + nunOnConnection +
+                            "; Num OnDisconnect=" + numOnDisconnect +
+                            "\n\nConnection History:\n";
+                    nodeInfoTextArea.appendText(churn);
+                    nodeInfoTextArea.appendText(connectionInfo);
+                });
 
         nodeInfoTextArea.positionCaret(0);
     }
