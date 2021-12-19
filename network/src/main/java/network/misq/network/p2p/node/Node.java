@@ -107,7 +107,6 @@ public class Node implements Connection.Handler {
     // Server
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-
     public CompletableFuture<Transport.ServerSocketResult> initializeServer(int port) {
         return transport.initialize()
                 .thenCompose(e -> createServerAndListen(port));
@@ -260,7 +259,7 @@ public class Node implements Connection.Handler {
             if (authorizationService.isAuthorized(authorizedMessage)) {
                 Message payLoadMessage = authorizedMessage.message();
                 if (payLoadMessage instanceof CloseConnectionMessage closeConnectionMessage) {
-                    log.debug("Node {} received CloseConnectionMessage with reason: {}", this, closeConnectionMessage.closeReason());
+                    log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this, connection.getPeerAddress(), closeConnectionMessage.closeReason());
                     closeConnection(connection, CLOSE_MSG_RECEIVED.details(closeConnectionMessage.closeReason().name()));
                 } else {
                     runAsync(() -> {
@@ -295,6 +294,12 @@ public class Node implements Connection.Handler {
         return connection.close(closeReason);
     }
 
+    public CompletableFuture<Connection> closeConnectionGracefully(Connection connection, CloseReason closeReason) {
+        return send(new CloseConnectionMessage(closeReason), connection)
+                .thenCompose(c -> connection.close(CLOSE_MSG_SENT.details(closeReason.name())))
+                .orTimeout(200, MILLISECONDS);
+    }
+
     public CompletableFuture<Void> shutdown() {
         log.info("Node {} shutdown", this);
         if (isStopped) {
@@ -302,35 +307,30 @@ public class Node implements Connection.Handler {
         }
         isStopped = true;
 
-        CountDownLatch latch = new CountDownLatch(outboundConnectionsByAddress.values().size() +
-                inboundConnectionsByAddress.size() +
-                ((int) server.stream().count())
-                + 1); // For transport
         return CompletableFuture.runAsync(() -> {
+            CountDownLatch latch = new CountDownLatch(outboundConnectionsByAddress.values().size() +
+                    inboundConnectionsByAddress.size() +
+                    ((int) server.stream().count())
+                    + 1); // For transport
             outboundConnectionsByAddress.values()
                     .forEach(connection -> closeConnectionGracefully(connection, SHUTDOWN)
-                            .whenComplete((v, t) -> latch.countDown()));
+                            .whenComplete((c, t) -> latch.countDown()));
             inboundConnectionsByAddress.values()
                     .forEach(connection -> closeConnectionGracefully(connection, SHUTDOWN)
-                            .whenComplete((v, t) -> latch.countDown()));
-            server.ifPresent(server -> server.shutdown().whenComplete((v, t) -> latch.countDown()));
-            transport.shutdown().whenComplete((v, t) -> latch.countDown());
-
+                            .whenComplete((c, t) -> latch.countDown()));
+            server.ifPresent(server -> server.shutdown().whenComplete((__, t) -> latch.countDown()));
+            transport.shutdown().whenComplete((__, t) -> latch.countDown());
             try {
-                latch.await(1, TimeUnit.SECONDS);
+                if (!latch.await(1, TimeUnit.SECONDS)) {
+                    log.warn("Shutdown interrupted by timeout");
+                }
             } catch (InterruptedException e) {
-                log.warn("Shutdown interrupted by timeout");
+                log.warn("Shutdown interrupted", e);
             }
             outboundConnectionsByAddress.clear();
             inboundConnectionsByAddress.clear();
             listeners.clear();
-        });
-    }
-
-    public CompletableFuture<Connection> closeConnectionGracefully(Connection connection, CloseReason closeReason) {
-        return send(new CloseConnectionMessage(closeReason), connection)
-                .thenCompose(c -> connection.close(CLOSE_MSG_SENT.details(closeReason.name())))
-                .orTimeout(200, MILLISECONDS);
+        }).orTimeout(1000, MILLISECONDS);
     }
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {

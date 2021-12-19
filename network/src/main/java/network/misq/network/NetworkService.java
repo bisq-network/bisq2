@@ -119,9 +119,11 @@ public class NetworkService {
             serviceNodesByTransport.shutdown().whenComplete((v, t) -> latch.countDown());
             httpService.shutdown().whenComplete((v, t) -> latch.countDown());
             try {
-                latch.await(1, TimeUnit.SECONDS);
+                if (!latch.await(1, TimeUnit.SECONDS)) {
+                    log.error("Shutdown interrupted by timeout");
+                }
             } catch (InterruptedException e) {
-                log.error("Shutdown interrupted by timeout");
+                log.error("Shutdown interrupted", e);
             }
         });
     }
@@ -152,5 +154,5 @@ public class NetworkService {
 
     public Optional<ServiceNode> findServiceNode(Transport.Type transport) {
         return serviceNodesByTransport.findServiceNode(transport);
-    } 
+    }
 }

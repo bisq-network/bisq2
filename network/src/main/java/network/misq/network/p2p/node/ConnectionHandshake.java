@@ -33,7 +33,6 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * At initial connection we exchange capabilities and require a valid AuthorizationToken (e.g. PoW).
@@ -42,7 +41,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class ConnectionHandshake {
-    private final static AtomicInteger ATOMIC_INTEGER = new AtomicInteger(0);
     private final Socket socket;
     private final BannList bannList;
     private final Capability capability;

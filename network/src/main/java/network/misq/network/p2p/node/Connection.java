@@ -99,9 +99,11 @@ public abstract class Connection {
         try {
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectInputStream = new ObjectInputStream(socket.getInputStream());
-        } catch (IOException e) {
-            log.error("Could not create objectOutputStream/objectInputStream", e);
-            errorHandler.accept(e);
+        } catch (IOException exception) {
+            log.error("Could not create objectOutputStream/objectInputStream", exception);
+            errorHandler.accept(exception);
+            close(CloseReason.EXCEPTION.exception(exception));
+            return;
         }
         ExecutorFactory.IO_POOL.execute(() -> {
             Thread.currentThread().setName("Connection-input-" + StringUtils.truncate(getThreadNameId()));

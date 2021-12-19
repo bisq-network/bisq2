@@ -19,6 +19,7 @@ package network.misq.network.p2p;
 
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import network.misq.common.util.CompletableFutureUtils;
 import network.misq.common.util.NetworkUtils;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
@@ -46,7 +47,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -240,17 +240,12 @@ public class ServiceNodesByTransport {
     }
 
     public CompletableFuture<Void> shutdown() {
-        CountDownLatch latch = new CountDownLatch(map.size());
-        return CompletableFuture.runAsync(() -> {
-            map.values()
-                    .forEach(serviceNode -> serviceNode.shutdown().whenComplete((v, t) -> latch.countDown()));
-            try {
-                latch.await(1, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                log.error("Shutdown interrupted by timeout");
-            }
-            map.clear();
-        });
+        return CompletableFutureUtils.allOf(map.values().stream().map(ServiceNode::shutdown))
+                .orTimeout(1, TimeUnit.SECONDS)
+                .thenApply(list -> {
+                    map.clear();
+                    return null;
+                });
     }
 
     public Map<Transport.Type, Map<String, Address>> findMyAddresses() {

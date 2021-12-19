@@ -69,12 +69,11 @@ public final class Server {
             return CompletableFuture.completedFuture(null);
         }
         isStopped = true;
-        return CompletableFuture.runAsync(() -> {
-            try {
-                serverSocket.close();
-            } catch (IOException ignore) {
-            }
-        });
+        try {
+            serverSocket.close();
+        } catch (IOException ignore) {
+        }
+        return CompletableFuture.completedFuture(null);
     }
 
     private boolean isNotStopped() {

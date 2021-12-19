@@ -18,6 +18,7 @@
 package network.misq.network.p2p.node;
 
 
+import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.peergroup.BannList;
@@ -93,17 +94,12 @@ public class NodesById implements Node.Listener {
     }
 
     public CompletableFuture<Void> shutdown() {
-        CountDownLatch latch = new CountDownLatch(map.size());
-        return CompletableFuture.runAsync(() -> {
-            map.values().forEach(node -> node.shutdown().whenComplete((v, t) -> latch.countDown()));
-
-            try {
-                latch.await(1, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                log.error("Shutdown interrupted by timeout");
-            }
-            map.clear();
-        });
+        return CompletableFutureUtils.allOf(map.values().stream().map(Node::shutdown))
+                .orTimeout(1, TimeUnit.SECONDS)
+                .thenApply(list -> {
+                    map.clear();
+                    return null;
+                });
     }
 
     public Optional<Address> findMyAddress(String nodeId) {

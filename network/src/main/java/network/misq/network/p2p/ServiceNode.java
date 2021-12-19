@@ -172,11 +172,12 @@ public class ServiceNode {
             dataService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
             relayService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
             monitorService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
-
             try {
-                latch.await(1, TimeUnit.SECONDS);
+                if (!latch.await(1, TimeUnit.SECONDS)) {
+                    log.error("Shutdown interrupted by timeout");
+                }
             } catch (InterruptedException e) {
-                log.error("Shutdown interrupted by timeout");
+                log.error("Shutdown interrupted", e);
             }
         });
     }

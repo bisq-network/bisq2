@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ExecutorFactory {
     public static final AtomicInteger COUNTER = new AtomicInteger(0);
     public static final ExecutorService WORK_STEALING_POOL = Executors.newWorkStealingPool();
-    public static final ExecutorService IO_POOL = getThreadPoolExecutor("IO-pool",
+    public static final ThreadPoolExecutor IO_POOL = getThreadPoolExecutor("IO_POOL",
             1,
             200,
             10,

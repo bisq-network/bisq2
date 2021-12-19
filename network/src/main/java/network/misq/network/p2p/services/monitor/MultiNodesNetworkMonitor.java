@@ -22,6 +22,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.data.Pair;
 import network.misq.common.util.CompletableFutureUtils;
+import network.misq.common.util.MathUtils;
 import network.misq.common.util.OsUtils;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.ServiceNode;
@@ -120,7 +121,7 @@ public class MultiNodesNetworkMonitor {
                         TimeUnit.SECONDS.toMillis(2),   //bootstrapTime
                         TimeUnit.SECONDS.toMillis(2),   //interval
                         TimeUnit.SECONDS.toMillis(5),  //timeout
-                        TimeUnit.SECONDS.toMillis(10),  //maxAge
+                        TimeUnit.MINUTES.toMillis(10),  //maxAge
                         100,                        //maxReported
                         100,                        //maxPersisted
                         4                              //maxSeeds
@@ -283,7 +284,20 @@ public class MultiNodesNetworkMonitor {
                                 .filter(serviceNode -> serviceNode.findMyDefaultAddresses().isPresent()))
                 .map(serviceNode -> {
                     String peerGroupInfo = serviceNode.getMonitorService().get().getPeerGroupInfo();
-                    String connectionInfo = connectionInfoByAddress.get(serviceNode.findMyDefaultAddresses().get());
+                    String connectionInfo = Optional.ofNullable(connectionInfoByAddress.get(serviceNode.findMyDefaultAddresses().get()))
+                            .map(conInfo -> {
+                                long nunOnConnection = Stream.of(conInfo.split("\\n")).filter(e -> e.startsWith("+ onConnection")).count();
+                                long numOnDisconnect = Stream.of(conInfo.split("\\n")).filter(e -> e.startsWith("- onDisconnect")).count();
+                                long open = nunOnConnection - numOnDisconnect;
+                                double churnRate = nunOnConnection != 0 ?
+                                        100 - MathUtils.roundDouble(open / (double) nunOnConnection * 100, 2) :
+                                        0;
+                                return "\nChurn rate=" + churnRate +
+                                        "%; Open connections=" + open +
+                                        "; Num OnConnection=" + nunOnConnection +
+                                        "; Num OnDisconnect=" + numOnDisconnect +
+                                        "\n\nConnection History:\n" + conInfo;
+                            }).orElse("");
                     return peerGroupInfo + connectionInfo;
                 })
                 .orElse("");
