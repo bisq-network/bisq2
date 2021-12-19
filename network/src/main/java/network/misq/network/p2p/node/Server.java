@@ -26,28 +26,26 @@ import network.misq.network.p2p.node.transport.Transport;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 @Slf4j
 public final class Server {
     private final ServerSocket serverSocket;
-    private final ExecutorService executorService = ExecutorFactory.getSingleThreadExecutor("Server");
     @Getter
     private final Address address;
     private volatile boolean isStopped;
+    private static BlockingQueue<Runnable> q = new ArrayBlockingQueue<>(20);
+    private static ThreadPoolExecutor ex = new ThreadPoolExecutor(4, 10, 20, TimeUnit.SECONDS, q);
 
     Server(Transport.ServerSocketResult serverSocketResult, Consumer<Socket> socketHandler, Consumer<Exception> exceptionHandler) {
         serverSocket = serverSocketResult.serverSocket();
         address = serverSocketResult.address();
         log.debug("Create server: {}", serverSocketResult);
-        executorService.execute(() -> {
+        ExecutorFactory.IO_POOL.execute(() -> {
             Thread.currentThread().setName("Server-" +
                     StringUtils.truncate(serverSocketResult.nodeId()) + "-" +
                     StringUtils.truncate(serverSocketResult.address().toString()));
-
             try {
                 while (isNotStopped()) {
                     Socket socket = serverSocket.accept();
@@ -72,7 +70,6 @@ public final class Server {
         }
         isStopped = true;
         return CompletableFuture.runAsync(() -> {
-            ExecutorFactory.shutdownAndAwaitTermination(executorService, 100, TimeUnit.MILLISECONDS);
             try {
                 serverSocket.close();
             } catch (IOException ignore) {

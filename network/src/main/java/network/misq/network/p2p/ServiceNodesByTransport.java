@@ -79,14 +79,7 @@ public class ServiceNodesByTransport {
         this.seedNodeRepository = seedNodeRepository;
         this.dataServiceConfig = dataServiceConfig;
         this.keyPairRepository = keyPairRepository;
-    }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public void init() {
         long socketTimeout = TimeUnit.MINUTES.toMillis(5);
         ConfidentialService.Config confMsgServiceConfig = new ConfidentialService.Config(keyPairRepository);
         supportedTransportTypes.forEach(transportType -> {
@@ -107,6 +100,11 @@ public class ServiceNodesByTransport {
             map.put(transportType, serviceNode);
         });
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> bootstrap() {
         return bootstrap(null);

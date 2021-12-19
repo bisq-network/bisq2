@@ -22,7 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.threading.ExecutorFactory;
 
 import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Global scheduler which is triggered by the TickEmitter.onTick calls every 10 ms.
@@ -33,8 +36,9 @@ import java.util.concurrent.*;
  */
 @Slf4j
 public class Scheduler implements TaskScheduler, TickEmitter.Listener {
+    public static final AtomicInteger COUNTER = new AtomicInteger(0);
     private Runnable task;
-    private ExecutorService executor = ExecutorFactory.GLOBAL_WORK_STEALING_POOL;
+    private ExecutorService executor = ExecutorFactory.WORK_STEALING_POOL;
     private long cycles;
 
     private volatile boolean stopped;
@@ -114,6 +118,7 @@ public class Scheduler implements TaskScheduler, TickEmitter.Listener {
                 return;
             }
             future = Optional.of(executor.submit(() -> {
+                Thread.currentThread().setName("Scheduler-" + COUNTER.incrementAndGet());
                 if (stopped) {
                     return;
                 }

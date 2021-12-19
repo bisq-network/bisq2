@@ -20,6 +20,7 @@ package network.misq.network.p2p.services.peergroup.keepalive;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.timer.Scheduler;
 import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.services.peergroup.PeerGroup;
@@ -53,7 +54,7 @@ public class KeepAliveService implements Node.Listener {
     }
 
     private void sendPingIfRequired() {
-        peerGroup.getAllConnectionsAsStream()
+        peerGroup.getAllConnections()
                 .filter(this::isRequired)
                 .forEach(this::sendPing);
     }
@@ -95,7 +96,7 @@ public class KeepAliveService implements Node.Listener {
     }
 
     @Override
-    public void onDisconnect(Connection connection) {
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
         String key = connection.getId();
         if (requestHandlerMap.containsKey(key)) {
             requestHandlerMap.get(key).dispose();

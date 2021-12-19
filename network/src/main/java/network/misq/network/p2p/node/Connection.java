@@ -36,6 +36,8 @@ import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
+import static java.util.concurrent.CompletableFuture.runAsync;
+
 /**
  * Represents an inbound or outbound connection to a peer node.
  * Listens for messages from the peer.
@@ -45,16 +47,17 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public abstract class Connection {
-    interface Handler {
-        void onMessage(Message messag, Connection connection);
 
-        void onConnectionClosed(Connection connection);
+    interface Handler {
+        void onMessage(Message message, Connection connection);
+
+        void onConnectionClosed(Connection connection, CloseReason closeReason);
     }
 
     public interface Listener {
         void onMessage(Message message);
 
-        void onConnectionClosed();
+        void onConnectionClosed(CloseReason closeReason);
     }
 
 
@@ -70,8 +73,6 @@ public abstract class Connection {
     private final Socket socket;
     private final Handler handler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
-    private ExecutorService writeExecutor;
-    private ExecutorService readExecutor;
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
     @Getter
@@ -89,8 +90,6 @@ public abstract class Connection {
     }
 
     void startListen(Consumer<Exception> errorHandler) {
-        writeExecutor = ExecutorFactory.getSingleThreadExecutor("Connection.outputExecutor-" + getThreadNameId());
-        readExecutor = ExecutorFactory.getSingleThreadExecutor("Connection.inputHandler-" + getThreadNameId());
 
         // TODO java serialisation is just for dev, will be replaced by custom serialisation
         // Type-Length-Value Format is considered to be used:
@@ -104,7 +103,8 @@ public abstract class Connection {
             log.error("Could not create objectOutputStream/objectInputStream", e);
             errorHandler.accept(e);
         }
-        readExecutor.execute(() -> {
+        ExecutorFactory.IO_POOL.execute(() -> {
+            Thread.currentThread().setName("Connection-input-" + StringUtils.truncate(getThreadNameId()));
             try {
                 while (isNotStopped()) {
                     Object msg = objectInputStream.readObject();
@@ -113,19 +113,19 @@ public abstract class Connection {
                         if (!(msg instanceof Envelope envelope)) {
                             throw new ConnectionException("Received message not type of Envelope. " + simpleName);
                         }
-                        if (envelope.getVersion() != Version.VERSION) {
+                        if (envelope.version() != Version.VERSION) {
                             throw new ConnectionException("Invalid network version. " + simpleName);
                         }
                         log.debug("Received message: {} at: {}", envelope, toString());
-                        metrics.received(envelope.getPayload());
-                        handler.onMessage(envelope.getPayload(), this);
+                        metrics.received(envelope.payload());
+                        handler.onMessage(envelope.payload(), this);
                     }
                 }
             } catch (Exception exception) {
                 //todo StreamCorruptedException from i2p at shutdown. prob it send some text data at shut down
                 if (!isStopped) {
                     log.debug("Call shutdown from startListen read handler {} due exception={}", this, exception.toString());
-                    shutdown();
+                    close(CloseReason.EXCEPTION.exception(exception));
                     // EOFException expected if connection got closed
                     if (!(exception instanceof EOFException)) {
                         errorHandler.accept(exception);
@@ -144,7 +144,8 @@ public abstract class Connection {
 
         return CompletableFuture.supplyAsync(() -> {
             try {
-                Envelope envelope = new Envelope(message);
+                Thread.currentThread().setName("Connection-output-" + StringUtils.truncate(getThreadNameId()));
+                Envelope envelope = new Envelope(message, Version.VERSION);
                 objectOutputStream.writeObject(envelope);
                 objectOutputStream.flush();
                 metrics.sent(message);
@@ -154,37 +155,40 @@ public abstract class Connection {
             } catch (IOException exception) {
                 if (!isStopped) {
                     log.debug("Call shutdown from send {} due exception={}", this, exception.toString());
-                    shutdown();
+                    close(CloseReason.EXCEPTION.exception(exception));
                 }
                 // We wrap any exception (also expected EOFException in case of connection close), to inform the caller 
                 // that the "send message" intent failed.
                 throw new CompletionException(exception);
             }
-        }, writeExecutor);
+        }, ExecutorFactory.IO_POOL);
     }
 
-    CompletableFuture<Void> shutdown() {
+    CompletableFuture<Connection> shutdown() {
+        return close(CloseReason.SHUTDOWN);
+    }
+
+    CompletableFuture<Connection> close(CloseReason closeReason) {
         if (isStopped) {
             log.debug("Shut down already in progress {}", this);
-            return CompletableFuture.completedFuture(null);
+            return CompletableFuture.completedFuture(this);
         }
         log.debug("Shut down {}", this);
         isStopped = true;
-        handler.onConnectionClosed(this);
-        listeners.forEach(Connection.Listener::onConnectionClosed);
-        listeners.clear();
-        return CompletableFuture.runAsync(() -> {
-            ExecutorFactory.shutdownAndAwaitTermination(readExecutor, 1, TimeUnit.SECONDS);
-            ExecutorFactory.shutdownAndAwaitTermination(writeExecutor, 1, TimeUnit.SECONDS);
-            try {
-                socket.close();
-            } catch (IOException ignore) {
-            }
+        handler.onConnectionClosed(this, closeReason);
+        runAsync(() -> {
+            listeners.forEach(listener -> listener.onConnectionClosed(closeReason));
+            listeners.clear();
         });
+        try {
+            socket.close();
+        } catch (IOException ignore) {
+        }
+        return CompletableFuture.completedFuture(this);
     }
 
     void notifyListeners(Message message) {
-        listeners.forEach(listener -> listener.onMessage(message));
+        runAsync(() -> listeners.forEach(listener -> listener.onMessage(message)));
     }
 
     public void addListener(Listener listener) {

@@ -20,6 +20,7 @@ package network.misq.network.p2p.node;
 
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.transport.Transport;
+import network.misq.network.p2p.services.peergroup.BannList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,10 +38,12 @@ public class NodesById implements Node.Listener {
     private static final Logger log = LoggerFactory.getLogger(NodesById.class);
 
     private final Map<String, Node> map = new ConcurrentHashMap<>();
+    private final BannList bannList;
     private final Node.Config nodeConfig;
     private final Set<Node.Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public NodesById(Node.Config nodeConfig) {
+    public NodesById(BannList bannList, Node.Config nodeConfig) {
+        this.bannList = bannList;
         this.nodeConfig = nodeConfig;
     }
 
@@ -137,7 +140,7 @@ public class NodesById implements Node.Listener {
         if (map.containsKey(nodeId)) {
             return map.get(nodeId);
         } else {
-            Node node = new Node(nodeConfig, nodeId);
+            Node node = new Node(bannList, nodeConfig, nodeId);
             map.put(nodeId, node);
             node.addListener(this);
             return node;

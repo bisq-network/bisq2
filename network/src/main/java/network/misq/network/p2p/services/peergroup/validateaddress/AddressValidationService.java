@@ -19,31 +19,25 @@ package network.misq.network.p2p.services.peergroup.validateaddress;
 
 import lombok.extern.slf4j.Slf4j;
 import network.misq.network.p2p.message.Message;
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.Connection;
-import network.misq.network.p2p.node.InboundConnection;
-import network.misq.network.p2p.node.Node;
-import network.misq.network.p2p.services.peergroup.Quarantine;
+import network.misq.network.p2p.node.*;
+import network.misq.network.p2p.services.peergroup.BannList;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Slf4j
 public class AddressValidationService implements Node.Listener {
     private static final long TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
     private final Node node;
-    private final Quarantine quarantine;
+    private final BannList bannList;
     private final Map<String, AddressValidationHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private final Set<String> requesters = new CopyOnWriteArraySet<>(); // connectionIds
 
-    public AddressValidationService(Node node, Quarantine quarantine) {
+    public AddressValidationService(Node node, BannList bannList) {
         this.node = node;
-        this.quarantine = quarantine;
+        this.bannList = bannList;
         this.node.addListener(this);
     }
 
@@ -57,7 +51,7 @@ public class AddressValidationService implements Node.Listener {
         } else {
             log.debug("Node {} adds a new AddressValidationHandler for {}", node, peerAddress);
         }
-        AddressValidationHandler handler = new AddressValidationHandler(node, peerAddress, quarantine);
+        AddressValidationHandler handler = new AddressValidationHandler(node, peerAddress, bannList);
         requestHandlerMap.put(key, handler);
         return handler.request()
                 .orTimeout(TIMEOUT, TimeUnit.SECONDS)
@@ -70,18 +64,22 @@ public class AddressValidationService implements Node.Listener {
                         } else {
                             log.warn("Node {} got a failed address validation for inboundConnection from {}. inboundConnection={}",
                                     node, peerAddress, inboundConnection);
-                            node.closeConnection(inboundConnection);
+                            node.closeConnection(inboundConnection, CloseReason.ADDRESS_VALIDATION_FAILED);
                         }
                     } else {
                         log.warn("Node {} got a failed address validation for inboundConnection from {}. exception {}. inboundConnection={}",
                                 node, peerAddress, throwable, inboundConnection);
-                        node.closeConnection(inboundConnection);
+                        node.closeConnection(inboundConnection, CloseReason.EXCEPTION.exception(throwable));
                     }
                 });
     }
 
     public boolean isNotInProgress(Connection connection) {
-        return !requestHandlerMap.containsKey(connection.getId()) && !requesters.contains(connection.getId());
+        return !isInProgress(connection);
+    }
+
+    public boolean isInProgress(Connection connection) {
+        return requestHandlerMap.containsKey(connection.getId()) && !requesters.contains(connection.getId());
     }
 
     public void shutdown() {
@@ -100,8 +98,8 @@ public class AddressValidationService implements Node.Listener {
                 log.debug("Node {} sent AddressValidationResponse with nonce {} to {}. Connection={}", node, addressValidationRequest.nonce(), peerAddress, inboundConnection.getId());
             } else {
                 log.warn("Node {}  got a AddressValidationRequest at {}. We expect an inbound connection. We close that connection.", node, connection);
-                quarantine.add(peerAddress, Quarantine.Reason.ADDRESS_VALIDATION_REQUEST_ON_OUTBOUND_CON);
-                node.closeConnection(connection);
+                bannList.add(peerAddress, BannList.Reason.ADDRESS_VALIDATION_REQUEST_ON_OUTBOUND_CON);
+                node.closeConnection(connection, CloseReason.ADDRESS_VALIDATION_FAILED);
             }
         }
     }
@@ -111,7 +109,7 @@ public class AddressValidationService implements Node.Listener {
     }
 
     @Override
-    public void onDisconnect(Connection connection) {
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
         String key = connection.getId();
         if (requestHandlerMap.containsKey(key)) {
             requestHandlerMap.get(key).dispose();

@@ -19,11 +19,13 @@ package network.misq.network.p2p.node;
 
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.threading.ExecutorFactory;
+import network.misq.common.util.StringUtils;
 import network.misq.network.p2p.message.Envelope;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.message.Version;
 import network.misq.network.p2p.node.authorization.AuthorizationService;
 import network.misq.network.p2p.node.authorization.AuthorizationToken;
+import network.misq.network.p2p.services.peergroup.BannList;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -42,6 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ConnectionHandshake {
     private final static AtomicInteger ATOMIC_INTEGER = new AtomicInteger(0);
     private final Socket socket;
+    private final BannList bannList;
     private final Capability capability;
     private final AuthorizationService authorizationService;
 
@@ -54,8 +57,9 @@ public class ConnectionHandshake {
     public static record Result(Capability capability, Load load) {
     }
 
-    public ConnectionHandshake(Socket socket, int socketTimeout, Capability capability, AuthorizationService authorizationService) {
+    public ConnectionHandshake(Socket socket, BannList bannList, int socketTimeout, Capability capability, AuthorizationService authorizationService) {
         this.socket = socket;
+        this.bannList = bannList;
         this.capability = capability;
         this.authorizationService = authorizationService;
 
@@ -71,29 +75,34 @@ public class ConnectionHandshake {
     // Client side protocol
     public CompletableFuture<Result> start(Load myLoad) {
         return CompletableFuture.supplyAsync(() -> {
+            Thread.currentThread().setName("ConnectionHandshake.start-" + StringUtils.truncate(capability.address().toString()));
             try {
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
                 AuthorizationToken token = authorizationService.createToken(Request.class).get();
-                Envelope requestEnvelope = new Envelope(new Request(token, capability, myLoad));
+                Envelope requestEnvelope = new Envelope(new Request(token, capability, myLoad), Version.VERSION);
                 log.debug("Client sends {}", requestEnvelope);
                 objectOutputStream.writeObject(requestEnvelope);
                 objectOutputStream.flush();
 
                 ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
                 Object msg = objectInputStream.readObject();
-                log.debug("Client received {}", msg);
-                String simpleName = msg.getClass().getSimpleName();
                 if (!(msg instanceof Envelope responseEnvelope)) {
-                    throw new ConnectionException("Received message not type of Envelope. " + simpleName);
+                    throw new ConnectionException("Received message not type of Envelope. " + msg.getClass().getSimpleName());
                 }
-                if (responseEnvelope.getVersion() != Version.VERSION) {
-                    throw new ConnectionException("Invalid network version. " + simpleName);
+                log.debug("Client received {}", msg);
+                if (responseEnvelope.version() != Version.VERSION) {
+                    throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
+                            responseEnvelope.version() + "; Version.VERSION=" + Version.VERSION);
                 }
-                if (!(responseEnvelope.getPayload() instanceof Response response)) {
-                    throw new ConnectionException("Received envelope.payload not type of Response. " + simpleName);
+                if (!(responseEnvelope.payload() instanceof Response response)) {
+                    throw new ConnectionException("ResponseEnvelope.payload() not type of Response. responseEnvelope=" +
+                            responseEnvelope);
+                }
+                if (bannList.isBanned(response.capability().address())) {
+                    throw new ConnectionException("Peers address is in quarantine. response=" + response);
                 }
                 if (!authorizationService.isAuthorized(response.token())) {
-                    throw new ConnectionException("Response authorization failed. " + simpleName);
+                    throw new ConnectionException("Response authorization failed. response=" + response);
                 }
 
                 log.debug("Servers capability {}, load={}", response.capability(), response.load());
@@ -109,34 +118,39 @@ public class ConnectionHandshake {
                     throw new ConnectionException(e);
                 }
             }
-        }, ExecutorFactory.getSingleThreadExecutor("ConnectionHandshake-client-" + ATOMIC_INTEGER.incrementAndGet()));
+        }, ExecutorFactory.IO_POOL);
     }
 
     // Server side protocol
     public CompletableFuture<Result> onSocket(Load myLoad) {
         return CompletableFuture.supplyAsync(() -> {
+            Thread.currentThread().setName("ConnectionHandshake.onSocket-" + StringUtils.truncate(capability.address().toString()));
             try {
                 ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
                 Object msg = objectInputStream.readObject();
-                log.debug("Server received {}", msg);
-                String simpleName = msg.getClass().getSimpleName();
                 if (!(msg instanceof Envelope requestEnvelope)) {
-                    throw new ConnectionException("Received message not type of Envelope. " + simpleName);
+                    throw new ConnectionException("Received message not type of Envelope. Received data=" + msg.getClass().getSimpleName());
                 }
-                if (requestEnvelope.getVersion() != Version.VERSION) {
-                    throw new ConnectionException("Invalid network version. " + simpleName);
+                log.debug("Server received {}", msg);
+                if (requestEnvelope.version() != Version.VERSION) {
+                    throw new ConnectionException("Invalid version. requestEnvelop.version()=" +
+                            requestEnvelope.version() + "; Version.VERSION=" + Version.VERSION);
                 }
-                if (!(requestEnvelope.getPayload() instanceof Request request)) {
-                    throw new ConnectionException("Received envelope.payload not type of Request. " + simpleName);
+                if (!(requestEnvelope.payload() instanceof Request request)) {
+                    throw new ConnectionException("RequestEnvelope.payload() not type of Request. requestEnvelope=" +
+                            requestEnvelope);
+                }
+                if (bannList.isBanned(request.capability().address())) {
+                    throw new ConnectionException("Peers address is in quarantine. request=" + request);
                 }
                 if (!authorizationService.isAuthorized(request.token())) {
-                    throw new ConnectionException("Request authorization failed. " + simpleName);
+                    throw new ConnectionException("Request authorization failed. request=" + request);
                 }
                 log.debug("Clients capability {}, load={}", request.capability(), request.load());
 
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
                 AuthorizationToken token = authorizationService.createToken(Response.class).get();
-                objectOutputStream.writeObject(new Envelope(new Response(token, capability, myLoad)));
+                objectOutputStream.writeObject(new Envelope(new Response(token, capability, myLoad), Version.VERSION));
                 objectOutputStream.flush();
 
                 return new Result(request.capability(), request.load());
@@ -145,12 +159,12 @@ public class ConnectionHandshake {
                     socket.close();
                 } catch (IOException ignore) {
                 }
-                if (e instanceof ConnectionException handShakeException) {
-                    throw handShakeException;
+                if (e instanceof ConnectionException connectionException) {
+                    throw connectionException;
                 } else {
                     throw new ConnectionException(e);
                 }
             }
-        }, ExecutorFactory.getSingleThreadExecutor("ConnectionHandshake-server-" + ATOMIC_INTEGER.incrementAndGet()));
+        }, ExecutorFactory.IO_POOL);
     }
 }

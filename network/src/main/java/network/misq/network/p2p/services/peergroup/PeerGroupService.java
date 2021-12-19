@@ -22,8 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.timer.Scheduler;
 import network.misq.common.util.CompletableFutureUtils;
-import network.misq.common.util.MathUtils;
-import network.misq.network.p2p.node.*;
+import network.misq.network.p2p.node.Address;
+import network.misq.network.p2p.node.CloseReason;
+import network.misq.network.p2p.node.Connection;
+import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.services.peergroup.exchange.PeerExchangeService;
 import network.misq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import network.misq.network.p2p.services.peergroup.keepalive.KeepAliveService;
@@ -32,26 +34,33 @@ import network.misq.network.p2p.services.peergroup.validateaddress.AddressValida
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static java.util.concurrent.CompletableFuture.delayedExecutor;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static network.misq.network.p2p.node.CloseReason.*;
+
+/*
+
+import static java.util.concurrent.CompletableFuture.delayedExecutor;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static network.misq.network.p2p.node.CloseConnectionMessage.Reason.*;
 
+ */
 @Slf4j
 public class PeerGroupService {
 
     private final Node node;
+    private final BannList bannList;
     private final Config config;
     @Getter
     private final PeerGroup peerGroup;
     private final PeerExchangeService peerExchangeService;
-    private final Quarantine quarantine;
     private final KeepAliveService keepAliveService;
     private final AddressValidationService addressValidationService;
-    private final ExecutorService executor;
     private Scheduler scheduler;
 
     public static record Config(PeerGroup.Config peerGroupConfig,
@@ -60,42 +69,43 @@ public class PeerGroupService {
                                 long bootstrapTime,
                                 long interval,
                                 long timeout,
+                                long maxAge,
                                 int maxReported,
                                 int maxPersisted,
                                 int maxSeeds) {
     }
 
-    public PeerGroupService(Node node, Config config, List<Address> seedNodeAddresses) {
+    public PeerGroupService(Node node, BannList bannList, Config config, List<Address> seedNodeAddresses) {
         this.node = node;
+        this.bannList = bannList;
         this.config = config;
-        quarantine = new Quarantine();
-        peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, quarantine);
+        peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, bannList);
         peerExchangeService = new PeerExchangeService(node, new PeerExchangeStrategy(peerGroup, config.peerExchangeConfig()));
         keepAliveService = new KeepAliveService(node, peerGroup, config.keepAliveServiceConfig());
-        addressValidationService = new AddressValidationService(node, quarantine);
-        executor = ExecutorFactory.getSingleThreadExecutor("PeerGroupService");
+        addressValidationService = new AddressValidationService(node, bannList);
     }
 
     public CompletableFuture<Boolean> initialize() {
         return peerExchangeService.doInitialPeerExchange()
                 .thenCompose(__ -> {
-                    scheduler = Scheduler.run(this::runBlockingTasks).withExecutor(executor).periodically(config.interval());
+                    scheduler = Scheduler.run(this::runBlockingTasks).withExecutor(ExecutorFactory.WORK_STEALING_POOL).periodically(config.interval());
                     keepAliveService.initialize();
                     return CompletableFuture.completedFuture(true);
                 });
     }
 
     private void runBlockingTasks() {
-        closeQuarantined().join();
-        verifyInboundConnections().join();
-        CompletableFutureUtils.wait(1000).thenCompose(__ -> maybeCloseDuplicateConnections()).join();
-        maybeCloseConnectionsToSeeds().join();
-        maybeCloseConnections().join();
-        maybeCreateConnections().join();
-        maybeRemoveReportedPeers();
-        maybeRemovePersistedPeers();
+        closeBanned()
+                .thenCompose(__ -> verifyInboundConnections())
+                .thenComposeAsync(__ -> maybeCloseDuplicateConnections(), delayedExecutor(100, MILLISECONDS))
+                .thenComposeAsync(__ -> maybeCloseConnectionsToSeeds(), delayedExecutor(100, MILLISECONDS))
+                .thenComposeAsync(__ -> maybeCloseAgedConnections(), delayedExecutor(100, MILLISECONDS))
+                .thenComposeAsync(__ -> maybeCloseExceedingInboundConnections(), delayedExecutor(100, MILLISECONDS))
+                .thenComposeAsync(__ -> maybeCloseExceedingConnections(), delayedExecutor(100, MILLISECONDS))
+                .thenComposeAsync(__ -> maybeCreateConnections(), delayedExecutor(100, MILLISECONDS))
+                .thenRun(this::maybeRemoveReportedPeers)
+                .thenRun(this::maybeRemovePersistedPeers);
     }
-
 
     public CompletableFuture<Void> shutdown() {
         peerExchangeService.shutdown();
@@ -105,126 +115,108 @@ public class PeerGroupService {
             scheduler.stop();
             scheduler = null;
         }
-        executor.shutdownNow();
         return CompletableFuture.completedFuture(null);
     }
 
-    private CompletableFuture<List<Void>> closeQuarantined() {
-        log.debug("Node {} called closeQuarantined", node);
-        return CompletableFutureUtils.allOf(peerGroup.getAllConnectionsAsStream()
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Tasks
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private CompletableFuture<List<Connection>> closeBanned() {
+        return CompletableFutureUtils.allOf(peerGroup.getAllConnections()
                         .filter(Connection::isRunning)
-                        .filter(connection -> quarantine.isInQuarantine(connection.getPeerAddress()))
+                        .filter(connection -> bannList.isBanned(connection.getPeerAddress()))
                         .peek(connection -> log.info("{} -> {}: CloseQuarantined triggered close connection", node, connection.getPeerAddress()))
-                        .map(node::closeConnection))
-                .orTimeout(config.timeout(), TimeUnit.MILLISECONDS);
+                        .map(connection -> node.closeConnection(connection, CloseReason.BANNED)))
+                .orTimeout(config.timeout(), MILLISECONDS);
     }
 
     private CompletableFuture<List<Boolean>> verifyInboundConnections() {
-        log.debug("Node {} called verifyInboundConnections", node);
-        Map<Address, Connection> outboundMap = getOutboundConnectionsByAddress();
-        return CompletableFutureUtils.allOf(peerGroup.getInboundConnections().values().stream()
+        Set<Address> outboundAddresses = peerGroup.getOutboundConnections()
+                .filter(addressValidationService::isInProgress)
+                .map(Connection::getPeerAddress)
+                .collect(Collectors.toSet());
+        return CompletableFutureUtils.allOf(peerGroup.getInboundConnections()
                         .filter(Connection::isRunning)
-                        .filter(addressValidationService::isNotInProgress)
                         .filter(inbound -> !inbound.isPeerAddressVerified())
-                        .filter(inbound -> !outboundMap.containsKey(inbound.getPeerAddress()))
+                        .filter(addressValidationService::isNotInProgress)
+                        .filter(inbound -> !outboundAddresses.contains(inbound.getPeerAddress()))
                         .peek(inbound -> log.info("{} -> {}: Start addressValidationProtocol", node, inbound.getPeerAddress()))
                         .map(addressValidationService::startAddressValidationProtocol))
-                .orTimeout(config.timeout(), TimeUnit.MILLISECONDS);
+                .orTimeout(config.timeout(), MILLISECONDS);
     }
 
     /**
      * Remove duplicate connections (inbound connections which have an outbound connection with the same address)
      */
     private CompletableFuture<List<Connection>> maybeCloseDuplicateConnections() {
-        log.debug("Node {} called maybeCloseDuplicateConnections", node);
-        Map<Address, Connection> outboundMap = getOutboundConnectionsByAddress();
-        return CompletableFutureUtils.allOf(peerGroup.getInboundConnections().values().stream()
-                        .filter(Connection::isRunning)
-                        .filter(addressValidationService::isNotInProgress)
-                        .filter(inbound -> outboundMap.containsKey(inbound.getPeerAddress()))
-                        .filter(this::isNotBootstrapping)
+        Set<Address> outboundAddresses = peerGroup.getOutboundConnections()
+                .filter(addressValidationService::isNotInProgress)
+                .map(Connection::getPeerAddress)
+                .collect(Collectors.toSet());
+        return CompletableFutureUtils.allOf(peerGroup.getInboundConnections()
+                        .filter(this::mayDisconnect)
+                        .filter(inbound -> outboundAddresses.contains(inbound.getPeerAddress()))
                         .peek(inbound -> log.info("{} -> {}: Send CloseConnectionMessage as we have an " +
                                         "outbound connection with the same address.",
                                 node, inbound.getPeerAddress()))
-                        .map(inbound -> node.send(new CloseConnectionMessage(DUPLICATE_CONNECTION), inbound)))
-                .orTimeout(config.timeout(), TimeUnit.MILLISECONDS);
+                        .map(inbound -> node.closeConnectionGracefully(inbound, DUPLICATE_CONNECTION)))
+                .orTimeout(config.timeout(), MILLISECONDS);
     }
 
 
     private CompletableFuture<List<Connection>> maybeCloseConnectionsToSeeds() {
-        // log.debug("Node {} called maybeCloseConnectionsToSeeds", node);
-        int numSeeds = (int) peerGroup.getAllConnectionsAsStream()
-                .filter(Connection::isRunning)
-                .filter(addressValidationService::isNotInProgress)
-                .filter(connection -> peerGroup.isASeed(connection.getPeerAddress())).count();
-        if (numSeeds > config.maxSeeds()) {
-            log.info("Node {} has {} connections with seed nodes", node, numSeeds);
-        }
-        return CompletableFutureUtils.allOf(peerGroup.getAllConnectionsAsStream()
-                        .filter(Connection::isRunning)
-                        .filter(addressValidationService::isNotInProgress)
-                        .filter(connection -> peerGroup.isASeed(connection.getPeerAddress()))
+        Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed(); // reversed as we use skip
+        return CompletableFutureUtils.allOf(peerGroup.getAllConnections()
+                        .filter(this::mayDisconnect)
+                        .filter(peerGroup::isASeed)
+                        .sorted(comparator)
                         .skip(config.maxSeeds())
                         .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too " +
                                         "many connections to seeds.",
                                 node, connection.getPeersCapability().address()))
-                        .map(connection -> node.send(new CloseConnectionMessage(TOO_MANY_CONNECTIONS_TO_SEEDS), connection)))
-                .orTimeout(config.timeout(), TimeUnit.MILLISECONDS);
+                        .map(connection -> node.closeConnectionGracefully(connection, TOO_MANY_CONNECTIONS_TO_SEEDS)))
+                .orTimeout(config.timeout(), MILLISECONDS);
     }
 
-    /**
-     * If we exceed our maxNumConnectedPeers we try to find enough old inbound connections to remove
-     * and if not sufficient we add also old outbound connections.
-     */
-    private CompletableFuture<List<Connection>> maybeCloseConnections() {
-        // log.debug("Node {} called maybeCloseConnections", node);
-        int maxNumConnectedPeers = peerGroup.getMaxNumConnectedPeers();
-        int numAllConnections = peerGroup.getNumConnections();
-        int exceedingTotal = numAllConnections - maxNumConnectedPeers;
-        int missingOutboundConnections = getMissingOutboundConnections();
-        int exceeding = Math.max(exceedingTotal, missingOutboundConnections);
-        if (exceeding <= 0) {
-            return CompletableFuture.completedFuture(new ArrayList<>());
-        }
+    private CompletableFuture<List<Connection>> maybeCloseAgedConnections() {
+        return CompletableFutureUtils.allOf(peerGroup.getAllConnections()
+                        .filter(this::mayDisconnect)
+                        .filter(connection -> connection.getMetrics().getAge() > config.maxAge())
+                        .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
+                                        "is too old.",
+                                node, connection.getPeersCapability().address()))
+                        .map(connection -> node.closeConnectionGracefully(connection, AGED_CONNECTION)))
+                .orTimeout(config.timeout(), MILLISECONDS);
+    }
 
-        // Remove the oldest inbound connections
-        List<InboundConnection> inbound = new ArrayList<>(peerGroup.getInboundConnections().values());
-        inbound.sort(Comparator.comparing(c -> c.getMetrics().getCreationDate()));
-        List<Connection> candidates = new ArrayList<>();
-        if (!inbound.isEmpty()) {
-            List<InboundConnection> list = inbound.subList(0, Math.min(exceeding, inbound.size())).stream()
-                    .filter(this::isNotBootstrapping)
-                    .collect(Collectors.toList());
-            candidates.addAll(list);
-        }
+    private CompletableFuture<List<Connection>> maybeCloseExceedingInboundConnections() {
+        Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed();
+        return CompletableFutureUtils.allOf(peerGroup.getInboundConnections()
+                        .filter(this::mayDisconnect)
+                        .sorted(comparator)
+                        .skip(peerGroup.getMaxInboundConnections())
+                        .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many inbound connections.",
+                                node, connection.getPeersCapability().address()))
+                        .map(connection -> node.closeConnectionGracefully(connection, TOO_MANY_INBOUND_CONNECTIONS)))
+                .orTimeout(config.timeout(), MILLISECONDS);
+    }
 
-        int stillExceeding = exceeding - candidates.size();
-        if (stillExceeding > 0) {
-            List<Connection> outbound = new ArrayList<>(peerGroup.getOutboundConnections().values());
-            outbound.sort(Comparator.comparing(c -> c.getMetrics().getCreationDate()));
-            if (!outbound.isEmpty()) {
-                List<Connection> list = outbound.subList(0, Math.min(stillExceeding, outbound.size())).stream()
-                        .filter(this::isNotBootstrapping)
-                        .collect(Collectors.toList());
-                candidates.addAll(list);
-            }
-        }
-        if (!candidates.isEmpty()) {
-            log.info("Node {} has {} connections. Our max connections target is {}. " +
-                            "We close {} connections.",
-                    node, numAllConnections, maxNumConnectedPeers, candidates.size());
-        }
-        return CompletableFutureUtils.allOf(candidates.stream()
-                        .filter(Connection::isRunning)
-                        .filter(addressValidationService::isNotInProgress)
-                        .peek(connection -> log.info("Node {} send CloseConnectionMessage to peer {} as we have too many connections.",
-                                node, connection.getPeersCapability().address().toString()))
-                        .map(connection -> node.send(new CloseConnectionMessage(TOO_MANY_CONNECTIONS), connection)))
-                .orTimeout(config.timeout(), TimeUnit.MILLISECONDS);
+
+    private CompletableFuture<List<Connection>> maybeCloseExceedingConnections() {
+        Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed();
+        return CompletableFutureUtils.allOf(peerGroup.getAllConnections()
+                        .filter(this::mayDisconnect)
+                        .sorted(comparator)
+                        .skip(peerGroup.getMaxNumConnectedPeers())
+                        .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many connections.",
+                                node, connection.getPeersCapability().address()))
+                        .map(connection -> node.closeConnectionGracefully(connection, TOO_MANY_CONNECTIONS)))
+                .orTimeout(config.timeout(), MILLISECONDS);
     }
 
     private CompletableFuture<Void> maybeCreateConnections() {
-        // log.debug("Node {} called maybeCreateConnections", node);
         int minNumConnectedPeers = peerGroup.getMinNumConnectedPeers();
         // We want to have at least 40% of our minNumConnectedPeers as outbound connections 
         if (getMissingOutboundConnections() <= 0) {
@@ -239,17 +231,25 @@ public class PeerGroupService {
         // We use the peer exchange protocol for establishing new connections.
         // The calculation how many connections we need is done inside PeerExchangeService/PeerExchangeStrategy
 
+        int missingOutboundConnections = getMissingOutboundConnections();
+        var a = peerGroup.getMinOutboundConnections();
+        var b = peerGroup.getOutboundConnections().count();
+        if (missingOutboundConnections <= 0) {
+            // We have enough outbound connections, lets check if we have sufficient connections in total
+            int numAllConnections = peerGroup.getNumConnections();
+            int missing = minNumConnectedPeers - numAllConnections;
+            if (missing <= 0) {
+                return CompletableFuture.completedFuture(null);
+            }
+        }
+
         log.info("Node {} has not sufficient connections and calls peerExchangeService.doFurtherPeerExchange", node);
         return peerExchangeService.doFurtherPeerExchange()
-                .orTimeout(config.timeout(), TimeUnit.MILLISECONDS);
+                .orTimeout(config.timeout(), MILLISECONDS);
     }
 
-    private int getMissingOutboundConnections() {
-        return MathUtils.roundDoubleToInt(peerGroup.getMinNumConnectedPeers() * 0.4) - peerGroup.getOutboundConnections().size();
-    }
 
     private void maybeRemoveReportedPeers() {
-        // log.debug("Node {} called maybeRemoveReportedPeers", node);
         List<Peer> reportedPeers = new ArrayList<>(peerGroup.getReportedPeers());
         int exceeding = reportedPeers.size() - config.maxReported();
         if (exceeding > 0) {
@@ -261,7 +261,6 @@ public class PeerGroupService {
     }
 
     private void maybeRemovePersistedPeers() {
-        // log.debug("Node {} called maybeRemovePersistedPeers", node);
         List<Peer> persistedPeers = new ArrayList<>(peerGroup.getPersistedPeers());
         int exceeding = persistedPeers.size() - config.maxPersisted();
         if (exceeding > 0) {
@@ -272,14 +271,22 @@ public class PeerGroupService {
         }
     }
 
-    private boolean isNotBootstrapping(Connection connection) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private boolean mayDisconnect(Connection connection) {
+        return notBootstrapping(connection) &&
+                addressValidationService.isNotInProgress(connection)
+                && connection.isRunning();
+    }
+
+    private boolean notBootstrapping(Connection connection) {
         return connection.getMetrics().getAge() > config.bootstrapTime();
     }
 
-    private Map<Address, Connection> getOutboundConnectionsByAddress() {
-        return peerGroup.getOutboundConnections().values().stream()
-                .filter(Connection::isRunning)
-                .filter(addressValidationService::isNotInProgress)
-                .collect(Collectors.toMap(Connection::getPeerAddress, c -> c));
+    private int getMissingOutboundConnections() {
+        return peerGroup.getMinOutboundConnections() - (int) peerGroup.getOutboundConnections().count();
     }
 }

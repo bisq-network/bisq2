@@ -22,7 +22,7 @@ import network.misq.network.p2p.BaseNetworkTest;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.services.peergroup.PeerGroup;
-import network.misq.network.p2p.services.peergroup.Quarantine;
+import network.misq.network.p2p.services.peergroup.BannList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +38,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
     void test_peerExchange(Node.Config nodeConfig) throws InterruptedException, ExecutionException {
         int numSeeds = 7;
         int numNodes = 3;
-
+        BannList bannList = new BannList();
         List<Address> seedNodeAddresses = new ArrayList<>();
         for (int i = 0; i < numSeeds; i++) {
             int port = 1000 + i;
@@ -50,13 +50,12 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
         List<Node> seeds = new ArrayList<>();
         for (int i = 0; i < numSeeds; i++) {
             int port = 1000 + i;
-            Node seed = new Node(nodeConfig, "seed_" + i);
+            Node seed = new Node(bannList, nodeConfig, "seed_" + i);
             seeds.add(seed);
             seed.initializeServer(port).whenComplete((r, t) -> {
                 initSeedsLatch.countDown();
             });
-            Quarantine quarantine = new Quarantine();
-            PeerGroup peerGroup = new PeerGroup(seed, new PeerGroup.Config(), seedNodeAddresses, quarantine);
+            PeerGroup peerGroup = new PeerGroup(seed, new PeerGroup.Config(), seedNodeAddresses, bannList);
             PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup, new PeerExchangeStrategy.Config());
             new PeerExchangeService(seed, peerExchangeStrategy);
         }
@@ -69,7 +68,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
         List<Node> nodes = new ArrayList<>();
         for (int i = 0; i < numNodes; i++) {
             int port = 3000 + i;
-            Node node = new Node(nodeConfig, "node_" + i);
+            Node node = new Node(bannList, nodeConfig, "node_" + i);
             nodes.add(node);
             node.initializeServer(port).whenComplete((r, t) -> {
                 initNodesLatch.countDown();
@@ -79,8 +78,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
 
         for (int i = 0; i < numNodes; i++) {
             Node node = nodes.get(i);
-            Quarantine quarantine = new Quarantine();
-            PeerGroup peerGroup = new PeerGroup(node, new PeerGroup.Config(), seedNodeAddresses, quarantine);
+            PeerGroup peerGroup = new PeerGroup(node, new PeerGroup.Config(), seedNodeAddresses, bannList);
             PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup, new PeerExchangeStrategy.Config());
             PeerExchangeService peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
             peerExchangeService.doInitialPeerExchange().whenComplete((result, throwable) -> {
@@ -97,8 +95,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
 
             for (int i = 0; i < numNodes; i++) {
                 Node node = nodes.get(i);
-                Quarantine quarantine = new Quarantine();
-                PeerGroup peerGroup = new PeerGroup(node, new PeerGroup.Config(), seedNodeAddresses, quarantine);
+                PeerGroup peerGroup = new PeerGroup(node, new PeerGroup.Config(), seedNodeAddresses, bannList);
                 PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup, new PeerExchangeStrategy.Config());
                 PeerExchangeService peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
                 peerExchangeService.doInitialPeerExchange().whenComplete((result, throwable) -> {

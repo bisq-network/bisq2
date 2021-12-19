@@ -21,7 +21,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.*;
-import network.misq.network.p2p.services.peergroup.Quarantine;
+import network.misq.network.p2p.services.peergroup.BannList;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -36,16 +36,16 @@ class AddressValidationHandler implements Connection.Listener {
 
     private final Node node;
     private final Address addressOfInboundConnection;
-    private final Quarantine quarantine;
+    private final BannList bannList;
     private final CompletableFuture<Boolean> future = new CompletableFuture<>();
     private final int nonce;
     @Nullable
     private OutboundConnection outboundConnection;
 
-    AddressValidationHandler(Node node, Address addressOfInboundConnection, Quarantine quarantine) {
+    AddressValidationHandler(Node node, Address addressOfInboundConnection, BannList bannList) {
         this.node = node;
         this.addressOfInboundConnection = addressOfInboundConnection;
-        this.quarantine = quarantine;
+        this.bannList = bannList;
         nonce = new Random().nextInt();
     }
 
@@ -77,9 +77,8 @@ class AddressValidationHandler implements Connection.Listener {
             Objects.requireNonNull(outboundConnection);
             if (addressValidationResponse.requestNonce() == nonce &&
                     outboundConnection.getPeerAddress().equals(addressOfInboundConnection)) {
-                log.debug("Node {} received valid AddressValidationResponse from {}",
-                        node, addressOfInboundConnection);
-                node.send(new CloseConnectionMessage(CloseConnectionMessage.Reason.ADDRESS_VALIDATION_COMPLETED), outboundConnection);
+                log.debug("Node {} received valid AddressValidationResponse from {}", node, addressOfInboundConnection);
+                node.closeConnectionGracefully(outboundConnection, CloseReason.ADDRESS_VALIDATION_COMPLETED);
                 removeListeners();
                 future.complete(true);
             } else {
@@ -89,9 +88,9 @@ class AddressValidationHandler implements Connection.Listener {
                         node, addressOfInboundConnection,
                         addressValidationResponse.requestNonce(), nonce,
                         outboundConnection.getPeerAddress(), addressOfInboundConnection);
-                quarantine.add(addressOfInboundConnection, Quarantine.Reason.ADDRESS_VALIDATION_FAILED);
-                quarantine.add(outboundConnection.getPeerAddress(), Quarantine.Reason.ADDRESS_VALIDATION_FAILED);
-                node.closeConnection(outboundConnection);
+                bannList.add(addressOfInboundConnection, BannList.Reason.ADDRESS_VALIDATION_FAILED);
+                bannList.add(outboundConnection.getPeerAddress(), BannList.Reason.ADDRESS_VALIDATION_FAILED);
+                node.closeConnection(outboundConnection, CloseReason.ADDRESS_VALIDATION_FAILED);
                 removeListeners();
                 future.complete(false);
             }
@@ -99,7 +98,7 @@ class AddressValidationHandler implements Connection.Listener {
     }
 
     @Override
-    public void onConnectionClosed() {
+    public void onConnectionClosed(CloseReason closeReason) {
         log.debug("Node {} got called onDisconnect. outboundConnection={}", node, outboundConnection);
         dispose();
     }

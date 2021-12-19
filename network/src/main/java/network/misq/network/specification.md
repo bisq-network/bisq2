@@ -1,4 +1,4 @@
-# P2P Network
+# P2P Network specification
 
 ## Features
 
@@ -73,8 +73,13 @@
     - Use a keyId for quick lookup to keyPair
 
 - `PeerGroupService`
-  TODO Manages gossip network
--
+    - Creates `Quarantine`, `PeerGroup`, `PeerExchangeService`, `KeepAliveService` and `AddressValidationService`
+    - At `initialize` starts initial peer exchange via `peerExchangeService`. When this completes we start a `Scheduler` 
+      to run several maintenance tasks as well we initialize the `KeepAliveService`.
+    - Maintenance tasks:
+        - `closeQuarantine`: We close the connection if the address of our connection is found in the `Quarantine` map. We do not send a `CloseConnectionMessage` but close immediately as addresses from `Quarantine` are only added due non protocol compliant behaviour. 
+        - `verifyInboundConnections`: 
+- 
 - `RelayService`
   TODO for relaying messages from one transport network to another
 

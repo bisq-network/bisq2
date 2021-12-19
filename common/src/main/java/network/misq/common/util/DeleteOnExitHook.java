@@ -65,7 +65,10 @@ class DeleteOnExitHook {
     private static LinkedHashSet<String> files = new LinkedHashSet<>();
 
     static {
-        Runtime.getRuntime().addShutdownHook(new Thread(DeleteOnExitHook::runHooks));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Thread.currentThread().setName("DeleteOnExitHook.runHooks");
+            runHooks();
+        }));
     }
 
     private DeleteOnExitHook() {

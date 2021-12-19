@@ -17,9 +17,10 @@
 
 package network.misq.common.timer;
 
+import network.misq.common.threading.ExecutorFactory;
+
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -29,7 +30,7 @@ class TickEmitter {
     }
 
     private static final long INTERVAL = 10;
-    private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService executorService = ExecutorFactory.newSingleThreadScheduledExecutor("TickEmitter");
     private static final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
     static {

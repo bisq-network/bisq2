@@ -32,6 +32,7 @@ import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.monitor.MonitorService;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
+import network.misq.network.p2p.services.peergroup.BannList;
 import network.misq.network.p2p.services.relay.RelayService;
 import network.misq.network.p2p.services.router.gossip.GossipResult;
 import network.misq.security.PubKey;
@@ -75,6 +76,7 @@ public class ServiceNode {
     private Optional<PeerGroupService> peerGroupService;
     private Optional<DataService> dataService;
     private Optional<RelayService> relayService;
+    @Getter
     private Optional<MonitorService> monitorService;
 
     public ServiceNode(Config config,
@@ -83,16 +85,16 @@ public class ServiceNode {
                        DataService.Config dataServiceConfig,
                        ConfidentialService.Config confMsgServiceConfig,
                        List<Address> seedNodeAddresses) {
-        nodesById = new NodesById(nodeConfig);
+        BannList bannList = new BannList();
+        nodesById = new NodesById(bannList, nodeConfig);
         defaultNode = nodesById.getDefaultNode();
-
         Set<Service> services = config.services();
         if (services.contains(Service.CONFIDENTIAL)) {
             confidentialMessageService = Optional.of(new ConfidentialService(nodesById, confMsgServiceConfig));
         }
 
         if (services.contains(Service.PEER_GROUP)) {
-            peerGroupService = Optional.of(new PeerGroupService(defaultNode, peerGroupServiceConfig, seedNodeAddresses));
+            peerGroupService = Optional.of(new PeerGroupService(defaultNode, bannList, peerGroupServiceConfig, seedNodeAddresses));
 
             if (services.contains(Service.DATA)) {
                 dataService = Optional.of(new DataService(defaultNode, peerGroupService.get(), dataServiceConfig));
@@ -103,7 +105,7 @@ public class ServiceNode {
             }
 
             if (services.contains(Service.MONITOR)) {
-                monitorService = Optional.of(new MonitorService(defaultNode));
+                monitorService = Optional.of(new MonitorService(defaultNode, peerGroupService.get()));
             }
         }
     }
@@ -191,6 +193,10 @@ public class ServiceNode {
         return nodesById.findMyAddress(nodeId);
     }
 
+    public Optional<Address> findMyDefaultAddresses() {
+        return findMyAddress(Node.DEFAULT_NODE_ID);
+    }
+
     public Optional<Node> findNode(String nodeId) {
         return nodesById.findNode(nodeId);
     }
@@ -198,4 +204,5 @@ public class ServiceNode {
     public Map<String, Address> getAddressesByNodeId() {
         return nodesById.getAddressesByNodeId();
     }
+
 }

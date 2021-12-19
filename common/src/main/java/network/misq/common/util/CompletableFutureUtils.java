@@ -79,35 +79,36 @@ public class CompletableFutureUtils {
         return result;
     }
 
-    public static CompletableFuture<Void> wait(int delayMs) {
-        return wait(delayMs, TimeUnit.MILLISECONDS);
+    public static CompletableFuture<Void> pause(long delayMs) {
+        return pause(delayMs, TimeUnit.MILLISECONDS);
     }
 
-    public static CompletableFuture<Void> wait(int minDelayMs, int maxDelayMs) {
-        return wait(minDelayMs, maxDelayMs, TimeUnit.MILLISECONDS);
+    public static CompletableFuture<Void> pause(long minDelayMs, long maxDelayMs) {
+        return pause(minDelayMs, maxDelayMs, TimeUnit.MILLISECONDS);
     }
 
-    public static CompletableFuture<Void> wait(int minDelayMs, int maxDelayMs, TimeUnit timeUnit) {
+    public static CompletableFuture<Void> pause(long minDelayMs, long maxDelayMs, TimeUnit timeUnit) {
         return delayRandom(CompletableFuture.completedFuture(null), minDelayMs, maxDelayMs, timeUnit);
     }
 
-    public static CompletableFuture<Void> wait(int delay, TimeUnit timeUnit) {
+    public static CompletableFuture<Void> pause(long delay, TimeUnit timeUnit) {
         return delay(CompletableFuture.completedFuture(null), delay, timeUnit);
     }
 
-    public static <T> CompletableFuture<T> delay(CompletableFuture<T> future, int delayMs) {
+    public static <T> CompletableFuture<T> delay(CompletableFuture<T> future, long delayMs) {
         return delay(future, delayMs, TimeUnit.MILLISECONDS);
     }
 
-    public static <T> CompletableFuture<T> delay(CompletableFuture<T> future, int delay, TimeUnit timeUnit) {
-        return future.thenApplyAsync(e -> e, CompletableFuture.delayedExecutor(delay, timeUnit));
+    public static <T> CompletableFuture<T> delay(CompletableFuture<T> future, long delay, TimeUnit timeUnit) {
+        return future.thenApplyAsync(__ -> __, CompletableFuture.delayedExecutor(delay, timeUnit));
     }
 
-    public static <T> CompletableFuture<T> delayRandom(CompletableFuture<T> future, int minDelayMs, int maxDelayMs) {
+    public static <T> CompletableFuture<T> delayRandom(CompletableFuture<T> future, long minDelayMs, long maxDelayMs) {
         return delayRandom(future, minDelayMs, maxDelayMs, TimeUnit.MILLISECONDS);
     }
 
-    public static <T> CompletableFuture<T> delayRandom(CompletableFuture<T> future, int minDelay, int maxDelay, TimeUnit timeUnit) {
-        return future.thenApplyAsync(e -> e, CompletableFuture.delayedExecutor(minDelay + new Random().nextInt(maxDelay - minDelay), timeUnit));
+    public static <T> CompletableFuture<T> delayRandom(CompletableFuture<T> future, long minDelay, long maxDelay, TimeUnit timeUnit) {
+        long delay = minDelay + new Random().nextInt((int) (maxDelay - minDelay));
+        return future.thenApplyAsync(__ -> __, CompletableFuture.delayedExecutor(delay, timeUnit));
     }
 }

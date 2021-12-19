@@ -20,6 +20,7 @@ package network.misq.network.p2p.services.peergroup.keepalive;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 
@@ -75,7 +76,7 @@ class KeepAliveHandler implements Connection.Listener {
     }
 
     @Override
-    public void onConnectionClosed() {
+    public void onConnectionClosed(CloseReason closeReason) {
         dispose();
     }
 

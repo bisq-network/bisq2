@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.StringUtils;
 import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.services.peergroup.Peer;
@@ -81,7 +82,7 @@ class PeerExchangeRequestHandler implements Connection.Listener {
     }
 
     @Override
-    public void onConnectionClosed() {
+    public void onConnectionClosed(CloseReason closeReason) {
         dispose();
     }
 

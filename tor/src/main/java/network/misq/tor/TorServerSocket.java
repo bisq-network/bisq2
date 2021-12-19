@@ -28,8 +28,9 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static network.misq.tor.Constants.*;
@@ -38,7 +39,6 @@ import static network.misq.tor.Constants.*;
 public class TorServerSocket extends ServerSocket {
     private final String hsDirPath;
     private final TorController torController;
-    private final Set<ExecutorService> executors = new CopyOnWriteArraySet<>();
     private Optional<OnionAddress> onionAddress = Optional.empty();
 
     public TorServerSocket(String torDirPath, TorController torController) throws IOException {
@@ -51,9 +51,7 @@ public class TorServerSocket extends ServerSocket {
     }
 
     public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort, String id) {
-        ExecutorService executor = ExecutorFactory.getSingleThreadExecutor("TorServerSocket.bindAsync");
-        executors.add(executor);
-        return bindAsync(hiddenServicePort, NetworkUtils.findFreeSystemPort(), id, executor);
+        return bindAsync(hiddenServicePort, NetworkUtils.findFreeSystemPort(), id, ExecutorFactory.IO_POOL);
     }
 
     public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort,
@@ -62,6 +60,7 @@ public class TorServerSocket extends ServerSocket {
                                                      Executor executor) {
         CompletableFuture<OnionAddress> future = new CompletableFuture<>();
         executor.execute(() -> {
+            Thread.currentThread().setName("TorServerSocket.bindAsync-" + id);
             try {
                 bind(hiddenServicePort, localPort, id);
                 checkArgument(onionAddress.isPresent(), "onionAddress must be present");
@@ -129,8 +128,6 @@ public class TorServerSocket extends ServerSocket {
             } catch (IOException ignore) {
             }
         });
-
-        executors.forEach(ExecutorFactory::shutdownAndAwaitTermination);
     }
 
     public Optional<OnionAddress> getOnionAddress() {

@@ -80,7 +80,6 @@ public class NetworkService {
                 config.seedNodeRepository(),
                 new DataService.Config(config.baseDirPath()),
                 keyPairRepository);
-        init();
     }
 
 
@@ -88,9 +87,6 @@ public class NetworkService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init() {
-        serviceNodesByTransport.init();
-    }
 
     public CompletableFuture<Boolean> bootstrap() {
         return serviceNodesByTransport.bootstrap();
@@ -156,5 +152,5 @@ public class NetworkService {
 
     public Optional<ServiceNode> findServiceNode(Transport.Type transport) {
         return serviceNodesByTransport.findServiceNode(transport);
-    }
+    } 
 }

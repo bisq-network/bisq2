@@ -30,18 +30,8 @@ public class ClearNetTransport implements Transport {
             return CompletableFuture.completedFuture(true);
         }
         initializeCalled = true;
-
         log.debug("Initialize");
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        new Thread(() -> {
-           /* try {
-                Thread.sleep(1); // simulate tor delay
-            } catch (InterruptedException ignore) {
-            }*/
-            future.complete(true);
-        }).start();
-
-        return future;
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override

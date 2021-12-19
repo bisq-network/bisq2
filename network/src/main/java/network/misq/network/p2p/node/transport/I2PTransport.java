@@ -12,7 +12,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.CompletionException;
 
 import static java.io.File.separator;
 
@@ -25,7 +25,6 @@ public class I2PTransport implements Transport {
 
     private final String i2pDirPath;
     private SamClient samClient;
-    private final ExecutorService serverSocketExecutor = ExecutorFactory.getSingleThreadExecutor("I2pNetworkProxy.ServerSocket");
     private boolean initializeCalled;
 
     public static I2PTransport getInstance(Config config) {
@@ -57,22 +56,21 @@ public class I2PTransport implements Transport {
 
     @Override
     public CompletableFuture<ServerSocketResult> getServerSocket(int port, String nodeId) {
-        CompletableFuture<ServerSocketResult> future = new CompletableFuture<>();
         log.debug("Create serverSocket");
-        serverSocketExecutor.execute(() -> {
+        return CompletableFuture.supplyAsync(() -> {
+            Thread.currentThread().setName("I2PTransport.getServerSocket-nodeId=" + nodeId+"-port="+port);
             try {
                 ServerSocket serverSocket = samClient.getServerSocket(nodeId, NetworkUtils.findFreeSystemPort());
                 String destination = samClient.getMyDestination(nodeId);
                 Address address = new Address(destination, -1);
                 log.debug("Create new Socket to {}", address);
                 log.debug("ServerSocket created for address {}", address);
-                future.complete(new ServerSocketResult(nodeId, serverSocket, address));
+                return new ServerSocketResult(nodeId, serverSocket, address);
             } catch (Exception exception) {
                 log.error(exception.toString(), exception);
-                future.completeExceptionally(exception);
+                throw new CompletionException(exception);
             }
-        });
-        return future;
+        }, ExecutorFactory.IO_POOL);
     }
 
     @Override

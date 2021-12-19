@@ -22,7 +22,8 @@ import network.misq.network.p2p.node.Address;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Quarantine {
+//todo check at connection handshake
+public class BannList {
     public enum Reason {
         ADDRESS_VALIDATION_FAILED,
         ADDRESS_VALIDATION_REQUEST_ON_OUTBOUND_CON
@@ -33,18 +34,18 @@ public class Quarantine {
 
     private final Map<Address, Entry> entryMap = new ConcurrentHashMap<>();
 
-    public Quarantine() {
+    public BannList() {
     }
 
     public void add(Address address, Reason reason) {
         entryMap.put(address, new Entry(reason, System.currentTimeMillis()));
     }
 
-    public boolean isInQuarantine(Address address) {
+    public boolean isBanned(Address address) {
         return entryMap.containsKey(address);
     }
 
-    public boolean isNotInQuarantine(Address address) {
-        return !isInQuarantine(address);
+    public boolean isNotBanned(Address address) {
+        return !isBanned(address);
     }
 }

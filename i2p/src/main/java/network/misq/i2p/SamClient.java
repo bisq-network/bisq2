@@ -74,7 +74,10 @@ public class SamClient {
         this.dirPath = dirPath;
         log.info("Sam client created with dirPath={}; host={}; port={}; socketTimeout={}",
                 dirPath, host, port, socketTimeout);
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Thread.currentThread().setName("SamClient.shutdownHook");
+            shutdown();
+        }));
     }
 
     /**

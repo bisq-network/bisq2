@@ -56,6 +56,7 @@ public class Persistence {
 
     public CompletableFuture<Boolean> persist() {
         return CompletableFuture.supplyAsync(() -> {
+            Thread.currentThread().setName("Persistence.persist-" + fileName);
             synchronized (writeLock) {
                 boolean success = false;
                 try {
@@ -85,6 +86,6 @@ public class Persistence {
                 }
                 return success;
             }
-        }, ExecutorFactory.getSingleThreadExecutor("Write-to-disk: " + fileName));
+        }, ExecutorFactory.IO_POOL);
     }
 }

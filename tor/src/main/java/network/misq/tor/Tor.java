@@ -41,7 +41,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -82,8 +81,6 @@ public class Tor {
     private final AtomicReference<State> state = new AtomicReference<>(State.NOT_STARTED);
     private final Set<CompletableFuture<Boolean>> startupFutures = new CopyOnWriteArraySet<>();
 
-    @Nullable
-    private ExecutorService startupExecutor;
     private int proxyPort = -1;
 
     public static Tor getTor(String torDirPath) {
@@ -119,16 +116,12 @@ public class Tor {
         bootstrap.shutdown();
         torController.shutdown();
 
-        if (startupExecutor != null) {
-            ExecutorFactory.shutdownAndAwaitTermination(startupExecutor);
-            startupExecutor = null;
-        }
         log.info("Shutdown Tor completed");
         state.set(State.NOT_STARTED);
     }
 
     public CompletableFuture<Boolean> startAsync() {
-        return startAsync(getStartupExecutor());
+        return startAsync(ExecutorFactory.IO_POOL);
     }
 
     public CompletableFuture<Boolean> startAsync(Executor executor) {
@@ -147,6 +140,7 @@ public class Tor {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         startupFutures.add(future);
         executor.execute(() -> {
+            Thread.currentThread().setName("Tor.startAsync");
             try {
                 if (state.get() == State.NOT_STARTED) {
                     start();
@@ -254,10 +248,5 @@ public class Tor {
             e.printStackTrace();
         }
         return socks5Proxy;
-    }
-
-    private ExecutorService getStartupExecutor() {
-        startupExecutor = ExecutorFactory.getSingleThreadExecutor("Tor.startAsync");
-        return startupExecutor;
     }
 }

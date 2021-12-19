@@ -20,6 +20,7 @@ package network.misq.network.p2p.services.data;
 import network.misq.common.util.MapUtils;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
+import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.services.data.filter.DataFilter;
@@ -109,7 +110,7 @@ public class DataService implements Node.Listener {
     }
 
     @Override
-    public void onDisconnect(Connection connection) {
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
         String id = connection.getId();
         MapUtils.disposeAndRemove(id, responseHandlerMap);
         MapUtils.disposeAndRemove(id, requestHandlerMap);
