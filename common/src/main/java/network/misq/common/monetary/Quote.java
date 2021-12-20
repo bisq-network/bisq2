@@ -65,7 +65,7 @@ public class Quote implements Comparable<Quote> {
     }
 
     /**
-     * @param price       Price of a Altcoin-BTC quote (e.g. XMR/BTC). Altcoin is base currency
+     * @param price       Price of an Altcoin-BTC quote (e.g. XMR/BTC). Altcoin is base currency
      * @param altCoinCode Currency code of the altcoin (base) side
      * @return A quote object using 1 unit of the altcoin as base coin.
      */

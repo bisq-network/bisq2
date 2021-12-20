@@ -17,12 +17,12 @@
 
 package network.misq.tor;
 
-import com.google.common.util.concurrent.MoreExecutors;
 import com.runjva.sourceforge.jsocks.protocol.Authentication;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.util.ThreadingUtils;
+import network.misq.common.threading.ExecutorFactory;
 
 import javax.annotation.Nullable;
 import javax.net.SocketFactory;
@@ -37,8 +37,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -65,21 +68,21 @@ public class Tor {
     // We use one tor binary for one app
     private final static Map<String, Tor> TOR_BY_APP = new HashMap<>();
 
-    enum State {
+    public enum State {
         NOT_STARTED,
         STARTING,
         STARTED,
         SHUTDOWN_STARTED
     }
 
+    private Optional<ExecutorService> executor = Optional.empty();
     private final TorController torController;
     private final Bootstrap bootstrap;
     private final String torDirPath;
+    @Getter
     private final AtomicReference<State> state = new AtomicReference<>(State.NOT_STARTED);
     private final Set<CompletableFuture<Boolean>> startupFutures = new CopyOnWriteArraySet<>();
 
-    @Nullable
-    private ExecutorService startupExecutor;
     private int proxyPort = -1;
 
     public static Tor getTor(String torDirPath) {
@@ -115,25 +118,34 @@ public class Tor {
         bootstrap.shutdown();
         torController.shutdown();
 
-        if (startupExecutor != null) {
-            MoreExecutors.shutdownAndAwaitTermination(startupExecutor, 100, TimeUnit.MILLISECONDS);
-            startupExecutor = null;
-        }
         log.info("Shutdown Tor completed");
+        state.set(State.NOT_STARTED);
+        executor.ifPresent(ExecutorFactory::shutdownAndAwaitTermination);
+        executor = Optional.empty();
     }
 
     public CompletableFuture<Boolean> startAsync() {
-        return startAsync(getStartupExecutor());
+        return startAsync(getExecutor());
     }
 
-    public CompletableFuture<Boolean> startAsync(Executor executor) {
+    public CompletableFuture<Boolean> startAsync(ExecutorService executor) {
+        this.executor = Optional.of(executor);
         if (state.get() == State.STARTED) {
             return CompletableFuture.completedFuture(true);
+        }
+
+        if (state.get() == State.STARTING) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ignore) {
+            }
+            return startAsync(executor);
         }
 
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         startupFutures.add(future);
         executor.execute(() -> {
+            Thread.currentThread().setName("Tor.startAsync");
             try {
                 if (state.get() == State.NOT_STARTED) {
                     start();
@@ -153,7 +165,7 @@ public class Tor {
             return;
         }
         checkArgument(state.get() == State.NOT_STARTED,
-                "Invalid state at startAsync. state=" + state.get());
+                "Invalid state at start. state=" + state.get());
         state.set(State.STARTING);
         long ts = System.currentTimeMillis();
         int controlPort = bootstrap.start();
@@ -165,13 +177,13 @@ public class Tor {
 
     public TorServerSocket getTorServerSocket() throws IOException {
         checkArgument(state.get() == State.STARTED,
-                "Invalid state at startAsync. state=" + state.get());
+                "Invalid state at Tor.getTorServerSocket. state=" + state.get());
         return new TorServerSocket(torDirPath, torController);
     }
 
     public Proxy getProxy(@Nullable String streamId) throws IOException {
         checkArgument(state.get() == State.STARTED,
-                "Invalid state at startAsync. state=" + state.get());
+                "Invalid state at Tor.getProxy. state=" + state.get());
         Socks5Proxy socks5Proxy = getSocks5Proxy(streamId);
         InetSocketAddress socketAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
         return new Proxy(Proxy.Type.SOCKS, socketAddress);
@@ -200,7 +212,7 @@ public class Tor {
 
     public Socks5Proxy getSocks5Proxy(@Nullable String streamId) throws IOException {
         checkArgument(state.get() == State.STARTED,
-                "Invalid state at startAsync. state=" + state.get());
+                "Invalid state at Tor.getSocks5Proxy. state=" + state.get());
         checkArgument(proxyPort > -1, "proxyPort must be defined");
         Socks5Proxy socks5Proxy = new Socks5Proxy(LOCALHOST, proxyPort);
         socks5Proxy.resolveAddrLocally(false);
@@ -243,8 +255,7 @@ public class Tor {
         return socks5Proxy;
     }
 
-    private ExecutorService getStartupExecutor() {
-        startupExecutor = ThreadingUtils.getSingleThreadExecutor("Tor.startAsync");
-        return startupExecutor;
+    private ExecutorService getExecutor() {
+        return executor.orElse(ExecutorFactory.newSingleThreadExecutor("Tor.startAsync"));
     }
 }

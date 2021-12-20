@@ -46,7 +46,6 @@ class Bootstrap {
     private final OsType osType;
 
     private volatile boolean isStopped;
-    private final Object isStoppedLock = new Object();
 
     Bootstrap(String torDirPath) {
         this.torDirPath = torDirPath;
@@ -230,7 +229,7 @@ class Bootstrap {
         if (osType != OsType.WIN) {
             int result = torProcess.waitFor();
             if (torProcess.waitFor() != 0) {
-                throw new IOException("Tor exited with value " + result);
+               // throw new IOException("Terminate processBuilder exited with an error");
             }
         }
         log.debug("Process builder terminated");
@@ -247,8 +246,6 @@ class Bootstrap {
     }
 
     void shutdown() {
-        synchronized (isStoppedLock) {
-            isStopped = true;
-        }
+        isStopped = true;
     }
 }

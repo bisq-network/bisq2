@@ -19,7 +19,7 @@ package network.misq.network.http.common;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.data.Couple;
+import network.misq.common.data.Pair;
 import network.misq.common.util.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -68,7 +68,7 @@ public class TorHttpClient extends BaseHttpClient {
     }
 
     @Override
-    protected String doRequest(String param, HttpMethod httpMethod, Optional<Couple<String, String>> optionalHeader) throws IOException {
+    protected String doRequest(String param, HttpMethod httpMethod, Optional<Pair<String, String>> optionalHeader) throws IOException {
         checkArgument(!hasPendingRequest, "We got called on the same HttpClient again while a request is still open.");
 
         hasPendingRequest = true;

@@ -53,4 +53,5 @@ tasks.named("javadoc") {
 
 tasks.named("test") {
     useJUnitPlatform()
+    exclude '**/**Integration*'
 }

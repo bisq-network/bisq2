@@ -54,7 +54,8 @@ public class FileUtils {
     }
 
     /**
-     * The `File.deleteOnExit` method is not suited for long running processes as it never removes the added files, thus leading to a memory leak.
+     * The `File.deleteOnExit` method is not suited for long-running processes as it never removes the added files,
+     * thus leading to a memory leak.
      * See: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6664633
      * We added our own extended DeleteOnExitHook where we added a remove method. The client is responsible to call that
      * `remove` method via `releaseTempFile` once the file should be deleted.
@@ -88,6 +89,15 @@ public class FileUtils {
         if (file != null && file.exists()) {
             if (!file.delete()) {
                 log.error("Cannot delete file {}", file);
+            }
+        }
+    }
+
+    public static void makeDirIfNotExists(String dirName) throws IOException {
+        File dir = new File(dirName);
+        if (!dir.exists()) {
+            if (!dir.mkdirs()) {
+                throw new IOException("Cannot create directory " + dir.getAbsolutePath());
             }
         }
     }

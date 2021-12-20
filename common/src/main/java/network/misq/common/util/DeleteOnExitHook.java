@@ -43,6 +43,8 @@
 
 package network.misq.common.util;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,11 +60,15 @@ import java.util.List;
  * A set is used both to prevent double-insertion of the same file as well as offer
  * quick removal.
  */
+@Slf4j
 class DeleteOnExitHook {
     private static LinkedHashSet<String> files = new LinkedHashSet<>();
 
     static {
-        Runtime.getRuntime().addShutdownHook(new Thread(DeleteOnExitHook::runHooks));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Thread.currentThread().setName("DeleteOnExitHook.runHooks");
+            runHooks();
+        }));
     }
 
     private DeleteOnExitHook() {
@@ -100,7 +106,9 @@ class DeleteOnExitHook {
         // Last in first deleted.
         Collections.reverse(toBeDeleted);
         for (String filename : toBeDeleted) {
-            (new File(filename)).delete();
+            if (!(new File(filename)).delete()) {
+                log.warn("Deleting {} failed", filename);
+            }
         }
     }
 }

@@ -18,7 +18,7 @@
 package network.misq.network.http.common;
 
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.data.Couple;
+import network.misq.common.data.Pair;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -43,12 +43,12 @@ public abstract class BaseHttpClient implements HttpClient {
     }
 
     @Override
-    public String get(String param, Optional<Couple<String, String>> optionalHeader) throws IOException {
+    public String get(String param, Optional<Pair<String, String>> optionalHeader) throws IOException {
         return doRequest(param, HttpMethod.GET, optionalHeader);
     }
 
     @Override
-    public String post(String param, Optional<Couple<String, String>> optionalHeader) throws IOException {
+    public String post(String param, Optional<Pair<String, String>> optionalHeader) throws IOException {
         return doRequest(param, HttpMethod.POST, optionalHeader);
     }
 
@@ -62,8 +62,9 @@ public abstract class BaseHttpClient implements HttpClient {
         return baseUrl;
     }
 
-    abstract protected String doRequest(String param, HttpMethod httpMethod,
-                                        Optional<Couple<String, String>> optionalHeader) throws IOException;
+    abstract protected String doRequest(String param,
+                                        HttpMethod httpMethod,
+                                        Optional<Pair<String, String>> optionalHeader) throws IOException;
 
     protected String inputStreamToString(InputStream inputStream) throws IOException {
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {

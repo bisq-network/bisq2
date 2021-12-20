@@ -25,10 +25,10 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -40,14 +40,14 @@ public class SamClient {
     public final static String DEFAULT_HOST = "127.0.0.1";
     public final static int DEFAULT_PORT = 7656;
     public final static long DEFAULT_SOCKET_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
-    private final static Map<String, SamClient> SAM_CLIENT_BY_APP = new HashMap<>();
+    private final static Map<String, SamClient> SAM_CLIENT_BY_APP = new ConcurrentHashMap<>();
 
     private final String host;
     private final int port;
     private final long socketTimeout;
     private final String dirPath;
-    private final Set<String> activeSessions = new HashSet<>();
-    private final Set<SamConnection> openSamConnections = new HashSet<>();
+    private final Set<String> activeSessions = new CopyOnWriteArraySet<>();
+    private final Set<SamConnection> openSamConnections = new CopyOnWriteArraySet<>();
 
     public static SamClient getSamClient(String dirPath) {
         return getSamClient(dirPath, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SOCKET_TIMEOUT);
@@ -74,7 +74,10 @@ public class SamClient {
         this.dirPath = dirPath;
         log.info("Sam client created with dirPath={}; host={}; port={}; socketTimeout={}",
                 dirPath, host, port, socketTimeout);
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Thread.currentThread().setName("SamClient.shutdownHook");
+            shutdown();
+        }));
     }
 
     /**
@@ -182,6 +185,13 @@ public class SamClient {
 
     public void shutdown() {
         openSamConnections.forEach(SamConnection::close);
+
+        activeSessions.clear();
+        openSamConnections.clear();
+       /* if (samConnection != null) {
+            samConnection.close();
+            openSamConnections.remove(samConnection);
+        }*/
     }
 
 

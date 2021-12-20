@@ -17,15 +17,15 @@
 
 package network.misq.network.http.common;
 
-import network.misq.common.data.Couple;
+import network.misq.common.data.Pair;
 
 import java.io.IOException;
 import java.util.Optional;
 
 public interface HttpClient {
-    String get(String param, Optional<Couple<String, String>> optionalHeader) throws IOException;
+    String get(String param, Optional<Pair<String, String>> optionalHeader) throws IOException;
 
-    String post(String param, Optional<Couple<String, String>> optionalHeader) throws IOException;
+    String post(String param, Optional<Pair<String, String>> optionalHeader) throws IOException;
 
     String getBaseUrl();
 
