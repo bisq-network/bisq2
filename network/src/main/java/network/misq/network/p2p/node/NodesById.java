@@ -82,15 +82,11 @@ public class NodesById implements Node.Listener {
     }
 
     public void addNodeListener(String nodeId, Node.Listener listener) {
-        Optional.ofNullable(map.get(nodeId)).ifPresent(node -> node.addListener(listener));
+        findNode(nodeId).ifPresent(node -> node.addListener(listener));
     }
 
     public void removeNodeListener(String nodeId, Node.Listener listener) {
-        Optional.ofNullable(map.get(nodeId)).ifPresent(node -> node.removeListener(listener));
-    }
-
-    public Optional<Address> getMyAddress(String nodeId) {
-        return Optional.ofNullable(map.get(nodeId)).flatMap(Node::findMyAddress);
+        findNode(nodeId).ifPresent(node -> node.removeListener(listener));
     }
 
     public CompletableFuture<Void> shutdown() {
@@ -103,7 +99,7 @@ public class NodesById implements Node.Listener {
     }
 
     public Optional<Address> findMyAddress(String nodeId) {
-        return map.get(nodeId).findMyAddress();
+        return findNode(nodeId).flatMap(Node::findMyAddress);
     }
 
     public Optional<Node> findNode(String nodeId) {
@@ -133,13 +129,12 @@ public class NodesById implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private Node getOrCreateNode(String nodeId) {
-        if (map.containsKey(nodeId)) {
-            return map.get(nodeId);
-        } else {
-            Node node = new Node(bannList, nodeConfig, nodeId);
-            map.put(nodeId, node);
-            node.addListener(this);
-            return node;
-        }
+        return findNode(nodeId)
+                .orElseGet(() -> {
+                    Node node = new Node(bannList, nodeConfig, nodeId);
+                    map.put(nodeId, node);
+                    node.addListener(this);
+                    return node;
+                });
     }
 }

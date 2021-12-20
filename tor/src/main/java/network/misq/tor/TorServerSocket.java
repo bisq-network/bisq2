@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static network.misq.tor.Constants.*;
@@ -40,6 +41,7 @@ public class TorServerSocket extends ServerSocket {
     private final String hsDirPath;
     private final TorController torController;
     private Optional<OnionAddress> onionAddress = Optional.empty();
+    private final ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("TorServerSocket.bindAsync");
 
     public TorServerSocket(String torDirPath, TorController torController) throws IOException {
         this.hsDirPath = torDirPath + File.separator + HS_DIR;
@@ -51,7 +53,7 @@ public class TorServerSocket extends ServerSocket {
     }
 
     public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort, String id) {
-        return bindAsync(hiddenServicePort, NetworkUtils.findFreeSystemPort(), id, ExecutorFactory.IO_POOL);
+        return bindAsync(hiddenServicePort, NetworkUtils.findFreeSystemPort(), id, executor);
     }
 
     public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort,
@@ -128,6 +130,7 @@ public class TorServerSocket extends ServerSocket {
             } catch (IOException ignore) {
             }
         });
+        ExecutorFactory.shutdownAndAwaitTermination(executor);
     }
 
     public Optional<OnionAddress> getOnionAddress() {

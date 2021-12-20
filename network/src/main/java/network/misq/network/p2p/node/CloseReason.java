@@ -56,9 +56,9 @@ public enum CloseReason {
 
     @Override
     public String toString() {
-        String graceful = isGraceful ? " (graceful)" : " (forced)";
-        return name() + graceful +
-                details.map(e -> "; " + e).orElse("") +
-                exception.map(e -> "; " + e).orElse("");
+        String graceful = isGraceful ? " [graceful" : " [forced";
+        return "Reason: " + name() + graceful +
+                details.map(e -> ", details: " + e).orElse("") +
+                exception.map(e -> ", exception: " + e).orElse("") + "]";
     }
 }

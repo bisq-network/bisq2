@@ -41,6 +41,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -74,6 +75,7 @@ public class Tor {
         SHUTDOWN_STARTED
     }
 
+    private final ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("Tor.startAsync");
     private final TorController torController;
     private final Bootstrap bootstrap;
     private final String torDirPath;
@@ -118,10 +120,11 @@ public class Tor {
 
         log.info("Shutdown Tor completed");
         state.set(State.NOT_STARTED);
+        ExecutorFactory.shutdownAndAwaitTermination(executor);
     }
 
     public CompletableFuture<Boolean> startAsync() {
-        return startAsync(ExecutorFactory.IO_POOL);
+        return startAsync(executor);
     }
 
     public CompletableFuture<Boolean> startAsync(Executor executor) {

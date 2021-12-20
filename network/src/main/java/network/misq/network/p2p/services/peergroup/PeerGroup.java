@@ -22,10 +22,11 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.MathUtils;
 import network.misq.network.p2p.node.*;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -173,39 +174,5 @@ public class PeerGroup {
 
     public boolean isASeed(Address address) {
         return seedNodeAddresses.stream().anyMatch(seedAddress -> seedAddress.equals(address));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Monitor
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getMonitorInfo() {
-        int numSeedConnections = (int) getAllConnections()
-                .filter(connection -> isASeed(connection.getPeerAddress())).count();
-        StringBuilder sb = new StringBuilder();
-        sb.append("Num connections: ").append(getNumConnections())
-                .append("\n").append("Num all connections: ").append(getNumConnections())
-                .append("\n").append("Num outbound connections: ").append(getOutboundConnections().count())
-                .append("\n").append("Num inbound connections: ").append(getInboundConnections().count())
-                .append("\n").append("Num seed connections: ").append(numSeedConnections)
-                .append("\n").append("Connections: ").append("\n");
-        getOutboundConnections()
-                .sorted(getConnectionAgeComparator())
-                .forEach(connection -> printConnectionInfo(sb, connection, true));
-        getInboundConnections()
-                .sorted(getConnectionAgeComparator())
-                .forEach(connection -> printConnectionInfo(sb, connection, false));
-        sb.append("\n").append("Reported peers: ").append(reportedPeers.stream().map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
-        sb.append("\n").append("Persisted peers: ").append(persistedPeers.stream().map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
-        return sb.append("\n").toString();
-    }
-
-    private void printConnectionInfo(StringBuilder sb, Connection connection, boolean isOutbound) {
-        String date = " at " + new SimpleDateFormat("HH:mm:ss.SSS").format(connection.getMetrics().getCreationDate());
-        String peerAddressVerified = connection.isPeerAddressVerified() ? " !]" : " ?]";
-        String peerAddress = connection.getPeerAddress().toString().replace("]", peerAddressVerified);
-        String dir = isOutbound ? " --> " : " <-- ";
-        sb.append(node).append(dir).append(peerAddress).append(date).append("\n");
     }
 }

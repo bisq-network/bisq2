@@ -21,9 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.timer.TaskScheduler;
 import network.misq.desktop.common.threading.reactfx.FxTimer;
 
-import javax.annotation.Nullable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -37,9 +34,6 @@ import java.util.concurrent.TimeUnit;
 public class UIScheduler implements TaskScheduler {
     private Runnable task;
     private FxTimer timer;
-    @Nullable
-    private ExecutorService executor;
-    private CompletableFuture<Void> future = new CompletableFuture<>();
 
     private UIScheduler() {
     }
@@ -50,11 +44,6 @@ public class UIScheduler implements TaskScheduler {
         return scheduler;
     }
 
-    @Override
-    public UIScheduler withExecutor(ExecutorService executor) {
-        this.executor = executor;
-        return this;
-    }
 
     @Override
     public UIScheduler after(long delayMs) {
@@ -88,7 +77,7 @@ public class UIScheduler implements TaskScheduler {
                 timer.stop();
             }
             long period = timeUnit.toMillis(delay);
-            timer = new FxTimer(period, period, task, (int) cycles, executor);
+            timer = new FxTimer(period, period, task, (int) cycles);
             timer.restart();
         });
         return this;

@@ -1,9 +1,9 @@
 package network.misq.network.p2p.node.transport;
 
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.util.NetworkUtils;
 import network.misq.i2p.SamClient;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 
@@ -58,7 +58,7 @@ public class I2PTransport implements Transport {
     public CompletableFuture<ServerSocketResult> getServerSocket(int port, String nodeId) {
         log.debug("Create serverSocket");
         return CompletableFuture.supplyAsync(() -> {
-            Thread.currentThread().setName("I2PTransport.getServerSocket-nodeId=" + nodeId+"-port="+port);
+            Thread.currentThread().setName("I2PTransport.getServerSocket-nodeId=" + nodeId + "-port=" + port);
             try {
                 ServerSocket serverSocket = samClient.getServerSocket(nodeId, NetworkUtils.findFreeSystemPort());
                 String destination = samClient.getMyDestination(nodeId);
@@ -70,7 +70,7 @@ public class I2PTransport implements Transport {
                 log.error(exception.toString(), exception);
                 throw new CompletionException(exception);
             }
-        }, ExecutorFactory.IO_POOL);
+        }, NetworkService.NETWORK_IO_POOL);
     }
 
     @Override

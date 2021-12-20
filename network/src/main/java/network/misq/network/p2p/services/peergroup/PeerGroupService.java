@@ -19,7 +19,6 @@ package network.misq.network.p2p.services.peergroup;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.timer.Scheduler;
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.p2p.node.Address;
@@ -31,10 +30,7 @@ import network.misq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy
 import network.misq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import network.misq.network.p2p.services.peergroup.validateaddress.AddressValidationService;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -42,14 +38,6 @@ import static java.util.concurrent.CompletableFuture.delayedExecutor;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static network.misq.network.p2p.node.CloseReason.*;
 
-/*
-
-import static java.util.concurrent.CompletableFuture.delayedExecutor;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static network.misq.network.p2p.node.CloseConnectionMessage.Reason.*;
-
- */
 @Slf4j
 public class PeerGroupService {
 
@@ -61,7 +49,7 @@ public class PeerGroupService {
     private final PeerExchangeService peerExchangeService;
     private final KeepAliveService keepAliveService;
     private final AddressValidationService addressValidationService;
-    private Scheduler scheduler;
+    private Optional<Scheduler> scheduler = Optional.empty();
 
     public static record Config(PeerGroup.Config peerGroupConfig,
                                 PeerExchangeStrategy.Config peerExchangeConfig,
@@ -88,7 +76,9 @@ public class PeerGroupService {
     public CompletableFuture<Boolean> initialize() {
         return peerExchangeService.doInitialPeerExchange()
                 .thenCompose(__ -> {
-                    scheduler = Scheduler.run(this::runBlockingTasks).withExecutor(ExecutorFactory.WORK_STEALING_POOL).periodically(config.interval());
+                    scheduler = Optional.of(Scheduler.run(this::runBlockingTasks)
+                            .periodically(config.interval())
+                            .name("PeerGroupService.scheduler-" + node));
                     keepAliveService.initialize();
                     return CompletableFuture.completedFuture(true);
                 });
@@ -96,7 +86,7 @@ public class PeerGroupService {
 
     private void runBlockingTasks() {
         closeBanned()
-                .thenCompose(__ -> verifyInboundConnections())
+                .thenCompose(__ -> maybeVerifyInboundConnections())
                 .thenComposeAsync(__ -> maybeCloseDuplicateConnections(), delayedExecutor(100, MILLISECONDS))
                 .thenComposeAsync(__ -> maybeCloseConnectionsToSeeds(), delayedExecutor(100, MILLISECONDS))
                 .thenComposeAsync(__ -> maybeCloseAgedConnections(), delayedExecutor(100, MILLISECONDS))
@@ -111,10 +101,7 @@ public class PeerGroupService {
         peerExchangeService.shutdown();
         addressValidationService.shutdown();
         keepAliveService.shutdown();
-        if (scheduler != null) {
-            scheduler.stop();
-            scheduler = null;
-        }
+        scheduler.ifPresent(Scheduler::stop);
         return CompletableFuture.completedFuture(null);
     }
 
@@ -132,7 +119,11 @@ public class PeerGroupService {
                 .orTimeout(config.timeout(), MILLISECONDS);
     }
 
-    private CompletableFuture<List<Boolean>> verifyInboundConnections() {
+    private CompletableFuture<List<Boolean>> maybeVerifyInboundConnections() {
+        // We only do the verification in about 30% of calls to avoid getting too much churn
+        if (new Random().nextInt(10) >= 3) {
+            return CompletableFuture.completedFuture(new ArrayList<>());
+        }
         Set<Address> outboundAddresses = peerGroup.getOutboundConnections()
                 .filter(addressValidationService::isInProgress)
                 .map(Connection::getPeerAddress)

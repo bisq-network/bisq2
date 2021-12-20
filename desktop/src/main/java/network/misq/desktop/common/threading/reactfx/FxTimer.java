@@ -5,9 +5,6 @@ import javafx.animation.Timeline;
 import javafx.util.Duration;
 import lombok.Getter;
 
-import javax.annotation.Nullable;
-import java.util.concurrent.Executor;
-
 /**
  * Provides factory methods for timers that are manipulated from and execute
  * their action on the JavaFX application thread.
@@ -17,17 +14,14 @@ import java.util.concurrent.Executor;
  */
 public class FxTimer {
     private final Duration actionTime;
-    @Nullable
-    private final Executor executor;
     private final Timeline timeline;
     private final Runnable action;
     private long seq = 0;
     @Getter
     private long counter = 0;
 
-    public FxTimer(long actionTime, long period, Runnable action, int cycles, @Nullable Executor executor) {
+    public FxTimer(long actionTime, long period, Runnable action, int cycles) {
         this.actionTime = Duration.millis(actionTime);
-        this.executor = executor;
         this.timeline = new Timeline();
         this.action = action;
 
@@ -44,15 +38,8 @@ public class FxTimer {
         long expected = seq;
         timeline.getKeyFrames().set(0, new KeyFrame(actionTime, ae -> {
             if (seq == expected) {
-                if (executor == null) {
-                    action.run();
-                    counter++;
-                } else {
-                    executor.execute(() -> {
-                        action.run();
-                        counter++;
-                    });
-                }
+                action.run();
+                counter++;
             }
         }));
         timeline.play();

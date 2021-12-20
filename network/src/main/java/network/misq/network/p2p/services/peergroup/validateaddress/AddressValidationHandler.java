@@ -53,7 +53,8 @@ class AddressValidationHandler implements Connection.Listener {
         future.orTimeout(TIMEOUT, TimeUnit.SECONDS);
         log.debug("Node {} send ConfirmAddressRequest to {} with nonce {}",
                 node, addressOfInboundConnection, nonce);
-        node.send(new AddressValidationRequest(nonce), addressOfInboundConnection)
+        node.getConnection(addressOfInboundConnection, false)
+                .thenCompose(connection -> node.send(new AddressValidationRequest(nonce), connection))
                 .whenComplete((connection, throwable) -> {
                     if (throwable == null) {
                         if (connection instanceof OutboundConnection outboundConnection) {

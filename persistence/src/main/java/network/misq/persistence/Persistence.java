@@ -23,9 +23,17 @@ import network.misq.common.util.FileUtils;
 
 import java.io.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
 public class Persistence {
+    public static final ThreadPoolExecutor PERSISTENCE_POOL = ExecutorFactory.getThreadPoolExecutor("PERSISTENCE_POOL",
+            1,
+            100,
+            5,
+            new SynchronousQueue<>());
+
     private final String directory;
     private final String fileName;
     private final String storagePath;
@@ -86,6 +94,6 @@ public class Persistence {
                 }
                 return success;
             }
-        }, ExecutorFactory.IO_POOL);
+        }, PERSISTENCE_POOL);
     }
 }

@@ -22,32 +22,20 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.threading.ExecutorFactory;
 
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Global scheduler which is triggered by the TickEmitter.onTick calls every 10 ms.
- * Precise timing is not a priority of that scheduler but avoidance to create new Timer threads for each scheduled execution.
- * If no executor is defined we use the global work-stealing pool (ForkJoinPool using a pool size of the number of
- * available CPU cores).
- * The timing precision should be between 10 and 20 ms.
- */
 @Slf4j
-public class Scheduler implements TaskScheduler, TickEmitter.Listener {
-    public static final AtomicInteger COUNTER = new AtomicInteger(0);
+public class Scheduler implements TaskScheduler {
+    private final ScheduledExecutorService executor = ExecutorFactory.newScheduledThreadPool("Scheduler", 10);
     private Runnable task;
-    private ExecutorService executor = ExecutorFactory.WORK_STEALING_POOL;
-    private long cycles;
-
     private volatile boolean stopped;
-    private long startTs;
-    private long interval;
-    private Optional<Future<?>> future = Optional.empty();
+    private Optional<ScheduledFuture<?>> future = Optional.empty();
 
     @Getter
     private long counter;
+    private Optional<String> threadName = Optional.empty();
 
     private Scheduler() {
     }
@@ -58,9 +46,8 @@ public class Scheduler implements TaskScheduler, TickEmitter.Listener {
         return scheduler;
     }
 
-    @Override
-    public Scheduler withExecutor(ExecutorService executor) {
-        this.executor = executor;
+    public Scheduler name(String threadName) {
+        this.threadName = Optional.of(threadName);
         return this;
     }
 
@@ -91,12 +78,23 @@ public class Scheduler implements TaskScheduler, TickEmitter.Listener {
 
     @Override
     public Scheduler repeated(long delay, TimeUnit timeUnit, long cycles) {
-        this.cycles = cycles;
-
-        stopped = false;
-        startTs = System.currentTimeMillis();
-        interval = timeUnit.toMillis(delay);
-        TickEmitter.addListener(this);
+        if (stopped) {
+            return this;
+        }
+        future = Optional.of(executor.scheduleWithFixedDelay(() -> {
+            if (stopped) {
+                return;
+            }
+            threadName.ifPresent(name -> Thread.currentThread().setName(name));
+            try {
+                task.run();
+            } finally {
+                counter++;
+                if (counter >= cycles) {
+                    stop();
+                }
+            }
+        }, delay, delay, timeUnit));
         return this;
     }
 
@@ -104,37 +102,5 @@ public class Scheduler implements TaskScheduler, TickEmitter.Listener {
     public void stop() {
         stopped = true;
         future.ifPresent(f -> f.cancel(true));
-        TickEmitter.removeListener(this);
-    }
-
-    @Override
-    public void onTick(long now) {
-        if (stopped) {
-            return;
-        }
-
-        if (now - startTs >= interval) {
-            if (future.isPresent() && !future.get().isDone()) {
-                return;
-            }
-            future = Optional.of(executor.submit(() -> {
-                Thread.currentThread().setName("Scheduler-" + COUNTER.incrementAndGet());
-                if (stopped) {
-                    return;
-                }
-                try {
-                    task.run();
-                } finally {
-                    counter++;
-                    if (counter >= cycles) {
-                        stop();
-                    } else {
-                        // We use the current time to ensure that in case the task took longer we wait at least the 
-                        // interval period before we execute again
-                        startTs = System.currentTimeMillis();
-                    }
-                }
-            }));
-        }
     }
 }

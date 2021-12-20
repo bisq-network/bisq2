@@ -19,14 +19,15 @@ package network.misq.network.p2p.node;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.util.StringUtils;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.node.transport.Transport;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -35,14 +36,13 @@ public final class Server {
     @Getter
     private final Address address;
     private volatile boolean isStopped;
-    private static BlockingQueue<Runnable> q = new ArrayBlockingQueue<>(20);
-    private static ThreadPoolExecutor ex = new ThreadPoolExecutor(4, 10, 20, TimeUnit.SECONDS, q);
+    private final Future<?> future;
 
     Server(Transport.ServerSocketResult serverSocketResult, Consumer<Socket> socketHandler, Consumer<Exception> exceptionHandler) {
         serverSocket = serverSocketResult.serverSocket();
         address = serverSocketResult.address();
         log.debug("Create server: {}", serverSocketResult);
-        ExecutorFactory.IO_POOL.execute(() -> {
+        future = NetworkService.NETWORK_IO_POOL.submit(() -> {
             Thread.currentThread().setName("Server-" +
                     StringUtils.truncate(serverSocketResult.nodeId()) + "-" +
                     StringUtils.truncate(serverSocketResult.address().toString()));
@@ -69,6 +69,7 @@ public final class Server {
             return CompletableFuture.completedFuture(null);
         }
         isStopped = true;
+        future.cancel(true);
         try {
             serverSocket.close();
         } catch (IOException ignore) {

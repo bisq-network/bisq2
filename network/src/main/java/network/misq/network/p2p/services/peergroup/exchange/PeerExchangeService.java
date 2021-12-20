@@ -30,6 +30,7 @@ import network.misq.network.p2p.services.peergroup.Peer;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,6 +50,8 @@ public class PeerExchangeService implements Node.Listener {
     private final PeerExchangeStrategy peerExchangeStrategy;
     private final Map<String, PeerExchangeRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private int doInitialPeerExchangeDelaySec = 1;
+    private volatile boolean isStopped;
+    private Optional<Scheduler> scheduler = Optional.empty();
 
     public PeerExchangeService(Node node, PeerExchangeStrategy peerExchangeStrategy) {
         this.node = node;
@@ -65,7 +68,7 @@ public class PeerExchangeService implements Node.Listener {
     }
 
     private CompletableFuture<Void> doPeerExchange(List<Address> candidates) {
-        if (candidates.isEmpty()) {
+        if (candidates.isEmpty() || isStopped) {
             return CompletableFuture.completedFuture(null);
         }
         log.info("Node {} starts peer exchange with: {}", node,
@@ -83,7 +86,9 @@ public class PeerExchangeService implements Node.Listener {
                     if (peerExchangeStrategy.redoInitialPeerExchange(numSuccess, candidates.size())) {
                         log.info("We redo the initial peer exchange after {} sec as we have not reached sufficient connections " +
                                 "or received sufficient peers", doInitialPeerExchangeDelaySec);
-                        Scheduler.run(this::doInitialPeerExchange).after(doInitialPeerExchangeDelaySec, TimeUnit.SECONDS);
+                        scheduler = Optional.of(Scheduler.run(this::doInitialPeerExchange)
+                                .after(doInitialPeerExchangeDelaySec, TimeUnit.SECONDS)
+                                .name("PeerExchangeService.scheduler-" + node));
                         doInitialPeerExchangeDelaySec = Math.min(60, doInitialPeerExchangeDelaySec * 2);
                     }
                     return CompletableFuture.completedFuture(null);
@@ -120,6 +125,8 @@ public class PeerExchangeService implements Node.Listener {
     }
 
     public void shutdown() {
+        isStopped = true;
+        scheduler.ifPresent(Scheduler::stop);
         requestHandlerMap.values().forEach(PeerExchangeRequestHandler::dispose);
         requestHandlerMap.clear();
         peerExchangeStrategy.shutdown();

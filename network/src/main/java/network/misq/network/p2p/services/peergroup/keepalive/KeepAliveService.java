@@ -26,6 +26,7 @@ import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.services.peergroup.PeerGroup;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +41,7 @@ public class KeepAliveService implements Node.Listener {
     private final PeerGroup peerGroup;
     private final Config config;
     private final Map<String, KeepAliveHandler> requestHandlerMap = new ConcurrentHashMap<>();
-    private Scheduler scheduler;
+    private Optional<Scheduler> scheduler = Optional.empty();
 
     public KeepAliveService(Node node, PeerGroup peerGroup, Config config) {
         this.node = node;
@@ -50,7 +51,8 @@ public class KeepAliveService implements Node.Listener {
     }
 
     public void initialize() {
-        scheduler = Scheduler.run(this::sendPingIfRequired).periodically(config.interval());
+        scheduler = Optional.of(Scheduler.run(this::sendPingIfRequired).periodically(config.interval())
+                .name("PeerExchangeService.scheduler-" + node));
     }
 
     private void sendPingIfRequired() {
@@ -74,10 +76,7 @@ public class KeepAliveService implements Node.Listener {
     }
 
     public void shutdown() {
-        if (scheduler != null) {
-            scheduler.stop();
-            scheduler = null;
-        }
+        scheduler.ifPresent(Scheduler::stop);
         requestHandlerMap.values().forEach(KeepAliveHandler::dispose);
         requestHandlerMap.clear();
     }

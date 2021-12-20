@@ -19,6 +19,8 @@ package network.misq.network;
 
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import network.misq.common.threading.ExecutorFactory;
 import network.misq.network.http.HttpService;
 import network.misq.network.http.common.BaseHttpClient;
 import network.misq.network.p2p.NetworkId;
@@ -33,24 +35,35 @@ import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.peergroup.SeedNodeRepository;
 import network.misq.security.KeyPairRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * High level API for network access to p2p network as well to http services (over Tor). If user has only I2P selected
  * for p2p network a tor instance will be still bootstrapped for usage for the http requests. Only if user has
  * clearNet enabled clearNet is used for https.
  */
+@Slf4j
 public class NetworkService {
-    private static final Logger log = LoggerFactory.getLogger(NetworkService.class);
+    // NETWORK_IO_POOL must be used only inside network module.
+    // The maximumPoolSize depends on the number of expected connections and nodes. Each node has 1 blocking IO thread 
+    // at ServerSocket.accept. Each connection has 1 blocking IO thread at InputStream.read and 1 thread at 
+    // OutputStream.write which is only short term blocking while writing. Beside that there is 1 blocking IO thread at 
+    // ConnectionHandshake which is active while handshake is in progress.
+    // If Tor and I2P are used there are additional threads at startup. 
+    // The PeerGroupService usually has about 12 connections, so that's 24 threads + 12 at sending messages. 
+    // If a user has 10 offers with dedicated nodes and 5 connections open, its another 100 threads + 50 at sending 
+    // messages. 100-200 threads might be a usual scenario, but it could also peak much higher, so we will give 
+    // maximumPoolSize sufficient headroom and use a rather short keepAliveTimeInSec.
+    public static final ThreadPoolExecutor NETWORK_IO_POOL = ExecutorFactory.getThreadPoolExecutor("NETWORK_IO_POOL",
+            1,
+            5000,
+            10,
+            new SynchronousQueue<>());
 
     public static record Config(String baseDirPath,
                                 Transport.Config transportConfig,

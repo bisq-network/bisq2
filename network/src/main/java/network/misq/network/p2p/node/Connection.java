@@ -19,8 +19,8 @@ package network.misq.network.p2p.node;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.util.StringUtils;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Envelope;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.message.Version;
@@ -31,9 +31,13 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -77,6 +81,7 @@ public abstract class Connection {
     private ObjectOutputStream objectOutputStream;
     @Getter
     private volatile boolean isStopped;
+    private Optional<Future<?>> future;
 
     protected Connection(Socket socket,
                          Capability peersCapability,
@@ -90,7 +95,6 @@ public abstract class Connection {
     }
 
     void startListen(Consumer<Exception> errorHandler) {
-
         // TODO java serialisation is just for dev, will be replaced by custom serialisation
         // Type-Length-Value Format is considered to be used:
         // https://github.com/lightningnetwork/lightning-rfc/blob/master/01-messaging.md#type-length-value-format
@@ -105,7 +109,7 @@ public abstract class Connection {
             close(CloseReason.EXCEPTION.exception(exception));
             return;
         }
-        ExecutorFactory.IO_POOL.execute(() -> {
+        future = Optional.of(NetworkService.NETWORK_IO_POOL.submit(() -> {
             Thread.currentThread().setName("Connection-input-" + StringUtils.truncate(getThreadNameId()));
             try {
                 while (isNotStopped()) {
@@ -134,7 +138,7 @@ public abstract class Connection {
                     }
                 }
             }
-        });
+        }));
     }
 
     CompletableFuture<Connection> send(AuthorizedMessage message) {
@@ -163,11 +167,7 @@ public abstract class Connection {
                 // that the "send message" intent failed.
                 throw new CompletionException(exception);
             }
-        }, ExecutorFactory.IO_POOL);
-    }
-
-    CompletableFuture<Connection> shutdown() {
-        return close(CloseReason.SHUTDOWN);
+        }, NetworkService.NETWORK_IO_POOL);
     }
 
     CompletableFuture<Connection> close(CloseReason closeReason) {
@@ -178,13 +178,15 @@ public abstract class Connection {
         log.debug("Shut down {}", this);
         isStopped = true;
         handler.onConnectionClosed(this, closeReason);
+        future.ifPresent(f -> f.cancel(true));
         runAsync(() -> {
             listeners.forEach(listener -> listener.onConnectionClosed(closeReason));
             listeners.clear();
         });
         try {
             socket.close();
-        } catch (IOException ignore) {
+        } catch (IOException e) {
+            log.error("Error at socket.close", e);
         }
         return CompletableFuture.completedFuture(this);
     }

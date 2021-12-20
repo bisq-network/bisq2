@@ -17,11 +17,9 @@
 
 package network.misq.common.timer;
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public interface TaskScheduler {
-    TaskScheduler withExecutor(ExecutorService executor);
 
     TaskScheduler after(long delayMs);
 

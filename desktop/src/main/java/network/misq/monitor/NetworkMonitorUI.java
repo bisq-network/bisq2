@@ -149,7 +149,7 @@ public class NetworkMonitorUI extends Application {
         boolean bootstrapAll = Optional.ofNullable(params.get("bootstrapAll"))
                 .map(e -> e.equalsIgnoreCase("true"))
                 .orElse(addressesToBootstrap.isEmpty() && myAddress.isEmpty());
-        multiNodesNetworkMonitor = new MultiNodesNetworkMonitor(Transport.Type.CLEAR_NET, bootstrapAll, addressesToBootstrap);
+        multiNodesNetworkMonitor = new MultiNodesNetworkMonitor(Transport.Type.TOR, bootstrapAll, addressesToBootstrap);
         multiNodesNetworkMonitor.addNetworkInfoConsumer(pair -> {
             UIThread.run(() -> {
                 if (networkInfoTextArea.isFocused()) {

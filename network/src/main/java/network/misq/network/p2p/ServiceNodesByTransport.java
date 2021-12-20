@@ -145,12 +145,13 @@ public class ServiceNodesByTransport {
         return future;
     }
 
+    // TODO we return first successful connection in case we have multiple transportTypes. Not sure if that is ok.
     public CompletableFuture<Connection> confidentialSend(Message message, NetworkId networkId, KeyPair myKeyPair, String connectionId) {
         CompletableFuture<Connection> future = new CompletableFuture<>();
         networkId.addressByNetworkType().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 map.get(transportType)
-                        .confidentialSend(message, networkId.addressByNetworkType().get(transportType), networkId.pubKey(), myKeyPair, connectionId)
+                        .confidentialSend(message, address, networkId.pubKey(), myKeyPair, connectionId)
                         .whenComplete((connection, throwable) -> {
                             if (connection != null) {
                                 future.complete(connection);
@@ -216,15 +217,14 @@ public class ServiceNodesByTransport {
     }
 
     public Optional<Socks5Proxy> getSocksProxy() {
-        if (map.containsKey(Transport.Type.TOR)) {
-            try {
-                return map.get(Transport.Type.TOR).getSocksProxy();
-            } catch (IOException e) {
-                return Optional.empty();
-            }
-        } else {
-            return Optional.empty();
-        }
+        return findServiceNode(Transport.Type.TOR)
+                .flatMap(serviceNode -> {
+                    try {
+                        return serviceNode.getSocksProxy();
+                    } catch (IOException ex) {
+                        return Optional.empty();
+                    }
+                });
     }
 
     public void addMessageListener(Node.Listener listener) {
@@ -258,7 +258,7 @@ public class ServiceNodesByTransport {
     }
 
     public Optional<Address> findMyAddresses(Transport.Type transport, String nodeId) {
-        return findMyAddresses(transport).map(map -> map.get(nodeId));
+        return findMyAddresses(transport).flatMap(map -> Optional.ofNullable(map.get(nodeId)));
     }
 
     public Optional<ServiceNode> findServiceNode(Transport.Type transport) {
@@ -266,7 +266,7 @@ public class ServiceNodesByTransport {
     }
 
     public Optional<Node> findNode(Transport.Type transport, String nodeId) {
-        return Optional.ofNullable(map.get(transport))
+        return findServiceNode(transport)
                 .flatMap(serviceNode -> serviceNode.findNode(nodeId));
     }
 }

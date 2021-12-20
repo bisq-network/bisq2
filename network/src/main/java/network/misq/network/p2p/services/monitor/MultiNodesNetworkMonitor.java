@@ -17,11 +17,8 @@
 
 package network.misq.network.p2p.services.monitor;
 
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.data.Pair;
-import network.misq.common.util.CompletableFutureUtils;
 import network.misq.common.util.MathUtils;
 import network.misq.common.util.OsUtils;
 import network.misq.network.NetworkService;
@@ -42,32 +39,29 @@ import network.misq.security.KeyPairRepository;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.concurrent.CompletableFuture.delayedExecutor;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 @Slf4j
 public class MultiNodesNetworkMonitor {
     private final Set<Transport.Type> supportedTransportTypes;
     private final boolean bootstrapAll;
     private final Optional<List<Address>> addressesToBootstrap;
-
     private final ServiceNode.Config serviceNodeConfig;
     private final String baseDirPath;
     private final KeyPairRepository keyPairRepository;
-
-    @Getter
     private final Transport.Type transportType;
     private final List<Address> seedAddresses;
     private final Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport;
     private final SeedNodeRepository seedNodeRepository;
-    @Setter
-    @Getter
-    private int numSeeds = 8;
-    @Setter
-    @Getter
-    private int numNodes = 20;
+    private final int numSeeds = 8;
+    private final int numNodes = 20;
     private final Map<Address, NetworkService> networkServicesByAddress = new HashMap<>();
     private final Map<Address, String> connectionInfoByAddress = new HashMap<>();
 
@@ -100,17 +94,17 @@ public class MultiNodesNetworkMonitor {
         seedNodeRepository = new SeedNodeRepository(seedsByTransportType);
         KeepAliveService.Config keepAliveServiceConfig = new KeepAliveService.Config(TimeUnit.SECONDS.toMillis(180), TimeUnit.SECONDS.toMillis(90));
         PeerExchangeStrategy.Config peerExchangeStrategyConfig = new PeerExchangeStrategy.Config(2, 10, 10);
-        PeerGroup.Config peerGroupConfig = new PeerGroup.Config(8, 20, 1);
+        PeerGroup.Config peerGroupConfig = new PeerGroup.Config(8, 16, 1);
         PeerGroupService.Config defaultConf = new PeerGroupService.Config(peerGroupConfig,
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
-                TimeUnit.SECONDS.toMillis(60),  //bootstrapTime
-                TimeUnit.SECONDS.toMillis(30),  //interval
-                TimeUnit.SECONDS.toMillis(10),  //timeout
+                TimeUnit.SECONDS.toMillis(5),  //bootstrapTime
+                TimeUnit.SECONDS.toMillis(10),  //interval
+                TimeUnit.SECONDS.toMillis(60),  //timeout
                 TimeUnit.MINUTES.toMillis(60),  //maxAge
                 100,                        //maxReported
                 100,                        //maxPersisted
-                2                              //maxSeeds
+                8                              //maxSeeds
         );
         peerGroupServiceConfigByTransport = Map.of(
                 Transport.Type.TOR, defaultConf,                           //maxSeeds
@@ -118,9 +112,9 @@ public class MultiNodesNetworkMonitor {
                 Transport.Type.CLEAR_NET, new PeerGroupService.Config(peerGroupConfig,
                         peerExchangeStrategyConfig,
                         keepAliveServiceConfig,
-                        TimeUnit.SECONDS.toMillis(2),   //bootstrapTime
-                        TimeUnit.SECONDS.toMillis(2),   //interval
-                        TimeUnit.SECONDS.toMillis(5),  //timeout
+                        TimeUnit.SECONDS.toMillis(10),   //bootstrapTime
+                        TimeUnit.SECONDS.toMillis(10),   //interval
+                        TimeUnit.SECONDS.toMillis(50),  //timeout
                         TimeUnit.MINUTES.toMillis(10),  //maxAge
                         100,                        //maxReported
                         100,                        //maxPersisted
@@ -139,11 +133,10 @@ public class MultiNodesNetworkMonitor {
             NetworkService networkService = createNetworkService(port);
             setupConnectionListener(networkService);
             networkServicesByAddress.put(address, networkService);
-            long minDelayMs = (i + 1) * 10L;
-            long maxDelayMs = (i + 1) * 1000L;
+            int delayMs = (i + 1) * 1000;
+            long randDelay = new Random().nextInt(delayMs);
             if (bootstrapAll || isInBootstrapList(address)) {
-                CompletableFutureUtils.pause(minDelayMs, maxDelayMs)
-                        .thenCompose(__ -> networkService.bootstrap(port));
+                CompletableFuture.runAsync(() -> networkService.bootstrap(port), delayedExecutor(randDelay, MILLISECONDS));
             }
         }
         return addresses;
@@ -172,7 +165,7 @@ public class MultiNodesNetworkMonitor {
     }
 
     private void setupConnectionListener(NetworkService networkService) {
-        networkService.findDefaultNode(getTransportType()).ifPresent(node -> {
+        networkService.findDefaultNode(transportType).ifPresent(node -> {
             node.addListener(new Node.Listener() {
 
                 @Override
@@ -199,7 +192,7 @@ public class MultiNodesNetworkMonitor {
             String peerAddressVerified = connection.isPeerAddressVerified() ? " !]" : " ?]";
             String peerAddress = connection.getPeerAddress().toString().replace("]", peerAddressVerified);
             String tag = closeReason.isPresent() ? "\n- onDisconnect " : "\n+ onConnection ";
-            String reason = " " + closeReason.map(r -> r.toString()).orElse("");
+            String reason = closeReason.map(r -> ", " + r).orElse("");
             String networkInfo = tag + node + dir + peerAddress + now + reason;
 
             String prev = connectionInfoByAddress.get(address);

@@ -28,16 +28,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ExecutorFactory {
     public static final AtomicInteger COUNTER = new AtomicInteger(0);
     public static final ExecutorService WORK_STEALING_POOL = Executors.newWorkStealingPool();
-    public static final ThreadPoolExecutor IO_POOL = getThreadPoolExecutor("IO_POOL",
-            1,
-            200,
-            10,
-            new SynchronousQueue<>());
+
 
     public static CompletableFuture<Void> shutdown() {
         return CompletableFuture.runAsync(() -> {
             ExecutorFactory.shutdownAndAwaitTermination(WORK_STEALING_POOL, 100);
-            ExecutorFactory.shutdownAndAwaitTermination(IO_POOL, 100);
         });
     }
 
@@ -70,17 +65,24 @@ public class ExecutorFactory {
         return Executors.newSingleThreadScheduledExecutor(threadFactory);
     }
 
-    private static ThreadPoolExecutor getThreadPoolExecutor(String name,
-                                                            int corePoolSize,
-                                                            int maximumPoolSize,
-                                                            long keepAliveTimeInSec,
-                                                            BlockingQueue<Runnable> workQueue) {
+    public static ScheduledExecutorService newScheduledThreadPool(String name, int corePoolSize) {
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(name + "-" + COUNTER.incrementAndGet())
+                .setDaemon(true)
+                .build();
+        return Executors.newScheduledThreadPool(corePoolSize, threadFactory);
+    }
+
+    public static ThreadPoolExecutor getThreadPoolExecutor(String name,
+                                                           int corePoolSize,
+                                                           int maximumPoolSize,
+                                                           long keepAliveTimeInSec,
+                                                           BlockingQueue<Runnable> workQueue) {
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat(name)
                 .setDaemon(true)
                 .build();
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
+        return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
                 TimeUnit.SECONDS, workQueue, threadFactory);
-        return executor;
     }
 }

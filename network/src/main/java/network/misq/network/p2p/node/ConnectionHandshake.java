@@ -17,9 +17,10 @@
 
 package network.misq.network.p2p.node;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.util.StringUtils;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Envelope;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.message.Version;
@@ -32,6 +33,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -40,22 +42,24 @@ import java.util.concurrent.CompletableFuture;
  * The server awaits the Request and sends the Response.
  */
 @Slf4j
-public class ConnectionHandshake {
+class ConnectionHandshake {
+    @Getter
+    private final String id = UUID.randomUUID().toString();
     private final Socket socket;
     private final BannList bannList;
     private final Capability capability;
     private final AuthorizationService authorizationService;
 
-    public static record Request(AuthorizationToken token, Capability capability, Load load) implements Message {
+    private static record Request(AuthorizationToken token, Capability capability, Load load) implements Message {
     }
 
-    public static record Response(AuthorizationToken token, Capability capability, Load load) implements Message {
+    private static record Response(AuthorizationToken token, Capability capability, Load load) implements Message {
     }
 
-    public static record Result(Capability capability, Load load) {
+    static record Result(Capability capability, Load load) {
     }
 
-    public ConnectionHandshake(Socket socket, BannList bannList, int socketTimeout, Capability capability, AuthorizationService authorizationService) {
+    ConnectionHandshake(Socket socket, BannList bannList, int socketTimeout, Capability capability, AuthorizationService authorizationService) {
         this.socket = socket;
         this.bannList = bannList;
         this.capability = capability;
@@ -71,7 +75,7 @@ public class ConnectionHandshake {
     }
 
     // Client side protocol
-    public CompletableFuture<Result> start(Load myLoad) {
+    CompletableFuture<Result> start(Load myLoad) {
         return CompletableFuture.supplyAsync(() -> {
             Thread.currentThread().setName("ConnectionHandshake.start-" + StringUtils.truncate(capability.address().toString()));
             try {
@@ -116,11 +120,11 @@ public class ConnectionHandshake {
                     throw new ConnectionException(e);
                 }
             }
-        }, ExecutorFactory.IO_POOL);
+        }, NetworkService.NETWORK_IO_POOL);
     }
 
     // Server side protocol
-    public CompletableFuture<Result> onSocket(Load myLoad) {
+    CompletableFuture<Result> onSocket(Load myLoad) {
         return CompletableFuture.supplyAsync(() -> {
             Thread.currentThread().setName("ConnectionHandshake.onSocket-" + StringUtils.truncate(capability.address().toString()));
             try {
@@ -163,6 +167,14 @@ public class ConnectionHandshake {
                     throw new ConnectionException(e);
                 }
             }
-        }, ExecutorFactory.IO_POOL);
+        }, NetworkService.NETWORK_IO_POOL);
+    }
+
+    CompletableFuture<Void> shutdown() {
+        try {
+            socket.close();
+        } catch (IOException ignore) {
+        }
+        return CompletableFuture.completedFuture(null);
     }
 }
