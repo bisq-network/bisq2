@@ -76,6 +76,7 @@ public class PeerGroupService {
     public CompletableFuture<Boolean> initialize() {
         return peerExchangeService.doInitialPeerExchange()
                 .thenCompose(__ -> {
+                    log.error("Node {} completed doInitialPeerExchange", node);
                     scheduler = Optional.of(Scheduler.run(this::runBlockingTasks)
                             .periodically(config.interval())
                             .name("PeerGroupService.scheduler-" + node));

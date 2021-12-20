@@ -31,6 +31,7 @@ import network.misq.security.HybridEncryption;
 import network.misq.security.KeyPairRepository;
 import network.misq.security.PubKey;
 
+import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Set;
@@ -71,8 +72,12 @@ public class ConfidentialService implements Node.Listener {
                 keyPairRepository.findKeyPair(confidentialMessage.getKeyId()).ifPresent(receiversKeyPair -> {
                     try {
                         byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
-                        Message decryptedMessage = (Message) ObjectSerializer.deserialize(decrypted);
-                        listeners.forEach(listener -> listener.onMessage(decryptedMessage, connection, nodeId));
+                        Serializable deserialized = ObjectSerializer.deserialize(decrypted);
+                        if (deserialized instanceof Message decryptedMessage) {
+                            listeners.forEach(listener -> listener.onMessage(decryptedMessage, connection, nodeId));
+                        } else {
+                            log.warn("Deserialized data is not of type Message. deserialized.getClass()={}", deserialized.getClass());
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

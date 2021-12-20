@@ -20,7 +20,6 @@ package network.misq.network.p2p;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import network.misq.common.util.CompletableFutureUtils;
-import network.misq.common.util.NetworkUtils;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Connection;
@@ -105,18 +104,6 @@ public class ServiceNodesByTransport {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public CompletableFuture<Boolean> bootstrap() {
-        return bootstrap(null);
-    }
-
-    public CompletableFuture<Boolean> bootstrap(@Nullable BiConsumer<Boolean, Throwable> resultHandler) {
-        return bootstrap(NetworkUtils.findFreeSystemPort(), resultHandler);
-    }
-
-    public CompletableFuture<Boolean> bootstrap(int port) {
-        return bootstrap(port, null);
-    }
 
     public CompletableFuture<Boolean> bootstrap(int port, @Nullable BiConsumer<Boolean, Throwable> resultHandler) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();

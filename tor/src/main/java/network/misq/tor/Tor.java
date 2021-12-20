@@ -37,10 +37,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -75,7 +75,7 @@ public class Tor {
         SHUTDOWN_STARTED
     }
 
-    private final ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("Tor.startAsync");
+    private Optional<ExecutorService> executor = Optional.empty();
     private final TorController torController;
     private final Bootstrap bootstrap;
     private final String torDirPath;
@@ -120,14 +120,16 @@ public class Tor {
 
         log.info("Shutdown Tor completed");
         state.set(State.NOT_STARTED);
-        ExecutorFactory.shutdownAndAwaitTermination(executor);
+        executor.ifPresent(ExecutorFactory::shutdownAndAwaitTermination);
+        executor = Optional.empty();
     }
 
     public CompletableFuture<Boolean> startAsync() {
-        return startAsync(executor);
+        return startAsync(getExecutor());
     }
 
-    public CompletableFuture<Boolean> startAsync(Executor executor) {
+    public CompletableFuture<Boolean> startAsync(ExecutorService executor) {
+        this.executor = Optional.of(executor);
         if (state.get() == State.STARTED) {
             return CompletableFuture.completedFuture(true);
         }
@@ -251,5 +253,9 @@ public class Tor {
             e.printStackTrace();
         }
         return socks5Proxy;
+    }
+
+    private ExecutorService getExecutor() {
+        return executor.orElse(ExecutorFactory.newSingleThreadExecutor("Tor.startAsync"));
     }
 }

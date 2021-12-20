@@ -21,11 +21,13 @@ package network.misq.network;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.threading.ExecutorFactory;
+import network.misq.common.util.NetworkUtils;
 import network.misq.network.http.HttpService;
 import network.misq.network.http.common.BaseHttpClient;
 import network.misq.network.p2p.NetworkId;
 import network.misq.network.p2p.ServiceNode;
 import network.misq.network.p2p.ServiceNodesByTransport;
+import network.misq.network.p2p.State;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Connection;
@@ -36,11 +38,15 @@ import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.peergroup.SeedNodeRepository;
 import network.misq.security.KeyPairRepository;
 
+import javax.annotation.Nullable;
 import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.function.BiConsumer;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * High level API for network access to p2p network as well to http services (over Tor). If user has only I2P selected
@@ -80,7 +86,10 @@ public class NetworkService {
     private final Optional<String> socks5ProxyAddress; // Optional proxy address of external tor instance 
     @Getter
     private final Set<Transport.Type> supportedTransportTypes;
+    @Getter
     private final ServiceNodesByTransport serviceNodesByTransport;
+    @Getter
+    public State state = State.INIT;
 
     public NetworkService(Config config, KeyPairRepository keyPairRepository) {
         httpService = new HttpService();
@@ -100,13 +109,40 @@ public class NetworkService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-
     public CompletableFuture<Boolean> bootstrap() {
-        return serviceNodesByTransport.bootstrap();
+        return bootstrap(NetworkUtils.findFreeSystemPort());
     }
 
     public CompletableFuture<Boolean> bootstrap(int port) {
-        return serviceNodesByTransport.bootstrap(port);
+        return bootstrap(port, null);
+    }
+
+    public CompletableFuture<Boolean> bootstrap(int port, @Nullable BiConsumer<Boolean, Throwable> resultHandler) {
+        setState(State.BOOTSTRAPPING);
+        return serviceNodesByTransport.bootstrap(port, resultHandler)
+                .whenComplete((result, throwable) -> {
+                    if (throwable == null) {
+                        setState(State.BOOTSTRAPPED);
+                    }
+                });
+    }
+
+    public CompletableFuture<Void> shutdown() {
+        setState(State.SHUTDOWN_STARTED);
+        CountDownLatch latch = new CountDownLatch(2);
+        return CompletableFuture.runAsync(() -> {
+            serviceNodesByTransport.shutdown().whenComplete((v, t) -> latch.countDown());
+            httpService.shutdown().whenComplete((v, t) -> latch.countDown());
+            try {
+                if (!latch.await(1, TimeUnit.SECONDS)) {
+                    log.error("Shutdown interrupted by timeout");
+                }
+            } catch (InterruptedException e) {
+                log.error("Shutdown interrupted", e);
+            } finally {
+                setState(State.SHUTDOWN_COMPLETE);
+            }
+        });
     }
 
     public CompletableFuture<Connection> confidentialSend(Message message, NetworkId peerNetworkId, KeyPair myKeyPair, String connectionId) {
@@ -121,24 +157,8 @@ public class NetworkService {
         serviceNodesByTransport.removeMessageListener(listener);
     }
 
-
     public CompletableFuture<BaseHttpClient> getHttpClient(String url, String userAgent, Transport.Type transportType) {
         return httpService.getHttpClient(url, userAgent, transportType, serviceNodesByTransport.getSocksProxy(), socks5ProxyAddress);
-    }
-
-    public CompletableFuture<Void> shutdown() {
-        CountDownLatch latch = new CountDownLatch(2);
-        return CompletableFuture.runAsync(() -> {
-            serviceNodesByTransport.shutdown().whenComplete((v, t) -> latch.countDown());
-            httpService.shutdown().whenComplete((v, t) -> latch.countDown());
-            try {
-                if (!latch.await(1, TimeUnit.SECONDS)) {
-                    log.error("Shutdown interrupted by timeout");
-                }
-            } catch (InterruptedException e) {
-                log.error("Shutdown interrupted", e);
-            }
-        });
     }
 
     public Map<Transport.Type, Map<String, Address>> findMyAddresses() {
@@ -167,5 +187,11 @@ public class NetworkService {
 
     public Optional<ServiceNode> findServiceNode(Transport.Type transport) {
         return serviceNodesByTransport.findServiceNode(transport);
+    }
+
+    private void setState(State state) {
+        checkArgument(this.state.ordinal() < state.ordinal(),
+                "New state %s must have a higher ordinal as the current state %s", state, this.state);
+        this.state = state;
     }
 }

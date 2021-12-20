@@ -31,8 +31,8 @@ import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.monitor.MonitorService;
-import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.peergroup.BannList;
+import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.relay.RelayService;
 import network.misq.network.p2p.services.router.gossip.GossipResult;
 import network.misq.security.PubKey;
@@ -78,6 +78,8 @@ public class ServiceNode {
     private Optional<RelayService> relayService;
     @Getter
     private Optional<MonitorService> monitorService;
+    @Getter
+    public State state = State.INIT;
 
     public ServiceNode(Config config,
                        Node.Config nodeConfig,
@@ -115,18 +117,59 @@ public class ServiceNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Boolean> bootstrap(String nodeId, int serverPort) {
-        return initializeServer(nodeId, serverPort)
-                .thenCompose(res -> initializePeerGroup());
+    public CompletableFuture<Transport.ServerSocketResult> initializeServer(String nodeId, int serverPort) {
+        setState(State.INITIALIZE_SERVER);
+        return nodesById.initializeServer(nodeId, serverPort)
+                .whenComplete((result, throwable) -> {
+                    if (throwable == null) {
+                        setState(State.SERVER_INITIALIZED);
+                    }
+                });
     }
 
-    public CompletableFuture<Transport.ServerSocketResult> initializeServer(String nodeId, int serverPort) {
-        return nodesById.initializeServer(nodeId, serverPort);
+    public CompletableFuture<Boolean> bootstrap(String nodeId, int serverPort) {
+        return initializeServer(nodeId, serverPort)
+                .thenCompose(res -> {
+                    setState(State.BOOTSTRAPPING);
+                    return initializePeerGroup();
+                })
+                .whenComplete((result, throwable) -> {
+                    if (throwable == null) {
+                        setState(State.BOOTSTRAPPED);
+                    }
+                });
     }
 
     public CompletableFuture<Boolean> initializePeerGroup() {
         return peerGroupService.map(PeerGroupService::initialize)
                 .orElse(CompletableFuture.completedFuture(true));
+    }
+
+    public CompletableFuture<Void> shutdown() {
+        setState(State.SHUTDOWN_STARTED);
+        CountDownLatch latch = new CountDownLatch(1 + // For nodesById
+                ((int) confidentialMessageService.stream().count()) +
+                ((int) peerGroupService.stream().count()) +
+                ((int) relayService.stream().count()) +
+                ((int) dataService.stream().count()) +
+                ((int) monitorService.stream().count()));
+        return CompletableFuture.runAsync(() -> {
+            nodesById.shutdown().whenComplete((v, t) -> latch.countDown());
+            confidentialMessageService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
+            peerGroupService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
+            dataService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
+            relayService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
+            monitorService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
+            try {
+                if (!latch.await(1, TimeUnit.SECONDS)) {
+                    log.error("Shutdown interrupted by timeout");
+                }
+            } catch (InterruptedException e) {
+                log.error("Shutdown interrupted", e);
+            } finally {
+                setState(State.SHUTDOWN_COMPLETE);
+            }
+        });
     }
 
     public CompletableFuture<Connection> confidentialSend(Message message, Address address, PubKey pubKey, KeyPair myKeyPair, String nodeId) {
@@ -158,30 +201,6 @@ public class ServiceNode {
         return defaultNode.getSocksProxy();
     }
 
-    public CompletableFuture<Void> shutdown() {
-        CountDownLatch latch = new CountDownLatch(1 + // For nodesById
-                ((int) confidentialMessageService.stream().count()) +
-                ((int) peerGroupService.stream().count()) +
-                ((int) relayService.stream().count()) +
-                ((int) dataService.stream().count()) +
-                ((int) monitorService.stream().count()));
-        return CompletableFuture.runAsync(() -> {
-            nodesById.shutdown().whenComplete((v, t) -> latch.countDown());
-            confidentialMessageService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
-            peerGroupService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
-            dataService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
-            relayService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
-            monitorService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
-            try {
-                if (!latch.await(1, TimeUnit.SECONDS)) {
-                    log.error("Shutdown interrupted by timeout");
-                }
-            } catch (InterruptedException e) {
-                log.error("Shutdown interrupted", e);
-            }
-        });
-    }
-
     public void addMessageListener(Node.Listener listener) {
         confidentialMessageService.ifPresent(service -> service.addMessageListener(listener));
     }
@@ -206,4 +225,9 @@ public class ServiceNode {
         return nodesById.getAddressesByNodeId();
     }
 
+    private void setState(State state) {
+        checkArgument(this.state.ordinal() < state.ordinal(),
+                "New state %s must have a higher ordinal as the current state %s", state, this.state);
+        this.state = state;
+    }
 }

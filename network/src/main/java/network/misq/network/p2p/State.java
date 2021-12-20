@@ -15,10 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.monitor;
+package network.misq.network.p2p;
 
-public class NetworkMonitorUIMain {
-    public static void main(String[] args) {
-        ConnectionMonitorUI.launch(ConnectionMonitorUI.class, args);
-    }
+public enum State {
+    INIT,
+    INITIALIZE_SERVER,
+    SERVER_INITIALIZED,
+    BOOTSTRAPPING,
+    BOOTSTRAPPED,
+    SHUTDOWN_STARTED,
+    SHUTDOWN_COMPLETE
 }

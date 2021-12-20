@@ -18,10 +18,12 @@
 package network.misq.network.p2p.services.monitor;
 
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.data.Pair;
+import network.misq.common.timer.Scheduler;
+import network.misq.common.util.CompletableFutureUtils;
 import network.misq.common.util.MathUtils;
 import network.misq.common.util.OsUtils;
 import network.misq.network.NetworkService;
+import network.misq.network.p2p.State;
 import network.misq.network.p2p.ServiceNode;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
@@ -41,40 +43,39 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.concurrent.CompletableFuture.delayedExecutor;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
 @Slf4j
 public class MultiNodesNetworkMonitor {
+    public interface Handler {
+        void onConnectionStateChange(Transport.Type transportType, Address address, String networkInfo);
+
+        void onStateChange(Address address, State networkServiceState);
+    }
+
     private final Set<Transport.Type> supportedTransportTypes;
     private final boolean bootstrapAll;
     private final Optional<List<Address>> addressesToBootstrap;
     private final ServiceNode.Config serviceNodeConfig;
     private final String baseDirPath;
     private final KeyPairRepository keyPairRepository;
-    private final Transport.Type transportType;
-    private final List<Address> seedAddresses;
     private final Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport;
     private final SeedNodeRepository seedNodeRepository;
     private final int numSeeds = 8;
     private final int numNodes = 20;
     private final Map<Address, NetworkService> networkServicesByAddress = new HashMap<>();
-    private final Map<Address, String> connectionInfoByAddress = new HashMap<>();
+    private final Map<Address, String> connectionHistoryByAddress = new HashMap<>();
 
-    private Optional<Consumer<Pair<Address, String>>> networkInfoConsumer = Optional.empty();
+    private Optional<Handler> handler = Optional.empty();
 
-    public MultiNodesNetworkMonitor(Transport.Type transportType,
+    public MultiNodesNetworkMonitor(Set<Transport.Type> supportedTransportTypes,
                                     boolean bootstrapAll,
                                     Optional<List<Address>> addressesToBootstrap) {
-        this.transportType = transportType;
-        supportedTransportTypes = Set.of(transportType);
+        this.supportedTransportTypes = supportedTransportTypes;
         this.bootstrapAll = bootstrapAll;
         this.addressesToBootstrap = addressesToBootstrap;
-        seedAddresses = getSeedAddresses(transportType);
+
         baseDirPath = OsUtils.getUserDataDir() + File.separator + this.getClass().getSimpleName();
 
         serviceNodeConfig = new ServiceNode.Config(Set.of(
@@ -98,8 +99,8 @@ public class MultiNodesNetworkMonitor {
         PeerGroupService.Config defaultConf = new PeerGroupService.Config(peerGroupConfig,
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
-                TimeUnit.SECONDS.toMillis(5),  //bootstrapTime
-                TimeUnit.SECONDS.toMillis(10),  //interval
+                TimeUnit.SECONDS.toMillis(30),  //bootstrapTime
+                TimeUnit.SECONDS.toMillis(30),  //interval
                 TimeUnit.SECONDS.toMillis(60),  //timeout
                 TimeUnit.MINUTES.toMillis(60),  //maxAge
                 100,                        //maxReported
@@ -123,31 +124,50 @@ public class MultiNodesNetworkMonitor {
         );
     }
 
-    public List<Address> bootstrapNetworkServices() {
-        List<Address> addresses = new ArrayList<>(seedAddresses);
-        addresses.addAll(getNodeAddresses());
+    public Map<Transport.Type, List<Address>> bootstrap() {
+        return supportedTransportTypes.stream()
+                .collect(Collectors.toMap(transportType -> transportType, this::bootstrap));
+    }
+
+    private List<Address> bootstrap(Transport.Type transportType) {
+        List<Address> addresses = new ArrayList<>(getSeedAddresses(transportType));
+        addresses.addAll(getNodeAddresses(transportType));
 
         for (int i = 0; i < addresses.size(); i++) {
             Address address = addresses.get(i);
-            int port = address.getPort();
-            NetworkService networkService = createNetworkService(port);
-            setupConnectionListener(networkService);
-            networkServicesByAddress.put(address, networkService);
-            int delayMs = (i + 1) * 1000;
-            long randDelay = new Random().nextInt(delayMs);
             if (bootstrapAll || isInBootstrapList(address)) {
-                CompletableFuture.runAsync(() -> networkService.bootstrap(port), delayedExecutor(randDelay, MILLISECONDS));
+                int delayMs = (i + 1) * 1000;
+                long randDelay = new Random().nextInt(delayMs);
+                Scheduler.run(() -> bootstrap(address, transportType)).after(randDelay);
             }
         }
         return addresses;
     }
 
-    private boolean isInBootstrapList(Address address) {
-        return addressesToBootstrap.stream().anyMatch(list -> list.contains(address));
+    public void bootstrap(Address address, Transport.Type transportType) {
+        NetworkService networkService = createNetworkService(address, transportType);
+        networkService.findServiceNode(transportType).ifPresent(serviceNode ->
+                serviceNode.bootstrap(Node.DEFAULT_NODE_ID, address.getPort())
+                        .whenComplete((r, t) -> handler.ifPresent(handler -> handler.onStateChange(address, serviceNode.getState()))));
     }
 
-    private NetworkService createNetworkService(int port) {
-        String dirPath = baseDirPath + File.separator + port;
+    public CompletableFuture<List<Void>> shutdown() {
+        return CompletableFutureUtils.allOf(networkServicesByAddress.keySet().stream().map(this::shutdown));
+    }
+
+    public CompletableFuture<Void> shutdown(Address address) {
+        handler.ifPresent(handler -> handler.onStateChange(address, State.SHUTDOWN_STARTED));
+        return findNetworkService(address)
+                .map(networkService -> networkService.shutdown()
+                        .whenComplete((__, t) -> {
+                            networkServicesByAddress.remove(address);
+                            handler.ifPresent(handler -> handler.onStateChange(address, networkService.state));
+                        }))
+                .orElse(CompletableFuture.completedFuture(null));
+    }
+
+    private NetworkService createNetworkService(Address address, Transport.Type transportType) {
+        String dirPath = baseDirPath + File.separator + address.getPort();
         Transport.Config transportConfig = new Transport.Config(dirPath);
         NetworkService.Config networkServiceConfig = new NetworkService.Config(dirPath,
                 transportConfig,
@@ -157,14 +177,14 @@ public class MultiNodesNetworkMonitor {
                 seedNodeRepository,
                 Optional.empty());
 
-        return new NetworkService(networkServiceConfig, keyPairRepository);
+        NetworkService networkService = new NetworkService(networkServiceConfig, keyPairRepository);
+        handler.ifPresent(handler -> handler.onStateChange(address, networkService.state));
+        networkServicesByAddress.put(address, networkService);
+        setupConnectionListener(networkService, transportType);
+        return networkService;
     }
 
-    public void addNetworkInfoConsumer(Consumer<Pair<Address, String>> handler) {
-        networkInfoConsumer = Optional.of(handler);
-    }
-
-    private void setupConnectionListener(NetworkService networkService) {
+    private void setupConnectionListener(NetworkService networkService, Transport.Type transportType) {
         networkService.findDefaultNode(transportType).ifPresent(node -> {
             node.addListener(new Node.Listener() {
 
@@ -174,18 +194,18 @@ public class MultiNodesNetworkMonitor {
 
                 @Override
                 public void onConnection(Connection connection) {
-                    onConnectionStateChanged(connection, node, Optional.empty());
+                    onConnectionStateChanged(transportType, connection, node, Optional.empty());
                 }
 
                 @Override
                 public void onDisconnect(Connection connection, CloseReason closeReason) {
-                    onConnectionStateChanged(connection, node, Optional.of(closeReason));
+                    onConnectionStateChanged(transportType, connection, node, Optional.of(closeReason));
                 }
             });
         });
     }
 
-    private void onConnectionStateChanged(Connection connection, Node node, Optional<CloseReason> closeReason) {
+    private void onConnectionStateChanged(Transport.Type transportType, Connection connection, Node node, Optional<CloseReason> closeReason) {
         node.findMyAddress().ifPresent(address -> {
             String now = " at " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
             String dir = connection.isOutboundConnection() ? " --> " : " <-- ";
@@ -193,19 +213,64 @@ public class MultiNodesNetworkMonitor {
             String peerAddress = connection.getPeerAddress().toString().replace("]", peerAddressVerified);
             String tag = closeReason.isPresent() ? "\n- onDisconnect " : "\n+ onConnection ";
             String reason = closeReason.map(r -> ", " + r).orElse("");
-            String networkInfo = tag + node + dir + peerAddress + now + reason;
+            String info = tag + node + dir + peerAddress + now + reason;
 
-            String prev = connectionInfoByAddress.get(address);
+            String prev = connectionHistoryByAddress.get(address);
             if (prev == null) {
                 prev = "";
             }
-            connectionInfoByAddress.put(address, prev + networkInfo);
-            networkInfoConsumer.ifPresent(c -> c.accept(new Pair<>(address, networkInfo)));
+            connectionHistoryByAddress.put(address, prev + info);
+            handler.ifPresent(handler -> handler.onConnectionStateChange(transportType, address, info));
         });
     }
 
-    private List<Address> getSeedAddresses(Transport.Type type) {
-        switch (type) {
+    public String getNodeInfo(Address address, Transport.Type transportType) {
+        return findNetworkService(address)
+                .flatMap(networkService -> networkService.findServiceNode(transportType))
+                .filter(serviceNode -> serviceNode.getMonitorService().isPresent())
+                .map(serviceNode -> {
+                    String peerGroupInfo = serviceNode.getMonitorService().get().getPeerGroupInfo();
+                    String connectionHistory = Optional.ofNullable(connectionHistoryByAddress.get(address))
+                            .map(history -> {
+                                long nunOnConnection = Stream.of(history.split("\\n"))
+                                        .filter(e -> e.startsWith("+ onConnection"))
+                                        .count();
+                                long numOnDisconnect = Stream.of(history.split("\\n"))
+                                        .filter(e -> e.startsWith("- onDisconnect"))
+                                        .count();
+                                long open = nunOnConnection - numOnDisconnect;
+                                double churnRate = nunOnConnection != 0 ?
+                                        MathUtils.roundDouble(numOnDisconnect / (double) nunOnConnection * 100, 2) :
+                                        0;
+                                return "\nChurn rate=" + churnRate +
+                                        "%; Open connections=" + open +
+                                        "; Num OnConnection=" + nunOnConnection +
+                                        "; Num OnDisconnect=" + numOnDisconnect +
+                                        "\n\nConnection History:\n" + history;
+                            }).orElse("");
+                    return peerGroupInfo + connectionHistory;
+                })
+                .orElse("");
+    }
+
+    public boolean isSeed(Address address, Transport.Type transportType) {
+        return getSeedAddresses(transportType).contains(address);
+    }
+
+    public Optional<NetworkService> findNetworkService(Address address) {
+        return Optional.ofNullable(networkServicesByAddress.get(address));
+    }
+
+    private boolean isInBootstrapList(Address address) {
+        return addressesToBootstrap.stream().anyMatch(list -> list.contains(address));
+    }
+
+    public void addNetworkInfoConsumer(Handler handler) {
+        this.handler = Optional.of(handler);
+    }
+
+    private List<Address> getSeedAddresses(Transport.Type transportType) {
+        switch (transportType) {
             case TOR -> {
                 return Stream.of(
                                 new Address("76ewqvsvh5nnuqnlro65nrxu3d4377aw5kv25p2uq7cpvoi4xslq7vyd.onion", 1000),
@@ -231,68 +296,52 @@ public class MultiNodesNetworkMonitor {
             default -> {
                 List<Address> seedAddresses = new ArrayList<>();
                 for (int i = 0; i < numSeeds; i++) {
-                    seedAddresses.add(Address.localHost(1000 + i));
+                    seedAddresses.add(Address.localHost(8000 + i));
                 }
                 return seedAddresses;
             }
         }
     }
 
-    private List<Address> getNodeAddresses() {
-        List<Address> addresses = new ArrayList<>();
-        for (int i = 0; i < numNodes; i++) {
-            addresses.add(Address.localHost(2000 + i));
+    private List<Address> getNodeAddresses(Transport.Type transportType) {
+        switch (transportType) {
+            case TOR -> {
+                return Stream.of(
+                                new Address("l2takiyfs4d7nou7wwjomx3a4jxpn4fabtxfclgobrucnokms6j6liid.onion", 2000),
+                                new Address("nsnos6boshp2iznnqkrgoqutr2sxgysyufx72ikd2e2ik2g4pdhmjsyd.onion", 2001),
+                                new Address("tbzmnqea2lris25z5ljtkzqi5euut2k33rpsnjv3izzgfpxfh3xwbfyd.onion", 2002),
+                                new Address("q7tixbmhuvivqttcuhl7a42lyaoelu4h27b4l7tdbwaw7qifbxxa2yqd.onion", 2003),
+                                new Address("epgfefrpwqdaat2kz2v6g5sdup3me32wotfhzv275zluhbrsssg3e5yd.onion", 2004),
+                                new Address("y2fu3dmmpdetteqwizubc7ivrgaheis3w2ynqg3yvpe36pg7z7zu6mqd.onion", 2005),
+                                new Address("6ydkwmxndkedl2tw3qfvxqv6nlgscj5uviaapgmh2h6hu4xggr2hqdqd.onion", 2006),
+                                new Address("pno7acyqteamsdj4mfjropdqbvgppia6k4hsxisdzcwywftq3h453oyd.onion", 2007),
+                                new Address("mi3x6vebpanoqjhrhyyve7zt6bqrh4erz4wmcqfyn6vqi4xgz4a5tfqd.onion", 2008),
+                                new Address("nympb7ltiv4el43cr3gi6klp7xvh4jyvbj23zbhpdoxntikqd2hjmtyd.onion", 2009),
+                                new Address("e7pt5zkibm2rkeof4o4erxdyir4mweprezobwzclmpl6xf54nx6byvqd.onion", 2010),
+                                new Address("sgyb2vlk4xafsupbycatsmtusgbi2gsh63ralvkizdpgas5rx2mq2lad.onion", 2011),
+                                new Address("3cllqgogu7tao7o5hnhp22erlq7gjncplcqoybytcbtpa7nj7xwtdvqd.onion", 2012),
+                                new Address("umzgiazybhoh4wg2w2bncjzuiwgs6xhsxrxeo56wv4xxhwpbqqrixhad.onion", 2013),
+                                new Address("pfzyun73mhmywoyq5vadatlegujfszplksity3a2shkhyqhjatgvp3ad.onion", 2014),
+                                new Address("hoxfbsde72pe3wawkwqtnch4577r2p2ttygvdubl7ew53c6hmqlqk4qd.onion", 2015),
+                                new Address("reftygswljdhzipgscqck36zpfbg7c2lucgwj2l352jm5lhrduhwfqqd.onion", 2016),
+                                new Address("gtxarnkuf5cwe2qzinpygx7brfj2ruh5mkw3rp6c5clawhvijwmkp5id.onion", 2017),
+                                new Address("yy63g2w6rfrjcvrgrunewchjprw3lmt7pbyf3yitwvlv3kuz3djom7yd.onion", 2018),
+                                new Address("mfopr77pvffhdpvysxbyrywqnp6goqwgbazjlchxjm3quzksm2zij3ad.onion", 2019)
+                        )
+                        .limit(numNodes)
+                        .collect(Collectors.toList());
+            }
+            case I2P -> {
+                //todo
+                return new ArrayList<>();
+            }
+            default -> {
+                List<Address> addresses = new ArrayList<>();
+                for (int i = 0; i < numNodes; i++) {
+                    addresses.add(Address.localHost(9000 + i));
+                }
+                return addresses;
+            }
         }
-        return addresses;
-    }
-
-
-    public boolean isSeed(Address address) {
-        return seedAddresses.contains(address);
-    }
-
-    public Optional<NetworkService> findNetworkService(Address address) {
-        return Optional.ofNullable(networkServicesByAddress.get(address));
-    }
-
-    public void bootstrap(Address address) {
-        int port = address.getPort();
-        NetworkService networkService = createNetworkService(port);
-        setupConnectionListener(networkService);
-        networkServicesByAddress.put(address, networkService);
-        networkService.bootstrap(port);
-    }
-
-    public void shutdown(Address address) {
-        findNetworkService(address)
-                .ifPresent(service -> service.shutdown()
-                        .whenComplete((__, t) -> networkServicesByAddress.remove(address)));
-    }
-
-    public String getNodeInfo(Address address) {
-        return findNetworkService(address)
-                .flatMap(networkService ->
-                        networkService.findServiceNode(transportType)
-                                .filter(serviceNode -> serviceNode.getMonitorService().isPresent())
-                                .filter(serviceNode -> serviceNode.findMyDefaultAddresses().isPresent()))
-                .map(serviceNode -> {
-                    String peerGroupInfo = serviceNode.getMonitorService().get().getPeerGroupInfo();
-                    String connectionInfo = Optional.ofNullable(connectionInfoByAddress.get(serviceNode.findMyDefaultAddresses().get()))
-                            .map(conInfo -> {
-                                long nunOnConnection = Stream.of(conInfo.split("\\n")).filter(e -> e.startsWith("+ onConnection")).count();
-                                long numOnDisconnect = Stream.of(conInfo.split("\\n")).filter(e -> e.startsWith("- onDisconnect")).count();
-                                long open = nunOnConnection - numOnDisconnect;
-                                double churnRate = nunOnConnection != 0 ?
-                                        100 - MathUtils.roundDouble(open / (double) nunOnConnection * 100, 2) :
-                                        0;
-                                return "\nChurn rate=" + churnRate +
-                                        "%; Open connections=" + open +
-                                        "; Num OnConnection=" + nunOnConnection +
-                                        "; Num OnDisconnect=" + numOnDisconnect +
-                                        "\n\nConnection History:\n" + conInfo;
-                            }).orElse("");
-                    return peerGroupInfo + connectionInfo;
-                })
-                .orElse("");
     }
 }

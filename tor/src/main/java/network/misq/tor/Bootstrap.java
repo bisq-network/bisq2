@@ -229,7 +229,7 @@ class Bootstrap {
         if (osType != OsType.WIN) {
             int result = torProcess.waitFor();
             if (torProcess.waitFor() != 0) {
-                throw new IOException("Tor exited with value " + result);
+               // throw new IOException("Terminate processBuilder exited with an error");
             }
         }
         log.debug("Process builder terminated");
