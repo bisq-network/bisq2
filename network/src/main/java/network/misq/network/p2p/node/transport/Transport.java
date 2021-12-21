@@ -31,7 +31,7 @@ public interface Transport {
     enum Type implements Serializable {
         TOR,
         I2P,
-        CLEAR_NET,
+        CLEAR,
     }
 
     record Config(String baseDirPath) {

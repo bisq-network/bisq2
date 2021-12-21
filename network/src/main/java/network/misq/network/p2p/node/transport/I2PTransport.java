@@ -5,7 +5,6 @@ import network.misq.common.util.NetworkUtils;
 import network.misq.i2p.SamClient;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.Node;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -21,20 +20,12 @@ import static java.io.File.separator;
 // Takes about 1-2 minutes until its ready
 @Slf4j
 public class I2PTransport implements Transport {
-    private static I2PTransport INSTANCE;
-
     private final String i2pDirPath;
     private SamClient samClient;
     private boolean initializeCalled;
+    private String sessionId;
 
-    public static I2PTransport getInstance(Config config) {
-        if (INSTANCE == null) {
-            INSTANCE = new I2PTransport(config);
-        }
-        return INSTANCE;
-    }
-
-    private I2PTransport(Config config) {
+    public I2PTransport(Config config) {
         i2pDirPath = config.baseDirPath() + separator + "i2p";
     }
 
@@ -54,17 +45,19 @@ public class I2PTransport implements Transport {
         }
     }
 
+
     @Override
     public CompletableFuture<ServerSocketResult> getServerSocket(int port, String nodeId) {
         log.debug("Create serverSocket");
         return CompletableFuture.supplyAsync(() -> {
             Thread.currentThread().setName("I2PTransport.getServerSocket-nodeId=" + nodeId + "-port=" + port);
             try {
-                ServerSocket serverSocket = samClient.getServerSocket(nodeId, NetworkUtils.findFreeSystemPort());
-                String destination = samClient.getMyDestination(nodeId);
-                Address address = new Address(destination, -1);
-                log.debug("Create new Socket to {}", address);
-                log.debug("ServerSocket created for address {}", address);
+                sessionId = nodeId + port;
+                ServerSocket serverSocket = samClient.getServerSocket(sessionId, NetworkUtils.findFreeSystemPort());
+                String destination = samClient.getMyDestination(sessionId);
+                // Port is irrelevant for I2P
+                Address address = new Address(destination, port);
+                log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
                 return new ServerSocketResult(nodeId, serverSocket, address);
             } catch (Exception exception) {
                 log.error(exception.toString(), exception);
@@ -76,9 +69,9 @@ public class I2PTransport implements Transport {
     @Override
     public Socket getSocket(Address address) throws IOException {
         try {
-            log.debug("Create new Socket to {}", address);
+            log.debug("Create new Socket to {} with sessionId={}", address, sessionId);
             //todo pass session nodeId
-            Socket socket = samClient.connect(address.getHost(), Node.DEFAULT_NODE_ID + "Alice");
+            Socket socket = samClient.connect(address.getHost(), sessionId);
             log.debug("Created new Socket");
             return socket;
         } catch (IOException exception) {
@@ -100,7 +93,8 @@ public class I2PTransport implements Transport {
     @Override
     public Optional<Address> getServerAddress(String serverId) {
         try {
-            String myDestination = samClient.getMyDestination(serverId);
+            //todo
+            String myDestination = samClient.getMyDestination(sessionId);
             return Optional.of(new Address(myDestination, -1));
         } catch (IOException exception) {
             log.error(exception.toString(), exception);

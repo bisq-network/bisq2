@@ -26,13 +26,13 @@ public class ClearNetNodesByIdIntegrationTest extends BaseNodesByIdTest {
 
     @Test
     void test_messageRoundTrip() throws InterruptedException {
-        super.test_messageRoundTrip(getConfig(Transport.Type.CLEAR_NET));
+        super.test_messageRoundTrip(getConfig(Transport.Type.CLEAR));
     }
 
     //fixme: BindException: Address already in use. Server port 1000 
     // @Test
     void test_initializeServer() throws InterruptedException {
-        super.test_initializeServer(getConfig(Transport.Type.CLEAR_NET));
+        super.test_initializeServer(getConfig(Transport.Type.CLEAR));
     }
 
     @Override

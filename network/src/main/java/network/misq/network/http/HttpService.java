@@ -45,7 +45,7 @@ public class HttpService {
                 case I2P:
                     // TODO We need to figure out how to get a proxy from i2p or require tor in any case
                     throw new IllegalArgumentException("I2P providers not supported yet.");
-                case CLEAR_NET:
+                case CLEAR:
                     return new ClearNetHttpClient(url, userAgent);
                 default:
                     throw new IllegalArgumentException("Providers network type not recognized. " + transportType);

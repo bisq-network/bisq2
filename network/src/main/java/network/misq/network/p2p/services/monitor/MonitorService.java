@@ -47,7 +47,9 @@ public class MonitorService {
         int numSeedConnections = (int) peerGroup.getAllConnections()
                 .filter(connection -> peerGroup.isASeed(connection.getPeerAddress())).count();
         StringBuilder sb = new StringBuilder();
-        sb.append("Num connections: ").append(peerGroup.getNumConnections())
+        sb.append(node.getTransportType().name()).append(": ")
+                .append(node.findMyAddress().map(Address::toString).orElse(""))
+                .append("\n").append("Num connections: ").append(peerGroup.getNumConnections())
                 .append("\n").append("Num all connections: ").append(peerGroup.getNumConnections())
                 .append("\n").append("Num outbound connections: ").append(peerGroup.getOutboundConnections().count())
                 .append("\n").append("Num inbound connections: ").append(peerGroup.getInboundConnections().count())
@@ -59,8 +61,10 @@ public class MonitorService {
         peerGroup.getInboundConnections()
                 .sorted(peerGroup.getConnectionAgeComparator())
                 .forEach(connection -> appendConnectionInfo(sb, connection, false));
-        sb.append("\n").append("Reported peers: ").append(peerGroup.getReportedPeers().stream().map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
-        sb.append("\n").append("Persisted peers: ").append(peerGroup.getPersistedPeers().stream().map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
+        sb.append("\n").append("Reported peers: ").append(peerGroup.getReportedPeers().stream()
+                .map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
+        sb.append("\n").append("Persisted peers: ").append(peerGroup.getPersistedPeers().stream()
+                .map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
         return sb.append("\n").toString();
     }
 

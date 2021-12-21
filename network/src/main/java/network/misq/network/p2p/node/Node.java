@@ -88,6 +88,7 @@ public class Node implements Connection.Handler {
     private final Map<Address, OutboundConnection> outboundConnectionsByAddress = new ConcurrentHashMap<>();
     @Getter
     private final Map<Address, InboundConnection> inboundConnectionsByAddress = new ConcurrentHashMap<>();
+    @Getter private final Transport.Type transportType;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<String, ConnectionHandshake> connectionHandshakes = new ConcurrentHashMap<>();
     private Optional<Server> server = Optional.empty();
@@ -96,7 +97,8 @@ public class Node implements Connection.Handler {
 
     public Node(BannList bannList, Config config, String nodeId) {
         this.bannList = bannList;
-        transport = getTransport(config.transportType(), config.transportConfig());
+        transportType = config.transportType();
+        transport = getTransport(transportType, config.transportConfig());
         authorizationService = config.authorizationService();
         this.config = config;
         this.nodeId = nodeId;
@@ -242,7 +244,7 @@ public class Node implements Connection.Handler {
                         handleException(throwable);
                         return;
                     }
-                    
+
                     log.debug("Outbound handshake completed: Initiated by {} to {}", myCapability.address(), address);
                     log.debug("Create new outbound connection to {}", address);
                     checkArgument(address.equals(result.capability().address()),
@@ -423,8 +425,8 @@ public class Node implements Connection.Handler {
     private Transport getTransport(Transport.Type transportType, Transport.Config config) {
         return switch (transportType) {
             case TOR -> new TorTransport(config);
-            case I2P -> I2PTransport.getInstance(config);
-            case CLEAR_NET -> new ClearNetTransport(config);
+            case I2P -> new I2PTransport(config);
+            case CLEAR -> new ClearNetTransport(config);
         };
     }
 
