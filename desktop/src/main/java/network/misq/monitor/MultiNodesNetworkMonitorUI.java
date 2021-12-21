@@ -18,6 +18,7 @@
 package network.misq.monitor;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -42,9 +43,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class ConnectionMonitorUI extends Application implements MultiNodesNetworkMonitor.Handler {
+public class MultiNodesNetworkMonitorUI extends Application implements MultiNodesNetworkMonitor.Handler {
     private MultiNodesNetworkMonitor multiNodesNetworkMonitor;
-    private FlowPane seedsPane, nodesPane;
+    private FlowPane clearSeedButtonsPane, torSeedButtonsPane, i2pSeedButtonsPane, clearNodeButtonsPane, torNodeButtonsPane, i2pNodeButtonsPane;
     private TextArea nodeInfoTextArea, networkInfoTextArea;
     private Optional<Address> selected = Optional.empty();
     private Map<Address, Pair<Button, Transport.Type>> buttonsByAddress = new HashMap<>();
@@ -59,22 +60,25 @@ public class ConnectionMonitorUI extends Application implements MultiNodesNetwor
         String bgStyle = "-fx-background-color: #dadada";
         String seedStyle = "-fx-background-color: #80afa1";
 
-        Insets bgPadding = new Insets(10, 10, 10, 10);
-        Insets labelPadding = new Insets(4, -20, 0, 0);
+        Insets padding = new Insets(10, 10, 10, 10);
         int nodeWidth = 50;
         double stageWidth = 2400;
-        double stageHeight = 1200;
-        double availableWidth = stageWidth - 2 * bgPadding.getLeft() - 2 * bgPadding.getRight();
+        double stageHeight = 1000;
+        double availableWidth = stageWidth - 2 * padding.getLeft() - 2 * padding.getRight();
         int nodesPerRow = (int) (availableWidth / nodeWidth);
-        stageWidth = nodesPerRow * nodeWidth + 2 * bgPadding.getLeft() + 2 * bgPadding.getRight();
+        stageWidth = nodesPerRow * nodeWidth + 2 * padding.getLeft() + 2 * padding.getRight();
 
-        seedsPane = new FlowPane();
-        seedsPane.setStyle(seedStyle);
-        seedsPane.setPadding(bgPadding);
+        VBox vBoxSeeds = new VBox(5);
+        clearSeedButtonsPane = getFlowPane(seedStyle, padding);
+        torSeedButtonsPane = getFlowPane(seedStyle, padding);
+        i2pSeedButtonsPane = getFlowPane(seedStyle, padding);
+        vBoxSeeds.getChildren().addAll(clearSeedButtonsPane, torSeedButtonsPane, i2pSeedButtonsPane);
 
-        nodesPane = new FlowPane();
-        nodesPane.setStyle(bgStyle);
-        nodesPane.setPadding(bgPadding);
+        VBox vBoxNodes = new VBox(5);
+        clearNodeButtonsPane = getFlowPane(bgStyle, padding);
+        torNodeButtonsPane = getFlowPane(bgStyle, padding);
+        i2pNodeButtonsPane = getFlowPane(bgStyle, padding);
+        vBoxNodes.getChildren().addAll(clearNodeButtonsPane, torNodeButtonsPane, i2pNodeButtonsPane);
 
         nodeInfoTextArea = new TextArea();
         nodeInfoTextArea.setEditable(false);
@@ -101,14 +105,14 @@ public class ConnectionMonitorUI extends Application implements MultiNodesNetwor
         contextMenu.getItems().add(clear);
         networkInfoTextArea.setContextMenu(contextMenu);
 
-        HBox infoBox = new HBox(20);
+        HBox infoBox = new HBox(10);
         infoBox.setStyle(bgStyle);
-        infoBox.setPadding(bgPadding);
+        infoBox.setPadding(padding);
         infoBox.getChildren().addAll(nodeInfoTextArea, networkInfoTextArea);
 
-        VBox vBox = new VBox(20);
-        vBox.setPadding(bgPadding);
-        vBox.getChildren().addAll(seedsPane, nodesPane, infoBox);
+        VBox vBox = new VBox(10);
+        vBox.setPadding(padding);
+        vBox.getChildren().addAll(vBoxSeeds, vBoxNodes, infoBox);
 
         ScrollPane scrollPane = new ScrollPane(vBox);
         scrollPane.setFitToWidth(true);
@@ -118,10 +122,16 @@ public class ConnectionMonitorUI extends Application implements MultiNodesNetwor
         stage.setScene(scene);
         stage.show();
         stage.setOnCloseRequest(event -> {
-           // event.consume();
-            multiNodesNetworkMonitor.shutdown();
-          //  multiNodesNetworkMonitor.shutdown().whenComplete((r, t) -> Platform.exit());
+            multiNodesNetworkMonitor.shutdown().whenComplete((r, t) -> Platform.exit());
         });
+    }
+
+    private FlowPane getFlowPane(String style, Insets bgPadding) {
+        FlowPane flowPane = new FlowPane();
+        flowPane.setHgap(5);
+        flowPane.setStyle(style);
+        flowPane.setPadding(bgPadding);
+        return flowPane;
     }
 
     private void setupMultiNodesNetworkMonitor() {
@@ -131,7 +141,7 @@ public class ConnectionMonitorUI extends Application implements MultiNodesNetwor
                 .map(StringUtils::trimWhitespace)
                 .map(str -> List.of(str.split(",")))
                 .map(list -> list.stream().map(Transport.Type::valueOf).collect(Collectors.toSet()))
-                .orElse(Set.of(Transport.Type.CLEAR_NET));
+                .orElse(Set.of(Transport.Type.CLEAR));
         String addressesToBootstrap1 = params.get("addressesToBootstrap");
         Optional<List<Address>> addressesToBootstrap = Optional.ofNullable(addressesToBootstrap1)
                 .map(StringUtils::trimWhitespace)
@@ -185,9 +195,17 @@ public class ConnectionMonitorUI extends Application implements MultiNodesNetwor
             button.setOnAction(e -> onButtonClicked(address, transportType));
             buttonsByAddress.put(address, new Pair<>(button, transportType));
             if (multiNodesNetworkMonitor.isSeed(address, transportType)) {
-                seedsPane.getChildren().add(button);
+                switch (transportType) {
+                    case TOR -> torSeedButtonsPane.getChildren().add(button);
+                    case I2P -> i2pSeedButtonsPane.getChildren().add(button);
+                    case CLEAR -> clearSeedButtonsPane.getChildren().add(button);
+                }
             } else {
-                nodesPane.getChildren().add(button);
+                switch (transportType) {
+                    case TOR -> torNodeButtonsPane.getChildren().add(button);
+                    case I2P -> i2pNodeButtonsPane.getChildren().add(button);
+                    case CLEAR -> clearNodeButtonsPane.getChildren().add(button);
+                }
             }
         });
     }
@@ -220,7 +238,7 @@ public class ConnectionMonitorUI extends Application implements MultiNodesNetwor
     }
 
     private String getTitle(Address address, Transport.Type transportType) {
-        String name = multiNodesNetworkMonitor.isSeed(address, transportType) ? "Seed: " : "Node: ";
-        return name + address;
+        String name = multiNodesNetworkMonitor.isSeed(address, transportType) ? "-Seed: " : "-Node: ";
+        return transportType.name() + name + address;
     }
 }

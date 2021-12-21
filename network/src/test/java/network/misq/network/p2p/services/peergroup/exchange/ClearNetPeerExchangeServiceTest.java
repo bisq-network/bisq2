@@ -28,7 +28,7 @@ public class ClearNetPeerExchangeServiceTest extends BasePeerExchangeServiceTest
 
     @Test
     void test_peerExchange() throws InterruptedException, ExecutionException {
-        super.test_peerExchange(getConfig(Transport.Type.CLEAR_NET));
+        super.test_peerExchange(getConfig(Transport.Type.CLEAR));
     }
 
     @Override

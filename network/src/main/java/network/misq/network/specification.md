@@ -91,7 +91,7 @@
 
 ### Basic data structures
 
-- `Transport.Type`: Enum with values`TOR, I2P, CLEAR_NET`
+- `Transport.Type`: Enum with values`TOR, I2P, CLEAR`
 - `Address`: Holds `host` and `port`
 - `Capability`: Holds connection initiators address (not verified if that address is really reachable, might be done
   later in a dedicated protocol) and peers supported `Transport.Type`s. Will get added more data later.

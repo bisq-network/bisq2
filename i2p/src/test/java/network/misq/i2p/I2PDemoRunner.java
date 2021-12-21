@@ -138,7 +138,7 @@ public class I2PDemoRunner {
                 c++;
                 try {
                     aliceServerReady.set(true);
-                    log.error("Waiting for inbound connection");
+                    log.info("Waiting for inbound connection");
                     Socket clientSocket = serverSocket.accept();
                     // aliceServerReady.set(false);
                     onNewConnection(clientSocket);

@@ -7,9 +7,10 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
-    
+
     <logger name="network.misq.tor" level="INFO" />
+    <logger name="network.misq.i2p" level="INFO" />
 </configuration>
