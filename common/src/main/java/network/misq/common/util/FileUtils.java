@@ -21,9 +21,8 @@ import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Scanner;
@@ -100,6 +99,42 @@ public class FileUtils {
                 throw new IOException("Cannot create directory " + dir.getAbsolutePath());
             }
         }
+    }
+
+    public static Path createTempDir() throws IOException {
+        Path tempDirPath = Files.createTempDirectory(null);
+        recursiveDeleteOnShutdownHook(tempDirPath);
+        return tempDirPath;
+    }
+
+    public static void recursiveDeleteOnShutdownHook(Path path) {
+        Runtime.getRuntime().addShutdownHook(new Thread(
+                () -> {
+                    try {
+                        Files.walkFileTree(path, new SimpleFileVisitor<>() {
+                            @Override
+                            public FileVisitResult visitFile(Path file,
+                                                             @SuppressWarnings("unused") BasicFileAttributes attrs)
+                                    throws IOException {
+                                Files.delete(file);
+                                return FileVisitResult.CONTINUE;
+                            }
+
+                            @Override
+                            public FileVisitResult postVisitDirectory(Path dir, IOException e)
+                                    throws IOException {
+                                if (e == null) {
+                                    Files.delete(dir);
+                                    return FileVisitResult.CONTINUE;
+                                }
+                                // directory iteration failed
+                                throw e;
+                            }
+                        });
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to delete " + path, e);
+                    }
+                }));
     }
 
     public static void makeDirs(String dirPath) throws IOException {
