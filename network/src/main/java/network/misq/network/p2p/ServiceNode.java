@@ -96,10 +96,11 @@ public class ServiceNode {
         }
 
         if (services.contains(Service.PEER_GROUP)) {
-            peerGroupService = Optional.of(new PeerGroupService(defaultNode, bannList, peerGroupServiceConfig, seedNodeAddresses));
+            PeerGroupService peerGroupService = new PeerGroupService(defaultNode, bannList, peerGroupServiceConfig, seedNodeAddresses);
+            this.peerGroupService = Optional.of(peerGroupService);
 
             if (services.contains(Service.DATA)) {
-                dataService = Optional.of(new DataService(defaultNode, peerGroupService.get(), dataServiceConfig));
+                dataService = Optional.of(new DataService(defaultNode, peerGroupService, dataServiceConfig));
             }
 
             if (services.contains(Service.RELAY)) {
@@ -107,7 +108,7 @@ public class ServiceNode {
             }
 
             if (services.contains(Service.MONITOR)) {
-                monitorService = Optional.of(new MonitorService(defaultNode, peerGroupService.get()));
+                monitorService = Optional.of(new MonitorService(defaultNode, peerGroupService));
             }
         }
     }
