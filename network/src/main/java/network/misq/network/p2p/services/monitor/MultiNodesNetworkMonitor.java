@@ -23,8 +23,8 @@ import network.misq.common.util.CompletableFutureUtils;
 import network.misq.common.util.MathUtils;
 import network.misq.common.util.OsUtils;
 import network.misq.network.NetworkService;
-import network.misq.network.p2p.State;
 import network.misq.network.p2p.ServiceNode;
+import network.misq.network.p2p.State;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.CloseReason;
@@ -79,10 +79,8 @@ public class MultiNodesNetworkMonitor {
         baseDirPath = OsUtils.getUserDataDir() + File.separator + this.getClass().getSimpleName();
 
         serviceNodeConfig = new ServiceNode.Config(Set.of(
-                ServiceNode.Service.CONFIDENTIAL,
                 ServiceNode.Service.PEER_GROUP,
                 ServiceNode.Service.DATA,
-                ServiceNode.Service.RELAY,
                 ServiceNode.Service.MONITOR));
 
         KeyPairRepository.Conf keyPairRepositoryConf = new KeyPairRepository.Conf(baseDirPath);
@@ -99,28 +97,29 @@ public class MultiNodesNetworkMonitor {
         PeerGroupService.Config defaultConf = new PeerGroupService.Config(peerGroupConfig,
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
-                TimeUnit.SECONDS.toMillis(30),  //bootstrapTime
-                TimeUnit.SECONDS.toMillis(30),  //interval
-                TimeUnit.SECONDS.toMillis(60),  //timeout
-                TimeUnit.MINUTES.toMillis(60),  //maxAge
-                100,                        //maxReported
-                100,                        //maxPersisted
-                8                              //maxSeeds
+                TimeUnit.SECONDS.toMillis(30),  // bootstrapTime
+                TimeUnit.SECONDS.toMillis(30),  // interval
+                TimeUnit.SECONDS.toMillis(60),  // timeout
+                TimeUnit.HOURS.toMillis(2),     // maxAge
+                100,                        // maxReported
+                100,                        // maxPersisted
+                4                             // maxSeeds
+        );
+        PeerGroupService.Config clearNetConf = new PeerGroupService.Config(peerGroupConfig,
+                peerExchangeStrategyConfig,
+                keepAliveServiceConfig,
+                TimeUnit.SECONDS.toMillis(5),  // bootstrapTime
+                TimeUnit.SECONDS.toMillis(5),  // interval
+                TimeUnit.SECONDS.toMillis(60),  // timeout
+                TimeUnit.HOURS.toMillis(2),     // maxAge
+                100,                        // maxReported
+                100,                        // maxPersisted
+                4                             // maxSeeds
         );
         peerGroupServiceConfigByTransport = Map.of(
-                Transport.Type.TOR, defaultConf,                           //maxSeeds
+                Transport.Type.TOR, defaultConf,
                 Transport.Type.I2P, defaultConf,
-                Transport.Type.CLEAR, new PeerGroupService.Config(peerGroupConfig,
-                        peerExchangeStrategyConfig,
-                        keepAliveServiceConfig,
-                        TimeUnit.SECONDS.toMillis(10),   //bootstrapTime
-                        TimeUnit.SECONDS.toMillis(10),   //interval
-                        TimeUnit.SECONDS.toMillis(50),  //timeout
-                        TimeUnit.MINUTES.toMillis(10),  //maxAge
-                        100,                        //maxReported
-                        100,                        //maxPersisted
-                        4                              //maxSeeds
-                )
+                Transport.Type.CLEAR, clearNetConf
         );
     }
 
@@ -137,8 +136,8 @@ public class MultiNodesNetworkMonitor {
             Address address = addresses.get(i);
             if (bootstrapAll || isInBootstrapList(address)) {
                 int delayMs = (i + 1) * 1000;
-                long randDelay = new Random().nextInt(delayMs);
-                Scheduler.run(() -> bootstrap(address, transportType)).after(randDelay);
+                long randDelay = new Random().nextInt(delayMs) + 1;
+                Scheduler.run(() -> bootstrap(address, transportType)).name("monitor-bootstrap-" + address).after(randDelay);
             }
         }
         return addresses;
@@ -152,7 +151,8 @@ public class MultiNodesNetworkMonitor {
     }
 
     public CompletableFuture<List<Void>> shutdown() {
-        return CompletableFutureUtils.allOf(networkServicesByAddress.keySet().stream().map(this::shutdown));
+        Set<Address> addresses = new HashSet<>(networkServicesByAddress.keySet());
+        return CompletableFutureUtils.allOf(addresses.stream().map(this::shutdown));
     }
 
     public CompletableFuture<Void> shutdown(Address address) {
