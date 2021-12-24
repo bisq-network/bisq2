@@ -42,7 +42,7 @@ import static network.misq.network.p2p.node.CloseReason.*;
 public class PeerGroupService {
 
     private final Node node;
-    private final BannList bannList;
+    private final BanList banList;
     private final Config config;
     @Getter
     private final PeerGroup peerGroup;
@@ -63,14 +63,14 @@ public class PeerGroupService {
                                 int maxSeeds) {
     }
 
-    public PeerGroupService(Node node, BannList bannList, Config config, List<Address> seedNodeAddresses) {
+    public PeerGroupService(Node node, BanList banList, Config config, List<Address> seedNodeAddresses) {
         this.node = node;
-        this.bannList = bannList;
+        this.banList = banList;
         this.config = config;
-        peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, bannList);
+        peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, banList);
         peerExchangeService = new PeerExchangeService(node, new PeerExchangeStrategy(peerGroup, config.peerExchangeConfig()));
         keepAliveService = new KeepAliveService(node, peerGroup, config.keepAliveServiceConfig());
-        addressValidationService = new AddressValidationService(node, bannList);
+        addressValidationService = new AddressValidationService(node, banList);
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -114,7 +114,7 @@ public class PeerGroupService {
     private CompletableFuture<List<Connection>> closeBanned() {
         return CompletableFutureUtils.allOf(peerGroup.getAllConnections()
                         .filter(Connection::isRunning)
-                        .filter(connection -> bannList.isBanned(connection.getPeerAddress()))
+                        .filter(connection -> banList.isBanned(connection.getPeerAddress()))
                         .peek(connection -> log.info("{} -> {}: CloseQuarantined triggered close connection", node, connection.getPeerAddress()))
                         .map(connection -> node.closeConnection(connection, CloseReason.BANNED)))
                 .orTimeout(config.timeout(), MILLISECONDS);

@@ -31,7 +31,7 @@ import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.monitor.MonitorService;
-import network.misq.network.p2p.services.peergroup.BannList;
+import network.misq.network.p2p.services.peergroup.BanList;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.relay.RelayService;
 import network.misq.network.p2p.services.router.gossip.GossipResult;
@@ -87,8 +87,8 @@ public class ServiceNode {
                        DataService.Config dataServiceConfig,
                        ConfidentialService.Config confMsgServiceConfig,
                        List<Address> seedNodeAddresses) {
-        BannList bannList = new BannList();
-        nodesById = new NodesById(bannList, nodeConfig);
+        BanList banList = new BanList();
+        nodesById = new NodesById(banList, nodeConfig);
         defaultNode = nodesById.getDefaultNode();
         Set<Service> services = config.services();
         if (services.contains(Service.CONFIDENTIAL)) {
@@ -96,7 +96,7 @@ public class ServiceNode {
         }
 
         if (services.contains(Service.PEER_GROUP)) {
-            PeerGroupService peerGroupService = new PeerGroupService(defaultNode, bannList, peerGroupServiceConfig, seedNodeAddresses);
+            PeerGroupService peerGroupService = new PeerGroupService(defaultNode, banList, peerGroupServiceConfig, seedNodeAddresses);
             this.peerGroupService = Optional.of(peerGroupService);
 
             if (services.contains(Service.DATA)) {

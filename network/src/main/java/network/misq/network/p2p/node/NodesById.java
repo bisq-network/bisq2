@@ -21,7 +21,7 @@ package network.misq.network.p2p.node;
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.peergroup.BannList;
+import network.misq.network.p2p.services.peergroup.BanList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +39,12 @@ public class NodesById implements Node.Listener {
     private static final Logger log = LoggerFactory.getLogger(NodesById.class);
 
     private final Map<String, Node> map = new ConcurrentHashMap<>();
-    private final BannList bannList;
+    private final BanList banList;
     private final Node.Config nodeConfig;
     private final Set<Node.Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public NodesById(BannList bannList, Node.Config nodeConfig) {
-        this.bannList = bannList;
+    public NodesById(BanList banList, Node.Config nodeConfig) {
+        this.banList = banList;
         this.nodeConfig = nodeConfig;
     }
 
@@ -131,7 +131,7 @@ public class NodesById implements Node.Listener {
     private Node getOrCreateNode(String nodeId) {
         return findNode(nodeId)
                 .orElseGet(() -> {
-                    Node node = new Node(bannList, nodeConfig, nodeId);
+                    Node node = new Node(banList, nodeConfig, nodeId);
                     map.put(nodeId, node);
                     node.addListener(this);
                     return node;

@@ -26,7 +26,7 @@ import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.message.Version;
 import network.misq.network.p2p.node.authorization.AuthorizationService;
 import network.misq.network.p2p.node.authorization.AuthorizationToken;
-import network.misq.network.p2p.services.peergroup.BannList;
+import network.misq.network.p2p.services.peergroup.BanList;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -46,7 +46,7 @@ class ConnectionHandshake {
     @Getter
     private final String id = UUID.randomUUID().toString();
     private final Socket socket;
-    private final BannList bannList;
+    private final BanList banList;
     private final Capability capability;
     private final AuthorizationService authorizationService;
 
@@ -59,9 +59,9 @@ class ConnectionHandshake {
     static record Result(Capability capability, Load load) {
     }
 
-    ConnectionHandshake(Socket socket, BannList bannList, int socketTimeout, Capability capability, AuthorizationService authorizationService) {
+    ConnectionHandshake(Socket socket, BanList banList, int socketTimeout, Capability capability, AuthorizationService authorizationService) {
         this.socket = socket;
-        this.bannList = bannList;
+        this.banList = banList;
         this.capability = capability;
         this.authorizationService = authorizationService;
 
@@ -100,7 +100,7 @@ class ConnectionHandshake {
                     throw new ConnectionException("ResponseEnvelope.payload() not type of Response. responseEnvelope=" +
                             responseEnvelope);
                 }
-                if (bannList.isBanned(response.capability().address())) {
+                if (banList.isBanned(response.capability().address())) {
                     throw new ConnectionException("Peers address is in quarantine. response=" + response);
                 }
                 if (!authorizationService.isAuthorized(response.token())) {
@@ -142,7 +142,7 @@ class ConnectionHandshake {
                     throw new ConnectionException("RequestEnvelope.payload() not type of Request. requestEnvelope=" +
                             requestEnvelope);
                 }
-                if (bannList.isBanned(request.capability().address())) {
+                if (banList.isBanned(request.capability().address())) {
                     throw new ConnectionException("Peers address is in quarantine. request=" + request);
                 }
                 if (!authorizationService.isAuthorized(request.token())) {

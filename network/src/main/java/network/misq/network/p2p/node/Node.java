@@ -30,7 +30,7 @@ import network.misq.network.p2p.node.transport.ClearNetTransport;
 import network.misq.network.p2p.node.transport.I2PTransport;
 import network.misq.network.p2p.node.transport.TorTransport;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.peergroup.BannList;
+import network.misq.network.p2p.services.peergroup.BanList;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -79,7 +79,7 @@ public class Node implements Connection.Handler {
                                 int socketTimeout) {
     }
 
-    private final BannList bannList;
+    private final BanList banList;
     private final Transport transport;
     private final AuthorizationService authorizationService;
     private final Config config;
@@ -95,8 +95,8 @@ public class Node implements Connection.Handler {
     private Optional<Capability> myCapability;
     private volatile boolean isStopped;
 
-    public Node(BannList bannList, Config config, String nodeId) {
-        this.bannList = bannList;
+    public Node(BanList banList, Config config, String nodeId) {
+        this.banList = banList;
         transportType = config.transportType();
         transport = getTransport(transportType, config.transportConfig());
         authorizationService = config.authorizationService();
@@ -126,7 +126,7 @@ public class Node implements Connection.Handler {
     }
 
     private void onClientSocket(Socket socket, Transport.ServerSocketResult serverSocketResult, Capability myCapability) {
-        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, bannList, config.socketTimeout(), myCapability, authorizationService);
+        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, config.socketTimeout(), myCapability, authorizationService);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Inbound handshake request at: {}", myCapability.address());
         connectionHandshake.onSocket(getMyLoad())
@@ -217,7 +217,7 @@ public class Node implements Connection.Handler {
     }
 
     private CompletableFuture<Connection> createOutboundConnection(Address address, Capability myCapability) {
-        if (bannList.isBanned(address)) {
+        if (banList.isBanned(address)) {
             throw new ConnectionException("Create outbound connection failed. PeerAddress is in quarantine. address=" + address);
         }
         Socket socket;
@@ -229,7 +229,7 @@ public class Node implements Connection.Handler {
         }
 
         CompletableFuture<Connection> future = new CompletableFuture<>();
-        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, bannList, config.socketTimeout(), myCapability, authorizationService);
+        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, config.socketTimeout(), myCapability, authorizationService);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.address(), address);
         connectionHandshake.start(getMyLoad())
