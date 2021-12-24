@@ -17,7 +17,7 @@
 
 package network.misq.network.p2p.services.data;
 
-import network.misq.common.util.MapUtils;
+import network.misq.common.Disposable;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.CloseReason;
@@ -71,8 +71,7 @@ public class DataService implements Node.Listener {
 
         this.storage = new Storage(config.baseDirPath());
 
-        // router = new Router(node, peerGroupService.getPeerGroup());
-        router = new Router(node, null);
+        router = new Router(node, peerGroupService.getPeerGroup());
 
         router.addMessageListener(this);
         node.addListener(this);
@@ -85,16 +84,14 @@ public class DataService implements Node.Listener {
 
     @Override
     public void onMessage(Message message, Connection connection, String nodeId) {
-        if (message instanceof AddDataRequest) {
-            AddDataRequest addDataRequest = (AddDataRequest) message;
+        if (message instanceof AddDataRequest addDataRequest) {
             if (canAdd(addDataRequest)) {
               /*  Message previousItem = storage.add(addDataRequest.getMapValue());
                 if (previousItem == null) {
                     dataListeners.forEach(listener -> listener.onDataAdded(message));
                 }*/
             }
-        } else if (message instanceof RemoveDataRequest) {
-            RemoveDataRequest removeDataRequest = (RemoveDataRequest) message;
+        } else if (message instanceof RemoveDataRequest removeDataRequest) {
             if (canRemove(removeDataRequest)) {
                 // Message removedItem = storage.remove(removeDataRequest.getMapKey());
               /*  if (removedItem != null) {
@@ -111,9 +108,11 @@ public class DataService implements Node.Listener {
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
-        String id = connection.getId();
-        MapUtils.disposeAndRemove(id, responseHandlerMap);
-        MapUtils.disposeAndRemove(id, requestHandlerMap);
+        String key = connection.getId();
+        if (responseHandlerMap.containsKey(key)) {
+            responseHandlerMap.get(key).dispose();
+            responseHandlerMap.remove(key);
+        }
     }
 
 
@@ -205,8 +204,24 @@ public class DataService implements Node.Listener {
         router.shutdown();
         storage.shutdown();
 
-        MapUtils.disposeAndRemoveAll(requestHandlerMap);
-        MapUtils.disposeAndRemoveAll(requestHandlerMap);
+        requestHandlerMap.values().forEach(Disposable::dispose);
+        requestHandlerMap.clear();
+
+        responseHandlerMap.values().forEach(Disposable::dispose);
+        responseHandlerMap.clear();
+
         return CompletableFuture.completedFuture(null);
+    }
+
+    public void disposeAndRemove(String key, Map<String, ? extends Disposable> map) {
+        if (map.containsKey(key)) {
+            map.get(key).dispose();
+            map.remove(key);
+        }
+    }
+
+    public void disposeAndRemoveAll(Map<String, ? extends Disposable> map) {
+        map.values().forEach(Disposable::dispose);
+        map.clear();
     }
 }
