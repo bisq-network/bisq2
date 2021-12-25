@@ -34,7 +34,7 @@ import network.misq.network.p2p.services.monitor.MonitorService;
 import network.misq.network.p2p.services.peergroup.BanList;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.relay.RelayService;
-import network.misq.network.p2p.services.router.BroadcastResult;
+import network.misq.network.p2p.services.broadcast.BroadcastResult;
 import network.misq.security.PubKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

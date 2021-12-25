@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.router.gossip;
+package network.misq.network.p2p.services.broadcast;
 
 import network.misq.common.util.CollectionUtil;
 import network.misq.network.p2p.message.Message;
@@ -23,7 +23,6 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.services.peergroup.PeerGroup;
-import network.misq.network.p2p.services.router.BroadcastResult;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -32,14 +31,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-public class GossipRouter implements Node.Listener {
+public class Broadcaster implements Node.Listener {
     private static final long BROADCAST_TIMEOUT = 90;
 
     private final Node node;
     private final PeerGroup peerGroup;
     private final Set<Node.Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public GossipRouter(Node node, PeerGroup peerGroup) {
+    public Broadcaster(Node node, PeerGroup peerGroup) {
         this.node = node;
         this.peerGroup = peerGroup;
 
@@ -48,8 +47,8 @@ public class GossipRouter implements Node.Listener {
 
     @Override
     public void onMessage(Message message, Connection connection, String nodeId) {
-        if (message instanceof GossipMessage gossipMessage) {
-            listeners.forEach(listener -> listener.onMessage(gossipMessage.message(), connection, nodeId));
+        if (message instanceof BroadcastMessage broadcastMessage) {
+            listeners.forEach(listener -> listener.onMessage(broadcastMessage.message(), connection, nodeId));
         }
     }
 
@@ -61,7 +60,7 @@ public class GossipRouter implements Node.Listener {
         AtomicInteger numFaults = new AtomicInteger(0);
         long target = peerGroup.getAllConnections().count();
         peerGroup.getAllConnections().forEach(connection -> {
-            node.send(new GossipMessage(message), connection)
+            node.send(new BroadcastMessage(message), connection)
                     .whenComplete((c, throwable) -> {
                         if (throwable == null) {
                             numSuccess.incrementAndGet();

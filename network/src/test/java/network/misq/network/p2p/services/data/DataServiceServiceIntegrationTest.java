@@ -28,7 +28,7 @@ import network.misq.network.p2p.services.data.storage.auth.MockAuthenticatedPayl
 import network.misq.network.p2p.services.data.storage.auth.MockNetworkData;
 import network.misq.network.p2p.services.monitor.MultiNodesSetup;
 import network.misq.network.p2p.services.peergroup.PeerGroup;
-import network.misq.network.p2p.services.router.BroadcastResult;
+import network.misq.network.p2p.services.broadcast.BroadcastResult;
 import network.misq.security.KeyGeneration;
 import org.junit.jupiter.api.Test;
 
@@ -78,7 +78,6 @@ public class DataServiceServiceIntegrationTest extends DataServiceNodeBase {
         DataService dataService_1 = dataServices.get(1);
         DataService dataService_2 = dataServices.get(2);
 
-        dataService_0.broadcast()
 
         CountDownLatch latch = new CountDownLatch(2);
         dataService_1.addDataListener(new DataListener() {

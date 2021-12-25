@@ -32,7 +32,7 @@ import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.peergroup.SeedNodeRepository;
-import network.misq.network.p2p.services.router.BroadcastResult;
+import network.misq.network.p2p.services.broadcast.BroadcastResult;
 import network.misq.security.KeyPairRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

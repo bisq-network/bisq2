@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.router;
+package network.misq.network.p2p.services.broadcast;
 
 public record BroadcastResult(int numSuccess, int numFaults, long duration) {
 }

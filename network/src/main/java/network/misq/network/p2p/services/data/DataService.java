@@ -31,8 +31,8 @@ import network.misq.network.p2p.services.data.inventory.InventoryResponseHandler
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.data.storage.Storage;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
-import network.misq.network.p2p.services.router.BroadcastResult;
-import network.misq.network.p2p.services.router.Router;
+import network.misq.network.p2p.services.broadcast.BroadcastResult;
+import network.misq.network.p2p.services.broadcast.Broadcaster;
 
 import java.util.Map;
 import java.util.Set;
@@ -68,7 +68,7 @@ public class DataService implements Node.Listener {
     @Getter
     private final PeerGroupService peerGroupService;
     private final Storage storage;
-    private final Router router;
+    private final Broadcaster broadcaster;
     private final Set<DataListener> dataListeners = new CopyOnWriteArraySet<>();
     private final Map<String, InventoryResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, InventoryRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
@@ -78,8 +78,8 @@ public class DataService implements Node.Listener {
         this.peerGroupService = peerGroupService;
         this.storage = new Storage(config.baseDirPath());
 
-        router = new Router(node, peerGroupService.getPeerGroup());
-        router.addMessageListener(this);
+        broadcaster = new Broadcaster(node, peerGroupService.getPeerGroup());
+        broadcaster.addMessageListener(this);
         // node.addListener(this);
     }
 
@@ -131,7 +131,7 @@ public class DataService implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<BroadcastResult> broadcast(Message message) {
-        return router.broadcast(new AddDataRequest(message));
+        return broadcaster.broadcast(new AddDataRequest(message));
     }
 
     public CompletableFuture<BroadcastResult> requestRemoveData(Message message) {
@@ -142,7 +142,7 @@ public class DataService implements Node.Listener {
     }
 
     public CompletableFuture<RequestInventoryResult> requestInventory(DataFilter dataFilter) {
-        return requestInventory(dataFilter, router.getPeerAddressesForInventoryRequest())
+        return requestInventory(dataFilter, broadcaster.getPeerAddressesForInventoryRequest())
                 .whenComplete((requestInventoryResult, throwable) -> {
                     if (requestInventoryResult != null) {
                       /*  storage.add(requestInventoryResult.getInventory())
@@ -202,7 +202,7 @@ public class DataService implements Node.Listener {
     public CompletableFuture<Void> shutdown() {
         dataListeners.clear();
         //todo
-        router.shutdown();
+        broadcaster.shutdown();
         storage.shutdown();
 
         requestHandlerMap.values().forEach(Disposable::dispose);

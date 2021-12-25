@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.router.gossip;
+package network.misq.network.p2p.services.broadcast;
 
 import network.misq.network.p2p.message.Message;
 
-public record GossipMessage(Message message) implements Message {
+public record BroadcastMessage(Message message) implements Message {
 }
