@@ -18,22 +18,30 @@
 package network.misq.network.p2p.services.data.storage;
 
 
+import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.services.data.AddDataRequest;
+import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.storage.append.AppendOnlyDataStore;
+import network.misq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import network.misq.network.p2p.services.data.storage.auth.AuthenticatedDataStore;
+import network.misq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import network.misq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import network.misq.network.p2p.services.data.storage.mailbox.DataStore;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxDataStore;
+import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.io.File.separator;
 
 public class Storage {
-    public static final String DIR = File.separator + "db" + File.separator + "network";
+    public static final String DIR = "db" + File.separator + "network";
 
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
 
@@ -52,28 +60,43 @@ public class Storage {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public AuthenticatedDataStore getAuthenticatedDataStore(MetaData metaData) throws IOException {
-        String key = metaData.getFileName();
-        if (!authenticatedDataStores.containsKey(key)) {
-            authenticatedDataStores.put(key, new AuthenticatedDataStore(storageDirPath, metaData));
+    public CompletableFuture<Optional<NetworkPayload>> addRequest(AddDataRequest addDataRequest) {
+        Message message = addDataRequest.message();
+        if (message instanceof AddMailboxRequest addMailboxRequest) {
+            return addRequest(addMailboxRequest);
+        } else if (message instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
+            return addRequest(addAuthenticatedDataRequest);
+        } else {
+            return CompletableFuture.failedFuture(new IllegalArgumentException("AddRequest called with invalid addDataRequest: " + addDataRequest.getClass().getSimpleName()));
         }
-        return authenticatedDataStores.get(key);
     }
 
-    public MailboxDataStore getMailboxStore(MetaData metaData) throws IOException {
-        String key = metaData.getFileName();
-        if (!mailboxStores.containsKey(key)) {
-            mailboxStores.put(key, new MailboxDataStore(storageDirPath, metaData));
-        }
-        return mailboxStores.get(key);
+    private CompletableFuture<Optional<NetworkPayload>> addRequest(AddMailboxRequest request) {
+        MailboxPayload payload = request.getMailboxData().getMailboxPayload();
+        return getOrCreateMailboxDataStore(payload.getMetaData())
+                .thenApply(store -> {
+                    Result result = store.add(request);
+                    if (result.isSuccess()) {
+                        return Optional.of(payload);
+                    } else {
+                        log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
+                        return Optional.empty();
+                    }
+                });
     }
 
-    public AppendOnlyDataStore getAppendOnlyDataStore(MetaData metaData) throws IOException {
-        String key = metaData.getFileName();
-        if (!appendOnlyDataStores.containsKey(key)) {
-            appendOnlyDataStores.put(key, new AppendOnlyDataStore(storageDirPath, metaData));
-        }
-        return appendOnlyDataStores.get(key);
+    private CompletableFuture<Optional<NetworkPayload>> addRequest(AddAuthenticatedDataRequest request) {
+        AuthenticatedPayload payload = request.getAuthenticatedData().getPayload();
+        return getOrCreateAuthenticatedDataStore(payload.getMetaData())
+                .thenApply(store -> {
+                    Result result = store.add(request);
+                    if (result.isSuccess()) {
+                        return Optional.of(payload);
+                    } else {
+                        log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
+                        return Optional.empty();
+                    }
+                });
     }
 
 
@@ -81,5 +104,38 @@ public class Storage {
         authenticatedDataStores.values().forEach(DataStore::shutdown);
         mailboxStores.values().forEach(DataStore::shutdown);
         appendOnlyDataStores.values().forEach(DataStore::shutdown);
+    }
+
+    public CompletableFuture<AuthenticatedDataStore> getOrCreateAuthenticatedDataStore(MetaData metaData) {
+        String key = metaData.getFileName();
+        if (!authenticatedDataStores.containsKey(key)) {
+            AuthenticatedDataStore dataStore = new AuthenticatedDataStore(storageDirPath, metaData);
+            authenticatedDataStores.put(key, dataStore);
+            return dataStore.readPersisted().thenApply(__ -> dataStore);
+        } else {
+            return CompletableFuture.completedFuture(authenticatedDataStores.get(key));
+        }
+    }
+
+    public CompletableFuture<MailboxDataStore> getOrCreateMailboxDataStore(MetaData metaData) {
+        String key = metaData.getFileName();
+        if (!mailboxStores.containsKey(key)) {
+            MailboxDataStore dataStore = new MailboxDataStore(storageDirPath, metaData);
+            mailboxStores.put(key, dataStore);
+            return dataStore.readPersisted().thenApply(__ -> dataStore);
+        } else {
+            return CompletableFuture.completedFuture(mailboxStores.get(key));
+        }
+    }
+
+    public CompletableFuture<AppendOnlyDataStore> getOrCreateAppendOnlyDataStore(MetaData metaData) {
+        String key = metaData.getFileName();
+        if (!appendOnlyDataStores.containsKey(key)) {
+            AppendOnlyDataStore dataStore = new AppendOnlyDataStore(storageDirPath, metaData);
+            appendOnlyDataStores.put(key, dataStore);
+            return dataStore.readPersisted().thenApply(__ -> dataStore);
+        } else {
+            return CompletableFuture.completedFuture(appendOnlyDataStores.get(key));
+        }
     }
 }

@@ -15,9 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.router.gossip;
+package network.misq.network.p2p.services.data;
 
-import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.message.Proto;
+import network.misq.network.p2p.services.data.storage.MetaData;
 
-public record GossipMessage(Message message) implements Message {
+public interface NetworkPayload extends Proto {
+    MetaData getMetaData();
+
+    boolean isDataInvalid();
 }

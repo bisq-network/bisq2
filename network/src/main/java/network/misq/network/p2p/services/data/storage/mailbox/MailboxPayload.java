@@ -19,6 +19,7 @@ package network.misq.network.p2p.services.data.storage.mailbox;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import network.misq.network.p2p.services.confidential.ConfidentialMessage;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import network.misq.security.ConfidentialData;
@@ -39,15 +40,16 @@ public class MailboxPayload implements AuthenticatedPayload {
                                                       PublicKey receiverPublicKey)
             throws GeneralSecurityException {
         ConfidentialData confidentialData = HybridEncryption.encryptAndSign(mailboxMessage.serialize(), receiverPublicKey, senderKeyPair);
-        return new MailboxPayload(confidentialData, mailboxMessage.getMetaData());
+        ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, "DEFAULT");
+        return new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
     }
 
     @Getter
-    private final ConfidentialData confidentialData;
+    private final ConfidentialMessage confidentialMessage;
     private final MetaData metaData;
 
-    public MailboxPayload(ConfidentialData confidentialData, MetaData metaData) {
-        this.confidentialData = confidentialData;
+    public MailboxPayload(ConfidentialMessage confidentialMessage, MetaData metaData) {
+        this.confidentialMessage = confidentialMessage;
         this.metaData = metaData;
     }
 
@@ -64,7 +66,7 @@ public class MailboxPayload implements AuthenticatedPayload {
     @Override
     public String toString() {
         return "MailboxPayload{" +
-                "\r\n     confidentialData=" + confidentialData +
+                "\r\n     confidentialMessage=" + confidentialMessage +
                 ",\r\n     metaData='" + metaData + '\'' +
                 "\r\n}";
     }

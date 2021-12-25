@@ -17,6 +17,7 @@
 
 package network.misq.network.p2p.services.confidential;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.ObjectSerializer;
 import network.misq.network.p2p.NetworkId;
@@ -25,6 +26,10 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.NodesById;
+import network.misq.network.p2p.services.broadcast.BroadcastResult;
+import network.misq.network.p2p.services.data.DataService;
+import network.misq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import network.misq.network.p2p.services.relay.RelayMessage;
 import network.misq.security.ConfidentialData;
 import network.misq.security.HybridEncryption;
@@ -34,23 +39,49 @@ import network.misq.security.PubKey;
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
 public class ConfidentialService implements Node.Listener {
+    public enum State {
+        SENT,
+        ADDED_TO_MAILBOX,
+        FAILED
+    }
 
-    public static record Config(KeyPairRepository keyPairRepository) {
+    @Getter
+    public static class Result {
+        private final State state;
+        private CompletableFuture<BroadcastResult> mailboxFuture;
+        private String errorMsg;
+
+        public Result(State state) {
+            this.state = state;
+        }
+
+        public Result mailboxFuture(CompletableFuture<BroadcastResult> mailboxFuture) {
+            this.mailboxFuture = mailboxFuture;
+            return this;
+        }
+
+        public Result errorMsg(String errorMsg) {
+            this.errorMsg = errorMsg;
+            return this;
+        }
     }
 
     private final Set<Node.Listener> listeners = new CopyOnWriteArraySet<>();
     private final NodesById nodesById;
     private final KeyPairRepository keyPairRepository;
+    private final Optional<DataService> dataService;
 
-    public ConfidentialService(NodesById nodesById, ConfidentialService.Config config) {
+    public ConfidentialService(NodesById nodesById, KeyPairRepository keyPairRepository, Optional<DataService> dataService) {
         this.nodesById = nodesById;
-        this.keyPairRepository = config.keyPairRepository();
+        this.keyPairRepository = keyPairRepository;
+        this.dataService = dataService;
 
         nodesById.addNodeListener(this);
     }
@@ -86,23 +117,46 @@ public class ConfidentialService implements Node.Listener {
         }
     }
 
-    public CompletableFuture<Connection> send(Message message,
-                                              Address address,
-                                              PubKey pubKey,
-                                              KeyPair myKeyPair,
-                                              String nodeId) {
-        return nodesById.send(nodeId, getConfidentialMessage(message, pubKey, myKeyPair), address);
+    public CompletableFuture<Result> send(Message message,
+                                          Address address,
+                                          PubKey receiverPubKey,
+                                          KeyPair senderKeyPair,
+                                          String nodeId) {
+        return nodesById.getConnection(nodeId, address)
+                .thenCompose(connection -> send(message, connection, receiverPubKey, senderKeyPair, nodeId));
     }
 
-    public CompletableFuture<Connection> send(Message message,
-                                              Connection connection,
-                                              PubKey pubKey,
-                                              KeyPair myKeyPair,
-                                              String nodeId) {
-        return nodesById.send(nodeId, getConfidentialMessage(message, pubKey, myKeyPair), connection);
+    public CompletableFuture<Result> send(Message message,
+                                          Connection connection,
+                                          PubKey receiverPubKey,
+                                          KeyPair senderKeyPair,
+                                          String nodeId) {
+        ConfidentialMessage confidentialMessage = getConfidentialMessage(message, receiverPubKey, senderKeyPair);
+        return nodesById.send(nodeId, confidentialMessage, connection)
+                .handle((con, throwable) -> {
+                    if (throwable == null) {
+                        return new Result(State.SENT);
+                    }
+
+                    if (message instanceof MailboxMessage mailboxMessage) {
+                        if (dataService.isEmpty()) {
+                            log.warn("We cannot stored a mailboxMessage because the dataService is not present. mailboxMessage={}", mailboxMessage);
+                            return new Result(State.FAILED).errorMsg("We cannot stored a mailboxMessage because the dataService is not present.");
+                        }
+
+                        MailboxPayload mailboxPayload = new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
+                        CompletableFuture<BroadcastResult> mailboxFuture = dataService.get().addMailboxPayload(mailboxPayload,
+                                senderKeyPair,
+                                receiverPubKey.publicKey());
+                        return new Result(State.ADDED_TO_MAILBOX).mailboxFuture(mailboxFuture);
+                    }
+
+                    log.warn("Sending message failed and message is not type of MailboxMessage. message={}", message);
+                    return new Result(State.FAILED).errorMsg("Sending message failed and message is not type of MailboxMessage.");
+                });
     }
 
-    public CompletableFuture<Connection> relay(Message message, NetworkId networkId, KeyPair myKeyPair) {
+    public CompletableFuture<Connection> relay(Message message, NetworkId networkId, KeyPair senderKeyPair) {
        /*   Set<Connection> connections = getConnectionsWithSupportedNetwork(peerAddress.getNetworkType());
       Connection outboundConnection = CollectionUtil.getRandomElement(connections);
         if (outboundConnection != null) {
@@ -135,10 +189,10 @@ public class ConfidentialService implements Node.Listener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private ConfidentialMessage getConfidentialMessage(Message message, PubKey pubKey, KeyPair myKeyPair) {
+    private ConfidentialMessage getConfidentialMessage(Message message, PubKey receiverPubKey, KeyPair senderKeyPair) {
         try {
-            ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message.serialize(), pubKey.publicKey(), myKeyPair);
-            return new ConfidentialMessage(confidentialData, pubKey.id());
+            ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message.serialize(), receiverPubKey.publicKey(), senderKeyPair);
+            return new ConfidentialMessage(confidentialData, receiverPubKey.id());
         } catch (GeneralSecurityException e) {
             log.error("HybridEncryption.encryptAndSign failed at getConfidentialMessage.", e);
             throw new RuntimeException(e);

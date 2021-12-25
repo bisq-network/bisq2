@@ -19,16 +19,16 @@ package network.misq.network.p2p.services.data.storage.append;
 
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.network.p2p.services.data.storage.MapKey;
+import network.misq.common.data.ByteArray;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.network.p2p.services.data.storage.mailbox.DataStore;
 import network.misq.persistence.Persistence;
 import network.misq.security.DigestUtil;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -37,42 +37,47 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * If key already exists we return. If map size exceeds MAX_MAP_SIZE we ignore new data.
  */
 @Slf4j
-public class AppendOnlyDataStore extends DataStore<AppendOnlyData> {
+public class AppendOnlyDataStore extends DataStore<AppendOnlyPayload> {
     private static final int MAX_MAP_SIZE = 10_000_000; // in bytes
 
     private final int maxMapSize;
 
     public interface Listener {
-        void onAppended(AppendOnlyData appendOnlyData);
+        void onAppended(AppendOnlyPayload appendOnlyData);
     }
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public AppendOnlyDataStore(String appDirPath, MetaData metaData) throws IOException {
+    public AppendOnlyDataStore(String appDirPath, MetaData metaData) {
         super(appDirPath, metaData);
 
         maxMapSize = MAX_MAP_SIZE / metaData.getMaxSizeInBytes();
-        if (new File(storageFilePath).exists()) {
-            Serializable serializable = Persistence.read(storageFilePath);
-            if (serializable instanceof ConcurrentHashMap) {
-                ConcurrentHashMap<MapKey, AppendOnlyData> persisted = (ConcurrentHashMap<MapKey, AppendOnlyData>) serializable;
-                map.putAll(persisted);
-            }
-        }
     }
 
-    public boolean append(AppendOnlyData appendOnlyData) {
+    public CompletableFuture<Void> readPersisted() {
+        return CompletableFuture.runAsync(() -> {
+            if (new File(storageFilePath).exists()) {
+                Serializable serializable = Persistence.read(storageFilePath);
+                if (serializable instanceof ConcurrentHashMap) {
+                    ConcurrentHashMap<ByteArray, AppendOnlyPayload> persisted = (ConcurrentHashMap<ByteArray, AppendOnlyPayload>) serializable;
+                    map.putAll(persisted);
+                }
+            }
+        });
+    }
+
+    public boolean append(AppendOnlyPayload appendOnlyData) {
         if (map.size() > maxMapSize) {
             return false;
         }
 
         byte[] hash = DigestUtil.hash(appendOnlyData.serialize());
-        MapKey mapKey = new MapKey(hash);
-        if (map.containsKey(mapKey)) {
+        ByteArray byteArray = new ByteArray(hash);
+        if (map.containsKey(byteArray)) {
             return false;
         }
 
-        map.put(mapKey, appendOnlyData);
+        map.put(byteArray, appendOnlyData);
         listeners.forEach(listener -> listener.onAppended(appendOnlyData));
         persist();
         return true;
@@ -97,7 +102,7 @@ public class AppendOnlyDataStore extends DataStore<AppendOnlyData> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @VisibleForTesting
-    ConcurrentHashMap<MapKey, AppendOnlyData> getMap() {
+    ConcurrentHashMap<ByteArray, AppendOnlyPayload> getMap() {
         return map;
     }
 }

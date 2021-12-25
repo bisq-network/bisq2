@@ -20,7 +20,7 @@ package network.misq.network.p2p.services.peergroup.validateaddress;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.*;
-import network.misq.network.p2p.services.peergroup.BannList;
+import network.misq.network.p2p.services.peergroup.BanList;
 
 import java.util.Map;
 import java.util.Set;
@@ -31,13 +31,13 @@ public class AddressValidationService implements Node.Listener {
     private static final long TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
     private final Node node;
-    private final BannList bannList;
+    private final BanList banList;
     private final Map<String, AddressValidationHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private final Set<String> requesters = new CopyOnWriteArraySet<>(); // connectionIds
 
-    public AddressValidationService(Node node, BannList bannList) {
+    public AddressValidationService(Node node, BanList banList) {
         this.node = node;
-        this.bannList = bannList;
+        this.banList = banList;
         this.node.addListener(this);
     }
 
@@ -51,7 +51,7 @@ public class AddressValidationService implements Node.Listener {
         } else {
             log.debug("Node {} adds a new AddressValidationHandler for {}", node, peerAddress);
         }
-        AddressValidationHandler handler = new AddressValidationHandler(node, peerAddress, bannList);
+        AddressValidationHandler handler = new AddressValidationHandler(node, peerAddress, banList);
         requestHandlerMap.put(key, handler);
         return handler.request()
                 .orTimeout(TIMEOUT, TimeUnit.SECONDS)
@@ -98,7 +98,7 @@ public class AddressValidationService implements Node.Listener {
                 log.debug("Node {} sent AddressValidationResponse with nonce {} to {}. Connection={}", node, addressValidationRequest.nonce(), peerAddress, inboundConnection.getId());
             } else {
                 log.warn("Node {}  got a AddressValidationRequest at {}. We expect an inbound connection. We close that connection.", node, connection);
-                bannList.add(peerAddress, BannList.Reason.ADDRESS_VALIDATION_REQUEST_ON_OUTBOUND_CON);
+                banList.add(peerAddress, BanList.Reason.ADDRESS_VALIDATION_REQUEST_ON_OUTBOUND_CON);
                 node.closeConnection(connection, CloseReason.ADDRESS_VALIDATION_FAILED);
             }
         }

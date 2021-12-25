@@ -17,14 +17,7 @@
 
 package network.misq.network.p2p.services.data;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import network.misq.network.p2p.message.Message;
 
-@EqualsAndHashCode
-@Getter
-public class AddDataRequest implements Message {
-
-    public AddDataRequest() {
-    }
+public record AddDataRequest(Message message) implements Message {
 }

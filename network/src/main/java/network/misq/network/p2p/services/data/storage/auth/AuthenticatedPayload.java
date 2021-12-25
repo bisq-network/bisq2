@@ -17,7 +17,7 @@
 
 package network.misq.network.p2p.services.data.storage.auth;
 
-import network.misq.network.p2p.services.data.NetworkData;
+import network.misq.network.p2p.services.data.NetworkPayload;
 
-public interface AuthenticatedPayload extends NetworkData {
+public interface AuthenticatedPayload extends NetworkPayload {
 }

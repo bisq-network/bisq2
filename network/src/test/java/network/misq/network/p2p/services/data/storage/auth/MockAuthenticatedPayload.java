@@ -26,13 +26,11 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 @Getter
 public class MockAuthenticatedPayload implements AuthenticatedPayload {
-    private final String text;
+    private final String offerDummy;
     final MetaData metaData;
 
-    public MockAuthenticatedPayload(String text) {
-        this.text = text;
-        // 463 is overhead of sig/pubkeys,...
-        // 582 is pubkey+sig+hash
+    public MockAuthenticatedPayload(String offerDummy) {
+        this.offerDummy = offerDummy;
         metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
     }
 

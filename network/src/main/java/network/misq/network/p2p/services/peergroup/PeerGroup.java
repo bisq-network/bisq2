@@ -58,18 +58,18 @@ public class PeerGroup {
     private final Config config;
     @Getter
     private final List<Address> seedNodeAddresses;
-    private final BannList bannList;
+    private final BanList banList;
     @Getter
     private final Set<Peer> reportedPeers = new CopyOnWriteArraySet<>();
     //todo persist
     @Getter
     private final Set<Peer> persistedPeers = new CopyOnWriteArraySet<>();
 
-    public PeerGroup(Node node, Config config, List<Address> seedNodeAddresses, BannList bannList) {
+    public PeerGroup(Node node, Config config, List<Address> seedNodeAddresses, BanList banList) {
         this.node = node;
         this.config = config;
         this.seedNodeAddresses = seedNodeAddresses;
-        this.bannList = bannList;
+        this.banList = banList;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -136,7 +136,7 @@ public class PeerGroup {
     }
 
     public boolean isNotInQuarantine(Peer peer) {
-        return bannList.isNotBanned(peer.getAddress());
+        return banList.isNotBanned(peer.getAddress());
     }
 
     public boolean notMyself(Peer peer) {

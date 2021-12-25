@@ -15,30 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.data.storage.append;
+package network.misq.network.p2p.services.broadcast;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import network.misq.network.p2p.services.data.storage.MetaData;
+import network.misq.network.p2p.message.Message;
 
-@EqualsAndHashCode
-@Getter
-public class MockAppendOnlyData implements AppendOnlyData {
-    private final String text;
-    final MetaData metaData;
-
-    public MockAppendOnlyData(String text) {
-        this.text = text;
-        metaData = new MetaData(251, getClass().getSimpleName());
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
+public record BroadcastMessage(Message message) implements Message {
 }

@@ -20,7 +20,7 @@ package network.misq.network.p2p.services.data.storage.auth;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.network.p2p.services.data.NetworkData;
+import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.network.p2p.services.data.storage.auth.authorized.AuthorizedPayload;
 
@@ -34,8 +34,8 @@ import java.util.concurrent.TimeUnit;
 public final class MockAuthorizedPayload extends AuthorizedPayload {
     private final MetaData metaData;
 
-    public MockAuthorizedPayload(NetworkData networkData, byte[] signature, PublicKey publicKey) {
-        super(networkData, signature, publicKey);
+    public MockAuthorizedPayload(NetworkPayload networkPayload, byte[] signature, PublicKey publicKey) {
+        super(networkPayload, signature, publicKey);
 
         this.metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 10000, this.getClass().getSimpleName());
     }

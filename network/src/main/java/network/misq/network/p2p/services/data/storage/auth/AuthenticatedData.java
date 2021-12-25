@@ -27,6 +27,14 @@ import java.io.Serializable;
 @Getter
 @EqualsAndHashCode
 public class AuthenticatedData implements Serializable {
+
+    public static AuthenticatedData from(AuthenticatedData data, int sequenceNumber) {
+        return new AuthenticatedData(data.getPayload(),
+                sequenceNumber,
+                data.getHashOfPublicKey(),
+                data.getCreated());
+    }
+
     protected final AuthenticatedPayload payload;
     protected final int sequenceNumber;
     protected final long created;

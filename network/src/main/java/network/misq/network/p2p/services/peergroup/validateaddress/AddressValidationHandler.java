@@ -21,7 +21,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.*;
-import network.misq.network.p2p.services.peergroup.BannList;
+import network.misq.network.p2p.services.peergroup.BanList;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -36,16 +36,16 @@ class AddressValidationHandler implements Connection.Listener {
 
     private final Node node;
     private final Address addressOfInboundConnection;
-    private final BannList bannList;
+    private final BanList banList;
     private final CompletableFuture<Boolean> future = new CompletableFuture<>();
     private final int nonce;
     @Nullable
     private OutboundConnection outboundConnection;
 
-    AddressValidationHandler(Node node, Address addressOfInboundConnection, BannList bannList) {
+    AddressValidationHandler(Node node, Address addressOfInboundConnection, BanList banList) {
         this.node = node;
         this.addressOfInboundConnection = addressOfInboundConnection;
-        this.bannList = bannList;
+        this.banList = banList;
         nonce = new Random().nextInt();
     }
 
@@ -89,8 +89,8 @@ class AddressValidationHandler implements Connection.Listener {
                         node, addressOfInboundConnection,
                         addressValidationResponse.requestNonce(), nonce,
                         outboundConnection.getPeerAddress(), addressOfInboundConnection);
-                bannList.add(addressOfInboundConnection, BannList.Reason.ADDRESS_VALIDATION_FAILED);
-                bannList.add(outboundConnection.getPeerAddress(), BannList.Reason.ADDRESS_VALIDATION_FAILED);
+                banList.add(addressOfInboundConnection, BanList.Reason.ADDRESS_VALIDATION_FAILED);
+                banList.add(outboundConnection.getPeerAddress(), BanList.Reason.ADDRESS_VALIDATION_FAILED);
                 node.closeConnection(outboundConnection, CloseReason.ADDRESS_VALIDATION_FAILED);
                 removeListeners();
                 future.complete(false);

@@ -15,13 +15,34 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.data;
+package network.misq.network.p2p.services.data.storage.auth;
 
-import network.misq.network.p2p.message.Proto;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import network.misq.network.p2p.services.data.storage.MetaData;
 
-public interface NetworkData extends Proto {
-    MetaData getMetaData();
+import java.util.concurrent.TimeUnit;
 
-    boolean isDataInvalid();
+@EqualsAndHashCode
+@Getter
+public class MockAuthenticatedTextPayload implements AuthenticatedPayload {
+    private final String text;
+    final MetaData metaData;
+
+    public MockAuthenticatedTextPayload(String text) {
+        this.text = text;
+        // 463 is overhead of sig/pubkeys,...
+        // 582 is pubkey+sig+hash
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return metaData;
+    }
+
+    @Override
+    public boolean isDataInvalid() {
+        return false;
+    }
 }

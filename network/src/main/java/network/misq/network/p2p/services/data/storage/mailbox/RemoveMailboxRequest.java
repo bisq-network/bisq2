@@ -56,7 +56,6 @@ public class RemoveMailboxRequest extends RemoveRequest implements MailboxReques
                 receiverPublicKey,
                 sequenceNumber,
                 signature);
-        log.error(this.toString());
     }
 
     @Override

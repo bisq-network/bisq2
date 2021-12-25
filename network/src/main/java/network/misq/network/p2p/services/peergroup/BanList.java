@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 //todo check at connection handshake
-public class BannList {
+public class BanList {
     public enum Reason {
         ADDRESS_VALIDATION_FAILED,
         ADDRESS_VALIDATION_REQUEST_ON_OUTBOUND_CON
@@ -34,7 +34,7 @@ public class BannList {
 
     private final Map<Address, Entry> entryMap = new ConcurrentHashMap<>();
 
-    public BannList() {
+    public BanList() {
     }
 
     public void add(Address address, Reason reason) {

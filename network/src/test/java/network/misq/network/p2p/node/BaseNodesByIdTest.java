@@ -21,7 +21,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.network.p2p.BaseNetworkTest;
 import network.misq.network.p2p.message.Message;
-import network.misq.network.p2p.services.peergroup.BannList;
+import network.misq.network.p2p.services.peergroup.BanList;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -34,8 +34,8 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
     protected int numNodes;
 
     void test_messageRoundTrip(Node.Config config) throws InterruptedException {
-        BannList bannList = new BannList();
-        NodesById nodesById = new NodesById(bannList, config);
+        BanList banList = new BanList();
+        NodesById nodesById = new NodesById(banList, config);
         long ts = System.currentTimeMillis();
         // Thread.sleep(6000);
         numNodes = 5;
@@ -125,8 +125,8 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
     }
 
     void test_initializeServer(Node.Config nodeConfig) throws InterruptedException {
-        BannList bannList = new BannList();
-        NodesById nodesById = new NodesById(bannList, nodeConfig);
+        BanList banList = new BanList();
+        NodesById nodesById = new NodesById(banList, nodeConfig);
         //Thread.sleep(6000);
         for (int i = 0; i < 2; i++) {
             initializeServers(2, nodesById);

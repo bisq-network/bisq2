@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class Scheduler implements TaskScheduler {
-    private final ScheduledExecutorService executor = ExecutorFactory.newScheduledThreadPool("Scheduler", 10);
+    private static final ScheduledExecutorService executor = ExecutorFactory.newScheduledThreadPool("Scheduler", 1);
     private Runnable task;
     private volatile boolean stopped;
     private Optional<ScheduledFuture<?>> future = Optional.empty();
@@ -80,6 +80,10 @@ public class Scheduler implements TaskScheduler {
     public Scheduler repeated(long delay, TimeUnit timeUnit, long cycles) {
         if (stopped) {
             return this;
+        }
+        if (delay == 0) {
+            log.warn("Delay must be > 0. We set it to 1 ms.");
+            delay = 1;
         }
         future = Optional.of(executor.scheduleWithFixedDelay(() -> {
             if (stopped) {

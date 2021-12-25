@@ -30,16 +30,19 @@ import network.misq.network.p2p.ServiceNodesByTransport;
 import network.misq.network.p2p.State;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
+import network.misq.network.p2p.services.broadcast.BroadcastResult;
+import network.misq.network.p2p.services.confidential.ConfidentialService;
 import network.misq.network.p2p.services.data.DataService;
+import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.peergroup.SeedNodeRepository;
 import network.misq.security.KeyPairRepository;
 
 import javax.annotation.Nullable;
 import java.security.KeyPair;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -145,8 +148,15 @@ public class NetworkService {
         });
     }
 
-    public CompletableFuture<Connection> confidentialSend(Message message, NetworkId peerNetworkId, KeyPair myKeyPair, String connectionId) {
+    public CompletableFuture<ConfidentialService.Result> confidentialSend(Message message, 
+                                                                          NetworkId peerNetworkId, 
+                                                                          KeyPair myKeyPair,
+                                                                          String connectionId) {
         return serviceNodesByTransport.confidentialSend(message, peerNetworkId, myKeyPair, connectionId);
+    }
+
+    public CompletableFuture<List<BroadcastResult>> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
+        return serviceNodesByTransport.addNetworkPayload(networkPayload, keyPair);
     }
 
     public void addMessageListener(Node.Listener listener) {

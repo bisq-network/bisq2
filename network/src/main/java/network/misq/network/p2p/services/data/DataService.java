@@ -17,27 +17,36 @@
 
 package network.misq.network.p2p.services.data;
 
-import network.misq.common.util.MapUtils;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import network.misq.common.Disposable;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
+import network.misq.network.p2p.services.broadcast.BroadcastResult;
+import network.misq.network.p2p.services.broadcast.Broadcaster;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.InventoryRequestHandler;
 import network.misq.network.p2p.services.data.inventory.InventoryResponseHandler;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.data.storage.Storage;
+import network.misq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import network.misq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import network.misq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
+import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
-import network.misq.network.p2p.services.router.Router;
-import network.misq.network.p2p.services.router.gossip.GossipResult;
+import network.misq.security.KeyPairRepository;
 
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+
+import static java.util.concurrent.CompletableFuture.runAsync;
 
 /**
  * Preliminary ideas:
@@ -49,33 +58,38 @@ import java.util.concurrent.TimeUnit;
  * At startup give users option to use clear-net for initial sync and switch to tor after that. Might require a restart ;-(.
  * That way the user trades of speed with loss of little privacy (the other nodes learn that that IP uses misq).
  * Probably acceptable trade off for many users. Would be good if the restart could be avoided. Maybe not that hard...
+ * <p>
+ * UPDATE: Use BloomFilter class from guava lib
  */
+@Slf4j
 public class DataService implements Node.Listener {
+    private static final long BROADCAST_TIMEOUT = 90;
 
     public static record Config(String baseDirPath) {
     }
 
-    private static final long BROADCAST_TIMEOUT = 90;
 
     private final Node node;
-    private final Router router;
+    @Getter
     private final PeerGroupService peerGroupService;
+    private final KeyPairRepository keyPairRepository;
     private final Storage storage;
+    private final Broadcaster broadcaster;
     private final Set<DataListener> dataListeners = new CopyOnWriteArraySet<>();
     private final Map<String, InventoryResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, InventoryRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
 
-    public DataService(Node node, PeerGroupService peerGroupService, Config config) {
+    public DataService(Node node, PeerGroupService peerGroupService, KeyPairRepository keyPairRepository, Config config) {
         this.node = node;
         this.peerGroupService = peerGroupService;
-
+        this.keyPairRepository = keyPairRepository;
         this.storage = new Storage(config.baseDirPath());
 
-        // router = new Router(node, peerGroupService.getPeerGroup());
-        router = new Router(node, null);
+        broadcaster = new Broadcaster(node, peerGroupService.getPeerGroup());
+        broadcaster.addMessageListener(this);
 
-        router.addMessageListener(this);
-        node.addListener(this);
+        keyPairRepository.getOrCreateKeyPair(KeyPairRepository.DEFAULT);
+        // node.addListener(this);
     }
 
 
@@ -85,22 +99,24 @@ public class DataService implements Node.Listener {
 
     @Override
     public void onMessage(Message message, Connection connection, String nodeId) {
-        if (message instanceof AddDataRequest) {
-            AddDataRequest addDataRequest = (AddDataRequest) message;
-            if (canAdd(addDataRequest)) {
-              /*  Message previousItem = storage.add(addDataRequest.getMapValue());
-                if (previousItem == null) {
-                    dataListeners.forEach(listener -> listener.onDataAdded(message));
-                }*/
-            }
-        } else if (message instanceof RemoveDataRequest) {
-            RemoveDataRequest removeDataRequest = (RemoveDataRequest) message;
-            if (canRemove(removeDataRequest)) {
-                // Message removedItem = storage.remove(removeDataRequest.getMapKey());
+        if (dataListeners.isEmpty()) {
+            return;
+        }
+
+        if (message instanceof AddDataRequest addDataRequest) {
+            storage.addRequest(addDataRequest)
+                    .whenComplete((optionalData, throwable) -> {
+                        optionalData.ifPresent(networkData -> {
+                            runAsync(() -> dataListeners.forEach(listener -> {
+                                listener.onNetworkDataAdded(networkData);
+                            }));
+                        });
+                    });
+        } else if (message instanceof RemoveDataRequest removeDataRequest) {
+            // Message removedItem = storage.remove(removeDataRequest.getMapKey());
               /*  if (removedItem != null) {
                     dataListeners.forEach(listener -> listener.onDataRemoved(message));
                 }*/
-            }
         }
     }
 
@@ -111,9 +127,11 @@ public class DataService implements Node.Listener {
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
-        String id = connection.getId();
-        MapUtils.disposeAndRemove(id, responseHandlerMap);
-        MapUtils.disposeAndRemove(id, requestHandlerMap);
+        String key = connection.getId();
+        if (responseHandlerMap.containsKey(key)) {
+            responseHandlerMap.get(key).dispose();
+            responseHandlerMap.remove(key);
+        }
     }
 
 
@@ -121,12 +139,45 @@ public class DataService implements Node.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<GossipResult> requestAddData() {
-        AddDataRequest addDataRequest = new AddDataRequest();
-        return router.broadcast(addDataRequest);
+    public CompletableFuture<BroadcastResult> addMailboxPayload(MailboxPayload mailboxPayload,
+                                                                KeyPair senderKeyPair,
+                                                                PublicKey receiverPublicKey) {
+        return storage.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
+                .thenCompose(store -> {
+                    try {
+                        AddMailboxRequest addRequest = AddMailboxRequest.from(store,
+                                mailboxPayload,
+                                senderKeyPair,
+                                receiverPublicKey);
+                        store.add(addRequest);
+                        return broadcaster.broadcast(new AddDataRequest(addRequest));
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                        throw new CompletionException(e);
+                    }
+                });
     }
 
-    public CompletableFuture<GossipResult> requestRemoveData(Message message) {
+    public CompletableFuture<BroadcastResult> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
+        if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
+            return storage.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
+                    .thenCompose(store -> {
+                        try {
+                            AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
+                            store.add(addRequest);
+                            return broadcaster.broadcast(new AddDataRequest(addRequest));
+                        } catch (GeneralSecurityException e) {
+                            e.printStackTrace();
+                            throw new CompletionException(e);
+                        }
+                    });
+        } else {
+            return CompletableFuture.failedFuture(new IllegalArgumentException(""));
+        }
+
+    }
+
+    public CompletableFuture<BroadcastResult> requestRemoveData(Message message) {
         //   RemoveDataRequest removeDataRequest = new RemoveDataRequest(new MapKey(message));
         //  storage.remove(removeDataRequest.getMapKey());
         // return router.broadcast(removeDataRequest);
@@ -134,7 +185,7 @@ public class DataService implements Node.Listener {
     }
 
     public CompletableFuture<RequestInventoryResult> requestInventory(DataFilter dataFilter) {
-        return requestInventory(dataFilter, router.getPeerAddressesForInventoryRequest())
+        return requestInventory(dataFilter, broadcaster.getPeerAddressesForInventoryRequest())
                 .whenComplete((requestInventoryResult, throwable) -> {
                     if (requestInventoryResult != null) {
                       /*  storage.add(requestInventoryResult.getInventory())
@@ -191,22 +242,30 @@ public class DataService implements Node.Listener {
         responseHandlerMap.put(connection.getId(), responseHandler);*/
     }
 
-    private boolean canAdd(AddDataRequest message) {
-        return true;
-    }
-
-    private boolean canRemove(RemoveDataRequest message) {
-        return true;
-    }
-
     public CompletableFuture<Void> shutdown() {
         dataListeners.clear();
         //todo
-        router.shutdown();
+        broadcaster.shutdown();
         storage.shutdown();
 
-        MapUtils.disposeAndRemoveAll(requestHandlerMap);
-        MapUtils.disposeAndRemoveAll(requestHandlerMap);
+        requestHandlerMap.values().forEach(Disposable::dispose);
+        requestHandlerMap.clear();
+
+        responseHandlerMap.values().forEach(Disposable::dispose);
+        responseHandlerMap.clear();
+
         return CompletableFuture.completedFuture(null);
+    }
+
+    public void disposeAndRemove(String key, Map<String, ? extends Disposable> map) {
+        if (map.containsKey(key)) {
+            map.get(key).dispose();
+            map.remove(key);
+        }
+    }
+
+    public void disposeAndRemoveAll(Map<String, ? extends Disposable> map) {
+        map.values().forEach(Disposable::dispose);
+        map.clear();
     }
 }

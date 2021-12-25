@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.data.storage.append;
+package network.misq.network.p2p.services.broadcast;
 
-import network.misq.network.p2p.services.data.NetworkData;
-
-public interface AppendOnlyData extends NetworkData {
+public record BroadcastResult(int numSuccess, int numFaults, long duration) {
 }

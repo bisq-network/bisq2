@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.router.gossip;
+package network.misq.network.p2p.services.broadcast;
 
 import network.misq.common.util.CollectionUtil;
 import network.misq.network.p2p.message.Message;
@@ -30,16 +30,15 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class GossipRouter implements Node.Listener {
+public class Broadcaster implements Node.Listener {
     private static final long BROADCAST_TIMEOUT = 90;
 
     private final Node node;
     private final PeerGroup peerGroup;
     private final Set<Node.Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public GossipRouter(Node node, PeerGroup peerGroup) {
+    public Broadcaster(Node node, PeerGroup peerGroup) {
         this.node = node;
         this.peerGroup = peerGroup;
 
@@ -48,53 +47,33 @@ public class GossipRouter implements Node.Listener {
 
     @Override
     public void onMessage(Message message, Connection connection, String nodeId) {
-        if (message instanceof GossipMessage gossipMessage) {
-            listeners.forEach(listener -> listener.onMessage(gossipMessage.message(), connection, nodeId));
+        if (message instanceof BroadcastMessage broadcastMessage) {
+            listeners.forEach(listener -> listener.onMessage(broadcastMessage.message(), connection, nodeId));
         }
     }
 
-    public CompletableFuture<GossipResult> broadcast(Message message) {
+    public CompletableFuture<BroadcastResult> broadcast(Message message) {
         long ts = System.currentTimeMillis();
-        CompletableFuture<GossipResult> future = new CompletableFuture<>();
-        future.orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
+        CompletableFuture<BroadcastResult> future = new CompletableFuture<BroadcastResult>()
+                .orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
         AtomicInteger numSuccess = new AtomicInteger(0);
         AtomicInteger numFaults = new AtomicInteger(0);
-
-        Stream<Address> allConnectedPeerAddresses = peerGroup.getAllConnectedPeerAddresses();
-        long target = allConnectedPeerAddresses.count();
-        allConnectedPeerAddresses.forEach(address -> {
-            node.send(new GossipMessage(message), address)
-                    .whenComplete((connection, t) -> {
-                        if (connection != null) {
+        long target = peerGroup.getAllConnections().count();
+        peerGroup.getAllConnections().forEach(connection -> {
+            node.send(new BroadcastMessage(message), connection)
+                    .whenComplete((c, throwable) -> {
+                        if (throwable == null) {
                             numSuccess.incrementAndGet();
                         } else {
                             numFaults.incrementAndGet();
                         }
                         if (numSuccess.get() + numFaults.get() == target) {
-                            future.complete(new GossipResult(numSuccess.get(),
+                            future.complete(new BroadcastResult(numSuccess.get(),
                                     numFaults.get(),
                                     System.currentTimeMillis() - ts));
                         }
                     });
         });
-        
-      /*  Set<Address> connectedPeerAddresses = allConnectedPeerAddresses.collect(Collectors.toSet());
-        int target = connectedPeerAddresses.size();
-        connectedPeerAddresses.forEach(address -> {
-            node.send(new GossipMessage(message), address)
-                    .whenComplete((connection, t) -> {
-                        if (connection != null) {
-                            numSuccess.incrementAndGet();
-                        } else {
-                            numFaults.incrementAndGet();
-                        }
-                        if (numSuccess.get() + numFaults.get() == target) {
-                            future.complete(new GossipResult(numSuccess.get(),
-                                    numFaults.get(),
-                                    System.currentTimeMillis() - ts));
-                        }
-                    });
-        });*/
         return future;
     }
 

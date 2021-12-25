@@ -27,6 +27,16 @@ import java.security.PublicKey;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class MailboxData extends AuthenticatedData {
+
+    public static MailboxData from(MailboxData mailboxData, int sequenceNumber) {
+        return new MailboxData(mailboxData.getMailboxPayload(),
+                sequenceNumber,
+                mailboxData.getHashOfPublicKey(),
+                mailboxData.getHashOfReceiversPublicKey(),
+                mailboxData.getReceiversPubKey(),
+                mailboxData.getCreated());
+    }
+    
     private final byte[] receiversPubKeyBytes;
     private final byte[] hashOfReceiversPublicKey;
     transient final private PublicKey receiversPubKey;

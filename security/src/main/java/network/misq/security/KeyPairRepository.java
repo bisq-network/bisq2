@@ -22,7 +22,9 @@ import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -42,22 +44,41 @@ public class KeyPairRepository {
     }
 
     public CompletableFuture<Boolean> initialize() {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        try {
-            KeyPair keyPair = KeyGeneration.generateKeyPair();
-            add(keyPair, DEFAULT);
-            future.complete(true);
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-            future.completeExceptionally(e);
-        }
-        return future;
+        return getOrCreateKeyPairAsync(DEFAULT).thenApply(r -> true);
     }
 
     public void shutdown() {
     }
 
-    public void add(KeyPair keyPair, String keyId) {
+
+    public Optional<KeyPair> findKeyPair(String keyId) {
+        return Optional.ofNullable(keyPairsById.get(keyId));
+    }
+
+    public KeyPair getOrCreateKeyPair(String keyId) {
+        try {
+            return getOrCreateKeyPairAsync(keyId).get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public CompletableFuture<KeyPair> getOrCreateKeyPairAsync(String keyId) {
+        return findKeyPair(keyId).map(CompletableFuture::completedFuture)
+                .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
+                    try {
+                        KeyPair keyPair = KeyGeneration.generateKeyPair();
+                        put(keyId, keyPair);
+                        return keyPair;
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                        throw new CompletionException(e);
+                    }
+                }));
+    }
+
+    private void put(String keyId, KeyPair keyPair) {
         checkArgument(!keyPairsById.containsKey(keyId));
         keyPairsById.put(keyId, keyPair);
         persist();
@@ -65,9 +86,5 @@ public class KeyPairRepository {
 
     private void persist() {
         // todo persist
-    }
-
-    public Optional<KeyPair> findKeyPair(String keyId) {
-        return Optional.ofNullable(keyPairsById.get(keyId));
     }
 }

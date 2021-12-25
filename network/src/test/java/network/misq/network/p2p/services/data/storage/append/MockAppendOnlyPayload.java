@@ -15,7 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.router.gossip;
+package network.misq.network.p2p.services.data.storage.append;
 
-public record GossipResult(int numSuccess, int numFaults, long duration) {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import network.misq.network.p2p.services.data.storage.MetaData;
+
+@EqualsAndHashCode
+@Getter
+public class MockAppendOnlyPayload implements AppendOnlyPayload {
+    private final String text;
+    final MetaData metaData;
+
+    public MockAppendOnlyPayload(String text) {
+        this.text = text;
+        metaData = new MetaData(251, getClass().getSimpleName());
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return metaData;
+    }
+
+    @Override
+    public boolean isDataInvalid() {
+        return false;
+    }
 }

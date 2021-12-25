@@ -15,22 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.common.util;
+package network.misq.network.p2p.services.data.storage.append;
 
-import network.misq.common.Disposable;
+import network.misq.network.p2p.services.data.NetworkPayload;
 
-import java.util.Map;
-
-public class MapUtils {
-    public static void disposeAndRemove(String key, Map<String, ? extends Disposable> map) {
-        if (map.containsKey(key)) {
-            map.get(key).dispose();
-            map.remove(key);
-        }
-    }
-
-    public static void disposeAndRemoveAll(Map<String, ? extends Disposable> map) {
-        map.values().forEach(Disposable::dispose);
-        map.clear();
-    }
+public interface AppendOnlyPayload extends NetworkPayload {
 }

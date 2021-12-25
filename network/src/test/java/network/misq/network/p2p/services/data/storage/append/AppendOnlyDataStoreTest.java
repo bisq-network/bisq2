@@ -32,12 +32,13 @@ public class AppendOnlyDataStoreTest {
 
     @Test
     public void testAppend() throws IOException {
-        MockAppendOnlyData data = new MockAppendOnlyData("test" + UUID.randomUUID());
+        MockAppendOnlyPayload data = new MockAppendOnlyPayload("test" + UUID.randomUUID());
         AppendOnlyDataStore store = new AppendOnlyDataStore(appDirPath, data.getMetaData());
+        store.readPersisted().join();
         int previous = store.getMap().size();
         int iterations = 10;
         for (int i = 0; i < iterations; i++) {
-            data = new MockAppendOnlyData("test" + UUID.randomUUID());
+            data = new MockAppendOnlyPayload("test" + UUID.randomUUID());
             boolean result = store.append(data);
             assertTrue(result);
         }
