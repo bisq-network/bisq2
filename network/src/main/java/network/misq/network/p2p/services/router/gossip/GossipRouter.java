@@ -23,6 +23,7 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.services.peergroup.PeerGroup;
+import network.misq.network.p2p.services.router.BroadcastResult;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -30,7 +31,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class GossipRouter implements Node.Listener {
     private static final long BROADCAST_TIMEOUT = 90;
@@ -53,48 +53,28 @@ public class GossipRouter implements Node.Listener {
         }
     }
 
-    public CompletableFuture<GossipResult> broadcast(Message message) {
+    public CompletableFuture<BroadcastResult> broadcast(Message message) {
         long ts = System.currentTimeMillis();
-        CompletableFuture<GossipResult> future = new CompletableFuture<>();
-        future.orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
+        CompletableFuture<BroadcastResult> future = new CompletableFuture<BroadcastResult>()
+                .orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
         AtomicInteger numSuccess = new AtomicInteger(0);
         AtomicInteger numFaults = new AtomicInteger(0);
-
-        Stream<Address> allConnectedPeerAddresses = peerGroup.getAllConnectedPeerAddresses();
-        long target = allConnectedPeerAddresses.count();
-        allConnectedPeerAddresses.forEach(address -> {
-            node.send(new GossipMessage(message), address)
-                    .whenComplete((connection, t) -> {
-                        if (connection != null) {
+        long target = peerGroup.getAllConnections().count();
+        peerGroup.getAllConnections().forEach(connection -> {
+            node.send(new GossipMessage(message), connection)
+                    .whenComplete((c, throwable) -> {
+                        if (throwable == null) {
                             numSuccess.incrementAndGet();
                         } else {
                             numFaults.incrementAndGet();
                         }
                         if (numSuccess.get() + numFaults.get() == target) {
-                            future.complete(new GossipResult(numSuccess.get(),
+                            future.complete(new BroadcastResult(numSuccess.get(),
                                     numFaults.get(),
                                     System.currentTimeMillis() - ts));
                         }
                     });
         });
-        
-      /*  Set<Address> connectedPeerAddresses = allConnectedPeerAddresses.collect(Collectors.toSet());
-        int target = connectedPeerAddresses.size();
-        connectedPeerAddresses.forEach(address -> {
-            node.send(new GossipMessage(message), address)
-                    .whenComplete((connection, t) -> {
-                        if (connection != null) {
-                            numSuccess.incrementAndGet();
-                        } else {
-                            numFaults.incrementAndGet();
-                        }
-                        if (numSuccess.get() + numFaults.get() == target) {
-                            future.complete(new GossipResult(numSuccess.get(),
-                                    numFaults.get(),
-                                    System.currentTimeMillis() - ts));
-                        }
-                    });
-        });*/
         return future;
     }
 

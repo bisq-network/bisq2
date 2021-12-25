@@ -32,7 +32,7 @@ import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.peergroup.SeedNodeRepository;
-import network.misq.network.p2p.services.router.gossip.GossipResult;
+import network.misq.network.p2p.services.router.BroadcastResult;
 import network.misq.security.KeyPairRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -164,7 +164,7 @@ public class ServiceNodesByTransport {
         return future;
     }
 
-    public void requestAddData(Message message, Consumer<GossipResult> resultHandler) {
+    public void requestAddData(Message message, Consumer<BroadcastResult> resultHandler) {
         map.values().forEach(networkNode -> {
             networkNode.requestAddData(message)
                     .whenComplete((gossipResult, throwable) -> {
@@ -177,7 +177,7 @@ public class ServiceNodesByTransport {
         });
     }
 
-    public void requestRemoveData(Message message, Consumer<GossipResult> resultHandler) {
+    public void requestRemoveData(Message message, Consumer<BroadcastResult> resultHandler) {
         map.values().forEach(dataService -> {
             dataService.requestRemoveData(message)
                     .whenComplete((gossipResult, throwable) -> {

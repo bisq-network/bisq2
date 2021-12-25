@@ -15,25 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.data.storage;
+package network.misq.network.p2p.services.router;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import network.misq.common.encoding.Hex;
-
-import java.io.Serializable;
-
-@EqualsAndHashCode
-@Getter
-public class MapKey implements Serializable {
-    private final byte[] hash;
-
-    public MapKey(byte[] hash) {
-        this.hash = hash;
-    }
-
-    @Override
-    public String toString() {
-        return Hex.encode(hash);
-    }
+public record BroadcastResult(int numSuccess, int numFaults, long duration) {
 }

@@ -18,7 +18,7 @@
 package network.misq.network.p2p.services.data.storage.mailbox;
 
 import network.misq.common.util.FileUtils;
-import network.misq.network.p2p.services.data.storage.MapKey;
+import network.misq.common.data.ByteArray;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.network.p2p.services.data.storage.Storage;
 import network.misq.persistence.Persistence;
@@ -34,11 +34,16 @@ public abstract class DataStore<T> {
     protected final String storageDirectory;
     protected final String fileName;
     protected final Persistence persistence;
-    protected final ConcurrentHashMap<MapKey, T> map = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<ByteArray, T> map = new ConcurrentHashMap<>();
 
-    public DataStore(String appDirPath, MetaData metaData) throws IOException {
-        storageDirectory = appDirPath + Storage.DIR + File.separator + getStoreDir();
-        FileUtils.makeDirs(storageDirectory);
+    public DataStore(String appDirPath, MetaData metaData) {
+        storageDirectory = appDirPath + File.separator + Storage.DIR + File.separator + getStoreDir();
+        try {
+            FileUtils.makeDirs(storageDirectory);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
         fileName = metaData.getFileName();
         storageFilePath = storageDirectory + separator + fileName;
         this.persistence = new Persistence(storageDirectory, fileName, map);

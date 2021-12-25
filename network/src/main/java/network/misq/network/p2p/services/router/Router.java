@@ -19,15 +19,11 @@ package network.misq.network.p2p.services.router;
 
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.services.peergroup.PeerGroup;
-import network.misq.network.p2p.services.router.gossip.GossipResult;
 import network.misq.network.p2p.services.router.gossip.GossipRouter;
 
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Responsibility:
@@ -35,31 +31,23 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * - Decides which router is used for which message
  * - MessageListeners will get the consolidated messages from multiple routers
  */
-public class Router implements Node.Listener {
+public class Router {
     private final GossipRouter gossipRouter;
-    private final Set<Node.Listener> listeners = new CopyOnWriteArraySet<>();
 
     public Router(Node node, PeerGroup peerGroup) {
         gossipRouter = new GossipRouter(node, peerGroup);
-        gossipRouter.addMessageListener(this);
     }
 
-    public CompletableFuture<GossipResult> broadcast(Message message) {
+    public CompletableFuture<BroadcastResult> broadcast(Message message) {
         return gossipRouter.broadcast(message);
     }
 
     public void addMessageListener(Node.Listener listener) {
-        listeners.add(listener);
+        gossipRouter.addMessageListener(listener);
     }
 
     public void removeMessageListener(Node.Listener listener) {
-        listeners.remove(listener);
-    }
-
-
-    @Override
-    public void onMessage(Message message, Connection connection, String nodeId) {
-        listeners.forEach(listener -> listener.onMessage(message, connection, nodeId));
+        gossipRouter.removeMessageListener(listener);
     }
 
     public Address getPeerAddressesForInventoryRequest() {
@@ -67,8 +55,6 @@ public class Router implements Node.Listener {
     }
 
     public void shutdown() {
-        listeners.clear();
-        gossipRouter.removeMessageListener(this);
         gossipRouter.shutdown();
     }
 }

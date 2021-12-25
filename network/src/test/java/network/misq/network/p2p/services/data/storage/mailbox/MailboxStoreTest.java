@@ -23,9 +23,9 @@ import network.misq.common.util.OsUtils;
 import network.misq.network.p2p.services.data.filter.FilterItem;
 import network.misq.network.p2p.services.data.filter.ProtectedDataFilter;
 import network.misq.network.p2p.services.data.inventory.Inventory;
-import network.misq.network.p2p.services.data.storage.MapKey;
+import network.misq.common.data.ByteArray;
 import network.misq.network.p2p.services.data.storage.auth.RemoveRequest;
-import network.misq.network.p2p.services.data.storage.auth.Result;
+import network.misq.network.p2p.services.data.storage.Result;
 import network.misq.security.DigestUtil;
 import network.misq.security.HybridEncryption;
 import network.misq.security.KeyGeneration;
@@ -52,11 +52,12 @@ public class MailboxStoreTest {
     public void testAddAndRemoveMailboxMsg() throws GeneralSecurityException, IOException, InterruptedException {
         MockMailboxMessage message = new MockMailboxMessage("test" + UUID.randomUUID());
         MailboxDataStore store = new MailboxDataStore(appDirPath, message.getMetaData());
+        store.readPersisted().join();
         KeyPair senderKeyPair = KeyGeneration.generateKeyPair();
         KeyPair receiverKeyPair = KeyGeneration.generateKeyPair();
 
         MailboxPayload payload = MailboxPayload.createMailboxPayload(message, senderKeyPair, receiverKeyPair.getPublic());
-        ConcurrentHashMap<MapKey, MailboxRequest> map = store.getMap();
+        ConcurrentHashMap<ByteArray, MailboxRequest> map = store.getMap();
         int initialMapSize = map.size();
         byte[] hash = DigestUtil.hash(payload.serialize());
         int initialSeqNum = store.getSequenceNumber(hash);
@@ -102,8 +103,8 @@ public class MailboxStoreTest {
         assertTrue(result.isSuccess());
         addLatch.await(1, TimeUnit.SECONDS);
 
-        MapKey mapKey = new MapKey(hash);
-        AddMailboxRequest addRequestFromMap = (AddMailboxRequest) map.get(mapKey);
+        ByteArray byteArray = new ByteArray(hash);
+        AddMailboxRequest addRequestFromMap = (AddMailboxRequest) map.get(byteArray);
         MailboxData dataFromMap = addRequestFromMap.getMailboxData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
@@ -114,9 +115,9 @@ public class MailboxStoreTest {
         // request inventory with old seqNum
         String dataType = payload.getMetaData().getFileName();
         Set<FilterItem> filterItems = new HashSet<>();
-        filterItems.add(new FilterItem(mapKey.getHash(), initialSeqNum));
+        filterItems.add(new FilterItem(byteArray.getHash(), initialSeqNum));
         ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
-        Inventory inventory = store.getInventory(filter);
+        Inventory inventory = store.getInventoryList(filter);
         // assertEquals(initialMapSize + 1, inventory.getEntries().size());
 
         // remove
@@ -128,7 +129,7 @@ public class MailboxStoreTest {
         log.info(removeDataResult.toString());
         assertTrue(removeDataResult.isSuccess());
 
-        RemoveRequest removeRequestFromMap = (RemoveRequest) map.get(mapKey);
+        RemoveRequest removeRequestFromMap = (RemoveRequest) map.get(byteArray);
         assertEquals(Integer.MAX_VALUE, removeRequestFromMap.getSequenceNumber());
 
         // we must not create a new sealed data as it would have a diff. secret key and so a diff hash...

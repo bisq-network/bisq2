@@ -34,7 +34,7 @@ import network.misq.network.p2p.services.monitor.MonitorService;
 import network.misq.network.p2p.services.peergroup.BanList;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.relay.RelayService;
-import network.misq.network.p2p.services.router.gossip.GossipResult;
+import network.misq.network.p2p.services.router.BroadcastResult;
 import network.misq.security.PubKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +74,7 @@ public class ServiceNode {
     private Optional<ConfidentialService> confidentialMessageService;
     @Getter
     private Optional<PeerGroupService> peerGroupService;
+    @Getter
     private Optional<DataService> dataService;
     private Optional<RelayService> relayService;
     @Getter
@@ -183,12 +184,12 @@ public class ServiceNode {
                 .orElseThrow(() -> new RuntimeException("RelayService not present at relay"));
     }
 
-    public CompletableFuture<GossipResult> requestAddData(Message message) {
+    public CompletableFuture<BroadcastResult> requestAddData(Message message) {
         //  return dataService.requestAddData(message);
         return null;
     }
 
-    public CompletableFuture<GossipResult> requestRemoveData(Message message) {
+    public CompletableFuture<BroadcastResult> requestRemoveData(Message message) {
         checkArgument(dataService.isPresent());
         return dataService.get().requestRemoveData(message);
     }

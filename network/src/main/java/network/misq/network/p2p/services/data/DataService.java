@@ -17,6 +17,8 @@
 
 package network.misq.network.p2p.services.data;
 
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import network.misq.common.Disposable;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
@@ -29,8 +31,8 @@ import network.misq.network.p2p.services.data.inventory.InventoryResponseHandler
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.data.storage.Storage;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
+import network.misq.network.p2p.services.router.BroadcastResult;
 import network.misq.network.p2p.services.router.Router;
-import network.misq.network.p2p.services.router.gossip.GossipResult;
 
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +40,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.CompletableFuture.runAsync;
 
 /**
  * Preliminary ideas:
@@ -49,18 +53,22 @@ import java.util.concurrent.TimeUnit;
  * At startup give users option to use clear-net for initial sync and switch to tor after that. Might require a restart ;-(.
  * That way the user trades of speed with loss of little privacy (the other nodes learn that that IP uses misq).
  * Probably acceptable trade off for many users. Would be good if the restart could be avoided. Maybe not that hard...
+ * <p>
+ * UPDATE: Use BloomFilter class from guava lib
  */
+@Slf4j
 public class DataService implements Node.Listener {
+    private static final long BROADCAST_TIMEOUT = 90;
 
     public static record Config(String baseDirPath) {
     }
 
-    private static final long BROADCAST_TIMEOUT = 90;
 
     private final Node node;
-    private final Router router;
+    @Getter
     private final PeerGroupService peerGroupService;
     private final Storage storage;
+    private final Router router;
     private final Set<DataListener> dataListeners = new CopyOnWriteArraySet<>();
     private final Map<String, InventoryResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, InventoryRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
@@ -68,13 +76,11 @@ public class DataService implements Node.Listener {
     public DataService(Node node, PeerGroupService peerGroupService, Config config) {
         this.node = node;
         this.peerGroupService = peerGroupService;
-
         this.storage = new Storage(config.baseDirPath());
 
         router = new Router(node, peerGroupService.getPeerGroup());
-
         router.addMessageListener(this);
-        node.addListener(this);
+        // node.addListener(this);
     }
 
 
@@ -84,20 +90,24 @@ public class DataService implements Node.Listener {
 
     @Override
     public void onMessage(Message message, Connection connection, String nodeId) {
+        if (dataListeners.isEmpty()) {
+            return;
+        }
+
         if (message instanceof AddDataRequest addDataRequest) {
-            if (canAdd(addDataRequest)) {
-              /*  Message previousItem = storage.add(addDataRequest.getMapValue());
-                if (previousItem == null) {
-                    dataListeners.forEach(listener -> listener.onDataAdded(message));
-                }*/
-            }
+            storage.addRequest(addDataRequest)
+                    .whenComplete((optionalData, throwable) -> {
+                        optionalData.ifPresent(networkData -> {
+                            runAsync(() -> dataListeners.forEach(listener -> {
+                                listener.onNetworkDataAdded(networkData);
+                            }));
+                        });
+                    });
         } else if (message instanceof RemoveDataRequest removeDataRequest) {
-            if (canRemove(removeDataRequest)) {
-                // Message removedItem = storage.remove(removeDataRequest.getMapKey());
+            // Message removedItem = storage.remove(removeDataRequest.getMapKey());
               /*  if (removedItem != null) {
                     dataListeners.forEach(listener -> listener.onDataRemoved(message));
                 }*/
-            }
         }
     }
 
@@ -120,12 +130,11 @@ public class DataService implements Node.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<GossipResult> requestAddData() {
-        AddDataRequest addDataRequest = new AddDataRequest();
-        return router.broadcast(addDataRequest);
+    public CompletableFuture<BroadcastResult> broadcast(Message message) {
+        return router.broadcast(new AddDataRequest(message));
     }
 
-    public CompletableFuture<GossipResult> requestRemoveData(Message message) {
+    public CompletableFuture<BroadcastResult> requestRemoveData(Message message) {
         //   RemoveDataRequest removeDataRequest = new RemoveDataRequest(new MapKey(message));
         //  storage.remove(removeDataRequest.getMapKey());
         // return router.broadcast(removeDataRequest);
@@ -188,14 +197,6 @@ public class DataService implements Node.Listener {
                 storage::getInventory,
                 () -> responseHandlerMap.remove(connection.getId()));
         responseHandlerMap.put(connection.getId(), responseHandler);*/
-    }
-
-    private boolean canAdd(AddDataRequest message) {
-        return true;
-    }
-
-    private boolean canRemove(RemoveDataRequest message) {
-        return true;
     }
 
     public CompletableFuture<Void> shutdown() {

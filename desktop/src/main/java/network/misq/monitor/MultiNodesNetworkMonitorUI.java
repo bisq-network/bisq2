@@ -37,14 +37,14 @@ import network.misq.desktop.common.threading.UIThread;
 import network.misq.network.p2p.State;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.monitor.MultiNodesNetworkMonitor;
+import network.misq.network.p2p.services.monitor.MultiNodesSetup;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class MultiNodesNetworkMonitorUI extends Application implements MultiNodesNetworkMonitor.Handler {
-    private MultiNodesNetworkMonitor multiNodesNetworkMonitor;
+public class MultiNodesNetworkMonitorUI extends Application implements MultiNodesSetup.Handler {
+    private MultiNodesSetup multiNodesSetup;
     private FlowPane clearSeedButtonsPane, torSeedButtonsPane, i2pSeedButtonsPane, clearNodeButtonsPane, torNodeButtonsPane, i2pNodeButtonsPane;
     private TextArea nodeInfoTextArea, networkInfoTextArea;
     private Optional<Address> selected = Optional.empty();
@@ -122,7 +122,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
         stage.setScene(scene);
         stage.show();
         stage.setOnCloseRequest(event -> {
-            multiNodesNetworkMonitor.shutdown().whenComplete((r, t) -> Platform.exit());
+            multiNodesSetup.shutdown().whenComplete((r, t) -> Platform.exit());
         });
     }
 
@@ -150,9 +150,10 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
         boolean bootstrapAll = Optional.ofNullable(params.get("bootstrapAll"))
                 .map(e -> e.equalsIgnoreCase("true"))
                 .orElse(addressesToBootstrap.isEmpty() && myAddress.isEmpty());
-        multiNodesNetworkMonitor = new MultiNodesNetworkMonitor(transports, bootstrapAll, addressesToBootstrap);
-        multiNodesNetworkMonitor.addNetworkInfoConsumer(this);
-        multiNodesNetworkMonitor.bootstrap()
+
+        multiNodesSetup = new MultiNodesSetup(transports, bootstrapAll, addressesToBootstrap);
+        multiNodesSetup.addNetworkInfoConsumer(this);
+        multiNodesSetup.bootstrap(100)
                 .forEach((transportType, addresses) -> addresses.forEach(address -> addButton(address, transportType)));
     }
 
@@ -171,7 +172,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
             }
 
             if (selected.isEmpty() || selected.get().equals(address)) {
-                nodeInfoTextArea.setText(multiNodesNetworkMonitor.getNodeInfo(address, transportType));
+                nodeInfoTextArea.setText(multiNodesSetup.getNodeInfo(address, transportType));
                 if (!nodeInfoTextArea.isFocused()) {
                     nodeInfoTextArea.positionCaret(0);
                 }
@@ -194,7 +195,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
             button.setUserData(address);
             button.setOnAction(e -> onButtonClicked(address, transportType));
             buttonsByAddress.put(address, new Pair<>(button, transportType));
-            if (multiNodesNetworkMonitor.isSeed(address, transportType)) {
+            if (multiNodesSetup.isSeed(address, transportType)) {
                 switch (transportType) {
                     case TOR -> torSeedButtonsPane.getChildren().add(button);
                     case I2P -> i2pSeedButtonsPane.getChildren().add(button);
@@ -212,22 +213,22 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
 
     private void onButtonClicked(Address address, Transport.Type transportType) {
         selected = Optional.of(address);
-        nodeInfoTextArea.setText(multiNodesNetworkMonitor.getNodeInfo(address, transportType));
+        nodeInfoTextArea.setText(multiNodesSetup.getNodeInfo(address, transportType));
         nodeInfoTextArea.positionCaret(0);
 
         MenuItem start = new MenuItem("Start");
         MenuItem stop = new MenuItem("Stop");
 
-        start.setDisable(multiNodesNetworkMonitor.findNetworkService(address).isPresent());
-        stop.setDisable(multiNodesNetworkMonitor.findNetworkService(address).isEmpty());
+        start.setDisable(multiNodesSetup.findNetworkService(address).isPresent());
+        stop.setDisable(multiNodesSetup.findNetworkService(address).isEmpty());
 
         start.setOnAction((event) -> {
-            multiNodesNetworkMonitor.bootstrap(address, transportType);
+            multiNodesSetup.bootstrap(address, transportType);
             start.setDisable(true);
             stop.setDisable(false);
         });
         stop.setOnAction((event) -> {
-            multiNodesNetworkMonitor.shutdown(address);
+            multiNodesSetup.shutdown(address);
             stop.setDisable(true);
             start.setDisable(false);
         });
@@ -238,7 +239,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
     }
 
     private String getTitle(Address address, Transport.Type transportType) {
-        String name = multiNodesNetworkMonitor.isSeed(address, transportType) ? "-Seed: " : "-Node: ";
+        String name = multiNodesSetup.isSeed(address, transportType) ? "-Seed: " : "-Node: ";
         return transportType.name() + name + address;
     }
 }

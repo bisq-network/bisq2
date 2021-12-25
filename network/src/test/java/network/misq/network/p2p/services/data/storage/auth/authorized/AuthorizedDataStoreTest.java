@@ -15,13 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.data.storage.auth;
+package network.misq.network.p2p.services.data.storage.auth.authorized;
 
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.encoding.Hex;
 import network.misq.common.util.OsUtils;
 import network.misq.network.p2p.services.data.NetworkData;
-import network.misq.network.p2p.services.data.storage.MapKey;
+import network.misq.common.data.ByteArray;
+import network.misq.network.p2p.services.data.storage.Result;
+import network.misq.network.p2p.services.data.storage.auth.*;
 import network.misq.security.DigestUtil;
 import network.misq.security.KeyGeneration;
 import network.misq.security.SignatureUtil;
@@ -60,15 +62,16 @@ public class AuthorizedDataStoreTest {
 
         KeyPair keyPair = KeyGeneration.generateKeyPair();
         AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, authorizedPayload.getMetaData());
+        store.readPersisted().join();
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authorizedPayload, keyPair);
         byte[] hash = DigestUtil.hash(authorizedPayload.serialize());
         int initialSeqNum = store.getSequenceNumber(hash);
         Result result = store.add(addRequest);
         assertTrue(result.isSuccess());
 
-        ConcurrentHashMap<MapKey, AuthenticatedDataRequest> map = store.getMap();
-        MapKey mapKey = new MapKey(hash);
-        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) map.get(mapKey);
+        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = store.getMap();
+        ByteArray byteArray = new ByteArray(hash);
+        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) map.get(byteArray);
         AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
@@ -80,7 +83,7 @@ public class AuthorizedDataStoreTest {
         Result refreshResult = store.refresh(refreshRequest);
         assertTrue(refreshResult.isSuccess());
 
-        addRequestFromMap = (AddAuthenticatedDataRequest) map.get(mapKey);
+        addRequestFromMap = (AddAuthenticatedDataRequest) map.get(byteArray);
         dataFromMap = addRequestFromMap.getAuthenticatedData();
         assertEquals(initialSeqNum + 2, dataFromMap.getSequenceNumber());
 
@@ -89,7 +92,7 @@ public class AuthorizedDataStoreTest {
         Result removeDataResult = store.remove(removeRequest);
         assertTrue(removeDataResult.isSuccess());
 
-        RemoveRequest removeRequestFromMap = (RemoveRequest) map.get(mapKey);
+        RemoveRequest removeRequestFromMap = (RemoveRequest) map.get(byteArray);
         assertEquals(initialSeqNum + 3, removeRequestFromMap.getSequenceNumber());
     }
 }

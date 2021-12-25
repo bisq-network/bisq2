@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.data.storage.auth;
+package network.misq.network.p2p.services.data.storage;
 
 import lombok.Getter;
 

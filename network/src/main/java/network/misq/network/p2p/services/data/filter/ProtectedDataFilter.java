@@ -20,7 +20,7 @@ package network.misq.network.p2p.services.data.filter;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import network.misq.network.p2p.services.data.storage.MapKey;
+import network.misq.common.data.ByteArray;
 
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 public class ProtectedDataFilter implements DataFilter {
     private final String dataType;
     private final Set<FilterItem> filterItems;
-    transient private final Map<MapKey, Integer> filterMap;
+    transient private final Map<ByteArray, Integer> filterMap;
     private final int range;
     private final int offset;
 
@@ -49,7 +49,7 @@ public class ProtectedDataFilter implements DataFilter {
         this.dataType = dataType;
         this.filterItems = filterItems;
         filterMap = filterItems.stream()
-                .collect(Collectors.toMap(e -> new MapKey(e.getHash()), FilterItem::getSequenceNumber));
+                .collect(Collectors.toMap(e -> new ByteArray(e.getHash()), FilterItem::getSequenceNumber));
         this.range = range;
         this.offset = offset;
     }

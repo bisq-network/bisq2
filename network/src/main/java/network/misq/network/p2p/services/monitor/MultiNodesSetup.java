@@ -17,6 +17,7 @@
 
 package network.misq.network.p2p.services.monitor;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.timer.Scheduler;
 import network.misq.common.util.CompletableFutureUtils;
@@ -47,7 +48,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
-public class MultiNodesNetworkMonitor {
+public class MultiNodesSetup {
     public interface Handler {
         void onConnectionStateChange(Transport.Type transportType, Address address, String networkInfo);
 
@@ -64,14 +65,15 @@ public class MultiNodesNetworkMonitor {
     private final SeedNodeRepository seedNodeRepository;
     private final int numSeeds = 8;
     private final int numNodes = 20;
+    @Getter
     private final Map<Address, NetworkService> networkServicesByAddress = new HashMap<>();
     private final Map<Address, String> connectionHistoryByAddress = new HashMap<>();
 
     private Optional<Handler> handler = Optional.empty();
 
-    public MultiNodesNetworkMonitor(Set<Transport.Type> supportedTransportTypes,
-                                    boolean bootstrapAll,
-                                    Optional<List<Address>> addressesToBootstrap) {
+    public MultiNodesSetup(Set<Transport.Type> supportedTransportTypes,
+                           boolean bootstrapAll,
+                           Optional<List<Address>> addressesToBootstrap) {
         this.supportedTransportTypes = supportedTransportTypes;
         this.bootstrapAll = bootstrapAll;
         this.addressesToBootstrap = addressesToBootstrap;
@@ -86,9 +88,9 @@ public class MultiNodesNetworkMonitor {
         KeyPairRepository.Conf keyPairRepositoryConf = new KeyPairRepository.Conf(baseDirPath);
         keyPairRepository = new KeyPairRepository(keyPairRepositoryConf);
         Map<Transport.Type, List<Address>> seedsByTransportType = Map.of(
-                Transport.Type.TOR, getSeedAddresses(Transport.Type.TOR),
-                Transport.Type.I2P, getSeedAddresses(Transport.Type.I2P),
-                Transport.Type.CLEAR, getSeedAddresses(Transport.Type.CLEAR)
+                Transport.Type.TOR, getSeedAddresses(Transport.Type.TOR, numSeeds),
+                Transport.Type.I2P, getSeedAddresses(Transport.Type.I2P, numSeeds),
+                Transport.Type.CLEAR, getSeedAddresses(Transport.Type.CLEAR, numSeeds)
         );
         seedNodeRepository = new SeedNodeRepository(seedsByTransportType);
         KeepAliveService.Config keepAliveServiceConfig = new KeepAliveService.Config(TimeUnit.SECONDS.toMillis(180), TimeUnit.SECONDS.toMillis(90));
@@ -108,8 +110,8 @@ public class MultiNodesNetworkMonitor {
         PeerGroupService.Config clearNetConf = new PeerGroupService.Config(peerGroupConfig,
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
-                TimeUnit.SECONDS.toMillis(5),  // bootstrapTime
-                TimeUnit.SECONDS.toMillis(5),  // interval
+                TimeUnit.SECONDS.toMillis(1),  // bootstrapTime
+                TimeUnit.SECONDS.toMillis(1),  // interval
                 TimeUnit.SECONDS.toMillis(60),  // timeout
                 TimeUnit.HOURS.toMillis(2),     // maxAge
                 100,                        // maxReported
@@ -123,21 +125,25 @@ public class MultiNodesNetworkMonitor {
         );
     }
 
-    public Map<Transport.Type, List<Address>> bootstrap() {
+    public Map<Transport.Type, List<Address>> bootstrap(int delay) {
         return supportedTransportTypes.stream()
-                .collect(Collectors.toMap(transportType -> transportType, this::bootstrap));
+                .collect(Collectors.toMap(transportType -> transportType, transportType -> bootstrap(transportType, delay)));
     }
 
-    private List<Address> bootstrap(Transport.Type transportType) {
-        List<Address> addresses = new ArrayList<>(getSeedAddresses(transportType));
-        addresses.addAll(getNodeAddresses(transportType));
+    private List<Address> bootstrap(Transport.Type transportType, int delay) {
+        List<Address> addresses = new ArrayList<>(getSeedAddresses(transportType, numSeeds));
+        addresses.addAll(getNodeAddresses(transportType, numNodes));
 
         for (int i = 0; i < addresses.size(); i++) {
             Address address = addresses.get(i);
             if (bootstrapAll || isInBootstrapList(address)) {
-                int delayMs = (i + 1) * 1000;
-                long randDelay = new Random().nextInt(delayMs) + 1;
-                Scheduler.run(() -> bootstrap(address, transportType)).name("monitor-bootstrap-" + address).after(randDelay);
+                if (delay > 0) {
+                    int delayMs = (i + 1) * delay;
+                    long randDelay = new Random().nextInt(delayMs) + 1;
+                    Scheduler.run(() -> bootstrap(address, transportType)).name("monitor-bootstrap-" + address).after(randDelay);
+                } else {
+                    bootstrap(address, transportType);
+                }
             }
         }
         return addresses;
@@ -264,7 +270,7 @@ public class MultiNodesNetworkMonitor {
     }
 
     public boolean isSeed(Address address, Transport.Type transportType) {
-        return getSeedAddresses(transportType).contains(address);
+        return getSeedAddresses(transportType, numSeeds).contains(address);
     }
 
     public Optional<NetworkService> findNetworkService(Address address) {
@@ -279,7 +285,7 @@ public class MultiNodesNetworkMonitor {
         this.handler = Optional.of(handler);
     }
 
-    private List<Address> getSeedAddresses(Transport.Type transportType) {
+    public static List<Address> getSeedAddresses(Transport.Type transportType, int numSeeds) {
         switch (transportType) {
             case TOR -> {
                 return Stream.of(
@@ -323,7 +329,7 @@ public class MultiNodesNetworkMonitor {
         }
     }
 
-    private List<Address> getNodeAddresses(Transport.Type transportType) {
+    public static List<Address> getNodeAddresses(Transport.Type transportType, int numNodes) {
         switch (transportType) {
             case TOR -> {
                 return Stream.of(

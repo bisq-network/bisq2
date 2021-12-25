@@ -17,17 +17,8 @@
 
 package network.misq.network.p2p.services.data;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import network.misq.common.data.ByteArray;
 import network.misq.network.p2p.message.Message;
-import network.misq.network.p2p.services.data.storage.MapKey;
 
-@EqualsAndHashCode
-@Getter
-public class RemoveDataRequest implements Message {
-    private final MapKey mapKey;
-
-    public RemoveDataRequest(MapKey mapKey) {
-        this.mapKey = mapKey;
-    }
+public record RemoveDataRequest(ByteArray byteArray) implements Message {
 }

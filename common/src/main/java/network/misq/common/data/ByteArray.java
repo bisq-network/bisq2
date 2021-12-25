@@ -15,29 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.data.storage.auth;
+package network.misq.common.data;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import network.misq.network.p2p.services.data.NetworkData;
-import network.misq.network.p2p.services.data.storage.MetaData;
+import network.misq.common.encoding.Hex;
 
+import java.io.Serializable;
+
+/**
+ * We do not use a record here because a byte array would be compared for identity equality instead of content
+ * equality if a record is used. We could override the equals methods but this would violate the semantics of a record.
+ * We prefer to keep is as a normal class instead.
+ * See: https://stackoverflow.com/questions/61261226/java-14-records-and-arrays
+ */
+@SuppressWarnings("ClassCanBeRecord")
 @EqualsAndHashCode
 @Getter
-public class MockAuthenticatedPayload implements AuthenticatedPayload {
-    private final NetworkData networkData;
+public class ByteArray implements Serializable {
+    private final byte[] hash;
 
-    public MockAuthenticatedPayload(NetworkData networkData) {
-        this.networkData = networkData;
+    public ByteArray(byte[] hash) {
+        this.hash = hash;
     }
 
     @Override
-    public MetaData getMetaData() {
-        return networkData.getMetaData();
-    }
-
-    @Override
-    public boolean isDataInvalid() {
-        return networkData.isDataInvalid();
+    public String toString() {
+        return Hex.encode(hash);
     }
 }

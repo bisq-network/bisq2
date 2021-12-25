@@ -15,19 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.data.storage;
+package network.misq.network.p2p.services.data.inventory;
 
 import network.misq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class Util {
-    public static List<? extends AuthenticatedDataRequest> getSubSet(List<? extends AuthenticatedDataRequest> map, int filterOffset, int filterRange, int maxItems) {
-        int size = map.size();
+public class InventoryUtil {
+    public static List<? extends AuthenticatedDataRequest> getSubList(
+            Collection<? extends AuthenticatedDataRequest> requests,
+            int filterOffset,
+            int filterRange,
+            int maxItems
+    ) {
+        int size = requests.size();
         checkArgument(filterOffset >= 0);
         checkArgument(filterOffset <= 100);
         checkArgument(filterRange >= 0);
@@ -35,7 +41,7 @@ public class Util {
         checkArgument(filterOffset + filterRange <= 100);
         int offset = size * filterOffset / 100;
         int range = size * filterRange / 100;
-        return map.stream()
+        return requests.stream()
                 .sorted(Comparator.comparingLong(AuthenticatedDataRequest::getCreated))
                 .skip(offset)
                 .limit(range)

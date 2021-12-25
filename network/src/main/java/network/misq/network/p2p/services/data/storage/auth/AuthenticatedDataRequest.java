@@ -17,7 +17,9 @@
 
 package network.misq.network.p2p.services.data.storage.auth;
 
-public interface AuthenticatedDataRequest {
+import network.misq.network.p2p.message.Message;
+
+public interface AuthenticatedDataRequest extends Message {
     int getSequenceNumber();
 
     long getCreated();

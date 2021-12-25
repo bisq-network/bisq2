@@ -23,15 +23,18 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.encoding.Hex;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.security.DigestUtil;
+import network.misq.security.KeyGeneration;
 import network.misq.security.SignatureUtil;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Optional;
 
-@Getter
+
 @EqualsAndHashCode
 @Slf4j
 public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Serializable {
@@ -40,17 +43,21 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Se
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(payload.serialize());
         byte[] hashOfPublicKey = DigestUtil.hash(keyPair.getPublic().getEncoded());
-        int newSequenceNumber = store.getSequenceNumber(hash) + 1;
-        AuthenticatedData data = new AuthenticatedData(payload, newSequenceNumber, hashOfPublicKey, System.currentTimeMillis());
+        int sequenceNumber = store.getSequenceNumber(hash) + 1;
+        AuthenticatedData data = new AuthenticatedData(payload, sequenceNumber, hashOfPublicKey, System.currentTimeMillis());
         byte[] serialized = data.serialize();
         byte[] signature = SignatureUtil.sign(serialized, keyPair.getPrivate());
         return new AddAuthenticatedDataRequest(data, signature, keyPair.getPublic());
     }
 
+    @Getter
     protected final AuthenticatedData authenticatedData;
+    @Getter
     protected final byte[] signature;         // 256 bytes
+    @Getter
     protected final byte[] ownerPublicKeyBytes; // 294 bytes
-    transient protected final PublicKey ownerPublicKey;
+    @Nullable
+    transient protected PublicKey ownerPublicKey;
 
     public AddAuthenticatedDataRequest(AuthenticatedData authenticatedData, byte[] signature, PublicKey ownerPublicKey) {
         this(authenticatedData,
@@ -71,8 +78,9 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Se
 
     public boolean isSignatureInvalid() {
         try {
-            return !SignatureUtil.verify(authenticatedData.serialize(), signature, ownerPublicKey);
+            return !SignatureUtil.verify(authenticatedData.serialize(), signature, getOwnerPublicKey());
         } catch (Exception e) {
+            log.warn(e.toString(), e);
             return true;
         }
     }
@@ -83,6 +91,17 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Se
         } catch (Exception e) {
             return true;
         }
+    }
+
+    public PublicKey getOwnerPublicKey() {
+        return Optional.ofNullable(ownerPublicKey).orElseGet(() -> {
+            try {
+                return KeyGeneration.generatePublic(ownerPublicKeyBytes);
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     public String getFileName() {
@@ -111,5 +130,4 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Se
                 ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
                 "\r\n}";
     }
-
 }
