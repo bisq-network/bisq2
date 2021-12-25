@@ -24,6 +24,7 @@ dependencies {
     implementation project(':security')
     implementation project(':persistence')
 
+    implementation 'com.typesafe:config'
     implementation 'com.google.guava:guava'
     implementation 'io.reactivex.rxjava2:rxjava'
     implementation 'com.google.protobuf:protobuf-gradle-plugin'
