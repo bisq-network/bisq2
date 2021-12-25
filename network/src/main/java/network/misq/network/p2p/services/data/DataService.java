@@ -25,21 +25,26 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
+import network.misq.network.p2p.services.broadcast.BroadcastResult;
+import network.misq.network.p2p.services.broadcast.Broadcaster;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.InventoryRequestHandler;
 import network.misq.network.p2p.services.data.inventory.InventoryResponseHandler;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.data.storage.Storage;
+import network.misq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import network.misq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import network.misq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
+import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
-import network.misq.network.p2p.services.broadcast.BroadcastResult;
-import network.misq.network.p2p.services.broadcast.Broadcaster;
+import network.misq.security.KeyPairRepository;
 
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static java.util.concurrent.CompletableFuture.runAsync;
 
@@ -67,19 +72,23 @@ public class DataService implements Node.Listener {
     private final Node node;
     @Getter
     private final PeerGroupService peerGroupService;
+    private final KeyPairRepository keyPairRepository;
     private final Storage storage;
     private final Broadcaster broadcaster;
     private final Set<DataListener> dataListeners = new CopyOnWriteArraySet<>();
     private final Map<String, InventoryResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, InventoryRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
 
-    public DataService(Node node, PeerGroupService peerGroupService, Config config) {
+    public DataService(Node node, PeerGroupService peerGroupService, KeyPairRepository keyPairRepository, Config config) {
         this.node = node;
         this.peerGroupService = peerGroupService;
+        this.keyPairRepository = keyPairRepository;
         this.storage = new Storage(config.baseDirPath());
 
         broadcaster = new Broadcaster(node, peerGroupService.getPeerGroup());
         broadcaster.addMessageListener(this);
+
+        keyPairRepository.getOrCreateKeyPair(KeyPairRepository.DEFAULT);
         // node.addListener(this);
     }
 
@@ -130,8 +139,42 @@ public class DataService implements Node.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadcastResult> broadcast(Message message) {
-        return broadcaster.broadcast(new AddDataRequest(message));
+    public CompletableFuture<BroadcastResult> addMailboxPayload(MailboxPayload mailboxPayload,
+                                                                KeyPair senderKeyPair,
+                                                                PublicKey receiverPublicKey) {
+        return storage.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
+                .thenCompose(store -> {
+                    try {
+                        AddMailboxRequest addRequest = AddMailboxRequest.from(store,
+                                mailboxPayload,
+                                senderKeyPair,
+                                receiverPublicKey);
+                        store.add(addRequest);
+                        return broadcaster.broadcast(new AddDataRequest(addRequest));
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                        throw new CompletionException(e);
+                    }
+                });
+    }
+
+    public CompletableFuture<BroadcastResult> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
+        if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
+            return storage.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
+                    .thenCompose(store -> {
+                        try {
+                            AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
+                            store.add(addRequest);
+                            return broadcaster.broadcast(new AddDataRequest(addRequest));
+                        } catch (GeneralSecurityException e) {
+                            e.printStackTrace();
+                            throw new CompletionException(e);
+                        }
+                    });
+        } else {
+            return CompletableFuture.failedFuture(new IllegalArgumentException(""));
+        }
+
     }
 
     public CompletableFuture<BroadcastResult> requestRemoveData(Message message) {

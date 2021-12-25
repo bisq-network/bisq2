@@ -15,9 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.data.storage.append;
+package network.misq.network.p2p.services.data;
 
-import network.misq.network.p2p.services.data.NetworkData;
+import network.misq.network.p2p.message.Proto;
+import network.misq.network.p2p.services.data.storage.MetaData;
 
-public interface AppendOnlyData extends NetworkData {
+public interface NetworkPayload extends Proto {
+    MetaData getMetaData();
+
+    boolean isDataInvalid();
 }

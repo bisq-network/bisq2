@@ -21,7 +21,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.encoding.Hex;
-import network.misq.network.p2p.services.data.NetworkData;
+import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.security.DigestUtil;
 import network.misq.security.SignatureUtil;
@@ -37,12 +37,12 @@ import java.util.Arrays;
 @Slf4j
 public class RefreshRequest implements Serializable {
 
-    public static RefreshRequest from(AuthenticatedDataStore store, NetworkData networkData, KeyPair keyPair)
+    public static RefreshRequest from(AuthenticatedDataStore store, NetworkPayload networkPayload, KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(networkData.serialize());
+        byte[] hash = DigestUtil.hash(networkPayload.serialize());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
-        return new RefreshRequest(networkData.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
+        return new RefreshRequest(networkPayload.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
     }
 
     protected final MetaData metaData;

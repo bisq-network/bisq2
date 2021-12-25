@@ -37,13 +37,13 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * If key already exists we return. If map size exceeds MAX_MAP_SIZE we ignore new data.
  */
 @Slf4j
-public class AppendOnlyDataStore extends DataStore<AppendOnlyData> {
+public class AppendOnlyDataStore extends DataStore<AppendOnlyPayload> {
     private static final int MAX_MAP_SIZE = 10_000_000; // in bytes
 
     private final int maxMapSize;
 
     public interface Listener {
-        void onAppended(AppendOnlyData appendOnlyData);
+        void onAppended(AppendOnlyPayload appendOnlyData);
     }
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
@@ -59,14 +59,14 @@ public class AppendOnlyDataStore extends DataStore<AppendOnlyData> {
             if (new File(storageFilePath).exists()) {
                 Serializable serializable = Persistence.read(storageFilePath);
                 if (serializable instanceof ConcurrentHashMap) {
-                    ConcurrentHashMap<ByteArray, AppendOnlyData> persisted = (ConcurrentHashMap<ByteArray, AppendOnlyData>) serializable;
+                    ConcurrentHashMap<ByteArray, AppendOnlyPayload> persisted = (ConcurrentHashMap<ByteArray, AppendOnlyPayload>) serializable;
                     map.putAll(persisted);
                 }
             }
         });
     }
 
-    public boolean append(AppendOnlyData appendOnlyData) {
+    public boolean append(AppendOnlyPayload appendOnlyData) {
         if (map.size() > maxMapSize) {
             return false;
         }
@@ -102,7 +102,7 @@ public class AppendOnlyDataStore extends DataStore<AppendOnlyData> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @VisibleForTesting
-    ConcurrentHashMap<ByteArray, AppendOnlyData> getMap() {
+    ConcurrentHashMap<ByteArray, AppendOnlyPayload> getMap() {
         return map;
     }
 }

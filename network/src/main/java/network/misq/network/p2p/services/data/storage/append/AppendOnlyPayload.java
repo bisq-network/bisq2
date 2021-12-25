@@ -17,28 +17,7 @@
 
 package network.misq.network.p2p.services.data.storage.append;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import network.misq.network.p2p.services.data.storage.MetaData;
+import network.misq.network.p2p.services.data.NetworkPayload;
 
-@EqualsAndHashCode
-@Getter
-public class MockAppendOnlyData implements AppendOnlyData {
-    private final String text;
-    final MetaData metaData;
-
-    public MockAppendOnlyData(String text) {
-        this.text = text;
-        metaData = new MetaData(251, getClass().getSimpleName());
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
+public interface AppendOnlyPayload extends NetworkPayload {
 }

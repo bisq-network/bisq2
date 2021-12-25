@@ -18,7 +18,7 @@
 package network.misq.network.p2p.services.data;
 
 public interface DataListener {
-    void onNetworkDataAdded(NetworkData networkData);
+    void onNetworkDataAdded(NetworkPayload networkPayload);
 
-    void onNetworkDataRemoved(NetworkData networkData);
+    void onNetworkDataRemoved(NetworkPayload networkPayload);
 }

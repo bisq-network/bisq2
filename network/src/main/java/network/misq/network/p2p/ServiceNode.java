@@ -26,21 +26,25 @@ import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.NodesById;
 import network.misq.network.p2p.node.transport.Transport;
+import network.misq.network.p2p.services.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.confidential.ConfidentialService;
 import network.misq.network.p2p.services.data.DataService;
+import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
+import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import network.misq.network.p2p.services.monitor.MonitorService;
 import network.misq.network.p2p.services.peergroup.BanList;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.relay.RelayService;
-import network.misq.network.p2p.services.broadcast.BroadcastResult;
+import network.misq.security.KeyPairRepository;
 import network.misq.security.PubKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -86,22 +90,19 @@ public class ServiceNode {
                        Node.Config nodeConfig,
                        PeerGroupService.Config peerGroupServiceConfig,
                        DataService.Config dataServiceConfig,
-                       ConfidentialService.Config confMsgServiceConfig,
+                       KeyPairRepository keyPairRepository,
                        List<Address> seedNodeAddresses) {
         BanList banList = new BanList();
         nodesById = new NodesById(banList, nodeConfig);
         defaultNode = nodesById.getDefaultNode();
         Set<Service> services = config.services();
-        if (services.contains(Service.CONFIDENTIAL)) {
-            confidentialMessageService = Optional.of(new ConfidentialService(nodesById, confMsgServiceConfig));
-        }
 
         if (services.contains(Service.PEER_GROUP)) {
             PeerGroupService peerGroupService = new PeerGroupService(defaultNode, banList, peerGroupServiceConfig, seedNodeAddresses);
             this.peerGroupService = Optional.of(peerGroupService);
 
             if (services.contains(Service.DATA)) {
-                dataService = Optional.of(new DataService(defaultNode, peerGroupService, dataServiceConfig));
+                dataService = Optional.of(new DataService(defaultNode, peerGroupService, keyPairRepository, dataServiceConfig));
             }
 
             if (services.contains(Service.RELAY)) {
@@ -111,6 +112,9 @@ public class ServiceNode {
             if (services.contains(Service.MONITOR)) {
                 monitorService = Optional.of(new MonitorService(defaultNode, peerGroupService));
             }
+        }
+        if (services.contains(Service.CONFIDENTIAL)) {
+            confidentialMessageService = Optional.of(new ConfidentialService(nodesById, keyPairRepository, dataService));
         }
     }
 
@@ -174,7 +178,7 @@ public class ServiceNode {
         });
     }
 
-    public CompletableFuture<Connection> confidentialSend(Message message, Address address, PubKey pubKey, KeyPair myKeyPair, String nodeId) {
+    public CompletableFuture<ConfidentialService.Result> confidentialSend(Message message, Address address, PubKey pubKey, KeyPair myKeyPair, String nodeId) {
         return confidentialMessageService.map(service -> service.send(message, address, pubKey, myKeyPair, nodeId))
                 .orElseThrow(() -> new RuntimeException("ConfidentialMessageService not present at confidentialSend"));
     }
@@ -182,6 +186,20 @@ public class ServiceNode {
     public CompletableFuture<Connection> relay(Message message, NetworkId networkId, KeyPair myKeyPair) {
         return relayService.map(service -> service.relay(message, networkId, myKeyPair))
                 .orElseThrow(() -> new RuntimeException("RelayService not present at relay"));
+    }
+
+    public CompletableFuture<BroadcastResult> addMailboxPayload(MailboxPayload mailboxPayload,
+                                                                KeyPair senderKeyPair,
+                                                                PublicKey receiverPublicKey) {
+        return dataService.map(dataService -> dataService.addMailboxPayload(mailboxPayload,
+                        senderKeyPair,
+                        receiverPublicKey))
+                .orElseThrow(() -> new RuntimeException("DataService not present at addMailboxPayload"));
+    }
+
+    public CompletableFuture<BroadcastResult> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
+        return dataService.map(dataService -> dataService.addNetworkPayload(networkPayload, keyPair))
+                .orElseThrow(() -> new RuntimeException("DataService not present at addNetworkPayload"));
     }
 
     public CompletableFuture<BroadcastResult> requestAddData(Message message) {

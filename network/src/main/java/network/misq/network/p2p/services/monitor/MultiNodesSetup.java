@@ -87,6 +87,7 @@ public class MultiNodesSetup {
 
         KeyPairRepository.Conf keyPairRepositoryConf = new KeyPairRepository.Conf(baseDirPath);
         keyPairRepository = new KeyPairRepository(keyPairRepositoryConf);
+        keyPairRepository.initialize().join();
         Map<Transport.Type, List<Address>> seedsByTransportType = Map.of(
                 Transport.Type.TOR, getSeedAddresses(Transport.Type.TOR, numSeeds),
                 Transport.Type.I2P, getSeedAddresses(Transport.Type.I2P, numSeeds),

@@ -26,13 +26,14 @@ import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.authorization.UnrestrictedAuthorizationService;
 import network.misq.network.p2p.node.transport.Transport;
+import network.misq.network.p2p.services.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.confidential.ConfidentialService;
 import network.misq.network.p2p.services.data.DataService;
+import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.peergroup.SeedNodeRepository;
-import network.misq.network.p2p.services.broadcast.BroadcastResult;
 import network.misq.security.KeyPairRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +81,6 @@ public class ServiceNodesByTransport {
         this.keyPairRepository = keyPairRepository;
 
         long socketTimeout = TimeUnit.MINUTES.toMillis(5);
-        ConfidentialService.Config confMsgServiceConfig = new ConfidentialService.Config(keyPairRepository);
         supportedTransportTypes.forEach(transportType -> {
             Node.Config nodeConfig = new Node.Config(transportType,
                     supportedTransportTypes,
@@ -94,7 +94,7 @@ public class ServiceNodesByTransport {
                     nodeConfig,
                     peerGroupServiceConfig,
                     dataServiceConfig,
-                    confMsgServiceConfig,
+                    keyPairRepository,
                     seedNodeAddresses);
             map.put(transportType, serviceNode);
         });
@@ -133,22 +133,23 @@ public class ServiceNodesByTransport {
     }
 
     // TODO we return first successful connection in case we have multiple transportTypes. Not sure if that is ok.
-    public CompletableFuture<Connection> confidentialSend(Message message, NetworkId networkId, KeyPair myKeyPair, String connectionId) {
-        CompletableFuture<Connection> future = new CompletableFuture<>();
+    public CompletableFuture<ConfidentialService.Result> confidentialSend(Message message, NetworkId networkId, KeyPair myKeyPair, String connectionId) {
+        CompletableFuture<ConfidentialService.Result> future = new CompletableFuture<>();
         networkId.addressByNetworkType().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 map.get(transportType)
                         .confidentialSend(message, address, networkId.pubKey(), myKeyPair, connectionId)
-                        .whenComplete((connection, throwable) -> {
-                            if (connection != null) {
-                                future.complete(connection);
+                        .whenComplete((result, throwable) -> {
+                            if (result != null) {
+                                future.complete(result);
                             } else {
                                 log.error(throwable.toString(), throwable);
                                 future.completeExceptionally(throwable);
                             }
                         });
             } else {
-                map.values().forEach(networkNode -> {
+                //todo
+             /*   map.values().forEach(networkNode -> {
                     networkNode.relay(message, networkId, myKeyPair)
                             .whenComplete((connection, throwable) -> {
                                 if (connection != null) {
@@ -158,23 +159,17 @@ public class ServiceNodesByTransport {
                                     future.completeExceptionally(throwable);
                                 }
                             });
-                });
+                });*/
             }
         });
         return future;
     }
 
-    public void requestAddData(Message message, Consumer<BroadcastResult> resultHandler) {
-        map.values().forEach(networkNode -> {
-            networkNode.requestAddData(message)
-                    .whenComplete((gossipResult, throwable) -> {
-                        if (gossipResult != null) {
-                            resultHandler.accept(gossipResult);
-                        } else {
-                            log.error(throwable.toString());
-                        }
-                    });
-        });
+    public CompletableFuture<List<BroadcastResult>> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
+        return CompletableFutureUtils.allOf(
+                map.values().stream()
+                        .map(serviceNode -> serviceNode.addNetworkPayload(networkPayload, keyPair))
+        );
     }
 
     public void requestRemoveData(Message message, Consumer<BroadcastResult> resultHandler) {
@@ -191,8 +186,8 @@ public class ServiceNodesByTransport {
     }
 
     public void requestInventory(DataFilter dataFilter, Consumer<RequestInventoryResult> resultHandler) {
-        map.values().forEach(networkNode -> {
-            networkNode.requestInventory(dataFilter)
+        map.values().forEach(serviceNode -> {
+            serviceNode.requestInventory(dataFilter)
                     .whenComplete((requestInventoryResult, throwable) -> {
                         if (requestInventoryResult != null) {
                             resultHandler.accept(requestInventoryResult);
@@ -208,22 +203,19 @@ public class ServiceNodesByTransport {
                 .flatMap(serviceNode -> {
                     try {
                         return serviceNode.getSocksProxy();
-                    } catch (IOException ex) {
+                    } catch (IOException e) {
+                        log.warn("Could not get socks proxy", e);
                         return Optional.empty();
                     }
                 });
     }
 
     public void addMessageListener(Node.Listener listener) {
-        map.values().forEach(networkNode -> {
-            networkNode.addMessageListener(listener);
-        });
+        map.values().forEach(serviceNode -> serviceNode.addMessageListener(listener));
     }
 
     public void removeMessageListener(Node.Listener listener) {
-        map.values().forEach(networkNode -> {
-            networkNode.removeMessageListener(listener);
-        });
+        map.values().forEach(serviceNode -> serviceNode.removeMessageListener(listener));
     }
 
     public CompletableFuture<Void> shutdown() {

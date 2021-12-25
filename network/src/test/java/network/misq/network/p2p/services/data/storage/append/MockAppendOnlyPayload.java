@@ -15,13 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.data;
+package network.misq.network.p2p.services.data.storage.append;
 
-import network.misq.network.p2p.message.Proto;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import network.misq.network.p2p.services.data.storage.MetaData;
 
-public interface NetworkData extends Proto {
-    MetaData getMetaData();
+@EqualsAndHashCode
+@Getter
+public class MockAppendOnlyPayload implements AppendOnlyPayload {
+    private final String text;
+    final MetaData metaData;
 
-    boolean isDataInvalid();
+    public MockAppendOnlyPayload(String text) {
+        this.text = text;
+        metaData = new MetaData(251, getClass().getSimpleName());
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return metaData;
+    }
+
+    @Override
+    public boolean isDataInvalid() {
+        return false;
+    }
 }

@@ -20,7 +20,7 @@ package network.misq.network.p2p.services.data.storage.auth.authorized;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.encoding.Hex;
 import network.misq.common.util.OsUtils;
-import network.misq.network.p2p.services.data.NetworkData;
+import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.common.data.ByteArray;
 import network.misq.network.p2p.services.data.storage.Result;
 import network.misq.network.p2p.services.data.storage.auth.*;
@@ -56,9 +56,9 @@ public class AuthorizedDataStoreTest {
         byte[] privateKeyBytes = Hex.decode(privateKeyAsHex);
 
         PrivateKey privateKey = KeyGeneration.generatePrivate(privateKeyBytes);
-        NetworkData networkData = new MockNetworkData("test" + UUID.randomUUID());
-        byte[] signature = SignatureUtil.sign(networkData.serialize(), privateKey);
-        MockAuthorizedPayload authorizedPayload = new MockAuthorizedPayload(networkData, signature, publicKey);
+        NetworkPayload networkPayload = new MockNetworkPayload("test" + UUID.randomUUID());
+        byte[] signature = SignatureUtil.sign(networkPayload.serialize(), privateKey);
+        MockAuthorizedPayload authorizedPayload = new MockAuthorizedPayload(networkPayload, signature, publicKey);
 
         KeyPair keyPair = KeyGeneration.generateKeyPair();
         AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, authorizedPayload.getMetaData());
@@ -76,7 +76,7 @@ public class AuthorizedDataStoreTest {
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
         MockAuthorizedPayload payload = (MockAuthorizedPayload) dataFromMap.getPayload();
-        assertEquals(payload.getNetworkData(), networkData);
+        assertEquals(payload.getNetworkPayload(), networkPayload);
 
         // refresh
         RefreshRequest refreshRequest = RefreshRequest.from(store, authorizedPayload, keyPair);

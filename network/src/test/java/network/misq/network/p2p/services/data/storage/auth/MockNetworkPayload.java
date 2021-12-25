@@ -19,18 +19,18 @@ package network.misq.network.p2p.services.data.storage.auth;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import network.misq.network.p2p.services.data.NetworkData;
+import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.storage.MetaData;
 
 import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode
 @Getter
-public class MockNetworkData implements NetworkData {
+public class MockNetworkPayload implements NetworkPayload {
     private final String text;
     final MetaData metaData;
 
-    public MockNetworkData(String text) {
+    public MockNetworkPayload(String text) {
         this.text = text;
         // 463 is overhead of sig/pubkeys,...
         // 582 is pubkey+sig+hash

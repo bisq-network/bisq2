@@ -20,7 +20,7 @@ package network.misq.network.p2p.services.data.storage;
 
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.services.data.AddDataRequest;
-import network.misq.network.p2p.services.data.NetworkData;
+import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.storage.append.AppendOnlyDataStore;
 import network.misq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import network.misq.network.p2p.services.data.storage.auth.AuthenticatedDataStore;
@@ -60,7 +60,7 @@ public class Storage {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Optional<NetworkData>> addRequest(AddDataRequest addDataRequest) {
+    public CompletableFuture<Optional<NetworkPayload>> addRequest(AddDataRequest addDataRequest) {
         Message message = addDataRequest.message();
         if (message instanceof AddMailboxRequest addMailboxRequest) {
             return addRequest(addMailboxRequest);
@@ -71,7 +71,7 @@ public class Storage {
         }
     }
 
-    private CompletableFuture<Optional<NetworkData>> addRequest(AddMailboxRequest request) {
+    private CompletableFuture<Optional<NetworkPayload>> addRequest(AddMailboxRequest request) {
         MailboxPayload payload = request.getMailboxData().getMailboxPayload();
         return getOrCreateMailboxDataStore(payload.getMetaData())
                 .thenApply(store -> {
@@ -85,7 +85,7 @@ public class Storage {
                 });
     }
 
-    private CompletableFuture<Optional<NetworkData>> addRequest(AddAuthenticatedDataRequest request) {
+    private CompletableFuture<Optional<NetworkPayload>> addRequest(AddAuthenticatedDataRequest request) {
         AuthenticatedPayload payload = request.getAuthenticatedData().getPayload();
         return getOrCreateAuthenticatedDataStore(payload.getMetaData())
                 .thenApply(store -> {
@@ -106,7 +106,7 @@ public class Storage {
         appendOnlyDataStores.values().forEach(DataStore::shutdown);
     }
 
-    private CompletableFuture<AuthenticatedDataStore> getOrCreateAuthenticatedDataStore(MetaData metaData) {
+    public CompletableFuture<AuthenticatedDataStore> getOrCreateAuthenticatedDataStore(MetaData metaData) {
         String key = metaData.getFileName();
         if (!authenticatedDataStores.containsKey(key)) {
             AuthenticatedDataStore dataStore = new AuthenticatedDataStore(storageDirPath, metaData);
@@ -117,7 +117,7 @@ public class Storage {
         }
     }
 
-    private CompletableFuture<MailboxDataStore> getOrCreateMailboxDataStore(MetaData metaData) {
+    public CompletableFuture<MailboxDataStore> getOrCreateMailboxDataStore(MetaData metaData) {
         String key = metaData.getFileName();
         if (!mailboxStores.containsKey(key)) {
             MailboxDataStore dataStore = new MailboxDataStore(storageDirPath, metaData);
@@ -128,7 +128,7 @@ public class Storage {
         }
     }
 
-    private CompletableFuture<AppendOnlyDataStore> getOrCreateAppendOnlyDataStore(MetaData metaData) {
+    public CompletableFuture<AppendOnlyDataStore> getOrCreateAppendOnlyDataStore(MetaData metaData) {
         String key = metaData.getFileName();
         if (!appendOnlyDataStores.containsKey(key)) {
             AppendOnlyDataStore dataStore = new AppendOnlyDataStore(storageDirPath, metaData);

@@ -19,25 +19,28 @@ package network.misq.network.p2p.services.data.storage.auth;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import network.misq.network.p2p.services.data.NetworkData;
 import network.misq.network.p2p.services.data.storage.MetaData;
+
+import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode
 @Getter
 public class MockAuthenticatedPayload implements AuthenticatedPayload {
-    private final NetworkData networkData;
+    private final String offerDummy;
+    final MetaData metaData;
 
-    public MockAuthenticatedPayload(NetworkData networkData) {
-        this.networkData = networkData;
+    public MockAuthenticatedPayload(String offerDummy) {
+        this.offerDummy = offerDummy;
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
     }
 
     @Override
     public MetaData getMetaData() {
-        return networkData.getMetaData();
+        return metaData;
     }
 
     @Override
     public boolean isDataInvalid() {
-        return networkData.isDataInvalid();
+        return false;
     }
 }

@@ -19,16 +19,12 @@ package network.misq.network.p2p.services.data;
 
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.OsUtils;
-import network.misq.network.p2p.MockMessage;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import network.misq.network.p2p.services.data.storage.auth.AuthenticatedDataStore;
+import network.misq.network.p2p.services.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.storage.auth.MockAuthenticatedPayload;
-import network.misq.network.p2p.services.data.storage.auth.MockNetworkData;
 import network.misq.network.p2p.services.monitor.MultiNodesSetup;
 import network.misq.network.p2p.services.peergroup.PeerGroup;
-import network.misq.network.p2p.services.broadcast.BroadcastResult;
 import network.misq.security.KeyGeneration;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +34,7 @@ import java.security.KeyPair;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -52,63 +49,59 @@ public class DataServiceServiceIntegrationTest extends DataServiceNodeBase {
     int numNodes = 4;
 
     // @Test
-    public void testBroadcast() throws InterruptedException, ExecutionException {
+    public void testBroadcast() throws InterruptedException, ExecutionException, GeneralSecurityException {
         List<DataService> dataServices = getBootstrappedDataServices();
         DataService dataService = dataServices.get(0);
         int minExpectedConnections = numSeeds + numNodes - 2;
-        BroadcastResult result = dataService.broadcast(new MockMessage("data1")).get();
+        KeyPair keyPair = KeyGeneration.generateKeyPair();
+        MockAuthenticatedPayload payload = new MockAuthenticatedPayload("Test offer " + UUID.randomUUID());
+        BroadcastResult result = dataService.addNetworkPayload(payload, keyPair).get();
         log.error("result={}", result.toString());
         assertTrue(result.numSuccess() >= minExpectedConnections);
     }
 
 
+    // TODO with getBootstrappedDataServices(); we don't get a deterministic set up nodes connected to each other.
+    // Mostly the small test network is well enough connected that the test succeeds, but not always.
+    // We would likely need a more deterministic peerGroup management for tests (e.g. all nodes are connected to each other).
     @Test
     public void testAddAuthenticatedDataRequest() throws GeneralSecurityException, InterruptedException, ExecutionException {
-        MockNetworkData networkData = new MockNetworkData("test");
-        MockAuthenticatedPayload data = new MockAuthenticatedPayload(networkData);
-        AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, data.getMetaData());
-        store.readPersisted().join();
+        MockAuthenticatedPayload payload = new MockAuthenticatedPayload("Test offer " + UUID.randomUUID());
         KeyPair keyPair = KeyGeneration.generateKeyPair();
-
-        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, data, keyPair);
-        store.add(addRequest);
-
         List<DataService> dataServices = getBootstrappedDataServices();
         DataService dataService_0 = dataServices.get(0);
         DataService dataService_1 = dataServices.get(1);
         DataService dataService_2 = dataServices.get(2);
 
-
         CountDownLatch latch = new CountDownLatch(2);
         dataService_1.addDataListener(new DataListener() {
             @Override
-            public void onNetworkDataAdded(NetworkData networkData) {
+            public void onNetworkDataAdded(NetworkPayload networkPayload) {
                 log.error("onNetworkDataAdded at dataService_1");
                 latch.countDown();
             }
 
             @Override
-            public void onNetworkDataRemoved(NetworkData networkData) {
-
+            public void onNetworkDataRemoved(NetworkPayload networkPayload) {
             }
         });
         dataService_2.addDataListener(new DataListener() {
             @Override
-            public void onNetworkDataAdded(NetworkData networkData) {
-                log.error("onNetworkDataAdded at dataService_2");
+            public void onNetworkDataAdded(NetworkPayload networkPayload) {
+                log.info("onNetworkDataAdded at dataService_2");
                 latch.countDown();
             }
 
             @Override
-            public void onNetworkDataRemoved(NetworkData networkData) {
-
+            public void onNetworkDataRemoved(NetworkPayload networkPayload) {
             }
         });
         int minExpectedConnections = numSeeds + numNodes - 1;
-        BroadcastResult broadcastResult = dataService_0.broadcast(addRequest).get();
+        BroadcastResult broadcastResult = dataService_0.addNetworkPayload(payload, keyPair).get();
+
         assertTrue(broadcastResult.numSuccess() >= minExpectedConnections);
         latch.countDown();
-        log.error("broadcastResult={}", broadcastResult);
+        log.info("broadcastResult={}", broadcastResult);
         assertTrue(latch.await(30, TimeUnit.SECONDS));
     }
 

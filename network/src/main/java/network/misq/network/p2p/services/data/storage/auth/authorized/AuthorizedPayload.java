@@ -21,7 +21,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.encoding.Hex;
-import network.misq.network.p2p.services.data.NetworkData;
+import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import network.misq.security.SignatureUtil;
 
@@ -36,13 +36,13 @@ import java.util.Set;
 @EqualsAndHashCode
 @Getter
 public abstract class AuthorizedPayload implements AuthenticatedPayload {
-    private final NetworkData networkData;
+    private final NetworkPayload networkPayload;
     private final byte[] signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
 
-    public AuthorizedPayload(NetworkData networkData, byte[] signature, PublicKey authorizedPublicKey) {
-        this.networkData = networkData;
+    public AuthorizedPayload(NetworkPayload networkPayload, byte[] signature, PublicKey authorizedPublicKey) {
+        this.networkPayload = networkPayload;
         this.signature = signature;
         this.authorizedPublicKey = authorizedPublicKey;
         authorizedPublicKeyBytes = authorizedPublicKey.getEncoded();
@@ -51,9 +51,9 @@ public abstract class AuthorizedPayload implements AuthenticatedPayload {
     @Override
     public boolean isDataInvalid() {
         try {
-            return networkData.isDataInvalid() ||
+            return networkPayload.isDataInvalid() ||
                     !getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes)) ||
-                    !SignatureUtil.verify(networkData.serialize(), signature, authorizedPublicKey);
+                    !SignatureUtil.verify(networkPayload.serialize(), signature, authorizedPublicKey);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
             return true;

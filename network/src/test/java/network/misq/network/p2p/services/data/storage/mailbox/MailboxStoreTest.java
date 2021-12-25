@@ -26,6 +26,7 @@ import network.misq.network.p2p.services.data.inventory.Inventory;
 import network.misq.common.data.ByteArray;
 import network.misq.network.p2p.services.data.storage.auth.RemoveRequest;
 import network.misq.network.p2p.services.data.storage.Result;
+import network.misq.security.ConfidentialData;
 import network.misq.security.DigestUtil;
 import network.misq.security.HybridEncryption;
 import network.misq.security.KeyGeneration;
@@ -69,7 +70,8 @@ public class MailboxStoreTest {
             public void onAdded(MailboxPayload mailboxPayload) {
                 assertEquals(payload, mailboxPayload);
                 try {
-                    byte[] decrypted = HybridEncryption.decryptAndVerify(mailboxPayload.getConfidentialData(), receiverKeyPair);
+                    ConfidentialData confidentialData = mailboxPayload.getConfidentialMessage().getConfidentialData();
+                    byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiverKeyPair);
                     Object decryptedMessage = ObjectSerializer.deserialize(decrypted);
                     MockMailboxMessage message2 = (MockMailboxMessage) decryptedMessage;
                     assertEquals(message, message2);
@@ -85,7 +87,8 @@ public class MailboxStoreTest {
             public void onRemoved(MailboxPayload mailboxPayload) {
                 assertEquals(payload, mailboxPayload);
                 try {
-                    byte[] decrypted = HybridEncryption.decryptAndVerify(mailboxPayload.getConfidentialData(), receiverKeyPair);
+                    ConfidentialData confidentialData = mailboxPayload.getConfidentialMessage().getConfidentialData();
+                    byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiverKeyPair);
                     Object decryptedMessage = ObjectSerializer.deserialize(decrypted);
                     MockMailboxMessage message2 = (MockMailboxMessage) decryptedMessage;
                     assertEquals(message, message2);
