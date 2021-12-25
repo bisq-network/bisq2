@@ -20,6 +20,7 @@ package network.misq.network;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import network.misq.common.configuration.MisqConfig;
 import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.util.NetworkUtils;
 import network.misq.network.http.HttpService;
@@ -50,6 +51,7 @@ import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static network.misq.common.configuration.MisqConfig.NETWORK_IO_POOL_CONFIG_PATH;
 
 /**
  * High level API for network access to p2p network as well to http services (over Tor). If user has only I2P selected
@@ -68,10 +70,12 @@ public class NetworkService {
     // If a user has 10 offers with dedicated nodes and 5 connections open, its another 100 threads + 50 at sending 
     // messages. 100-200 threads might be a usual scenario, but it could also peak much higher, so we will give 
     // maximumPoolSize sufficient headroom and use a rather short keepAliveTimeInSec.
-    public static final ThreadPoolExecutor NETWORK_IO_POOL = ExecutorFactory.getThreadPoolExecutor("NETWORK_IO_POOL",
-            1,
-            5000,
-            10,
+    public static final com.typesafe.config.Config NETWORK_IO_POOL_CONFIG = MisqConfig.getConfig(NETWORK_IO_POOL_CONFIG_PATH);
+    public static final ThreadPoolExecutor NETWORK_IO_POOL = ExecutorFactory.getThreadPoolExecutor(
+            NETWORK_IO_POOL_CONFIG.getString("name"),
+            NETWORK_IO_POOL_CONFIG.getInt("corePoolSize"),
+            NETWORK_IO_POOL_CONFIG.getInt("maximumPoolSize"),
+            NETWORK_IO_POOL_CONFIG.getLong("keepAliveTimeInSec"),
             new SynchronousQueue<>());
 
     public static record Config(String baseDirPath,
