@@ -16,13 +16,8 @@
  */
 
 package network.misq.network.p2p.message;
-
-import network.misq.common.ObjectSerializer;
-
-import java.io.Serializable;
-
-public interface Message extends Serializable {
-    default byte[] serialize() {
-        return ObjectSerializer.serialize(this);
-    }
+/**
+ * Interface for any object sent over the network
+ */
+public interface Message extends Proto {
 }

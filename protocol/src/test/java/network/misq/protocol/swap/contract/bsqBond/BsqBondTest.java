@@ -64,7 +64,7 @@ public class BsqBondTest {
     public void testBsqBond() {
 
         // create offer
-        NetworkId makerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"));
+        NetworkId makerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"),"default");
 
         Asset askAsset = new Asset(Fiat.of(100, "USD"), List.of(FiatTransfer.ZELLE), AssetTransfer.Type.MANUAL);
         Asset bidAsset = new Asset(Fiat.of(90, "EUR"), List.of(FiatTransfer.REVOLUT, FiatTransfer.SEPA), AssetTransfer.Type.MANUAL);
@@ -79,7 +79,7 @@ public class BsqBondTest {
 
         // simulated take offer protocol: Taker sends to maker the selectedProtocolType
         //todo is takerMultiAddress correct?
-        NetworkId takerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"));
+        NetworkId takerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"),"default");
         TwoPartyContract makerTrade = ContractMaker.createMakerTrade(takerNetworkId, selectedProtocolType);
         MakerBsqBondProtocol makerBsqBondProtocol = new MakerBsqBondProtocol(makerTrade, networkService);
         ProtocolExecutor makerSwapTradeProtocolExecutor = new ProtocolExecutor(makerBsqBondProtocol);

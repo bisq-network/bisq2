@@ -27,10 +27,10 @@ public class AllNetworksIntegrationTest {
     private ServiceNodesByTransport alice1, alice2, bob1, bob2;
     protected final Storage storage = new Storage("");
 
-   /* private Set<NetworkServiceConfig> getNetNetworkConfigs(Config.Role role, String id, int serverPort) {
-        return Set.of(Config.getClearNetNetworkConfig(role, id, serverPort),
-                Config.getTorNetworkConfig(role, id, serverPort),
-                Config.getI2pNetworkConfig(role, id));
+   /* private Set<NetworkServiceConfig> getNetNetworkConfigs(Config.Role role, String keyId, int serverPort) {
+        return Set.of(Config.getClearNetNetworkConfig(role, keyId, serverPort),
+                Config.getTorNetworkConfig(role, keyId, serverPort),
+                Config.getI2pNetworkConfig(role, keyId));
     }
 
     @Test

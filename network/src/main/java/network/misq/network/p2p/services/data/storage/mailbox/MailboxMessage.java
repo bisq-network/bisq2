@@ -17,9 +17,12 @@
 
 package network.misq.network.p2p.services.data.storage.mailbox;
 
-import network.misq.network.p2p.message.Proto;
+import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.services.data.storage.MetaData;
 
-public interface MailboxMessage extends Proto {
+/**
+ * Message which will be stored in the mailbox message in case the receiver was not available.
+ */
+public interface MailboxMessage extends Message {
     MetaData getMetaData();
 }

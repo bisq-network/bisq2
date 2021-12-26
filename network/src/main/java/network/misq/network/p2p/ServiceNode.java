@@ -27,7 +27,7 @@ import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.NodesById;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.broadcast.BroadcastResult;
-import network.misq.network.p2p.services.confidential.ConfidentialService;
+import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.filter.DataFilter;
@@ -75,7 +75,7 @@ public class ServiceNode {
 
     private final NodesById nodesById;
     private final Node defaultNode;
-    private Optional<ConfidentialService> confidentialMessageService;
+    private Optional<ConfidentialMessageService> confidentialMessageService;
     @Getter
     private Optional<PeerGroupService> peerGroupService;
     @Getter
@@ -114,7 +114,7 @@ public class ServiceNode {
             }
         }
         if (services.contains(Service.CONFIDENTIAL)) {
-            confidentialMessageService = Optional.of(new ConfidentialService(nodesById, keyPairRepository, dataService));
+            confidentialMessageService = Optional.of(new ConfidentialMessageService(nodesById, keyPairRepository, dataService));
         }
     }
 
@@ -178,8 +178,12 @@ public class ServiceNode {
         });
     }
 
-    public CompletableFuture<ConfidentialService.Result> confidentialSend(Message message, Address address, PubKey pubKey, KeyPair myKeyPair, String nodeId) {
-        return confidentialMessageService.map(service -> service.send(message, address, pubKey, myKeyPair, nodeId))
+    public CompletableFuture<ConfidentialMessageService.Result> confidentialSend(Message message,
+                                                                                 Address address,
+                                                                                 PubKey receiverPubKey,
+                                                                                 KeyPair senderKeyPair,
+                                                                                 String senderNodeId) {
+        return confidentialMessageService.map(service -> service.send(message, address, receiverPubKey, senderKeyPair, senderNodeId))
                 .orElseThrow(() -> new RuntimeException("ConfidentialMessageService not present at confidentialSend"));
     }
 

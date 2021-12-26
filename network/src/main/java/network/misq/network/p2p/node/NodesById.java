@@ -57,12 +57,12 @@ public class NodesById implements Node.Listener {
         return getOrCreateNode(Node.DEFAULT_NODE_ID);
     }
 
-    public CompletableFuture<Connection> send(String nodeId, Message message, Address address) {
-        return getOrCreateNode(nodeId).send(message, address);
+    public CompletableFuture<Connection> send(String senderNodeId, Message message, Address address) {
+        return getOrCreateNode(senderNodeId).send(message, address);
     }
 
-    public CompletableFuture<Connection> send(String nodeId, Message message, Connection connection) {
-        return getOrCreateNode(nodeId).send(message, connection);
+    public CompletableFuture<Connection> send(String senderNodeId, Message message, Connection connection) {
+        return getOrCreateNode(senderNodeId).send(message, connection);
     }
 
     public CompletableFuture<Connection> getConnection(String nodeId, Address address) {

@@ -45,7 +45,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
-public class ConfidentialService implements Node.Listener {
+public class ConfidentialMessageService implements Node.Listener {
     public enum State {
         SENT,
         ADDED_TO_MAILBOX,
@@ -55,21 +55,26 @@ public class ConfidentialService implements Node.Listener {
     @Getter
     public static class Result {
         private final State state;
-        private CompletableFuture<BroadcastResult> mailboxFuture;
-        private String errorMsg;
+        private Optional<CompletableFuture<BroadcastResult>> mailboxFuture = Optional.empty();
+        private Optional<String> errorMsg = Optional.empty();
 
         public Result(State state) {
             this.state = state;
         }
 
         public Result mailboxFuture(CompletableFuture<BroadcastResult> mailboxFuture) {
-            this.mailboxFuture = mailboxFuture;
+            this.mailboxFuture = Optional.of(mailboxFuture);
             return this;
         }
 
         public Result errorMsg(String errorMsg) {
-            this.errorMsg = errorMsg;
+            this.errorMsg = Optional.of(errorMsg);
             return this;
+        }
+
+        @Override
+        public String toString() {
+            return "[state=" + state + errorMsg.map(error -> ", errorMsg=" + error + "]").orElse("]");
         }
     }
 
@@ -78,7 +83,7 @@ public class ConfidentialService implements Node.Listener {
     private final KeyPairRepository keyPairRepository;
     private final Optional<DataService> dataService;
 
-    public ConfidentialService(NodesById nodesById, KeyPairRepository keyPairRepository, Optional<DataService> dataService) {
+    public ConfidentialMessageService(NodesById nodesById, KeyPairRepository keyPairRepository, Optional<DataService> dataService) {
         this.nodesById = nodesById;
         this.keyPairRepository = keyPairRepository;
         this.dataService = dataService;
@@ -121,39 +126,57 @@ public class ConfidentialService implements Node.Listener {
                                           Address address,
                                           PubKey receiverPubKey,
                                           KeyPair senderKeyPair,
-                                          String nodeId) {
-        return nodesById.getConnection(nodeId, address)
-                .thenCompose(connection -> send(message, connection, receiverPubKey, senderKeyPair, nodeId));
+                                          String senderNodeId) {
+        return nodesById.getConnection(senderNodeId, address)
+                .thenCompose(connection -> send(message, connection, receiverPubKey, senderKeyPair, senderNodeId))
+                .handle((result, throwable) -> {
+                    if (throwable == null) {
+                        return result;
+                    } else {
+                        if (message instanceof MailboxMessage mailboxMessage) {
+                            ConfidentialMessage confidentialMessage = getConfidentialMessage(message, receiverPubKey, senderKeyPair);
+                            return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
+                        } else {
+                            log.warn("Sending message failed and message is not type of MailboxMessage. message={}", message);
+                            return new Result(State.FAILED).errorMsg("Sending message failed and message is not type of MailboxMessage. Exception=" + throwable);
+                        }
+                    }
+                });
     }
 
     public CompletableFuture<Result> send(Message message,
                                           Connection connection,
                                           PubKey receiverPubKey,
                                           KeyPair senderKeyPair,
-                                          String nodeId) {
+                                          String senderNodeId) {
         ConfidentialMessage confidentialMessage = getConfidentialMessage(message, receiverPubKey, senderKeyPair);
-        return nodesById.send(nodeId, confidentialMessage, connection)
+        return nodesById.send(senderNodeId, confidentialMessage, connection)
                 .handle((con, throwable) -> {
                     if (throwable == null) {
                         return new Result(State.SENT);
+                    } else if (message instanceof MailboxMessage mailboxMessage) {
+                        return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
+                    } else {
+                        log.warn("Sending message failed and message is not type of MailboxMessage. message={}", message);
+                        return new Result(State.FAILED).errorMsg("Sending message failed and message is not type of MailboxMessage. Exception=" + throwable);
                     }
-
-                    if (message instanceof MailboxMessage mailboxMessage) {
-                        if (dataService.isEmpty()) {
-                            log.warn("We cannot stored a mailboxMessage because the dataService is not present. mailboxMessage={}", mailboxMessage);
-                            return new Result(State.FAILED).errorMsg("We cannot stored a mailboxMessage because the dataService is not present.");
-                        }
-
-                        MailboxPayload mailboxPayload = new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
-                        CompletableFuture<BroadcastResult> mailboxFuture = dataService.get().addMailboxPayload(mailboxPayload,
-                                senderKeyPair,
-                                receiverPubKey.publicKey());
-                        return new Result(State.ADDED_TO_MAILBOX).mailboxFuture(mailboxFuture);
-                    }
-
-                    log.warn("Sending message failed and message is not type of MailboxMessage. message={}", message);
-                    return new Result(State.FAILED).errorMsg("Sending message failed and message is not type of MailboxMessage.");
                 });
+    }
+
+    private Result storeMailBoxMessage(MailboxMessage mailboxMessage,
+                                       ConfidentialMessage confidentialMessage,
+                                       PubKey receiverPubKey,
+                                       KeyPair senderKeyPair) {
+        if (dataService.isEmpty()) {
+            log.warn("We cannot stored a mailboxMessage because the dataService is not present. mailboxMessage={}", mailboxMessage);
+            return new Result(State.FAILED).errorMsg("We cannot stored a mailboxMessage because the dataService is not present.");
+        }
+
+        MailboxPayload mailboxPayload = new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
+        CompletableFuture<BroadcastResult> mailboxFuture = dataService.get().addMailboxPayload(mailboxPayload,
+                senderKeyPair,
+                receiverPubKey.publicKey());
+        return new Result(State.ADDED_TO_MAILBOX).mailboxFuture(mailboxFuture);
     }
 
     public CompletableFuture<Connection> relay(Message message, NetworkId networkId, KeyPair senderKeyPair) {
@@ -192,7 +215,7 @@ public class ConfidentialService implements Node.Listener {
     private ConfidentialMessage getConfidentialMessage(Message message, PubKey receiverPubKey, KeyPair senderKeyPair) {
         try {
             ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message.serialize(), receiverPubKey.publicKey(), senderKeyPair);
-            return new ConfidentialMessage(confidentialData, receiverPubKey.id());
+            return new ConfidentialMessage(confidentialData, receiverPubKey.keyId());
         } catch (GeneralSecurityException e) {
             log.error("HybridEncryption.encryptAndSign failed at getConfidentialMessage.", e);
             throw new RuntimeException(e);

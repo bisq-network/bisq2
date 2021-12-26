@@ -21,8 +21,10 @@ import network.misq.common.ObjectSerializer;
 
 import java.io.Serializable;
 
+/**
+ * Interface for any object which gets serialized (network or persistence)
+ */
 public interface Proto extends Serializable {
-
     default byte[] serialize() {
         return ObjectSerializer.serialize(this);
     }

@@ -38,6 +38,7 @@ import network.misq.desktop.common.threading.UIThread;
 import network.misq.network.NetworkServiceConfigFactory;
 import network.misq.network.p2p.State;
 import network.misq.network.p2p.node.Address;
+import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.monitor.MultiNodesSetup;
 
@@ -52,6 +53,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
     private TextArea nodeInfoTextArea, networkInfoTextArea;
     private Optional<Address> selected = Optional.empty();
     private final Map<Address, Pair<Button, Transport.Type>> buttonsByAddress = new HashMap<>();
+    private TextField fromTf;
 
     @Override
     public void start(Stage primaryStage) {
@@ -66,7 +68,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
         Insets padding = new Insets(10, 10, 10, 10);
         int nodeWidth = 50;
         double stageWidth = 2400;
-        double stageHeight = 1000;
+        double stageHeight = 1300;
         double availableWidth = stageWidth - 2 * padding.getLeft() - 2 * padding.getRight();
         int nodesPerRow = (int) (availableWidth / nodeWidth);
         stageWidth = nodesPerRow * nodeWidth + 2 * padding.getLeft() + 2 * padding.getRight();
@@ -85,7 +87,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
 
         nodeInfoTextArea = new TextArea();
         nodeInfoTextArea.setEditable(false);
-        nodeInfoTextArea.setMinHeight(stageHeight - 200);
+        nodeInfoTextArea.setMinHeight(stageHeight - 500);
         nodeInfoTextArea.setMinWidth(stageWidth / 2 - 100);
         nodeInfoTextArea.setFont(Font.font("Courier", FontWeight.NORMAL, FontPosture.REGULAR, 13));
         nodeInfoTextArea.setOnKeyPressed(event -> {
@@ -113,9 +115,27 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
         infoBox.setPadding(padding);
         infoBox.getChildren().addAll(nodeInfoTextArea, networkInfoTextArea);
 
+
+        fromTf = new TextField("localhost:9000");
+        TextField toTf = new TextField("localhost:9001");
+        // TextField nodeIdTf = new TextField("mock node id");
+        TextField nodeIdTf = new TextField(Node.DEFAULT_NODE_ID);
+        TextField msgTf = new TextField("Test message");
+        Button sendButton = new Button("Send");
+        sendButton.setOnAction(e -> multiNodesSetup.send(new Address(fromTf.getText()),
+                new Address(toTf.getText()),
+                nodeIdTf.getText(),
+                msgTf.getText()));
+
+        HBox sendMsgBox = new HBox(10);
+        sendMsgBox.setStyle(bgStyle);
+        sendMsgBox.setPadding(padding);
+        sendMsgBox.getChildren().addAll(fromTf, toTf, nodeIdTf, msgTf, sendButton);
+
+
         VBox vBox = new VBox(10);
         vBox.setPadding(padding);
-        vBox.getChildren().addAll(vBoxSeeds, vBoxNodes, infoBox);
+        vBox.getChildren().addAll(vBoxSeeds, vBoxNodes, sendMsgBox, infoBox);
 
         ScrollPane scrollPane = new ScrollPane(vBox);
         scrollPane.setFitToWidth(true);
@@ -192,6 +212,9 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
             Button button = buttonInfo.first();
             button.setText(getTitle(address, buttonInfo.second()) + " [" + networkServiceState.name() + "]");
             button.setDefaultButton(networkServiceState == State.BOOTSTRAPPED);
+
+            selected.filter(addr -> addr.equals(address))
+                    .ifPresent(addr -> updateNodeInfo(address, Transport.Type.from(address)));
         }));
     }
 
@@ -219,8 +242,8 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
 
     private void onButtonClicked(Address address, Transport.Type transportType) {
         selected = Optional.of(address);
-        nodeInfoTextArea.setText(multiNodesSetup.getNodeInfo(address, transportType));
-        nodeInfoTextArea.positionCaret(0);
+        fromTf.setText(address.getFullAddress());
+        updateNodeInfo(address, transportType);
 
         MenuItem start = new MenuItem("Start");
         MenuItem stop = new MenuItem("Stop");
@@ -242,6 +265,11 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
         ContextMenu contextMenu = new ContextMenu();
         contextMenu.getItems().addAll(start, stop);
         nodeInfoTextArea.setContextMenu(contextMenu);
+    }
+
+    private void updateNodeInfo(Address address, Transport.Type transportType) {
+        nodeInfoTextArea.setText(multiNodesSetup.getNodeInfo(address, transportType));
+        nodeInfoTextArea.positionCaret(0);
     }
 
     private String getTitle(Address address, Transport.Type transportType) {

@@ -33,7 +33,7 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.broadcast.BroadcastResult;
-import network.misq.network.p2p.services.confidential.ConfidentialService;
+import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
@@ -147,11 +147,11 @@ public class NetworkService {
         });
     }
 
-    public CompletableFuture<ConfidentialService.Result> confidentialSend(Message message, 
-                                                                          NetworkId peerNetworkId, 
-                                                                          KeyPair myKeyPair,
-                                                                          String connectionId) {
-        return serviceNodesByTransport.confidentialSend(message, peerNetworkId, myKeyPair, connectionId);
+    public CompletableFuture<ConfidentialMessageService.Result> confidentialSend(Message message,
+                                                                                 NetworkId receiverNetworkId,
+                                                                                 KeyPair senderKeyPair,
+                                                                                 String senderNodeId) {
+        return serviceNodesByTransport.confidentialSend(message, receiverNetworkId, senderKeyPair, senderNodeId);
     }
 
     public CompletableFuture<List<BroadcastResult>> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
