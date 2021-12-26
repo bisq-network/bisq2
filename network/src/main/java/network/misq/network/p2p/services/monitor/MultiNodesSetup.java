@@ -41,7 +41,6 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class MultiNodesSetup {
-
     public interface Handler {
         void onConnectionStateChange(Transport.Type transportType, Address address, String networkInfo);
 
@@ -64,7 +63,7 @@ public class MultiNodesSetup {
 
     public MultiNodesSetup(NetworkService.Config networkServiceConfig, Set<Transport.Type> supportedTransportTypes,
                            boolean bootstrapAll) {
-        this.networkServiceConfig = networkServiceConfig;
+        this.networkServiceConfig = cloneWithLimitedSeeds(networkServiceConfig, numSeeds);
         this.supportedTransportTypes = supportedTransportTypes;
         this.bootstrapAll = bootstrapAll;
 
@@ -74,6 +73,7 @@ public class MultiNodesSetup {
         keyPairRepository = new KeyPairRepository(keyPairRepositoryConf);
         keyPairRepository.initialize().join();
     }
+
 
     public Map<Transport.Type, List<Address>> bootstrap(Optional<List<Address>> addressesToBootstrap, int delay) {
         this.addressesToBootstrap = addressesToBootstrap;
@@ -240,6 +240,20 @@ public class MultiNodesSetup {
 
     public void addNetworkInfoConsumer(Handler handler) {
         this.handler = Optional.of(handler);
+    }
+
+    private NetworkService.Config cloneWithLimitedSeeds(NetworkService.Config networkServiceConfig, int numSeeds) {
+
+        Map<Transport.Type, List<Address>> seeds = networkServiceConfig.seedAddressesByTransport().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        e -> e.getValue().stream().limit(numSeeds).collect(Collectors.toList())));
+        return new NetworkService.Config(networkServiceConfig.baseDir(),
+                networkServiceConfig.transportConfig(),
+                networkServiceConfig.supportedTransportTypes(),
+                networkServiceConfig.serviceNodeConfig(),
+                networkServiceConfig.peerGroupServiceConfigByTransport(),
+                seeds,
+                networkServiceConfig.socks5ProxyAddress());
     }
 
     public List<Address> getNodeAddresses(Transport.Type transportType, int numNodes) {
