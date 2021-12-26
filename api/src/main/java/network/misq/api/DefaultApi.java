@@ -50,15 +50,15 @@ public class DefaultApi {
     private final IdentityRepository identityRepository;
     private final MarketPriceService marketPriceService;
 
-    public DefaultApi(DefaultApplicationFactory applicationFactory) {
-        applicationOptions = applicationFactory.getApplicationOptions();
-        keyPairRepository = applicationFactory.getKeyPairRepository();
-        networkService = applicationFactory.getNetworkService();
-        identityRepository = applicationFactory.getIdentityRepository();
-        offerRepository = applicationFactory.getOfferRepository();
-        openOfferRepository = applicationFactory.getOpenOfferRepository();
-        offerEntityRepository = applicationFactory.getOfferEntityRepository();
-        marketPriceService = applicationFactory.getMarketPriceService();
+    public DefaultApi(DefaultApplicationSetup applicationSetup) {
+        applicationOptions = applicationSetup.getApplicationOptions();
+        keyPairRepository = applicationSetup.getKeyPairRepository();
+        networkService = applicationSetup.getNetworkService();
+        identityRepository = applicationSetup.getIdentityRepository();
+        offerRepository = applicationSetup.getOfferRepository();
+        openOfferRepository = applicationSetup.getOpenOfferRepository();
+        offerEntityRepository = applicationSetup.getOfferEntityRepository();
+        marketPriceService = applicationSetup.getMarketPriceService();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////

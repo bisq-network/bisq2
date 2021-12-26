@@ -18,13 +18,13 @@
 package network.misq.api.partial;
 
 import lombok.Getter;
-import network.misq.api.options.KeyPairRepositoryOptionsParser;
-import network.misq.api.options.NetworkServiceOptionsParser;
-import network.misq.application.ApplicationFactory;
+import network.misq.application.ApplicationSetup;
 import network.misq.application.options.ApplicationOptions;
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.NetworkService;
+import network.misq.network.NetworkServiceConfigFactory;
 import network.misq.security.KeyPairRepository;
+import network.misq.security.KeyPairRepositoryConfigFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,15 +39,18 @@ import java.util.concurrent.TimeUnit;
  * Provides the completely setup instances to other clients (Api)
  */
 @Getter
-public class SeedNodeApplicationFactory implements ApplicationFactory {
+public class SeedNodeApplicationSetup extends ApplicationSetup {
     private final KeyPairRepository keyPairRepository;
     private final NetworkService networkService;
 
-    public SeedNodeApplicationFactory(ApplicationOptions applicationOptions, String[] args) {
-        KeyPairRepository.Conf keyPairRepositoryConf = new KeyPairRepositoryOptionsParser(applicationOptions, args).getConf();
+    public SeedNodeApplicationSetup(ApplicationOptions applicationOptions, String[] args) {
+        super("seed");
+
+        KeyPairRepository.Conf keyPairRepositoryConf = new KeyPairRepositoryConfigFactory(applicationOptions.baseDir()).get();
         keyPairRepository = new KeyPairRepository(keyPairRepositoryConf);
 
-        NetworkService.Config networkServiceConfig = new NetworkServiceOptionsParser(applicationOptions, args).getConfig();
+        NetworkService.Config networkServiceConfig = new NetworkServiceConfigFactory(applicationOptions.baseDir(),
+                getConfig("networkServiceConfig"), args).get();
         networkService = new NetworkService(networkServiceConfig, keyPairRepository);
     }
 

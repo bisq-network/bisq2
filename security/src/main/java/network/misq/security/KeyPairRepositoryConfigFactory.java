@@ -15,20 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.api.options;
-
-import lombok.Getter;
-import network.misq.application.options.ApplicationOptions;
-import network.misq.security.KeyPairRepository;
+package network.misq.security;
 
 /**
  * Parses the program arguments which are relevant for that domain and stores it in the options field.
  */
-public class KeyPairRepositoryOptionsParser {
-    @Getter
+public class KeyPairRepositoryConfigFactory {
     private final KeyPairRepository.Conf conf;
 
-    public KeyPairRepositoryOptionsParser(ApplicationOptions applicationOptions, String[] args) {
-        conf = new KeyPairRepository.Conf(applicationOptions.appDir());
+    public KeyPairRepository.Conf get() {
+        return conf;
+    }
+
+    public KeyPairRepositoryConfigFactory(String baseDir) {
+        conf = new KeyPairRepository.Conf(baseDir);
     }
 }

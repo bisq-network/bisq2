@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-package network.misq.common;
+package network.misq;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -43,16 +43,15 @@ import lombok.extern.slf4j.Slf4j;
  * https://florentfo.rest/2019/01/07/configuring-spark-applications-with-typesafe-config.html
  */
 @Slf4j
-public class MisqConfig {
-
+public class MockConfig {
     public static final String NETWORK_CONFIG_PATH = "misq.networkConfig";
     public static final String NETWORK_IO_POOL_CONFIG_PATH = NETWORK_CONFIG_PATH + ".networkIOPool";
 
-    private static final Config MISQ_CONFIG = ConfigFactory.load("misq");
+    private static final Config MISQ_CONFIG = ConfigFactory.load("mock");
 
     static {
         try {
-            MISQ_CONFIG.checkValid(ConfigFactory.defaultReference(), "misq");
+            MISQ_CONFIG.checkValid(ConfigFactory.defaultReference(), "mock");
         } catch (Exception ex) {
             throw new IllegalStateException("misq.conf validation failed", ex);
         }

@@ -65,7 +65,7 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 public class DataService implements Node.Listener {
     private static final long BROADCAST_TIMEOUT = 90;
 
-    public static record Config(String baseDirPath) {
+    public static record Config(String baseDir) {
     }
 
 
@@ -83,7 +83,7 @@ public class DataService implements Node.Listener {
         this.node = node;
         this.peerGroupService = peerGroupService;
         this.keyPairRepository = keyPairRepository;
-        this.storage = new Storage(config.baseDirPath());
+        this.storage = new Storage(config.baseDir());
 
         broadcaster = new Broadcaster(node, peerGroupService.getPeerGroup());
         broadcaster.addMessageListener(this);

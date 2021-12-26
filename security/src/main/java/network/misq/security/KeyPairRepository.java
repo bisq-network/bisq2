@@ -30,9 +30,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public class KeyPairRepository {
     public static final String DEFAULT = "default";
-    private final String baseDirPath;
+    private final String baseDir;
 
-    public static record Conf(String baseDirPath) {
+    public static record Conf(String baseDir) {
     }
 
     // Key is an arbitrary keyId, but usually associated with interaction like offer ID. 
@@ -40,7 +40,7 @@ public class KeyPairRepository {
     private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
 
     public KeyPairRepository(Conf conf) {
-        baseDirPath = conf.baseDirPath;
+        baseDir = conf.baseDir;
     }
 
     public CompletableFuture<Boolean> initialize() {

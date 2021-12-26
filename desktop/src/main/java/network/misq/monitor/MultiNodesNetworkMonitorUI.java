@@ -32,13 +32,16 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.data.Pair;
+import network.misq.common.util.OsUtils;
 import network.misq.common.util.StringUtils;
 import network.misq.desktop.common.threading.UIThread;
+import network.misq.network.NetworkServiceConfigFactory;
 import network.misq.network.p2p.State;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.monitor.MultiNodesSetup;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -48,7 +51,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
     private FlowPane clearSeedButtonsPane, torSeedButtonsPane, i2pSeedButtonsPane, clearNodeButtonsPane, torNodeButtonsPane, i2pNodeButtonsPane;
     private TextArea nodeInfoTextArea, networkInfoTextArea;
     private Optional<Address> selected = Optional.empty();
-    private Map<Address, Pair<Button, Transport.Type>> buttonsByAddress = new HashMap<>();
+    private final Map<Address, Pair<Button, Transport.Type>> buttonsByAddress = new HashMap<>();
 
     @Override
     public void start(Stage primaryStage) {
@@ -151,9 +154,12 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
                 .map(e -> e.equalsIgnoreCase("true"))
                 .orElse(addressesToBootstrap.isEmpty() && myAddress.isEmpty());
 
-        multiNodesSetup = new MultiNodesSetup(transports, bootstrapAll, addressesToBootstrap);
+        String baseDir = OsUtils.getUserDataDir() + File.separator + "misq_MultiNodes";
+        NetworkServiceConfigFactory networkServiceConfigFactory = new NetworkServiceConfigFactory(baseDir);
+
+        multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory.get(), transports, bootstrapAll);
         multiNodesSetup.addNetworkInfoConsumer(this);
-        multiNodesSetup.bootstrap(100)
+        multiNodesSetup.bootstrap(addressesToBootstrap, 100)
                 .forEach((transportType, addresses) -> addresses.forEach(address -> addButton(address, transportType)));
     }
 

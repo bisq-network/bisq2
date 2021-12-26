@@ -51,7 +51,7 @@ public class MarketPriceService {
     private ExecutorService executor;
     private BaseHttpClient httpClient;
 
-    public static record Options(Set<Provider> providers) {
+    public static record Config(Set<Provider> providers) {
     }
 
     public static record Provider(String url, String operator, Transport.Type transportType) {
@@ -68,8 +68,8 @@ public class MarketPriceService {
     @Getter
     private final BehaviorSubject<Map<String, MarketPrice>> marketPriceSubject;
 
-    public MarketPriceService(Options options, NetworkService networkService, String version) {
-        providers = new ArrayList<>(options.providers);
+    public MarketPriceService(Config conf, NetworkService networkService, String version) {
+        providers = new ArrayList<>(conf.providers);
         checkArgument(!providers.isEmpty(), "providers must not be empty");
         this.networkService = networkService;
         userAgent = "misq/" + version;

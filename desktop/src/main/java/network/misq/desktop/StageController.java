@@ -34,7 +34,6 @@ public class StageController implements Controller {
     private final DefaultApi api;
     private final StageModel model;
     private StageView stageView;
-    private MainViewController mainViewController;
     private OverlayController overlayController;
 
     public StageController(DefaultApi api) {
@@ -72,7 +71,7 @@ public class StageController implements Controller {
 
     public void activate() {
         model.setTitle(api.getAppName());
-        mainViewController = new MainViewController(api, overlayController);
+        MainViewController mainViewController = new MainViewController(api, overlayController);
         mainViewController.initialize();
         stageView.activate(mainViewController.getView());
     }
@@ -96,6 +95,7 @@ public class StageController implements Controller {
     }
 
     public void onQuit() {
+        // todo graceful shutdown
         System.exit(0);
     }
 

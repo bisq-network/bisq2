@@ -15,24 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.api.options;
+package network.misq.offer;
 
-import lombok.Getter;
-import network.misq.application.options.ApplicationOptions;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.offer.MarketPriceService;
 
 import java.util.Set;
 
 /**
  * Parses the program arguments which are relevant for that domain and stores it in the options field.
  */
-public class MarketPriceServiceOptionsParser {
-    @Getter
-    private final MarketPriceService.Options options;
+public class MarketPriceServiceConfigFactory {
 
-    public MarketPriceServiceOptionsParser(ApplicationOptions applicationOptions, String[] args) {
-        options = new MarketPriceService.Options(Set.of(
+    private final MarketPriceService.Config config;
+
+    public MarketPriceService.Config get() {
+        return config;
+    }
+
+    public MarketPriceServiceConfigFactory() {
+        config = new MarketPriceService.Config(Set.of(
                 new MarketPriceService.Provider("https://price.bisq.wiz.biz/", "wiz", Transport.Type.CLEAR),
                 new MarketPriceService.Provider("http://wizpriceje6q5tdrxkyiazsgu7irquiqjy2dptezqhrtu7l2qelqktid.onion/", "wiz", Transport.Type.TOR),
                 new MarketPriceService.Provider("http://emzypricpidesmyqg2hc6dkwitqzaxrqnpkdg3ae2wef5znncu2ambqd.onion/", "emzy", Transport.Type.TOR),

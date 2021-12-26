@@ -17,10 +17,26 @@
 
 package network.misq.application;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
 import java.util.concurrent.CompletableFuture;
 
-public interface ApplicationFactory {
-    CompletableFuture<Boolean> initialize();
+public abstract class ApplicationSetup {
+    protected final Config misqConfig;
 
-    CompletableFuture<Void> shutdown();
+    public ApplicationSetup(String config) {
+        misqConfig = ConfigFactory.load(config);
+        misqConfig.checkValid(ConfigFactory.defaultReference(), config);
+
+    }
+
+    protected Config getConfig(String path) {
+        misqConfig.checkValid(ConfigFactory.defaultReference(), path);
+        return misqConfig.getConfig(path);
+    }
+
+    public abstract CompletableFuture<Boolean> initialize();
+
+    public abstract CompletableFuture<Void> shutdown();
 }

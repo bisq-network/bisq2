@@ -47,8 +47,14 @@ public class OfferRepository {
 
     public OfferRepository(INetworkService networkService) {
         this.networkService = networkService;
+
         offerAddedSubject = PublishSubject.create();
         offerRemovedSubject = PublishSubject.create();
+    }
+
+    public CompletableFuture<Boolean> initialize() {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        //todo
 
         offers.addAll(MockOfferBuilder.makeOffers().values());
 
@@ -67,14 +73,9 @@ public class OfferRepository {
                     offers.remove(offer);
                     offerRemovedSubject.onNext(offer);
                 }
-
             }
         });
-    }
 
-    public CompletableFuture<Boolean> initialize() {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        //todo
         future.complete(true);
         return future;
     }

@@ -1,4 +1,4 @@
-package network.misq.common;
+package network.misq;
 
 import com.typesafe.config.Config;
 import org.junit.jupiter.api.Assertions;
@@ -10,7 +10,7 @@ public class TypesafeConfigTest {
 
     @Test
     public void testNetworkPoolConfig() {
-        Config config = MisqConfig.getConfig(MisqConfig.NETWORK_IO_POOL_CONFIG_PATH);
+        Config config = MockConfig.getConfig(MockConfig.NETWORK_IO_POOL_CONFIG_PATH);
         assertNotNull(config);
 
         Assertions.assertEquals("NETWORK_IO_POOL", config.getString("name"));

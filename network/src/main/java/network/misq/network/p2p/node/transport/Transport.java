@@ -34,7 +34,7 @@ public interface Transport {
         CLEAR,
     }
 
-    record Config(String baseDirPath) {
+    record Config(String baseDir) {
     }
 
     record ServerSocketResult(String nodeId, ServerSocket serverSocket, Address address) {

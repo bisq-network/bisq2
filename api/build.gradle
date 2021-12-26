@@ -31,6 +31,7 @@ dependencies {
 
     implementation 'com.google.guava:guava'
     implementation 'io.reactivex.rxjava2:rxjava'
+    implementation 'com.typesafe:config'
 }
 
 test {

@@ -20,12 +20,12 @@ package network.misq.desktop;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.api.DefaultApi;
-import network.misq.api.DefaultApplicationFactory;
+import network.misq.api.DefaultApplicationSetup;
 import network.misq.application.Executable;
 import network.misq.application.options.ApplicationOptions;
 
 @Slf4j
-public class DesktopApplication extends Executable<DefaultApplicationFactory> {
+public class DesktopApplication extends Executable<DefaultApplicationSetup> {
     private StageController stageController;
     protected DefaultApi api;
 
@@ -34,33 +34,37 @@ public class DesktopApplication extends Executable<DefaultApplicationFactory> {
     }
 
     @Override
-    protected DefaultApplicationFactory createApplicationFactory(ApplicationOptions applicationOptions, String[] args) {
-        return new DefaultApplicationFactory(applicationOptions, args);
+    protected DefaultApplicationSetup createApplicationSetup(ApplicationOptions applicationOptions, String[] args) {
+        return new DefaultApplicationSetup(applicationOptions, args);
     }
 
     @Override
     protected void createApi() {
-        api = new DefaultApi(applicationFactory);
+        api = new DefaultApi(applicationSetup);
     }
 
     @Override
     protected void launchApplication() {
         stageController = new StageController(api);
         stageController.launchApplication().whenComplete((success, throwable) -> {
-            log.info("Java FX Application initialized");
-            applicationLaunched();
+            if (throwable == null) {
+                log.info("Java FX Application initialized");
+                onApplicationLaunched();
+            } else {
+                log.warn("Could not launch JavaFX application.", throwable);
+            }
         });
+    }
+
+    @Override
+    protected void onInitializeDomainCompleted() {
+        Platform.runLater(stageController::activate);
     }
 
     @Override
     protected void onInitializeDomainFailed(Throwable throwable) {
         super.onInitializeDomainFailed(throwable);
         stageController.onInitializeDomainFailed();
-    }
-
-    @Override
-    protected void onInitializeDomainCompleted() {
-        Platform.runLater(stageController::activate);
     }
 
     @Override

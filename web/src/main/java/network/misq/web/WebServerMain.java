@@ -2,14 +2,14 @@ package network.misq.web;
 
 
 import network.misq.api.DefaultApi;
-import network.misq.api.DefaultApplicationFactory;
+import network.misq.api.DefaultApplicationSetup;
 import network.misq.application.Executable;
 import network.misq.application.options.ApplicationOptions;
 import network.misq.web.server.WebServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WebServerMain extends Executable<DefaultApplicationFactory> {
+public class WebServerMain extends Executable<DefaultApplicationSetup> {
     private static final Logger log = LoggerFactory.getLogger(WebServerMain.class);
 
     public static void main(String[] args) {
@@ -24,13 +24,13 @@ public class WebServerMain extends Executable<DefaultApplicationFactory> {
     }
 
     @Override
-    protected DefaultApplicationFactory createApplicationFactory(ApplicationOptions applicationOptions, String[] args) {
-        return new DefaultApplicationFactory(applicationOptions, args);
+    protected DefaultApplicationSetup createApplicationSetup(ApplicationOptions applicationOptions, String[] args) {
+        return new DefaultApplicationSetup(applicationOptions, args);
     }
 
     @Override
     protected void createApi() {
-        api = new DefaultApi(applicationFactory);
+        api = new DefaultApi(applicationSetup);
     }
 
     @Override

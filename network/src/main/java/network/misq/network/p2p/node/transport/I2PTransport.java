@@ -26,7 +26,7 @@ public class I2PTransport implements Transport {
     private String sessionId;
 
     public I2PTransport(Config config) {
-        i2pDirPath = config.baseDirPath() + separator + "i2p";
+        i2pDirPath = config.baseDir() + separator + "i2p";
     }
 
     public CompletableFuture<Boolean> initialize() {

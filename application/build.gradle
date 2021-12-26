@@ -17,6 +17,7 @@ dependencies {
     implementation project(':common')
 
     implementation 'com.google.guava:guava'
+    implementation 'com.typesafe:config'
 }
 
 test {

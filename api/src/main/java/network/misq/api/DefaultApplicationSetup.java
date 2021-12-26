@@ -18,10 +18,7 @@
 package network.misq.api;
 
 import lombok.Getter;
-import network.misq.api.options.KeyPairRepositoryOptionsParser;
-import network.misq.api.options.MarketPriceServiceOptionsParser;
-import network.misq.api.options.NetworkServiceOptionsParser;
-import network.misq.application.ApplicationFactory;
+import network.misq.application.ApplicationSetup;
 import network.misq.application.Version;
 import network.misq.application.options.ApplicationOptions;
 import network.misq.common.currency.FiatCurrencyRepository;
@@ -29,12 +26,15 @@ import network.misq.common.locale.LocaleRepository;
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.id.IdentityRepository;
 import network.misq.network.NetworkService;
+import network.misq.network.NetworkServiceConfigFactory;
 import network.misq.network.p2p.MockNetworkService;
 import network.misq.offer.MarketPriceService;
+import network.misq.offer.MarketPriceServiceConfigFactory;
 import network.misq.offer.OfferRepository;
 import network.misq.offer.OpenOfferRepository;
 import network.misq.presentation.offer.OfferEntityRepository;
 import network.misq.security.KeyPairRepository;
+import network.misq.security.KeyPairRepositoryConfigFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,26 +50,29 @@ import java.util.concurrent.TimeUnit;
  * Provides the completely setup instances to other clients (Api)
  */
 @Getter
-public class DefaultApplicationFactory implements ApplicationFactory {
+public class DefaultApplicationSetup extends ApplicationSetup {
     private final KeyPairRepository keyPairRepository;
     private final NetworkService networkService;
     private final OfferRepository offerRepository;
     private final OpenOfferRepository openOfferRepository;
     private final OfferEntityRepository offerEntityRepository;
     private final IdentityRepository identityRepository;
-    private final ApplicationOptions applicationOptions;
     private final MarketPriceService marketPriceService;
+    private final ApplicationOptions applicationOptions;
 
-    public DefaultApplicationFactory(ApplicationOptions applicationOptions, String[] args) {
+    public DefaultApplicationSetup(ApplicationOptions applicationOptions, String[] args) {
+        super("misq");
         this.applicationOptions = applicationOptions;
+
         Locale locale = applicationOptions.getLocale();
         LocaleRepository.setDefaultLocale(locale);
         FiatCurrencyRepository.applyLocale(locale);
 
-        KeyPairRepository.Conf keyPairRepositoryConf = new KeyPairRepositoryOptionsParser(applicationOptions, args).getConf();
+        KeyPairRepository.Conf keyPairRepositoryConf = new KeyPairRepositoryConfigFactory(applicationOptions.baseDir()).get();
         keyPairRepository = new KeyPairRepository(keyPairRepositoryConf);
 
-        NetworkService.Config networkServiceConfig = new NetworkServiceOptionsParser(applicationOptions, args).getConfig();
+        NetworkService.Config networkServiceConfig = new NetworkServiceConfigFactory(applicationOptions.baseDir(),
+                getConfig("networkServiceConfig"), args).get();
         networkService = new NetworkService(networkServiceConfig, keyPairRepository);
 
         identityRepository = new IdentityRepository(networkService);
@@ -80,8 +83,8 @@ public class DefaultApplicationFactory implements ApplicationFactory {
         openOfferRepository = new OpenOfferRepository(mockNetworkService);
 
 
-        MarketPriceService.Options marketPriceServiceOptions = new MarketPriceServiceOptionsParser(applicationOptions, args).getOptions();
-        marketPriceService = new MarketPriceService(marketPriceServiceOptions, networkService, Version.VERSION);
+        MarketPriceService.Config marketPriceServiceConf = new MarketPriceServiceConfigFactory().get();
+        marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, Version.VERSION);
         offerEntityRepository = new OfferEntityRepository(offerRepository, marketPriceService);
     }
 
@@ -100,7 +103,7 @@ public class DefaultApplicationFactory implements ApplicationFactory {
         // Once all have successfully completed our initialize is complete as well
         return CompletableFutureUtils.allOf(allFutures)
                 .thenApply(success -> success.stream().allMatch(e -> e))
-                .orTimeout(120, TimeUnit.SECONDS)
+                .orTimeout(10, TimeUnit.SECONDS)
                 .thenCompose(CompletableFuture::completedFuture);
     }
 
