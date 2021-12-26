@@ -72,7 +72,7 @@ public class DefaultApplicationSetup extends ApplicationSetup {
         keyPairRepository = new KeyPairRepository(keyPairRepositoryConf);
 
         NetworkService.Config networkServiceConfig = new NetworkServiceConfigFactory(applicationOptions.baseDir(),
-                getConfig("networkServiceConfig"), args).get();
+                getConfig("misq.networkServiceConfig"), args).get();
         networkService = new NetworkService(networkServiceConfig, keyPairRepository);
 
         identityRepository = new IdentityRepository(networkService);
