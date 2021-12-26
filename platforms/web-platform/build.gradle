@@ -3,9 +3,135 @@ plugins {
     id 'maven-publish'
 }
 
-dependencies {
-    constraints {
-        // Web app framework to be decided.
-    }
+ext {
+    ratpackVersion = '1.8.2'
+    ratpackNettyVersion = '4.1.48.Final'
+    ratpackJacksonVersion = '2.10.3'
 }
 
+dependencies {
+    constraints {
+        // The api configuration should be used to declare constraints and
+        // dependencies which should be used when compiling against the platform.
+
+        /////////////////////////////////////////////////////////////////////////////////
+        // Ratpack dependency constraints.
+        /////////////////////////////////////////////////////////////////////////////////
+        api('io.ratpack:ratpack-base') {
+            // might be 'runtime'
+            version { require "$ratpackVersion" }
+        }
+        api('io.ratpack:ratpack-core') {
+            version { require "$ratpackVersion" }
+        }
+        api('io.ratpack:ratpack-exec') {
+            // might be 'runtime'
+            version { require "$ratpackVersion" }
+        }
+        api('io.ratpack:ratpack-rx2') {
+            version { require "$ratpackVersion" }
+        }
+
+        /////////////////////////////////////////////////////////////////////////////////
+        // Ratpack's transitive dependency constraints.
+        /////////////////////////////////////////////////////////////////////////////////
+
+        // Reactivex -> depends on -> Reactivestreams
+        // TODO might want to re-factor these into a reactive-platform.
+
+        api('io.reactivex.rxjava2:rxjava') {
+            version { require '2.1.12' }
+        }
+        api('org.reactivestreams:reactive-streams') {
+            version { require '1.0.2' }
+        }
+
+
+        // Netty
+
+        api('io.netty:netty-buffer') {
+            version { require "$ratpackNettyVersion" }
+        }
+        api('io.netty:netty-codec') {
+            version { require "$ratpackNettyVersion" }
+        }
+        api('io.netty:netty-codec-http') {
+            version { require "$ratpackNettyVersion" }
+        }
+        api('io.netty:netty-codec-socks') {
+            version { require "$ratpackNettyVersion" }
+        }
+        api('io.netty:netty-common') {
+            version { require "$ratpackNettyVersion" }
+        }
+        api('io.netty:netty-handler') {
+            version { require "$ratpackNettyVersion" }
+        }
+        api('io.netty:netty-handler-proxy') {
+            version { require "$ratpackNettyVersion" }
+        }
+        api('io.netty:netty-resolver') {
+            version { require "$ratpackNettyVersion" }
+        }
+        api('io.netty:netty-tcnative') {
+            version { require '2.0.30.Final' }
+        }
+        api('io.netty:netty-transport') {
+            version { require "$ratpackNettyVersion" }
+        }
+        api('io.netty:netty-transport-native-epoll') {
+            version { require "$ratpackNettyVersion" }
+        }
+        api('io.netty:etty-transport-native-unix-common') {
+            version { require "$ratpackNettyVersion" }
+        }
+
+        // Faster XML Jackson
+
+        api('com.fasterxml.jackson.core:jackson-annotations') {
+            version { require "$ratpackJacksonVersion" }
+        }
+        api('com.fasterxml.jackson.core:jackson-core') {
+            version { require "$ratpackJacksonVersion" }
+        }
+        api('com.fasterxml.jackson.core:jackson-databind') {
+            version { require "$ratpackJacksonVersion" }
+        }
+        api('com.fasterxml.jackson.core:jackson-dataformat-yaml') {
+            version { require "$ratpackJacksonVersion" }
+        }
+        api('com.fasterxml.jackson.core:jackson-dataformat-guava') {
+            version { require "$ratpackJacksonVersion" }
+        }
+        api('com.fasterxml.jackson.core:jackson-dataformat-jdk8') {
+            version { require "$ratpackJacksonVersion" }
+        }
+        api('com.fasterxml.jackson.core:jackson-dataformat-jsr310') {
+            version { require "$ratpackJacksonVersion" }
+        }
+
+        // Caffeine
+
+        api('com.github.ben-manes.caffeine:caffeine') {
+            version { require '2.8.8' }
+        }
+
+        // Javax Activation
+
+        api('com.sun.activation:javax.activation') {
+            version { require '1.2.0' }
+        }
+
+        // Javassist
+
+        api('org.javassist:javassist') {
+            version { require '3.22.0-GA' }
+        }
+
+        // Yaml
+
+        api('org.yaml:snakeyaml') {
+            version { require '1.27' }
+        }
+    }
+}

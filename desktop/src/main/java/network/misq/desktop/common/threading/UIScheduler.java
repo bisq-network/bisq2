@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.timer.TaskScheduler;
 import network.misq.desktop.common.threading.reactfx.FxTimer;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -34,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 public class UIScheduler implements TaskScheduler {
     private Runnable task;
     private FxTimer timer;
+    private CompletableFuture<Void> future = new CompletableFuture<>();
 
     private UIScheduler() {
     }

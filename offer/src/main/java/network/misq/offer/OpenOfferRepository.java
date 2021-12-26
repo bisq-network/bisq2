@@ -17,5 +17,59 @@
 
 package network.misq.offer;
 
+import network.misq.account.FiatTransfer;
+import network.misq.common.monetary.Coin;
+import network.misq.common.monetary.Fiat;
+import network.misq.contract.AssetTransfer;
+import network.misq.contract.SwapProtocolType;
+import network.misq.network.p2p.INetworkService;
+import network.misq.network.p2p.NetworkId;
+import network.misq.network.p2p.node.Address;
+import network.misq.network.p2p.node.transport.Transport;
+import network.misq.security.PubKey;
+import network.misq.wallets.Wallet;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArraySet;
+
 public class OpenOfferRepository {
+    // Expected dependency for deactivating offers if not sufficient wallet balance
+    Wallet wallet;
+
+    private final INetworkService networkService;
+    private final Set<OpenOffer> openOffers = new CopyOnWriteArraySet<>();
+
+    public OpenOfferRepository(INetworkService networkService) {
+        this.networkService = networkService;
+    }
+
+    public CompletableFuture<Boolean> initialize() {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        //todo
+        future.complete(true);
+        return future;
+    }
+
+    public void createNewOffer(long askAmount) {
+        Map<Transport.Type, Address> map = Map.of(Transport.Type.CLEAR, Address.localHost(3333));
+        NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"));
+        Asset askAsset = new Asset(Coin.asBtc(askAmount), List.of(), AssetTransfer.Type.MANUAL);
+        Asset bidAsset = new Asset(Fiat.of(5000, "USD"), List.of(FiatTransfer.ZELLE), AssetTransfer.Type.MANUAL);
+        Offer offer = new Offer(List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
+                makerNetworkId, bidAsset, askAsset);
+        networkService.addData(offer);
+    }
+
+    public void newOpenOffer(Offer offer) {
+        OpenOffer openOffer = new OpenOffer(offer);
+        openOffers.add(openOffer);
+        //  Persistence.write(openOffers);
+    }
+
+    public void shutdown() {
+
+    }
 }

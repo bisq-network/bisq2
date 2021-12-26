@@ -20,7 +20,7 @@ package network.misq.network;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.configuration.MisqConfig;
+import network.misq.common.MisqConfig;
 import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.util.NetworkUtils;
 import network.misq.network.http.HttpService;
@@ -51,7 +51,7 @@ import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static network.misq.common.configuration.MisqConfig.NETWORK_IO_POOL_CONFIG_PATH;
+import static network.misq.common.MisqConfig.NETWORK_IO_POOL_CONFIG_PATH;
 
 /**
  * High level API for network access to p2p network as well to http services (over Tor). If user has only I2P selected
