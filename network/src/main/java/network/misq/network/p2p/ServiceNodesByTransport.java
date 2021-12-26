@@ -22,7 +22,6 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.authorization.UnrestrictedAuthorizationService;
 import network.misq.network.p2p.node.transport.Transport;
@@ -33,7 +32,6 @@ import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
-import network.misq.network.p2p.services.peergroup.SeedNodeRepository;
 import network.misq.security.KeyPairRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,32 +51,20 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class ServiceNodesByTransport {
     private static final Logger log = LoggerFactory.getLogger(ServiceNodesByTransport.class);
 
     private final Map<Transport.Type, ServiceNode> map = new ConcurrentHashMap<>();
-    private final Transport.Config transportConfig;
-    private final Set<Transport.Type> supportedTransportTypes;
-    private final ServiceNode.Config serviceNodeConfig;
-    private final Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport;
-    private final SeedNodeRepository seedNodeRepository;
-    private final DataService.Config dataServiceConfig;
-    private final KeyPairRepository keyPairRepository;
 
     public ServiceNodesByTransport(Transport.Config transportConfig,
                                    Set<Transport.Type> supportedTransportTypes,
                                    ServiceNode.Config serviceNodeConfig,
                                    Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
-                                   SeedNodeRepository seedNodeRepository,
+                                   Map<Transport.Type, List<Address>> seedAddressesByTransport,
                                    DataService.Config dataServiceConfig,
                                    KeyPairRepository keyPairRepository) {
-        this.transportConfig = transportConfig;
-        this.supportedTransportTypes = supportedTransportTypes;
-        this.serviceNodeConfig = serviceNodeConfig;
-        this.peerGroupServiceConfigByTransport = peerGroupServiceConfigByTransport;
-        this.seedNodeRepository = seedNodeRepository;
-        this.dataServiceConfig = dataServiceConfig;
-        this.keyPairRepository = keyPairRepository;
 
         long socketTimeout = TimeUnit.MINUTES.toMillis(5);
         supportedTransportTypes.forEach(transportType -> {
@@ -88,14 +74,15 @@ public class ServiceNodesByTransport {
                     transportConfig,
                     (int) socketTimeout);
 
-            List<Address> seedNodeAddresses = seedNodeRepository.addressesByTransportType().get(transportType);
+            List<Address> seedAddresses = seedAddressesByTransport.get(transportType);
+            checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
             PeerGroupService.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
             ServiceNode serviceNode = new ServiceNode(serviceNodeConfig,
                     nodeConfig,
                     peerGroupServiceConfig,
                     dataServiceConfig,
                     keyPairRepository,
-                    seedNodeAddresses);
+                    seedAddresses);
             map.put(transportType, serviceNode);
         });
     }

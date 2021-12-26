@@ -18,4 +18,9 @@
 package network.misq.offer;
 
 public class OpenOffer {
+    private final Offer offer;
+
+    public OpenOffer(Offer offer) {
+        this.offer = offer;
+    }
 }

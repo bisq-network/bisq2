@@ -18,10 +18,13 @@
 package network.misq.network.p2p.services.data;
 
 import lombok.extern.slf4j.Slf4j;
+import network.misq.common.util.OsUtils;
+import network.misq.network.NetworkServiceConfigFactory;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.monitor.MultiNodesSetup;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,11 +38,15 @@ public abstract class DataServiceNodeBase {
     protected MultiNodesSetup multiNodesSetup;
 
     protected Map<Transport.Type, List<Address>> bootstrapMultiNodesSetup(Set<Transport.Type> transports, int numSeeds, int numNodes) {
-        Stream<Address> seeds = transports.stream().flatMap(transport -> MultiNodesSetup.getSeedAddresses(transport, numSeeds).stream());
-        Stream<Address> nodes = transports.stream().flatMap(transport -> MultiNodesSetup.getNodeAddresses(transport, numNodes).stream());
+        String baseDir = OsUtils.getUserDataDir() + File.separator + "misq_MultiNodes";
+        NetworkServiceConfigFactory networkServiceConfigFactory = new NetworkServiceConfigFactory(baseDir);
+        multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory.get(), transports, false);
+
+        Stream<Address> seeds = transports.stream().flatMap(transport -> multiNodesSetup.getSeedAddresses(transport, numSeeds).stream());
+        Stream<Address> nodes = transports.stream().flatMap(transport -> multiNodesSetup.getNodeAddresses(transport, numNodes).stream());
         Optional<List<Address>> addressesToBootstrap = Optional.of(Stream.concat(seeds, nodes).collect(Collectors.toList()));
-        multiNodesSetup = new MultiNodesSetup(transports, false, addressesToBootstrap);
-        return multiNodesSetup.bootstrap(0);
+
+        return multiNodesSetup.bootstrap(addressesToBootstrap, 0);
     }
 
     public CompletableFuture<List<Void>> shutdown() {

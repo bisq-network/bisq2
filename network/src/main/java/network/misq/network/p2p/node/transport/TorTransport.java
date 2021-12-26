@@ -34,7 +34,7 @@ public class TorTransport implements Transport {
     }
 
     public TorTransport(Config config) {
-        torDirPath = config.baseDirPath() + separator + "tor";
+        torDirPath = config.baseDir() + separator + "tor";
         log.info("TorTransport using torDirPath: {}", torDirPath);
         // We get a singleton instance per application (torDirPath)
         tor = Tor.getTor(torDirPath);

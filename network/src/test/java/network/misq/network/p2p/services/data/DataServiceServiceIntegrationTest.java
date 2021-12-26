@@ -23,7 +23,6 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.storage.auth.MockAuthenticatedPayload;
-import network.misq.network.p2p.services.monitor.MultiNodesSetup;
 import network.misq.network.p2p.services.peergroup.PeerGroup;
 import network.misq.security.KeyGeneration;
 import org.junit.jupiter.api.Test;
@@ -77,7 +76,7 @@ public class DataServiceServiceIntegrationTest extends DataServiceNodeBase {
         dataService_1.addDataListener(new DataListener() {
             @Override
             public void onNetworkDataAdded(NetworkPayload networkPayload) {
-                log.error("onNetworkDataAdded at dataService_1");
+                log.info("onNetworkDataAdded at dataService_1");
                 latch.countDown();
             }
 
@@ -110,7 +109,7 @@ public class DataServiceServiceIntegrationTest extends DataServiceNodeBase {
 
         Map<Transport.Type, List<Address>> allNodes = bootstrapMultiNodesSetup(Set.of(type), numSeeds, numNodes);
 
-        List<Address> nodes = MultiNodesSetup.getNodeAddresses(type, numNodes);
+        List<Address> nodes = multiNodesSetup.getNodeAddresses(type, numNodes);
         List<DataService> dataServices = multiNodesSetup.getNetworkServicesByAddress().entrySet().stream()
                 .filter(e -> nodes.contains(e.getKey()))
                 .map(Map.Entry::getValue)
