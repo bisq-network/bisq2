@@ -25,8 +25,8 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
-import network.misq.network.p2p.services.broadcast.BroadcastResult;
-import network.misq.network.p2p.services.broadcast.Broadcaster;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
+import network.misq.network.p2p.services.data.broadcast.Broadcaster;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.InventoryRequestHandler;
 import network.misq.network.p2p.services.data.inventory.InventoryResponseHandler;
@@ -46,8 +46,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
-import static java.util.concurrent.CompletableFuture.runAsync;
-
 /**
  * Preliminary ideas:
  * Use an ephemeral ID (key) for mailbox msg so a receiver can pick the right msg to decode.
@@ -65,6 +63,12 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 public class DataService implements Node.Listener {
     private static final long BROADCAST_TIMEOUT = 90;
 
+    public interface Listener {
+        void onNetworkDataAdded(NetworkPayload networkPayload);
+
+        void onNetworkDataRemoved(NetworkPayload networkPayload);
+    }
+
     public static record Config(String baseDir) {
     }
 
@@ -75,7 +79,7 @@ public class DataService implements Node.Listener {
     private final KeyPairRepository keyPairRepository;
     private final Storage storage;
     private final Broadcaster broadcaster;
-    private final Set<DataListener> dataListeners = new CopyOnWriteArraySet<>();
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<String, InventoryResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, InventoryRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
 
@@ -89,17 +93,16 @@ public class DataService implements Node.Listener {
         broadcaster.addMessageListener(this);
 
         keyPairRepository.getOrCreateKeyPair(KeyPairRepository.DEFAULT);
-        // node.addListener(this);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Node.Listener
+    // Node.Listener at Broadcaster
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onMessage(Message message, Connection connection, String nodeId) {
-        if (dataListeners.isEmpty()) {
+        if (listeners.isEmpty()) {
             return;
         }
 
@@ -107,9 +110,8 @@ public class DataService implements Node.Listener {
             storage.addRequest(addDataRequest)
                     .whenComplete((optionalData, throwable) -> {
                         optionalData.ifPresent(networkData -> {
-                            runAsync(() -> dataListeners.forEach(listener -> {
-                                listener.onNetworkDataAdded(networkData);
-                            }));
+                             listeners.forEach(listener -> listener.onNetworkDataAdded(networkData));
+                             broadcaster.reBroadcast(addDataRequest);
                         });
                     });
         } else if (message instanceof RemoveDataRequest removeDataRequest) {
@@ -200,12 +202,12 @@ public class DataService implements Node.Listener {
                 });
     }
 
-    public void addDataListener(DataListener listener) {
-        dataListeners.add(listener);
+    public void addListener(Listener listener) {
+        listeners.add(listener);
     }
 
-    public void removeDataListener(DataListener listener) {
-        dataListeners.remove(listener);
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
     }
 
 
@@ -243,7 +245,7 @@ public class DataService implements Node.Listener {
     }
 
     public CompletableFuture<Void> shutdown() {
-        dataListeners.clear();
+        listeners.clear();
         //todo
         broadcaster.shutdown();
         storage.shutdown();

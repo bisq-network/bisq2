@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.OsUtils;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.broadcast.BroadcastResult;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.storage.auth.MockAuthenticatedPayload;
 import network.misq.network.p2p.services.peergroup.PeerGroup;
 import network.misq.security.KeyGeneration;
@@ -73,7 +73,7 @@ public class DataServiceServiceIntegrationTest extends DataServiceNodeBase {
         DataService dataService_2 = dataServices.get(2);
 
         CountDownLatch latch = new CountDownLatch(2);
-        dataService_1.addDataListener(new DataListener() {
+        dataService_1.addListener(new DataService.Listener() {
             @Override
             public void onNetworkDataAdded(NetworkPayload networkPayload) {
                 log.info("onNetworkDataAdded at dataService_1");
@@ -84,7 +84,7 @@ public class DataServiceServiceIntegrationTest extends DataServiceNodeBase {
             public void onNetworkDataRemoved(NetworkPayload networkPayload) {
             }
         });
-        dataService_2.addDataListener(new DataListener() {
+        dataService_2.addListener(new DataService.Listener() {
             @Override
             public void onNetworkDataAdded(NetworkPayload networkPayload) {
                 log.info("onNetworkDataAdded at dataService_2");

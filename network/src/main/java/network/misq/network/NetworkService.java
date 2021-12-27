@@ -32,7 +32,7 @@ import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.broadcast.BroadcastResult;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
@@ -158,6 +158,14 @@ public class NetworkService {
         return serviceNodesByTransport.addNetworkPayload(networkPayload, keyPair);
     }
 
+    public void addDataServiceListener(DataService.Listener listener) {
+        serviceNodesByTransport.addDataServiceListener(listener);
+    }
+
+    public void removeDataServiceListener(DataService.Listener listener) {
+        serviceNodesByTransport.removeDataServiceListener(listener);
+    }
+
     public void addMessageListener(Node.Listener listener) {
         serviceNodesByTransport.addMessageListener(listener);
     }
@@ -182,7 +190,7 @@ public class NetworkService {
         return serviceNodesByTransport.findMyAddresses(transport, nodeId);
     }
 
-    public Optional<Address> findMyDefaultAddresses(Transport.Type transport) {
+    public Optional<Address> findMyDefaultAddress(Transport.Type transport) {
         return serviceNodesByTransport.findMyAddresses(transport, Node.DEFAULT_NODE_ID);
     }
 

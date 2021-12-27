@@ -53,7 +53,7 @@ public class NetworkServiceConfigFactory {
         //todo apply networkConfig
         //todo use option parser lib for args (define priority)
 
-        Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR/*, Transport.Type.TOR, Transport.Type.I2P*/);
+        Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
 
         ServiceNode.Config serviceNodeConfig = new ServiceNode.Config(Set.of(
                 ServiceNode.Service.CONFIDENTIAL,
@@ -70,14 +70,14 @@ public class NetworkServiceConfigFactory {
 
         Transport.Config transportConfig = new Transport.Config(baseDir);
 
-        PeerGroup.Config peerGroupConfig = new PeerGroup.Config(1, 16, 1);
+        PeerGroup.Config peerGroupConfig = new PeerGroup.Config(8, 16, 1);
         PeerExchangeStrategy.Config peerExchangeStrategyConfig = new PeerExchangeStrategy.Config(2, 10, 10);
         KeepAliveService.Config keepAliveServiceConfig = new KeepAliveService.Config(TimeUnit.SECONDS.toMillis(180), TimeUnit.SECONDS.toMillis(90));
         PeerGroupService.Config defaultConf = new PeerGroupService.Config(peerGroupConfig,
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
-                TimeUnit.SECONDS.toMillis(30),  // bootstrapTime
-                TimeUnit.SECONDS.toMillis(30),  // interval
+                TimeUnit.SECONDS.toMillis(5),  // bootstrapTime
+                TimeUnit.SECONDS.toMillis(5),  // interval
                 TimeUnit.SECONDS.toMillis(60),  // timeout
                 TimeUnit.HOURS.toMillis(2),     // maxAge
                 100,                        // maxReported
@@ -87,8 +87,8 @@ public class NetworkServiceConfigFactory {
         PeerGroupService.Config clearNetConf = new PeerGroupService.Config(peerGroupConfig,
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
-                TimeUnit.SECONDS.toMillis(2),  // bootstrapTime
-                TimeUnit.SECONDS.toMillis(2),  // interval
+                TimeUnit.SECONDS.toMillis(5),  // bootstrapTime
+                TimeUnit.SECONDS.toMillis(5),  // interval
                 TimeUnit.SECONDS.toMillis(60),  // timeout
                 TimeUnit.HOURS.toMillis(2),     // maxAge
                 100,                        // maxReported

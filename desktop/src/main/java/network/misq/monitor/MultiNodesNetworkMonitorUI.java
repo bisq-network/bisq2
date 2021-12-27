@@ -19,6 +19,7 @@ package network.misq.monitor;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -31,7 +32,6 @@ import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.data.Pair;
 import network.misq.common.util.OsUtils;
 import network.misq.common.util.StringUtils;
 import network.misq.desktop.common.threading.UIThread;
@@ -40,6 +40,7 @@ import network.misq.network.p2p.State;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
+import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.monitor.MultiNodesSetup;
 
 import java.io.File;
@@ -52,8 +53,9 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
     private FlowPane clearSeedButtonsPane, torSeedButtonsPane, i2pSeedButtonsPane, clearNodeButtonsPane, torNodeButtonsPane, i2pNodeButtonsPane;
     private TextArea nodeInfoTextArea, networkInfoTextArea;
     private Optional<Address> selected = Optional.empty();
-    private final Map<Address, Pair<Button, Transport.Type>> buttonsByAddress = new HashMap<>();
+    private final Map<Address, NodeInfoBox> nodeInfoBoxByAddress = new HashMap<>();
     private TextField fromTf;
+    private ObservableList<String> defaultButtonStyle;
 
     @Override
     public void start(Stage primaryStage) {
@@ -117,7 +119,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
 
 
         fromTf = new TextField("localhost:9000");
-        TextField toTf = new TextField("localhost:9001");
+        TextField toTf = new TextField("localhost:9033");
         // TextField nodeIdTf = new TextField("mock node id");
         TextField nodeIdTf = new TextField(Node.DEFAULT_NODE_ID);
         TextField msgTf = new TextField("Test message");
@@ -127,10 +129,17 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
                 nodeIdTf.getText(),
                 msgTf.getText()));
 
+        Button resetButton = new Button("Reset");
+        resetButton.setOnAction(e -> nodeInfoBoxByAddress.values().forEach(NodeInfoBox::reset));
+
         HBox sendMsgBox = new HBox(10);
         sendMsgBox.setStyle(bgStyle);
         sendMsgBox.setPadding(padding);
-        sendMsgBox.getChildren().addAll(fromTf, toTf, nodeIdTf, msgTf, sendButton);
+        sendMsgBox.getChildren().addAll(new Label("From: "), fromTf,
+                new Label("To: "), toTf,
+                new Label("Node ID: "), nodeIdTf,
+                new Label("Message: "), msgTf,
+                sendButton, resetButton);
 
 
         VBox vBox = new VBox(10);
@@ -180,7 +189,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
         multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory.get(), transports, bootstrapAll);
         multiNodesSetup.addNetworkInfoConsumer(this);
         multiNodesSetup.bootstrap(addressesToBootstrap, 100)
-                .forEach((transportType, addresses) -> addresses.forEach(address -> addButton(address, transportType)));
+                .forEach((transportType, addresses) -> addresses.forEach(address -> addNodeInfoBox(address, transportType)));
     }
 
     @Override
@@ -208,33 +217,48 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
 
     @Override
     public void onStateChange(Address address, State networkServiceState) {
-        UIThread.run(() -> Optional.ofNullable(buttonsByAddress.get(address)).ifPresent(buttonInfo -> {
-            Button button = buttonInfo.first();
-            button.setText(getTitle(address, buttonInfo.second()) + " [" + networkServiceState.name() + "]");
-            button.setDefaultButton(networkServiceState == State.BOOTSTRAPPED);
+        UIThread.run(() -> Optional.ofNullable(nodeInfoBoxByAddress.get(address)).ifPresent(nodeInfoBox -> {
+            nodeInfoBox.onStateChange(networkServiceState);
+            nodeInfoBox.setDefaultButton(networkServiceState == State.BOOTSTRAPPED);
+        }));
+    }
 
+    @Override
+    public void onMessage(Address address) {
+        UIThread.run(() -> Optional.ofNullable(nodeInfoBoxByAddress.get(address)).ifPresent(buttonInfo -> {
             selected.filter(addr -> addr.equals(address))
                     .ifPresent(addr -> updateNodeInfo(address, Transport.Type.from(address)));
         }));
     }
 
-    private void addButton(Address address, Transport.Type transportType) {
+
+    @Override
+    public void onData(Address address, NetworkPayload networkPayload) {
+        UIThread.run(() -> Optional.ofNullable(nodeInfoBoxByAddress.get(address)).ifPresent(buttonInfo -> {
+            selected.filter(addr -> addr.equals(address))
+                    .ifPresent(addr -> updateNodeInfo(address, Transport.Type.from(address)));
+            NodeInfoBox nodeInfoBox = nodeInfoBoxByAddress.get(address);
+            nodeInfoBox.onData(networkPayload);
+        }));
+    }
+
+    private void addNodeInfoBox(Address address, Transport.Type transportType) {
         UIThread.run(() -> {
-            Button button = new Button(getTitle(address, transportType));
-            button.setUserData(address);
-            button.setOnAction(e -> onButtonClicked(address, transportType));
-            buttonsByAddress.put(address, new Pair<>(button, transportType));
+            boolean isSeed = multiNodesSetup.isSeed(address, transportType);
+            NodeInfoBox nodeInfoBox = new NodeInfoBox(address, transportType, isSeed);
+            nodeInfoBox.setOnAction(e -> onButtonClicked(address, transportType));
+            nodeInfoBoxByAddress.put(address, nodeInfoBox);
             if (multiNodesSetup.isSeed(address, transportType)) {
                 switch (transportType) {
-                    case TOR -> torSeedButtonsPane.getChildren().add(button);
-                    case I2P -> i2pSeedButtonsPane.getChildren().add(button);
-                    case CLEAR -> clearSeedButtonsPane.getChildren().add(button);
+                    case TOR -> torSeedButtonsPane.getChildren().add(nodeInfoBox);
+                    case I2P -> i2pSeedButtonsPane.getChildren().add(nodeInfoBox);
+                    case CLEAR -> clearSeedButtonsPane.getChildren().add(nodeInfoBox);
                 }
             } else {
                 switch (transportType) {
-                    case TOR -> torNodeButtonsPane.getChildren().add(button);
-                    case I2P -> i2pNodeButtonsPane.getChildren().add(button);
-                    case CLEAR -> clearNodeButtonsPane.getChildren().add(button);
+                    case TOR -> torNodeButtonsPane.getChildren().add(nodeInfoBox);
+                    case I2P -> i2pNodeButtonsPane.getChildren().add(nodeInfoBox);
+                    case CLEAR -> clearNodeButtonsPane.getChildren().add(nodeInfoBox);
                 }
             }
         });

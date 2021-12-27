@@ -15,10 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.data;
+package network.misq.network.p2p.services.data.broadcast;
 
-public interface DataListener {
-    void onNetworkDataAdded(NetworkPayload networkPayload);
-
-    void onNetworkDataRemoved(NetworkPayload networkPayload);
+public record BroadcastResult(int numSuccess, int numFaults, long duration) {
 }

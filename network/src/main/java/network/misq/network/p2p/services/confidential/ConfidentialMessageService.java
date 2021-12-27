@@ -26,7 +26,7 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.NodesById;
-import network.misq.network.p2p.services.broadcast.BroadcastResult;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;

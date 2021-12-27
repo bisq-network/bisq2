@@ -26,7 +26,7 @@ import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.NodesById;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.broadcast.BroadcastResult;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
@@ -225,6 +225,13 @@ public class ServiceNode {
         return defaultNode.getSocksProxy();
     }
 
+    public void addDataServiceListener(DataService.Listener listener) {
+        dataService.ifPresent(dataService -> dataService.addListener(listener));
+    }
+    public void removeDataServiceListener(DataService.Listener listener) {
+        dataService.ifPresent(dataService -> dataService.removeListener(listener));
+    }
+    
     public void addMessageListener(Node.Listener listener) {
         confidentialMessageService.ifPresent(service -> service.addMessageListener(listener));
     }

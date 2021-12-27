@@ -79,7 +79,9 @@ public class Storage {
                     if (result.isSuccess()) {
                         return Optional.of(payload);
                     } else {
-                        log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
+                        if (!result.isRequestAlreadyReceived()) {
+                            log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
+                        }
                         return Optional.empty();
                     }
                 });
@@ -93,7 +95,9 @@ public class Storage {
                     if (result.isSuccess()) {
                         return Optional.of(payload);
                     } else {
-                        log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
+                        if (!result.isRequestAlreadyReceived()) {
+                            log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
+                        }
                         return Optional.empty();
                     }
                 });

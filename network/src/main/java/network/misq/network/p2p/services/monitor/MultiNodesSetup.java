@@ -32,6 +32,8 @@ import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
+import network.misq.network.p2p.services.data.DataService;
+import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import network.misq.security.KeyPairRepository;
@@ -47,6 +49,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.concurrent.CompletableFuture.runAsync;
+
 @Slf4j
 public class MultiNodesSetup {
 
@@ -54,6 +58,10 @@ public class MultiNodesSetup {
         void onConnectionStateChange(Transport.Type transportType, Address address, String networkInfo);
 
         void onStateChange(Address address, State networkServiceState);
+
+        void onMessage(Address address);
+
+        void onData(Address address, NetworkPayload networkPayload);
     }
 
     public record MockMailBoxMessage(String message) implements MailboxMessage {
@@ -69,7 +77,7 @@ public class MultiNodesSetup {
     private final boolean bootstrapAll;
     private Optional<List<Address>> addressesToBootstrap = Optional.empty();
     private final KeyPairRepository keyPairRepository;
-    private final int numSeeds = 2;
+    private final int numSeeds = 8;
     private final int numNodes = 20;
     @Getter
     private final Map<Address, NetworkService> networkServicesByAddress = new ConcurrentHashMap<>();
@@ -81,7 +89,7 @@ public class MultiNodesSetup {
 
     public MultiNodesSetup(NetworkService.Config networkServiceConfig, Set<Transport.Type> supportedTransportTypes,
                            boolean bootstrapAll) {
-        this.networkServiceConfig = cloneWithLimitedSeeds(networkServiceConfig, numSeeds);
+        this.networkServiceConfig = cloneWithLimitedSeeds(networkServiceConfig, numSeeds, supportedTransportTypes);
         this.supportedTransportTypes = supportedTransportTypes;
         this.bootstrapAll = bootstrapAll;
 
@@ -149,20 +157,22 @@ public class MultiNodesSetup {
     }
 
     public void send(Address senderAddress, Address receiverAddress, String nodeId, String message) {
-        String senderKeyId = senderAddress + nodeId;
-        KeyPair senderKeyPair = keyPairRepository.getOrCreateKeyPair(senderKeyId);
-        String receiverKeyId = receiverAddress + nodeId;
-        KeyPair receiverKeyPair = keyPairRepository.getOrCreateKeyPair(receiverKeyId);
-        NetworkId receiverNetworkId = new NetworkId(Map.of(Transport.Type.from(receiverAddress), receiverAddress),
-                new PubKey(receiverKeyPair.getPublic(), receiverKeyId),
-                nodeId);
-        NetworkId senderNetworkId = new NetworkId(Map.of(Transport.Type.from(senderAddress), senderAddress),
-                new PubKey(senderKeyPair.getPublic(), senderKeyId),
-                nodeId);
-        send(senderNetworkId, receiverNetworkId, senderKeyPair, message);
+        runAsync(() -> {
+            String senderKeyId = senderAddress + nodeId;
+            KeyPair senderKeyPair = keyPairRepository.getOrCreateKeyPair(senderKeyId);
+            String receiverKeyId = receiverAddress + nodeId;
+            KeyPair receiverKeyPair = keyPairRepository.getOrCreateKeyPair(receiverKeyId);
+            NetworkId receiverNetworkId = new NetworkId(Map.of(Transport.Type.from(receiverAddress), receiverAddress),
+                    new PubKey(receiverKeyPair.getPublic(), receiverKeyId),
+                    nodeId);
+            NetworkId senderNetworkId = new NetworkId(Map.of(Transport.Type.from(senderAddress), senderAddress),
+                    new PubKey(senderKeyPair.getPublic(), senderKeyId),
+                    nodeId);
+            send(senderNetworkId, receiverNetworkId, senderKeyPair, message);
+        });
     }
 
-    public void send(NetworkId senderNetworkId, NetworkId receiverNetworkId, KeyPair senderKeyPair, String message) {
+    private void send(NetworkId senderNetworkId, NetworkId receiverNetworkId, KeyPair senderKeyPair, String message) {
         NetworkService senderNetworkService = senderNetworkId.addressByNetworkType().entrySet().stream()
                 .map(e -> getOrCreateNetworkService(e.getValue(), e.getKey()))
                 .findAny()
@@ -178,7 +188,7 @@ public class MultiNodesSetup {
                         type.toString().substring(0, 3) + "  onReceived   " +
                         connection.getPeerAddress() + " --> " + receiverAddress + " " + msg.toString();
                 appendToHistory(receiverAddress, newLine);
-                handler.ifPresent(handler -> handler.onStateChange(receiverAddress, receiverNetworkService.state));
+                handler.ifPresent(handler -> handler.onMessage(receiverAddress));
                 receiverNetworkService.removeMessageListener(sendMsgListener);
             };
             receiverNetworkService.addMessageListener(sendMsgListener);
@@ -194,7 +204,7 @@ public class MultiNodesSetup {
                                 senderAddress + " --> " + receiverNetworkId.addressByNetworkType().get(type) + " " +
                                 mailBoxMessage + ", Result: " + result;
                         appendToHistory(senderAddress, newLine);
-                        handler.ifPresent(handler -> handler.onStateChange(senderAddress, senderNetworkService.state));
+                        handler.ifPresent(handler -> handler.onMessage(senderAddress));
                     });
                 });
     }
@@ -253,6 +263,35 @@ public class MultiNodesSetup {
                 }
             });
         });
+
+        networkService.addDataServiceListener(new DataService.Listener() {
+            @Override
+            public void onNetworkDataAdded(NetworkPayload networkPayload) {
+                onNetworkDataChanged(networkService, networkPayload, transportType, true);
+            }
+
+            @Override
+            public void onNetworkDataRemoved(NetworkPayload networkPayload) {
+                onNetworkDataChanged(networkService, networkPayload, transportType, false);
+            }
+        });
+
+    }
+
+    private void onNetworkDataChanged(NetworkService networkService,
+                                      NetworkPayload networkPayload,
+                                      Transport.Type transportType,
+                                      boolean wasAdded) {
+        StringBuilder sb = new StringBuilder("\n");
+        Address address = networkService.findMyDefaultAddress(transportType).get();
+        sb.append(getTimestamp())
+                .append(" ").append(transportType.name(), 0, 3)
+                .append(wasAdded ? " +onDataAdded " : " -onDataRemoved ")
+                .append(address)
+                .append(" networkPayload=").append(networkPayload);
+        String newLine = sb.toString();
+        appendToHistory(address, newLine);
+        handler.ifPresent(handler -> handler.onData(address, networkPayload));
     }
 
     private void onConnectionStateChanged(Transport.Type transportType, Connection connection, Node node, Optional<CloseReason> closeReason) {
@@ -266,7 +305,6 @@ public class MultiNodesSetup {
                     .append(connection.getPeerAddress().toString().replace("]", connection.isPeerAddressVerified() ? " !]" : " ?]"))
                     .append(closeReason.map(r -> ", " + r).orElse(""));
             String newLine = sb.toString();
-
             appendToHistory(address, newLine);
             handler.ifPresent(handler -> handler.onConnectionStateChange(transportType, address, newLine));
         });
@@ -321,14 +359,16 @@ public class MultiNodesSetup {
         this.handler = Optional.of(handler);
     }
 
-    private NetworkService.Config cloneWithLimitedSeeds(NetworkService.Config networkServiceConfig, int numSeeds) {
+    private NetworkService.Config cloneWithLimitedSeeds(NetworkService.Config networkServiceConfig,
+                                                        int numSeeds,
+                                                        Set<Transport.Type> supportedTransportTypes) {
 
         Map<Transport.Type, List<Address>> seeds = networkServiceConfig.seedAddressesByTransport().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         e -> e.getValue().stream().limit(numSeeds).collect(Collectors.toList())));
         return new NetworkService.Config(networkServiceConfig.baseDir(),
                 networkServiceConfig.transportConfig(),
-                networkServiceConfig.supportedTransportTypes(),
+                supportedTransportTypes,
                 networkServiceConfig.serviceNodeConfig(),
                 networkServiceConfig.peerGroupServiceConfigByTransport(),
                 seeds,

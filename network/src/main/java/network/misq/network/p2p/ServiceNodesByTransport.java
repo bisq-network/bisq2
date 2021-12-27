@@ -25,7 +25,7 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.authorization.UnrestrictedAuthorizationService;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.broadcast.BroadcastResult;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
@@ -198,6 +198,14 @@ public class ServiceNodesByTransport {
                         return Optional.empty();
                     }
                 });
+    }
+
+    public void addDataServiceListener(DataService.Listener listener) {
+        map.values().forEach(serviceNode -> serviceNode.addDataServiceListener(listener));
+    }
+
+    public void removeDataServiceListener(DataService.Listener listener) {
+        map.values().forEach(serviceNode -> serviceNode.removeDataServiceListener(listener));
     }
 
     public void addMessageListener(Node.Listener listener) {
