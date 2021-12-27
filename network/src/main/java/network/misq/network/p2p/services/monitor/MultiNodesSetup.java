@@ -101,7 +101,10 @@ public class MultiNodesSetup {
     }
 
 
-    public Map<Transport.Type, List<Address>> bootstrap(Optional<List<Address>> addressesToBootstrap, int delay) {
+    public Map<Transport.Type, List<Address>> bootstrap(Optional<List<Address>> addressesToBootstrap) {
+        int delay = supportedTransportTypes.contains(Transport.Type.TOR) || supportedTransportTypes.contains(Transport.Type.I2P) ?
+                1000 :
+                100;
         this.addressesToBootstrap = addressesToBootstrap;
         return supportedTransportTypes.stream()
                 .collect(Collectors.toMap(transportType -> transportType, transportType -> bootstrap(transportType, delay)));

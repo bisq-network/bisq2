@@ -26,10 +26,10 @@ import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.NodesById;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
@@ -135,7 +135,7 @@ public class ServiceNode {
 
     public CompletableFuture<Boolean> bootstrap(String nodeId, int serverPort) {
         return initializeServer(nodeId, serverPort)
-                .thenCompose(res -> {
+                .thenComposeAsync(res -> {
                     setState(State.BOOTSTRAPPING);
                     return initializePeerGroup();
                 })

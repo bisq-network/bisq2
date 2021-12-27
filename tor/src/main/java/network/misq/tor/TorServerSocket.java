@@ -28,12 +28,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static network.misq.tor.Constants.*;
 
 @Slf4j
@@ -60,18 +56,15 @@ public class TorServerSocket extends ServerSocket {
                                                      int localPort,
                                                      String id,
                                                      Executor executor) {
-        CompletableFuture<OnionAddress> future = new CompletableFuture<>();
-        executor.execute(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             Thread.currentThread().setName("TorServerSocket.bindAsync-" + id);
             try {
                 bind(hiddenServicePort, localPort, id);
-                checkArgument(onionAddress.isPresent(), "onionAddress must be present");
-                future.complete(onionAddress.get());
+                return onionAddress.orElseThrow(() -> new IllegalArgumentException("onionAddress must be present"));
             } catch (IOException | InterruptedException e) {
-                future.completeExceptionally(e);
+                throw new CompletionException(e);
             }
-        });
-        return future;
+        }, executor);
     }
 
     // Blocking

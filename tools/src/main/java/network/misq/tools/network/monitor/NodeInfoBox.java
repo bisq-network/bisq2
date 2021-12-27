@@ -80,7 +80,7 @@ public class NodeInfoBox extends VBox {
                 .replace("[", "")
                 .replace("]", ""));
         UIScheduler.run(() -> {
-            setStyle("-fx-background-color: #FFFFFF");
+            setStyle("-fx-background-color: #EEEEEE");
         }).after(2000);
     }
 

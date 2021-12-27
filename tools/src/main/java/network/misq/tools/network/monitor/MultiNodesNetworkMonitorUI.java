@@ -19,7 +19,6 @@ package network.misq.tools.network.monitor;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -45,6 +44,7 @@ import network.misq.network.p2p.services.monitor.MultiNodesSetup;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -55,7 +55,6 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
     private Optional<Address> selected = Optional.empty();
     private final Map<Address, NodeInfoBox> nodeInfoBoxByAddress = new HashMap<>();
     private TextField fromTf;
-    private ObservableList<String> defaultButtonStyle;
 
     @Override
     public void start(Stage primaryStage) {
@@ -119,8 +118,8 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
 
 
         fromTf = new TextField("localhost:9000");
-        TextField toTf = new TextField("localhost:9033");
-        // TextField nodeIdTf = new TextField("mock node id");
+        //TextField toTf = new TextField("localhost:9099");
+        TextField toTf = new TextField("l2takiyfs5d7nou7wwjomx3a4jxpn4fabtxfclgobrucnokms6j6liid.onion:2000");
         TextField nodeIdTf = new TextField(Node.DEFAULT_NODE_ID);
         TextField msgTf = new TextField("Test message");
         Button sendButton = new Button("Send");
@@ -186,10 +185,12 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
         String baseDir = OsUtils.getUserDataDir() + File.separator + "misq_MultiNodes";
         NetworkServiceConfigFactory networkServiceConfigFactory = new NetworkServiceConfigFactory(baseDir);
 
-        multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory.get(), transports, bootstrapAll);
-        multiNodesSetup.addNetworkInfoConsumer(this);
-        multiNodesSetup.bootstrap(addressesToBootstrap, 1000)
-                .forEach((transportType, addresses) -> addresses.forEach(address -> addNodeInfoBox(address, transportType)));
+        CompletableFuture.runAsync(() -> {
+            multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory.get(), transports, bootstrapAll);
+            multiNodesSetup.addNetworkInfoConsumer(this);
+            multiNodesSetup.bootstrap(addressesToBootstrap)
+                    .forEach((transportType, addresses) -> addresses.forEach(address -> addNodeInfoBox(address, transportType)));
+        });
     }
 
     @Override
@@ -225,10 +226,9 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
 
     @Override
     public void onMessage(Address address) {
-        UIThread.run(() -> Optional.ofNullable(nodeInfoBoxByAddress.get(address)).ifPresent(buttonInfo -> {
-            selected.filter(addr -> addr.equals(address))
-                    .ifPresent(addr -> updateNodeInfo(address, Transport.Type.from(address)));
-        }));
+        UIThread.run(() -> Optional.ofNullable(nodeInfoBoxByAddress.get(address))
+                .flatMap(buttonInfo -> selected.filter(addr -> addr.equals(address)))
+                .ifPresent(addr -> updateNodeInfo(address, Transport.Type.from(address))));
     }
 
 
@@ -248,7 +248,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
             NodeInfoBox nodeInfoBox = new NodeInfoBox(address, transportType, isSeed);
             nodeInfoBox.setOnAction(e -> onButtonClicked(address, transportType));
             nodeInfoBoxByAddress.put(address, nodeInfoBox);
-            if (multiNodesSetup.isSeed(address, transportType)) {
+            if (isSeed) {
                 switch (transportType) {
                     case TOR -> torSeedButtonsPane.getChildren().add(nodeInfoBox);
                     case I2P -> i2pSeedButtonsPane.getChildren().add(nodeInfoBox);
@@ -276,12 +276,12 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
         stop.setDisable(multiNodesSetup.findNetworkService(address).isEmpty());
 
         start.setOnAction((event) -> {
-            multiNodesSetup.bootstrap(address, transportType);
+            CompletableFuture.runAsync(() -> multiNodesSetup.bootstrap(address, transportType));
             start.setDisable(true);
             stop.setDisable(false);
         });
         stop.setOnAction((event) -> {
-            multiNodesSetup.shutdown(address);
+            CompletableFuture.runAsync(() -> multiNodesSetup.shutdown(address));
             stop.setDisable(true);
             start.setDisable(false);
         });

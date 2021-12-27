@@ -69,8 +69,8 @@ public class NetworkService {
     // maximumPoolSize sufficient headroom and use a rather short keepAliveTimeInSec.
     public static final ThreadPoolExecutor NETWORK_IO_POOL = ExecutorFactory.getThreadPoolExecutor("NETWORK_IO_POOL",
             10,
-            50000,
-            10,
+            5000,
+            1,
             new SynchronousQueue<>());
 
     public static record Config(String baseDir,

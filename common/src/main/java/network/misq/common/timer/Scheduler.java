@@ -32,7 +32,6 @@ public class Scheduler implements TaskScheduler {
     private Runnable task;
     private volatile boolean stopped;
     private Optional<ScheduledFuture<?>> future = Optional.empty();
-
     @Getter
     private long counter;
     private Optional<String> threadName = Optional.empty();
