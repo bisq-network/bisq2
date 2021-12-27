@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.monitor;
+package network.misq.tools.network.monitor;
 
 public class MultiNodesNetworkMonitorUIMain {
     public static void main(String[] args) {

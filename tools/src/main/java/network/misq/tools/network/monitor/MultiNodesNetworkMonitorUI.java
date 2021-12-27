@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.monitor;
+package network.misq.tools.network.monitor;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -188,7 +188,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
 
         multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory.get(), transports, bootstrapAll);
         multiNodesSetup.addNetworkInfoConsumer(this);
-        multiNodesSetup.bootstrap(addressesToBootstrap, 100)
+        multiNodesSetup.bootstrap(addressesToBootstrap, 1000)
                 .forEach((transportType, addresses) -> addresses.forEach(address -> addNodeInfoBox(address, transportType)));
     }
 
