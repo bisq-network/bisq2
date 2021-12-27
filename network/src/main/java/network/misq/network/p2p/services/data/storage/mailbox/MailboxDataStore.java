@@ -65,6 +65,7 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
 
         maxItems = MAX_INVENTORY_MAP_SIZE / metaData.getMaxSizeInBytes();
     }
+
     public CompletableFuture<Void> readPersisted() {
         return CompletableFuture.runAsync(() -> {
             if (new File(storageFilePath).exists()) {
@@ -84,6 +85,10 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
         ByteArray byteArray = new ByteArray(hash);
         MailboxRequest requestFromMap = map.get(byteArray);
         int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
+
+        if (request.equals(requestFromMap)) {
+            return new Result(false).requestAlreadyReceived();
+        }
 
         if (requestFromMap != null && data.isSequenceNrInvalid(sequenceNumberFromMap)) {
             return new Result(false).sequenceNrInvalid();

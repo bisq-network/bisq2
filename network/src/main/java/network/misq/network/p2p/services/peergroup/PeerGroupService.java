@@ -224,8 +224,6 @@ public class PeerGroupService {
         // The calculation how many connections we need is done inside PeerExchangeService/PeerExchangeStrategy
 
         int missingOutboundConnections = getMissingOutboundConnections();
-        var a = peerGroup.getMinOutboundConnections();
-        var b = peerGroup.getOutboundConnections().count();
         if (missingOutboundConnections <= 0) {
             // We have enough outbound connections, lets check if we have sufficient connections in total
             int numAllConnections = peerGroup.getNumConnections();

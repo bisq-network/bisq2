@@ -122,7 +122,7 @@ public abstract class Connection {
                         if (envelope.version() != Version.VERSION) {
                             throw new ConnectionException("Invalid network version. " + simpleName);
                         }
-                        log.debug("Received message: {} at: {}", envelope, toString());
+                        log.debug("Received message: {} at: {}", envelope.payload(), this);
                         metrics.received(envelope.payload());
                         handler.onMessage(envelope.payload(), this);
                     }
@@ -229,7 +229,7 @@ public abstract class Connection {
     public String toString() {
         return "'" + getClass().getSimpleName() + " [peerAddress=" + getPeersCapability().address() +
                 ", socket=" + socket +
-                ", id=" + getId() + "]'";
+                ", keyId=" + getId() + "]'";
     }
 
     private String getThreadNameId() {

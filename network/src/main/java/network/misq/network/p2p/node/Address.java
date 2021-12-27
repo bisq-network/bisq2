@@ -17,6 +17,7 @@
 
 package network.misq.network.p2p.node;
 
+import com.google.common.net.InetAddresses;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import network.misq.common.util.StringUtils;
@@ -47,6 +48,25 @@ public class Address implements Serializable {
     public Address(String host, int port) {
         this.host = maybeConvertLocalHost(host);
         this.port = port;
+    }
+
+
+    public boolean isClearNetAddress() {
+        //noinspection UnstableApiUsage
+        return InetAddresses.isInetAddress(host);
+    }
+
+    public boolean isTorAddress() {
+        return host.endsWith(".onion");
+    }
+
+    public boolean isI2pAddress() {
+        //TODO
+        return !isClearNetAddress() && !isTorAddress();
+    }
+
+    public String getFullAddress() {
+        return host + ":" + port;
     }
 
     @Override

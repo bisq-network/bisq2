@@ -19,5 +19,5 @@ package network.misq.security;
 
 import java.security.PublicKey;
 
-public record PubKey(PublicKey publicKey, String id) {
+public record PubKey(PublicKey publicKey, String keyId) {
 }

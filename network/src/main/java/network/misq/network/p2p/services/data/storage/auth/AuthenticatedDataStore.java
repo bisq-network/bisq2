@@ -91,8 +91,13 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
         AuthenticatedPayload payload = data.getPayload();
         byte[] hash = DigestUtil.hash(payload.serialize());
         ByteArray byteArray = new ByteArray(hash);
-        AuthenticatedDataRequest dataRequest = map.get(byteArray);
-        if (dataRequest != null && data.isSequenceNrInvalid(dataRequest.getSequenceNumber())) {
+        AuthenticatedDataRequest requestFromMap = map.get(byteArray);
+
+        if (request.equals(requestFromMap)) {
+            return new Result(false).requestAlreadyReceived();
+        }
+        
+        if (requestFromMap != null && data.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
             return new Result(false).sequenceNrInvalid();
         }
 

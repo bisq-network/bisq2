@@ -88,11 +88,12 @@ public class Node implements Connection.Handler {
     private final Map<Address, OutboundConnection> outboundConnectionsByAddress = new ConcurrentHashMap<>();
     @Getter
     private final Map<Address, InboundConnection> inboundConnectionsByAddress = new ConcurrentHashMap<>();
-    @Getter private final Transport.Type transportType;
+    @Getter
+    private final Transport.Type transportType;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<String, ConnectionHandshake> connectionHandshakes = new ConcurrentHashMap<>();
     private Optional<Server> server = Optional.empty();
-    private Optional<Capability> myCapability;
+    private Optional<Capability> myCapability = Optional.empty();
     private volatile boolean isStopped;
 
     public Node(BanList banList, Config config, String nodeId) {

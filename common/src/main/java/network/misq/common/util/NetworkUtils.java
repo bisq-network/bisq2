@@ -17,8 +17,6 @@
 
 package network.misq.common.util;
 
-import com.google.common.net.InetAddresses;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Random;
@@ -33,19 +31,5 @@ public class NetworkUtils {
         } catch (IOException ignored) {
             return new Random().nextInt(10000) + 50000;
         }
-    }
-
-    public static boolean isClearNetAddress(String host) {
-        //noinspection UnstableApiUsage
-        return InetAddresses.isInetAddress(host);
-    }
-
-    public static boolean isTorAddress(String host) {
-        return host.endsWith(".onion");
-    }
-
-    public static boolean isI2pAddress(String host) {
-        //TODO
-        return !isClearNetAddress(host) && !isTorAddress(host);
     }
 }

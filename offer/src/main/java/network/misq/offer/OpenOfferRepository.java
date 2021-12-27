@@ -55,7 +55,7 @@ public class OpenOfferRepository {
 
     public void createNewOffer(long askAmount) {
         Map<Transport.Type, Address> map = Map.of(Transport.Type.CLEAR, Address.localHost(3333));
-        NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"));
+        NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"), "default");
         Asset askAsset = new Asset(Coin.asBtc(askAmount), List.of(), AssetTransfer.Type.MANUAL);
         Asset bidAsset = new Asset(Fiat.of(5000, "USD"), List.of(FiatTransfer.ZELLE), AssetTransfer.Type.MANUAL);
         Offer offer = new Offer(List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),

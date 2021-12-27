@@ -23,7 +23,7 @@ import network.misq.contract.TwoPartyContract;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Connection;
-import network.misq.network.p2p.services.confidential.ConfidentialService;
+import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.protocol.SecurityProvider;
 import network.misq.protocol.multiSig.MultiSig;
 import network.misq.protocol.multiSig.MultiSigProtocol;
@@ -75,7 +75,7 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
         return CompletableFuture.completedFuture(true);
     }
 
-    private CompletableFuture<ConfidentialService.Result> onFundsSent() {
+    private CompletableFuture<ConfidentialMessageService.Result> onFundsSent() {
         setState(State.FUNDS_SENT);
         return multiSig.createPartialPayoutTx()
                 .thenCompose(multiSig::getPayoutTxSignature)

@@ -20,9 +20,11 @@ package network.misq.network.p2p.services.monitor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.timer.Scheduler;
+import network.misq.common.util.ByteUnit;
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.common.util.MathUtils;
 import network.misq.network.NetworkService;
+import network.misq.network.p2p.NetworkId;
 import network.misq.network.p2p.State;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
@@ -30,21 +32,44 @@ import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
+import network.misq.network.p2p.services.data.DataService;
+import network.misq.network.p2p.services.data.NetworkPayload;
+import network.misq.network.p2p.services.data.storage.MetaData;
+import network.misq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import network.misq.security.KeyPairRepository;
+import network.misq.security.PubKey;
 
 import java.io.File;
+import java.security.KeyPair;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.concurrent.CompletableFuture.runAsync;
+
 @Slf4j
 public class MultiNodesSetup {
+
     public interface Handler {
         void onConnectionStateChange(Transport.Type transportType, Address address, String networkInfo);
 
         void onStateChange(Address address, State networkServiceState);
+
+        void onMessage(Address address);
+
+        void onData(Address address, NetworkPayload networkPayload);
+    }
+
+    public record MockMailBoxMessage(String message) implements MailboxMessage {
+        @Override
+        public MetaData getMetaData() {
+            double v = ByteUnit.KIB.toBytes(1);
+            return new MetaData(TimeUnit.MINUTES.toMillis(1), (int) v, "MockMailBoxMessage");
+        }
     }
 
     private final NetworkService.Config networkServiceConfig;
@@ -55,15 +80,16 @@ public class MultiNodesSetup {
     private final int numSeeds = 8;
     private final int numNodes = 20;
     @Getter
-    private final Map<Address, NetworkService> networkServicesByAddress = new HashMap<>();
-    private final Map<Address, String> connectionHistoryByAddress = new HashMap<>();
+    private final Map<Address, NetworkService> networkServicesByAddress = new ConcurrentHashMap<>();
+    private final Map<Address, String> logHistoryByAddress = new ConcurrentHashMap<>();
     private final Map<Transport.Type, List<Address>> seedAddressesByTransport;
 
     private Optional<Handler> handler = Optional.empty();
+    private Node.Listener sendMsgListener;
 
     public MultiNodesSetup(NetworkService.Config networkServiceConfig, Set<Transport.Type> supportedTransportTypes,
                            boolean bootstrapAll) {
-        this.networkServiceConfig = cloneWithLimitedSeeds(networkServiceConfig, numSeeds);
+        this.networkServiceConfig = cloneWithLimitedSeeds(networkServiceConfig, numSeeds, supportedTransportTypes);
         this.supportedTransportTypes = supportedTransportTypes;
         this.bootstrapAll = bootstrapAll;
 
@@ -107,9 +133,11 @@ public class MultiNodesSetup {
 
     public void bootstrap(Address address, Transport.Type transportType) {
         NetworkService networkService = createNetworkService(address, transportType);
-        networkService.findServiceNode(transportType).ifPresent(serviceNode ->
+        networkService.bootstrap(address.getPort())
+                .whenComplete((r, t) -> handler.ifPresent(handler -> handler.onStateChange(address, networkService.getState())));
+      /*  networkService.findServiceNode(transportType).ifPresent(serviceNode ->
                 serviceNode.bootstrap(Node.DEFAULT_NODE_ID, address.getPort())
-                        .whenComplete((r, t) -> handler.ifPresent(handler -> handler.onStateChange(address, serviceNode.getState()))));
+                        .whenComplete((r, t) -> handler.ifPresent(handler -> handler.onStateChange(address, serviceNode.getState()))));*/
     }
 
     public CompletableFuture<List<Void>> shutdown() {
@@ -126,6 +154,75 @@ public class MultiNodesSetup {
                             handler.ifPresent(handler -> handler.onStateChange(address, networkService.state));
                         }))
                 .orElse(CompletableFuture.completedFuture(null));
+    }
+
+    public void send(Address senderAddress, Address receiverAddress, String nodeId, String message) {
+        runAsync(() -> {
+            String senderKeyId = senderAddress + nodeId;
+            KeyPair senderKeyPair = keyPairRepository.getOrCreateKeyPair(senderKeyId);
+            String receiverKeyId = receiverAddress + nodeId;
+            KeyPair receiverKeyPair = keyPairRepository.getOrCreateKeyPair(receiverKeyId);
+            NetworkId receiverNetworkId = new NetworkId(Map.of(Transport.Type.from(receiverAddress), receiverAddress),
+                    new PubKey(receiverKeyPair.getPublic(), receiverKeyId),
+                    nodeId);
+            NetworkId senderNetworkId = new NetworkId(Map.of(Transport.Type.from(senderAddress), senderAddress),
+                    new PubKey(senderKeyPair.getPublic(), senderKeyId),
+                    nodeId);
+            send(senderNetworkId, receiverNetworkId, senderKeyPair, message);
+        });
+    }
+
+    private void send(NetworkId senderNetworkId, NetworkId receiverNetworkId, KeyPair senderKeyPair, String message) {
+        NetworkService senderNetworkService = senderNetworkId.addressByNetworkType().entrySet().stream()
+                .map(e -> getOrCreateNetworkService(e.getValue(), e.getKey()))
+                .findAny()
+                .get();
+        NetworkService receiverNetworkService = receiverNetworkId.addressByNetworkType().entrySet().stream()
+                .map(e -> getOrCreateNetworkService(e.getValue(), e.getKey()))
+                .findAny()
+                .get();
+        receiverNetworkService.findMyAddresses().forEach((type, value) -> {
+            Address receiverAddress = value.get(receiverNetworkId.nodeId());
+            sendMsgListener = (msg, connection, nodeId1) -> {
+                String newLine = "\n" + getTimestamp() + " " +
+                        type.toString().substring(0, 3) + "  onReceived   " +
+                        connection.getPeerAddress() + " --> " + receiverAddress + " " + msg.toString();
+                appendToHistory(receiverAddress, newLine);
+                handler.ifPresent(handler -> handler.onMessage(receiverAddress));
+                receiverNetworkService.removeMessageListener(sendMsgListener);
+            };
+            receiverNetworkService.addMessageListener(sendMsgListener);
+        });
+
+        MockMailBoxMessage mailBoxMessage = new MockMailBoxMessage(message);
+        senderNetworkService.confidentialSend(mailBoxMessage, receiverNetworkId, senderKeyPair, senderNetworkId.nodeId())
+                .whenComplete((result, throwable) -> {
+                    senderNetworkService.findMyAddresses().forEach((type, value) -> {
+                        Address senderAddress = value.get(senderNetworkId.nodeId());
+                        String newLine = "\n" + getTimestamp() + " " +
+                                type.toString().substring(0, 3) + "  onSent       " +
+                                senderAddress + " --> " + receiverNetworkId.addressByNetworkType().get(type) + " " +
+                                mailBoxMessage + ", Result: " + result;
+                        appendToHistory(senderAddress, newLine);
+                        handler.ifPresent(handler -> handler.onMessage(senderAddress));
+                    });
+                });
+    }
+
+    private void appendToHistory(Address address, String newLine) {
+        String prev = logHistoryByAddress.get(address);
+        if (prev == null) {
+            prev = "";
+        }
+        logHistoryByAddress.put(address, prev + newLine);
+    }
+
+    private NetworkService getOrCreateNetworkService(Address address, Transport.Type transportType) {
+        if (networkServicesByAddress.containsKey(address)) {
+            return networkServicesByAddress.get(address);
+        } else {
+            return createNetworkService(address, transportType);
+        }
     }
 
     private NetworkService createNetworkService(Address address, Transport.Type transportType) {
@@ -166,35 +263,55 @@ public class MultiNodesSetup {
                 }
             });
         });
+
+        networkService.addDataServiceListener(new DataService.Listener() {
+            @Override
+            public void onNetworkDataAdded(NetworkPayload networkPayload) {
+                onNetworkDataChanged(networkService, networkPayload, transportType, true);
+            }
+
+            @Override
+            public void onNetworkDataRemoved(NetworkPayload networkPayload) {
+                onNetworkDataChanged(networkService, networkPayload, transportType, false);
+            }
+        });
+
+    }
+
+    private void onNetworkDataChanged(NetworkService networkService,
+                                      NetworkPayload networkPayload,
+                                      Transport.Type transportType,
+                                      boolean wasAdded) {
+        StringBuilder sb = new StringBuilder("\n");
+        Address address = networkService.findMyDefaultAddress(transportType).get();
+        sb.append(getTimestamp())
+                .append(" ").append(transportType.name(), 0, 3)
+                .append(wasAdded ? " +onDataAdded " : " -onDataRemoved ")
+                .append(address)
+                .append(" networkPayload=").append(networkPayload);
+        String newLine = sb.toString();
+        appendToHistory(address, newLine);
+        handler.ifPresent(handler -> handler.onData(address, networkPayload));
     }
 
     private void onConnectionStateChanged(Transport.Type transportType, Connection connection, Node node, Optional<CloseReason> closeReason) {
         node.findMyAddress().ifPresent(address -> {
-           /* String now = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
-            String dir = connection.isOutboundConnection() ? " --> " : " <-- ";
-            String peerAddressVerified = connection.isPeerAddressVerified() ? " !]" : " ?]";
-            String peerAddress = connection.getPeerAddress().toString().replace("]", peerAddressVerified);
-            String tag = closeReason.isPresent() ? " - onDisconnect " : " + onConnection ";
-            String reason = closeReason.map(r -> ", " + r).orElse("");
-            String info = "\n" + now + transportType.name().substring(0, 3) + tag + node + dir + peerAddress + now + reason;*/
-
             StringBuilder sb = new StringBuilder("\n");
-            sb.append(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()))
+            sb.append(getTimestamp())
                     .append(" ").append(transportType.name(), 0, 3)
                     .append(closeReason.isPresent() ? " -onDisconnect " : " +onConnection ")
                     .append(node)
                     .append(connection.isOutboundConnection() ? " --> " : " <-- ")
                     .append(connection.getPeerAddress().toString().replace("]", connection.isPeerAddressVerified() ? " !]" : " ?]"))
                     .append(closeReason.map(r -> ", " + r).orElse(""));
-            String info = sb.toString();
-
-            String prev = connectionHistoryByAddress.get(address);
-            if (prev == null) {
-                prev = "";
-            }
-            connectionHistoryByAddress.put(address, prev + info);
-            handler.ifPresent(handler -> handler.onConnectionStateChange(transportType, address, info));
+            String newLine = sb.toString();
+            appendToHistory(address, newLine);
+            handler.ifPresent(handler -> handler.onConnectionStateChange(transportType, address, newLine));
         });
+    }
+
+    private String getTimestamp() {
+        return new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
     }
 
     public String getNodeInfo(Address address, Transport.Type transportType) {
@@ -203,7 +320,7 @@ public class MultiNodesSetup {
                 .filter(serviceNode -> serviceNode.getMonitorService().isPresent())
                 .map(serviceNode -> {
                     String peerGroupInfo = serviceNode.getMonitorService().get().getPeerGroupInfo();
-                    String connectionHistory = Optional.ofNullable(connectionHistoryByAddress.get(address))
+                    String connectionHistory = Optional.ofNullable(logHistoryByAddress.get(address))
                             .map(history -> {
                                 long nunOnConnection = Stream.of(history.split("\\n"))
                                         .filter(e -> e.contains("+onConnection"))
@@ -242,14 +359,16 @@ public class MultiNodesSetup {
         this.handler = Optional.of(handler);
     }
 
-    private NetworkService.Config cloneWithLimitedSeeds(NetworkService.Config networkServiceConfig, int numSeeds) {
+    private NetworkService.Config cloneWithLimitedSeeds(NetworkService.Config networkServiceConfig,
+                                                        int numSeeds,
+                                                        Set<Transport.Type> supportedTransportTypes) {
 
         Map<Transport.Type, List<Address>> seeds = networkServiceConfig.seedAddressesByTransport().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         e -> e.getValue().stream().limit(numSeeds).collect(Collectors.toList())));
         return new NetworkService.Config(networkServiceConfig.baseDir(),
                 networkServiceConfig.transportConfig(),
-                networkServiceConfig.supportedTransportTypes(),
+                supportedTransportTypes,
                 networkServiceConfig.serviceNodeConfig(),
                 networkServiceConfig.peerGroupServiceConfigByTransport(),
                 seeds,

@@ -31,7 +31,19 @@ public interface Transport {
     enum Type implements Serializable {
         TOR,
         I2P,
-        CLEAR,
+        CLEAR;
+
+        public static Type from(Address address) {
+            if (address.isClearNetAddress()) {
+                return Type.CLEAR;
+            } else if (address.isTorAddress()) {
+                return Type.TOR;
+            } else if (address.isI2pAddress()) {
+                return Type.I2P;
+            } else {
+                throw new IllegalArgumentException("Could not resolve transportType from address " + address);
+            }
+        }
     }
 
     record Config(String baseDir) {

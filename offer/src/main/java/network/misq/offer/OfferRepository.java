@@ -93,7 +93,7 @@ public class OfferRepository {
     }
 
     public Offer createOffer(long askAmount) {
-        NetworkId makerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"));
+        NetworkId makerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"),"default");
         Asset askAsset = new Asset(Coin.asBtc(askAmount), List.of(), AssetTransfer.Type.MANUAL);
         Asset bidAsset = new Asset(Fiat.of(5000, "USD"), List.of(FiatTransfer.ZELLE), AssetTransfer.Type.MANUAL);
         return new Offer(List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
@@ -202,7 +202,7 @@ public class OfferRepository {
                 protocolTypes.add(swapProtocolType);
             }
             Map<Transport.Type, Address> map = Map.of(Transport.Type.CLEAR, Address.localHost(1000 + new Random().nextInt(1000)));
-            NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"));
+            NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"),"default");
 
             Set<OfferOption> options = new HashSet<>();
             ReputationProof accountCreationDateProof = new AccountCreationDateProof("hashOfAccount", "otsProof)");

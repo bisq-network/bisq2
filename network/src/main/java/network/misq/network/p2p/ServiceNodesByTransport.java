@@ -25,8 +25,8 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.authorization.UnrestrictedAuthorizationService;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.broadcast.BroadcastResult;
-import network.misq.network.p2p.services.confidential.ConfidentialService;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
+import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.filter.DataFilter;
@@ -120,12 +120,15 @@ public class ServiceNodesByTransport {
     }
 
     // TODO we return first successful connection in case we have multiple transportTypes. Not sure if that is ok.
-    public CompletableFuture<ConfidentialService.Result> confidentialSend(Message message, NetworkId networkId, KeyPair myKeyPair, String connectionId) {
-        CompletableFuture<ConfidentialService.Result> future = new CompletableFuture<>();
-        networkId.addressByNetworkType().forEach((transportType, address) -> {
+    public CompletableFuture<ConfidentialMessageService.Result> confidentialSend(Message message,
+                                                                                 NetworkId receiverNetworkId,
+                                                                                 KeyPair senderKeyPair,
+                                                                                 String senderNodeId) {
+        CompletableFuture<ConfidentialMessageService.Result> future = new CompletableFuture<>();
+        receiverNetworkId.addressByNetworkType().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 map.get(transportType)
-                        .confidentialSend(message, address, networkId.pubKey(), myKeyPair, connectionId)
+                        .confidentialSend(message, address, receiverNetworkId.pubKey(), senderKeyPair, senderNodeId)
                         .whenComplete((result, throwable) -> {
                             if (result != null) {
                                 future.complete(result);
@@ -137,7 +140,7 @@ public class ServiceNodesByTransport {
             } else {
                 //todo
              /*   map.values().forEach(networkNode -> {
-                    networkNode.relay(message, networkId, myKeyPair)
+                    networkNode.relay(message, receiverNetworkId, myKeyPair)
                             .whenComplete((connection, throwable) -> {
                                 if (connection != null) {
                                     future.complete(connection);
@@ -195,6 +198,14 @@ public class ServiceNodesByTransport {
                         return Optional.empty();
                     }
                 });
+    }
+
+    public void addDataServiceListener(DataService.Listener listener) {
+        map.values().forEach(serviceNode -> serviceNode.addDataServiceListener(listener));
+    }
+
+    public void removeDataServiceListener(DataService.Listener listener) {
+        map.values().forEach(serviceNode -> serviceNode.removeDataServiceListener(listener));
     }
 
     public void addMessageListener(Node.Listener listener) {
