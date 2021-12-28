@@ -60,8 +60,7 @@ public class TorServerSocket extends ServerSocket {
         return CompletableFuture.supplyAsync(() -> {
             Thread.currentThread().setName("TorServerSocket.bindAsync-" + id);
             try {
-                bind(hiddenServicePort, localPort, id);
-                return onionAddress.orElseThrow(() -> new IllegalArgumentException("onionAddress must be present"));
+                return bind(hiddenServicePort, localPort, id);
             } catch (IOException | InterruptedException e) {
                 throw new CompletionException(e);
             }
@@ -69,7 +68,15 @@ public class TorServerSocket extends ServerSocket {
     }
 
     // Blocking
-    public void bind(int hiddenServicePort, int localPort, String id) throws IOException, InterruptedException {
+    public OnionAddress bind(int hiddenServicePort) throws IOException, InterruptedException {
+        return bind(hiddenServicePort, "default");
+    }
+
+    public OnionAddress bind(int hiddenServicePort, String id) throws IOException, InterruptedException {
+       return bind(hiddenServicePort, NetworkUtils.findFreeSystemPort(), id);
+    }
+
+    public OnionAddress bind(int hiddenServicePort, int localPort, String id) throws IOException, InterruptedException {
         long ts = System.currentTimeMillis();
         File dir = new File(hsDirPath, id);
         File hostNameFile = new File(dir.getCanonicalPath(), HOSTNAME);
@@ -111,6 +118,7 @@ public class TorServerSocket extends ServerSocket {
         });
         latch.await();
         torController.removeHiddenServiceReadyListener(serviceId);
+        return onionAddress;
     }
 
     @Override

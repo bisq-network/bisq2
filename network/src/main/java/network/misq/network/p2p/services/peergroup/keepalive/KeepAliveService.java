@@ -85,7 +85,7 @@ public class KeepAliveService implements Node.Listener {
     public void onMessage(Message message, Connection connection, String nodeId) {
         if (message instanceof Ping ping) {
             log.debug("Node {} received Ping with nonce {} from {}", node, ping.nonce(), connection.getPeerAddress());
-            node.send(new Pong(ping.nonce()), connection);
+            node.sendAsync(new Pong(ping.nonce()), connection);
             log.debug("Node {} sent Pong with nonce {} to {}. Connection={}", node, ping.nonce(), connection.getPeerAddress(), connection.getId());
         }
     }

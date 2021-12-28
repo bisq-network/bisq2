@@ -57,20 +57,32 @@ public class NodesById implements Node.Listener {
         return getOrCreateNode(Node.DEFAULT_NODE_ID);
     }
 
-    public CompletableFuture<Connection> send(String senderNodeId, Message message, Address address) {
+    public Connection send(String senderNodeId, Message message, Address address) {
         return getOrCreateNode(senderNodeId).send(message, address);
     }
 
-    public CompletableFuture<Connection> send(String senderNodeId, Message message, Connection connection) {
+    public Connection send(String senderNodeId, Message message, Connection connection) {
         return getOrCreateNode(senderNodeId).send(message, connection);
     }
 
-    public CompletableFuture<Connection> getConnection(String nodeId, Address address) {
+    public CompletableFuture<Connection> sendAsync(String senderNodeId, Message message, Address address) {
+        return getOrCreateNode(senderNodeId).sendAsync(message, address);
+    }
+
+    public CompletableFuture<Connection> sendAsync(String senderNodeId, Message message, Connection connection) {
+        return getOrCreateNode(senderNodeId).sendAsync(message, connection);
+    }
+
+    public Connection getConnection(String nodeId, Address address) {
         return getOrCreateNode(nodeId).getConnection(address);
     }
 
+    public CompletableFuture<Connection> getConnectionAsync(String nodeId, Address address) {
+        return getOrCreateNode(nodeId).getConnectionAsync(address);
+    }
+
     public CompletableFuture<Transport.ServerSocketResult> initializeServer(String nodeId, int serverPort) {
-        return getOrCreateNode(nodeId).initializeServer(serverPort);
+        return getOrCreateNode(nodeId).initializeServerAsync(serverPort);
     }
 
     public void addNodeListener(Node.Listener listener) {

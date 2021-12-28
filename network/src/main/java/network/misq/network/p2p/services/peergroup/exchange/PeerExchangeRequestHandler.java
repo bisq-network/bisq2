@@ -53,7 +53,7 @@ class PeerExchangeRequestHandler implements Connection.Listener {
         future.orTimeout(TIMEOUT, TimeUnit.SECONDS);
         log.debug("Node {} send PeerExchangeRequest to {} with my peers {}",
                 node, connection.getPeerAddress(), peersForPeerExchange);
-        node.send(new PeerExchangeRequest(nonce, peersForPeerExchange), connection)
+        node.sendAsync(new PeerExchangeRequest(nonce, peersForPeerExchange), connection)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);

@@ -50,7 +50,7 @@ class KeepAliveHandler implements Connection.Listener {
         future.orTimeout(TIMEOUT, TimeUnit.SECONDS);
         log.info("Node {} send Ping to {} with nonce {}. Connection={}",
                 node, connection.getPeerAddress(), nonce, connection.getId());
-        node.send(new Ping(nonce), connection)
+        node.sendAsync(new Ping(nonce), connection)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);

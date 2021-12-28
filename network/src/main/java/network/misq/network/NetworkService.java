@@ -32,10 +32,10 @@ import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.security.KeyPairRepository;
 
@@ -49,6 +49,7 @@ import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * High level API for network access to p2p network as well to http services (over Tor). If user has only I2P selected
@@ -67,9 +68,10 @@ public class NetworkService {
     // If a user has 10 offers with dedicated nodes and 5 connections open, its another 100 threads + 50 at sending 
     // messages. 100-200 threads might be a usual scenario, but it could also peak much higher, so we will give 
     // maximumPoolSize sufficient headroom and use a rather short keepAliveTimeInSec.
-    public static final ThreadPoolExecutor NETWORK_IO_POOL = ExecutorFactory.getThreadPoolExecutor("NetworkService.IO");
+    public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
-    
+    public static final ExecutorService WORKER_POOL = ExecutorFactory.newFixedThreadPool("NetworkService.client-pool");
+
     public static record Config(String baseDir,
                                 Transport.Config transportConfig,
                                 Set<Transport.Type> supportedTransportTypes,
@@ -144,11 +146,19 @@ public class NetworkService {
         });
     }
 
-    public CompletableFuture<ConfidentialMessageService.Result> confidentialSend(Message message,
-                                                                                 NetworkId receiverNetworkId,
-                                                                                 KeyPair senderKeyPair,
-                                                                                 String senderNodeId) {
+    // Blocking API
+    public Map<Transport.Type, ConfidentialMessageService.Result> confidentialSend(Message message,
+                                                                                   NetworkId receiverNetworkId,
+                                                                                   KeyPair senderKeyPair,
+                                                                                   String senderNodeId) {
         return serviceNodesByTransport.confidentialSend(message, receiverNetworkId, senderKeyPair, senderNodeId);
+    }
+
+    public CompletableFuture<Map<Transport.Type, ConfidentialMessageService.Result>> confidentialSendAsync(Message message,
+                                                                                                           NetworkId receiverNetworkId,
+                                                                                                           KeyPair senderKeyPair,
+                                                                                                           String senderNodeId) {
+        return supplyAsync(() -> confidentialSend(message, receiverNetworkId, senderKeyPair, senderNodeId), NETWORK_IO_POOL);
     }
 
     public CompletableFuture<List<BroadcastResult>> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {

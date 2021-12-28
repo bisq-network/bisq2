@@ -85,7 +85,7 @@ public class Broadcaster implements Node.Listener {
                 .limit(numBroadcasts)
                 .forEach(connection -> {
                     log.error("Node {} broadcast to {}", node, connection.getPeerAddress());
-                    node.send(new BroadcastMessage(message), connection)
+                    node.sendAsync(new BroadcastMessage(message), connection)
                             .whenComplete((c, throwable) -> {
                                 if (throwable == null) {
                                     numSuccess.incrementAndGet();

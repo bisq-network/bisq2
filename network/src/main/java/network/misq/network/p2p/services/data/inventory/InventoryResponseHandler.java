@@ -54,7 +54,7 @@ public class InventoryResponseHandler implements Node.Listener, Disposable {
         if (this.connection.getId().equals(connection.getId()) &&
                 message instanceof InventoryRequest request) {
             Inventory inventory = inventoryProvider.apply(request.getDataFilter());
-            node.send(new InventoryResponse(inventory), connection);
+            node.sendAsync(new InventoryResponse(inventory), connection);
             node.removeListener(this);
             completeHandler.run();
         }

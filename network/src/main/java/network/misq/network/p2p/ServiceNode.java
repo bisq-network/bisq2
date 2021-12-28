@@ -178,12 +178,21 @@ public class ServiceNode {
         });
     }
 
-    public CompletableFuture<ConfidentialMessageService.Result> confidentialSend(Message message,
-                                                                                 Address address,
-                                                                                 PubKey receiverPubKey,
-                                                                                 KeyPair senderKeyPair,
-                                                                                 String senderNodeId) {
+    public ConfidentialMessageService.Result confidentialSend(Message message,
+                                                              Address address,
+                                                              PubKey receiverPubKey,
+                                                              KeyPair senderKeyPair,
+                                                              String senderNodeId) {
         return confidentialMessageService.map(service -> service.send(message, address, receiverPubKey, senderKeyPair, senderNodeId))
+                .orElseThrow(() -> new RuntimeException("ConfidentialMessageService not present at confidentialSend"));
+    }
+
+    public CompletableFuture<ConfidentialMessageService.Result> confidentialSendAsync(Message message,
+                                                                                      Address address,
+                                                                                      PubKey receiverPubKey,
+                                                                                      KeyPair senderKeyPair,
+                                                                                      String senderNodeId) {
+        return confidentialMessageService.map(service -> service.sendAsync(message, address, receiverPubKey, senderKeyPair, senderNodeId))
                 .orElseThrow(() -> new RuntimeException("ConfidentialMessageService not present at confidentialSend"));
     }
 
@@ -228,10 +237,11 @@ public class ServiceNode {
     public void addDataServiceListener(DataService.Listener listener) {
         dataService.ifPresent(dataService -> dataService.addListener(listener));
     }
+
     public void removeDataServiceListener(DataService.Listener listener) {
         dataService.ifPresent(dataService -> dataService.removeListener(listener));
     }
-    
+
     public void addMessageListener(Node.Listener listener) {
         confidentialMessageService.ifPresent(service -> service.addMessageListener(listener));
     }

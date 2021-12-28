@@ -19,9 +19,6 @@ package network.misq.network.p2p.node;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.threading.ExecutorFactory;
-import network.misq.common.util.StringUtils;
-import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Envelope;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.message.Version;
@@ -78,53 +75,49 @@ class ConnectionHandshake {
     }
 
     // Client side protocol
-    CompletableFuture<Result> start(Load myLoad) {
-        return CompletableFuture.supplyAsync(() -> {
-                    Thread.currentThread().setName("ConnectionHandshake.start-" + StringUtils.truncate(capability.address().toString()));
-                    try {
-                        ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-                        AuthorizationToken token = authorizationService.createToken(Request.class).get();
-                        Envelope requestEnvelope = new Envelope(new Request(token, capability, myLoad), Version.VERSION);
-                        log.debug("Client sends {}", requestEnvelope);
-                        objectOutputStream.writeObject(requestEnvelope);
-                        objectOutputStream.flush();
+    Result start(Load myLoad) {
+        try {
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            AuthorizationToken token = authorizationService.createToken(Request.class).get();
+            Envelope requestEnvelope = new Envelope(new Request(token, capability, myLoad), Version.VERSION);
+            log.debug("Client sends {}", requestEnvelope);
+            objectOutputStream.writeObject(requestEnvelope);
+            objectOutputStream.flush();
 
-                        ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-                        Object msg = objectInputStream.readObject();
-                        if (!(msg instanceof Envelope responseEnvelope)) {
-                            throw new ConnectionException("Received message not type of Envelope. " + msg.getClass().getSimpleName());
-                        }
-                        log.debug("Client received {}", msg);
-                        if (responseEnvelope.version() != Version.VERSION) {
-                            throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
-                                    responseEnvelope.version() + "; Version.VERSION=" + Version.VERSION);
-                        }
-                        if (!(responseEnvelope.payload() instanceof Response response)) {
-                            throw new ConnectionException("ResponseEnvelope.payload() not type of Response. responseEnvelope=" +
-                                    responseEnvelope);
-                        }
-                        if (banList.isBanned(response.capability().address())) {
-                            throw new ConnectionException("Peers address is in quarantine. response=" + response);
-                        }
-                        if (!authorizationService.isAuthorized(response.token())) {
-                            throw new ConnectionException("Response authorization failed. response=" + response);
-                        }
+            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+            Object msg = objectInputStream.readObject();
+            if (!(msg instanceof Envelope responseEnvelope)) {
+                throw new ConnectionException("Received message not type of Envelope. " + msg.getClass().getSimpleName());
+            }
+            log.debug("Client received {}", msg);
+            if (responseEnvelope.version() != Version.VERSION) {
+                throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
+                        responseEnvelope.version() + "; Version.VERSION=" + Version.VERSION);
+            }
+            if (!(responseEnvelope.payload() instanceof Response response)) {
+                throw new ConnectionException("ResponseEnvelope.payload() not type of Response. responseEnvelope=" +
+                        responseEnvelope);
+            }
+            if (banList.isBanned(response.capability().address())) {
+                throw new ConnectionException("Peers address is in quarantine. response=" + response);
+            }
+            if (!authorizationService.isAuthorized(response.token())) {
+                throw new ConnectionException("Response authorization failed. response=" + response);
+            }
 
-                        log.debug("Servers capability {}, load={}", response.capability(), response.load());
-                        return new Result(response.capability(), response.load());
-                    } catch (Exception e) {
-                        try {
-                            socket.close();
-                        } catch (IOException ignore) {
-                        }
-                        if (e instanceof ConnectionException handShakeException) {
-                            throw handShakeException;
-                        } else {
-                            throw new ConnectionException(e);
-                        }
-                    }
-                }, NetworkService.NETWORK_IO_POOL)
-                .thenApplyAsync(result -> result, ExecutorFactory.newSingleThreadExecutor("ConnectionHandshake"));
+            log.debug("Servers capability {}, load={}", response.capability(), response.load());
+            return new Result(response.capability(), response.load());
+        } catch (Exception e) {
+            try {
+                socket.close();
+            } catch (IOException ignore) {
+            }
+            if (e instanceof ConnectionException handShakeException) {
+                throw handShakeException;
+            } else {
+                throw new ConnectionException(e);
+            }
+        }
     }
 
     // Server side protocol

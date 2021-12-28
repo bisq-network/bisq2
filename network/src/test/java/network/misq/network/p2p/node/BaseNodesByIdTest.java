@@ -67,7 +67,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
                     if (message instanceof ClearNetNodesByIdIntegrationTest.Ping) {
                         ClearNetNodesByIdIntegrationTest.Pong pong = new ClearNetNodesByIdIntegrationTest.Pong("Pong from " + finalI + " to " + connection.getPeerAddress().getPort());
                         log.info("Send pong " + pong);
-                        nodesById.send(nodeId, pong, connection).whenComplete((r2, t2) -> {
+                        nodesById.sendAsync(nodeId, pong, connection).whenComplete((r2, t2) -> {
                             if (t2 != null) {
                                 fail(t2);
                             }
@@ -95,7 +95,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
             Address receiverNodeAddress = nodesById.findMyAddress(receiverNodeId).get();
             ClearNetNodesByIdIntegrationTest.Ping ping = new ClearNetNodesByIdIntegrationTest.Ping("Ping from " + nodesById.findMyAddress(nodeId) + " to " + receiverNodeAddress);
             log.info("Send ping " + ping);
-            nodesById.send(nodeId, ping, receiverNodeAddress).whenComplete((r, t) -> {
+            nodesById.sendAsync(nodeId, ping, receiverNodeAddress).whenComplete((r, t) -> {
                 if (t != null) {
                     fail(t);
                 }

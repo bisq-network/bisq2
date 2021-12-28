@@ -23,6 +23,7 @@ import network.misq.contract.TwoPartyContract;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Connection;
+import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.protocol.SecurityProvider;
 import network.misq.protocol.multiSig.MultiSig;
@@ -30,6 +31,7 @@ import network.misq.protocol.multiSig.MultiSigProtocol;
 import network.misq.protocol.multiSig.taker.DepositTxBroadcastMessage;
 import network.misq.protocol.multiSig.taker.PayoutTxBroadcastMessage;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -68,20 +70,20 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
         multiSig.addListener(this);
         setState(State.START);
         multiSig.getTxInputs()
-                .thenCompose(txInputs -> networkService.confidentialSend(new TxInputsMessage(txInputs),
+                .thenCompose(txInputs -> networkService.confidentialSendAsync(new TxInputsMessage(txInputs),
                         counterParty.getMakerNetworkId(),
                         null, null))
                 .whenComplete((success, t) -> setState(State.TX_INPUTS_SENT));
         return CompletableFuture.completedFuture(true);
     }
 
-    private CompletableFuture<ConfidentialMessageService.Result> onFundsSent() {
+    private CompletableFuture<Map<Transport.Type, ConfidentialMessageService.Result>> onFundsSent() {
         setState(State.FUNDS_SENT);
         return multiSig.createPartialPayoutTx()
                 .thenCompose(multiSig::getPayoutTxSignature)
-                .thenCompose(sig -> networkService.confidentialSend(new FundsSentMessage(sig),
+                .thenCompose(sig -> networkService.confidentialSendAsync(new FundsSentMessage(sig),
                         counterParty.getMakerNetworkId(),
                         null, null))
-                .whenComplete((isValid, t) -> setState(State.FUNDS_SENT_MSG_SENT));
+                .whenComplete((resultMap, t) -> setState(State.FUNDS_SENT_MSG_SENT));
     }
 }

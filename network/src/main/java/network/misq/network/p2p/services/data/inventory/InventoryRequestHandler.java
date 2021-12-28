@@ -43,7 +43,7 @@ public class InventoryRequestHandler implements Node.Listener, Disposable {
     public CompletableFuture<Inventory> request(DataFilter dataFilter) {
         future.orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS);
         node.addListener(this);
-        node.send(new InventoryRequest(dataFilter), connection);
+        node.sendAsync(new InventoryRequest(dataFilter), connection);
         return future;
     }
 

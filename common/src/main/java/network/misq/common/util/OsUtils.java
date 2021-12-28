@@ -35,6 +35,10 @@ public class OsUtils {
         return Paths.get(System.getProperty("user.home"), ".local", "share").toFile();
     }
 
+    public static int availableProcessors() {
+        return Runtime.getRuntime().availableProcessors();
+    }
+
     public static boolean isWindows() {
         return getOSName().contains("win");
     }

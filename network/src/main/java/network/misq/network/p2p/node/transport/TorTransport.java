@@ -3,9 +3,10 @@ package network.misq.network.p2p.node.transport;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.FileUtils;
-import network.misq.network.NetworkService;
 import network.misq.network.p2p.node.Address;
+import network.misq.network.p2p.node.ConnectionException;
 import network.misq.tor.Constants;
+import network.misq.tor.OnionAddress;
 import network.misq.tor.Tor;
 import network.misq.tor.TorServerSocket;
 
@@ -43,52 +44,38 @@ public class TorTransport implements Transport {
     }
 
     @Override
-    public CompletableFuture<Boolean> initialize() {
-        if (tor.getState().get() == Tor.State.STARTED) {
-            return CompletableFuture.completedFuture(true);
-        } else if (tor.getState().get() == Tor.State.STARTING || tor.getState().get() == Tor.State.SHUTDOWN_STARTED) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ignore) {
-            }
-            return initialize();
-        }
-
+    public Boolean initialize() {
         log.info("Initialize Tor");
         long ts = System.currentTimeMillis();
-        return tor.startAsync(NetworkService.NETWORK_IO_POOL)
-                .whenComplete((result, throwable) -> {
-                    if (throwable == null) {
-                        log.info("Tor initialized after {} ms", System.currentTimeMillis() - ts);
-                    } else {
-                        log.error("tor.startAsync failed", throwable);
-                    }
-                })
-                .thenApplyAsync(result -> result, newSingleThreadExecutor("TorTransport.initialize"));
+        try {
+            tor.start();
+            log.info("Tor initialized after {} ms", System.currentTimeMillis() - ts);
+            return true;
+        } catch (IOException | InterruptedException e) {
+            log.error("tor.startAsync failed", e);
+            throw new ConnectionException(e);
+        }
     }
 
     @Override
-    public CompletableFuture<ServerSocketResult> getServerSocket(int port, String nodeId) {
+    public ServerSocketResult getServerSocket(int port, String nodeId) {
         log.info("Start hidden service with port {} and nodeId {}", port, nodeId);
         long ts = System.currentTimeMillis();
         try {
             TorServerSocket torServerSocket = tor.getTorServerSocket();
-            return torServerSocket.bindAsync(port, nodeId, NetworkService.NETWORK_IO_POOL)
-                    .thenApply(onionAddress -> {
-                        log.info("Tor hidden service Ready. Took {} ms. Onion address={}", System.currentTimeMillis() - ts, onionAddress);
-                        return new ServerSocketResult(nodeId, torServerSocket, new Address(onionAddress.getHost(), onionAddress.getPort()));
-                    })
-                    .thenApplyAsync(result -> result, newSingleThreadExecutor("TorTransport.getServerSocket"));
-        } catch (IOException e) {
-            log.error(e.toString(), e);
-            return CompletableFuture.failedFuture(e);
+            OnionAddress onionAddress = torServerSocket.bind(port, nodeId);
+            log.info("Tor hidden service Ready. Took {} ms. Onion address={}", System.currentTimeMillis() - ts, onionAddress);
+            return new ServerSocketResult(nodeId, torServerSocket, new Address(onionAddress.getHost(), onionAddress.getPort()));
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            throw new ConnectionException(e);
         }
     }
 
     @Override
     public Socket getSocket(Address address) throws IOException {
         long ts = System.currentTimeMillis();
-        Socket socket = tor.getSocket(null);
+        Socket socket = tor.getSocket(null); // Blocking call. Takes 5-15 sec usually.
         socket.connect(new InetSocketAddress(address.getHost(), address.getPort()));
         log.info("Tor socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
         return socket;

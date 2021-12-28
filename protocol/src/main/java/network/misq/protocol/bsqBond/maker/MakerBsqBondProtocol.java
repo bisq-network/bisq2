@@ -44,7 +44,7 @@ public class MakerBsqBondProtocol extends BsqBondProtocol {
             security.verifyBondCommitmentMessage(bondCommitmentMessage)
                     .whenComplete((success, t) -> setState(State.COMMITMENT_RECEIVED))
                     .thenCompose(isValid -> transport.sendFunds(contract))
-                    .thenCompose(isSent -> networkService.confidentialSend(new MakerFundsSentMessage(),
+                    .thenCompose(isSent -> networkService.confidentialSendAsync(new MakerFundsSentMessage(),
                             counterParty.getMakerNetworkId(),
                             null, null))
                     .whenComplete((connection1, t) -> setState(State.FUNDS_SENT));
@@ -64,7 +64,7 @@ public class MakerBsqBondProtocol extends BsqBondProtocol {
         networkService.addMessageListener(this);
         setState(State.START);
         security.getCommitment(contract)
-                .thenCompose(commitment -> networkService.confidentialSend(new MakerCommitmentMessage(commitment),
+                .thenCompose(commitment -> networkService.confidentialSendAsync(new MakerCommitmentMessage(commitment),
                         counterParty.getMakerNetworkId(),
                         null, null))
                 .whenComplete((success, t) -> setState(State.COMMITMENT_SENT));

@@ -25,10 +25,10 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.authorization.UnrestrictedAuthorizationService;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
@@ -39,10 +39,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.KeyPair;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -119,16 +116,38 @@ public class ServiceNodesByTransport {
         return future;
     }
 
+    public Map<Transport.Type, ConfidentialMessageService.Result> confidentialSend(Message message,
+                                                                                   NetworkId receiverNetworkId,
+                                                                                   KeyPair senderKeyPair,
+                                                                                   String senderNodeId) {
+        Map<Transport.Type, ConfidentialMessageService.Result> resultsByType = new HashMap<>();
+        receiverNetworkId.addressByNetworkType().forEach((transportType, address) -> {
+            if (map.containsKey(transportType)) {
+                ServiceNode serviceNode = map.get(transportType);
+                try {
+                    ConfidentialMessageService.Result result = serviceNode.confidentialSend(message, address, receiverNetworkId.pubKey(), senderKeyPair, senderNodeId);
+                    resultsByType.put(transportType, result);
+                } catch (Throwable throwable) {
+                    resultsByType.put(transportType, new ConfidentialMessageService.Result(ConfidentialMessageService.State.FAILED)
+                            .errorMsg(throwable.getMessage()));
+                }
+            } else {
+                //todo
+            }
+        });
+        return resultsByType;
+    }
+
     // TODO we return first successful connection in case we have multiple transportTypes. Not sure if that is ok.
-    public CompletableFuture<ConfidentialMessageService.Result> confidentialSend(Message message,
-                                                                                 NetworkId receiverNetworkId,
-                                                                                 KeyPair senderKeyPair,
-                                                                                 String senderNodeId) {
+    public CompletableFuture<ConfidentialMessageService.Result> confidentialSendAsync(Message message,
+                                                                                      NetworkId receiverNetworkId,
+                                                                                      KeyPair senderKeyPair,
+                                                                                      String senderNodeId) {
         CompletableFuture<ConfidentialMessageService.Result> future = new CompletableFuture<>();
         receiverNetworkId.addressByNetworkType().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 map.get(transportType)
-                        .confidentialSend(message, address, receiverNetworkId.pubKey(), senderKeyPair, senderNodeId)
+                        .confidentialSendAsync(message, address, receiverNetworkId.pubKey(), senderKeyPair, senderNodeId)
                         .whenComplete((result, throwable) -> {
                             if (result != null) {
                                 future.complete(result);

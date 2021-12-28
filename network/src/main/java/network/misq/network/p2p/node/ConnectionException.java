@@ -25,7 +25,7 @@ public class ConnectionException extends CompletionException {
         super(message);
     }
 
-    public ConnectionException(Exception exception) {
-        super(exception);
+    public ConnectionException(Throwable throwable) {
+        super(throwable);
     }
 }

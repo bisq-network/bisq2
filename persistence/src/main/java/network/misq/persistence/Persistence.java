@@ -23,11 +23,11 @@ import network.misq.common.util.FileUtils;
 
 import java.io.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 public class Persistence {
-    public static final ThreadPoolExecutor PERSISTENCE_POOL = ExecutorFactory.getThreadPoolExecutor("PERSISTENCE_POOL");
+    public static final ExecutorService PERSISTENCE_POOL = ExecutorFactory.newCachedThreadPool("PERSISTENCE_POOL");
 
     private final String directory;
     private final String fileName;

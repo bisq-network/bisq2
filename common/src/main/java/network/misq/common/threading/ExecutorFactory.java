@@ -20,6 +20,7 @@ package network.misq.common.threading;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
+import network.misq.common.util.OsUtils;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,15 +58,33 @@ public class ExecutorFactory {
         return Executors.newSingleThreadScheduledExecutor(threadFactory);
     }
 
-
-    public static ThreadPoolExecutor getThreadPoolExecutor(String name) {
-        return getThreadPoolExecutor(name, 1, 10000, 1);
+    /**
+     * Uses a SynchronousQueue, so each submitted task requires a new thread as no queuing functionality is provided.
+     * To be used when we want to avoid overhead for new thread creation/destruction and no queuing functionality.
+     */
+    public static ExecutorService newCachedThreadPool(String name) {
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(name)
+                .setDaemon(true)
+                .build();
+        return Executors.newCachedThreadPool(threadFactory);
     }
 
     /**
-     * Uses a SynchronousQueue, so each submitted task requires a new thread as no queuing functionality is provided.
-     * To be used when we want to avoid overhead for new thread creation/destruction.
+     * Used when queuing is desired.
      */
+    public static ExecutorService newFixedThreadPool(String name) {
+        return newFixedThreadPool(name, OsUtils.availableProcessors());
+    }
+
+    public static ExecutorService newFixedThreadPool(String name, int numThreads) {
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(name)
+                .setDaemon(true)
+                .build();
+        return Executors.newFixedThreadPool(numThreads, threadFactory);
+    }
+
     public static ThreadPoolExecutor getThreadPoolExecutor(String name,
                                                            int corePoolSize,
                                                            int maximumPoolSize,
@@ -82,6 +101,7 @@ public class ExecutorFactory {
                 .setNameFormat(name)
                 .setDaemon(true)
                 .build();
+
         return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
                 TimeUnit.MILLISECONDS, workQueue, threadFactory);
     }

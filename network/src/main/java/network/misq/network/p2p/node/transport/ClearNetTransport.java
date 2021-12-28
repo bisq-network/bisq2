@@ -1,7 +1,6 @@
 package network.misq.network.p2p.node.transport;
 
 import lombok.extern.slf4j.Slf4j;
-import network.misq.network.NetworkService;
 import network.misq.network.p2p.node.Address;
 
 import java.io.IOException;
@@ -29,33 +28,28 @@ public class ClearNetTransport implements Transport {
     public ClearNetTransport(Config config) {
     }
 
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.supplyAsync(() -> {
-                    if (initializeCalled) {
-                        return true;
-                    }
-                    initializeCalled = true;
-                    log.debug("Initialize");
-                    return true;
-                }, NetworkService.NETWORK_IO_POOL)
-                .thenApplyAsync(result -> result, newSingleThreadExecutor("ClearNetTransport.initialize"));
+    @Override
+    public Boolean initialize() {
+        if (initializeCalled) {
+            return true;
+        }
+        initializeCalled = true;
+        log.debug("Initialize");
+        return true;
     }
 
     @Override
-    public CompletableFuture<ServerSocketResult> getServerSocket(int port, String nodeId) {
+    public ServerSocketResult getServerSocket(int port, String nodeId) {
         log.debug("Create serverSocket at port {}", port);
-        return CompletableFuture.supplyAsync(() -> {
-                    try {
-                        ServerSocket serverSocket = new ServerSocket(port);
-                        Address address = Address.localHost(port);
-                        log.debug("ServerSocket created at port {}", port);
-                        return new ServerSocketResult(nodeId, serverSocket, address);
-                    } catch (IOException e) {
-                        log.error("{}. Server port {}", e, port);
-                        throw new CompletionException(e);
-                    }
-                }, NetworkService.NETWORK_IO_POOL)
-                .thenApplyAsync(result -> result, newSingleThreadExecutor("ClearNetTransport.getServerSocket"));
+        try {
+            ServerSocket serverSocket = new ServerSocket(port);
+            Address address = Address.localHost(port);
+            log.debug("ServerSocket created at port {}", port);
+            return new ServerSocketResult(nodeId, serverSocket, address);
+        } catch (IOException e) {
+            log.error("{}. Server port {}", e, port);
+            throw new CompletionException(e);
+        }
     }
 
     @Override
@@ -66,7 +60,7 @@ public class ClearNetTransport implements Transport {
 
     @Override
     public CompletableFuture<Void> shutdown() {
-        return CompletableFuture.runAsync(() -> initializeCalled = false, 
+        return CompletableFuture.runAsync(() -> initializeCalled = false,
                 newSingleThreadExecutor("ClearNetTransport.shutdown"));
     }
 

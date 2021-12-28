@@ -35,7 +35,6 @@ import java.net.Socket;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
@@ -112,7 +111,7 @@ public abstract class Connection {
             return;
         }
         future = NetworkService.NETWORK_IO_POOL.submit(() -> {
-            Thread.currentThread().setName("Connection-input-" + getThreadNameId());
+            Thread.currentThread().setName("Connection.read-" + getThreadNameId());
             try {
                 while (isNotStopped()) {
                     Object msg = objectInputStream.readObject();
@@ -127,7 +126,7 @@ public abstract class Connection {
                         log.debug("Received message: {} at: {}", envelope.payload(), this);
                         metrics.onMessage(envelope.payload());
                         runAsync(() -> handler.onMessage(envelope.payload(), this),
-                                newSingleThreadExecutor("Connection.onMessage"));
+                                NetworkService.DISPATCHER);
                     }
                 }
             } catch (Exception exception) {
@@ -144,34 +143,34 @@ public abstract class Connection {
         });
     }
 
-    CompletableFuture<Connection> send(AuthorizedMessage message) {
+    CompletableFuture<Connection> sendAsync(AuthorizedMessage message) {
+        return CompletableFuture.supplyAsync(() -> send(message), NetworkService.NETWORK_IO_POOL)
+                .thenApplyAsync(connection -> connection, newSingleThreadExecutor("Connection.send"));
+    }
+
+    Connection send(AuthorizedMessage message) {
         if (isStopped) {
             log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
                     StringUtils.truncate(message.toString(), 200), this);
-            throw new CompletionException(new ConnectionClosedException(this));
+            throw new ConnectionClosedException(this);
         }
-        return CompletableFuture.supplyAsync(() -> {
-                    try {
-                        Thread.currentThread().setName("Connection-output-" + getThreadNameId());
-                        Envelope envelope = new Envelope(message, Version.VERSION);
-                        objectOutputStream.writeObject(envelope);
-                        objectOutputStream.flush();
-                        metrics.sent(message);
-                        log.debug("Sent {} from {}",
-                                StringUtils.truncate(message.toString(), 300), this);
-                        return this;
-                    } catch (IOException exception) {
-                        if (!isStopped) {
-                            log.debug("Call shutdown from send {} due exception={}", this, exception.toString());
-                            close(CloseReason.EXCEPTION.exception(exception));
-                        }
-                        // We wrap any exception (also expected EOFException in case of connection close), to inform the caller 
-                        // that the "send message" intent failed.
-                        throw new CompletionException(exception);
-                    }
-                }, NetworkService.NETWORK_IO_POOL)
-                .thenApplyAsync(connection -> connection,
-                        newSingleThreadExecutor("Connection.send"));
+        try {
+            Envelope envelope = new Envelope(message, Version.VERSION);
+            objectOutputStream.writeObject(envelope);
+            objectOutputStream.flush();
+            metrics.sent(message);
+            log.debug("Sent {} from {}",
+                    StringUtils.truncate(message.toString(), 300), this);
+            return this;
+        } catch (IOException exception) {
+            if (!isStopped) {
+                log.debug("Call shutdown from send {} due exception={}", this, exception.toString());
+                close(CloseReason.EXCEPTION.exception(exception));
+            }
+            // We wrap any exception (also expected EOFException in case of connection close), to inform the caller 
+            // that the "send message" intent failed.
+            throw new ConnectionException(exception);
+        }
     }
 
     CompletableFuture<Connection> close(CloseReason closeReason) {

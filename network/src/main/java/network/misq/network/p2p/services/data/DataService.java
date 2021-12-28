@@ -219,7 +219,7 @@ public class DataService implements Node.Listener {
         long ts = System.currentTimeMillis();
         CompletableFuture<RequestInventoryResult> future = new CompletableFuture<>();
         future.orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
-        node.getConnection(address)
+        node.getConnectionAsync(address)
                 .thenCompose(connection -> {
                     InventoryRequestHandler requestHandler = new InventoryRequestHandler(node, connection);
                     requestHandlerMap.put(connection.getId(), requestHandler);

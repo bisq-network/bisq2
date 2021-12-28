@@ -96,7 +96,7 @@ public class PeerExchangeService implements Node.Listener {
     }
 
     private CompletableFuture<Boolean> doPeerExchange(Address peerAddress) {
-        return node.getConnection(peerAddress)
+        return node.getConnectionAsync(peerAddress)
                 .orTimeout(TIMEOUT, TimeUnit.SECONDS)
                 .thenCompose(connection -> {
                     String key = connection.getId();
@@ -139,7 +139,7 @@ public class PeerExchangeService implements Node.Listener {
             Address peerAddress = connection.getPeerAddress();
             peerExchangeStrategy.addReportedPeers(request.peers(), peerAddress);
             Set<Peer> myPeers = peerExchangeStrategy.getPeers(peerAddress);
-            node.send(new PeerExchangeResponse(request.nonce(), myPeers), connection);
+            node.sendAsync(new PeerExchangeResponse(request.nonce(), myPeers), connection);
             log.debug("Node {} sent PeerExchangeResponse with my myPeers {}", node, myPeers);
         }
     }

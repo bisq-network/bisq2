@@ -199,14 +199,19 @@ public class MultiNodesSetup {
         });
 
         MockMailBoxMessage mailBoxMessage = new MockMailBoxMessage(message);
-        senderNetworkService.confidentialSend(mailBoxMessage, receiverNetworkId, senderKeyPair, senderNetworkId.nodeId())
+
+
+        senderNetworkService.confidentialSendAsync(mailBoxMessage,
+                        receiverNetworkId,
+                        senderKeyPair,
+                        senderNetworkId.nodeId())
                 .whenComplete((result, throwable) -> {
                     senderNetworkService.findMyAddresses().forEach((type, value) -> {
                         Address senderAddress = value.get(senderNetworkId.nodeId());
                         String newLine = "\n" + getTimestamp() + " " +
                                 type.toString().substring(0, 3) + "  onSent       " +
                                 senderAddress + " --> " + receiverNetworkId.addressByNetworkType().get(type) + " " +
-                                mailBoxMessage + ", Result: " + result;
+                                mailBoxMessage + ", Result: " + result.get(type);
                         appendToHistory(senderAddress, newLine);
                         handler.ifPresent(handler -> handler.onMessage(senderAddress));
                     });
