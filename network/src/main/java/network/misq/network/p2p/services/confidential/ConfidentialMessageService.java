@@ -234,6 +234,8 @@ public class ConfidentialMessageService implements Node.Listener {
         }
 
         MailboxPayload mailboxPayload = new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
+        // We do not wait for the broadcast result as that can take a while. We pack the future into our result, 
+        // so clients can react on it as they wish.
         CompletableFuture<BroadcastResult> mailboxFuture = dataService.get().addMailboxPayload(mailboxPayload,
                 senderKeyPair,
                 receiverPubKey.publicKey());

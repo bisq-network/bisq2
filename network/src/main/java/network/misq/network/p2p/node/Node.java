@@ -21,7 +21,6 @@ package network.misq.network.p2p.node;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.util.NetworkUtils;
 import network.misq.common.util.StringUtils;
 import network.misq.network.NetworkService;
@@ -47,6 +46,7 @@ import java.util.concurrent.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static network.misq.network.p2p.node.CloseReason.*;
 
@@ -114,22 +114,23 @@ public class Node implements Connection.Handler {
     // Server
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initializeServer(int port) {
+    public Transport.ServerSocketResult initializeServer(int port) {
         transport.initializeAsync();
-        createServerAndListen(port);
+        return createServerAndListen(port);
     }
 
-    private void createServerAndListen(int port) {
+    private Transport.ServerSocketResult createServerAndListen(int port) {
         Transport.ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
         myCapability = Optional.of(new Capability(serverSocketResult.address(), config.supportedTransportTypes()));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
                 this::handleException));
+        return serverSocketResult;
     }
 
     public CompletableFuture<Transport.ServerSocketResult> initializeServerAsync(int port) {
         return transport.initializeAsync()
-                .thenCompose(e -> createServerAndListenAsync(port));
+                .thenCompose(result -> createServerAndListenAsync(port));
     }
 
     private CompletableFuture<Transport.ServerSocketResult> createServerAndListenAsync(int port) {
@@ -197,6 +198,10 @@ public class Node implements Connection.Handler {
         return send(message, connection);
     }
 
+    public CompletableFuture<Connection> sendAsync(Message message, Address address) {
+        return supplyAsync(() -> send(message, address), NetworkService.NETWORK_IO_POOL);
+    }
+
     public Connection send(Message message, Connection connection) {
         if (connection.isStopped()) {
             throw new ConnectionClosedException(connection);
@@ -213,45 +218,21 @@ public class Node implements Connection.Handler {
         }
     }
 
-
-    public CompletableFuture<Connection> sendAsync(Message message, Address address) {
-        return getConnectionAsync(address)
-                .thenCompose(connection -> sendAsync(message, connection));
-    }
-
     public CompletableFuture<Connection> sendAsync(Message message, Connection connection) {
-        if (connection.isStopped()) {
-            return CompletableFuture.failedFuture(new ConnectionClosedException(connection));
-        }
-        return authorizationService.createToken(message.getClass())
-                .thenCompose(token -> connection.sendAsync(new AuthorizedMessage(message, token)))
-                .whenComplete((con, throwable) -> {
-                    if (throwable != null) {
-                        if (connection.isRunning()) {
-                            handleException(connection, throwable);
-                            closeConnection(connection, CloseReason.EXCEPTION.exception(throwable));
-                        }
-                    }
-                });
+        return supplyAsync(() -> send(message, connection), NetworkService.NETWORK_IO_POOL);
     }
 
-    public CompletableFuture<Connection> getConnectionAsync(Address address) {
-        return getConnectionAsync(address, true);
-    }
 
-    public CompletableFuture<Connection> getConnectionAsync(Address address, boolean allowUnverifiedAddress) {
-        if (outboundConnectionsByAddress.containsKey(address)) {
-            return CompletableFuture.completedFuture(outboundConnectionsByAddress.get(address));
-        } else if (inboundConnectionsByAddress.containsKey(address) &&
-                (allowUnverifiedAddress || inboundConnectionsByAddress.get(address).isPeerAddressVerified())) {
-            return CompletableFuture.completedFuture(inboundConnectionsByAddress.get(address));
-        } else {
-            return createOutboundConnectionAsync(address);
-        }
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Connection
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Connection getConnection(Address address) {
         return getConnection(address, true);
+    }
+
+    public CompletableFuture<Connection> getConnectionAsync(Address address) {
+        return supplyAsync(() -> getConnection(address), NetworkService.NETWORK_IO_POOL);
     }
 
     public Connection getConnection(Address address, boolean allowUnverifiedAddress) {
@@ -265,20 +246,10 @@ public class Node implements Connection.Handler {
         }
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // OutboundConnection
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private CompletableFuture<Connection> createOutboundConnectionAsync(Address address) {
-        return myCapability.map(capability -> createOutboundConnectionAsync(address, capability))
-                .orElseGet(() -> initializeServerAsync(NetworkUtils.findFreeSystemPort())
-                        .thenCompose(serverSocketResult -> createOutboundConnectionAsync(address, myCapability.get())));
-    }
-
-    private CompletableFuture<Connection> createOutboundConnectionAsync(Address address, Capability myCapability) {
-        return CompletableFuture.supplyAsync(() -> createOutboundConnection(address, myCapability),
-                ExecutorFactory.newSingleThreadExecutor("Node.createOutboundConnection"));
-    }
 
     private Connection createOutboundConnection(Address address) {
         return myCapability.map(capability -> createOutboundConnection(address, capability))
@@ -376,6 +347,7 @@ public class Node implements Connection.Handler {
         if (isStopped) {
             return;
         }
+        // We get called from Connection on the dispatcher thread.
         if (message instanceof AuthorizedMessage authorizedMessage) {
             if (authorizationService.isAuthorized(authorizedMessage)) {
                 Message payLoadMessage = authorizedMessage.message();
@@ -409,17 +381,21 @@ public class Node implements Connection.Handler {
         listeners.forEach(listener -> listener.onDisconnect(connection, closeReason));
     }
 
-    public CompletableFuture<Connection> closeConnection(Connection connection, CloseReason closeReason) {
+    public void closeConnection(Connection connection, CloseReason closeReason) {
         log.debug("Node {} got called closeConnection for {}", this, connection);
-        return connection.close(closeReason);
+        connection.close(closeReason);
     }
 
-    public CompletableFuture<Connection> closeConnectionGracefully(Connection connection, CloseReason closeReason) {
-        return sendAsync(new CloseConnectionMessage(closeReason), connection)
-                .orTimeout(200, MILLISECONDS)
-                .whenComplete((c, t) -> connection.close(CLOSE_MSG_SENT.details(closeReason.name())));
+    public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
+        return runAsync(() -> closeConnectionGracefully(connection, closeReason), NetworkService.NETWORK_IO_POOL);
     }
 
+    public void closeConnectionGracefully(Connection connection, CloseReason closeReason) {
+        send(new CloseConnectionMessage(closeReason), connection);
+        connection.close(CLOSE_MSG_SENT.details(closeReason.name()));
+    }
+
+    //todo
     public CompletableFuture<Void> shutdown() {
         log.info("Node {} shutdown", this);
         if (isStopped) {
@@ -433,14 +409,16 @@ public class Node implements Connection.Handler {
                     connectionHandshakes.size() +
                     +1); // For transport
             outboundConnectionsByAddress.values()
-                    .forEach(connection -> closeConnectionGracefully(connection, SHUTDOWN)
+                    .forEach(connection -> closeConnectionGracefullyAsync(connection, SHUTDOWN)
                             .whenComplete((c, t) -> latch.countDown()));
             inboundConnectionsByAddress.values()
-                    .forEach(connection -> closeConnectionGracefully(connection, SHUTDOWN)
+                    .forEach(connection -> closeConnectionGracefullyAsync(connection, SHUTDOWN)
                             .whenComplete((c, t) -> latch.countDown()));
             connectionHandshakes.values()
-                    .forEach(handshake -> handshake.shutdown()
-                            .whenComplete((c, t) -> latch.countDown()));
+                    .forEach(handshake -> {
+                        handshake.shutdown();
+                        latch.countDown();
+                    });
             server.ifPresent(Server::shutdown);
             transport.shutdown().whenComplete((__, t) -> latch.countDown());
             try {

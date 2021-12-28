@@ -81,7 +81,11 @@ public class NodesById implements Node.Listener {
         return getOrCreateNode(nodeId).getConnectionAsync(address);
     }
 
-    public CompletableFuture<Transport.ServerSocketResult> initializeServer(String nodeId, int serverPort) {
+    public Transport.ServerSocketResult initializeServer(String nodeId, int serverPort) {
+        return getOrCreateNode(nodeId).initializeServer(serverPort);
+    }
+
+    public CompletableFuture<Transport.ServerSocketResult> initializeServerAsync(String nodeId, int serverPort) {
         return getOrCreateNode(nodeId).initializeServerAsync(serverPort);
     }
 

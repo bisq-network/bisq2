@@ -30,7 +30,6 @@ import network.misq.persistence.Persistence;
 import network.misq.security.DigestUtil;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -67,15 +66,16 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
     }
 
     public CompletableFuture<Void> readPersisted() {
-        return CompletableFuture.runAsync(() -> {
-            if (new File(storageFilePath).exists()) {
-                Serializable serializable = Persistence.read(storageFilePath);
-                if (serializable instanceof ConcurrentHashMap) {
-                    ConcurrentHashMap<ByteArray, MailboxRequest> persisted = (ConcurrentHashMap<ByteArray, MailboxRequest>) serializable;
-                    maybePruneMap(persisted);
-                }
-            }
-        });
+        if (!new File(storageFilePath).exists()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return Persistence.readAsync(storageFilePath)
+                .whenComplete((serializable, t) -> {
+                    if (serializable instanceof ConcurrentHashMap) {
+                        ConcurrentHashMap<ByteArray, MailboxRequest> persisted = (ConcurrentHashMap<ByteArray, MailboxRequest>) serializable;
+                        map.putAll(persisted);
+                    }
+                }).thenApply(serializable -> null);
     }
 
     public Result add(AddMailboxRequest request) {

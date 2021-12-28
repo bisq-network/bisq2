@@ -34,14 +34,11 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 
 import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
-import static network.misq.common.threading.ExecutorFactory.newSingleThreadExecutor;
 
 /**
  * Represents an inbound or outbound connection to a peer node.
@@ -143,11 +140,6 @@ public abstract class Connection {
         });
     }
 
-    CompletableFuture<Connection> sendAsync(AuthorizedMessage message) {
-        return CompletableFuture.supplyAsync(() -> send(message), NetworkService.NETWORK_IO_POOL)
-                .thenApplyAsync(connection -> connection, newSingleThreadExecutor("Connection.send"));
-    }
-
     Connection send(AuthorizedMessage message) {
         if (isStopped) {
             log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
@@ -173,29 +165,26 @@ public abstract class Connection {
         }
     }
 
-    CompletableFuture<Connection> close(CloseReason closeReason) {
-        return supplyAsync(() -> {
-            if (isStopped) {
-                log.debug("Shut down already in progress {}", this);
-                return this;
-            }
-            log.debug("Shut down {}", this);
-            isStopped = true;
-            if (future != null) {
-                future.cancel(true);
-            }
-            runAsync(() -> {
-                handler.onConnectionClosed(this, closeReason);
-                listeners.forEach(listener -> listener.onConnectionClosed(closeReason));
-            }, newSingleThreadExecutor("Connection.onConnectionClosed"));
+    void close(CloseReason closeReason) {
+        if (isStopped) {
+            log.debug("Shut down already in progress {}", this);
+            return;
+        }
+        log.debug("Shut down {}", this);
+        isStopped = true;
+        if (future != null) {
+            future.cancel(true);
+        }
+        try {
+            socket.close();
+        } catch (IOException e) {
+            log.error("Error at socket.close", e);
+        }
+        runAsync(() -> {
+            handler.onConnectionClosed(this, closeReason);
+            listeners.forEach(listener -> listener.onConnectionClosed(closeReason));
             listeners.clear();
-            try {
-                socket.close();
-            } catch (IOException e) {
-                log.error("Error at socket.close", e);
-            }
-            return this;
-        }, newSingleThreadExecutor("Connection.close"));
+        }, NetworkService.DISPATCHER);
     }
 
     void notifyListeners(Message message) {

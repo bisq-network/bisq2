@@ -20,7 +20,6 @@ package network.misq.network.p2p.services.peergroup;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.timer.Scheduler;
-import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
@@ -34,8 +33,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static java.util.concurrent.CompletableFuture.delayedExecutor;
-import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static network.misq.network.p2p.node.CloseReason.*;
 
@@ -90,16 +87,26 @@ public class PeerGroupService {
 
     private void runBlockingTasks() {
         log.debug("Node {} called runBlockingTasks", node);
-        closeBanned().join();
-        maybeVerifyInboundConnections().join();
-        runAsync(this::maybeCloseDuplicateConnections, delayedExecutor(200, MILLISECONDS)).join();
-        runAsync(this::maybeCloseConnectionsToSeeds, delayedExecutor(200, MILLISECONDS)).join();
-        runAsync(this::maybeCloseAgedConnections, delayedExecutor(200, MILLISECONDS)).join();
-        runAsync(this::maybeCloseExceedingInboundConnections, delayedExecutor(200, MILLISECONDS)).join();
-        runAsync(this::maybeCloseExceedingConnections, delayedExecutor(200, MILLISECONDS)).join();
-        runAsync(this::maybeCreateConnections, delayedExecutor(200, MILLISECONDS)).join();
-        maybeRemoveReportedPeers();
-        maybeRemovePersistedPeers();
+        try {
+            closeBanned();
+            maybeVerifyInboundConnections();
+            Thread.sleep(100);
+            maybeCloseDuplicateConnections();
+            Thread.sleep(100);
+            maybeCloseConnectionsToSeeds();
+            Thread.sleep(100);
+            maybeCloseAgedConnections();
+            Thread.sleep(100);
+            maybeCloseExceedingInboundConnections();
+            Thread.sleep(100);
+            maybeCloseExceedingConnections();
+            Thread.sleep(100);
+            maybeCreateConnections();
+            maybeRemoveReportedPeers();
+            maybeRemovePersistedPeers();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public CompletableFuture<Void> shutdown() {
@@ -115,42 +122,32 @@ public class PeerGroupService {
     // Tasks
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private CompletableFuture<List<Connection>> closeBanned() {
+    private void closeBanned() {
         log.debug("Node {} called closeBanned", node);
-        return CompletableFutureUtils.allOf(peerGroup.getAllConnections()
-                        .filter(Connection::isRunning)
-                        .filter(connection -> banList.isBanned(connection.getPeerAddress()))
-                        .peek(connection -> log.info("{} -> {}: CloseQuarantined triggered close connection", node, connection.getPeerAddress()))
-                        .map(connection -> node.closeConnection(connection, CloseReason.BANNED)))
-                .orTimeout(config.timeout(), MILLISECONDS)
-                .exceptionally(throwable -> {
-                    log.error("Node {} failed at closeBanned with {}", node, throwable);
-                    return new ArrayList<>();
-                });
+        peerGroup.getAllConnections()
+                .filter(Connection::isRunning)
+                .filter(connection -> banList.isBanned(connection.getPeerAddress()))
+                .peek(connection -> log.info("{} -> {}: CloseQuarantined triggered close connection", node, connection.getPeerAddress()))
+                .forEach(connection -> node.closeConnection(connection, CloseReason.BANNED));
     }
 
-    private CompletableFuture<List<Boolean>> maybeVerifyInboundConnections() {
+    private void maybeVerifyInboundConnections() {
         log.debug("Node {} called maybeVerifyInboundConnections", node);
         // We only do the verification in about 30% of calls to avoid getting too much churn
-       /* if (new Random().nextInt(10) >= 3) {
-            return CompletableFuture.completedFuture(new ArrayList<>());
-        }*/
+        if (new Random().nextInt(10) >= 3) {
+            return;
+        }
         Set<Address> outboundAddresses = peerGroup.getOutboundConnections()
                 .filter(addressValidationService::isInProgress)
                 .map(Connection::getPeerAddress)
                 .collect(Collectors.toSet());
-        return CompletableFutureUtils.allOf(peerGroup.getInboundConnections()
-                        .filter(Connection::isRunning)
-                        .filter(inbound -> !inbound.isPeerAddressVerified())
-                        .filter(addressValidationService::isNotInProgress)
-                        .filter(inbound -> !outboundAddresses.contains(inbound.getPeerAddress()))
-                        .peek(inbound -> log.info("{} -> {}: Start addressValidationProtocol", node, inbound.getPeerAddress()))
-                        .map(addressValidationService::startAddressValidationProtocol))
-                .orTimeout(config.timeout(), MILLISECONDS)
-                .exceptionally(throwable -> {
-                    log.error("Node {} failed at maybeVerifyInboundConnections with {}", node, throwable);
-                    return new ArrayList<>();
-                });
+        peerGroup.getInboundConnections()
+                .filter(Connection::isRunning)
+                .filter(inbound -> !inbound.isPeerAddressVerified())
+                .filter(addressValidationService::isNotInProgress)
+                .filter(inbound -> !outboundAddresses.contains(inbound.getPeerAddress()))
+                .peek(inbound -> log.info("{} -> {}: Start addressValidationProtocol", node, inbound.getPeerAddress()))
+                .forEach(inbound -> addressValidationService.startAddressValidationProtocol(inbound).join());
     }
 
     /**
@@ -162,89 +159,67 @@ public class PeerGroupService {
                 .filter(addressValidationService::isNotInProgress)
                 .map(Connection::getPeerAddress)
                 .collect(Collectors.toSet());
-        CompletableFutureUtils.allOf(peerGroup.getInboundConnections()
-                        .filter(this::mayDisconnect)
-                        .filter(inbound -> outboundAddresses.contains(inbound.getPeerAddress()))
-                        .peek(inbound -> log.info("{} -> {}: Send CloseConnectionMessage as we have an " +
-                                        "outbound connection with the same address.",
-                                node, inbound.getPeerAddress()))
-                        .map(inbound -> node.closeConnectionGracefully(inbound, DUPLICATE_CONNECTION)))
-                .orTimeout(config.timeout(), MILLISECONDS)
-                .exceptionally(throwable -> {
-                    log.error("Node {} failed at maybeCloseDuplicateConnections with {}", node, throwable);
-                    return new ArrayList<>();
-                });
+        peerGroup.getInboundConnections()
+                .filter(this::mayDisconnect)
+                .filter(inbound -> outboundAddresses.contains(inbound.getPeerAddress()))
+                .peek(inbound -> log.info("{} -> {}: Send CloseConnectionMessage as we have an " +
+                                "outbound connection with the same address.",
+                        node, inbound.getPeerAddress()))
+                .forEach(inbound -> node.closeConnectionGracefully(inbound, DUPLICATE_CONNECTION));
     }
 
 
     private void maybeCloseConnectionsToSeeds() {
         log.debug("Node {} called maybeCloseConnectionsToSeeds", node);
         Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed(); // reversed as we use skip
-        CompletableFutureUtils.allOf(peerGroup.getAllConnections()
-                        .filter(this::mayDisconnect)
-                        .filter(peerGroup::isASeed)
-                        .sorted(comparator)
-                        .skip(config.maxSeeds())
-                        .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too " +
-                                        "many connections to seeds.",
-                                node, connection.getPeersCapability().address()))
-                        .map(connection -> node.closeConnectionGracefully(connection, TOO_MANY_CONNECTIONS_TO_SEEDS)))
-                .orTimeout(config.timeout(), MILLISECONDS)
-                .exceptionally(throwable -> {
-                    log.error("Node {} failed at maybeCloseConnectionsToSeeds with {}", node, throwable);
-                    return new ArrayList<>();
-                });
+        peerGroup.getAllConnections()
+                .filter(this::mayDisconnect)
+                .filter(peerGroup::isASeed)
+                .sorted(comparator)
+                .skip(config.maxSeeds())
+                .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too " +
+                                "many connections to seeds.",
+                        node, connection.getPeersCapability().address()))
+                .forEach(connection -> node.closeConnectionGracefully(connection, TOO_MANY_CONNECTIONS_TO_SEEDS));
     }
 
     private void maybeCloseAgedConnections() {
         log.debug("Node {} called maybeCloseAgedConnections", node);
-        CompletableFutureUtils.allOf(peerGroup.getAllConnections()
-                        .filter(this::mayDisconnect)
-                        .filter(connection -> connection.getMetrics().getAge() > config.maxAge())
-                        .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
-                                        "is too old.",
-                                node, connection.getPeersCapability().address()))
-                        .map(connection -> node.closeConnectionGracefully(connection, AGED_CONNECTION)))
-                .orTimeout(config.timeout(), MILLISECONDS)
-                .exceptionally(throwable -> {
-                    log.error("Node {} failed at maybeCloseAgedConnections with {}", node, throwable);
-                    return new ArrayList<>();
-                });
+        peerGroup.getAllConnections()
+                .filter(this::mayDisconnect)
+                .filter(connection -> connection.getMetrics().getAge() > config.maxAge())
+                .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
+                                "is too old.",
+                        node, connection.getPeersCapability().address()))
+                .forEach(connection -> node.closeConnectionGracefully(connection, AGED_CONNECTION));
+
     }
 
     private void maybeCloseExceedingInboundConnections() {
         log.debug("Node {} called maybeCloseExceedingInboundConnections", node);
         Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed();
-        CompletableFutureUtils.allOf(peerGroup.getInboundConnections()
-                        .filter(this::mayDisconnect)
-                        .sorted(comparator)
-                        .skip(peerGroup.getMaxInboundConnections())
-                        .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many inbound connections.",
-                                node, connection.getPeersCapability().address()))
-                        .map(connection -> node.closeConnectionGracefully(connection, TOO_MANY_INBOUND_CONNECTIONS)))
-                .orTimeout(config.timeout(), MILLISECONDS)
-                .exceptionally(throwable -> {
-                    log.error("Node {} failed at maybeCloseExceedingInboundConnections with {}", node, throwable);
-                    return new ArrayList<>();
-                });
+        peerGroup.getInboundConnections()
+                .filter(this::mayDisconnect)
+                .sorted(comparator)
+                .skip(peerGroup.getMaxInboundConnections())
+                .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many inbound connections.",
+                        node, connection.getPeersCapability().address()))
+                .forEach(connection -> node.closeConnectionGracefully(connection, TOO_MANY_INBOUND_CONNECTIONS));
+
     }
 
 
     private void maybeCloseExceedingConnections() {
         log.debug("Node {} called maybeCloseExceedingConnections", node);
         Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed();
-        CompletableFutureUtils.allOf(peerGroup.getAllConnections()
-                        .filter(this::mayDisconnect)
-                        .sorted(comparator)
-                        .skip(peerGroup.getMaxNumConnectedPeers())
-                        .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many connections.",
-                                node, connection.getPeersCapability().address()))
-                        .map(connection -> node.closeConnectionGracefully(connection, TOO_MANY_CONNECTIONS)))
-                .orTimeout(config.timeout(), MILLISECONDS)
-                .exceptionally(throwable -> {
-                    log.error("Node {} failed at maybeCloseExceedingConnections with {}", node, throwable);
-                    return new ArrayList<>();
-                });
+        peerGroup.getAllConnections()
+                .filter(this::mayDisconnect)
+                .sorted(comparator)
+                .skip(peerGroup.getMaxNumConnectedPeers())
+                .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many connections.",
+                        node, connection.getPeersCapability().address()))
+                .forEach(connection -> node.closeConnectionGracefully(connection, TOO_MANY_CONNECTIONS));
+
     }
 
     private void maybeCreateConnections() {
@@ -256,7 +231,7 @@ public class PeerGroupService {
             int numAllConnections = peerGroup.getNumConnections();
             int missing = minNumConnectedPeers - numAllConnections;
             if (missing <= 0) {
-                log.error("Node {} has sufficient outbound connections", node);
+                log.debug("Node {} has sufficient outbound connections", node);
                 CompletableFuture.completedFuture(null);
                 return;
             }

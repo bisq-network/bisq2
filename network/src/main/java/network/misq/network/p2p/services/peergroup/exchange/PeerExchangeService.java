@@ -49,7 +49,7 @@ public class PeerExchangeService implements Node.Listener {
     private final Node node;
     private final PeerExchangeStrategy peerExchangeStrategy;
     private final Map<String, PeerExchangeRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
-    private int doInitialPeerExchangeDelaySec = 1;
+    private int doInitialPeerExchangeDelaySec = 1; //todo move to config
     private volatile boolean isStopped;
     private Optional<Scheduler> scheduler = Optional.empty();
 
@@ -90,6 +90,8 @@ public class PeerExchangeService implements Node.Listener {
                                 .after(doInitialPeerExchangeDelaySec, TimeUnit.SECONDS)
                                 .name("PeerExchangeService.scheduler-" + node));
                         doInitialPeerExchangeDelaySec = Math.min(60, doInitialPeerExchangeDelaySec * 2);
+                    } else {
+                        scheduler.ifPresent(Scheduler::stop);
                     }
                     return CompletableFuture.completedFuture(null);
                 });

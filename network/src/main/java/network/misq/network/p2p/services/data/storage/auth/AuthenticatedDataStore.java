@@ -32,7 +32,6 @@ import network.misq.persistence.Persistence;
 import network.misq.security.DigestUtil;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -75,15 +74,16 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
     }
 
     public CompletableFuture<Void> readPersisted() {
-        return CompletableFuture.runAsync(() -> {
-            if (new File(storageFilePath).exists()) {
-                Serializable serializable = Persistence.read(storageFilePath);
-                if (serializable instanceof ConcurrentHashMap) {
-                    ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> persisted = (ConcurrentHashMap<ByteArray, AuthenticatedDataRequest>) serializable;
-                    maybePruneMap(persisted);
-                }
-            }
-        });
+        if (!new File(storageFilePath).exists()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return Persistence.readAsync(storageFilePath)
+                .whenComplete((serializable, t) -> {
+                    if (serializable instanceof ConcurrentHashMap) {
+                        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> persisted = (ConcurrentHashMap<ByteArray, AuthenticatedDataRequest>) serializable;
+                        maybePruneMap(persisted);
+                    }
+                }).thenApply(serializable -> null);
     }
 
     public Result add(AddAuthenticatedDataRequest request) {
@@ -96,7 +96,7 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
         if (request.equals(requestFromMap)) {
             return new Result(false).requestAlreadyReceived();
         }
-        
+
         if (requestFromMap != null && data.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
             return new Result(false).sequenceNrInvalid();
         }

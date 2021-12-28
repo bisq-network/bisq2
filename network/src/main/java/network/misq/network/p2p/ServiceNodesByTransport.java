@@ -89,13 +89,13 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Boolean> bootstrap(int port, @Nullable BiConsumer<Boolean, Throwable> resultHandler) {
+    public CompletableFuture<Boolean> bootstrapAsync(int port, @Nullable BiConsumer<Boolean, Throwable> resultHandler) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         AtomicInteger completed = new AtomicInteger(0);
         AtomicInteger failed = new AtomicInteger(0);
         int numNodes = map.size();
         map.values().forEach(networkNode -> {
-            networkNode.bootstrap(Node.DEFAULT_NODE_ID, port)
+            networkNode.bootstrapAsync(Node.DEFAULT_NODE_ID, port)
                     .whenComplete((result, throwable) -> {
                         if (result != null) {
                             int compl = completed.incrementAndGet();

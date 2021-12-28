@@ -32,9 +32,6 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-
-import static java.util.concurrent.CompletableFuture.runAsync;
 
 /**
  * At initial connection we exchange capabilities and require a valid AuthorizationToken (e.g. PoW).
@@ -164,12 +161,10 @@ class ConnectionHandshake {
         }
     }
 
-    CompletableFuture<Void> shutdown() {
-        return runAsync(() -> {
-            try {
-                socket.close();
-            } catch (IOException ignore) {
-            }
-        });
+    void shutdown() {
+        try {
+            socket.close();
+        } catch (IOException ignore) {
+        }
     }
 }

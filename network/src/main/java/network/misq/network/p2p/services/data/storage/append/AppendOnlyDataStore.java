@@ -26,7 +26,6 @@ import network.misq.persistence.Persistence;
 import network.misq.security.DigestUtil;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,15 +54,16 @@ public class AppendOnlyDataStore extends DataStore<AppendOnlyPayload> {
     }
 
     public CompletableFuture<Void> readPersisted() {
-        return CompletableFuture.runAsync(() -> {
-            if (new File(storageFilePath).exists()) {
-                Serializable serializable = Persistence.read(storageFilePath);
-                if (serializable instanceof ConcurrentHashMap) {
-                    ConcurrentHashMap<ByteArray, AppendOnlyPayload> persisted = (ConcurrentHashMap<ByteArray, AppendOnlyPayload>) serializable;
-                    map.putAll(persisted);
-                }
-            }
-        });
+        if (!new File(storageFilePath).exists()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return Persistence.readAsync(storageFilePath)
+                .whenComplete((serializable, t) -> {
+                    if (serializable instanceof ConcurrentHashMap) {
+                        ConcurrentHashMap<ByteArray, AppendOnlyPayload> persisted = (ConcurrentHashMap<ByteArray, AppendOnlyPayload>) serializable;
+                        map.putAll(persisted);
+                    }
+                }).thenApply(serializable -> null);
     }
 
     public boolean append(AppendOnlyPayload appendOnlyData) {

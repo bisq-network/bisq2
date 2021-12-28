@@ -19,6 +19,7 @@ package network.misq.network.p2p.services.data.broadcast;
 
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.CollectionUtil;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Connection;
@@ -33,6 +34,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
 public class Broadcaster implements Node.Listener {
@@ -77,28 +80,28 @@ public class Broadcaster implements Node.Listener {
         AtomicInteger numFaults = new AtomicInteger(0);
         long numConnections = peerGroup.getAllConnections().count();
         long numBroadcasts = Math.min(numConnections, Math.round(numConnections * distributionFactor));
-        log.error("Broadcast message to {} out of {} peers. distributionFactor={}",
+        log.debug("Broadcast message to {} out of {} peers. distributionFactor={}",
                 numBroadcasts, numConnections, distributionFactor);
         List<Connection> allConnections = peerGroup.getAllConnections().collect(Collectors.toList());
         Collections.shuffle(allConnections);
-        allConnections.stream()
-                .limit(numBroadcasts)
-                .forEach(connection -> {
-                    log.error("Node {} broadcast to {}", node, connection.getPeerAddress());
-                    node.sendAsync(new BroadcastMessage(message), connection)
-                            .whenComplete((c, throwable) -> {
-                                if (throwable == null) {
-                                    numSuccess.incrementAndGet();
-                                } else {
-                                    numFaults.incrementAndGet();
-                                }
-                                if (numSuccess.get() + numFaults.get() == numBroadcasts) {
-                                    future.complete(new BroadcastResult(numSuccess.get(),
-                                            numFaults.get(),
-                                            System.currentTimeMillis() - ts));
-                                }
-                            });
-                });
+        runAsync(() -> {
+            allConnections.stream()
+                    .limit(numBroadcasts)
+                    .forEach(connection -> {
+                        log.debug("Node {} broadcast to {}", node, connection.getPeerAddress());
+                        try {
+                            node.send(new BroadcastMessage(message), connection);
+                            numSuccess.incrementAndGet();
+                        } catch (Throwable throwable) {
+                            numFaults.incrementAndGet();
+                        }
+                        if (numSuccess.get() + numFaults.get() == numBroadcasts) {
+                            future.complete(new BroadcastResult(numSuccess.get(),
+                                    numFaults.get(),
+                                    System.currentTimeMillis() - ts));
+                        }
+                    });
+        }, NetworkService.NETWORK_IO_POOL);
         return future;
     }
 

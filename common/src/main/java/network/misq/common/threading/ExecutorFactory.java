@@ -67,7 +67,9 @@ public class ExecutorFactory {
                 .setNameFormat(name)
                 .setDaemon(true)
                 .build();
-        return Executors.newCachedThreadPool(threadFactory);
+        ExecutorService executorService = Executors.newCachedThreadPool(threadFactory);
+        ((ThreadPoolExecutor) executorService).setKeepAliveTime(1, TimeUnit.MILLISECONDS);
+        return executorService;
     }
 
     /**

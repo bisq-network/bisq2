@@ -62,7 +62,7 @@ public class SeedNodeApplicationSetup extends ApplicationSetup {
         List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
         // Assuming identityRepository depends on keyPairRepository being initialized... 
         allFutures.add(keyPairRepository.initialize());
-        allFutures.add(networkService.bootstrap());
+        allFutures.add(networkService.bootstrapAsync());
         // Once all have successfully completed our initialize is complete as well
         return CompletableFutureUtils.allOf(allFutures)
                 .thenApply(success -> success.stream().allMatch(e -> e))

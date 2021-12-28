@@ -137,7 +137,7 @@ public class MultiNodesSetup {
 
     public void bootstrap(Address address, Transport.Type transportType) {
         NetworkService networkService = createNetworkService(address, transportType);
-        networkService.bootstrap(address.getPort())
+        networkService.bootstrapAsync(address.getPort())
                 .whenComplete((r, t) -> handler.ifPresent(handler -> handler.onStateChange(address, networkService.getState())));
       /*  networkService.findServiceNode(transportType).ifPresent(serviceNode ->
                 serviceNode.bootstrap(Node.DEFAULT_NODE_ID, address.getPort())

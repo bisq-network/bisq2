@@ -68,9 +68,9 @@ public class NetworkService {
     // If a user has 10 offers with dedicated nodes and 5 connections open, its another 100 threads + 50 at sending 
     // messages. 100-200 threads might be a usual scenario, but it could also peak much higher, so we will give 
     // maximumPoolSize sufficient headroom and use a rather short keepAliveTimeInSec.
-    public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.IO-pool");
+    public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
-    public static final ExecutorService WORKER_POOL = ExecutorFactory.newFixedThreadPool("NetworkService.client-pool");
+    public static final ExecutorService WORKER_POOL = ExecutorFactory.newFixedThreadPool("NetworkService.worker-pool");
 
     public static record Config(String baseDir,
                                 Transport.Config transportConfig,
@@ -110,23 +110,32 @@ public class NetworkService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Boolean> bootstrap() {
-        return bootstrap(NetworkUtils.findFreeSystemPort());
+    public CompletableFuture<Boolean> bootstrapAsync() {
+        return bootstrapAsync(NetworkUtils.findFreeSystemPort());
     }
 
-    public CompletableFuture<Boolean> bootstrap(int port) {
-        return bootstrap(port, null);
+    public CompletableFuture<Boolean> bootstrapAsync(int port) {
+        return bootstrapAsync(port, null);
     }
 
-    public CompletableFuture<Boolean> bootstrap(int port, @Nullable BiConsumer<Boolean, Throwable> resultHandler) {
+    public CompletableFuture<Boolean> bootstrapAsync(int port, @Nullable BiConsumer<Boolean, Throwable> resultHandler) {
+        setState(State.INITIALIZE_PEER_GROUP);
+        return serviceNodesByTransport.bootstrapAsync(port, resultHandler)
+                .whenComplete((result, throwable) -> {
+                    if (throwable == null) {
+                        setState(State.PEER_GROUP_INITIALIZED);
+                    }
+                });
+    }
+ /*   public Boolean bootstrap(int port, @Nullable BiConsumer<Boolean, Throwable> resultHandler) {
         setState(State.BOOTSTRAPPING);
-        return serviceNodesByTransport.bootstrap(port, resultHandler)
+        return serviceNodesByTransport.bootstrapAsync(port, resultHandler)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         setState(State.BOOTSTRAPPED);
                     }
                 });
-    }
+    }*/
 
     public CompletableFuture<Void> shutdown() {
         setState(State.SHUTDOWN_STARTED);

@@ -57,7 +57,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
             String nodeId = "node_" + i;
             int finalI = i;
             int serverPort = 1000 + i;
-            nodesById.initializeServer(nodeId, serverPort).whenComplete((serverSocketResult, t) -> {
+            nodesById.initializeServerAsync(nodeId, serverPort).whenComplete((serverSocketResult, t) -> {
                 if (t != null) {
                     fail(t);
                 }
@@ -139,7 +139,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         for (int i = 0; i < numNodes; i++) {
             String nodeId = "node_" + i;
             int serverPort = 1000 + i;
-            nodesById.initializeServer(nodeId, serverPort).whenComplete((r, t) -> {
+            nodesById.initializeServerAsync(nodeId, serverPort).whenComplete((r, t) -> {
                 if (t != null) {
                     fail(t);
                 }

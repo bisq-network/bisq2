@@ -123,9 +123,16 @@ public class ServiceNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Transport.ServerSocketResult> initializeServer(String nodeId, int serverPort) {
+    public Transport.ServerSocketResult initializeServer(String nodeId, int serverPort) {
         setState(State.INITIALIZE_SERVER);
-        return nodesById.initializeServer(nodeId, serverPort)
+        Transport.ServerSocketResult result = nodesById.initializeServer(nodeId, serverPort);
+        setState(State.SERVER_INITIALIZED);
+        return result;
+    }
+
+    public CompletableFuture<Transport.ServerSocketResult> initializeServerAsync(String nodeId, int serverPort) {
+        setState(State.INITIALIZE_SERVER);
+        return nodesById.initializeServerAsync(nodeId, serverPort)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         setState(State.SERVER_INITIALIZED);
@@ -133,20 +140,33 @@ public class ServiceNode {
                 });
     }
 
-    public CompletableFuture<Boolean> bootstrap(String nodeId, int serverPort) {
-        return initializeServer(nodeId, serverPort)
+    public Boolean bootstrap(String nodeId, int serverPort) {
+        initializeServer(nodeId, serverPort);
+        setState(State.INITIALIZE_PEER_GROUP);
+        Boolean result = initializePeerGroupAsync().join();
+        setState(State.PEER_GROUP_INITIALIZED);
+        return result;
+    }
+
+    public CompletableFuture<Boolean> bootstrapAsync(String nodeId, int serverPort) {
+        return initializeServerAsync(nodeId, serverPort)
                 .thenCompose(res -> {
-                    setState(State.BOOTSTRAPPING);
-                    return initializePeerGroup();
+                    setState(State.INITIALIZE_PEER_GROUP);
+                    return initializePeerGroupAsync();
                 })
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
-                        setState(State.BOOTSTRAPPED);
+                        setState(State.PEER_GROUP_INITIALIZED);
                     }
                 });
     }
 
-    public CompletableFuture<Boolean> initializePeerGroup() {
+    public Boolean initializePeerGroup() {
+        return peerGroupService.map(e -> e.initialize().join())
+                .orElse(true);
+    }
+
+    public CompletableFuture<Boolean> initializePeerGroupAsync() {
         return peerGroupService.map(PeerGroupService::initialize)
                 .orElse(CompletableFuture.completedFuture(true));
     }

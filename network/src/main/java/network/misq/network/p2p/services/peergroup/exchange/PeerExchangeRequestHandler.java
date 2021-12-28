@@ -29,14 +29,11 @@ import network.misq.network.p2p.services.peergroup.Peer;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Getter
 @Slf4j
 class PeerExchangeRequestHandler implements Connection.Listener {
-    private static final long TIMEOUT = 90;
-
     private final Node node;
     private final Connection connection;
     private final CompletableFuture<Set<Peer>> future = new CompletableFuture<>();
@@ -50,16 +47,15 @@ class PeerExchangeRequestHandler implements Connection.Listener {
     }
 
     CompletableFuture<Set<Peer>> request(Set<Peer> peersForPeerExchange) {
-        future.orTimeout(TIMEOUT, TimeUnit.SECONDS);
         log.debug("Node {} send PeerExchangeRequest to {} with my peers {}",
                 node, connection.getPeerAddress(), peersForPeerExchange);
-        node.sendAsync(new PeerExchangeRequest(nonce, peersForPeerExchange), connection)
-                .whenComplete((c, throwable) -> {
-                    if (throwable != null) {
-                        future.completeExceptionally(throwable);
-                        dispose();
-                    }
-                });
+        try {
+            // We get called from the IO thread, so we do not use the async send method
+            node.send(new PeerExchangeRequest(nonce, peersForPeerExchange), connection);
+        } catch (Throwable throwable) {
+            future.completeExceptionally(throwable);
+            dispose();
+        }
         return future;
     }
 

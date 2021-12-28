@@ -217,7 +217,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
     public void onStateChange(Address address, State networkServiceState) {
         UIThread.run(() -> Optional.ofNullable(nodeInfoBoxByAddress.get(address)).ifPresent(nodeInfoBox -> {
             nodeInfoBox.onStateChange(networkServiceState);
-            nodeInfoBox.setDefaultButton(networkServiceState == State.BOOTSTRAPPED);
+            nodeInfoBox.setDefaultButton(networkServiceState == State.PEER_GROUP_INITIALIZED);
         }));
     }
 

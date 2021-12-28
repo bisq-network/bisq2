@@ -51,8 +51,9 @@ public class KeepAliveService implements Node.Listener {
     }
 
     public void initialize() {
-        scheduler = Optional.of(Scheduler.run(this::sendPingIfRequired).periodically(config.interval())
-                .name("PeerExchangeService.scheduler-" + node));
+        scheduler = Optional.of(Scheduler.run(this::sendPingIfRequired)
+                .periodically(config.interval())
+                .name("KeepAliveService.scheduler-" + node));
     }
 
     private void sendPingIfRequired() {
