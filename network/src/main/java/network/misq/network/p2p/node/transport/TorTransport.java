@@ -3,6 +3,7 @@ package network.misq.network.p2p.node.transport;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.FileUtils;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.node.Address;
 import network.misq.tor.Constants;
 import network.misq.tor.Tor;
@@ -16,6 +17,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static java.io.File.separator;
+import static network.misq.common.threading.ExecutorFactory.newSingleThreadExecutor;
 
 
 @Slf4j
@@ -54,11 +56,15 @@ public class TorTransport implements Transport {
 
         log.info("Initialize Tor");
         long ts = System.currentTimeMillis();
-        return tor.startAsync()
-                .thenApply(result -> {
-                    log.info("Tor initialized after {} ms", System.currentTimeMillis() - ts);
-                    return true;
-                });
+        return tor.startAsync(NetworkService.NETWORK_IO_POOL)
+                .whenComplete((result, throwable) -> {
+                    if (throwable == null) {
+                        log.info("Tor initialized after {} ms", System.currentTimeMillis() - ts);
+                    } else {
+                        log.error("tor.startAsync failed", throwable);
+                    }
+                })
+                .thenApplyAsync(result -> result, newSingleThreadExecutor("TorTransport.initialize"));
     }
 
     @Override
@@ -67,11 +73,12 @@ public class TorTransport implements Transport {
         long ts = System.currentTimeMillis();
         try {
             TorServerSocket torServerSocket = tor.getTorServerSocket();
-            return torServerSocket.bindAsync(port, nodeId)
+            return torServerSocket.bindAsync(port, nodeId, NetworkService.NETWORK_IO_POOL)
                     .thenApply(onionAddress -> {
                         log.info("Tor hidden service Ready. Took {} ms. Onion address={}", System.currentTimeMillis() - ts, onionAddress);
                         return new ServerSocketResult(nodeId, torServerSocket, new Address(onionAddress.getHost(), onionAddress.getPort()));
-                    });
+                    })
+                    .thenApplyAsync(result -> result, newSingleThreadExecutor("TorTransport.getServerSocket"));
         } catch (IOException e) {
             log.error(e.toString(), e);
             return CompletableFuture.failedFuture(e);
@@ -97,7 +104,7 @@ public class TorTransport implements Transport {
             if (tor != null) {
                 tor.shutdown();
             }
-        });
+        }, newSingleThreadExecutor("TorTransport.shutdown"));
     }
 
     //todo move to torify lib

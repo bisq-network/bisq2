@@ -14,6 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import static java.io.File.separator;
+import static network.misq.common.threading.ExecutorFactory.newSingleThreadExecutor;
 
 // Start I2P
 // Enable SAM at http://127.0.0.1:7657/configclients
@@ -30,19 +31,16 @@ public class I2PTransport implements Transport {
     }
 
     public CompletableFuture<Boolean> initialize() {
-        if (initializeCalled) {
-            return CompletableFuture.completedFuture(true);
-        }
-        initializeCalled = true;
-
-        log.debug("Initialize");
-        try {
-            samClient = SamClient.getSamClient(i2pDirPath);
-            return CompletableFuture.completedFuture(true);
-        } catch (Exception exception) {
-            log.error(exception.toString(), exception);
-            return CompletableFuture.failedFuture(exception);
-        }
+        return CompletableFuture.supplyAsync(() -> {
+                    if (initializeCalled) {
+                        return true;
+                    }
+                    initializeCalled = true;
+                    log.debug("Initialize");
+                    samClient = SamClient.getSamClient(i2pDirPath);
+                    return true;
+                }, NetworkService.NETWORK_IO_POOL)
+                .thenApplyAsync(result -> result, newSingleThreadExecutor("I2PTransport.initialize"));
     }
 
 
@@ -50,29 +48,31 @@ public class I2PTransport implements Transport {
     public CompletableFuture<ServerSocketResult> getServerSocket(int port, String nodeId) {
         log.debug("Create serverSocket");
         return CompletableFuture.supplyAsync(() -> {
-            Thread.currentThread().setName("I2PTransport.getServerSocket-nodeId=" + nodeId + "-port=" + port);
-            try {
-                sessionId = nodeId + port;
-                ServerSocket serverSocket = samClient.getServerSocket(sessionId, NetworkUtils.findFreeSystemPort());
-                String destination = samClient.getMyDestination(sessionId);
-                // Port is irrelevant for I2P
-                Address address = new Address(destination, port);
-                log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
-                return new ServerSocketResult(nodeId, serverSocket, address);
-            } catch (Exception exception) {
-                log.error(exception.toString(), exception);
-                throw new CompletionException(exception);
-            }
-        }, NetworkService.NETWORK_IO_POOL);
+                    Thread.currentThread().setName("I2PTransport.getServerSocket-nodeId=" + nodeId + "-port=" + port);
+                    try {
+                        sessionId = nodeId + port;
+                        ServerSocket serverSocket = samClient.getServerSocket(sessionId, NetworkUtils.findFreeSystemPort());
+                        String destination = samClient.getMyDestination(sessionId);
+                        // Port is irrelevant for I2P
+                        Address address = new Address(destination, port);
+                        log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
+                        return new ServerSocketResult(nodeId, serverSocket, address);
+                    } catch (Exception exception) {
+                        log.error(exception.toString(), exception);
+                        throw new CompletionException(exception);
+                    }
+                }, NetworkService.NETWORK_IO_POOL)
+                .thenApplyAsync(result -> result, newSingleThreadExecutor("I2PTransport.getServerSocket"));
     }
 
     @Override
     public Socket getSocket(Address address) throws IOException {
         try {
+            //todo check usage of sessionId
             log.debug("Create new Socket to {} with sessionId={}", address, sessionId);
-            //todo pass session nodeId
-            Socket socket = samClient.connect(address.getHost(), sessionId);
-            log.debug("Created new Socket");
+            long ts = System.currentTimeMillis();
+            Socket socket = samClient.getSocket(address.getHost(), sessionId);
+            log.error("I2P socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
             return socket;
         } catch (IOException exception) {
             log.error(exception.toString(), exception);
@@ -87,7 +87,7 @@ public class I2PTransport implements Transport {
                 samClient.shutdown();
             }
             initializeCalled = false;
-        });
+        }, newSingleThreadExecutor("I2PTransport.shutdown"));
     }
 
     @Override

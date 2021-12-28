@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.network.p2p.node.transport.Transport;
 
 import java.net.Socket;
+import java.util.function.BiConsumer;
 
 @Slf4j
 public class InboundConnection extends Connection {
@@ -36,8 +37,9 @@ public class InboundConnection extends Connection {
                       Transport.ServerSocketResult serverSocketResult,
                       Capability peersCapability,
                       Load peersLoad,
-                      Handler handler) {
-        super(socket, peersCapability, peersLoad, handler);
+                      Handler handler,
+                      BiConsumer<Connection, Exception> errorHandler) {
+        super(socket, peersCapability, peersLoad, handler, errorHandler);
         this.serverSocketResult = serverSocketResult;
         log.debug("Create inboundConnection from server: {}", serverSocketResult);
     }

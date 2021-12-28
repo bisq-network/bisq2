@@ -17,9 +17,7 @@ package network.misq.common.util;/*
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -77,38 +75,5 @@ public class CompletableFutureUtils {
         f1.thenAccept(result::complete);
         f2.thenAccept(result::complete);
         return result;
-    }
-
-    public static CompletableFuture<Void> pause(long delayMs) {
-        return pause(delayMs, TimeUnit.MILLISECONDS);
-    }
-
-    public static CompletableFuture<Void> pause(long minDelayMs, long maxDelayMs) {
-        return pause(minDelayMs, maxDelayMs, TimeUnit.MILLISECONDS);
-    }
-
-    public static CompletableFuture<Void> pause(long minDelayMs, long maxDelayMs, TimeUnit timeUnit) {
-        return delayRandom(CompletableFuture.completedFuture(null), minDelayMs, maxDelayMs, timeUnit);
-    }
-
-    public static CompletableFuture<Void> pause(long delay, TimeUnit timeUnit) {
-        return delay(CompletableFuture.completedFuture(null), delay, timeUnit);
-    }
-
-    public static <T> CompletableFuture<T> delay(CompletableFuture<T> future, long delayMs) {
-        return delay(future, delayMs, TimeUnit.MILLISECONDS);
-    }
-
-    public static <T> CompletableFuture<T> delay(CompletableFuture<T> future, long delay, TimeUnit timeUnit) {
-        return future.thenApplyAsync(__ -> __, CompletableFuture.delayedExecutor(delay, timeUnit));
-    }
-
-    public static <T> CompletableFuture<T> delayRandom(CompletableFuture<T> future, long minDelayMs, long maxDelayMs) {
-        return delayRandom(future, minDelayMs, maxDelayMs, TimeUnit.MILLISECONDS);
-    }
-
-    public static <T> CompletableFuture<T> delayRandom(CompletableFuture<T> future, long minDelay, long maxDelay, TimeUnit timeUnit) {
-        long delay = minDelay + new Random().nextInt((int) (maxDelay - minDelay));
-        return future.thenApplyAsync(__ -> __, CompletableFuture.delayedExecutor(delay, timeUnit));
     }
 }

@@ -67,12 +67,9 @@ public class NetworkService {
     // If a user has 10 offers with dedicated nodes and 5 connections open, its another 100 threads + 50 at sending 
     // messages. 100-200 threads might be a usual scenario, but it could also peak much higher, so we will give 
     // maximumPoolSize sufficient headroom and use a rather short keepAliveTimeInSec.
-    public static final ThreadPoolExecutor NETWORK_IO_POOL = ExecutorFactory.getThreadPoolExecutor("NETWORK_IO_POOL",
-            10,
-            5000,
-            1,
-            new SynchronousQueue<>());
-
+    public static final ThreadPoolExecutor NETWORK_IO_POOL = ExecutorFactory.getThreadPoolExecutor("NetworkService.IO");
+    public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
+    
     public static record Config(String baseDir,
                                 Transport.Config transportConfig,
                                 Set<Transport.Type> supportedTransportTypes,

@@ -19,6 +19,7 @@ package network.misq.network.p2p.services.monitor;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.timer.Scheduler;
 import network.misq.common.util.ByteUnit;
 import network.misq.common.util.CompletableFutureUtils;
@@ -172,7 +173,7 @@ public class MultiNodesSetup {
                     new PubKey(senderKeyPair.getPublic(), senderKeyId),
                     nodeId);
             send(senderNetworkId, receiverNetworkId, senderKeyPair, message);
-        });
+        }, ExecutorFactory.newSingleThreadExecutor("MultiNodesSetup.send"));
     }
 
     private void send(NetworkId senderNetworkId, NetworkId receiverNetworkId, KeyPair senderKeyPair, String message) {

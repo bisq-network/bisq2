@@ -34,8 +34,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static java.util.concurrent.CompletableFuture.runAsync;
-
 @Slf4j
 public class Broadcaster implements Node.Listener {
     private static final long BROADCAST_TIMEOUT = 90;
@@ -58,7 +56,7 @@ public class Broadcaster implements Node.Listener {
         }
 
         if (message instanceof BroadcastMessage broadcastMessage) {
-            runAsync(() -> listeners.forEach(listener -> listener.onMessage(broadcastMessage.message(), connection, nodeId)));
+            listeners.forEach(listener -> listener.onMessage(broadcastMessage.message(), connection, nodeId));
         }
     }
 

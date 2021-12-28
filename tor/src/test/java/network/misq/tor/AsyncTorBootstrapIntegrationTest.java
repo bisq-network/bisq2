@@ -9,6 +9,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static network.misq.tor.Constants.VERSION;
@@ -17,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class AsyncBootstrapIntegrationTest extends AbstractTorTest {
+public class AsyncTorBootstrapIntegrationTest extends AbstractTorTest {
 
     @Test
     @Order(1)
@@ -28,7 +29,7 @@ public class AsyncBootstrapIntegrationTest extends AbstractTorTest {
             tor = Tor.getTor(torDirPathSpec);
 
             CountDownLatch latch = new CountDownLatch(1);
-            tor.startAsync()
+            tor.startAsync(Executors.newSingleThreadExecutor())
                     .thenCompose(result -> startServerAsync()
                             .thenAccept(onionAddress -> {
                                 if (onionAddress == null) {
@@ -66,7 +67,7 @@ public class AsyncBootstrapIntegrationTest extends AbstractTorTest {
         }).start();
 
         Thread mainThread = Thread.currentThread();
-        tor.startAsync()
+        tor.startAsync(Executors.newSingleThreadExecutor())
                 .exceptionally(throwable -> {
                     File versionFile = new File(torDirPathSpec + File.separator + VERSION);
                     assertFalse(versionFile.exists());

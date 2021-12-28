@@ -155,5 +155,25 @@ default `Node` with nodeId `DEFAULT` used for the `PeerGroupService`.
 This node has not enabled the `ConfidentialMessageService` as it is not used as a user agent node but only for
 propagating data in the overlay network.
 
+## Threading model
+
+Threading is complex in the network layer as many parallel execution streams happen, and we deal with blocking IO.
+Javas non-blocking IO APIs do not support socks proxy which is required for Tor. 
+
+
+### Server
+A node starts a `Server` instance with a blocking IO thread for accepting new sockets on the given port.
+Once a new socket is accepted it creates a new thread and call the socket handler (`Node`) in that thread context.
+The `Node` starts the `ConnectionHandshake` with a blocking read on the input stream of the socket. Once the request 
+message has been read it writes (blocking) to the output stream the reply message and after that returns to the 
+caller (`Node`). The `Node` creates an `InboundConnection` puts it into the concurrent map and creates a 
+dispatcher thread to notify the listeners about the new connections.
+After that the thread execution is completed.
+
+We have this structure of threads:
+- `Server.listen`: Blocking IO thread listening for new sockets in a while loop
+    - `Server.acceptSocket`: Starts blocking `ConnectionHandshake` protocol, creates `InboundConnection` and creates a dispatcher thread for notifying listeners.
+      - `Node.dispatcher`: Thread for calling `onConnection` on listeners. 
+
 Last update: 11.12.2021
 

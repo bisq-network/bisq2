@@ -19,7 +19,6 @@ package network.misq.tor;
 
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.TorControlConnection;
-import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.util.FileUtils;
 import network.misq.common.util.NetworkUtils;
 
@@ -28,7 +27,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 
 import static network.misq.tor.Constants.*;
 
@@ -37,18 +39,17 @@ public class TorServerSocket extends ServerSocket {
     private final String hsDirPath;
     private final TorController torController;
     private Optional<OnionAddress> onionAddress = Optional.empty();
-    private final ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("TorServerSocket.bindAsync");
 
     public TorServerSocket(String torDirPath, TorController torController) throws IOException {
         this.hsDirPath = torDirPath + File.separator + HS_DIR;
         this.torController = torController;
     }
 
-    public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort) {
-        return bindAsync(hiddenServicePort, "default");
+    public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort, Executor executor) {
+        return bindAsync(hiddenServicePort, "default", executor);
     }
 
-    public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort, String id) {
+    public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort, String id, Executor executor) {
         return bindAsync(hiddenServicePort, NetworkUtils.findFreeSystemPort(), id, executor);
     }
 
@@ -123,7 +124,6 @@ public class TorServerSocket extends ServerSocket {
             } catch (IOException ignore) {
             }
         });
-        ExecutorFactory.shutdownAndAwaitTermination(executor);
     }
 
     public Optional<OnionAddress> getOnionAddress() {

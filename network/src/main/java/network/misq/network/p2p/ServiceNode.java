@@ -135,7 +135,7 @@ public class ServiceNode {
 
     public CompletableFuture<Boolean> bootstrap(String nodeId, int serverPort) {
         return initializeServer(nodeId, serverPort)
-                .thenComposeAsync(res -> {
+                .thenCompose(res -> {
                     setState(State.BOOTSTRAPPING);
                     return initializePeerGroup();
                 })

@@ -34,8 +34,8 @@ import java.net.Proxy;
 import java.net.Socket;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TorDemo {
     private static final Logger log = LoggerFactory.getLogger(TorDemo.class);
@@ -63,10 +63,9 @@ public class TorDemo {
     }
 
     private static void useNonBlockingAPI(String torDirPath) throws InterruptedException {
-        AtomicBoolean stopped = new AtomicBoolean(false);
         tor = Tor.getTor(torDirPath);
         CountDownLatch latch = new CountDownLatch(1);
-        tor.startAsync()
+        tor.startAsync(Executors.newSingleThreadExecutor())
                 .thenCompose(result -> startServerAsync()
                         .thenAccept(onionAddress -> {
                             if (onionAddress == null) {
@@ -95,7 +94,7 @@ public class TorDemo {
         try {
             TorServerSocket torServerSocket = tor.getTorServerSocket();
             torServerSocket
-                    .bindAsync(3000, "hiddenservice_3")
+                    .bindAsync(3000, "hiddenservice_3", Executors.newSingleThreadExecutor())
                     .whenComplete((onionAddress, throwable) -> {
                         if (throwable == null) {
                             runServer(torServerSocket);

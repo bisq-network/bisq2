@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class BlockingBootstrapIntegrationTest extends AbstractTorTest {
+public class BlockingTorBootstrapIntegrationTest extends AbstractTorTest {
 
     @Test
     @Order(1)

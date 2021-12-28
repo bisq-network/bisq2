@@ -75,7 +75,7 @@ public class PeerGroupService {
     }
 
     public CompletableFuture<Boolean> initialize() {
-        log.error("Node {} called initialize", node);
+        log.debug("Node {} called initialize", node);
         return peerExchangeService.doInitialPeerExchange()
                 .thenCompose(__ -> {
                     log.info("Node {} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
@@ -89,7 +89,7 @@ public class PeerGroupService {
     }
 
     private void runBlockingTasks() {
-        log.error("Node {} called runBlockingTasks", node);
+        log.debug("Node {} called runBlockingTasks", node);
         closeBanned().join();
         maybeVerifyInboundConnections().join();
         runAsync(this::maybeCloseDuplicateConnections, delayedExecutor(200, MILLISECONDS)).join();
@@ -100,7 +100,6 @@ public class PeerGroupService {
         runAsync(this::maybeCreateConnections, delayedExecutor(200, MILLISECONDS)).join();
         maybeRemoveReportedPeers();
         maybeRemovePersistedPeers();
-        log.error("Node {} called runBlockingTasks DONE", node);
     }
 
     public CompletableFuture<Void> shutdown() {
@@ -117,7 +116,7 @@ public class PeerGroupService {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private CompletableFuture<List<Connection>> closeBanned() {
-        log.error("Node {} called closeBanned", node);
+        log.debug("Node {} called closeBanned", node);
         return CompletableFutureUtils.allOf(peerGroup.getAllConnections()
                         .filter(Connection::isRunning)
                         .filter(connection -> banList.isBanned(connection.getPeerAddress()))
@@ -131,7 +130,7 @@ public class PeerGroupService {
     }
 
     private CompletableFuture<List<Boolean>> maybeVerifyInboundConnections() {
-        log.error("Node {} called maybeVerifyInboundConnections", node);
+        log.debug("Node {} called maybeVerifyInboundConnections", node);
         // We only do the verification in about 30% of calls to avoid getting too much churn
        /* if (new Random().nextInt(10) >= 3) {
             return CompletableFuture.completedFuture(new ArrayList<>());
@@ -158,7 +157,7 @@ public class PeerGroupService {
      * Remove duplicate connections (inbound connections which have an outbound connection with the same address)
      */
     private void maybeCloseDuplicateConnections() {
-        log.error("Node {} called maybeCloseDuplicateConnections", node);
+        log.debug("Node {} called maybeCloseDuplicateConnections", node);
         Set<Address> outboundAddresses = peerGroup.getOutboundConnections()
                 .filter(addressValidationService::isNotInProgress)
                 .map(Connection::getPeerAddress)
@@ -179,7 +178,7 @@ public class PeerGroupService {
 
 
     private void maybeCloseConnectionsToSeeds() {
-        log.error("Node {} called maybeCloseConnectionsToSeeds", node);
+        log.debug("Node {} called maybeCloseConnectionsToSeeds", node);
         Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed(); // reversed as we use skip
         CompletableFutureUtils.allOf(peerGroup.getAllConnections()
                         .filter(this::mayDisconnect)
@@ -198,7 +197,7 @@ public class PeerGroupService {
     }
 
     private void maybeCloseAgedConnections() {
-        log.error("Node {} called maybeCloseAgedConnections", node);
+        log.debug("Node {} called maybeCloseAgedConnections", node);
         CompletableFutureUtils.allOf(peerGroup.getAllConnections()
                         .filter(this::mayDisconnect)
                         .filter(connection -> connection.getMetrics().getAge() > config.maxAge())
@@ -214,7 +213,7 @@ public class PeerGroupService {
     }
 
     private void maybeCloseExceedingInboundConnections() {
-        log.error("Node {} called maybeCloseExceedingInboundConnections", node);
+        log.debug("Node {} called maybeCloseExceedingInboundConnections", node);
         Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed();
         CompletableFutureUtils.allOf(peerGroup.getInboundConnections()
                         .filter(this::mayDisconnect)
@@ -232,7 +231,7 @@ public class PeerGroupService {
 
 
     private void maybeCloseExceedingConnections() {
-        log.error("Node {} called maybeCloseExceedingConnections", node);
+        log.debug("Node {} called maybeCloseExceedingConnections", node);
         Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed();
         CompletableFutureUtils.allOf(peerGroup.getAllConnections()
                         .filter(this::mayDisconnect)
@@ -249,7 +248,7 @@ public class PeerGroupService {
     }
 
     private void maybeCreateConnections() {
-        log.error("Node {} called maybeCreateConnections", node);
+        log.debug("Node {} called maybeCreateConnections", node);
         int minNumConnectedPeers = peerGroup.getMinNumConnectedPeers();
         // We want to have at least 40% of our minNumConnectedPeers as outbound connections 
         if (getMissingOutboundConnections() <= 0) {
@@ -272,7 +271,7 @@ public class PeerGroupService {
             int numAllConnections = peerGroup.getNumConnections();
             int missing = minNumConnectedPeers - numAllConnections;
             if (missing <= 0) {
-                log.error("Node {} has sufficient connections", node);
+                log.debug("Node {} has sufficient connections", node);
                 CompletableFuture.completedFuture(null);
                 return;
             }

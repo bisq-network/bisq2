@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -50,7 +51,7 @@ public class TorIntegrationTest {
 
         }).start();
         Thread mainThread = Thread.currentThread();
-        tor.startAsync()
+        tor.startAsync(Executors.newSingleThreadExecutor())
                 .exceptionally(throwable -> {
                     assertFalse(versionFile.exists());
                     mainThread.interrupt();

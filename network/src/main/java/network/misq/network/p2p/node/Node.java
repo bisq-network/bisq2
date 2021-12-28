@@ -23,6 +23,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.NetworkUtils;
 import network.misq.common.util.StringUtils;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.authorization.AuthorizationService;
 import network.misq.network.p2p.node.authorization.AuthorizedMessage;
@@ -94,6 +95,7 @@ public class Node implements Connection.Handler {
     private final Map<String, ConnectionHandshake> connectionHandshakes = new ConcurrentHashMap<>();
     private Optional<Server> server = Optional.empty();
     private Optional<Capability> myCapability = Optional.empty();
+   
     private volatile boolean isStopped;
 
     public Node(BanList banList, Config config, String nodeId) {
@@ -130,40 +132,41 @@ public class Node implements Connection.Handler {
         ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, config.socketTimeout(), myCapability, authorizationService);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Inbound handshake request at: {}", myCapability.address());
-        connectionHandshake.onSocket(getMyLoad())
-                .whenComplete((result, throwable) -> {
-                    if (throwable != null) {
-                        connectionHandshake.shutdown();
-                        try {
-                            socket.close();
-                        } catch (IOException ignore) {
-                        }
-                        connectionHandshakes.remove(connectionHandshake.getId());
-                        handleException(throwable);
-                        return;
-                    }
+        try {
+            ConnectionHandshake.Result result = connectionHandshake.onSocket(getMyLoad());
+            Address address = result.capability().address();
+            log.debug("Inbound handshake completed: Initiated by {} to {}", address, myCapability.address());
+            if (inboundConnectionsByAddress.containsKey(address)) {
+                log.warn("Node {} have already an InboundConnection from {}. This can happen when a " +
+                                "handshake was in progress while we received a new connection from that address. " +
+                                "We will close the socket of that new connection and use the existing instead.",
+                        this, address);
+                try {
+                    socket.close();
+                } catch (IOException ignore) {
+                }
+                connectionHandshakes.remove(connectionHandshake.getId());
+                return;
+            }
 
-                    Address address = result.capability().address();
-                    log.debug("Inbound handshake completed: Initiated by {} to {}", address, myCapability.address());
-                    if (inboundConnectionsByAddress.containsKey(address)) {
-                        log.warn("Node {} have already an InboundConnection from {}. This can happen when a " +
-                                        "handshake was in progress while we received a new connection from that address. " +
-                                        "We will close the socket of that new connection and use the existing instead.",
-                                this, address);
-                        try {
-                            socket.close();
-                        } catch (IOException ignore) {
-                        }
-                        connectionHandshakes.remove(connectionHandshake.getId());
-                        return;
-                    }
-
-                    InboundConnection connection = new InboundConnection(socket, serverSocketResult, result.capability(), result.load(), this);
-                    inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
-                    connection.startListen(exception -> handleException(connection, exception));
-                    runAsync(() -> listeners.forEach(listener -> listener.onConnection(connection)));
-                    connectionHandshakes.remove(connectionHandshake.getId());
-                });
+            InboundConnection connection = new InboundConnection(socket,
+                    serverSocketResult,
+                    result.capability(),
+                    result.load(),
+                    this,
+                    this::handleException);
+            inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
+            connectionHandshakes.remove(connectionHandshake.getId());
+            runAsync(() -> listeners.forEach(listener -> listener.onConnection(connection)), NetworkService.DISPATCHER);
+        } catch (Throwable throwable) {
+            connectionHandshake.shutdown();
+            try {
+                socket.close();
+            } catch (IOException ignore) {
+            }
+            connectionHandshakes.remove(connectionHandshake.getId());
+            handleException(throwable);
+        }
     }
 
 
@@ -264,12 +267,16 @@ public class Node implements Connection.Handler {
                         future.complete(outboundConnectionsByAddress.get(address));
                         return;
                     }
-                    OutboundConnection connection = new OutboundConnection(socket, address, result.capability(), result.load(), this);
+                    OutboundConnection connection = new OutboundConnection(socket,
+                            address,
+                            result.capability(),
+                            result.load(),
+                            this,
+                            this::handleException);
                     outboundConnectionsByAddress.put(address, connection);
-                    connection.startListen(exception -> handleException(connection, exception));
-                    runAsync(() -> listeners.forEach(listener -> listener.onConnection(connection)));
                     connectionHandshakes.remove(connectionHandshake.getId());
                     future.complete(connection);
+                    listeners.forEach(listener -> listener.onConnection(connection));
                 });
         return future;
     }
@@ -291,10 +298,8 @@ public class Node implements Connection.Handler {
                     log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this, connection.getPeerAddress(), closeConnectionMessage.closeReason());
                     closeConnection(connection, CLOSE_MSG_RECEIVED.details(closeConnectionMessage.closeReason().name()));
                 } else {
-                    runAsync(() -> {
-                        connection.notifyListeners(payLoadMessage);
-                        listeners.forEach(listener -> listener.onMessage(payLoadMessage, connection, nodeId));
-                    });
+                    connection.notifyListeners(payLoadMessage);
+                    listeners.forEach(listener -> listener.onMessage(payLoadMessage, connection, nodeId));
                 }
             } else {
                 log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(authorizedMessage.toString()));
@@ -315,7 +320,7 @@ public class Node implements Connection.Handler {
                 log.warn("Node {} did not had entry in outboundConnections. connection={}, peerAddress={}", this, connection, peerAddress);
             }
         }
-        runAsync(() -> listeners.forEach(listener -> listener.onDisconnect(connection, closeReason)));
+        listeners.forEach(listener -> listener.onDisconnect(connection, closeReason));
     }
 
     public CompletableFuture<Connection> closeConnection(Connection connection, CloseReason closeReason) {
@@ -336,12 +341,11 @@ public class Node implements Connection.Handler {
         }
         isStopped = true;
 
-        return CompletableFuture.runAsync(() -> {
+        return runAsync(() -> {
             CountDownLatch latch = new CountDownLatch(outboundConnectionsByAddress.values().size() +
                     inboundConnectionsByAddress.size() +
                     connectionHandshakes.size() +
-                    ((int) server.stream().count())
-                    + 1); // For transport
+                    +1); // For transport
             outboundConnectionsByAddress.values()
                     .forEach(connection -> closeConnectionGracefully(connection, SHUTDOWN)
                             .whenComplete((c, t) -> latch.countDown()));
@@ -351,7 +355,7 @@ public class Node implements Connection.Handler {
             connectionHandshakes.values()
                     .forEach(handshake -> handshake.shutdown()
                             .whenComplete((c, t) -> latch.countDown()));
-            server.ifPresent(server -> server.shutdown().whenComplete((__, t) -> latch.countDown()));
+            server.ifPresent(Server::shutdown);
             transport.shutdown().whenComplete((__, t) -> latch.countDown());
             try {
                 if (!latch.await(1, TimeUnit.SECONDS)) {

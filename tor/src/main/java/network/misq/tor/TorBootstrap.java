@@ -31,8 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static network.misq.tor.Constants.*;
 
 @Slf4j
-class Bootstrap {
-
+class TorBootstrap {
     private final List<String> bridgeConfig = new ArrayList<>();
     private final String torDirPath;
     private final File torDir;
@@ -47,7 +46,7 @@ class Bootstrap {
 
     private volatile boolean isStopped;
 
-    Bootstrap(String torDirPath) {
+    TorBootstrap(String torDirPath) {
         this.torDirPath = torDirPath;
 
         torDir = new File(torDirPath);
@@ -227,9 +226,8 @@ class Bootstrap {
     private void terminateProcessBuilder(Process torProcess) throws InterruptedException, IOException {
         // TODO investigate how to handle windows case?
         if (osType != OsType.WIN) {
-            int result = torProcess.waitFor();
             if (torProcess.waitFor() != 0) {
-               // throw new IOException("Terminate processBuilder exited with an error");
+                throw new IOException("Terminate processBuilder exited with an error");
             }
         }
         log.debug("Process builder terminated");

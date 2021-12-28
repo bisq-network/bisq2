@@ -27,14 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class ExecutorFactory {
     public static final AtomicInteger COUNTER = new AtomicInteger(0);
-    public static final ExecutorService WORK_STEALING_POOL = Executors.newWorkStealingPool();
-
-
-    public static CompletableFuture<Void> shutdown() {
-        return CompletableFuture.runAsync(() -> {
-            ExecutorFactory.shutdownAndAwaitTermination(WORK_STEALING_POOL, 100);
-        });
-    }
 
     public static void shutdownAndAwaitTermination(ExecutorService executor) {
         shutdownAndAwaitTermination(executor, 100);
@@ -65,12 +57,20 @@ public class ExecutorFactory {
         return Executors.newSingleThreadScheduledExecutor(threadFactory);
     }
 
-    public static ScheduledExecutorService newScheduledThreadPool(String name, int corePoolSize) {
-        ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name + "-" + COUNTER.incrementAndGet())
-                .setDaemon(true)
-                .build();
-        return Executors.newScheduledThreadPool(corePoolSize, threadFactory);
+
+    public static ThreadPoolExecutor getThreadPoolExecutor(String name) {
+        return getThreadPoolExecutor(name, 1, 10000, 1);
+    }
+
+    /**
+     * Uses a SynchronousQueue, so each submitted task requires a new thread as no queuing functionality is provided.
+     * To be used when we want to avoid overhead for new thread creation/destruction.
+     */
+    public static ThreadPoolExecutor getThreadPoolExecutor(String name,
+                                                           int corePoolSize,
+                                                           int maximumPoolSize,
+                                                           long keepAliveTimeInSec) {
+        return getThreadPoolExecutor(name, 1, 10000, 1, new SynchronousQueue<>());
     }
 
     public static ThreadPoolExecutor getThreadPoolExecutor(String name,
@@ -83,6 +83,6 @@ public class ExecutorFactory {
                 .setDaemon(true)
                 .build();
         return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
-                TimeUnit.SECONDS, workQueue, threadFactory);
+                TimeUnit.MILLISECONDS, workQueue, threadFactory);
     }
 }

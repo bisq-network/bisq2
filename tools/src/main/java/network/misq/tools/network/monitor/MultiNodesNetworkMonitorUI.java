@@ -44,7 +44,6 @@ import network.misq.network.p2p.services.monitor.MultiNodesSetup;
 
 import java.io.File;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -185,12 +184,10 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
         String baseDir = OsUtils.getUserDataDir() + File.separator + "misq_MultiNodes";
         NetworkServiceConfigFactory networkServiceConfigFactory = new NetworkServiceConfigFactory(baseDir);
 
-        CompletableFuture.runAsync(() -> {
-            multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory.get(), transports, bootstrapAll);
-            multiNodesSetup.addNetworkInfoConsumer(this);
-            multiNodesSetup.bootstrap(addressesToBootstrap)
-                    .forEach((transportType, addresses) -> addresses.forEach(address -> addNodeInfoBox(address, transportType)));
-        });
+        multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory.get(), transports, bootstrapAll);
+        multiNodesSetup.addNetworkInfoConsumer(this);
+        multiNodesSetup.bootstrap(addressesToBootstrap)
+                .forEach((transportType, addresses) -> addresses.forEach(address -> addNodeInfoBox(address, transportType)));
     }
 
     @Override
@@ -276,12 +273,12 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
         stop.setDisable(multiNodesSetup.findNetworkService(address).isEmpty());
 
         start.setOnAction((event) -> {
-            CompletableFuture.runAsync(() -> multiNodesSetup.bootstrap(address, transportType));
+            multiNodesSetup.bootstrap(address, transportType);
             start.setDisable(true);
             stop.setDisable(false);
         });
         stop.setOnAction((event) -> {
-            CompletableFuture.runAsync(() -> multiNodesSetup.shutdown(address));
+            multiNodesSetup.shutdown(address);
             stop.setDisable(true);
             start.setDisable(false);
         });

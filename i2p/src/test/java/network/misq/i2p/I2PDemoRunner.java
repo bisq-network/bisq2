@@ -78,7 +78,7 @@ public class I2PDemoRunner {
                     }
                 }
 
-                Socket clientSocketBobToAlice = samClient.connect(destinationAlice.get(), sessionIdBob);
+                Socket clientSocketBobToAlice = samClient.getSocket(destinationAlice.get(), sessionIdBob);
                 PrintWriter printWriter = new PrintWriter(clientSocketBobToAlice.getOutputStream(), true);
                 printWriter.println("####### Hello from Bob1");
                 printWriter.flush();
@@ -106,7 +106,7 @@ public class I2PDemoRunner {
                     } catch (InterruptedException ignore) {
                     }
                 }
-                Socket clientSocketCarolToAlice = samClient.connect(destinationAlice.get(), sessionIdCarol);
+                Socket clientSocketCarolToAlice = samClient.getSocket(destinationAlice.get(), sessionIdCarol);
                 PrintWriter printWriter = new PrintWriter(clientSocketCarolToAlice.getOutputStream(), true);
                 printWriter.println("####### Hello from Carol1");
                 printWriter.flush();

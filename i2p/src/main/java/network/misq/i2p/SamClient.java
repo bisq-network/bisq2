@@ -86,7 +86,7 @@ public class SamClient {
      * @return The socket for the outbound connection
      * @throws IOException
      */
-    public Socket connect(String peer, String sessionId) throws IOException {
+    public Socket getSocket(String peer, String sessionId) throws IOException {
         SamConnection samConnection = null;
         try {
             long ts = System.currentTimeMillis();

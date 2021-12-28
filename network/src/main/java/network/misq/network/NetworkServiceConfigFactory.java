@@ -88,7 +88,7 @@ public class NetworkServiceConfigFactory {
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
                 TimeUnit.SECONDS.toMillis(1),  // bootstrapTime
-                TimeUnit.SECONDS.toMillis(10),  // interval
+                TimeUnit.SECONDS.toMillis(1),  // interval
                 TimeUnit.SECONDS.toMillis(60),  // timeout
                 TimeUnit.HOURS.toMillis(2),     // maxAge
                 100,                        // maxReported
