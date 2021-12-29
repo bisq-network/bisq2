@@ -53,7 +53,8 @@ public class NetworkServiceConfigFactory {
         //todo apply networkConfig
         //todo use option parser lib for args (define priority)
 
-        Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
+       // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
+        Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
 
         ServiceNode.Config serviceNodeConfig = new ServiceNode.Config(Set.of(
                 ServiceNode.Service.CONFIDENTIAL,

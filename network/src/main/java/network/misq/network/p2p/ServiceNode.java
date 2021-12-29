@@ -122,11 +122,6 @@ public class ServiceNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void bootstrap(String nodeId, int serverPort) {
-        initializeServer(nodeId, serverPort);
-        initializePeerGroup();
-    }
-
     public void initializeServer(String nodeId, int serverPort) {
         setState(State.INITIALIZE_SERVER);
         nodesById.initializeServer(nodeId, serverPort);

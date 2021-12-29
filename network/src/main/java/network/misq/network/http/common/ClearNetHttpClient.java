@@ -84,7 +84,7 @@ public class ClearNetHttpClient extends BaseHttpClient {
                         param,
                         System.currentTimeMillis() - ts,
                         StringUtils.fileSizePrettyPrint(response.getBytes().length),
-                        StringUtils.truncate(response, 2000));
+                        StringUtils.truncate(response, 100));
                 return response;
             }
 

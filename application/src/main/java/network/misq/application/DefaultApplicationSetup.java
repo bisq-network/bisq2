@@ -18,6 +18,7 @@
 package network.misq.application;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import network.misq.common.currency.FiatCurrencyRepository;
 import network.misq.common.locale.LocaleRepository;
 import network.misq.common.util.CompletableFutureUtils;
@@ -33,8 +34,6 @@ import network.misq.presentation.offer.OfferEntityRepository;
 import network.misq.security.KeyPairRepository;
 import network.misq.security.KeyPairRepositoryConfigFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +46,7 @@ import java.util.concurrent.TimeUnit;
  * Provides the completely setup instances to other clients (Api)
  */
 @Getter
+@Slf4j
 public class DefaultApplicationSetup extends ApplicationSetup {
     private final KeyPairRepository keyPairRepository;
     private final NetworkService networkService;
@@ -90,21 +90,22 @@ public class DefaultApplicationSetup extends ApplicationSetup {
      * We do in parallel as far as possible. If there are dependencies we chain those as sequence.
      */
     public CompletableFuture<Boolean> initialize() {
-        List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
-        // Assuming identityRepository depends on keyPairRepository being initialized... 
-        allFutures.add(keyPairRepository.initialize()
-                .thenCompose(success -> identityRepository.initialize())
-                .thenCompose(success -> networkService.bootstrap()));
-        allFutures.add(networkService.bootstrap().thenCompose(success -> marketPriceService.initialize()));
-        
-        allFutures.add(offerRepository.initialize());
-        allFutures.add(openOfferRepository.initialize());
-        allFutures.add(offerEntityRepository.initialize());
-        // Once all have successfully completed our initialize is complete as well
-        return CompletableFutureUtils.allOf(allFutures)
-                .thenApply(success -> success.stream().allMatch(e -> e))
+        return keyPairRepository.initialize()
+                .thenCompose(result -> identityRepository.initialize())
+                .thenCompose(result -> networkService.initialize() // We need to get at least the default nodes server initialized before we move on
+                        .whenComplete((res, t) -> networkService.initializePeerGroup())) // But we do not wait for the initializePeerGroup 
+                .thenCompose(result -> marketPriceService.initialize())
+                .thenCompose(result -> CompletableFutureUtils.allOf(offerRepository.initialize(),
+                        openOfferRepository.initialize(),
+                        offerEntityRepository.initialize()))
                 .orTimeout(10, TimeUnit.SECONDS)
-                .thenCompose(CompletableFuture::completedFuture);
+                .whenComplete((list, throwable) -> {
+                    if (throwable != null) {
+                        log.error("Error at startup", throwable);
+                    } else {
+                        log.error("Application initialized successfully");
+                    }
+                }).thenApply(list -> list.stream().allMatch(e -> e));
     }
 
     @Override

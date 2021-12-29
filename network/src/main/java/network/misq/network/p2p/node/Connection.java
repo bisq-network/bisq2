@@ -118,7 +118,7 @@ public abstract class Connection {
                         if (envelope.version() != Version.VERSION) {
                             throw new ConnectionException("Invalid network version. " + simpleName);
                         }
-                        log.debug("Received message: {} at: {}", envelope.payload(), this);
+                        log.debug("Received message: {} at: {}", StringUtils.truncate(envelope.payload().toString(), 200), this);
                         metrics.onMessage(envelope.payload());
                         NetworkService.DISPATCHER.submit(() -> handler.onMessage(envelope.payload(), this));
                     }

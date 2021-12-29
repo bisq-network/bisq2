@@ -105,12 +105,16 @@ public class NetworkService {
         return supplyAsync(() -> serviceNodesByTransport.initializeServer(port), NetworkService.NETWORK_IO_POOL);
     }
 
+    public CompletableFuture<Boolean> initializePeerGroup() {
+        return supplyAsync(serviceNodesByTransport::initializePeerGroup, NetworkService.NETWORK_IO_POOL);
+    }
+
     public CompletableFuture<Boolean> bootstrap() {
         return bootstrap(NetworkUtils.findFreeSystemPort());
     }
 
     public CompletableFuture<Boolean> bootstrap(int port) {
-        return supplyAsync(() -> serviceNodesByTransport.bootstrap(port), NetworkService.NETWORK_IO_POOL);
+        return initialize(port).thenCompose(result -> initializePeerGroup());
     }
 
     public CompletableFuture<Void> shutdown() {

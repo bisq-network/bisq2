@@ -90,7 +90,7 @@ public class ServiceNodesByTransport {
     public boolean initializeServer(int port) {
         AtomicInteger completed = new AtomicInteger(0);
         AtomicInteger failed = new AtomicInteger(0);
-        int numNodes = map.size();
+        int numTransports = map.size();
         map.values().forEach(networkNode -> {
             try {
                 networkNode.initializeServer(Node.DEFAULT_NODE_ID, port);
@@ -99,22 +99,24 @@ public class ServiceNodesByTransport {
                 failed.incrementAndGet();
             }
         });
-        return completed.get() == numNodes;
+        log.info("Server initialized with {} transports.", numTransports);
+        return completed.get() == numTransports;
     }
 
-    public boolean bootstrap(int port) {
+    public boolean initializePeerGroup() {
         AtomicInteger completed = new AtomicInteger(0);
         AtomicInteger failed = new AtomicInteger(0);
-        int numNodes = map.size();
+        int numTransports = map.size();
         map.values().forEach(networkNode -> {
             try {
-                networkNode.bootstrap(Node.DEFAULT_NODE_ID, port);
+                networkNode.initializePeerGroup();
                 completed.incrementAndGet();
             } catch (Throwable throwable) {
                 failed.incrementAndGet();
             }
         });
-        return completed.get() == numNodes;
+        log.info("PeerGroup initialized with {} transports.", numTransports);
+        return completed.get() == numTransports;
     }
 
     public Map<Transport.Type, ConfidentialMessageService.Result> confidentialSend(Message message,
