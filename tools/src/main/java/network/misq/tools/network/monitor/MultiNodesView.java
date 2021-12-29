@@ -40,15 +40,14 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.data.NetworkPayload;
-import network.misq.network.p2p.services.monitor.MultiNodesSetup;
 
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class MultiNodesNetworkMonitorUI extends Application implements MultiNodesSetup.Handler {
-    private MultiNodesSetup multiNodesSetup;
+public class MultiNodesView extends Application implements MultiNodesModel.Handler {
+    private MultiNodesModel multiNodesModel;
     private FlowPane clearSeedButtonsPane, torSeedButtonsPane, i2pSeedButtonsPane, clearNodeButtonsPane, torNodeButtonsPane, i2pNodeButtonsPane;
     private TextArea nodeInfoTextArea, networkInfoTextArea;
     private Optional<Address> selected = Optional.empty();
@@ -117,12 +116,12 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
 
 
         fromTf = new TextField("localhost:9000");
-        //TextField toTf = new TextField("localhost:9099");
-        TextField toTf = new TextField("l2takiyfs5d7nou7wwjomx3a4jxpn4fabtxfclgobrucnokms6j6liid.onion:2000");
+        TextField toTf = new TextField("localhost:9999");
+        // TextField toTf = new TextField("l2takiyfs5d7nou7wwjomx3a4jxpn4fabtxfclgobrucnokms6j6liid.onion:2000");
         TextField nodeIdTf = new TextField(Node.DEFAULT_NODE_ID);
         TextField msgTf = new TextField("Test message");
         Button sendButton = new Button("Send");
-        sendButton.setOnAction(e -> multiNodesSetup.send(new Address(fromTf.getText()),
+        sendButton.setOnAction(e -> multiNodesModel.send(new Address(fromTf.getText()),
                 new Address(toTf.getText()),
                 nodeIdTf.getText(),
                 msgTf.getText()));
@@ -152,7 +151,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
         stage.setScene(scene);
         stage.show();
         stage.setOnCloseRequest(event -> {
-            multiNodesSetup.shutdown().whenComplete((r, t) -> Platform.exit());
+            multiNodesModel.shutdown().whenComplete((r, t) -> Platform.exit());
         });
     }
 
@@ -184,9 +183,9 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
         String baseDir = OsUtils.getUserDataDir() + File.separator + "misq_MultiNodes";
         NetworkServiceConfigFactory networkServiceConfigFactory = new NetworkServiceConfigFactory(baseDir);
 
-        multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory.get(), transports, bootstrapAll);
-        multiNodesSetup.addNetworkInfoConsumer(this);
-        multiNodesSetup.bootstrap(addressesToBootstrap)
+        multiNodesModel = new MultiNodesModel(networkServiceConfigFactory.get(), transports, bootstrapAll);
+        multiNodesModel.addNetworkInfoConsumer(this);
+        multiNodesModel.bootstrap(addressesToBootstrap)
                 .forEach((transportType, addresses) -> addresses.forEach(address -> addNodeInfoBox(address, transportType)));
     }
 
@@ -205,7 +204,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
             }
 
             if (selected.isEmpty() || selected.get().equals(address)) {
-                nodeInfoTextArea.setText(multiNodesSetup.getNodeInfo(address, transportType));
+                nodeInfoTextArea.setText(multiNodesModel.getNodeInfo(address, transportType));
                 if (!nodeInfoTextArea.isFocused()) {
                     nodeInfoTextArea.positionCaret(0);
                 }
@@ -241,7 +240,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
 
     private void addNodeInfoBox(Address address, Transport.Type transportType) {
         UIThread.run(() -> {
-            boolean isSeed = multiNodesSetup.isSeed(address, transportType);
+            boolean isSeed = multiNodesModel.isSeed(address, transportType);
             NodeInfoBox nodeInfoBox = new NodeInfoBox(address, transportType, isSeed);
             nodeInfoBox.setOnAction(e -> onButtonClicked(address, transportType));
             nodeInfoBoxByAddress.put(address, nodeInfoBox);
@@ -269,16 +268,16 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
         MenuItem start = new MenuItem("Start");
         MenuItem stop = new MenuItem("Stop");
 
-        start.setDisable(multiNodesSetup.findNetworkService(address).isPresent());
-        stop.setDisable(multiNodesSetup.findNetworkService(address).isEmpty());
+        start.setDisable(multiNodesModel.findNetworkService(address).isPresent());
+        stop.setDisable(multiNodesModel.findNetworkService(address).isEmpty());
 
         start.setOnAction((event) -> {
-            multiNodesSetup.bootstrap(address, transportType);
+            multiNodesModel.bootstrap(address, transportType);
             start.setDisable(true);
             stop.setDisable(false);
         });
         stop.setOnAction((event) -> {
-            multiNodesSetup.shutdown(address);
+            multiNodesModel.shutdown(address);
             stop.setDisable(true);
             start.setDisable(false);
         });
@@ -289,12 +288,12 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
     }
 
     private void updateNodeInfo(Address address, Transport.Type transportType) {
-        nodeInfoTextArea.setText(multiNodesSetup.getNodeInfo(address, transportType));
+        nodeInfoTextArea.setText(multiNodesModel.getNodeInfo(address, transportType));
         nodeInfoTextArea.positionCaret(0);
     }
 
     private String getTitle(Address address, Transport.Type transportType) {
-        String name = multiNodesSetup.isSeed(address, transportType) ? "-Seed: " : "-Node: ";
+        String name = multiNodesModel.isSeed(address, transportType) ? "-Seed: " : "-Node: ";
         return transportType.name() + name + address;
     }
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.monitor;
+package network.misq.tools.network.monitor;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
-public class MultiNodesSetup {
+public class MultiNodesModel {
 
     public interface Handler {
         void onConnectionStateChange(Transport.Type transportType, Address address, String networkInfo);
@@ -85,7 +85,7 @@ public class MultiNodesSetup {
     private Optional<Handler> handler = Optional.empty();
     private Node.Listener sendMsgListener;
 
-    public MultiNodesSetup(NetworkService.Config networkServiceConfig, Set<Transport.Type> supportedTransportTypes,
+    public MultiNodesModel(NetworkService.Config networkServiceConfig, Set<Transport.Type> supportedTransportTypes,
                            boolean bootstrapAll) {
         this.networkServiceConfig = cloneWithLimitedSeeds(networkServiceConfig, numSeeds, supportedTransportTypes);
         this.supportedTransportTypes = supportedTransportTypes;
@@ -102,7 +102,7 @@ public class MultiNodesSetup {
     public Map<Transport.Type, List<Address>> bootstrap(Optional<List<Address>> addressesToBootstrap) {
         int delay = supportedTransportTypes.contains(Transport.Type.TOR) || supportedTransportTypes.contains(Transport.Type.I2P) ?
                 1000 :
-                100;
+                20;
         this.addressesToBootstrap = addressesToBootstrap;
         return supportedTransportTypes.stream()
                 .collect(Collectors.toMap(transportType -> transportType, transportType -> bootstrap(transportType, delay)));

@@ -17,8 +17,8 @@
 
 package network.misq.tools.network.monitor;
 
-public class MultiNodesNetworkMonitorUIMain {
+public class MultiNodesMain {
     public static void main(String[] args) {
-        MultiNodesNetworkMonitorUI.launch(MultiNodesNetworkMonitorUI.class, args);
+        MultiNodesView.launch(MultiNodesView.class, args);
     }
 }
