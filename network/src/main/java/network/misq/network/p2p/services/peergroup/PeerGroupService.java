@@ -71,18 +71,15 @@ public class PeerGroupService {
         addressValidationService = new AddressValidationService(node, banList);
     }
 
-    public CompletableFuture<Boolean> initialize() {
+    public void initialize() {
         log.debug("Node {} called initialize", node);
-        return peerExchangeService.doInitialPeerExchange()
-                .thenCompose(__ -> {
-                    log.info("Node {} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
-                            node, config.interval());
-                    scheduler = Optional.of(Scheduler.run(this::runBlockingTasks)
-                            .periodically(config.interval())
-                            .name("PeerGroupService.scheduler-" + node));
-                    keepAliveService.initialize();
-                    return CompletableFuture.completedFuture(true);
-                });
+        peerExchangeService.doInitialPeerExchange().join();
+        log.info("Node {} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
+                node, config.interval());
+        scheduler = Optional.of(Scheduler.run(this::runBlockingTasks)
+                .periodically(config.interval())
+                .name("PeerGroupService.scheduler-" + node));
+        keepAliveService.initialize();
     }
 
     private void runBlockingTasks() {

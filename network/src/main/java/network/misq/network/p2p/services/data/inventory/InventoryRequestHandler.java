@@ -19,6 +19,7 @@ package network.misq.network.p2p.services.data.inventory;
 
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.Disposable;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
@@ -26,6 +27,8 @@ import network.misq.network.p2p.services.data.filter.DataFilter;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class InventoryRequestHandler implements Node.Listener, Disposable {
@@ -43,7 +46,7 @@ public class InventoryRequestHandler implements Node.Listener, Disposable {
     public CompletableFuture<Inventory> request(DataFilter dataFilter) {
         future.orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS);
         node.addListener(this);
-        node.sendAsync(new InventoryRequest(dataFilter), connection);
+        supplyAsync(() -> node.send(new InventoryRequest(dataFilter), connection), NetworkService.NETWORK_IO_POOL);
         return future;
     }
 

@@ -19,6 +19,7 @@ package network.misq.network.p2p.services.peergroup.keepalive;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
@@ -26,6 +27,8 @@ import network.misq.network.p2p.node.Node;
 
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Getter
 @Slf4j
@@ -46,7 +49,7 @@ class KeepAliveHandler implements Connection.Listener {
     CompletableFuture<Void> request() {
         log.info("Node {} send Ping to {} with nonce {}. Connection={}",
                 node, connection.getPeerAddress(), nonce, connection.getId());
-        node.sendAsync(new Ping(nonce), connection)
+        supplyAsync(() -> node.send(new Ping(nonce), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);

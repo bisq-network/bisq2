@@ -3,6 +3,7 @@ package network.misq.network.p2p.node.transport;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.FileUtils;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.ConnectionException;
 import network.misq.tor.Constants;
@@ -18,7 +19,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static java.io.File.separator;
-import static network.misq.common.threading.ExecutorFactory.newSingleThreadExecutor;
 
 
 @Slf4j
@@ -87,11 +87,10 @@ public class TorTransport implements Transport {
 
     @Override
     public CompletableFuture<Void> shutdown() {
-        return CompletableFuture.runAsync(() -> {
-            if (tor != null) {
-                tor.shutdown();
-            }
-        }, newSingleThreadExecutor("TorTransport.shutdown"));
+        if (tor == null) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return CompletableFuture.runAsync(tor::shutdown, NetworkService.NETWORK_IO_POOL);
     }
 
     //todo move to torify lib

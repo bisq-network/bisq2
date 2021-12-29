@@ -37,6 +37,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static network.misq.network.NetworkService.NETWORK_IO_POOL;
+
 /**
  * Responsible for executing the peer exchange protocol with set of peers.
  * We use the PeerExchangeStrategy for the selection of nodes.
@@ -76,10 +79,10 @@ public class PeerExchangeService implements Node.Listener {
                         .map(Address::toString)
                         .collect(Collectors.toList()).toString()));
         List<CompletableFuture<Boolean>> allFutures = candidates.stream()
-                .map(this::doPeerExchange)
+                .map(this::doPeerExchangeAsync)
                 .collect(Collectors.toList());
         return CompletableFutureUtils.allOf(allFutures)
-                .thenCompose(resultList -> {
+                .thenApply(resultList -> {
                     int numSuccess = (int) resultList.stream().filter(e -> e).count();
                     log.info("Node {} completed peer exchange to {} candidates. {} requests successfully completed.",
                             node, candidates.size(), numSuccess);
@@ -93,37 +96,40 @@ public class PeerExchangeService implements Node.Listener {
                     } else {
                         scheduler.ifPresent(Scheduler::stop);
                     }
-                    return CompletableFuture.completedFuture(null);
+                    return null;
                 });
     }
 
-    private CompletableFuture<Boolean> doPeerExchange(Address peerAddress) {
-        return node.getConnectionAsync(peerAddress)
-                .orTimeout(TIMEOUT, TimeUnit.SECONDS)
-                .thenCompose(connection -> {
-                    String key = connection.getId();
-                    if (requestHandlerMap.containsKey(key)) {
-                        log.warn("Node {} : requestHandlerMap contains already {}. " +
-                                "We dispose the existing handler and start a new one.", node, peerAddress);
-                        requestHandlerMap.get(key).dispose();
-                    }
+    private CompletableFuture<Boolean> doPeerExchangeAsync(Address peerAddress) {
+        return supplyAsync(() -> doPeerExchange(peerAddress), NETWORK_IO_POOL);
+    }
 
-                    PeerExchangeRequestHandler handler = new PeerExchangeRequestHandler(node, connection);
-                    requestHandlerMap.put(key, handler);
-                    Set<Peer> myPeers = peerExchangeStrategy.getPeers(peerAddress);
-                    return handler.request(myPeers)
-                            .orTimeout(TIMEOUT, TimeUnit.SECONDS)
-                            .handle((peers, throwable) -> {
-                                requestHandlerMap.remove(key);
-                                if (throwable == null) {
-                                    peerExchangeStrategy.addReportedPeers(peers, peerAddress);
-                                    return true;
-                                } else {
-                                    // Expected ConnectException if peer not available 
-                                    return false;
-                                }
-                            });
-                }).exceptionally(e -> false);
+    private boolean doPeerExchange(Address peerAddress) {
+        String key = null;
+        try {
+            Connection connection = node.getConnection(peerAddress);
+            key = connection.getId();
+            if (requestHandlerMap.containsKey(key)) {
+                log.warn("Node {} : requestHandlerMap contains already {}. " +
+                        "We dispose the existing handler and start a new one.", node, peerAddress);
+                requestHandlerMap.get(key).dispose();
+            }
+
+            PeerExchangeRequestHandler handler = new PeerExchangeRequestHandler(node, connection);
+            requestHandlerMap.put(key, handler);
+            Set<Peer> myPeers = peerExchangeStrategy.getPeers(peerAddress);
+
+            Set<Peer> peers = handler.request(myPeers).join();
+            peerExchangeStrategy.addReportedPeers(peers, peerAddress);
+            requestHandlerMap.remove(key);
+            return true;
+        } catch (Throwable throwable) {
+            if (key != null) {
+                requestHandlerMap.remove(key);
+            }
+            // Expect ConnectException if peer is not available 
+            return false;
+        }
     }
 
     public void shutdown() {
@@ -141,7 +147,7 @@ public class PeerExchangeService implements Node.Listener {
             Address peerAddress = connection.getPeerAddress();
             peerExchangeStrategy.addReportedPeers(request.peers(), peerAddress);
             Set<Peer> myPeers = peerExchangeStrategy.getPeers(peerAddress);
-            node.sendAsync(new PeerExchangeResponse(request.nonce(), myPeers), connection);
+            NETWORK_IO_POOL.submit(() -> node.send(new PeerExchangeResponse(request.nonce(), myPeers), connection));
             log.debug("Node {} sent PeerExchangeResponse with my myPeers {}", node, myPeers);
         }
     }

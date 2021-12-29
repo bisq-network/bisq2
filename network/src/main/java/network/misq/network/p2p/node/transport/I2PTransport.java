@@ -3,6 +3,7 @@ package network.misq.network.p2p.node.transport;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.NetworkUtils;
 import network.misq.i2p.SamClient;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.ConnectionException;
 
@@ -13,7 +14,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static java.io.File.separator;
-import static network.misq.common.threading.ExecutorFactory.newSingleThreadExecutor;
 
 // Start I2P
 // Enable SAM at http://127.0.0.1:7657/configclients
@@ -66,7 +66,7 @@ public class I2PTransport implements Transport {
             log.debug("Create new Socket to {} with sessionId={}", address, sessionId);
             long ts = System.currentTimeMillis();
             Socket socket = samClient.getSocket(address.getHost(), sessionId);
-            log.error("I2P socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
+            log.info("I2P socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
             return socket;
         } catch (IOException exception) {
             log.error(exception.toString(), exception);
@@ -76,12 +76,11 @@ public class I2PTransport implements Transport {
 
     @Override
     public CompletableFuture<Void> shutdown() {
-        return CompletableFuture.runAsync(() -> {
-            if (samClient != null) {
-                samClient.shutdown();
-            }
-            initializeCalled = false;
-        }, newSingleThreadExecutor("I2PTransport.shutdown"));
+        initializeCalled = false;
+        if (samClient == null) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return CompletableFuture.runAsync(samClient::shutdown, NetworkService.NETWORK_IO_POOL);
     }
 
     @Override

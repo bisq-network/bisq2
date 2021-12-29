@@ -75,7 +75,7 @@ class ConnectionHandshake {
     Result start(Load myLoad) {
         try {
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            AuthorizationToken token = authorizationService.createToken(Request.class).get();
+            AuthorizationToken token = authorizationService.createToken(Request.class);
             Envelope requestEnvelope = new Envelope(new Request(token, capability, myLoad), Version.VERSION);
             log.debug("Client sends {}", requestEnvelope);
             objectOutputStream.writeObject(requestEnvelope);
@@ -143,7 +143,7 @@ class ConnectionHandshake {
             log.debug("Clients capability {}, load={}", request.capability(), request.load());
 
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            AuthorizationToken token = authorizationService.createToken(Response.class).get();
+            AuthorizationToken token = authorizationService.createToken(Response.class);
             objectOutputStream.writeObject(new Envelope(new Response(token, capability, myLoad), Version.VERSION));
             objectOutputStream.flush();
 

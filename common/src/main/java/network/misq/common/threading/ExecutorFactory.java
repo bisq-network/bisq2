@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class ExecutorFactory {
+    public static final ExecutorService WORKER_POOL = newFixedThreadPool("Worker-pool");
     public static final AtomicInteger COUNTER = new AtomicInteger(0);
 
     public static void shutdownAndAwaitTermination(ExecutorService executor) {
@@ -68,7 +69,7 @@ public class ExecutorFactory {
                 .setDaemon(true)
                 .build();
         ExecutorService executorService = Executors.newCachedThreadPool(threadFactory);
-        ((ThreadPoolExecutor) executorService).setKeepAliveTime(1, TimeUnit.MILLISECONDS);
+        //((ThreadPoolExecutor) executorService).setKeepAliveTime(1, TimeUnit.SECONDS);
         return executorService;
     }
 

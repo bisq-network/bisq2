@@ -35,11 +35,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static java.util.concurrent.CompletableFuture.runAsync;
-
 @Slf4j
 public class Broadcaster implements Node.Listener {
     private static final long BROADCAST_TIMEOUT = 90;
+    private static final long RE_BROADCAST_DELAY_MS = 10;
 
     private final Node node;
     private final PeerGroup peerGroup;
@@ -65,7 +64,7 @@ public class Broadcaster implements Node.Listener {
 
     public CompletableFuture<BroadcastResult> reBroadcast(Message message) {
         return CompletableFuture.supplyAsync(() -> broadcast(message, 0.75).join(),
-                CompletableFuture.delayedExecutor(1000, TimeUnit.MILLISECONDS));
+                CompletableFuture.delayedExecutor(RE_BROADCAST_DELAY_MS, TimeUnit.MILLISECONDS));
     }
 
     public CompletableFuture<BroadcastResult> broadcast(Message message) {
@@ -84,7 +83,7 @@ public class Broadcaster implements Node.Listener {
                 numBroadcasts, numConnections, distributionFactor);
         List<Connection> allConnections = peerGroup.getAllConnections().collect(Collectors.toList());
         Collections.shuffle(allConnections);
-        runAsync(() -> {
+        NetworkService.NETWORK_IO_POOL.submit(() -> {
             allConnections.stream()
                     .limit(numBroadcasts)
                     .forEach(connection -> {
@@ -101,7 +100,7 @@ public class Broadcaster implements Node.Listener {
                                     System.currentTimeMillis() - ts));
                         }
                     });
-        }, NetworkService.NETWORK_IO_POOL);
+        });
         return future;
     }
 

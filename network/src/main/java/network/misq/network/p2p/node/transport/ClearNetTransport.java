@@ -9,8 +9,7 @@ import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-
-import static network.misq.common.threading.ExecutorFactory.newSingleThreadExecutor;
+import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
@@ -60,8 +59,7 @@ public class ClearNetTransport implements Transport {
 
     @Override
     public CompletableFuture<Void> shutdown() {
-        return CompletableFuture.runAsync(() -> initializeCalled = false,
-                newSingleThreadExecutor("ClearNetTransport.shutdown"));
+        return CompletableFuture.runAsync(()->{}, CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));
     }
 
     @Override

@@ -18,7 +18,6 @@
 package network.misq.network.p2p.node.transport;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import network.misq.network.NetworkService;
 import network.misq.network.p2p.node.Address;
 
 import java.io.IOException;
@@ -27,8 +26,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-
-import static network.misq.common.threading.ExecutorFactory.newSingleThreadExecutor;
 
 public interface Transport {
     enum Type implements Serializable {
@@ -55,17 +52,7 @@ public interface Transport {
     record ServerSocketResult(String nodeId, ServerSocket serverSocket, Address address) {
     }
 
-    default CompletableFuture<Boolean> initializeAsync() {
-        return CompletableFuture.supplyAsync(this::initialize, NetworkService.NETWORK_IO_POOL)
-                .thenApplyAsync(result -> result, newSingleThreadExecutor(getClass().getSimpleName() + ".initialize"));
-    }
-
     Boolean initialize();
-
-    default CompletableFuture<ServerSocketResult> getServerSocketAsync(int port, String nodeId) {
-        return CompletableFuture.supplyAsync(() -> getServerSocket(port, nodeId), NetworkService.NETWORK_IO_POOL)
-                .thenApplyAsync(result -> result, newSingleThreadExecutor(getClass().getSimpleName() + ".getServerSocket"));
-    }
 
     ServerSocketResult getServerSocket(int port, String nodeId);
 

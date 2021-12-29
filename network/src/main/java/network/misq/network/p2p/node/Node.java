@@ -21,6 +21,7 @@ package network.misq.network.p2p.node;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import network.misq.common.util.CompletableFutureUtils;
 import network.misq.common.util.NetworkUtils;
 import network.misq.common.util.StringUtils;
 import network.misq.network.NetworkService;
@@ -39,15 +40,19 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static network.misq.network.NetworkService.DISPATCHER;
 import static network.misq.network.p2p.node.CloseReason.*;
 
 /**
@@ -114,34 +119,17 @@ public class Node implements Connection.Handler {
     // Server
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transport.ServerSocketResult initializeServer(int port) {
-        transport.initializeAsync();
-        return createServerAndListen(port);
+    public void initializeServer(int port) {
+        transport.initialize();
+        createServerAndListen(port);
     }
 
-    private Transport.ServerSocketResult createServerAndListen(int port) {
+    private void createServerAndListen(int port) {
         Transport.ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
         myCapability = Optional.of(new Capability(serverSocketResult.address(), config.supportedTransportTypes()));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
                 this::handleException));
-        return serverSocketResult;
-    }
-
-    public CompletableFuture<Transport.ServerSocketResult> initializeServerAsync(int port) {
-        return transport.initializeAsync()
-                .thenCompose(result -> createServerAndListenAsync(port));
-    }
-
-    private CompletableFuture<Transport.ServerSocketResult> createServerAndListenAsync(int port) {
-        return transport.getServerSocketAsync(port, nodeId)
-                .thenCompose(serverSocketResult -> {
-                    myCapability = Optional.of(new Capability(serverSocketResult.address(), config.supportedTransportTypes()));
-                    server = Optional.of(new Server(serverSocketResult,
-                            socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
-                            this::handleException));
-                    return CompletableFuture.completedFuture(serverSocketResult);
-                });
     }
 
     private void onClientSocket(Socket socket, Transport.ServerSocketResult serverSocketResult, Capability myCapability) {
@@ -175,7 +163,7 @@ public class Node implements Connection.Handler {
                     this,
                     this::handleException);
             inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
-            runAsync(() -> listeners.forEach(listener -> listener.onConnection(connection)), NetworkService.DISPATCHER);
+            DISPATCHER.submit(() -> listeners.forEach(listener -> listener.onConnection(connection)));
         } catch (Throwable throwable) {
             connectionHandshake.shutdown();
             connectionHandshakes.remove(connectionHandshake.getId());
@@ -198,16 +186,12 @@ public class Node implements Connection.Handler {
         return send(message, connection);
     }
 
-    public CompletableFuture<Connection> sendAsync(Message message, Address address) {
-        return supplyAsync(() -> send(message, address), NetworkService.NETWORK_IO_POOL);
-    }
-
     public Connection send(Message message, Connection connection) {
         if (connection.isStopped()) {
             throw new ConnectionClosedException(connection);
         }
         try {
-            AuthorizationToken token = authorizationService.createToken(message.getClass()).join(); //todo
+            AuthorizationToken token = authorizationService.createToken(message.getClass());
             return connection.send(new AuthorizedMessage(message, token));
         } catch (Throwable throwable) {
             if (connection.isRunning()) {
@@ -218,10 +202,6 @@ public class Node implements Connection.Handler {
         }
     }
 
-    public CompletableFuture<Connection> sendAsync(Message message, Connection connection) {
-        return supplyAsync(() -> send(message, connection), NetworkService.NETWORK_IO_POOL);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Connection
@@ -229,10 +209,6 @@ public class Node implements Connection.Handler {
 
     public Connection getConnection(Address address) {
         return getConnection(address, true);
-    }
-
-    public CompletableFuture<Connection> getConnectionAsync(Address address) {
-        return supplyAsync(() -> getConnection(address), NetworkService.NETWORK_IO_POOL);
     }
 
     public Connection getConnection(Address address, boolean allowUnverifiedAddress) {
@@ -322,7 +298,7 @@ public class Node implements Connection.Handler {
                     this,
                     this::handleException);
             outboundConnectionsByAddress.put(address, connection);
-            runAsync(() -> listeners.forEach(listener -> listener.onConnection(connection)), NetworkService.DISPATCHER);
+            DISPATCHER.submit(() -> listeners.forEach(listener -> listener.onConnection(connection)));
             return connection;
         } catch (Throwable throwable) {
             connectionHandshake.shutdown();
@@ -347,7 +323,6 @@ public class Node implements Connection.Handler {
         if (isStopped) {
             return;
         }
-        // We get called from Connection on the dispatcher thread.
         if (message instanceof AuthorizedMessage authorizedMessage) {
             if (authorizationService.isAuthorized(authorizedMessage)) {
                 Message payLoadMessage = authorizedMessage.message();
@@ -355,6 +330,7 @@ public class Node implements Connection.Handler {
                     log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this, connection.getPeerAddress(), closeConnectionMessage.closeReason());
                     closeConnection(connection, CLOSE_MSG_RECEIVED.details(closeConnectionMessage.closeReason().name()));
                 } else {
+                    // We got called from Connection on the dispatcher thread, so no mapping needed here.
                     connection.notifyListeners(payLoadMessage);
                     listeners.forEach(listener -> listener.onMessage(payLoadMessage, connection, nodeId));
                 }
@@ -381,13 +357,14 @@ public class Node implements Connection.Handler {
         listeners.forEach(listener -> listener.onDisconnect(connection, closeReason));
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Close
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     public void closeConnection(Connection connection, CloseReason closeReason) {
         log.debug("Node {} got called closeConnection for {}", this, connection);
         connection.close(closeReason);
-    }
-
-    public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
-        return runAsync(() -> closeConnectionGracefully(connection, closeReason), NetworkService.NETWORK_IO_POOL);
     }
 
     public void closeConnectionGracefully(Connection connection, CloseReason closeReason) {
@@ -395,44 +372,36 @@ public class Node implements Connection.Handler {
         connection.close(CLOSE_MSG_SENT.details(closeReason.name()));
     }
 
-    //todo
-    public CompletableFuture<Void> shutdown() {
+    public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
+        return runAsync(() -> closeConnectionGracefully(connection, closeReason), NetworkService.NETWORK_IO_POOL);
+    }
+
+    public CompletableFuture<List<Void>> shutdown() {
         log.info("Node {} shutdown", this);
         if (isStopped) {
             return CompletableFuture.completedFuture(null);
         }
         isStopped = true;
 
-        return runAsync(() -> {
-            CountDownLatch latch = new CountDownLatch(outboundConnectionsByAddress.values().size() +
-                    inboundConnectionsByAddress.size() +
-                    connectionHandshakes.size() +
-                    +1); // For transport
-            outboundConnectionsByAddress.values()
-                    .forEach(connection -> closeConnectionGracefullyAsync(connection, SHUTDOWN)
-                            .whenComplete((c, t) -> latch.countDown()));
-            inboundConnectionsByAddress.values()
-                    .forEach(connection -> closeConnectionGracefullyAsync(connection, SHUTDOWN)
-                            .whenComplete((c, t) -> latch.countDown()));
-            connectionHandshakes.values()
-                    .forEach(handshake -> {
-                        handshake.shutdown();
-                        latch.countDown();
-                    });
-            server.ifPresent(Server::shutdown);
-            transport.shutdown().whenComplete((__, t) -> latch.countDown());
-            try {
-                if (!latch.await(1, TimeUnit.SECONDS)) {
-                    log.warn("Shutdown interrupted by timeout");
-                }
-            } catch (InterruptedException e) {
-                log.warn("Shutdown interrupted", e);
-            }
-            outboundConnectionsByAddress.clear();
-            inboundConnectionsByAddress.clear();
-            listeners.clear();
-        }).orTimeout(1000, MILLISECONDS);
+        server.ifPresent(Server::shutdown);
+        connectionHandshakes.values().forEach(ConnectionHandshake::shutdown);
+
+        Stream<CompletableFuture<Void>> connections = Stream.concat(inboundConnectionsByAddress.values().stream(),
+                        outboundConnectionsByAddress.values().stream())
+                .map(connection -> closeConnectionGracefullyAsync(connection, SHUTDOWN));
+        return CompletableFutureUtils.allOf(connections)
+                .orTimeout(1, SECONDS)
+                .whenComplete((r, throwable) -> {
+                    transport.shutdown();
+                    outboundConnectionsByAddress.clear();
+                    inboundConnectionsByAddress.clear();
+                    listeners.clear();
+                    if (throwable != null) {
+                        log.warn("Exception at node shutdown", throwable);
+                    }
+                });
     }
+
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return transport.getSocksProxy();

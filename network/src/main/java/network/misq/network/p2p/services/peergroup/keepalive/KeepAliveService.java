@@ -19,6 +19,7 @@ package network.misq.network.p2p.services.peergroup.keepalive;
 
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.timer.Scheduler;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
@@ -86,7 +87,7 @@ public class KeepAliveService implements Node.Listener {
     public void onMessage(Message message, Connection connection, String nodeId) {
         if (message instanceof Ping ping) {
             log.debug("Node {} received Ping with nonce {} from {}", node, ping.nonce(), connection.getPeerAddress());
-            node.sendAsync(new Pong(ping.nonce()), connection);
+            NetworkService.NETWORK_IO_POOL.submit(() -> node.send(new Pong(ping.nonce()), connection));
             log.debug("Node {} sent Pong with nonce {} to {}. Connection={}", node, ping.nonce(), connection.getPeerAddress(), connection.getId());
         }
     }

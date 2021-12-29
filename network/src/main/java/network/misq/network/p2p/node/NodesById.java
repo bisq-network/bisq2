@@ -20,7 +20,6 @@ package network.misq.network.p2p.node;
 
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.p2p.message.Message;
-import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.peergroup.BanList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +27,10 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -53,8 +55,12 @@ public class NodesById implements Node.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Node getDefaultNode() {
-        return getOrCreateNode(Node.DEFAULT_NODE_ID);
+    public void initializeServer(String nodeId, int serverPort) {
+        getOrCreateNode(nodeId).initializeServer(serverPort);
+    }
+
+    public Connection getConnection(String nodeId, Address address) {
+        return getOrCreateNode(nodeId).getConnection(address);
     }
 
     public Connection send(String senderNodeId, Message message, Address address) {
@@ -63,30 +69,6 @@ public class NodesById implements Node.Listener {
 
     public Connection send(String senderNodeId, Message message, Connection connection) {
         return getOrCreateNode(senderNodeId).send(message, connection);
-    }
-
-    public CompletableFuture<Connection> sendAsync(String senderNodeId, Message message, Address address) {
-        return getOrCreateNode(senderNodeId).sendAsync(message, address);
-    }
-
-    public CompletableFuture<Connection> sendAsync(String senderNodeId, Message message, Connection connection) {
-        return getOrCreateNode(senderNodeId).sendAsync(message, connection);
-    }
-
-    public Connection getConnection(String nodeId, Address address) {
-        return getOrCreateNode(nodeId).getConnection(address);
-    }
-
-    public CompletableFuture<Connection> getConnectionAsync(String nodeId, Address address) {
-        return getOrCreateNode(nodeId).getConnectionAsync(address);
-    }
-
-    public Transport.ServerSocketResult initializeServer(String nodeId, int serverPort) {
-        return getOrCreateNode(nodeId).initializeServer(serverPort);
-    }
-
-    public CompletableFuture<Transport.ServerSocketResult> initializeServerAsync(String nodeId, int serverPort) {
-        return getOrCreateNode(nodeId).initializeServerAsync(serverPort);
     }
 
     public void addNodeListener(Node.Listener listener) {
@@ -107,11 +89,15 @@ public class NodesById implements Node.Listener {
 
     public CompletableFuture<Void> shutdown() {
         return CompletableFutureUtils.allOf(map.values().stream().map(Node::shutdown))
-                .orTimeout(1, TimeUnit.SECONDS)
+                .orTimeout(2, TimeUnit.SECONDS)
                 .thenApply(list -> {
                     map.clear();
                     return null;
                 });
+    }
+
+    public Node getDefaultNode() {
+        return getOrCreateNode(Node.DEFAULT_NODE_ID);
     }
 
     public Optional<Address> findMyAddress(String nodeId) {

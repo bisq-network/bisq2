@@ -108,13 +108,14 @@ public class Tor {
         if (state.get() == State.SHUTDOWN_STARTED) {
             return;
         }
+        long ts = System.currentTimeMillis();
         state.set(State.SHUTDOWN_STARTED);
 
         torBootstrap.shutdown();
         torController.shutdown();
 
-        log.info("Shutdown Tor completed");
         state.set(State.NOT_STARTED);
+        log.info("Tor shutdown completed. Took {} ms.", System.currentTimeMillis() - ts); // Usually takes 20-40 ms
     }
 
     public CompletableFuture<Boolean> startAsync(ExecutorService executor) {

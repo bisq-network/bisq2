@@ -20,6 +20,7 @@ package network.misq.network.p2p.services.data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.Disposable;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.CloseReason;
@@ -45,6 +46,8 @@ import java.security.PublicKey;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
+
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * Preliminary ideas:
@@ -110,8 +113,8 @@ public class DataService implements Node.Listener {
             storage.addRequest(addDataRequest)
                     .whenComplete((optionalData, throwable) -> {
                         optionalData.ifPresent(networkData -> {
-                             listeners.forEach(listener -> listener.onNetworkDataAdded(networkData));
-                             broadcaster.reBroadcast(addDataRequest);
+                            listeners.forEach(listener -> listener.onNetworkDataAdded(networkData));
+                            broadcaster.reBroadcast(addDataRequest);
                         });
                     });
         } else if (message instanceof RemoveDataRequest removeDataRequest) {
@@ -219,7 +222,7 @@ public class DataService implements Node.Listener {
         long ts = System.currentTimeMillis();
         CompletableFuture<RequestInventoryResult> future = new CompletableFuture<>();
         future.orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
-        node.getConnectionAsync(address)
+        supplyAsync(() -> node.getConnection(address), NetworkService.NETWORK_IO_POOL)
                 .thenCompose(connection -> {
                     InventoryRequestHandler requestHandler = new InventoryRequestHandler(node, connection);
                     requestHandlerMap.put(connection.getId(), requestHandler);

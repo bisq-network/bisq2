@@ -38,8 +38,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 
-import static java.util.concurrent.CompletableFuture.runAsync;
-
 /**
  * Represents an inbound or outbound connection to a peer node.
  * Listens for messages from the peer.
@@ -122,8 +120,7 @@ public abstract class Connection {
                         }
                         log.debug("Received message: {} at: {}", envelope.payload(), this);
                         metrics.onMessage(envelope.payload());
-                        runAsync(() -> handler.onMessage(envelope.payload(), this),
-                                NetworkService.DISPATCHER);
+                        NetworkService.DISPATCHER.submit(() -> handler.onMessage(envelope.payload(), this));
                     }
                 }
             } catch (Exception exception) {
@@ -180,11 +177,11 @@ public abstract class Connection {
         } catch (IOException e) {
             log.error("Error at socket.close", e);
         }
-        runAsync(() -> {
+        NetworkService.DISPATCHER.submit(() -> {
             handler.onConnectionClosed(this, closeReason);
             listeners.forEach(listener -> listener.onConnectionClosed(closeReason));
             listeners.clear();
-        }, NetworkService.DISPATCHER);
+        });
     }
 
     void notifyListeners(Message message) {
