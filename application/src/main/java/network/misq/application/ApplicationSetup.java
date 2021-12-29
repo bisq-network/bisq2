@@ -25,10 +25,9 @@ import java.util.concurrent.CompletableFuture;
 public abstract class ApplicationSetup {
     protected final Config misqConfig;
 
-    public ApplicationSetup(String config) {
-        misqConfig = ConfigFactory.load(config);
-        misqConfig.checkValid(ConfigFactory.defaultReference(), config);
-
+    public ApplicationSetup(String configFileName) {
+        misqConfig = ConfigFactory.load(configFileName);
+        misqConfig.checkValid(ConfigFactory.defaultReference(), configFileName);
     }
 
     protected Config getConfig(String path) {

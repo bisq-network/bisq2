@@ -15,8 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * Does not know about the concrete application or domains but provides general purpose application specific features.
- * Defines the basic startup structure and provides application specific options like app name.
- */
 package network.misq.application;
+
+
+import network.misq.common.util.OsUtils;
+
+import java.io.File;
+
+public class ApplicationOptionsParser {
+    public static ApplicationOptions parse(String[] args) {
+        //todo
+        String appName = "Misq";
+        String appDir = OsUtils.getUserDataDir() + File.separator + appName;
+        return new ApplicationOptions(appDir, appName);
+    }
+}

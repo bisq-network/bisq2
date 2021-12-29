@@ -96,20 +96,21 @@ public class NetworkService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Boolean> bootstrapAsync() {
-        return supplyAsync(this::bootstrap, NetworkService.NETWORK_IO_POOL);
+
+    public CompletableFuture<Boolean> initialize() {
+        return initialize(NetworkUtils.findFreeSystemPort());
     }
 
-    public CompletableFuture<Boolean> bootstrapAsync(int port) {
-        return supplyAsync(() -> bootstrap(port), NetworkService.NETWORK_IO_POOL);
+    public CompletableFuture<Boolean> initialize(int port) {
+        return supplyAsync(() -> serviceNodesByTransport.initializeServer(port), NetworkService.NETWORK_IO_POOL);
     }
 
-    public boolean bootstrap() {
+    public CompletableFuture<Boolean> bootstrap() {
         return bootstrap(NetworkUtils.findFreeSystemPort());
     }
 
-    public boolean bootstrap(int port) {
-        return serviceNodesByTransport.bootstrap(port);
+    public CompletableFuture<Boolean> bootstrap(int port) {
+        return supplyAsync(() -> serviceNodesByTransport.bootstrap(port), NetworkService.NETWORK_IO_POOL);
     }
 
     public CompletableFuture<Void> shutdown() {

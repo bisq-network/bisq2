@@ -106,9 +106,7 @@ public class DataServiceServiceIntegrationTest extends DataServiceNodeBase {
 
     private List<DataService> getBootstrappedDataServices() throws InterruptedException {
         Transport.Type type = Transport.Type.CLEAR;
-
-        Map<Transport.Type, List<Address>> allNodes = bootstrapMultiNodesSetup(Set.of(type), numSeeds, numNodes);
-
+        bootstrapMultiNodesSetup(Set.of(type), numSeeds, numNodes);
         List<Address> nodes = multiNodesSetup.getNodeAddresses(type, numNodes);
         List<DataService> dataServices = multiNodesSetup.getNetworkServicesByAddress().entrySet().stream()
                 .filter(e -> nodes.contains(e.getKey()))

@@ -15,18 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.application.options;
+package network.misq.api;
 
+import lombok.Getter;
+import network.misq.application.DefaultApplicationSetup;
+import network.misq.network.NetworkService;
+import network.misq.security.KeyPairRepository;
 
-import network.misq.common.util.OsUtils;
+/**
+ * Api for seed node with limited feature set
+ */
+@Getter
+public class SeedNodeApi {
+    private final KeyPairRepository keyPairRepository;
+    private final NetworkService networkService;
 
-import java.io.File;
-
-public class ApplicationOptionsParser {
-    public static ApplicationOptions parse(String[] args) {
-        //todo
-        String appName = "Misq";
-        String appDir = OsUtils.getUserDataDir() + File.separator + appName;
-        return new ApplicationOptions(appDir, appName);
+    public SeedNodeApi(DefaultApplicationSetup applicationFactory) {
+        keyPairRepository = applicationFactory.getKeyPairRepository();
+        networkService = applicationFactory.getNetworkService();
     }
 }

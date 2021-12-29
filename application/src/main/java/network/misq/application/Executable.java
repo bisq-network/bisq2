@@ -1,8 +1,6 @@
 package network.misq.application;
 
 import lombok.extern.slf4j.Slf4j;
-import network.misq.application.options.ApplicationOptions;
-import network.misq.application.options.ApplicationOptionsParser;
 
 @Slf4j
 public abstract class Executable<T extends ApplicationSetup> {

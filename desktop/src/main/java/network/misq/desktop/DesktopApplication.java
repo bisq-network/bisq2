@@ -20,9 +20,9 @@ package network.misq.desktop;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.api.DefaultApi;
-import network.misq.api.DefaultApplicationSetup;
+import network.misq.application.DefaultApplicationSetup;
 import network.misq.application.Executable;
-import network.misq.application.options.ApplicationOptions;
+import network.misq.application.ApplicationOptions;
 
 @Slf4j
 public class DesktopApplication extends Executable<DefaultApplicationSetup> {
