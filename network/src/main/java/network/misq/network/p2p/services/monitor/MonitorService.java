@@ -42,7 +42,6 @@ public class MonitorService {
         return CompletableFuture.completedFuture(null);
     }
 
-
     public String getPeerGroupInfo() {
         int numSeedConnections = (int) peerGroup.getAllConnections()
                 .filter(connection -> peerGroup.isASeed(connection.getPeerAddress())).count();

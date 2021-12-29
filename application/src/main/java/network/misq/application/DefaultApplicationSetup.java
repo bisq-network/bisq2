@@ -15,19 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.api.partial;
+package network.misq.application;
 
 import lombok.Getter;
-import network.misq.application.ApplicationSetup;
-import network.misq.application.options.ApplicationOptions;
+import network.misq.common.currency.FiatCurrencyRepository;
+import network.misq.common.locale.LocaleRepository;
 import network.misq.common.util.CompletableFutureUtils;
+import network.misq.id.IdentityRepository;
 import network.misq.network.NetworkService;
 import network.misq.network.NetworkServiceConfigFactory;
+import network.misq.network.p2p.MockNetworkService;
+import network.misq.offer.MarketPriceService;
+import network.misq.offer.MarketPriceServiceConfigFactory;
+import network.misq.offer.OfferRepository;
+import network.misq.offer.OpenOfferRepository;
+import network.misq.presentation.offer.OfferEntityRepository;
 import network.misq.security.KeyPairRepository;
 import network.misq.security.KeyPairRepositoryConfigFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -39,12 +47,23 @@ import java.util.concurrent.TimeUnit;
  * Provides the completely setup instances to other clients (Api)
  */
 @Getter
-public class SeedNodeApplicationSetup extends ApplicationSetup {
+public class DefaultApplicationSetup extends ApplicationSetup {
     private final KeyPairRepository keyPairRepository;
     private final NetworkService networkService;
+    private final OfferRepository offerRepository;
+    private final OpenOfferRepository openOfferRepository;
+    private final OfferEntityRepository offerEntityRepository;
+    private final IdentityRepository identityRepository;
+    private final MarketPriceService marketPriceService;
+    private final ApplicationOptions applicationOptions;
 
-    public SeedNodeApplicationSetup(ApplicationOptions applicationOptions, String[] args) {
-        super("seed");
+    public DefaultApplicationSetup(ApplicationOptions applicationOptions, String[] args) {
+        super("Misq");
+        this.applicationOptions = applicationOptions;
+
+        Locale locale = applicationOptions.getLocale();
+        LocaleRepository.setDefaultLocale(locale);
+        FiatCurrencyRepository.applyLocale(locale);
 
         KeyPairRepository.Conf keyPairRepositoryConf = new KeyPairRepositoryConfigFactory(applicationOptions.baseDir()).get();
         keyPairRepository = new KeyPairRepository(keyPairRepositoryConf);
@@ -52,17 +71,35 @@ public class SeedNodeApplicationSetup extends ApplicationSetup {
         NetworkService.Config networkServiceConfig = new NetworkServiceConfigFactory(applicationOptions.baseDir(),
                 getConfig("misq.networkServiceConfig"), args).get();
         networkService = new NetworkService(networkServiceConfig, keyPairRepository);
+
+        identityRepository = new IdentityRepository(networkService);
+
+        // add data use case is not available yet at networkService
+        MockNetworkService mockNetworkService = new MockNetworkService();
+        offerRepository = new OfferRepository(mockNetworkService);
+        openOfferRepository = new OpenOfferRepository(mockNetworkService);
+
+
+        MarketPriceService.Config marketPriceServiceConf = new MarketPriceServiceConfigFactory().get();
+        marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, Version.VERSION);
+        offerEntityRepository = new OfferEntityRepository(offerRepository, marketPriceService);
     }
 
     /**
-     * Initializes all domain objects.
+     * Initializes all domain objects, services and repositories.
      * We do in parallel as far as possible. If there are dependencies we chain those as sequence.
      */
     public CompletableFuture<Boolean> initialize() {
         List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
         // Assuming identityRepository depends on keyPairRepository being initialized... 
-        allFutures.add(keyPairRepository.initialize());
-        allFutures.add(networkService.bootstrapAsync());
+        allFutures.add(keyPairRepository.initialize()
+                .thenCompose(success -> identityRepository.initialize())
+                .thenCompose(success -> networkService.bootstrap()));
+        allFutures.add(networkService.bootstrap().thenCompose(success -> marketPriceService.initialize()));
+        
+        allFutures.add(offerRepository.initialize());
+        allFutures.add(openOfferRepository.initialize());
+        allFutures.add(offerEntityRepository.initialize());
         // Once all have successfully completed our initialize is complete as well
         return CompletableFutureUtils.allOf(allFutures)
                 .thenApply(success -> success.stream().allMatch(e -> e))
@@ -72,7 +109,14 @@ public class SeedNodeApplicationSetup extends ApplicationSetup {
 
     @Override
     public CompletableFuture<Void> shutdown() {
+        //todo maybe chain async shutdown calls
         keyPairRepository.shutdown();
+        identityRepository.shutdown();
+        marketPriceService.shutdown();
+        offerRepository.shutdown();
+        openOfferRepository.shutdown();
+        offerEntityRepository.shutdown();
+
         return networkService.shutdown();
     }
 }

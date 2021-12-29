@@ -22,7 +22,6 @@ import network.misq.common.util.OsUtils;
 import network.misq.network.NetworkServiceConfigFactory;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.monitor.MultiNodesSetup;
 
 import java.io.File;
 import java.util.List;

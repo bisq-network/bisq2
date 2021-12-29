@@ -87,6 +87,21 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public boolean initializeServer(int port) {
+        AtomicInteger completed = new AtomicInteger(0);
+        AtomicInteger failed = new AtomicInteger(0);
+        int numNodes = map.size();
+        map.values().forEach(networkNode -> {
+            try {
+                networkNode.initializeServer(Node.DEFAULT_NODE_ID, port);
+                completed.incrementAndGet();
+            } catch (Throwable throwable) {
+                failed.incrementAndGet();
+            }
+        });
+        return completed.get() == numNodes;
+    }
+
     public boolean bootstrap(int port) {
         AtomicInteger completed = new AtomicInteger(0);
         AtomicInteger failed = new AtomicInteger(0);

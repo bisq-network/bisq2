@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.application.options;
+package network.misq.application;
 
 import network.misq.common.options.PropertiesReader;
 

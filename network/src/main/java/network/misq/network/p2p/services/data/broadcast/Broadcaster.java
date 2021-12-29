@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class Broadcaster implements Node.Listener {
     private static final long BROADCAST_TIMEOUT = 90;
-    private static final long RE_BROADCAST_DELAY_MS = 10;
+    private static final long RE_BROADCAST_DELAY_MS = 100;
 
     private final Node node;
     private final PeerGroup peerGroup;

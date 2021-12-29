@@ -40,7 +40,7 @@ public class MockServiceTransport extends NetworkService {
     }
 
     @Override
-    public CompletableFuture<Boolean> bootstrapAsync() {
+    public CompletableFuture<Boolean> bootstrap() {
         return CompletableFuture.completedFuture(true);
     }
 

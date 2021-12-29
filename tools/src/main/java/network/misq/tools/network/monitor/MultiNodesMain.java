@@ -15,23 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.api.partial;
+package network.misq.tools.network.monitor;
 
-import lombok.Getter;
-import network.misq.api.DefaultApplicationSetup;
-import network.misq.network.NetworkService;
-import network.misq.security.KeyPairRepository;
-
-/**
- * Api for seed node with limited feature set
- */
-@Getter
-public class SeedNodeApi {
-    private final KeyPairRepository keyPairRepository;
-    private final NetworkService networkService;
-
-    public SeedNodeApi(DefaultApplicationSetup applicationFactory) {
-        keyPairRepository = applicationFactory.getKeyPairRepository();
-        networkService = applicationFactory.getNetworkService();
+public class MultiNodesMain {
+    public static void main(String[] args) {
+        MultiNodesView.launch(MultiNodesView.class, args);
     }
 }
