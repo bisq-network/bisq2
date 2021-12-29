@@ -20,21 +20,15 @@ package network.misq.common.threading;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
+import network.misq.common.util.OsUtils;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class ExecutorFactory {
+    public static final ExecutorService WORKER_POOL = newFixedThreadPool("Worker-pool");
     public static final AtomicInteger COUNTER = new AtomicInteger(0);
-    public static final ExecutorService WORK_STEALING_POOL = Executors.newWorkStealingPool();
-
-
-    public static CompletableFuture<Void> shutdown() {
-        return CompletableFuture.runAsync(() -> {
-            ExecutorFactory.shutdownAndAwaitTermination(WORK_STEALING_POOL, 100);
-        });
-    }
 
     public static void shutdownAndAwaitTermination(ExecutorService executor) {
         shutdownAndAwaitTermination(executor, 100);
@@ -65,12 +59,40 @@ public class ExecutorFactory {
         return Executors.newSingleThreadScheduledExecutor(threadFactory);
     }
 
-    public static ScheduledExecutorService newScheduledThreadPool(String name, int corePoolSize) {
+    /**
+     * Uses a SynchronousQueue, so each submitted task requires a new thread as no queuing functionality is provided.
+     * To be used when we want to avoid overhead for new thread creation/destruction and no queuing functionality.
+     */
+    public static ExecutorService newCachedThreadPool(String name) {
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name + "-" + COUNTER.incrementAndGet())
+                .setNameFormat(name)
                 .setDaemon(true)
                 .build();
-        return Executors.newScheduledThreadPool(corePoolSize, threadFactory);
+        ExecutorService executorService = Executors.newCachedThreadPool(threadFactory);
+        //((ThreadPoolExecutor) executorService).setKeepAliveTime(1, TimeUnit.SECONDS);
+        return executorService;
+    }
+
+    /**
+     * Used when queuing is desired.
+     */
+    public static ExecutorService newFixedThreadPool(String name) {
+        return newFixedThreadPool(name, OsUtils.availableProcessors());
+    }
+
+    public static ExecutorService newFixedThreadPool(String name, int numThreads) {
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(name)
+                .setDaemon(true)
+                .build();
+        return Executors.newFixedThreadPool(numThreads, threadFactory);
+    }
+
+    public static ThreadPoolExecutor getThreadPoolExecutor(String name,
+                                                           int corePoolSize,
+                                                           int maximumPoolSize,
+                                                           long keepAliveTimeInSec) {
+        return getThreadPoolExecutor(name, 1, 10000, 1, new SynchronousQueue<>());
     }
 
     public static ThreadPoolExecutor getThreadPoolExecutor(String name,
@@ -82,7 +104,8 @@ public class ExecutorFactory {
                 .setNameFormat(name)
                 .setDaemon(true)
                 .build();
+
         return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
-                TimeUnit.SECONDS, workQueue, threadFactory);
+                TimeUnit.MILLISECONDS, workQueue, threadFactory);
     }
 }

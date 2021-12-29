@@ -30,7 +30,7 @@ public class ClearNetNodesByIdIntegrationTest extends BaseNodesByIdTest {
     }
 
     //fixme: BindException: Address already in use. Server port 1000 Seems to fail only if run with all tests...
-    //@Test
+    @Test
     void test_initializeServer() throws InterruptedException {
         super.test_initializeServer(getConfig(Transport.Type.CLEAR));
     }

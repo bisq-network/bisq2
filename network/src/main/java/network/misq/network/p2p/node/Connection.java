@@ -26,21 +26,17 @@ import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.message.Version;
 import network.misq.network.p2p.node.authorization.AuthorizedMessage;
 
+import javax.annotation.Nullable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
-import java.util.function.Consumer;
-
-import static java.util.concurrent.CompletableFuture.runAsync;
+import java.util.function.BiConsumer;
 
 /**
  * Represents an inbound or outbound connection to a peer node.
@@ -72,31 +68,31 @@ public abstract class Connection {
     @Getter
     private final Load peersLoad;
     @Getter
-    private final Metrics metrics;
+    private final Metrics metrics = new Metrics();
+    ;
 
     private final Socket socket;
     private final Handler handler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
+    @Nullable
+    private Future<?> future;
+
     @Getter
     private volatile boolean isStopped;
-    private Optional<Future<?>> future;
 
     protected Connection(Socket socket,
                          Capability peersCapability,
                          Load peersLoad,
-                         Handler handler) {
+                         Handler handler,
+                         BiConsumer<Connection, Exception> errorHandler) {
         this.socket = socket;
         this.peersCapability = peersCapability;
         this.peersLoad = peersLoad;
         this.handler = handler;
-        metrics = new Metrics();
-    }
 
-    void startListen(Consumer<Exception> errorHandler) {
         // TODO java serialisation is just for dev, will be replaced by custom serialisation
-        // Type-Length-Value Format is considered to be used:
         // https://github.com/lightningnetwork/lightning-rfc/blob/master/01-messaging.md#type-length-value-format
         // ObjectOutputStream need to be set before objectInputStream otherwise we get blocked...
         // https://stackoverflow.com/questions/14110986/new-objectinputstream-blocks/14111047
@@ -105,12 +101,12 @@ public abstract class Connection {
             objectInputStream = new ObjectInputStream(socket.getInputStream());
         } catch (IOException exception) {
             log.error("Could not create objectOutputStream/objectInputStream", exception);
-            errorHandler.accept(exception);
+            errorHandler.accept(this, exception);
             close(CloseReason.EXCEPTION.exception(exception));
             return;
         }
-        future = Optional.of(NetworkService.NETWORK_IO_POOL.submit(() -> {
-            Thread.currentThread().setName("Connection-input-" + StringUtils.truncate(getThreadNameId()));
+        future = NetworkService.NETWORK_IO_POOL.submit(() -> {
+            Thread.currentThread().setName("Connection.read-" + getThreadNameId());
             try {
                 while (isNotStopped()) {
                     Object msg = objectInputStream.readObject();
@@ -123,8 +119,8 @@ public abstract class Connection {
                             throw new ConnectionException("Invalid network version. " + simpleName);
                         }
                         log.debug("Received message: {} at: {}", envelope.payload(), this);
-                        metrics.received(envelope.payload());
-                        handler.onMessage(envelope.payload(), this);
+                        metrics.onMessage(envelope.payload());
+                        NetworkService.DISPATCHER.submit(() -> handler.onMessage(envelope.payload(), this));
                     }
                 }
             } catch (Exception exception) {
@@ -134,65 +130,62 @@ public abstract class Connection {
                     close(CloseReason.EXCEPTION.exception(exception));
                     // EOFException expected if connection got closed
                     if (!(exception instanceof EOFException)) {
-                        errorHandler.accept(exception);
+                        errorHandler.accept(this, exception);
                     }
                 }
             }
-        }));
+        });
     }
 
-    CompletableFuture<Connection> send(AuthorizedMessage message) {
+    Connection send(AuthorizedMessage message) {
         if (isStopped) {
             log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
                     StringUtils.truncate(message.toString(), 200), this);
-            throw new CompletionException(new ConnectionClosedException(this));
+            throw new ConnectionClosedException(this);
         }
-
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                Thread.currentThread().setName("Connection-output-" + StringUtils.truncate(getThreadNameId()));
-                Envelope envelope = new Envelope(message, Version.VERSION);
-                objectOutputStream.writeObject(envelope);
-                objectOutputStream.flush();
-                metrics.sent(message);
-                log.debug("Sent {} from {}",
-                        StringUtils.truncate(message.toString(), 300), this);
-                return this;
-            } catch (IOException exception) {
-                if (!isStopped) {
-                    log.debug("Call shutdown from send {} due exception={}", this, exception.toString());
-                    close(CloseReason.EXCEPTION.exception(exception));
-                }
-                // We wrap any exception (also expected EOFException in case of connection close), to inform the caller 
-                // that the "send message" intent failed.
-                throw new CompletionException(exception);
+        try {
+            Envelope envelope = new Envelope(message, Version.VERSION);
+            objectOutputStream.writeObject(envelope);
+            objectOutputStream.flush();
+            metrics.sent(message);
+            log.debug("Sent {} from {}",
+                    StringUtils.truncate(message.toString(), 300), this);
+            return this;
+        } catch (IOException exception) {
+            if (!isStopped) {
+                log.debug("Call shutdown from send {} due exception={}", this, exception.toString());
+                close(CloseReason.EXCEPTION.exception(exception));
             }
-        }, NetworkService.NETWORK_IO_POOL);
+            // We wrap any exception (also expected EOFException in case of connection close), to inform the caller 
+            // that the "send message" intent failed.
+            throw new ConnectionException(exception);
+        }
     }
 
-    CompletableFuture<Connection> close(CloseReason closeReason) {
+    void close(CloseReason closeReason) {
         if (isStopped) {
             log.debug("Shut down already in progress {}", this);
-            return CompletableFuture.completedFuture(this);
+            return;
         }
         log.debug("Shut down {}", this);
         isStopped = true;
-        handler.onConnectionClosed(this, closeReason);
-        future.ifPresent(f -> f.cancel(true));
-        runAsync(() -> {
-            listeners.forEach(listener -> listener.onConnectionClosed(closeReason));
-            listeners.clear();
-        });
+        if (future != null) {
+            future.cancel(true);
+        }
         try {
             socket.close();
         } catch (IOException e) {
             log.error("Error at socket.close", e);
         }
-        return CompletableFuture.completedFuture(this);
+        NetworkService.DISPATCHER.submit(() -> {
+            handler.onConnectionClosed(this, closeReason);
+            listeners.forEach(listener -> listener.onConnectionClosed(closeReason));
+            listeners.clear();
+        });
     }
 
     void notifyListeners(Message message) {
-        runAsync(() -> listeners.forEach(listener -> listener.onMessage(message)));
+        listeners.forEach(listener -> listener.onMessage(message));
     }
 
     public void addListener(Listener listener) {
@@ -233,7 +226,7 @@ public abstract class Connection {
     }
 
     private String getThreadNameId() {
-        return getPeersCapability().address().toString() + "-" + id.substring(0, 8);
+        return StringUtils.truncate(getPeersCapability().address().toString() + "-" + id.substring(0, 8));
     }
 
     private boolean isNotStopped() {

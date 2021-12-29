@@ -19,6 +19,7 @@ package network.misq.network.p2p.services.data.broadcast;
 
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.CollectionUtil;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Connection;
@@ -34,11 +35,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static java.util.concurrent.CompletableFuture.runAsync;
-
 @Slf4j
 public class Broadcaster implements Node.Listener {
     private static final long BROADCAST_TIMEOUT = 90;
+    private static final long RE_BROADCAST_DELAY_MS = 10;
 
     private final Node node;
     private final PeerGroup peerGroup;
@@ -58,13 +58,13 @@ public class Broadcaster implements Node.Listener {
         }
 
         if (message instanceof BroadcastMessage broadcastMessage) {
-            runAsync(() -> listeners.forEach(listener -> listener.onMessage(broadcastMessage.message(), connection, nodeId)));
+            listeners.forEach(listener -> listener.onMessage(broadcastMessage.message(), connection, nodeId));
         }
     }
 
     public CompletableFuture<BroadcastResult> reBroadcast(Message message) {
         return CompletableFuture.supplyAsync(() -> broadcast(message, 0.75).join(),
-                CompletableFuture.delayedExecutor(1000, TimeUnit.MILLISECONDS));
+                CompletableFuture.delayedExecutor(RE_BROADCAST_DELAY_MS, TimeUnit.MILLISECONDS));
     }
 
     public CompletableFuture<BroadcastResult> broadcast(Message message) {
@@ -79,28 +79,28 @@ public class Broadcaster implements Node.Listener {
         AtomicInteger numFaults = new AtomicInteger(0);
         long numConnections = peerGroup.getAllConnections().count();
         long numBroadcasts = Math.min(numConnections, Math.round(numConnections * distributionFactor));
-        log.error("Broadcast message to {} out of {} peers. distributionFactor={}",
+        log.debug("Broadcast message to {} out of {} peers. distributionFactor={}",
                 numBroadcasts, numConnections, distributionFactor);
         List<Connection> allConnections = peerGroup.getAllConnections().collect(Collectors.toList());
         Collections.shuffle(allConnections);
-        allConnections.stream()
-                .limit(numBroadcasts)
-                .forEach(connection -> {
-                    log.error("Node {} broadcast to {}", node, connection.getPeerAddress());
-                    node.send(new BroadcastMessage(message), connection)
-                            .whenComplete((c, throwable) -> {
-                                if (throwable == null) {
-                                    numSuccess.incrementAndGet();
-                                } else {
-                                    numFaults.incrementAndGet();
-                                }
-                                if (numSuccess.get() + numFaults.get() == numBroadcasts) {
-                                    future.complete(new BroadcastResult(numSuccess.get(),
-                                            numFaults.get(),
-                                            System.currentTimeMillis() - ts));
-                                }
-                            });
-                });
+        NetworkService.NETWORK_IO_POOL.submit(() -> {
+            allConnections.stream()
+                    .limit(numBroadcasts)
+                    .forEach(connection -> {
+                        log.debug("Node {} broadcast to {}", node, connection.getPeerAddress());
+                        try {
+                            node.send(new BroadcastMessage(message), connection);
+                            numSuccess.incrementAndGet();
+                        } catch (Throwable throwable) {
+                            numFaults.incrementAndGet();
+                        }
+                        if (numSuccess.get() + numFaults.get() == numBroadcasts) {
+                            future.complete(new BroadcastResult(numSuccess.get(),
+                                    numFaults.get(),
+                                    System.currentTimeMillis() - ts));
+                        }
+                    });
+        });
         return future;
     }
 

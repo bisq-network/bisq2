@@ -70,14 +70,14 @@ public class NetworkServiceConfigFactory {
 
         Transport.Config transportConfig = new Transport.Config(baseDir);
 
-        PeerGroup.Config peerGroupConfig = new PeerGroup.Config(8, 16, 1);
+        PeerGroup.Config peerGroupConfig = new PeerGroup.Config(8, 12, 1);
         PeerExchangeStrategy.Config peerExchangeStrategyConfig = new PeerExchangeStrategy.Config(2, 10, 10);
         KeepAliveService.Config keepAliveServiceConfig = new KeepAliveService.Config(TimeUnit.SECONDS.toMillis(180), TimeUnit.SECONDS.toMillis(90));
         PeerGroupService.Config defaultConf = new PeerGroupService.Config(peerGroupConfig,
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
-                TimeUnit.SECONDS.toMillis(5),  // bootstrapTime
-                TimeUnit.SECONDS.toMillis(5),  // interval
+                TimeUnit.SECONDS.toMillis(10),  // bootstrapTime
+                TimeUnit.SECONDS.toMillis(20),  // interval
                 TimeUnit.SECONDS.toMillis(60),  // timeout
                 TimeUnit.HOURS.toMillis(2),     // maxAge
                 100,                        // maxReported
@@ -88,7 +88,7 @@ public class NetworkServiceConfigFactory {
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
                 TimeUnit.SECONDS.toMillis(5),  // bootstrapTime
-                TimeUnit.SECONDS.toMillis(5),  // interval
+                TimeUnit.SECONDS.toMillis(10),  // interval
                 TimeUnit.SECONDS.toMillis(60),  // timeout
                 TimeUnit.HOURS.toMillis(2),     // maxAge
                 100,                        // maxReported

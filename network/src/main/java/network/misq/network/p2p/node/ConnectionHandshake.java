@@ -19,8 +19,6 @@ package network.misq.network.p2p.node;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.util.StringUtils;
-import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Envelope;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.message.Version;
@@ -34,7 +32,6 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * At initial connection we exchange capabilities and require a valid AuthorizationToken (e.g. PoW).
@@ -75,106 +72,99 @@ class ConnectionHandshake {
     }
 
     // Client side protocol
-    CompletableFuture<Result> start(Load myLoad) {
-        return CompletableFuture.supplyAsync(() -> {
-            Thread.currentThread().setName("ConnectionHandshake.start-" + StringUtils.truncate(capability.address().toString()));
-            try {
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-                AuthorizationToken token = authorizationService.createToken(Request.class).get();
-                Envelope requestEnvelope = new Envelope(new Request(token, capability, myLoad), Version.VERSION);
-                log.debug("Client sends {}", requestEnvelope);
-                objectOutputStream.writeObject(requestEnvelope);
-                objectOutputStream.flush();
+    Result start(Load myLoad) {
+        try {
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            AuthorizationToken token = authorizationService.createToken(Request.class);
+            Envelope requestEnvelope = new Envelope(new Request(token, capability, myLoad), Version.VERSION);
+            log.debug("Client sends {}", requestEnvelope);
+            objectOutputStream.writeObject(requestEnvelope);
+            objectOutputStream.flush();
 
-                ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-                Object msg = objectInputStream.readObject();
-                if (!(msg instanceof Envelope responseEnvelope)) {
-                    throw new ConnectionException("Received message not type of Envelope. " + msg.getClass().getSimpleName());
-                }
-                log.debug("Client received {}", msg);
-                if (responseEnvelope.version() != Version.VERSION) {
-                    throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
-                            responseEnvelope.version() + "; Version.VERSION=" + Version.VERSION);
-                }
-                if (!(responseEnvelope.payload() instanceof Response response)) {
-                    throw new ConnectionException("ResponseEnvelope.payload() not type of Response. responseEnvelope=" +
-                            responseEnvelope);
-                }
-                if (banList.isBanned(response.capability().address())) {
-                    throw new ConnectionException("Peers address is in quarantine. response=" + response);
-                }
-                if (!authorizationService.isAuthorized(response.token())) {
-                    throw new ConnectionException("Response authorization failed. response=" + response);
-                }
-
-                log.debug("Servers capability {}, load={}", response.capability(), response.load());
-                return new Result(response.capability(), response.load());
-            } catch (Exception e) {
-                try {
-                    socket.close();
-                } catch (IOException ignore) {
-                }
-                if (e instanceof ConnectionException handShakeException) {
-                    throw handShakeException;
-                } else {
-                    throw new ConnectionException(e);
-                }
+            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+            Object msg = objectInputStream.readObject();
+            if (!(msg instanceof Envelope responseEnvelope)) {
+                throw new ConnectionException("Received message not type of Envelope. " + msg.getClass().getSimpleName());
             }
-        }, NetworkService.NETWORK_IO_POOL);
+            log.debug("Client received {}", msg);
+            if (responseEnvelope.version() != Version.VERSION) {
+                throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
+                        responseEnvelope.version() + "; Version.VERSION=" + Version.VERSION);
+            }
+            if (!(responseEnvelope.payload() instanceof Response response)) {
+                throw new ConnectionException("ResponseEnvelope.payload() not type of Response. responseEnvelope=" +
+                        responseEnvelope);
+            }
+            if (banList.isBanned(response.capability().address())) {
+                throw new ConnectionException("Peers address is in quarantine. response=" + response);
+            }
+            if (!authorizationService.isAuthorized(response.token())) {
+                throw new ConnectionException("Response authorization failed. response=" + response);
+            }
+
+            log.debug("Servers capability {}, load={}", response.capability(), response.load());
+            return new Result(response.capability(), response.load());
+        } catch (Exception e) {
+            try {
+                socket.close();
+            } catch (IOException ignore) {
+            }
+            if (e instanceof ConnectionException handShakeException) {
+                throw handShakeException;
+            } else {
+                throw new ConnectionException(e);
+            }
+        }
     }
 
     // Server side protocol
-    CompletableFuture<Result> onSocket(Load myLoad) {
-        return CompletableFuture.supplyAsync(() -> {
-            Thread.currentThread().setName("ConnectionHandshake.onSocket-" + StringUtils.truncate(capability.address().toString()));
-            try {
-                ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-                Object msg = objectInputStream.readObject();
-                if (!(msg instanceof Envelope requestEnvelope)) {
-                    throw new ConnectionException("Received message not type of Envelope. Received data=" + msg.getClass().getSimpleName());
-                }
-                log.debug("Server received {}", msg);
-                if (requestEnvelope.version() != Version.VERSION) {
-                    throw new ConnectionException("Invalid version. requestEnvelop.version()=" +
-                            requestEnvelope.version() + "; Version.VERSION=" + Version.VERSION);
-                }
-                if (!(requestEnvelope.payload() instanceof Request request)) {
-                    throw new ConnectionException("RequestEnvelope.payload() not type of Request. requestEnvelope=" +
-                            requestEnvelope);
-                }
-                if (banList.isBanned(request.capability().address())) {
-                    throw new ConnectionException("Peers address is in quarantine. request=" + request);
-                }
-                if (!authorizationService.isAuthorized(request.token())) {
-                    throw new ConnectionException("Request authorization failed. request=" + request);
-                }
-                log.debug("Clients capability {}, load={}", request.capability(), request.load());
-
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-                AuthorizationToken token = authorizationService.createToken(Response.class).get();
-                objectOutputStream.writeObject(new Envelope(new Response(token, capability, myLoad), Version.VERSION));
-                objectOutputStream.flush();
-
-                return new Result(request.capability(), request.load());
-            } catch (Exception e) {
-                try {
-                    socket.close();
-                } catch (IOException ignore) {
-                }
-                if (e instanceof ConnectionException connectionException) {
-                    throw connectionException;
-                } else {
-                    throw new ConnectionException(e);
-                }
+    Result onSocket(Load myLoad) {
+        try {
+            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+            Object msg = objectInputStream.readObject();
+            if (!(msg instanceof Envelope requestEnvelope)) {
+                throw new ConnectionException("Received message not type of Envelope. Received data=" + msg.getClass().getSimpleName());
             }
-        }, NetworkService.NETWORK_IO_POOL);
+            log.debug("Server received {}", msg);
+            if (requestEnvelope.version() != Version.VERSION) {
+                throw new ConnectionException("Invalid version. requestEnvelop.version()=" +
+                        requestEnvelope.version() + "; Version.VERSION=" + Version.VERSION);
+            }
+            if (!(requestEnvelope.payload() instanceof Request request)) {
+                throw new ConnectionException("RequestEnvelope.payload() not type of Request. requestEnvelope=" +
+                        requestEnvelope);
+            }
+            if (banList.isBanned(request.capability().address())) {
+                throw new ConnectionException("Peers address is in quarantine. request=" + request);
+            }
+            if (!authorizationService.isAuthorized(request.token())) {
+                throw new ConnectionException("Request authorization failed. request=" + request);
+            }
+            log.debug("Clients capability {}, load={}", request.capability(), request.load());
+
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            AuthorizationToken token = authorizationService.createToken(Response.class);
+            objectOutputStream.writeObject(new Envelope(new Response(token, capability, myLoad), Version.VERSION));
+            objectOutputStream.flush();
+
+            return new Result(request.capability(), request.load());
+        } catch (Exception e) {
+            try {
+                socket.close();
+            } catch (IOException ignore) {
+            }
+            if (e instanceof ConnectionException connectionException) {
+                throw connectionException;
+            } else {
+                throw new ConnectionException(e);
+            }
+        }
     }
 
-    CompletableFuture<Void> shutdown() {
+    void shutdown() {
         try {
             socket.close();
         } catch (IOException ignore) {
         }
-        return CompletableFuture.completedFuture(null);
     }
 }

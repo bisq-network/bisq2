@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
+import static network.misq.network.NetworkService.NETWORK_IO_POOL;
+
 @Slf4j
 public class AddressValidationService implements Node.Listener {
     private static final long TIMEOUT = TimeUnit.SECONDS.toMillis(30);
@@ -67,9 +69,11 @@ public class AddressValidationService implements Node.Listener {
                             node.closeConnection(inboundConnection, CloseReason.ADDRESS_VALIDATION_FAILED);
                         }
                     } else {
-                        log.warn("Node {} got a failed address validation for inboundConnection from {}. exception {}. inboundConnection={}",
-                                node, peerAddress, throwable, inboundConnection);
-                        node.closeConnection(inboundConnection, CloseReason.EXCEPTION.exception(throwable));
+                        if (!(throwable instanceof CancellationException)) {
+                            log.warn("Node {} got a failed address validation for inboundConnection from {}. exception {}. inboundConnection={}",
+                                    node, peerAddress, throwable, inboundConnection);
+                            node.closeConnection(inboundConnection, CloseReason.EXCEPTION.exception(throwable));
+                        }
                     }
                 });
     }
@@ -94,7 +98,7 @@ public class AddressValidationService implements Node.Listener {
             if (connection instanceof InboundConnection inboundConnection) {
                 log.debug("Node {} received AddressValidationRequest with nonce {} from {}", node, addressValidationRequest.nonce(), peerAddress);
                 requesters.add(connection.getId());
-                node.send(new AddressValidationResponse(addressValidationRequest.nonce()), inboundConnection);
+                NETWORK_IO_POOL.submit(() -> node.send(new AddressValidationResponse(addressValidationRequest.nonce()), inboundConnection));
                 log.debug("Node {} sent AddressValidationResponse with nonce {} to {}. Connection={}", node, addressValidationRequest.nonce(), peerAddress, inboundConnection.getId());
             } else {
                 log.warn("Node {}  got a AddressValidationRequest at {}. We expect an inbound connection. We close that connection.", node, connection);

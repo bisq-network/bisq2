@@ -26,7 +26,6 @@ import network.misq.network.p2p.node.transport.Transport;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
@@ -43,7 +42,7 @@ public final class Server {
         address = serverSocketResult.address();
         log.debug("Create server: {}", serverSocketResult);
         future = NetworkService.NETWORK_IO_POOL.submit(() -> {
-            Thread.currentThread().setName("Server-" +
+            Thread.currentThread().setName("Server.listen-" +
                     StringUtils.truncate(serverSocketResult.nodeId()) + "-" +
                     StringUtils.truncate(serverSocketResult.address().toString()));
             try {
@@ -51,7 +50,11 @@ public final class Server {
                     Socket socket = serverSocket.accept();
                     log.debug("Accepted new connection on server: {}", serverSocketResult);
                     if (isNotStopped()) {
-                        socketHandler.accept(socket);
+                        // Call handler on new thread
+                        NetworkService.NETWORK_IO_POOL.submit(() -> {
+                            Thread.currentThread().setName("Server.acceptSocket-" + serverSocketResult.address());
+                            socketHandler.accept(socket);
+                        });
                     }
                 }
             } catch (IOException e) {
@@ -63,10 +66,10 @@ public final class Server {
         });
     }
 
-    CompletableFuture<Void> shutdown() {
+    void shutdown() {
         log.info("shutdown {}", address);
         if (isStopped) {
-            return CompletableFuture.completedFuture(null);
+            return;
         }
         isStopped = true;
         future.cancel(true);
@@ -74,7 +77,6 @@ public final class Server {
             serverSocket.close();
         } catch (IOException ignore) {
         }
-        return CompletableFuture.completedFuture(null);
     }
 
     private boolean isNotStopped() {

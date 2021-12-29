@@ -47,7 +47,7 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
                     .whenComplete((txInput, t) -> setState(State.TX_INPUTS_RECEIVED))
                     .thenCompose(multiSig::broadcastDepositTx)
                     .whenComplete((depositTx, t) -> setState(State.DEPOSIT_TX_BROADCAST))
-                    .thenCompose(depositTx -> networkService.confidentialSend(new DepositTxBroadcastMessage(depositTx),
+                    .thenCompose(depositTx -> networkService.confidentialSendAsync(new DepositTxBroadcastMessage(depositTx),
                             counterParty.getMakerNetworkId(),
                             null, null))
                     .whenComplete((connection1, t) -> setState(State.DEPOSIT_TX_BROADCAST_MSG_SENT));
@@ -78,7 +78,7 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
         setState(State.FUNDS_RECEIVED);
         multiSig.broadcastPayoutTx()
                 .whenComplete((payoutTx, t) -> setState(State.PAYOUT_TX_BROADCAST))
-                .thenCompose(payoutTx -> networkService.confidentialSend(new PayoutTxBroadcastMessage(payoutTx),
+                .thenCompose(payoutTx -> networkService.confidentialSendAsync(new PayoutTxBroadcastMessage(payoutTx),
                         counterParty.getMakerNetworkId(),
                         null, null))
                 .whenComplete((isValid, t) -> setState(State.PAYOUT_TX_BROADCAST_MSG_SENT));

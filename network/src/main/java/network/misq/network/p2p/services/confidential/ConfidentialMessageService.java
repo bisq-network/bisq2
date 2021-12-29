@@ -20,14 +20,15 @@ package network.misq.network.p2p.services.confidential;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.ObjectSerializer;
-import network.misq.network.p2p.NetworkId;
+import network.misq.common.threading.ExecutorFactory;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.NodesById;
-import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.DataService;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import network.misq.network.p2p.services.relay.RelayMessage;
@@ -91,6 +92,7 @@ public class ConfidentialMessageService implements Node.Listener {
         nodesById.addNodeListener(this);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Node.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,67 +102,68 @@ public class ConfidentialMessageService implements Node.Listener {
         if (message instanceof ConfidentialMessage confidentialMessage) {
             if (confidentialMessage instanceof RelayMessage) {
                 //todo
-                RelayMessage relayMessage = (RelayMessage) message;
-                Address targetAddress = relayMessage.getTargetAddress();
+                // RelayMessage relayMessage = (RelayMessage) message;
+                // Address targetAddress = relayMessage.getTargetAddress();
                 // send(message, targetAddress);
             } else {
                 ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
                 keyPairRepository.findKeyPair(confidentialMessage.getKeyId()).ifPresent(receiversKeyPair -> {
-                    try {
-                        byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
-                        Serializable deserialized = ObjectSerializer.deserialize(decrypted);
-                        if (deserialized instanceof Message decryptedMessage) {
-                            listeners.forEach(listener -> listener.onMessage(decryptedMessage, connection, nodeId));
-                        } else {
-                            log.warn("Deserialized data is not of type Message. deserialized.getClass()={}", deserialized.getClass());
+                    ExecutorFactory.WORKER_POOL.submit(() -> {
+                        try {
+                            byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
+                            Serializable deserialized = ObjectSerializer.deserialize(decrypted);
+                            if (deserialized instanceof Message decryptedMessage) {
+                                NetworkService.DISPATCHER.submit(() ->
+                                        listeners.forEach(listener -> listener.onMessage(decryptedMessage, connection, nodeId)));
+                            } else {
+                                log.warn("Deserialized data is not of type Message. deserialized.getClass()={}", deserialized.getClass());
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    });
                 });
             }
         }
     }
 
-    public CompletableFuture<Result> send(Message message,
-                                          Address address,
-                                          PubKey receiverPubKey,
-                                          KeyPair senderKeyPair,
-                                          String senderNodeId) {
-        return nodesById.getConnection(senderNodeId, address)
-                .thenCompose(connection -> send(message, connection, receiverPubKey, senderKeyPair, senderNodeId))
-                .handle((result, throwable) -> {
-                    if (throwable == null) {
-                        return result;
-                    } else {
-                        if (message instanceof MailboxMessage mailboxMessage) {
-                            ConfidentialMessage confidentialMessage = getConfidentialMessage(message, receiverPubKey, senderKeyPair);
-                            return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
-                        } else {
-                            log.warn("Sending message failed and message is not type of MailboxMessage. message={}", message);
-                            return new Result(State.FAILED).errorMsg("Sending message failed and message is not type of MailboxMessage. Exception=" + throwable);
-                        }
-                    }
-                });
+    public Result send(Message message,
+                       Address address,
+                       PubKey receiverPubKey,
+                       KeyPair senderKeyPair,
+                       String senderNodeId) {
+        Connection connection;
+        try {
+            connection = nodesById.getConnection(senderNodeId, address);
+        } catch (Throwable throwable) {
+            if (message instanceof MailboxMessage mailboxMessage) {
+                ConfidentialMessage confidentialMessage = getConfidentialMessage(message, receiverPubKey, senderKeyPair);
+                return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
+            } else {
+                log.warn("Sending message failed and message is not type of MailboxMessage. message={}", message);
+                return new Result(State.FAILED).errorMsg("Sending message failed and message is not type of MailboxMessage. Exception=" + throwable);
+            }
+        }
+        return send(message, connection, receiverPubKey, senderKeyPair, senderNodeId);
     }
 
-    public CompletableFuture<Result> send(Message message,
-                                          Connection connection,
-                                          PubKey receiverPubKey,
-                                          KeyPair senderKeyPair,
-                                          String senderNodeId) {
+    public Result send(Message message,
+                       Connection connection,
+                       PubKey receiverPubKey,
+                       KeyPair senderKeyPair,
+                       String senderNodeId) {
         ConfidentialMessage confidentialMessage = getConfidentialMessage(message, receiverPubKey, senderKeyPair);
-        return nodesById.send(senderNodeId, confidentialMessage, connection)
-                .handle((con, throwable) -> {
-                    if (throwable == null) {
-                        return new Result(State.SENT);
-                    } else if (message instanceof MailboxMessage mailboxMessage) {
-                        return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
-                    } else {
-                        log.warn("Sending message failed and message is not type of MailboxMessage. message={}", message);
-                        return new Result(State.FAILED).errorMsg("Sending message failed and message is not type of MailboxMessage. Exception=" + throwable);
-                    }
-                });
+        try {
+            nodesById.send(senderNodeId, confidentialMessage, connection);
+            return new Result(State.SENT);
+        } catch (Throwable throwable) {
+            if (message instanceof MailboxMessage mailboxMessage) {
+                return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
+            } else {
+                log.warn("Sending message failed and message is not type of MailboxMessage. message={}", message);
+                return new Result(State.FAILED).errorMsg("Sending message failed and message is not type of MailboxMessage. Exception=" + throwable);
+            }
+        }
     }
 
     private Result storeMailBoxMessage(MailboxMessage mailboxMessage,
@@ -173,31 +176,20 @@ public class ConfidentialMessageService implements Node.Listener {
         }
 
         MailboxPayload mailboxPayload = new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
+        // We do not wait for the broadcast result as that can take a while. We pack the future into our result, 
+        // so clients can react on it as they wish.
         CompletableFuture<BroadcastResult> mailboxFuture = dataService.get().addMailboxPayload(mailboxPayload,
                 senderKeyPair,
                 receiverPubKey.publicKey());
         return new Result(State.ADDED_TO_MAILBOX).mailboxFuture(mailboxFuture);
     }
 
-    public CompletableFuture<Connection> relay(Message message, NetworkId networkId, KeyPair senderKeyPair) {
-       /*   Set<Connection> connections = getConnectionsWithSupportedNetwork(peerAddress.getNetworkType());
-      Connection outboundConnection = CollectionUtil.getRandomElement(connections);
-        if (outboundConnection != null) {
-            //todo we need 2 diff. pub keys for encryption here
-            // ConfidentialMessage inner = seal(message);
-            // RelayMessage relayMessage = new RelayMessage(inner, peerAddress);
-            // ConfidentialMessage confidentialMessage = seal(relayMessage);
-            // return node.send(confidentialMessage, outboundConnection);
-        }*/
-        return CompletableFuture.failedFuture(new Exception("No connection supporting that network type found."));
-    }
 
     public CompletableFuture<Void> shutdown() {
         nodesById.removeNodeListener(this);
         listeners.clear();
         return CompletableFuture.completedFuture(null);
     }
-
 
     public void addMessageListener(Node.Listener listener) {
         listeners.add(listener);

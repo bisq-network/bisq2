@@ -13,6 +13,7 @@ import java.net.Proxy;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -68,7 +69,7 @@ abstract class AbstractTorTest {
         try {
             TorServerSocket torServerSocket = tor.getTorServerSocket();
             torServerSocket
-                    .bindAsync(3000, "hiddenservice_3")
+                    .bindAsync(3000, "hiddenservice_3", Executors.newSingleThreadExecutor())
                     .whenComplete((onionAddress, throwable) -> {
                         if (throwable == null) {
                             runServer(torServerSocket);

@@ -27,12 +27,13 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static network.misq.network.NetworkService.NETWORK_IO_POOL;
 
 @Getter
 @Slf4j
 class AddressValidationHandler implements Connection.Listener {
-    private static final long TIMEOUT = 90;
 
     private final Node node;
     private final Address addressOfInboundConnection;
@@ -50,11 +51,13 @@ class AddressValidationHandler implements Connection.Listener {
     }
 
     CompletableFuture<Boolean> request() {
-        future.orTimeout(TIMEOUT, TimeUnit.SECONDS);
         log.debug("Node {} send ConfirmAddressRequest to {} with nonce {}",
                 node, addressOfInboundConnection, nonce);
-        node.getConnection(addressOfInboundConnection, false)
-                .thenCompose(connection -> node.send(new AddressValidationRequest(nonce), connection))
+        supplyAsync(() -> node.getConnection(addressOfInboundConnection, false), NETWORK_IO_POOL)
+                .thenApply(connection ->
+                        // We get called from the IO thread, so we do not use the async send method
+                        node.send(new AddressValidationRequest(nonce), connection)
+                )
                 .whenComplete((connection, throwable) -> {
                     if (throwable == null) {
                         if (connection instanceof OutboundConnection outboundConnection) {
@@ -79,7 +82,7 @@ class AddressValidationHandler implements Connection.Listener {
             if (addressValidationResponse.requestNonce() == nonce &&
                     outboundConnection.getPeerAddress().equals(addressOfInboundConnection)) {
                 log.debug("Node {} received valid AddressValidationResponse from {}", node, addressOfInboundConnection);
-                node.closeConnectionGracefully(outboundConnection, CloseReason.ADDRESS_VALIDATION_COMPLETED);
+                node.closeConnectionGracefullyAsync(outboundConnection, CloseReason.ADDRESS_VALIDATION_COMPLETED);
                 removeListeners();
                 future.complete(true);
             } else {

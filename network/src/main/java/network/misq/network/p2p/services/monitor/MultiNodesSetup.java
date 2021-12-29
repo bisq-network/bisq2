@@ -49,8 +49,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.concurrent.CompletableFuture.runAsync;
-
 @Slf4j
 public class MultiNodesSetup {
 
@@ -101,7 +99,10 @@ public class MultiNodesSetup {
     }
 
 
-    public Map<Transport.Type, List<Address>> bootstrap(Optional<List<Address>> addressesToBootstrap, int delay) {
+    public Map<Transport.Type, List<Address>> bootstrap(Optional<List<Address>> addressesToBootstrap) {
+        int delay = supportedTransportTypes.contains(Transport.Type.TOR) || supportedTransportTypes.contains(Transport.Type.I2P) ?
+                1000 :
+                100;
         this.addressesToBootstrap = addressesToBootstrap;
         return supportedTransportTypes.stream()
                 .collect(Collectors.toMap(transportType -> transportType, transportType -> bootstrap(transportType, delay)));
@@ -133,11 +134,9 @@ public class MultiNodesSetup {
 
     public void bootstrap(Address address, Transport.Type transportType) {
         NetworkService networkService = createNetworkService(address, transportType);
-        networkService.bootstrap(address.getPort())
-                .whenComplete((r, t) -> handler.ifPresent(handler -> handler.onStateChange(address, networkService.getState())));
-      /*  networkService.findServiceNode(transportType).ifPresent(serviceNode ->
-                serviceNode.bootstrap(Node.DEFAULT_NODE_ID, address.getPort())
-                        .whenComplete((r, t) -> handler.ifPresent(handler -> handler.onStateChange(address, serviceNode.getState()))));*/
+        networkService.bootstrapAsync(address.getPort())
+                .whenComplete((r, t) -> handler.ifPresent(handler ->
+                        handler.onStateChange(address, networkService.getStateByTransportType().get(transportType))));
     }
 
     public CompletableFuture<List<Void>> shutdown() {
@@ -151,25 +150,27 @@ public class MultiNodesSetup {
                 .map(networkService -> networkService.shutdown()
                         .whenComplete((__, t) -> {
                             networkServicesByAddress.remove(address);
-                            handler.ifPresent(handler -> handler.onStateChange(address, networkService.state));
+                            handler.ifPresent(handler -> {
+                                State networkServiceState = supportedTransportTypes.stream()
+                                        .map(e -> networkService.getStateByTransportType().get(e)).findAny().orElseThrow();
+                                handler.onStateChange(address, networkServiceState);
+                            });
                         }))
                 .orElse(CompletableFuture.completedFuture(null));
     }
 
     public void send(Address senderAddress, Address receiverAddress, String nodeId, String message) {
-        runAsync(() -> {
-            String senderKeyId = senderAddress + nodeId;
-            KeyPair senderKeyPair = keyPairRepository.getOrCreateKeyPair(senderKeyId);
-            String receiverKeyId = receiverAddress + nodeId;
-            KeyPair receiverKeyPair = keyPairRepository.getOrCreateKeyPair(receiverKeyId);
-            NetworkId receiverNetworkId = new NetworkId(Map.of(Transport.Type.from(receiverAddress), receiverAddress),
-                    new PubKey(receiverKeyPair.getPublic(), receiverKeyId),
-                    nodeId);
-            NetworkId senderNetworkId = new NetworkId(Map.of(Transport.Type.from(senderAddress), senderAddress),
-                    new PubKey(senderKeyPair.getPublic(), senderKeyId),
-                    nodeId);
-            send(senderNetworkId, receiverNetworkId, senderKeyPair, message);
-        });
+        String senderKeyId = senderAddress + nodeId;
+        KeyPair senderKeyPair = keyPairRepository.getOrCreateKeyPair(senderKeyId);
+        String receiverKeyId = receiverAddress + nodeId;
+        KeyPair receiverKeyPair = keyPairRepository.getOrCreateKeyPair(receiverKeyId);
+        NetworkId receiverNetworkId = new NetworkId(Map.of(Transport.Type.from(receiverAddress), receiverAddress),
+                new PubKey(receiverKeyPair.getPublic(), receiverKeyId),
+                nodeId);
+        NetworkId senderNetworkId = new NetworkId(Map.of(Transport.Type.from(senderAddress), senderAddress),
+                new PubKey(senderKeyPair.getPublic(), senderKeyId),
+                nodeId);
+        send(senderNetworkId, receiverNetworkId, senderKeyPair, message);
     }
 
     private void send(NetworkId senderNetworkId, NetworkId receiverNetworkId, KeyPair senderKeyPair, String message) {
@@ -195,14 +196,17 @@ public class MultiNodesSetup {
         });
 
         MockMailBoxMessage mailBoxMessage = new MockMailBoxMessage(message);
-        senderNetworkService.confidentialSend(mailBoxMessage, receiverNetworkId, senderKeyPair, senderNetworkId.nodeId())
+        senderNetworkService.confidentialSendAsync(mailBoxMessage,
+                        receiverNetworkId,
+                        senderKeyPair,
+                        senderNetworkId.nodeId())
                 .whenComplete((result, throwable) -> {
                     senderNetworkService.findMyAddresses().forEach((type, value) -> {
                         Address senderAddress = value.get(senderNetworkId.nodeId());
                         String newLine = "\n" + getTimestamp() + " " +
                                 type.toString().substring(0, 3) + "  onSent       " +
                                 senderAddress + " --> " + receiverNetworkId.addressByNetworkType().get(type) + " " +
-                                mailBoxMessage + ", Result: " + result;
+                                mailBoxMessage + ", Result: " + result.get(type);
                         appendToHistory(senderAddress, newLine);
                         handler.ifPresent(handler -> handler.onMessage(senderAddress));
                     });
@@ -238,7 +242,7 @@ public class MultiNodesSetup {
                 Optional.empty());
 
         NetworkService networkService = new NetworkService(specificNetworkServiceConfig, keyPairRepository);
-        handler.ifPresent(handler -> handler.onStateChange(address, networkService.state));
+        handler.ifPresent(handler -> handler.onStateChange(address, networkService.getStateByTransportType().get(transportType)));
         networkServicesByAddress.put(address, networkService);
         setupConnectionListener(networkService, transportType);
         return networkService;

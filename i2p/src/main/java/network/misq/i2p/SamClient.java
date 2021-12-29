@@ -86,7 +86,7 @@ public class SamClient {
      * @return The socket for the outbound connection
      * @throws IOException
      */
-    public Socket connect(String peer, String sessionId) throws IOException {
+    public Socket getSocket(String peer, String sessionId) throws IOException {
         SamConnection samConnection = null;
         try {
             long ts = System.currentTimeMillis();
@@ -184,14 +184,13 @@ public class SamClient {
     }
 
     public void shutdown() {
+        long ts = System.currentTimeMillis();
         openSamConnections.forEach(SamConnection::close);
 
         activeSessions.clear();
         openSamConnections.clear();
-       /* if (samConnection != null) {
-            samConnection.close();
-            openSamConnections.remove(samConnection);
-        }*/
+        // Takes 800-1200 ms
+        log.info("I2P shutdown completed. Took {} ms.", System.currentTimeMillis() - ts);
     }
 
 

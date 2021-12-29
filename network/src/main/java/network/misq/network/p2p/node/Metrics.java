@@ -51,7 +51,7 @@ public class Metrics {
         numMessagesSent.incrementAndGet();
     }
 
-    public void received(Message message) {
+    public void onMessage(Message message) {
         lastUpdate.set(System.currentTimeMillis());
         receivedBytes.addAndGet(message.serialize().length);
         numMessagesReceived.incrementAndGet();

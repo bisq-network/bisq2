@@ -38,8 +38,13 @@ public class UnrestrictedAuthorizationService implements AuthorizationService {
 
 
     @Override
-    public CompletableFuture<AuthorizationToken> createToken(Class<? extends Message> messageClass) {
+    public CompletableFuture<AuthorizationToken> createTokenAsync(Class<? extends Message> messageClass) {
         return CompletableFuture.completedFuture(new AuthorizationToken());
+    }
+
+    @Override
+    public AuthorizationToken createToken(Class<? extends Message> message) {
+        return new AuthorizationToken();
     }
 
     @Override

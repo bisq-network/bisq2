@@ -21,6 +21,7 @@ package network.misq.network;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.threading.ExecutorFactory;
+import network.misq.common.util.CompletableFutureUtils;
 import network.misq.common.util.NetworkUtils;
 import network.misq.network.http.HttpService;
 import network.misq.network.http.common.BaseHttpClient;
@@ -32,23 +33,22 @@ import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.security.KeyPairRepository;
 
-import javax.annotation.Nullable;
 import java.security.KeyPair;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.*;
-import java.util.function.BiConsumer;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * High level API for network access to p2p network as well to http services (over Tor). If user has only I2P selected
@@ -57,21 +57,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class NetworkService {
-    // NETWORK_IO_POOL must be used only inside network module.
-    // The maximumPoolSize depends on the number of expected connections and nodes. Each node has 1 blocking IO thread 
-    // at ServerSocket.accept. Each connection has 1 blocking IO thread at InputStream.read and 1 thread at 
-    // OutputStream.write which is only short term blocking while writing. Beside that there is 1 blocking IO thread at 
-    // ConnectionHandshake which is active while handshake is in progress.
-    // If Tor and I2P are used there are additional threads at startup. 
-    // The PeerGroupService usually has about 12 connections, so that's 24 threads + 12 at sending messages. 
-    // If a user has 10 offers with dedicated nodes and 5 connections open, its another 100 threads + 50 at sending 
-    // messages. 100-200 threads might be a usual scenario, but it could also peak much higher, so we will give 
-    // maximumPoolSize sufficient headroom and use a rather short keepAliveTimeInSec.
-    public static final ThreadPoolExecutor NETWORK_IO_POOL = ExecutorFactory.getThreadPoolExecutor("NETWORK_IO_POOL",
-            10,
-            50000,
-            10,
-            new SynchronousQueue<>());
+    public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
+    public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
 
     public static record Config(String baseDir,
                                 Transport.Config transportConfig,
@@ -90,8 +77,6 @@ public class NetworkService {
     private final Set<Transport.Type> supportedTransportTypes;
     @Getter
     private final ServiceNodesByTransport serviceNodesByTransport;
-    @Getter
-    public State state = State.INIT;
 
     public NetworkService(Config config, KeyPairRepository keyPairRepository) {
         httpService = new HttpService();
@@ -111,48 +96,41 @@ public class NetworkService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Boolean> bootstrap() {
+    public CompletableFuture<Boolean> bootstrapAsync() {
+        return supplyAsync(this::bootstrap, NetworkService.NETWORK_IO_POOL);
+    }
+
+    public CompletableFuture<Boolean> bootstrapAsync(int port) {
+        return supplyAsync(() -> bootstrap(port), NetworkService.NETWORK_IO_POOL);
+    }
+
+    public boolean bootstrap() {
         return bootstrap(NetworkUtils.findFreeSystemPort());
     }
 
-    public CompletableFuture<Boolean> bootstrap(int port) {
-        return bootstrap(port, null);
-    }
-
-    public CompletableFuture<Boolean> bootstrap(int port, @Nullable BiConsumer<Boolean, Throwable> resultHandler) {
-        setState(State.BOOTSTRAPPING);
-        return serviceNodesByTransport.bootstrap(port, resultHandler)
-                .whenComplete((result, throwable) -> {
-                    if (throwable == null) {
-                        setState(State.BOOTSTRAPPED);
-                    }
-                });
+    public boolean bootstrap(int port) {
+        return serviceNodesByTransport.bootstrap(port);
     }
 
     public CompletableFuture<Void> shutdown() {
-        setState(State.SHUTDOWN_STARTED);
-        CountDownLatch latch = new CountDownLatch(2);
-        return CompletableFuture.runAsync(() -> {
-            serviceNodesByTransport.shutdown().whenComplete((v, t) -> latch.countDown());
-            httpService.shutdown().whenComplete((v, t) -> latch.countDown());
-            try {
-                if (!latch.await(1, TimeUnit.SECONDS)) {
-                    log.error("Shutdown interrupted by timeout");
-                }
-            } catch (InterruptedException e) {
-                log.error("Shutdown interrupted", e);
-            } finally {
-                setState(State.SHUTDOWN_COMPLETE);
-            }
-        });
+        return CompletableFutureUtils.allOf(serviceNodesByTransport.shutdown(), httpService.shutdown())
+                .thenApply(list -> null);
     }
 
-    public CompletableFuture<ConfidentialMessageService.Result> confidentialSend(Message message,
-                                                                                 NetworkId receiverNetworkId,
-                                                                                 KeyPair senderKeyPair,
-                                                                                 String senderNodeId) {
+    public CompletableFuture<Map<Transport.Type, ConfidentialMessageService.Result>> confidentialSendAsync(Message message,
+                                                                                                           NetworkId receiverNetworkId,
+                                                                                                           KeyPair senderKeyPair,
+                                                                                                           String senderNodeId) {
+        return supplyAsync(() -> confidentialSend(message, receiverNetworkId, senderKeyPair, senderNodeId), NETWORK_IO_POOL);
+    }
+
+    public Map<Transport.Type, ConfidentialMessageService.Result> confidentialSend(Message message,
+                                                                                   NetworkId receiverNetworkId,
+                                                                                   KeyPair senderKeyPair,
+                                                                                   String senderNodeId) {
         return serviceNodesByTransport.confidentialSend(message, receiverNetworkId, senderKeyPair, senderNodeId);
     }
+
 
     public CompletableFuture<List<BroadcastResult>> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
         return serviceNodesByTransport.addNetworkPayload(networkPayload, keyPair);
@@ -206,9 +184,7 @@ public class NetworkService {
         return serviceNodesByTransport.findServiceNode(transport);
     }
 
-    private void setState(State state) {
-        checkArgument(this.state.ordinal() < state.ordinal(),
-                "New state %s must have a higher ordinal as the current state %s", state, this.state);
-        this.state = state;
+    public Map<Transport.Type, State> getStateByTransportType() {
+        return serviceNodesByTransport.getStateByTransportType();
     }
 }

@@ -23,27 +23,27 @@ import network.misq.common.threading.ExecutorFactory;
 
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class Scheduler implements TaskScheduler {
-    private static final ScheduledExecutorService executor = ExecutorFactory.newScheduledThreadPool("Scheduler", 1);
-    private Runnable task;
+    // We do not use a ScheduledThreadPoolExecutor as the queue cannot be customized. It would cause undesired behaviour 
+    // in case we would use a static executor for all Scheduler instances and multiple schedule calls would get 
+    // queued up instead of starting a new scheduler.
+    private final ScheduledExecutorService executor;
+    private final Runnable task;
     private volatile boolean stopped;
-    private Optional<ScheduledFuture<?>> future = Optional.empty();
-
     @Getter
     private long counter;
     private Optional<String> threadName = Optional.empty();
 
-    private Scheduler() {
+    private Scheduler(Runnable task) {
+        this.task = task;
+        executor = ExecutorFactory.newSingleThreadScheduledExecutor("Scheduler");
     }
 
     public static Scheduler run(Runnable task) {
-        Scheduler scheduler = new Scheduler();
-        scheduler.task = task;
-        return scheduler;
+        return new Scheduler(task);
     }
 
     public Scheduler name(String threadName) {
@@ -85,26 +85,40 @@ public class Scheduler implements TaskScheduler {
             log.warn("Delay must be > 0. We set it to 1 ms.");
             delay = 1;
         }
-        future = Optional.of(executor.scheduleWithFixedDelay(() -> {
-            if (stopped) {
-                return;
-            }
-            threadName.ifPresent(name -> Thread.currentThread().setName(name));
-            try {
-                task.run();
-            } finally {
-                counter++;
-                if (counter >= cycles) {
-                    stop();
+        if (cycles == 1) {
+            executor.schedule(() -> {
+                if (stopped) {
+                    return;
                 }
-            }
-        }, delay, delay, timeUnit));
+                threadName.ifPresent(name -> Thread.currentThread().setName(name));
+                try {
+                    task.run();
+                } finally {
+                    stopped = true;
+                }
+            }, delay, timeUnit);
+        } else {
+            executor.scheduleWithFixedDelay(() -> {
+                if (stopped) {
+                    return;
+                }
+                threadName.ifPresent(name -> Thread.currentThread().setName(name));
+                try {
+                    task.run();
+                } finally {
+                    counter++;
+                    if (counter >= cycles) {
+                        stop();
+                    }
+                }
+            }, delay, delay, timeUnit);
+        }
         return this;
     }
 
     @Override
     public void stop() {
         stopped = true;
-        future.ifPresent(f -> f.cancel(true));
+        ExecutorFactory.shutdownAndAwaitTermination(executor);
     }
 }

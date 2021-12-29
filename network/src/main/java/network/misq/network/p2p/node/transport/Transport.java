@@ -52,9 +52,9 @@ public interface Transport {
     record ServerSocketResult(String nodeId, ServerSocket serverSocket, Address address) {
     }
 
-    CompletableFuture<Boolean> initialize();
+    Boolean initialize();
 
-    CompletableFuture<ServerSocketResult> getServerSocket(int port, String nodeId);
+    ServerSocketResult getServerSocket(int port, String nodeId);
 
     Socket getSocket(Address address) throws IOException;
 

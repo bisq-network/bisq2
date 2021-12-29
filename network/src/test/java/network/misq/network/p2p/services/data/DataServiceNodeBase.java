@@ -46,7 +46,7 @@ public abstract class DataServiceNodeBase {
         Stream<Address> nodes = transports.stream().flatMap(transport -> multiNodesSetup.getNodeAddresses(transport, numNodes).stream());
         Optional<List<Address>> addressesToBootstrap = Optional.of(Stream.concat(seeds, nodes).collect(Collectors.toList()));
 
-        return multiNodesSetup.bootstrap(addressesToBootstrap, 0);
+        return multiNodesSetup.bootstrap(addressesToBootstrap);
     }
 
     public CompletableFuture<List<Void>> shutdown() {

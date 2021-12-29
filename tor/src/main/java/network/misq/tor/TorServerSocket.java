@@ -19,7 +19,6 @@ package network.misq.tor;
 
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.TorControlConnection;
-import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.util.FileUtils;
 import network.misq.common.util.NetworkUtils;
 
@@ -29,11 +28,10 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static network.misq.tor.Constants.*;
 
 @Slf4j
@@ -41,18 +39,17 @@ public class TorServerSocket extends ServerSocket {
     private final String hsDirPath;
     private final TorController torController;
     private Optional<OnionAddress> onionAddress = Optional.empty();
-    private final ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("TorServerSocket.bindAsync");
 
     public TorServerSocket(String torDirPath, TorController torController) throws IOException {
         this.hsDirPath = torDirPath + File.separator + HS_DIR;
         this.torController = torController;
     }
 
-    public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort) {
-        return bindAsync(hiddenServicePort, "default");
+    public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort, Executor executor) {
+        return bindAsync(hiddenServicePort, "default", executor);
     }
 
-    public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort, String id) {
+    public CompletableFuture<OnionAddress> bindAsync(int hiddenServicePort, String id, Executor executor) {
         return bindAsync(hiddenServicePort, NetworkUtils.findFreeSystemPort(), id, executor);
     }
 
@@ -60,22 +57,26 @@ public class TorServerSocket extends ServerSocket {
                                                      int localPort,
                                                      String id,
                                                      Executor executor) {
-        CompletableFuture<OnionAddress> future = new CompletableFuture<>();
-        executor.execute(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             Thread.currentThread().setName("TorServerSocket.bindAsync-" + id);
             try {
-                bind(hiddenServicePort, localPort, id);
-                checkArgument(onionAddress.isPresent(), "onionAddress must be present");
-                future.complete(onionAddress.get());
+                return bind(hiddenServicePort, localPort, id);
             } catch (IOException | InterruptedException e) {
-                future.completeExceptionally(e);
+                throw new CompletionException(e);
             }
-        });
-        return future;
+        }, executor);
     }
 
     // Blocking
-    public void bind(int hiddenServicePort, int localPort, String id) throws IOException, InterruptedException {
+    public OnionAddress bind(int hiddenServicePort) throws IOException, InterruptedException {
+        return bind(hiddenServicePort, "default");
+    }
+
+    public OnionAddress bind(int hiddenServicePort, String id) throws IOException, InterruptedException {
+       return bind(hiddenServicePort, NetworkUtils.findFreeSystemPort(), id);
+    }
+
+    public OnionAddress bind(int hiddenServicePort, int localPort, String id) throws IOException, InterruptedException {
         long ts = System.currentTimeMillis();
         File dir = new File(hsDirPath, id);
         File hostNameFile = new File(dir.getCanonicalPath(), HOSTNAME);
@@ -117,6 +118,7 @@ public class TorServerSocket extends ServerSocket {
         });
         latch.await();
         torController.removeHiddenServiceReadyListener(serviceId);
+        return onionAddress;
     }
 
     @Override
@@ -130,7 +132,6 @@ public class TorServerSocket extends ServerSocket {
             } catch (IOException ignore) {
             }
         });
-        ExecutorFactory.shutdownAndAwaitTermination(executor);
     }
 
     public Optional<OnionAddress> getOnionAddress() {

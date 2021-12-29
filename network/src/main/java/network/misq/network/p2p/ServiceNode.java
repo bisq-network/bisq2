@@ -20,16 +20,16 @@ package network.misq.network.p2p;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
+import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.NodesById;
-import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
@@ -50,7 +50,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -123,66 +122,42 @@ public class ServiceNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Transport.ServerSocketResult> initializeServer(String nodeId, int serverPort) {
+    public void bootstrap(String nodeId, int serverPort) {
+        initializeServer(nodeId, serverPort);
+        initializePeerGroup();
+    }
+
+    public void initializeServer(String nodeId, int serverPort) {
         setState(State.INITIALIZE_SERVER);
-        return nodesById.initializeServer(nodeId, serverPort)
-                .whenComplete((result, throwable) -> {
-                    if (throwable == null) {
-                        setState(State.SERVER_INITIALIZED);
-                    }
-                });
+        nodesById.initializeServer(nodeId, serverPort);
+        setState(State.SERVER_INITIALIZED);
     }
 
-    public CompletableFuture<Boolean> bootstrap(String nodeId, int serverPort) {
-        return initializeServer(nodeId, serverPort)
-                .thenCompose(res -> {
-                    setState(State.BOOTSTRAPPING);
-                    return initializePeerGroup();
-                })
-                .whenComplete((result, throwable) -> {
-                    if (throwable == null) {
-                        setState(State.BOOTSTRAPPED);
-                    }
-                });
-    }
-
-    public CompletableFuture<Boolean> initializePeerGroup() {
-        return peerGroupService.map(PeerGroupService::initialize)
-                .orElse(CompletableFuture.completedFuture(true));
+    public void initializePeerGroup() {
+        setState(State.INITIALIZE_PEER_GROUP);
+        peerGroupService.ifPresent(PeerGroupService::initialize);
+        setState(State.PEER_GROUP_INITIALIZED);
     }
 
     public CompletableFuture<Void> shutdown() {
         setState(State.SHUTDOWN_STARTED);
-        CountDownLatch latch = new CountDownLatch(1 + // For nodesById
-                ((int) confidentialMessageService.stream().count()) +
-                ((int) peerGroupService.stream().count()) +
-                ((int) relayService.stream().count()) +
-                ((int) dataService.stream().count()) +
-                ((int) monitorService.stream().count()));
-        return CompletableFuture.runAsync(() -> {
-            nodesById.shutdown().whenComplete((v, t) -> latch.countDown());
-            confidentialMessageService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
-            peerGroupService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
-            dataService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
-            relayService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
-            monitorService.ifPresent(service -> service.shutdown().whenComplete((v, t) -> latch.countDown()));
-            try {
-                if (!latch.await(1, TimeUnit.SECONDS)) {
-                    log.error("Shutdown interrupted by timeout");
-                }
-            } catch (InterruptedException e) {
-                log.error("Shutdown interrupted", e);
-            } finally {
-                setState(State.SHUTDOWN_COMPLETE);
-            }
-        });
+        return CompletableFutureUtils.allOf(nodesById.shutdown(),
+                        confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(CompletableFuture.completedFuture(null)),
+                        peerGroupService.map(PeerGroupService::shutdown).orElse(CompletableFuture.completedFuture(null)),
+                        dataService.map(DataService::shutdown).orElse(CompletableFuture.completedFuture(null)),
+                        relayService.map(RelayService::shutdown).orElse(CompletableFuture.completedFuture(null)),
+                        monitorService.map(MonitorService::shutdown).orElse(CompletableFuture.completedFuture(null)))
+                .orTimeout(4, TimeUnit.SECONDS)
+                .whenComplete((list, throwable) -> {
+                    setState(State.SHUTDOWN_COMPLETE);
+                }).thenApply(list -> null);
     }
 
-    public CompletableFuture<ConfidentialMessageService.Result> confidentialSend(Message message,
-                                                                                 Address address,
-                                                                                 PubKey receiverPubKey,
-                                                                                 KeyPair senderKeyPair,
-                                                                                 String senderNodeId) {
+    public ConfidentialMessageService.Result confidentialSend(Message message,
+                                                              Address address,
+                                                              PubKey receiverPubKey,
+                                                              KeyPair senderKeyPair,
+                                                              String senderNodeId) {
         return confidentialMessageService.map(service -> service.send(message, address, receiverPubKey, senderKeyPair, senderNodeId))
                 .orElseThrow(() -> new RuntimeException("ConfidentialMessageService not present at confidentialSend"));
     }
@@ -228,10 +203,11 @@ public class ServiceNode {
     public void addDataServiceListener(DataService.Listener listener) {
         dataService.ifPresent(dataService -> dataService.addListener(listener));
     }
+
     public void removeDataServiceListener(DataService.Listener listener) {
         dataService.ifPresent(dataService -> dataService.removeListener(listener));
     }
-    
+
     public void addMessageListener(Node.Listener listener) {
         confidentialMessageService.ifPresent(service -> service.addMessageListener(listener));
     }

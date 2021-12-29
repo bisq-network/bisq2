@@ -27,7 +27,9 @@ public interface AuthorizationService {
 
     boolean isAuthorized(AuthorizationToken authorizationToken);
 
-    CompletableFuture<AuthorizationToken> createToken(Class<? extends Message> message);
+    CompletableFuture<AuthorizationToken> createTokenAsync(Class<? extends Message> message);
+
+    AuthorizationToken createToken(Class<? extends Message> message);
 
     void shutdown();
 }

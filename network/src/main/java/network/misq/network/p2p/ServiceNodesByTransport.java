@@ -25,10 +25,10 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.authorization.UnrestrictedAuthorizationService;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
+import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
@@ -36,18 +36,13 @@ import network.misq.security.KeyPairRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.KeyPair;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -92,67 +87,41 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Boolean> bootstrap(int port, @Nullable BiConsumer<Boolean, Throwable> resultHandler) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+    public boolean bootstrap(int port) {
         AtomicInteger completed = new AtomicInteger(0);
         AtomicInteger failed = new AtomicInteger(0);
         int numNodes = map.size();
         map.values().forEach(networkNode -> {
-            networkNode.bootstrap(Node.DEFAULT_NODE_ID, port)
-                    .whenComplete((result, throwable) -> {
-                        if (result != null) {
-                            int compl = completed.incrementAndGet();
-                            if (compl + failed.get() == numNodes) {
-                                future.complete(compl == numNodes);
-                            }
-                        } else {
-                            log.error(throwable.toString(), throwable);
-                            if (failed.incrementAndGet() + completed.get() == numNodes) {
-                                future.complete(false);
-                            }
-                        }
-                        if (resultHandler != null) {
-                            resultHandler.accept(result, throwable);
-                        }
-                    });
-        });
-        return future;
-    }
-
-    // TODO we return first successful connection in case we have multiple transportTypes. Not sure if that is ok.
-    public CompletableFuture<ConfidentialMessageService.Result> confidentialSend(Message message,
-                                                                                 NetworkId receiverNetworkId,
-                                                                                 KeyPair senderKeyPair,
-                                                                                 String senderNodeId) {
-        CompletableFuture<ConfidentialMessageService.Result> future = new CompletableFuture<>();
-        receiverNetworkId.addressByNetworkType().forEach((transportType, address) -> {
-            if (map.containsKey(transportType)) {
-                map.get(transportType)
-                        .confidentialSend(message, address, receiverNetworkId.pubKey(), senderKeyPair, senderNodeId)
-                        .whenComplete((result, throwable) -> {
-                            if (result != null) {
-                                future.complete(result);
-                            } else {
-                                log.error(throwable.toString(), throwable);
-                                future.completeExceptionally(throwable);
-                            }
-                        });
-            } else {
-                //todo
-             /*   map.values().forEach(networkNode -> {
-                    networkNode.relay(message, receiverNetworkId, myKeyPair)
-                            .whenComplete((connection, throwable) -> {
-                                if (connection != null) {
-                                    future.complete(connection);
-                                } else {
-                                    log.error(throwable.toString(), throwable);
-                                    future.completeExceptionally(throwable);
-                                }
-                            });
-                });*/
+            try {
+                networkNode.bootstrap(Node.DEFAULT_NODE_ID, port);
+                completed.incrementAndGet();
+            } catch (Throwable throwable) {
+                failed.incrementAndGet();
             }
         });
-        return future;
+        return completed.get() == numNodes;
+    }
+
+    public Map<Transport.Type, ConfidentialMessageService.Result> confidentialSend(Message message,
+                                                                                   NetworkId receiverNetworkId,
+                                                                                   KeyPair senderKeyPair,
+                                                                                   String senderNodeId) {
+        Map<Transport.Type, ConfidentialMessageService.Result> resultsByType = new HashMap<>();
+        receiverNetworkId.addressByNetworkType().forEach((transportType, address) -> {
+            if (map.containsKey(transportType)) {
+                ServiceNode serviceNode = map.get(transportType);
+                try {
+                    ConfidentialMessageService.Result result = serviceNode.confidentialSend(message, address, receiverNetworkId.pubKey(), senderKeyPair, senderNodeId);
+                    resultsByType.put(transportType, result);
+                } catch (Throwable throwable) {
+                    resultsByType.put(transportType, new ConfidentialMessageService.Result(ConfidentialMessageService.State.FAILED)
+                            .errorMsg(throwable.getMessage()));
+                }
+            } else {
+                //todo
+            }
+        });
+        return resultsByType;
     }
 
     public CompletableFuture<List<BroadcastResult>> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
@@ -218,7 +187,7 @@ public class ServiceNodesByTransport {
 
     public CompletableFuture<Void> shutdown() {
         return CompletableFutureUtils.allOf(map.values().stream().map(ServiceNode::shutdown))
-                .orTimeout(1, TimeUnit.SECONDS)
+                .orTimeout(6, TimeUnit.SECONDS)
                 .thenApply(list -> {
                     map.clear();
                     return null;
@@ -245,5 +214,10 @@ public class ServiceNodesByTransport {
     public Optional<Node> findNode(Transport.Type transport, String nodeId) {
         return findServiceNode(transport)
                 .flatMap(serviceNode -> serviceNode.findNode(nodeId));
+    }
+
+    public Map<Transport.Type, State> getStateByTransportType() {
+        return map.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getState()));
     }
 }

@@ -74,12 +74,14 @@
 
 - `PeerGroupService`
     - Creates `Quarantine`, `PeerGroup`, `PeerExchangeService`, `KeepAliveService` and `AddressValidationService`
-    - At `initialize` starts initial peer exchange via `peerExchangeService`. When this completes we start a `Scheduler` 
+    - At `initialize` starts initial peer exchange via `peerExchangeService`. When this completes we start a `Scheduler`
       to run several maintenance tasks as well we initialize the `KeepAliveService`.
     - Maintenance tasks:
-        - `closeQuarantine`: We close the connection if the address of our connection is found in the `Quarantine` map. We do not send a `CloseConnectionMessage` but close immediately as addresses from `Quarantine` are only added due non protocol compliant behaviour. 
-        - `verifyInboundConnections`: 
-- 
+        - `closeQuarantine`: We close the connection if the address of our connection is found in the `Quarantine` map.
+          We do not send a `CloseConnectionMessage` but close immediately as addresses from `Quarantine` are only added
+          due non protocol compliant behaviour.
+        - `verifyInboundConnections`:
+-
 - `RelayService`
   TODO for relaying messages from one transport network to another
 
@@ -155,5 +157,67 @@ default `Node` with nodeId `DEFAULT` used for the `PeerGroupService`.
 This node has not enabled the `ConfidentialMessageService` as it is not used as a user agent node but only for
 propagating data in the overlay network.
 
-Last update: 11.12.2021
+## Threading model
+
+Threading is complex in the network layer as many parallel execution streams happen, and we deal with blocking IO. Javas
+non-blocking IO APIs do not support socks proxy which is required for Tor, so it cannot be used. 
+
+Here are some use cases described from a threading perspective.
+
+### Initiating a new connection and sending a confidential message
+
+When sending a message we create a connection if none is available. Let's use as example confidential send:
+From the `NetworkService` API we call the `confidentialSendAsync` method which runs the blocking `confidentialSend`
+method inside a new thread taken from the `NetworkService.NETWORK_IO_POOL` thread pool. It delegates down to
+the `ConfidentialMessageService.send` method where it first requests a connection from the node. There we look up if
+there is any existing connection for the given address available. If so we return otherwise we
+call `createOutboundConnection` which first creates a new socket via the blocking `Transport.getSocket` call, and after
+we received the socket we start the `ConnectionHandshake` protocol. Both the getSocket and the handshake are blocking IO
+calls, that's why we use the `NetworkService.NETWORK_IO_POOL` pool. Once the connection is created we return it to our
+the `ConfidentialMessageService.send` method, create the
+`ConfidentialMessage` and call the send method on that node. The encryption is also a blocking call and might take a few
+milliseconds. At the nodes send method we call `AuthorizationService.createToken` which can also consume some time if a
+PoW token is minted. Finally, we call send on our connection which is a blocking IO operation. Here we return to the
+initial caller and our execution path is closed.
+
+We have one thread being used for all the tasks on that execution path. We did not cover the mailbox message case or
+error handling, but that should not make much of a difference.
+
+### Receiver of the message accepts inbound connection, decrypts the message and notifies the listeners.
+
+A node starts a `Server` instance with a blocking IO thread for accepting new sockets on the given port. Once a new
+socket is accepted it creates a new thread and call the socket handler (`Node`) in that thread context. The `Node`
+starts the `ConnectionHandshake` with a blocking read on the input stream of the socket. Once the request message has
+been read it writes to the output stream the reply message and after that returns to the caller (`Node`). The `Node`
+creates an `InboundConnection` puts it into the map and use the `DISPATCHER` thread to notify the listeners about the
+new connections. There is only 1 single `DISPATCHER` thread for one NetworkService (usually client applications have
+only one). When we created the connection we create a new thread using the `NetworkService.NETWORK_IO_POOL` pool for
+listening for inbound messages on our sockets input stream. When a new message arrives, we call our
+messageHandler (`Node`) using the `DISPATCHER` thread. The `onMessage` in node calls `authorizationService.isAuthorized`
+and if that returns true we check if the message was a `CloseConnectionMessage`. If so, we close our connection.
+Otherwise, we call `connection.notifyListeners` so that the connection notifies their listeners (only for authorized
+messages) and the node notifies their own listeners. We do not need to map to the `DISPATCHER` thread as we are
+executing on it. The `authorizationService.isAuthorized` is very cheap and must be non-blocking. From the node layer we
+are done, but other network layers will react on the message. As we deal with a confidential message we look into that
+aspect. The `ConfidentialMessageService` adds a listener on all nodes. When a new message gets dispatched it checks if
+the message is of type `ConfidentialMessage` and if so, it processes it. It looks up the decryption key and if found, it
+uses that to decrypt the message. Encryption is done on the `NetworkService.WORKER_POOL` to avoid that the `DISPATCHER`
+thread gets too much load. Once done, it notifies its listener using the `DISPATCHER` thread.
+
+After that the thread execution is completed.
+
+We have this structure of threads:
+
+- `Server.listen`: Blocking IO thread listening for new sockets in a while loop
+    - `Server.acceptSocket`: Starts blocking `ConnectionHandshake` protocol, creates `InboundConnection` and creates a
+      dispatcher thread for notifying listeners.
+        - `Connection.read`: IO thread created in `Connection` for listening on new messages.
+        - `Node.dispatcher`: Dispatcher thread for calling `onConnection` on listeners.
+            - `DISPATCHER`: Dispatcher thread for calling `onMessage` on handler and further listeners.
+            - `NetworkService.WORKER_POOL`: `ConfidentialMessageService` got called `onMessage` and use the worker pool
+              for decrypting the message.
+            - `DISPATCHER`: After decryption `ConfidentialMessageService` notifies their listeners via the dispatcher
+              thread.
+
+Last update: 28.12.2021
 

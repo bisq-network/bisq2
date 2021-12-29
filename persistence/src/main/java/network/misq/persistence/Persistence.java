@@ -23,16 +23,11 @@ import network.misq.common.util.FileUtils;
 
 import java.io.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 public class Persistence {
-    public static final ThreadPoolExecutor PERSISTENCE_POOL = ExecutorFactory.getThreadPoolExecutor("PERSISTENCE_POOL",
-            1,
-            100,
-            5,
-            new SynchronousQueue<>());
+    public static final ExecutorService DISK_IO_POOL = ExecutorFactory.newFixedThreadPool("Persistence.disk_IO-pool");
 
     private final String directory;
     private final String fileName;
@@ -50,6 +45,10 @@ public class Persistence {
         this.serializable = serializable;
         this.fileName = fileName;
         storagePath = directory + File.separator + fileName;
+    }
+
+    public static CompletableFuture<Serializable> readAsync(String storagePath) {
+        return CompletableFuture.supplyAsync(() -> read(storagePath), DISK_IO_POOL);
     }
 
     public static Serializable read(String storagePath) {
@@ -94,6 +93,6 @@ public class Persistence {
                 }
                 return success;
             }
-        }, PERSISTENCE_POOL);
+        }, DISK_IO_POOL);
     }
 }

@@ -27,7 +27,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @Slf4j
 public abstract class BaseNodesByIdTest extends BaseNetworkTest {
@@ -37,7 +36,6 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         BanList banList = new BanList();
         NodesById nodesById = new NodesById(banList, config);
         long ts = System.currentTimeMillis();
-        // Thread.sleep(6000);
         numNodes = 5;
         int numRepeats = 1;
         for (int i = 0; i < numRepeats; i++) {
@@ -45,7 +43,6 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
             doMessageRoundTrip(numNodes, nodesById);
         }
         log.error("MessageRoundTrip for {} nodes repeated {} times took {} ms", numNodes, numRepeats, System.currentTimeMillis() - ts);
-        // Thread.sleep(6000000);
     }
 
     private void doMessageRoundTrip(int numNodes, NodesById nodesById) throws InterruptedException {
@@ -57,27 +54,18 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
             String nodeId = "node_" + i;
             int finalI = i;
             int serverPort = 1000 + i;
-            nodesById.initializeServer(nodeId, serverPort).whenComplete((serverSocketResult, t) -> {
-                if (t != null) {
-                    fail(t);
+            nodesById.initializeServer(nodeId, serverPort);
+            initializeServerLatch.countDown();
+            nodesById.addNodeListener(nodeId, (message, connection, id) -> {
+                log.info("Received " + message.toString());
+                if (message instanceof ClearNetNodesByIdIntegrationTest.Ping) {
+                    ClearNetNodesByIdIntegrationTest.Pong pong = new ClearNetNodesByIdIntegrationTest.Pong("Pong from " + finalI + " to " + connection.getPeerAddress().getPort());
+                    log.info("Send pong " + pong);
+                    nodesById.send(nodeId, pong, connection);
+                    sendPongLatch.countDown();
+                } else if (message instanceof ClearNetNodesByIdIntegrationTest.Pong) {
+                    receivedPongLatch.countDown();
                 }
-                initializeServerLatch.countDown();
-                nodesById.addNodeListener(nodeId, (message, connection, id) -> {
-                    log.info("Received " + message.toString());
-                    if (message instanceof ClearNetNodesByIdIntegrationTest.Ping) {
-                        ClearNetNodesByIdIntegrationTest.Pong pong = new ClearNetNodesByIdIntegrationTest.Pong("Pong from " + finalI + " to " + connection.getPeerAddress().getPort());
-                        log.info("Send pong " + pong);
-                        nodesById.send(nodeId, pong, connection).whenComplete((r2, t2) -> {
-                            if (t2 != null) {
-                                fail(t2);
-                            }
-                            log.info("Send pong completed " + pong);
-                            sendPongLatch.countDown();
-                        });
-                    } else if (message instanceof ClearNetNodesByIdIntegrationTest.Pong) {
-                        receivedPongLatch.countDown();
-                    }
-                });
             });
         }
         log.error("init started {} ms", System.currentTimeMillis() - ts);
@@ -95,13 +83,9 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
             Address receiverNodeAddress = nodesById.findMyAddress(receiverNodeId).get();
             ClearNetNodesByIdIntegrationTest.Ping ping = new ClearNetNodesByIdIntegrationTest.Ping("Ping from " + nodesById.findMyAddress(nodeId) + " to " + receiverNodeAddress);
             log.info("Send ping " + ping);
-            nodesById.send(nodeId, ping, receiverNodeAddress).whenComplete((r, t) -> {
-                if (t != null) {
-                    fail(t);
-                }
-                log.info("Send ping completed " + ping);
-                sendPingLatch.countDown();
-            });
+            nodesById.send(nodeId, ping, receiverNodeAddress);
+            log.info("Send ping completed " + ping);
+            sendPingLatch.countDown();
         }
         log.error("Send ping took {} ms", System.currentTimeMillis() - ts);
 
@@ -127,28 +111,22 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
     void test_initializeServer(Node.Config nodeConfig) throws InterruptedException {
         BanList banList = new BanList();
         NodesById nodesById = new NodesById(banList, nodeConfig);
-        //Thread.sleep(6000);
         for (int i = 0; i < 2; i++) {
             initializeServers(2, nodesById);
         }
-        //Thread.sleep(6000000);
+        nodesById.shutdown();
+        Thread.sleep(100);
     }
 
     private void initializeServers(int numNodes, NodesById nodesById) throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(numNodes);
         for (int i = 0; i < numNodes; i++) {
             String nodeId = "node_" + i;
             int serverPort = 1000 + i;
-            nodesById.initializeServer(nodeId, serverPort).whenComplete((r, t) -> {
-                if (t != null) {
-                    fail(t);
-                }
-                latch.countDown();
-            });
+            nodesById.initializeServer(nodeId, serverPort);
         }
-        boolean result = latch.await(getTimeout(), TimeUnit.SECONDS);
         nodesById.shutdown();
-        assertTrue(result);
+        Thread.sleep(100);
+        assertTrue(true);
     }
 
     @ToString

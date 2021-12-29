@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.monitor;
+package network.misq.tools.network.monitor;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -80,7 +80,7 @@ public class NodeInfoBox extends VBox {
                 .replace("[", "")
                 .replace("]", ""));
         UIScheduler.run(() -> {
-            setStyle("-fx-background-color: #FFFFFF");
+            setStyle("-fx-background-color: #EEEEEE");
         }).after(2000);
     }
 

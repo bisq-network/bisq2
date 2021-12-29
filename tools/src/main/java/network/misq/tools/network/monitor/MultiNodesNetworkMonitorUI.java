@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.monitor;
+package network.misq.tools.network.monitor;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -55,7 +54,6 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
     private Optional<Address> selected = Optional.empty();
     private final Map<Address, NodeInfoBox> nodeInfoBoxByAddress = new HashMap<>();
     private TextField fromTf;
-    private ObservableList<String> defaultButtonStyle;
 
     @Override
     public void start(Stage primaryStage) {
@@ -119,8 +117,8 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
 
 
         fromTf = new TextField("localhost:9000");
-        TextField toTf = new TextField("localhost:9033");
-        // TextField nodeIdTf = new TextField("mock node id");
+        //TextField toTf = new TextField("localhost:9099");
+        TextField toTf = new TextField("l2takiyfs5d7nou7wwjomx3a4jxpn4fabtxfclgobrucnokms6j6liid.onion:2000");
         TextField nodeIdTf = new TextField(Node.DEFAULT_NODE_ID);
         TextField msgTf = new TextField("Test message");
         Button sendButton = new Button("Send");
@@ -188,7 +186,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
 
         multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory.get(), transports, bootstrapAll);
         multiNodesSetup.addNetworkInfoConsumer(this);
-        multiNodesSetup.bootstrap(addressesToBootstrap, 100)
+        multiNodesSetup.bootstrap(addressesToBootstrap)
                 .forEach((transportType, addresses) -> addresses.forEach(address -> addNodeInfoBox(address, transportType)));
     }
 
@@ -219,16 +217,15 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
     public void onStateChange(Address address, State networkServiceState) {
         UIThread.run(() -> Optional.ofNullable(nodeInfoBoxByAddress.get(address)).ifPresent(nodeInfoBox -> {
             nodeInfoBox.onStateChange(networkServiceState);
-            nodeInfoBox.setDefaultButton(networkServiceState == State.BOOTSTRAPPED);
+            nodeInfoBox.setDefaultButton(networkServiceState == State.PEER_GROUP_INITIALIZED);
         }));
     }
 
     @Override
     public void onMessage(Address address) {
-        UIThread.run(() -> Optional.ofNullable(nodeInfoBoxByAddress.get(address)).ifPresent(buttonInfo -> {
-            selected.filter(addr -> addr.equals(address))
-                    .ifPresent(addr -> updateNodeInfo(address, Transport.Type.from(address)));
-        }));
+        UIThread.run(() -> Optional.ofNullable(nodeInfoBoxByAddress.get(address))
+                .flatMap(buttonInfo -> selected.filter(addr -> addr.equals(address)))
+                .ifPresent(addr -> updateNodeInfo(address, Transport.Type.from(address))));
     }
 
 
@@ -248,7 +245,7 @@ public class MultiNodesNetworkMonitorUI extends Application implements MultiNode
             NodeInfoBox nodeInfoBox = new NodeInfoBox(address, transportType, isSeed);
             nodeInfoBox.setOnAction(e -> onButtonClicked(address, transportType));
             nodeInfoBoxByAddress.put(address, nodeInfoBox);
-            if (multiNodesSetup.isSeed(address, transportType)) {
+            if (isSeed) {
                 switch (transportType) {
                     case TOR -> torSeedButtonsPane.getChildren().add(nodeInfoBox);
                     case I2P -> i2pSeedButtonsPane.getChildren().add(nodeInfoBox);

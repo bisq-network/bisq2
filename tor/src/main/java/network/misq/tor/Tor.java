@@ -22,7 +22,6 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.threading.ExecutorFactory;
 
 import javax.annotation.Nullable;
 import javax.net.SocketFactory;
@@ -37,10 +36,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -75,13 +72,11 @@ public class Tor {
         SHUTDOWN_STARTED
     }
 
-    private Optional<ExecutorService> executor = Optional.empty();
     private final TorController torController;
-    private final Bootstrap bootstrap;
+    private final TorBootstrap torBootstrap;
     private final String torDirPath;
     @Getter
     private final AtomicReference<State> state = new AtomicReference<>(State.NOT_STARTED);
-    private final Set<CompletableFuture<Boolean>> startupFutures = new CopyOnWriteArraySet<>();
 
     private int proxyPort = -1;
 
@@ -100,8 +95,8 @@ public class Tor {
 
     private Tor(String torDirPath) {
         this.torDirPath = torDirPath;
-        bootstrap = new Bootstrap(torDirPath);
-        torController = new TorController(bootstrap.getCookieFile());
+        torBootstrap = new TorBootstrap(torDirPath);
+        torController = new TorController(torBootstrap.getCookieFile());
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Thread.currentThread().setName("Tor.shutdownHook");
@@ -113,50 +108,30 @@ public class Tor {
         if (state.get() == State.SHUTDOWN_STARTED) {
             return;
         }
+        long ts = System.currentTimeMillis();
         state.set(State.SHUTDOWN_STARTED);
 
-        bootstrap.shutdown();
+        torBootstrap.shutdown();
         torController.shutdown();
 
-        log.info("Shutdown Tor completed");
         state.set(State.NOT_STARTED);
-        executor.ifPresent(ExecutorFactory::shutdownAndAwaitTermination);
-        executor = Optional.empty();
-    }
-
-    public CompletableFuture<Boolean> startAsync() {
-        return startAsync(getExecutor());
+        log.info("Tor shutdown completed. Took {} ms.", System.currentTimeMillis() - ts); // Usually takes 20-40 ms
     }
 
     public CompletableFuture<Boolean> startAsync(ExecutorService executor) {
-        this.executor = Optional.of(executor);
-        if (state.get() == State.STARTED) {
-            return CompletableFuture.completedFuture(true);
-        }
-
-        if (state.get() == State.STARTING) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ignore) {
-            }
-            return startAsync(executor);
-        }
-
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        startupFutures.add(future);
-        executor.execute(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             Thread.currentThread().setName("Tor.startAsync");
             try {
-                if (state.get() == State.NOT_STARTED) {
-                    start();
-                    startupFutures.forEach(f -> f.complete(true));
+                if (state.get() != State.NOT_STARTED) {
+                    throw new IllegalStateException("startAsync called with invalid state. State=" + state.get());
                 }
+                start();
+                return true;
             } catch (IOException | InterruptedException exception) {
-                bootstrap.deleteVersionFile();
-                startupFutures.forEach(f -> f.completeExceptionally(exception));
+                torBootstrap.deleteVersionFile();
+                throw new CompletionException(exception);
             }
-        });
-        return future;
+        }, executor);
     }
 
     // Blocking start
@@ -168,7 +143,7 @@ public class Tor {
                 "Invalid state at start. state=" + state.get());
         state.set(State.STARTING);
         long ts = System.currentTimeMillis();
-        int controlPort = bootstrap.start();
+        int controlPort = torBootstrap.start();
         torController.start(controlPort);
         proxyPort = torController.getProxyPort();
         state.set(State.STARTED);
@@ -253,9 +228,5 @@ public class Tor {
             e.printStackTrace();
         }
         return socks5Proxy;
-    }
-
-    private ExecutorService getExecutor() {
-        return executor.orElse(ExecutorFactory.newSingleThreadExecutor("Tor.startAsync"));
     }
 }

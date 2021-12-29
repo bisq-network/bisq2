@@ -61,7 +61,7 @@ public class MonitorService {
         peerGroup.getInboundConnections()
                 .sorted(peerGroup.getConnectionAgeComparator())
                 .forEach(connection -> appendConnectionInfo(sb, connection, false));
-        sb.append("\n").append("Reported peers: ").append(peerGroup.getReportedPeers().stream()
+        sb.append("\n").append("Reported peers (").append(peerGroup.getReportedPeers().size()).append("): ").append(peerGroup.getReportedPeers().stream()
                 .map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
         sb.append("\n").append("Persisted peers: ").append(peerGroup.getPersistedPeers().stream()
                 .map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
