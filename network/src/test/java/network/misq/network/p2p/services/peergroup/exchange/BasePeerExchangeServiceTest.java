@@ -36,8 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Slf4j
 public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
     void test_peerExchange(Node.Config nodeConfig) throws InterruptedException, ExecutionException {
-        int numSeeds = 7;
-        int numNodes = 3;
+        int numSeeds = 2;
+        int numNodes = 2;
         BanList banList = new BanList();
         List<Address> seedNodeAddresses = new ArrayList<>();
         for (int i = 0; i < numSeeds; i++) {
@@ -70,7 +70,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
             Node node = new Node(banList, nodeConfig, "node_" + i);
             nodes.add(node);
             node.initializeServer(port);
-            initSeedsLatch.countDown();
+            initNodesLatch.countDown();
         }
         assertTrue(initNodesLatch.await(getTimeout(), TimeUnit.SECONDS));
 

@@ -17,20 +17,24 @@
 
 package network.misq.desktop.common;
 
+import javafx.application.HostServices;
 import lombok.NonNull;
 import network.misq.common.annotations.LateInit;
 
 import static java.util.Objects.requireNonNull;
 
-public class HostServices {
+public class Browser {
     @LateInit
-    private static javafx.application.HostServices delegate;
+    private static HostServices hostServices;
 
-    public static void init(@NonNull javafx.application.HostServices hostServices) {
-        HostServices.delegate = hostServices;
+    public static void setHostServices(@NonNull HostServices hostServices) {
+        Browser.hostServices = hostServices;
     }
 
-    public static void openUri(String uri) {
-        requireNonNull(delegate).showDocument(uri);
+    public static void open(String uri) {
+        if (hostServices == null) {
+            throw new IllegalArgumentException("hostServices must be set before open is called");
+        }
+        hostServices.showDocument(uri);
     }
 }

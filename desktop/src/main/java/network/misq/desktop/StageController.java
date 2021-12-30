@@ -21,7 +21,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.api.DefaultApi;
-import network.misq.desktop.common.HostServices;
+import network.misq.desktop.common.Browser;
 import network.misq.desktop.common.UncaughtExceptionHandler;
 import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.view.Controller;
@@ -42,24 +42,26 @@ public class StageController implements Controller {
     public StageController(DefaultApi api, JavaFXApplication.Data applicationData) {
         this.api = api;
         parameters = applicationData.parameters();
-        HostServices.init(applicationData.hostServices());
+        Browser.setHostServices(applicationData.hostServices());
 
         this.model = new StageModel();
         stageView = new StageView(model, this, applicationData.stage());
 
         overlayController = new OverlayController(stageView.getScene());
         mainViewController = new MainViewController(api, overlayController);
-
-        stageView.addMainView(mainViewController.getView());
+       
+        initialize();
     }
 
     @Override
     public void initialize() {
+        stageView.addMainView(mainViewController.getView());
+        model.setTitle(api.getAppName());
         mainViewController.initialize();
     }
 
     public void onDomainInitialized() {
-        model.setTitle(api.getAppName());
+
     }
 
     @Override

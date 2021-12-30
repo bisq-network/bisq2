@@ -24,25 +24,25 @@ import network.misq.desktop.main.content.ContentViewController;
 import network.misq.desktop.overlay.OverlayController;
 
 public class SettingsController implements Controller {
-    private SettingsModel model;
+    private final SettingsModel model;
     @Getter
-    private SettingsView view;
-    @Getter
+    private final SettingsView view;
     private final DefaultApi api;
     private final ContentViewController contentViewController;
     private final OverlayController overlayController;
 
     public SettingsController(DefaultApi api, ContentViewController contentViewController, OverlayController overlayController) {
         this.api = api;
+        model = new SettingsModel(api);
+        view = new SettingsView(model, this);
+        
         this.contentViewController = contentViewController;
         this.overlayController = overlayController;
     }
 
     @Override
     public void initialize() {
-        model = new SettingsModel(api);
         model.initialize();
-        view = new SettingsView(model, this);
     }
 
     @Override
