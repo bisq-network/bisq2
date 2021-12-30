@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.content.offerbook;
+package network.misq.desktop.main.content.settings;
 
 import io.reactivex.subjects.BehaviorSubject;
 import javafx.application.Platform;
@@ -29,7 +29,7 @@ import network.misq.presentation.offer.OfferEntity;
 
 import java.util.Map;
 
-public class OfferListItem extends OfferEntity {
+public class ConnectionListItem extends OfferEntity {
     @Getter
     private final StringProperty quoteProperty = new SimpleStringProperty("");
     @Getter
@@ -40,13 +40,13 @@ public class OfferListItem extends OfferEntity {
     private final StringProperty askAmountProperty = new SimpleStringProperty("");
     @Getter
     private final StringProperty bidAmountProperty = new SimpleStringProperty("");
-    private final BooleanProperty showAllAskCurrencies;
-    private final BooleanProperty showAllBidCurrencies;
+    private BooleanProperty showAllAskCurrencies;
+    private BooleanProperty showAllBidCurrencies;
 
-    public OfferListItem(Offer offer,
-                         BehaviorSubject<Map<String, MarketPrice>> marketPriceSubject,
-                         BooleanProperty showAllAskCurrencies,
-                         BooleanProperty showAllBidCurrencies) {
+    public ConnectionListItem(Offer offer,
+                              BehaviorSubject<Map<String, MarketPrice>> marketPriceSubject,
+                              BooleanProperty showAllAskCurrencies,
+                              BooleanProperty showAllBidCurrencies) {
 
         super(offer, marketPriceSubject);
         this.showAllAskCurrencies = showAllAskCurrencies;

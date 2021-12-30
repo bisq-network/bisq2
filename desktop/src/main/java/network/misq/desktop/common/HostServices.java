@@ -15,19 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.content;
+package network.misq.desktop.common;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.scene.Parent;
-import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.common.view.Model;
-import network.misq.desktop.common.view.View;
+import lombok.NonNull;
+import network.misq.common.annotations.LateInit;
 
-public class ContentViewModel implements Model {
-    final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
+import static java.util.Objects.requireNonNull;
 
-    public void selectView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
-        this.view.set(view);
+public class HostServices {
+    @LateInit
+    private static javafx.application.HostServices delegate;
+
+    public static void init(@NonNull javafx.application.HostServices hostServices) {
+        HostServices.delegate = hostServices;
+    }
+
+    public static void openUri(String uri) {
+        requireNonNull(delegate).showDocument(uri);
     }
 }

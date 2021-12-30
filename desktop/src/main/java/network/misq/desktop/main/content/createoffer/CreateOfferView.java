@@ -17,11 +17,8 @@
 
 package network.misq.desktop.main.content.createoffer;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -29,8 +26,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.common.view.Model;
 import network.misq.desktop.common.view.View;
 import network.misq.desktop.components.controls.AutoTooltipButton;
 import network.misq.desktop.components.controls.AutoTooltipLabel;
@@ -44,6 +39,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         super(new VBox(), model, controller);
     }
 
+    @Override
     protected void setupView() {
         root.setSpacing(40);
         root.setPadding(new Insets(20, 20, 20, 20));
@@ -74,15 +70,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         root.minHeightProperty().bind(model.minHeightProperty);
         back.visibleProperty().bind(model.backButtonVisible);
         next.visibleProperty().bind(model.nextButtonVisible);
-
-        model.view.addListener(new ChangeListener<View<Parent, Model, Controller>>() {
-            @Override
-            public void changed(ObservableValue<? extends View<Parent, Model, Controller>> observable,
-                                View<Parent, Model, Controller> oldValue,
-                                View<Parent, Model, Controller> newValue) {
-                root.getChildren().add(1, newValue.getRoot());
-            }
-        });
+        model.view.addListener((observable, oldValue, newValue) -> root.getChildren().add(1, newValue.getRoot()));
     }
 
     protected void configController() {
@@ -98,5 +86,4 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
 
     protected void onRemovedFromStage() {
     }
-
 }

@@ -42,6 +42,7 @@ import java.util.concurrent.CompletableFuture;
  */
 @Getter
 public class DefaultApi {
+    private final DefaultApplicationSetup applicationSetup;
     private final ApplicationOptions applicationOptions;
     private final KeyPairRepository keyPairRepository;
     private final NetworkService networkService;
@@ -52,6 +53,7 @@ public class DefaultApi {
     private final MarketPriceService marketPriceService;
 
     public DefaultApi(DefaultApplicationSetup applicationSetup) {
+        this.applicationSetup = applicationSetup;
         applicationOptions = applicationSetup.getApplicationOptions();
         keyPairRepository = applicationSetup.getKeyPairRepository();
         networkService = applicationSetup.getNetworkService();
@@ -60,6 +62,7 @@ public class DefaultApi {
         openOfferRepository = applicationSetup.getOpenOfferRepository();
         offerEntityRepository = applicationSetup.getOfferEntityRepository();
         marketPriceService = applicationSetup.getMarketPriceService();
+
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -137,5 +140,9 @@ public class DefaultApi {
 
     public String getAppName() {
         return applicationOptions.appName();
+    }
+
+    public CompletableFuture<Void> shutdown() {
+       return applicationSetup.shutdown();
     }
 }

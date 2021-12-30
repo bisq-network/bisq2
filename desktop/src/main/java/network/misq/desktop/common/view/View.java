@@ -21,15 +21,13 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 import javafx.stage.Window;
-import lombok.Getter;
 
-public abstract class View<T extends Node, M extends Model, C extends Controller> {
-    @Getter
-    protected final T root;
+public abstract class View<R extends Node, M extends Model, C extends Controller> {
+    protected final R root;
     protected final M model;
     protected final C controller;
 
-    public View(T root, M model, C controller) {
+    public View(R root, M model, C controller) {
         this.root = root;
         this.model = model;
         this.controller = controller;
@@ -39,7 +37,7 @@ public abstract class View<T extends Node, M extends Model, C extends Controller
                     if (newValue.getWindow() != null) {
                         onAddedToStage();
                     } else {
-                        // For overlays we need to wait until stage is available
+                        // For overlays, we need to wait until stage is available
                         newValue.windowProperty().addListener(new ChangeListener<Window>() {
                             @Override
                             public void changed(ObservableValue<? extends Window> observable, Window oldValue, Window newValue) {
@@ -59,6 +57,10 @@ public abstract class View<T extends Node, M extends Model, C extends Controller
         configController();
     }
 
+    public R getRoot() {
+        return root;
+    }
+
     protected void setupView() {
     }
 
@@ -73,5 +75,4 @@ public abstract class View<T extends Node, M extends Model, C extends Controller
 
     protected void onRemovedFromStage() {
     }
-
 }

@@ -34,7 +34,7 @@ public class WebServerMain extends Executable<DefaultApplicationSetup> {
     }
 
     @Override
-    protected void onInitializeDomainCompleted() {
+    protected void onDomainInitialized() {
         webServer = new WebServer(api);
         webServer.start();
     }

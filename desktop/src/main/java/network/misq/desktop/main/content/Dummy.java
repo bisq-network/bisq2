@@ -17,15 +17,19 @@
 
 package network.misq.desktop.main.content;
 
+import javafx.scene.Parent;
 import javafx.scene.layout.StackPane;
+import network.misq.desktop.common.view.Controller;
+import network.misq.desktop.common.view.Model;
+import network.misq.desktop.common.view.View;
 import network.misq.desktop.components.controls.AutoTooltipLabel;
 
 public class Dummy {
 
-    public static class Model implements network.misq.desktop.common.view.Model {
+    public static class DummyModel implements Model {
     }
 
-    public static class Controller implements network.misq.desktop.common.view.Controller {
+    public static class DummyController implements Controller {
         @Override
         public void initialize() {
         }
@@ -39,14 +43,14 @@ public class Dummy {
         }
 
         @Override
-        public network.misq.desktop.common.view.View getView() {
+        public View<Parent, Model, Controller> getView() {
             return null;
         }
     }
 
-    public static class View extends network.misq.desktop.common.view.View<StackPane, Model, Controller> {
-        public View(String label) {
-            super(new StackPane(), new Model(), new Controller());
+    public static class DummyView extends View<StackPane, DummyModel, DummyController> {
+        public DummyView(String label) {
+            super(new StackPane(), new DummyModel(), new DummyController());
             root.getChildren().add(new AutoTooltipLabel(label));
         }
     }

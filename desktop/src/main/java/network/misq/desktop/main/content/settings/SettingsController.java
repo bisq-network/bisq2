@@ -15,52 +15,51 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.left;
+package network.misq.desktop.main.content.settings;
 
 import lombok.Getter;
 import network.misq.api.DefaultApi;
 import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.main.content.ContentViewController;
-import network.misq.desktop.main.content.createoffer.CreateOfferController;
 import network.misq.desktop.overlay.OverlayController;
 
-public class NavigationViewController implements Controller {
+public class SettingsController implements Controller {
+    private SettingsModel model;
+    @Getter
+    private SettingsView view;
+    @Getter
     private final DefaultApi api;
     private final ContentViewController contentViewController;
     private final OverlayController overlayController;
-    private final NavigationViewModel model;
-    @Getter
-    private final NavigationView view;
 
-    public NavigationViewController(DefaultApi api,
-                                    ContentViewController contentViewController,
-                                    OverlayController overlayController) {
+    public SettingsController(DefaultApi api, ContentViewController contentViewController, OverlayController overlayController) {
         this.api = api;
         this.contentViewController = contentViewController;
         this.overlayController = overlayController;
-
-        model = new NavigationViewModel();
-        view = new NavigationView(model, this);
     }
 
     @Override
     public void initialize() {
+        model = new SettingsModel(api);
+        model.initialize();
+        view = new SettingsView(model, this);
     }
 
     @Override
     public void onViewAdded() {
+        model.activate();
+
+        // Platform.runLater(() -> onCreateOffer());
     }
 
     @Override
     public void onViewRemoved() {
+        model.deactivate();
     }
 
-    public void onShowView(Class<? extends Controller> controllerClass) {
-        if (controllerClass == CreateOfferController.class) {
-            overlayController.show(new CreateOfferController(api));
-        } else {
-            contentViewController.onNavigationRequest(controllerClass);
-        }
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // View events
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 }

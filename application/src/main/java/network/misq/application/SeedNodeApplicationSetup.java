@@ -18,6 +18,7 @@
 package network.misq.application;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.NetworkService;
 import network.misq.network.NetworkServiceConfigFactory;
@@ -29,6 +30,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static network.misq.common.util.OsUtils.EXIT_FAILURE;
+import static network.misq.common.util.OsUtils.EXIT_SUCCESS;
+
 /**
  * Creates domain specific options from program arguments and application options.
  * Creates domain instance with options and optional dependency to other domain objects.
@@ -37,6 +41,7 @@ import java.util.concurrent.TimeUnit;
  * Provides the completely setup instances to other clients (Api)
  */
 @Getter
+@Slf4j
 public class SeedNodeApplicationSetup extends ApplicationSetup {
     private final KeyPairRepository keyPairRepository;
     private final NetworkService networkService;
@@ -71,6 +76,14 @@ public class SeedNodeApplicationSetup extends ApplicationSetup {
     @Override
     public CompletableFuture<Void> shutdown() {
         keyPairRepository.shutdown();
-        return networkService.shutdown();
+        return networkService.shutdown()
+                .whenComplete((__, throwable) -> {
+                    if (throwable == null) {
+                        System.exit(EXIT_SUCCESS);
+                    } else {
+                        log.error("Error at shutdown", throwable);
+                        System.exit(EXIT_FAILURE);
+                    }
+                });
     }
 }

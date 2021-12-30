@@ -21,17 +21,17 @@ import lombok.Getter;
 import network.misq.desktop.common.view.Controller;
 
 public class TopPanelController implements Controller {
-    private TopPanelModel model;
+    private final TopPanelModel model;
     @Getter
-    private TopPanelView view;
+    private final TopPanelView view;
 
     public TopPanelController() {
+        model = new TopPanelModel();
+        view = new TopPanelView(model, this);
     }
 
     @Override
     public void initialize() {
-        this.model = new TopPanelModel();
-        this.view = new TopPanelView(model, this);
     }
 
     @Override

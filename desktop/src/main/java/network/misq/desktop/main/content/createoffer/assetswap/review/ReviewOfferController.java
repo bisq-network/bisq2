@@ -25,21 +25,22 @@ import network.misq.offer.OfferRepository;
 import network.misq.offer.OpenOfferRepository;
 
 public class ReviewOfferController implements Controller {
+    private final ReviewOfferModel model;
+    @Getter
+    private final ReviewOfferView view;
     private final OfferRepository offerRepository;
     private final OpenOfferRepository openOfferRepository;
-    private ReviewOfferModel model;
-    @Getter
-    private ReviewOfferView view;
 
     public ReviewOfferController(DefaultApi api) {
+        model = new ReviewOfferModel();
+        view = new ReviewOfferView(model, this);
+
         offerRepository = api.getOfferRepository();
         openOfferRepository = api.getOpenOfferRepository();
     }
 
     @Override
     public void initialize() {
-        this.model = new ReviewOfferModel();
-        this.view = new ReviewOfferView(model, this);
     }
 
     @Override

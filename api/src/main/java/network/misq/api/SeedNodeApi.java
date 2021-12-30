@@ -18,20 +18,28 @@
 package network.misq.api;
 
 import lombok.Getter;
-import network.misq.application.DefaultApplicationSetup;
+import network.misq.application.SeedNodeApplicationSetup;
 import network.misq.network.NetworkService;
 import network.misq.security.KeyPairRepository;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Api for seed node with limited feature set
  */
 @Getter
 public class SeedNodeApi {
+    private final SeedNodeApplicationSetup applicationSetup;
     private final KeyPairRepository keyPairRepository;
     private final NetworkService networkService;
 
-    public SeedNodeApi(DefaultApplicationSetup applicationFactory) {
-        keyPairRepository = applicationFactory.getKeyPairRepository();
-        networkService = applicationFactory.getNetworkService();
+    public SeedNodeApi(SeedNodeApplicationSetup applicationSetup) {
+        this.applicationSetup = applicationSetup;
+        keyPairRepository = applicationSetup.getKeyPairRepository();
+        networkService = applicationSetup.getNetworkService();
+    }
+
+    public CompletableFuture<Void> shutdown() {
+        return applicationSetup.shutdown();
     }
 }

@@ -28,7 +28,6 @@ import network.misq.desktop.components.controls.AutoTooltipLabel;
 import network.misq.desktop.components.controls.MisqTextField;
 
 public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferController> {
-
     private GridPane gridPane;
     private TextField askTextField;
     private AutoTooltipButton publishButton;

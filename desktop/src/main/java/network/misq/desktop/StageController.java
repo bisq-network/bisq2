@@ -18,71 +18,53 @@
 package network.misq.desktop;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.api.DefaultApi;
+import network.misq.desktop.common.HostServices;
 import network.misq.desktop.common.UncaughtExceptionHandler;
 import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.common.view.View;
 import network.misq.desktop.main.MainViewController;
 import network.misq.desktop.overlay.OverlayController;
-
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class StageController implements Controller {
     private final DefaultApi api;
+    private final Application.Parameters parameters;
+
     private final StageModel model;
-    private StageView stageView;
-    private OverlayController overlayController;
+    private final StageView stageView;
 
-    public StageController(DefaultApi api) {
+    private final MainViewController mainViewController;
+    private final OverlayController overlayController;
+
+    public StageController(DefaultApi api, JavaFXApplication.Data applicationData) {
         this.api = api;
-        this.model = new StageModel();
-    }
+        parameters = applicationData.parameters();
+        HostServices.init(applicationData.hostServices());
 
-    public CompletableFuture<Boolean> launchApplication() {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        StageView.LAUNCH_APP_FUTURE.whenComplete((stageView, throwable) -> {
-            if (stageView != null) {
-                this.stageView = stageView;
-                initialize();
-                future.complete(true);
-            } else {
-                throwable.printStackTrace();
-            }
-        });
-        new Thread(() -> {
-            Thread.currentThread().setName("Java FX Application Launcher");
-            Application.launch(StageView.class); //blocks until app closed
-        }).start();
-        return future;
+        this.model = new StageModel();
+        stageView = new StageView(model, this, applicationData.stage());
+
+        overlayController = new OverlayController(stageView.getScene());
+        mainViewController = new MainViewController(api, overlayController);
+
+        stageView.addMainView(mainViewController.getView());
     }
 
     @Override
     public void initialize() {
-        try {
-            overlayController = new OverlayController();
-            stageView.initialize(model, this);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        mainViewController.initialize();
     }
 
-    public void activate() {
+    public void onDomainInitialized() {
         model.setTitle(api.getAppName());
-        MainViewController mainViewController = new MainViewController(api, overlayController);
-        mainViewController.initialize();
-        stageView.activate(mainViewController.getView());
     }
 
     @Override
     public void onViewAdded() {
-        try {
-            overlayController.initialize(stageView.getScene());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        //  overlayController.initialize();
     }
 
     @Override
@@ -90,15 +72,15 @@ public class StageController implements Controller {
     }
 
     @Override
-    public View getView() {
-        return null;
+    public StageView getView() {
+        return stageView;
     }
 
     public void onQuit() {
-        // todo graceful shutdown
-        System.exit(0);
+        shutdown();
     }
 
+    //todo
     public static void setupUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
             // Might come from another thread
@@ -124,12 +106,10 @@ public class StageController implements Controller {
     }
 
     public void onInitializeDomainFailed() {
-
+        //todo show error popup
     }
 
     public void shutdown() {
-
+        api.shutdown().whenComplete((__, throwable) -> Platform.exit());
     }
-
-
 }

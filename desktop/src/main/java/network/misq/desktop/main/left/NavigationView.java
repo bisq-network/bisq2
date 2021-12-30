@@ -20,12 +20,13 @@ package network.misq.desktop.main.left;
 import javafx.geometry.Insets;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
-import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.common.view.View;
+import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.components.controls.AutoTooltipToggleButton;
 import network.misq.desktop.main.content.createoffer.CreateOfferController;
 import network.misq.desktop.main.content.markets.MarketsController;
 import network.misq.desktop.main.content.offerbook.OfferbookController;
+import network.misq.desktop.main.content.settings.SettingsController;
 
 public class NavigationView extends View<VBox, NavigationViewModel, NavigationViewController> {
     private final ToggleGroup navButtons = new ToggleGroup();
@@ -41,19 +42,20 @@ public class NavigationView extends View<VBox, NavigationViewModel, NavigationVi
         NavButton markets = new NavButton(MarketsController.class, "Markets");
         NavButton offerBook = new NavButton(OfferbookController.class, "Offerbook");
         NavButton createOffer = new NavButton(CreateOfferController.class, "Create offer");
+        NavButton settings = new NavButton(SettingsController.class, "Settings");
       /*   NavButton trades = new NavButton(TradesViewController.class, "Trades");
         NavButton funds = new NavButton(FundsViewController.class, "Funds");
         NavButton accounts = new NavButton(AccountsViewController.class, "Accounts");
-        NavButton settings = new NavButton(SettingsViewController.class, "SettingsView");*/
+        */
 
-        root.getChildren().addAll(markets, offerBook, createOffer /*,trades, funds, accounts, settings*/);
+        root.getChildren().addAll(markets, offerBook, createOffer, settings /*,trades, funds, accounts, settings*/);
 
       /*  Navigation.addListener((viewPath, data) -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0) {
                 return;
             }
 
-            Class<? extends View> tip = viewPath.tip();
+            Class<? extends AView> tip = viewPath.tip();
             navButtons.getToggles().stream()
                     .filter(toggle -> tip == ((NavButton) toggle).target)
                     .forEach(toggle -> toggle.setSelected(true));

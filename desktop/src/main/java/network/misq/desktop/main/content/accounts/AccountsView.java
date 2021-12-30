@@ -19,7 +19,7 @@ package network.misq.desktop.main.content.accounts;
 
 import network.misq.desktop.main.content.Dummy;
 
-public class AccountsView extends Dummy.View {
+public class AccountsView extends Dummy.DummyView {
 
     public AccountsView() {
         super("AccountsView");

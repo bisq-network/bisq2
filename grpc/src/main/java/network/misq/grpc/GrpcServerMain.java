@@ -34,7 +34,7 @@ public class GrpcServerMain extends Executable<DefaultApplicationSetup> {
     }
 
     @Override
-    protected void onInitializeDomainCompleted() {
+    protected void onDomainInitialized() {
         grpcServer = new GrpcServer(api);
         grpcServer.start();
     }

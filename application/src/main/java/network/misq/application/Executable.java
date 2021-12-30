@@ -10,14 +10,14 @@ public abstract class Executable<T extends ApplicationSetup> {
         ApplicationOptions applicationOptions = ApplicationOptionsParser.parse(args);
         applicationSetup = createApplicationSetup(applicationOptions, args);
         createApi();
-        launchApplication();
+        launchApplication(args);
     }
 
     abstract protected T createApplicationSetup(ApplicationOptions applicationOptions, String[] args);
 
     abstract protected void createApi();
 
-    protected void launchApplication() {
+    protected void launchApplication(String[] args) {
         onApplicationLaunched();
     }
 
@@ -29,7 +29,7 @@ public abstract class Executable<T extends ApplicationSetup> {
         applicationSetup.initialize()
                 .whenComplete((success, throwable) -> {
                     if (success) {
-                        onInitializeDomainCompleted();
+                        onDomainInitialized();
                     } else {
                         onInitializeDomainFailed(throwable);
                     }
@@ -40,16 +40,9 @@ public abstract class Executable<T extends ApplicationSetup> {
         throwable.printStackTrace();
     }
 
-    abstract protected void onInitializeDomainCompleted();
+    abstract protected void onDomainInitialized();
 
     public void shutdown() {
-        applicationSetup.shutdown().whenComplete((__, throwable) -> {
-            if (throwable == null) {
-                System.exit(0);
-            } else {
-                log.error("Error at applicationSetup.shutdown.", throwable);
-                System.exit(1);
-            }
-        });
+        applicationSetup.shutdown();
     }
 }

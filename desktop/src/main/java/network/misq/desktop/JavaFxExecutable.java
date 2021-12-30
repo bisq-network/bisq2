@@ -17,19 +17,25 @@
 
 package network.misq.desktop;
 
+import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.api.DefaultApi;
+import network.misq.application.ApplicationOptions;
 import network.misq.application.DefaultApplicationSetup;
 import network.misq.application.Executable;
-import network.misq.application.ApplicationOptions;
+import network.misq.common.annotations.LateInit;
+
+import static java.util.Objects.requireNonNull;
 
 @Slf4j
-public class DesktopApplication extends Executable<DefaultApplicationSetup> {
+public class JavaFxExecutable extends Executable<DefaultApplicationSetup> {
+    @LateInit
     private StageController stageController;
+    @LateInit
     protected DefaultApi api;
 
-    public DesktopApplication(String[] args) {
+    public JavaFxExecutable(String[] args) {
         super(args);
     }
 
@@ -44,35 +50,42 @@ public class DesktopApplication extends Executable<DefaultApplicationSetup> {
     }
 
     @Override
-    protected void launchApplication() {
-        stageController = new StageController(api);
-        stageController.launchApplication().whenComplete((success, throwable) -> {
-            if (throwable == null) {
-                log.info("Java FX Application initialized");
-                onApplicationLaunched();
-            } else {
-                log.warn("Could not launch JavaFX application.", throwable);
-            }
-        });
+    protected void launchApplication(String[] args) {
+        new Thread(() -> {
+            Thread.currentThread().setName("Java FX Application Launcher");
+            Application.launch(JavaFXApplication.class, args); //blocks until app is closed
+        }).start();
+
+        JavaFXApplication.onApplicationLaunched
+                .whenComplete((applicationData, throwable) -> {
+                    if (throwable == null) {
+                        stageController = new StageController(api, applicationData);
+                        log.info("Java FX Application launched");
+                        onApplicationLaunched();
+                    } else {
+                        log.error("Could not launch JavaFX application.", throwable);
+                        shutdown();
+                    }
+                });
     }
 
     @Override
-    protected void onInitializeDomainCompleted() {
-        Platform.runLater(stageController::activate);
+    protected void onDomainInitialized() {
+        Platform.runLater(() -> requireNonNull(stageController).onDomainInitialized());
     }
 
     @Override
     protected void onInitializeDomainFailed(Throwable throwable) {
         super.onInitializeDomainFailed(throwable);
-        stageController.onInitializeDomainFailed();
+        requireNonNull(stageController).onInitializeDomainFailed();
     }
 
     @Override
     public void shutdown() {
         if (stageController != null) {
             stageController.shutdown();
+        } else {
+            super.shutdown();
         }
-
-        super.shutdown();
     }
 }

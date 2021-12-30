@@ -26,18 +26,18 @@ public class OfferDetailsController implements Controller {
     private final OfferListItem item;
     private final Bounds boundsInParent;
     @Getter
-    private OfferDetailsView view;
-    private OfferDetailsModel model;
+    private final OfferDetailsView view;
+    private final OfferDetailsModel model;
 
     public OfferDetailsController(OfferListItem item, Bounds boundsInParent) {
         this.item = item;
         this.boundsInParent = boundsInParent;
+        model = new OfferDetailsModel(item);
+        view = new OfferDetailsView(model, this, boundsInParent);
     }
 
     @Override
     public void initialize() {
-        model = new OfferDetailsModel(item);
-        view = new OfferDetailsView(model, this, boundsInParent);
     }
 
     @Override

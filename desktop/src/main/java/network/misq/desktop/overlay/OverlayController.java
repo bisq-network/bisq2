@@ -17,26 +17,29 @@
 
 package network.misq.desktop.overlay;
 
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.desktop.common.view.Controller;
+import network.misq.desktop.common.view.Model;
 import network.misq.desktop.common.view.View;
 
 @Slf4j
 public class OverlayController {
     private OverlayModel model;
+    private OverlayView overlayView;
 
-    public OverlayController() {
+    public OverlayController(Scene parentScene) {
+        model = new OverlayModel();
+        overlayView = new OverlayView(model, this, parentScene);
     }
 
-    public void initialize(Scene parentScene) {
-        model = new OverlayModel();
-        OverlayView overlayView = new OverlayView(model, this, parentScene);
+    public void initialize() {
     }
 
     public void show(Controller controller) {
         controller.initialize();
-        View view = controller.getView();
+        View<? extends Parent, ? extends Model, ? extends Controller> view = controller.getView();
         model.selectView(view);
     }
 

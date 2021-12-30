@@ -15,19 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.content;
+package network.misq.desktop;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.scene.Parent;
-import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.common.view.Model;
-import network.misq.desktop.common.view.View;
+import javafx.application.Application;
+import javafx.application.HostServices;
+import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
 
-public class ContentViewModel implements Model {
-    final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
+import java.util.concurrent.CompletableFuture;
 
-    public void selectView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
-        this.view.set(view);
+@Slf4j
+public class JavaFXApplication extends Application {
+    record Data(Stage stage, Parameters parameters, HostServices hostServices) {
+    }
+
+    static final CompletableFuture<Data> onApplicationLaunched = new CompletableFuture<>();
+
+    @Override
+    public void start(Stage stage) {
+        onApplicationLaunched.complete(new Data(stage, getParameters(), getHostServices()));
     }
 }

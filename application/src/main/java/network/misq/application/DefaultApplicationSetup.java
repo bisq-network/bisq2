@@ -38,6 +38,10 @@ import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.CompletableFuture.runAsync;
+import static network.misq.common.util.OsUtils.EXIT_FAILURE;
+import static network.misq.common.util.OsUtils.EXIT_SUCCESS;
+
 /**
  * Creates domain specific options from program arguments and application options.
  * Creates domain instance with options and optional dependency to other domain objects.
@@ -98,12 +102,12 @@ public class DefaultApplicationSetup extends ApplicationSetup {
                 .thenCompose(result -> CompletableFutureUtils.allOf(offerRepository.initialize(),
                         openOfferRepository.initialize(),
                         offerEntityRepository.initialize()))
-                .orTimeout(10, TimeUnit.SECONDS)
+                .orTimeout(120, TimeUnit.SECONDS)
                 .whenComplete((list, throwable) -> {
                     if (throwable != null) {
                         log.error("Error at startup", throwable);
                     } else {
-                        log.error("Application initialized successfully");
+                        log.info("Application initialized successfully");
                     }
                 }).thenApply(list -> list.stream().allMatch(e -> e));
     }
@@ -117,7 +121,16 @@ public class DefaultApplicationSetup extends ApplicationSetup {
         offerRepository.shutdown();
         openOfferRepository.shutdown();
         offerEntityRepository.shutdown();
-
-        return networkService.shutdown();
+        return networkService.shutdown()
+                .whenComplete((__, throwable) -> {
+                    if (throwable != null) {
+                        log.error("Error at shutdown", throwable);
+                        System.exit(EXIT_FAILURE);
+                    } else {
+                        // In case the application is a JavaFXApplication give it chance to trigger the exit
+                        // via Platform.exit()
+                        runAsync(() -> System.exit(EXIT_SUCCESS));
+                    }
+                });
     }
 }

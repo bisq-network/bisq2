@@ -21,17 +21,17 @@ import lombok.Getter;
 import network.misq.desktop.common.view.Controller;
 
 public class SetAmountsController implements Controller {
-    private SetAmountsModel model;
+    private final SetAmountsModel model;
     @Getter
-    private SetAmountsView view;
+    private final SetAmountsView view;
 
     public SetAmountsController() {
+        model = new SetAmountsModel();
+        view = new SetAmountsView(model, this);
     }
 
     @Override
     public void initialize() {
-        this.model = new SetAmountsModel();
-        this.view = new SetAmountsView(model, this);
     }
 
     @Override

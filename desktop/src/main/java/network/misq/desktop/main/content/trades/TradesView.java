@@ -19,7 +19,7 @@ package network.misq.desktop.main.content.trades;
 
 import network.misq.desktop.main.content.Dummy;
 
-public class TradesView extends Dummy.View {
+public class TradesView extends Dummy.DummyView {
 
     public TradesView() {
         super("TradesView");
