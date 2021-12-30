@@ -20,33 +20,25 @@ package network.misq.desktop;
 import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.application.ApplicationOptions;
-import network.misq.application.DefaultApplicationSetup;
 import network.misq.application.Executable;
 import network.misq.common.annotations.LateInit;
 
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
-public class JavaFxExecutable extends Executable<DefaultApplicationSetup> {
+public class JavaFxExecutable extends Executable<DefaultServiceProvider> {
     @LateInit
     private StageController stageController;
-    @LateInit
-    protected DefaultApi api;
 
     public JavaFxExecutable(String[] args) {
         super(args);
     }
 
     @Override
-    protected DefaultApplicationSetup createApplicationSetup(ApplicationOptions applicationOptions, String[] args) {
-        return new DefaultApplicationSetup(applicationOptions, args);
-    }
-
-    @Override
-    protected void createApi() {
-        api = new DefaultApi(applicationSetup);
+    protected DefaultServiceProvider createServiceProvider(ApplicationOptions applicationOptions, String[] args) {
+        return new DefaultServiceProvider(applicationOptions, args);
     }
 
     @Override
@@ -59,7 +51,7 @@ public class JavaFxExecutable extends Executable<DefaultApplicationSetup> {
         JavaFXApplication.onApplicationLaunched
                 .whenComplete((applicationData, throwable) -> {
                     if (throwable == null) {
-                        stageController = new StageController(api, applicationData);
+                        stageController = new StageController(serviceProvider, applicationData);
                         log.info("Java FX Application launched");
                         onApplicationLaunched();
                     } else {

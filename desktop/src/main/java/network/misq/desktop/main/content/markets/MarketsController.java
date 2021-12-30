@@ -18,18 +18,18 @@
 package network.misq.desktop.main.content.markets;
 
 import lombok.Getter;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.view.Controller;
 
 public class MarketsController implements Controller {
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
     private final MarketsModel model;
     @Getter
     private final MarketsView view;
 
-    public MarketsController(DefaultApi api) {
-        this.api = api;
+    public MarketsController(DefaultServiceProvider serviceProvider) {
+         this.serviceProvider = serviceProvider;
         model = new MarketsModel();
         view = new MarketsView(model, this);
     }
@@ -47,7 +47,7 @@ public class MarketsController implements Controller {
     }
 
     void onRefresh() {
-        api.requestMarketPriceUpdate()
+        serviceProvider.getMarketPriceService().request()
                 .whenComplete((marketPriceMap, t) -> UIThread.run(() -> model.setMarketPriceMap(marketPriceMap)));
     }
 }

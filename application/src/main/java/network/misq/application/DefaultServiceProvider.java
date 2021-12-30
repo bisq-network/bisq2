@@ -22,16 +22,16 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.currency.FiatCurrencyRepository;
 import network.misq.common.locale.LocaleRepository;
 import network.misq.common.util.CompletableFutureUtils;
-import network.misq.id.IdentityRepository;
+import network.misq.id.IdentityService;
 import network.misq.network.NetworkService;
 import network.misq.network.NetworkServiceConfigFactory;
 import network.misq.network.p2p.MockNetworkService;
 import network.misq.offer.MarketPriceService;
 import network.misq.offer.MarketPriceServiceConfigFactory;
-import network.misq.offer.OfferRepository;
-import network.misq.offer.OpenOfferRepository;
-import network.misq.presentation.offer.OfferEntityRepository;
-import network.misq.security.KeyPairRepository;
+import network.misq.offer.OfferService;
+import network.misq.offer.OpenOfferService;
+import network.misq.presentation.offer.OfferEntityService;
+import network.misq.security.KeyPairService;
 import network.misq.security.KeyPairRepositoryConfigFactory;
 
 import java.util.Locale;
@@ -51,17 +51,17 @@ import static network.misq.common.util.OsUtils.EXIT_SUCCESS;
  */
 @Getter
 @Slf4j
-public class DefaultApplicationSetup extends ApplicationSetup {
-    private final KeyPairRepository keyPairRepository;
+public class DefaultServiceProvider extends ServiceProvider {
+    private final KeyPairService keyPairService;
     private final NetworkService networkService;
-    private final OfferRepository offerRepository;
-    private final OpenOfferRepository openOfferRepository;
-    private final OfferEntityRepository offerEntityRepository;
-    private final IdentityRepository identityRepository;
+    private final OfferService offerService;
+    private final OpenOfferService openOfferService;
+    private final OfferEntityService offerEntityService;
+    private final IdentityService identityService;
     private final MarketPriceService marketPriceService;
     private final ApplicationOptions applicationOptions;
 
-    public DefaultApplicationSetup(ApplicationOptions applicationOptions, String[] args) {
+    public DefaultServiceProvider(ApplicationOptions applicationOptions, String[] args) {
         super("Misq");
         this.applicationOptions = applicationOptions;
 
@@ -69,39 +69,40 @@ public class DefaultApplicationSetup extends ApplicationSetup {
         LocaleRepository.setDefaultLocale(locale);
         FiatCurrencyRepository.applyLocale(locale);
 
-        KeyPairRepository.Conf keyPairRepositoryConf = new KeyPairRepositoryConfigFactory(applicationOptions.baseDir()).get();
-        keyPairRepository = new KeyPairRepository(keyPairRepositoryConf);
+        KeyPairService.Conf keyPairRepositoryConf = new KeyPairRepositoryConfigFactory(applicationOptions.baseDir()).get();
+        keyPairService = new KeyPairService(keyPairRepositoryConf);
 
         NetworkService.Config networkServiceConfig = new NetworkServiceConfigFactory(applicationOptions.baseDir(),
                 getConfig("misq.networkServiceConfig"), args).get();
-        networkService = new NetworkService(networkServiceConfig, keyPairRepository);
+        networkService = new NetworkService(networkServiceConfig, keyPairService);
 
-        identityRepository = new IdentityRepository(networkService);
+        identityService = new IdentityService(networkService);
 
         // add data use case is not available yet at networkService
         MockNetworkService mockNetworkService = new MockNetworkService();
-        offerRepository = new OfferRepository(mockNetworkService);
-        openOfferRepository = new OpenOfferRepository(mockNetworkService);
+        offerService = new OfferService(mockNetworkService);
+        openOfferService = new OpenOfferService(mockNetworkService);
 
 
         MarketPriceService.Config marketPriceServiceConf = new MarketPriceServiceConfigFactory().get();
         marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, Version.VERSION);
-        offerEntityRepository = new OfferEntityRepository(offerRepository, marketPriceService);
+        offerEntityService = new OfferEntityService(offerService, marketPriceService);
     }
 
     /**
      * Initializes all domain objects, services and repositories.
      * We do in parallel as far as possible. If there are dependencies we chain those as sequence.
      */
+    @Override
     public CompletableFuture<Boolean> initialize() {
-        return keyPairRepository.initialize()
-                .thenCompose(result -> identityRepository.initialize())
+        return keyPairService.initialize()
+                .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> networkService.initialize() // We need to get at least the default nodes server initialized before we move on
                         .whenComplete((res, t) -> networkService.initializePeerGroup())) // But we do not wait for the initializePeerGroup 
                 .thenCompose(result -> marketPriceService.initialize())
-                .thenCompose(result -> CompletableFutureUtils.allOf(offerRepository.initialize(),
-                        openOfferRepository.initialize(),
-                        offerEntityRepository.initialize()))
+                .thenCompose(result -> CompletableFutureUtils.allOf(offerService.initialize(),
+                        openOfferService.initialize(),
+                        offerEntityService.initialize()))
                 .orTimeout(120, TimeUnit.SECONDS)
                 .whenComplete((list, throwable) -> {
                     if (throwable != null) {
@@ -115,12 +116,12 @@ public class DefaultApplicationSetup extends ApplicationSetup {
     @Override
     public CompletableFuture<Void> shutdown() {
         //todo maybe chain async shutdown calls
-        keyPairRepository.shutdown();
-        identityRepository.shutdown();
+        keyPairService.shutdown();
+        identityService.shutdown();
         marketPriceService.shutdown();
-        offerRepository.shutdown();
-        openOfferRepository.shutdown();
-        offerEntityRepository.shutdown();
+        offerService.shutdown();
+        openOfferService.shutdown();
+        offerEntityService.shutdown();
         return networkService.shutdown()
                 .whenComplete((__, throwable) -> {
                     if (throwable != null) {

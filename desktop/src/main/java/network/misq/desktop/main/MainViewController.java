@@ -18,7 +18,7 @@
 package network.misq.desktop.main;
 
 import lombok.Getter;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.main.content.ContentViewController;
 import network.misq.desktop.main.content.settings.SettingsController;
@@ -27,7 +27,7 @@ import network.misq.desktop.main.top.TopPanelController;
 import network.misq.desktop.overlay.OverlayController;
 
 public class MainViewController implements Controller {
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
     private final MainViewModel model = new MainViewModel();
     private final ContentViewController contentViewController;
     private final NavigationViewController navigationViewController;
@@ -35,11 +35,11 @@ public class MainViewController implements Controller {
     @Getter
     private final MainView view;
 
-    public MainViewController(DefaultApi api, OverlayController overlayController) {
-        this.api = api;
+    public MainViewController(DefaultServiceProvider serviceProvider, OverlayController overlayController) {
+         this.serviceProvider = serviceProvider;
 
-        contentViewController = new ContentViewController(api, overlayController);
-        navigationViewController = new NavigationViewController(api, contentViewController, overlayController);
+        contentViewController = new ContentViewController(serviceProvider, overlayController);
+        navigationViewController = new NavigationViewController(serviceProvider, contentViewController, overlayController);
         topPanelController = new TopPanelController();
 
         view = new MainView(model,

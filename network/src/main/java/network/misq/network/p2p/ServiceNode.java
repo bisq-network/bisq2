@@ -37,7 +37,7 @@ import network.misq.network.p2p.services.monitor.MonitorService;
 import network.misq.network.p2p.services.peergroup.BanList;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.relay.RelayService;
-import network.misq.security.KeyPairRepository;
+import network.misq.security.KeyPairService;
 import network.misq.security.PubKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +89,7 @@ public class ServiceNode {
                        Node.Config nodeConfig,
                        PeerGroupService.Config peerGroupServiceConfig,
                        DataService.Config dataServiceConfig,
-                       KeyPairRepository keyPairRepository,
+                       KeyPairService keyPairService,
                        List<Address> seedNodeAddresses) {
         BanList banList = new BanList();
         nodesById = new NodesById(banList, nodeConfig);
@@ -101,7 +101,7 @@ public class ServiceNode {
             this.peerGroupService = Optional.of(peerGroupService);
 
             if (services.contains(Service.DATA)) {
-                dataService = Optional.of(new DataService(defaultNode, peerGroupService, keyPairRepository, dataServiceConfig));
+                dataService = Optional.of(new DataService(defaultNode, peerGroupService, keyPairService, dataServiceConfig));
             }
 
             if (services.contains(Service.RELAY)) {
@@ -113,7 +113,7 @@ public class ServiceNode {
             }
         }
         if (services.contains(Service.CONFIDENTIAL)) {
-            confidentialMessageService = Optional.of(new ConfidentialMessageService(nodesById, keyPairRepository, dataService));
+            confidentialMessageService = Optional.of(new ConfidentialMessageService(nodesById, keyPairService, dataService));
         }
     }
 

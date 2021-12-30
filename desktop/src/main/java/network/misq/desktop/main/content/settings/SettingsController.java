@@ -18,7 +18,7 @@
 package network.misq.desktop.main.content.settings;
 
 import lombok.Getter;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.main.content.ContentViewController;
 import network.misq.desktop.overlay.OverlayController;
@@ -27,13 +27,13 @@ public class SettingsController implements Controller {
     private final SettingsModel model;
     @Getter
     private final SettingsView view;
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
     private final ContentViewController contentViewController;
     private final OverlayController overlayController;
 
-    public SettingsController(DefaultApi api, ContentViewController contentViewController, OverlayController overlayController) {
-        this.api = api;
-        model = new SettingsModel(api);
+    public SettingsController(DefaultServiceProvider serviceProvider, ContentViewController contentViewController, OverlayController overlayController) {
+         this.serviceProvider = serviceProvider;
+        model = new SettingsModel(serviceProvider);
         view = new SettingsView(model, this);
         
         this.contentViewController = contentViewController;

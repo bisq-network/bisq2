@@ -19,7 +19,7 @@ package network.misq.desktop.main.content;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.main.content.markets.MarketsController;
 import network.misq.desktop.main.content.offerbook.OfferbookController;
@@ -31,23 +31,23 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class ContentViewController implements Controller {
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
     private final OverlayController overlayController;
     private final Map<Class<? extends Controller>, Controller> map = new ConcurrentHashMap<>();
     private final ContentViewModel model;
     @Getter
     private final ContentView view;
 
-    public ContentViewController(DefaultApi api, OverlayController overlayController) {
-        this.api = api;
+    public ContentViewController(DefaultServiceProvider serviceProvider, OverlayController overlayController) {
+         this.serviceProvider = serviceProvider;
         this.overlayController = overlayController;
 
         model = new ContentViewModel();
         view = new ContentView(model, this);
 
-        addController(new MarketsController(api));
-        addController(new OfferbookController(api, this, overlayController));
-        addController(new SettingsController(api, this, overlayController));
+        addController(new MarketsController(serviceProvider));
+        addController(new OfferbookController(serviceProvider, this, overlayController));
+        addController(new SettingsController(serviceProvider, this, overlayController));
     }
 
     @Override

@@ -20,7 +20,7 @@ package network.misq.desktop;
 import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.Browser;
 import network.misq.desktop.common.UncaughtExceptionHandler;
 import network.misq.desktop.common.threading.UIThread;
@@ -30,7 +30,7 @@ import network.misq.desktop.overlay.OverlayController;
 
 @Slf4j
 public class StageController implements Controller {
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
     private final Application.Parameters parameters;
 
     private final StageModel model;
@@ -39,8 +39,8 @@ public class StageController implements Controller {
     private final MainViewController mainViewController;
     private final OverlayController overlayController;
 
-    public StageController(DefaultApi api, JavaFXApplication.Data applicationData) {
-        this.api = api;
+    public StageController(DefaultServiceProvider serviceProvider, JavaFXApplication.Data applicationData) {
+         this.serviceProvider = serviceProvider;
         parameters = applicationData.parameters();
         Browser.setHostServices(applicationData.hostServices());
 
@@ -48,7 +48,7 @@ public class StageController implements Controller {
         stageView = new StageView(model, this, applicationData.stage());
 
         overlayController = new OverlayController(stageView.getScene());
-        mainViewController = new MainViewController(api, overlayController);
+        mainViewController = new MainViewController(serviceProvider, overlayController);
        
         initialize();
     }
@@ -56,7 +56,7 @@ public class StageController implements Controller {
     @Override
     public void initialize() {
         stageView.addMainView(mainViewController.getView());
-        model.setTitle(api.getAppName());
+        model.setTitle(serviceProvider.getApplicationOptions().appName());
         mainViewController.initialize();
     }
 
@@ -112,6 +112,6 @@ public class StageController implements Controller {
     }
 
     public void shutdown() {
-        api.shutdown().whenComplete((__, throwable) -> Platform.exit());
+        serviceProvider.shutdown().whenComplete((__, throwable) -> Platform.exit());
     }
 }

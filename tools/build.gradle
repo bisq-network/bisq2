@@ -29,7 +29,6 @@ dependencies {
     implementation project(':contract')
     implementation project(':offer')
     implementation project(':presentation')
-    implementation project(':api')
     implementation project(':application')
     implementation project(':desktop')
 

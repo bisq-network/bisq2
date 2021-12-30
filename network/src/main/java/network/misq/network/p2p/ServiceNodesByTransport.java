@@ -32,7 +32,7 @@ import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
-import network.misq.security.KeyPairRepository;
+import network.misq.security.KeyPairService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +59,7 @@ public class ServiceNodesByTransport {
                                    Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
                                    Map<Transport.Type, List<Address>> seedAddressesByTransport,
                                    DataService.Config dataServiceConfig,
-                                   KeyPairRepository keyPairRepository) {
+                                   KeyPairService keyPairService) {
 
         long socketTimeout = TimeUnit.MINUTES.toMillis(5);
         supportedTransportTypes.forEach(transportType -> {
@@ -76,7 +76,7 @@ public class ServiceNodesByTransport {
                     nodeConfig,
                     peerGroupServiceConfig,
                     dataServiceConfig,
-                    keyPairRepository,
+                    keyPairService,
                     seedAddresses);
             map.put(transportType, serviceNode);
         });

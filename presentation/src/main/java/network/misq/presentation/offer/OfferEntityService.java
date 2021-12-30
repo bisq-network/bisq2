@@ -22,7 +22,7 @@ import io.reactivex.subjects.PublishSubject;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.offer.MarketPriceService;
 import network.misq.offer.Offer;
-import network.misq.offer.OfferRepository;
+import network.misq.offer.OfferService;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -30,16 +30,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class OfferEntityRepository {
-    protected final OfferRepository offerRepository;
+public class OfferEntityService {
+    protected final OfferService offerService;
     protected final List<OfferEntity> offerEntities = new CopyOnWriteArrayList<>();
     protected final PublishSubject<OfferEntity> offerEntityAddedSubject;
     protected final PublishSubject<OfferEntity> offerEntityRemovedSubject;
     private final MarketPriceService marketPriceService;
     private Disposable oferAddedDisposable, oferRemovedDisposable;
 
-    public OfferEntityRepository(OfferRepository offerRepository, MarketPriceService marketPriceService) {
-        this.offerRepository = offerRepository;
+    public OfferEntityService(OfferService offerService, MarketPriceService marketPriceService) {
+        this.offerService = offerService;
         this.marketPriceService = marketPriceService;
 
         offerEntityAddedSubject = PublishSubject.create();
@@ -54,7 +54,7 @@ public class OfferEntityRepository {
     public CompletableFuture<Boolean> initialize() {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         //todo
-        offerEntities.addAll(offerRepository.getOffers().stream()
+        offerEntities.addAll(offerService.getOffers().stream()
                 .map(offer -> new OfferEntity((Offer) offer, marketPriceService.getMarketPriceSubject()))
                 .collect(Collectors.toList()));
         future.complete(true);
@@ -62,7 +62,7 @@ public class OfferEntityRepository {
     }
 
     public void activate() {
-        oferAddedDisposable = offerRepository.getOfferAddedSubject().subscribe(offer -> {
+        oferAddedDisposable = offerService.getOfferAddedSubject().subscribe(offer -> {
             offerEntities.stream()
                     .filter(e -> e.getOffer().equals(offer))
                     .findAny()
@@ -71,7 +71,7 @@ public class OfferEntityRepository {
                         offerEntityRemovedSubject.onNext(offerEntity);
                     });
         });
-        oferRemovedDisposable = offerRepository.getOfferRemovedSubject().subscribe(offer -> {
+        oferRemovedDisposable = offerService.getOfferRemovedSubject().subscribe(offer -> {
             if (offer instanceof Offer) {
                 OfferEntity offerEntity = new OfferEntity((Offer) offer, marketPriceService.getMarketPriceSubject());
                 offerEntities.add(offerEntity);

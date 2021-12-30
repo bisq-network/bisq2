@@ -18,24 +18,24 @@
 package network.misq.desktop.main.left;
 
 import lombok.Getter;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.main.content.ContentViewController;
 import network.misq.desktop.main.content.createoffer.CreateOfferController;
 import network.misq.desktop.overlay.OverlayController;
 
 public class NavigationViewController implements Controller {
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
     private final ContentViewController contentViewController;
     private final OverlayController overlayController;
     private final NavigationViewModel model;
     @Getter
     private final NavigationView view;
 
-    public NavigationViewController(DefaultApi api,
+    public NavigationViewController(DefaultServiceProvider serviceProvider,
                                     ContentViewController contentViewController,
                                     OverlayController overlayController) {
-        this.api = api;
+         this.serviceProvider = serviceProvider;
         this.contentViewController = contentViewController;
         this.overlayController = overlayController;
 
@@ -57,7 +57,7 @@ public class NavigationViewController implements Controller {
 
     public void onShowView(Class<? extends Controller> controllerClass) {
         if (controllerClass == CreateOfferController.class) {
-            overlayController.show(new CreateOfferController(api));
+            overlayController.show(new CreateOfferController(serviceProvider));
         } else {
             contentViewController.onNavigationRequest(controllerClass);
         }

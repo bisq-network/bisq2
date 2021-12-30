@@ -18,26 +18,26 @@
 package network.misq.desktop.main.content.createoffer;
 
 import lombok.Getter;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.main.content.createoffer.assetswap.amounts.SetAmountsController;
 import network.misq.desktop.main.content.createoffer.assetswap.review.ReviewOfferController;
 import network.misq.desktop.main.content.createoffer.assetswap.review.ReviewOfferView;
 
 public class CreateOfferController implements Controller {
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
     private final CreateOfferModel model;
     @Getter
     private final CreateOfferView view;
     private final ReviewOfferController reviewOfferController;
     private final SetAmountsController setAmountsController;
 
-    public CreateOfferController(DefaultApi api) {
-        this.api = api;
+    public CreateOfferController(DefaultServiceProvider serviceProvider) {
+         this.serviceProvider = serviceProvider;
         model = new CreateOfferModel();
         view = new CreateOfferView(model, this);
 
-        reviewOfferController=  new ReviewOfferController(api);
+        reviewOfferController=  new ReviewOfferController(serviceProvider);
         setAmountsController=  new SetAmountsController();
     }
 

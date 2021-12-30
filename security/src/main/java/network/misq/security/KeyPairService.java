@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class KeyPairRepository {
+public class KeyPairService {
     public static final String DEFAULT = "default";
     private final String baseDir;
 
@@ -39,7 +39,7 @@ public class KeyPairRepository {
     // Throws when attempting to use an already existing keyId at add method.
     private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
 
-    public KeyPairRepository(Conf conf) {
+    public KeyPairService(Conf conf) {
         baseDir = conf.baseDir;
     }
 

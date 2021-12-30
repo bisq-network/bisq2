@@ -1,7 +1,7 @@
 package network.misq.web.server;
 
 import io.reactivex.Observable;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.web.server.handler.GetOffersHandler;
 import network.misq.web.server.handler.GetVersionHandler;
 import org.slf4j.Logger;
@@ -17,10 +17,10 @@ public class WebServer {
 
     private RatpackServer ratpackServer;
 
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
 
-    public WebServer(DefaultApi api) {
-        this.api = api;
+    public WebServer(DefaultServiceProvider serviceProvider) {
+         this.serviceProvider = serviceProvider;
     }
 
     public void start() {
@@ -31,7 +31,7 @@ public class WebServer {
                     .port(5050)
                     .findBaseDir()
             );
-            Registry registrySpec = new MisqRegistrySpec(api).build();
+            Registry registrySpec = new MisqRegistrySpec(serviceProvider).build();
             ratpackServer = RatpackServer.start(server -> server
                     .serverConfig(serverConfig)
                     .registry(registrySpec)

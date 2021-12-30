@@ -18,7 +18,7 @@
 package network.misq.grpc;
 
 import io.grpc.stub.StreamObserver;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.grpc.proto.GetMethodHelpReply;
 import network.misq.grpc.proto.GetMethodHelpRequest;
 import network.misq.grpc.proto.HelpGrpc;
@@ -29,17 +29,17 @@ import org.slf4j.LoggerFactory;
 public class GrpcHelpService extends HelpGrpc.HelpImplBase {
     private static final Logger log = LoggerFactory.getLogger(GrpcHelpService.class);
 
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
 
-    public GrpcHelpService(DefaultApi api) {
-        this.api = api;
+    public GrpcHelpService(DefaultServiceProvider serviceProvider) {
+        this.serviceProvider = serviceProvider;
     }
 
     @Override
     public void getMethodHelp(GetMethodHelpRequest req,
                               StreamObserver<GetMethodHelpReply> responseObserver) {
         try {
-            String helpText = api.getHelp();
+            String helpText = "help"; //todo
             var reply = GetMethodHelpReply.newBuilder().setMethodHelp(helpText).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();

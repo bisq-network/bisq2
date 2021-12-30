@@ -24,7 +24,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Model;
 import network.misq.offer.MarketPrice;
 
@@ -42,7 +42,7 @@ public class OfferbookModel implements Model {
     // Exposed for filter model
     final ObservableList<OfferListItem> offerItems = FXCollections.observableArrayList();
     final Set<Predicate<OfferListItem>> listFilterPredicates = new CopyOnWriteArraySet<>();
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
     Predicate<OfferListItem> askCurrencyPredicate = e -> true;
     Predicate<OfferListItem> bidCurrencyPredicate = e -> true;
     String baseCurrency, quoteCurrency;
@@ -73,8 +73,8 @@ public class OfferbookModel implements Model {
 
     private Disposable offerEntityAddedDisposable, offerEntityRemovedDisposable, marketPriceDisposable;
 
-    public OfferbookModel(DefaultApi api) {
-        this.api = api;
+    public OfferbookModel(DefaultServiceProvider serviceProvider) {
+         this.serviceProvider = serviceProvider;
 
         amountFilterModel = new RangeFilterModel(this);
     }
@@ -86,10 +86,10 @@ public class OfferbookModel implements Model {
     }
 
     public void activate() {
-        api.activateOfferbookEntity();
+        serviceProvider.getOfferEntityService().activate();
 
         offerItems.clear();
-        offerItems.addAll(api.getOfferEntities().stream()
+        offerItems.addAll(serviceProvider.getOfferEntityService().getOfferEntities().stream()
                 .map(OfferListItem -> new OfferListItem(OfferListItem.getOffer(),
                         OfferListItem.getMarketPriceSubject(),
                         showAllAskCurrencies,
@@ -105,26 +105,26 @@ public class OfferbookModel implements Model {
 
         amountFilterModel.activate();
 
-        offerEntityAddedDisposable = api.getOfferEntityAddedSubject().subscribe(offerEntity -> {
+        offerEntityAddedDisposable = serviceProvider.getOfferEntityService().getOfferEntityAddedSubject().subscribe(offerEntity -> {
             offerItems.add(new OfferListItem(offerEntity.getOffer(),
                     offerEntity.getMarketPriceSubject(),
                     showAllAskCurrencies,
                     showAllBidCurrencies));
         }, Throwable::printStackTrace);
 
-        offerEntityRemovedDisposable = api.getOfferEntityRemovedSubject().subscribe(offerEntity -> {
+        offerEntityRemovedDisposable = serviceProvider.getOfferEntityService().getOfferEntityRemovedSubject().subscribe(offerEntity -> {
             offerItems.stream()
                     .filter(e -> e.getOffer().equals(offerEntity.getOffer()))
                     .findAny()
                     .ifPresent(offerItems::remove);
         }, Throwable::printStackTrace);
 
-        marketPriceDisposable = api.getMarketPriceSubject().subscribe(marketPriceByCurrencyMapProperty::set, Throwable::printStackTrace);
-        marketPriceByCurrencyMapProperty.set(api.getMarketPriceByCurrencyMap());
+        marketPriceDisposable = serviceProvider.getMarketPriceService().getMarketPriceSubject().subscribe(marketPriceByCurrencyMapProperty::set, Throwable::printStackTrace);
+        marketPriceByCurrencyMapProperty.set(serviceProvider.getMarketPriceService().getMarketPriceByCurrencyMap());
     }
 
     public void deactivate() {
-        api.deactivateOfferbookEntity();
+        serviceProvider.getOfferEntityService().deactivate();
         amountFilterModel.deactivate();
 
         if (offerEntityAddedDisposable != null) {

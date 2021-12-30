@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.NetworkService;
 import network.misq.network.NetworkServiceConfigFactory;
-import network.misq.security.KeyPairRepository;
+import network.misq.security.KeyPairService;
 import network.misq.security.KeyPairRepositoryConfigFactory;
 
 import java.util.ArrayList;
@@ -42,19 +42,19 @@ import static network.misq.common.util.OsUtils.EXIT_SUCCESS;
  */
 @Getter
 @Slf4j
-public class SeedNodeApplicationSetup extends ApplicationSetup {
-    private final KeyPairRepository keyPairRepository;
+public class SeedNodeServiceProvider extends ServiceProvider {
+    private final KeyPairService keyPairService;
     private final NetworkService networkService;
 
-    public SeedNodeApplicationSetup(ApplicationOptions applicationOptions, String[] args) {
+    public SeedNodeServiceProvider(ApplicationOptions applicationOptions, String[] args) {
         super("Seed");
 
-        KeyPairRepository.Conf keyPairRepositoryConf = new KeyPairRepositoryConfigFactory(applicationOptions.baseDir()).get();
-        keyPairRepository = new KeyPairRepository(keyPairRepositoryConf);
+        KeyPairService.Conf keyPairRepositoryConf = new KeyPairRepositoryConfigFactory(applicationOptions.baseDir()).get();
+        keyPairService = new KeyPairService(keyPairRepositoryConf);
 
         NetworkService.Config networkServiceConfig = new NetworkServiceConfigFactory(applicationOptions.baseDir(),
                 getConfig("misq.networkServiceConfig"), args).get();
-        networkService = new NetworkService(networkServiceConfig, keyPairRepository);
+        networkService = new NetworkService(networkServiceConfig, keyPairService);
     }
 
     /**
@@ -64,7 +64,7 @@ public class SeedNodeApplicationSetup extends ApplicationSetup {
     public CompletableFuture<Boolean> initialize() {
         List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
         // Assuming identityRepository depends on keyPairRepository being initialized... 
-        allFutures.add(keyPairRepository.initialize());
+        allFutures.add(keyPairService.initialize());
         allFutures.add(networkService.bootstrap());
         // Once all have successfully completed our initialize is complete as well
         return CompletableFutureUtils.allOf(allFutures)
@@ -75,7 +75,7 @@ public class SeedNodeApplicationSetup extends ApplicationSetup {
 
     @Override
     public CompletableFuture<Void> shutdown() {
-        keyPairRepository.shutdown();
+        keyPairService.shutdown();
         return networkService.shutdown()
                 .whenComplete((__, throwable) -> {
                     if (throwable == null) {

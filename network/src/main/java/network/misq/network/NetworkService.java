@@ -38,7 +38,7 @@ import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
-import network.misq.security.KeyPairRepository;
+import network.misq.security.KeyPairService;
 
 import java.security.KeyPair;
 import java.util.List;
@@ -78,7 +78,7 @@ public class NetworkService {
     @Getter
     private final ServiceNodesByTransport serviceNodesByTransport;
 
-    public NetworkService(Config config, KeyPairRepository keyPairRepository) {
+    public NetworkService(Config config, KeyPairService keyPairService) {
         httpService = new HttpService();
         socks5ProxyAddress = config.socks5ProxyAddress;
         supportedTransportTypes = config.supportedTransportTypes();
@@ -88,7 +88,7 @@ public class NetworkService {
                 config.peerGroupServiceConfigByTransport,
                 config.seedAddressesByTransport(),
                 new DataService.Config(config.baseDir()),
-                keyPairRepository);
+                keyPairService);
     }
 
 

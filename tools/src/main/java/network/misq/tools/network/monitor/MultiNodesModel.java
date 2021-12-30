@@ -36,7 +36,7 @@ import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import network.misq.security.KeyPairRepository;
+import network.misq.security.KeyPairService;
 import network.misq.security.PubKey;
 
 import java.io.File;
@@ -74,7 +74,7 @@ public class MultiNodesModel {
     private final Set<Transport.Type> supportedTransportTypes;
     private final boolean bootstrapAll;
     private Optional<List<Address>> addressesToBootstrap = Optional.empty();
-    private final KeyPairRepository keyPairRepository;
+    private final KeyPairService keyPairService;
     private final int numSeeds = 8;
     private final int numNodes = 20;
     @Getter
@@ -93,9 +93,9 @@ public class MultiNodesModel {
 
         seedAddressesByTransport = networkServiceConfig.seedAddressesByTransport();
 
-        KeyPairRepository.Conf keyPairRepositoryConf = new KeyPairRepository.Conf(networkServiceConfig.baseDir());
-        keyPairRepository = new KeyPairRepository(keyPairRepositoryConf);
-        keyPairRepository.initialize().join();
+        KeyPairService.Conf keyPairRepositoryConf = new KeyPairService.Conf(networkServiceConfig.baseDir());
+        keyPairService = new KeyPairService(keyPairRepositoryConf);
+        keyPairService.initialize().join();
     }
 
 
@@ -161,9 +161,9 @@ public class MultiNodesModel {
 
     public void send(Address senderAddress, Address receiverAddress, String nodeId, String message) {
         String senderKeyId = senderAddress + nodeId;
-        KeyPair senderKeyPair = keyPairRepository.getOrCreateKeyPair(senderKeyId);
+        KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(senderKeyId);
         String receiverKeyId = receiverAddress + nodeId;
-        KeyPair receiverKeyPair = keyPairRepository.getOrCreateKeyPair(receiverKeyId);
+        KeyPair receiverKeyPair = keyPairService.getOrCreateKeyPair(receiverKeyId);
         NetworkId receiverNetworkId = new NetworkId(Map.of(Transport.Type.from(receiverAddress), receiverAddress),
                 new PubKey(receiverKeyPair.getPublic(), receiverKeyId),
                 nodeId);
@@ -241,7 +241,7 @@ public class MultiNodesModel {
                 networkServiceConfig.seedAddressesByTransport(),
                 Optional.empty());
 
-        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, keyPairRepository);
+        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, keyPairService);
         handler.ifPresent(handler -> handler.onStateChange(address, networkService.getStateByTransportType().get(transportType)));
         networkServicesByAddress.put(address, networkService);
         setupConnectionListener(networkService, transportType);

@@ -35,14 +35,14 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-public class OpenOfferRepository {
+public class OpenOfferService {
     // Expected dependency for deactivating offers if not sufficient wallet balance
     Wallet wallet;
 
     private final INetworkService networkService;
     private final Set<OpenOffer> openOffers = new CopyOnWriteArraySet<>();
 
-    public OpenOfferRepository(INetworkService networkService) {
+    public OpenOfferService(INetworkService networkService) {
         this.networkService = networkService;
     }
 

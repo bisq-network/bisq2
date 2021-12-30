@@ -1,22 +1,21 @@
 package network.misq.web;
 
 
-import network.misq.api.DefaultApi;
-import network.misq.application.DefaultApplicationSetup;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.application.Executable;
 import network.misq.application.ApplicationOptions;
 import network.misq.web.server.WebServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WebServerMain extends Executable<DefaultApplicationSetup> {
+public class WebServerMain extends Executable<DefaultServiceProvider> {
     private static final Logger log = LoggerFactory.getLogger(WebServerMain.class);
 
     public static void main(String[] args) {
         new WebServerMain(args);
     }
 
-    protected DefaultApi api;
+    protected DefaultServiceProvider serviceProvider;
     private WebServer webServer;
 
     public WebServerMain(String[] args) {
@@ -24,18 +23,13 @@ public class WebServerMain extends Executable<DefaultApplicationSetup> {
     }
 
     @Override
-    protected DefaultApplicationSetup createApplicationSetup(ApplicationOptions applicationOptions, String[] args) {
-        return new DefaultApplicationSetup(applicationOptions, args);
-    }
-
-    @Override
-    protected void createApi() {
-        api = new DefaultApi(applicationSetup);
+    protected DefaultServiceProvider createServiceProvider(ApplicationOptions applicationOptions, String[] args) {
+        return new DefaultServiceProvider(applicationOptions, args);
     }
 
     @Override
     protected void onDomainInitialized() {
-        webServer = new WebServer(api);
+        webServer = new WebServer(serviceProvider);
         webServer.start();
     }
 

@@ -34,7 +34,7 @@ import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import network.misq.network.p2p.services.relay.RelayMessage;
 import network.misq.security.ConfidentialData;
 import network.misq.security.HybridEncryption;
-import network.misq.security.KeyPairRepository;
+import network.misq.security.KeyPairService;
 import network.misq.security.PubKey;
 
 import java.io.Serializable;
@@ -81,12 +81,12 @@ public class ConfidentialMessageService implements Node.Listener {
 
     private final Set<Node.Listener> listeners = new CopyOnWriteArraySet<>();
     private final NodesById nodesById;
-    private final KeyPairRepository keyPairRepository;
+    private final KeyPairService keyPairService;
     private final Optional<DataService> dataService;
 
-    public ConfidentialMessageService(NodesById nodesById, KeyPairRepository keyPairRepository, Optional<DataService> dataService) {
+    public ConfidentialMessageService(NodesById nodesById, KeyPairService keyPairService, Optional<DataService> dataService) {
         this.nodesById = nodesById;
-        this.keyPairRepository = keyPairRepository;
+        this.keyPairService = keyPairService;
         this.dataService = dataService;
 
         nodesById.addNodeListener(this);
@@ -107,7 +107,7 @@ public class ConfidentialMessageService implements Node.Listener {
                 // send(message, targetAddress);
             } else {
                 ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
-                keyPairRepository.findKeyPair(confidentialMessage.getKeyId()).ifPresent(receiversKeyPair -> {
+                keyPairService.findKeyPair(confidentialMessage.getKeyId()).ifPresent(receiversKeyPair -> {
                     ExecutorFactory.WORKER_POOL.submit(() -> {
                         try {
                             byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);

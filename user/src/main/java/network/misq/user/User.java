@@ -18,7 +18,7 @@
 package network.misq.user;
 
 import network.misq.account.Account;
-import network.misq.id.IdentityRepository;
+import network.misq.id.IdentityService;
 import network.misq.offer.OpenOffer;
 import network.misq.persistence.Persistence;
 import network.misq.protocol.Deal;
@@ -28,7 +28,7 @@ import java.util.Collection;
 
 public class User {
     // expected dependencies
-    Collection<IdentityRepository> identities; // A user can manage multiple identities and assign it to offers or other interactions
+    Collection<IdentityService> identities; // A user can manage multiple identities and assign it to offers or other interactions
     Collection<Account> accounts;
     Collection<OpenOffer> openOffers;
     Collection<Deal> deals;

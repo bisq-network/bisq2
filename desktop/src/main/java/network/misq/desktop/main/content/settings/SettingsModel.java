@@ -17,16 +17,16 @@
 
 package network.misq.desktop.main.content.settings;
 
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Model;
 
 // Handled jfx only concerns, others which can be re-used by other frontends are in OfferbookEntity
 public class SettingsModel implements Model {
 
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
 
-    public SettingsModel(DefaultApi api) {
-        this.api = api;
+    public SettingsModel(DefaultServiceProvider serviceProvider) {
+         this.serviceProvider = serviceProvider;
     }
 
     public void initialize() {

@@ -21,13 +21,13 @@ package network.misq.security;
  * Parses the program arguments which are relevant for that domain and stores it in the options field.
  */
 public class KeyPairRepositoryConfigFactory {
-    private final KeyPairRepository.Conf conf;
+    private final KeyPairService.Conf conf;
 
-    public KeyPairRepository.Conf get() {
+    public KeyPairService.Conf get() {
         return conf;
     }
 
     public KeyPairRepositoryConfigFactory(String baseDir) {
-        conf = new KeyPairRepository.Conf(baseDir);
+        conf = new KeyPairService.Conf(baseDir);
     }
 }

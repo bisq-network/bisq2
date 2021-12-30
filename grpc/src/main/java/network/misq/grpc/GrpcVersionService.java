@@ -18,7 +18,8 @@
 package network.misq.grpc;
 
 import io.grpc.stub.StreamObserver;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
+import network.misq.application.Version;
 import network.misq.grpc.proto.GetVersionGrpc;
 import network.misq.grpc.proto.GetVersionReply;
 import network.misq.grpc.proto.GetVersionRequest;
@@ -29,10 +30,10 @@ import org.slf4j.LoggerFactory;
 public class GrpcVersionService extends GetVersionGrpc.GetVersionImplBase {
     private static final Logger log = LoggerFactory.getLogger(GrpcVersionService.class);
 
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
 
-    public GrpcVersionService(DefaultApi api) {
-        this.api = api;
+    public GrpcVersionService(DefaultServiceProvider serviceProvider) {
+         this.serviceProvider = serviceProvider;
     }
 
     @Override
@@ -40,7 +41,7 @@ public class GrpcVersionService extends GetVersionGrpc.GetVersionImplBase {
                            StreamObserver<GetVersionReply> responseObserver) {
         try {
             var reply = GetVersionReply.newBuilder()
-                    .setVersion(api.getVersion())
+                    .setVersion(Version.VERSION)
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();

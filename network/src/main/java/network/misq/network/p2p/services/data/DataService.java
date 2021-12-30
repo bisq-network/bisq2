@@ -38,7 +38,7 @@ import network.misq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import network.misq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
-import network.misq.security.KeyPairRepository;
+import network.misq.security.KeyPairService;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -79,23 +79,23 @@ public class DataService implements Node.Listener {
     private final Node node;
     @Getter
     private final PeerGroupService peerGroupService;
-    private final KeyPairRepository keyPairRepository;
+    private final KeyPairService keyPairService;
     private final Storage storage;
     private final Broadcaster broadcaster;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<String, InventoryResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, InventoryRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
 
-    public DataService(Node node, PeerGroupService peerGroupService, KeyPairRepository keyPairRepository, Config config) {
+    public DataService(Node node, PeerGroupService peerGroupService, KeyPairService keyPairService, Config config) {
         this.node = node;
         this.peerGroupService = peerGroupService;
-        this.keyPairRepository = keyPairRepository;
+        this.keyPairService = keyPairService;
         this.storage = new Storage(config.baseDir());
 
         broadcaster = new Broadcaster(node, peerGroupService.getPeerGroup());
         broadcaster.addMessageListener(this);
 
-        keyPairRepository.getOrCreateKeyPair(KeyPairRepository.DEFAULT);
+        keyPairService.getOrCreateKeyPair(KeyPairService.DEFAULT);
     }
 
 

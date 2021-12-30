@@ -3,19 +3,16 @@ package network.misq.application;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class Executable<T extends ApplicationSetup> {
-    protected final T applicationSetup;
+public abstract class Executable<T extends ServiceProvider> {
+    protected final T serviceProvider;
 
     public Executable(String[] args) {
         ApplicationOptions applicationOptions = ApplicationOptionsParser.parse(args);
-        applicationSetup = createApplicationSetup(applicationOptions, args);
-        createApi();
+        serviceProvider = createServiceProvider(applicationOptions, args);
         launchApplication(args);
     }
 
-    abstract protected T createApplicationSetup(ApplicationOptions applicationOptions, String[] args);
-
-    abstract protected void createApi();
+    abstract protected T createServiceProvider(ApplicationOptions applicationOptions, String[] args);
 
     protected void launchApplication(String[] args) {
         onApplicationLaunched();
@@ -26,7 +23,7 @@ public abstract class Executable<T extends ApplicationSetup> {
     }
 
     protected void initializeDomain() {
-        applicationSetup.initialize()
+        serviceProvider.initialize()
                 .whenComplete((success, throwable) -> {
                     if (success) {
                         onDomainInitialized();
@@ -43,6 +40,6 @@ public abstract class Executable<T extends ApplicationSetup> {
     abstract protected void onDomainInitialized();
 
     public void shutdown() {
-        applicationSetup.shutdown();
+        serviceProvider.shutdown();
     }
 }
