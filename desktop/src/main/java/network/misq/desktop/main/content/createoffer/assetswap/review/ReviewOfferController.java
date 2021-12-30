@@ -18,28 +18,29 @@
 package network.misq.desktop.main.content.createoffer.assetswap.review;
 
 import lombok.Getter;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
 import network.misq.offer.Offer;
-import network.misq.offer.OfferRepository;
-import network.misq.offer.OpenOfferRepository;
+import network.misq.offer.OfferService;
+import network.misq.offer.OpenOfferService;
 
 public class ReviewOfferController implements Controller {
-    private final OfferRepository offerRepository;
-    private final OpenOfferRepository openOfferRepository;
-    private ReviewOfferModel model;
+    private final ReviewOfferModel model;
     @Getter
-    private ReviewOfferView view;
+    private final ReviewOfferView view;
+    private final OfferService offerService;
+    private final OpenOfferService openOfferService;
 
-    public ReviewOfferController(DefaultApi api) {
-        offerRepository = api.getOfferRepository();
-        openOfferRepository = api.getOpenOfferRepository();
+    public ReviewOfferController(DefaultServiceProvider serviceProvider) {
+        model = new ReviewOfferModel();
+        view = new ReviewOfferView(model, this);
+
+        offerService = serviceProvider.getOfferService();
+        openOfferService = serviceProvider.getOpenOfferService();
     }
 
     @Override
     public void initialize() {
-        this.model = new ReviewOfferModel();
-        this.view = new ReviewOfferView(model, this);
     }
 
     @Override
@@ -55,8 +56,8 @@ public class ReviewOfferController implements Controller {
     }
 
     public void onPublish() {
-        Offer offer = offerRepository.createOffer(model.askAmount);
-        offerRepository.publishOffer(offer);
-        openOfferRepository.newOpenOffer(offer);
+        Offer offer = offerService.createOffer(model.askAmount);
+        offerService.publishOffer(offer);
+        openOfferService.newOpenOffer(offer);
     }
 }

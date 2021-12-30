@@ -18,37 +18,35 @@
 package network.misq.desktop.main.content.createoffer;
 
 import lombok.Getter;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.common.view.View;
 import network.misq.desktop.main.content.createoffer.assetswap.amounts.SetAmountsController;
 import network.misq.desktop.main.content.createoffer.assetswap.review.ReviewOfferController;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import network.misq.desktop.main.content.createoffer.assetswap.review.ReviewOfferView;
 
 public class CreateOfferController implements Controller {
-    private final DefaultApi api;
-    private CreateOfferModel model;
+    private final DefaultServiceProvider serviceProvider;
+    private final CreateOfferModel model;
     @Getter
-    private CreateOfferView view;
-    private final Map<Class<? extends Controller>, Controller> map = new ConcurrentHashMap<>();
+    private final CreateOfferView view;
+    private final ReviewOfferController reviewOfferController;
+    private final SetAmountsController setAmountsController;
 
-    public CreateOfferController(DefaultApi api) {
-        this.api = api;
+    public CreateOfferController(DefaultServiceProvider serviceProvider) {
+         this.serviceProvider = serviceProvider;
+        model = new CreateOfferModel();
+        view = new CreateOfferView(model, this);
+
+        reviewOfferController=  new ReviewOfferController(serviceProvider);
+        setAmountsController=  new SetAmountsController();
     }
 
     @Override
     public void initialize() {
-        this.model = new CreateOfferModel();
-        this.view = new CreateOfferView(model, this);
-        addController(new SetAmountsController());
-        addController(new ReviewOfferController(api));
+        reviewOfferController.initialize();
+        setAmountsController.initialize();
 
-        //  Controller controller = map.get(SetAmountsController.class);
-        Controller controller = map.get(ReviewOfferController.class);
-        controller.initialize();
-        View view = controller.getView();
+        ReviewOfferView view = reviewOfferController.getView();
         model.selectView(view);
     }
 
@@ -61,14 +59,8 @@ public class CreateOfferController implements Controller {
     }
 
     public void onNavigateBack() {
-
     }
 
     public void onNavigateNext() {
-
-    }
-
-    private void addController(Controller controller) {
-        map.put(controller.getClass(), controller);
     }
 }

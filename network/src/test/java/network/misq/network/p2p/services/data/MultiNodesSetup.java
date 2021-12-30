@@ -24,7 +24,7 @@ import network.misq.network.NetworkService;
 import network.misq.network.p2p.State;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.KeyPairRepository;
+import network.misq.security.KeyPairService;
 
 import java.io.File;
 import java.util.*;
@@ -51,7 +51,7 @@ public class MultiNodesSetup {
     private final Set<Transport.Type> supportedTransportTypes;
     private final boolean bootstrapAll;
     private Optional<List<Address>> addressesToBootstrap = Optional.empty();
-    private final KeyPairRepository keyPairRepository;
+    private final KeyPairService keyPairService;
     private final int numSeeds = 8;
     private final int numNodes = 20;
     @Getter
@@ -68,9 +68,9 @@ public class MultiNodesSetup {
 
         seedAddressesByTransport = networkServiceConfig.seedAddressesByTransport();
 
-        KeyPairRepository.Conf keyPairRepositoryConf = new KeyPairRepository.Conf(networkServiceConfig.baseDir());
-        keyPairRepository = new KeyPairRepository(keyPairRepositoryConf);
-        keyPairRepository.initialize().join();
+        KeyPairService.Conf keyPairRepositoryConf = new KeyPairService.Conf(networkServiceConfig.baseDir());
+        keyPairService = new KeyPairService(keyPairRepositoryConf);
+        keyPairService.initialize().join();
     }
 
     public Map<Transport.Type, List<Address>> bootstrap(Optional<List<Address>> addressesToBootstrap) {
@@ -133,7 +133,7 @@ public class MultiNodesSetup {
                 networkServiceConfig.seedAddressesByTransport(),
                 Optional.empty());
 
-        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, keyPairRepository);
+        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, keyPairService);
         networkServicesByAddress.put(address, networkService);
         return networkService;
     }

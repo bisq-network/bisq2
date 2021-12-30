@@ -8,7 +8,6 @@ include 'platforms:web-platform'
 include 'platforms:test-platform'
 
 include 'account'
-include 'api'
 include 'application'
 include 'cli'
 include 'common'

@@ -17,10 +17,10 @@
 
 package network.misq.support;
 
-import network.misq.id.IdentityRepository;
+import network.misq.id.IdentityService;
 
 public class Dispute {
     // expected dependencies
-    IdentityRepository peerIdentityRepository;
-    IdentityRepository disputeAgentIdentityRepository;
+    IdentityService peerIdentityService;
+    IdentityService disputeAgentIdentityService;
 }

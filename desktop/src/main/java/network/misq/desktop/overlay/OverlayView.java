@@ -17,16 +17,11 @@
 
 package network.misq.desktop.overlay;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.common.view.Model;
-import network.misq.desktop.common.view.View;
 
 public class OverlayView {
     private final Scene parentScene;
@@ -38,16 +33,11 @@ public class OverlayView {
         this.model = model;
         this.controller = controller;
         this.parentScene = parentScene;
-        model.view.addListener(new ChangeListener<View<Parent, Model, Controller>>() {
-            @Override
-            public void changed(ObservableValue<? extends View<Parent, Model, Controller>> observable,
-                                View<Parent, Model, Controller> oldValue,
-                                View<Parent, Model, Controller> newValue) {
-                if (newValue != null) {
-                    show(newValue.getRoot());
-                } else if (stage != null) {
-                    stage.hide();
-                }
+        model.view.addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                show(newValue.getRoot());
+            } else if (stage != null) {
+                stage.hide();
             }
         });
     }

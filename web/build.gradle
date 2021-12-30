@@ -19,7 +19,6 @@ dependencies {
     api platform(project(':platforms:web-platform'))
 
     implementation project(':common')
-    implementation project(':api')
     implementation project(':presentation')
     implementation project(':application')
 

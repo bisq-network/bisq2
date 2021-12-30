@@ -17,15 +17,11 @@
 
 package network.misq.desktop.main.content;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.common.view.Model;
 import network.misq.desktop.common.view.View;
 
 @Slf4j
@@ -33,23 +29,18 @@ public class ContentView extends View<HBox, ContentViewModel, ContentViewControl
 
     public ContentView(ContentViewModel model, ContentViewController controller) {
         super(new HBox(), model, controller);
-
-        model.view.addListener(new ChangeListener<View<? extends Node, Model, Controller>>() {
-            @Override
-            public void changed(ObservableValue<? extends View<? extends Node, Model, Controller>> observable,
-                                View<? extends Node, Model, Controller> oldValue,
-                                View<? extends Node, Model, Controller> newValue) {
-                HBox.setHgrow(newValue.getRoot(), Priority.ALWAYS);
-                ObservableList<Node> children = root.getChildren();
-                children.setAll(newValue.getRoot());
-            }
+        
+        model.view.addListener((observable, oldValue, newValue) -> {
+            HBox.setHgrow(newValue.getRoot(), Priority.ALWAYS);
+            ObservableList<Node> children = root.getChildren();
+            children.setAll(newValue.getRoot());
         });
 
      /*   Navigation.addListener((viewPath, data) -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
                 return;
 
-            Class<? extends View> viewClass = viewPath.tip();
+            Class<? extends AView> viewClass = viewPath.tip();
             if (viewClass == null) {
                 return;
             }

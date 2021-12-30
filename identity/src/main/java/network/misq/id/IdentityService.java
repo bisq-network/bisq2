@@ -23,12 +23,12 @@ import network.misq.persistence.Persistence;
 
 import java.util.concurrent.CompletableFuture;
 
-public class IdentityRepository {
+public class IdentityService {
     // expected dependencies
     Persistence persistence;
     private NetworkService networkService;
 
-    public IdentityRepository(NetworkService networkService) {
+    public IdentityService(NetworkService networkService) {
         this.networkService = networkService;
     }
 

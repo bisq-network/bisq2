@@ -15,23 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.api;
+package network.misq.desktop.common;
 
-import lombok.Getter;
-import network.misq.application.DefaultApplicationSetup;
-import network.misq.network.NetworkService;
-import network.misq.security.KeyPairRepository;
+import javafx.application.HostServices;
+import lombok.NonNull;
+import network.misq.common.annotations.LateInit;
 
-/**
- * Api for seed node with limited feature set
- */
-@Getter
-public class SeedNodeApi {
-    private final KeyPairRepository keyPairRepository;
-    private final NetworkService networkService;
+import static java.util.Objects.requireNonNull;
 
-    public SeedNodeApi(DefaultApplicationSetup applicationFactory) {
-        keyPairRepository = applicationFactory.getKeyPairRepository();
-        networkService = applicationFactory.getNetworkService();
+public class Browser {
+    @LateInit
+    private static HostServices hostServices;
+
+    public static void setHostServices(@NonNull HostServices hostServices) {
+        Browser.hostServices = hostServices;
+    }
+
+    public static void open(String uri) {
+        if (hostServices == null) {
+            throw new IllegalArgumentException("hostServices must be set before open is called");
+        }
+        hostServices.showDocument(uri);
     }
 }

@@ -19,11 +19,11 @@ package network.misq.desktop.main.content;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.common.view.View;
 import network.misq.desktop.main.content.markets.MarketsController;
 import network.misq.desktop.main.content.offerbook.OfferbookController;
+import network.misq.desktop.main.content.settings.SettingsController;
 import network.misq.desktop.overlay.OverlayController;
 
 import java.util.Map;
@@ -31,25 +31,27 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class ContentViewController implements Controller {
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
     private final OverlayController overlayController;
     private final Map<Class<? extends Controller>, Controller> map = new ConcurrentHashMap<>();
-    private ContentViewModel model;
+    private final ContentViewModel model;
     @Getter
-    private ContentView view;
+    private final ContentView view;
 
-    public ContentViewController(DefaultApi api, OverlayController overlayController) {
-        this.api = api;
+    public ContentViewController(DefaultServiceProvider serviceProvider, OverlayController overlayController) {
+         this.serviceProvider = serviceProvider;
         this.overlayController = overlayController;
+
+        model = new ContentViewModel();
+        view = new ContentView(model, this);
+
+        addController(new MarketsController(serviceProvider));
+        addController(new OfferbookController(serviceProvider, this, overlayController));
+        addController(new SettingsController(serviceProvider, this, overlayController));
     }
 
     @Override
     public void initialize() {
-        this.model = new ContentViewModel();
-        this.view = new ContentView(model, this);
-
-        addController(new MarketsController(api));
-        addController(new OfferbookController(api, this, overlayController));
     }
 
     @Override
@@ -63,8 +65,7 @@ public class ContentViewController implements Controller {
     public void onNavigationRequest(Class<? extends Controller> controllerClass) {
         Controller controller = map.get(controllerClass);
         controller.initialize();
-        View view = controller.getView();
-        model.selectView(view);
+        model.selectView(controller.getView());
     }
 
     private void addController(Controller controller) {

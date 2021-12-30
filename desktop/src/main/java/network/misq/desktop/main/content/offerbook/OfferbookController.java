@@ -19,36 +19,33 @@ package network.misq.desktop.main.content.offerbook;
 
 import javafx.geometry.Bounds;
 import lombok.Getter;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.main.content.ContentViewController;
 import network.misq.desktop.main.content.createoffer.CreateOfferController;
 import network.misq.desktop.main.content.offerbook.details.OfferDetailsController;
 import network.misq.desktop.overlay.OverlayController;
 
-// As all controllers in a view hierarchy are created at startup we do not do anything in the constructors beside assigning fields.
-// The initialize() method starts the MVC group. onViewAdded() is called when the view got added to the stage.
-// onViewRemoved() when the view got removed from the stage.
 public class OfferbookController implements Controller {
-    private OfferbookModel model;
+    private final OfferbookModel model;
     @Getter
-    private OfferbookView view;
+    private final OfferbookView view;
     @Getter
-    private final DefaultApi api;
+    private final DefaultServiceProvider serviceProvider;
     private final ContentViewController contentViewController;
     private final OverlayController overlayController;
 
-    public OfferbookController(DefaultApi api, ContentViewController contentViewController, OverlayController overlayController) {
-        this.api = api;
+    public OfferbookController(DefaultServiceProvider serviceProvider, ContentViewController contentViewController, OverlayController overlayController) {
+         this.serviceProvider = serviceProvider;
         this.contentViewController = contentViewController;
         this.overlayController = overlayController;
+        model = new OfferbookModel(serviceProvider);
+        view = new OfferbookView(model, this);
     }
 
     @Override
     public void initialize() {
-        model = new OfferbookModel(api);
         model.initialize();
-        view = new OfferbookView(model, this);
     }
 
     @Override
@@ -85,7 +82,7 @@ public class OfferbookController implements Controller {
     }
 
     public void onCreateOffer() {
-        overlayController.show(new CreateOfferController(api));
+        overlayController.show(new CreateOfferController(serviceProvider));
     }
 
     public void onTakeOffer(OfferListItem item) {

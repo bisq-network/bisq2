@@ -1,6 +1,6 @@
 package network.misq.web.server;
 
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.web.json.JsonTransform;
 import network.misq.web.server.handler.GetOffersHandler;
 import network.misq.web.server.handler.GetVersionHandler;
@@ -14,13 +14,13 @@ class MisqRegistrySpec extends DefaultRegistryBuilder implements RegistrySpec {
 
     private final JsonTransform jsonTransform;
 
-    MisqRegistrySpec(DefaultApi coreApi) {
+    MisqRegistrySpec(DefaultServiceProvider coreApi) {
         this.jsonTransform = new JsonTransform();
         init(coreApi);
     }
 
-    void init(DefaultApi api) {
-        add(DefaultApi.class, api);
+    void init(DefaultServiceProvider serviceProvider) {
+        add(DefaultServiceProvider.class, serviceProvider);
         add(GetVersionHandler.class, new GetVersionHandler(jsonTransform));
         add(GetOffersHandler.class, new GetOffersHandler(jsonTransform));
     }

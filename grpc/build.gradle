@@ -16,7 +16,6 @@ apply from: '../buildSrc/test-dependencies.gradle'
 dependencies {
     api platform(project(':platforms:grpc-platform'))
 
-    implementation project(':api')
     implementation project(':application')
     implementation 'javax.annotation:javax.annotation-api'
     implementation 'com.google.protobuf:protobuf-java'

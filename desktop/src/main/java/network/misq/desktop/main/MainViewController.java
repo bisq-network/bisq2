@@ -18,46 +18,44 @@
 package network.misq.desktop.main;
 
 import lombok.Getter;
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.main.content.ContentViewController;
-import network.misq.desktop.main.content.offerbook.OfferbookController;
+import network.misq.desktop.main.content.settings.SettingsController;
 import network.misq.desktop.main.left.NavigationViewController;
 import network.misq.desktop.main.top.TopPanelController;
 import network.misq.desktop.overlay.OverlayController;
 
 public class MainViewController implements Controller {
-    private final DefaultApi api;
-    private final OverlayController overlayController;
-    private MainViewModel model;
+    private final DefaultServiceProvider serviceProvider;
+    private final MainViewModel model = new MainViewModel();
+    private final ContentViewController contentViewController;
+    private final NavigationViewController navigationViewController;
+    private final TopPanelController topPanelController;
     @Getter
-    private MainView view;
+    private final MainView view;
 
-    public MainViewController(DefaultApi api, OverlayController overlayController) {
-        this.api = api;
-        this.overlayController = overlayController;
+    public MainViewController(DefaultServiceProvider serviceProvider, OverlayController overlayController) {
+         this.serviceProvider = serviceProvider;
+
+        contentViewController = new ContentViewController(serviceProvider, overlayController);
+        navigationViewController = new NavigationViewController(serviceProvider, contentViewController, overlayController);
+        topPanelController = new TopPanelController();
+
+        view = new MainView(model,
+                this,
+                contentViewController.getView(),
+                navigationViewController.getView(),
+                topPanelController.getView());
     }
 
     public void initialize() {
         try {
-            this.model = new MainViewModel();
-
-            ContentViewController contentViewController = new ContentViewController(api, overlayController);
             contentViewController.initialize();
-            NavigationViewController navigationViewController = new NavigationViewController(api,
-                    contentViewController,
-                    overlayController);
             navigationViewController.initialize();
-            TopPanelController topPanelController = new TopPanelController();
             topPanelController.initialize();
 
-            this.view = new MainView(model,
-                    this,
-                    contentViewController.getView(),
-                    navigationViewController.getView(),
-                    topPanelController.getView());
-
-            contentViewController.onNavigationRequest(OfferbookController.class);
+            contentViewController.onNavigationRequest(SettingsController.class);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -65,11 +63,9 @@ public class MainViewController implements Controller {
 
     @Override
     public void onViewAdded() {
-
     }
 
     @Override
     public void onViewRemoved() {
-
     }
 }

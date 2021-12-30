@@ -15,27 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.application;
+package network.misq.desktop;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
+import javafx.application.Application;
+import javafx.application.HostServices;
+import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
 
-public abstract class ApplicationSetup {
-    protected final Config misqConfig;
-
-    public ApplicationSetup(String configFileName) {
-        misqConfig = ConfigFactory.load(configFileName);
-        misqConfig.checkValid(ConfigFactory.defaultReference(), configFileName);
+@Slf4j
+public class JavaFXApplication extends Application {
+    record Data(Stage stage, Parameters parameters, HostServices hostServices) {
     }
 
-    protected Config getConfig(String path) {
-        misqConfig.checkValid(ConfigFactory.defaultReference(), path);
-        return misqConfig.getConfig(path);
+    static final CompletableFuture<Data> onApplicationLaunched = new CompletableFuture<>();
+
+    @Override
+    public void start(Stage stage) {
+        onApplicationLaunched.complete(new Data(stage, getParameters(), getHostServices()));
     }
-
-    public abstract CompletableFuture<Boolean> initialize();
-
-    public abstract CompletableFuture<Void> shutdown();
 }

@@ -39,13 +39,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
-public class OfferRepository {
+public class OfferService {
     private final List<Listing> offers = new CopyOnWriteArrayList<>();
     protected final PublishSubject<Listing> offerAddedSubject;
     protected final PublishSubject<Listing> offerRemovedSubject;
     private final INetworkService networkService;
 
-    public OfferRepository(INetworkService networkService) {
+    public OfferService(INetworkService networkService) {
         this.networkService = networkService;
 
         offerAddedSubject = PublishSubject.create();

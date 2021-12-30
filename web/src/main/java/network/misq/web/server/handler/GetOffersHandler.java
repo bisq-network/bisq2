@@ -1,7 +1,7 @@
 package network.misq.web.server.handler;
 
 
-import network.misq.api.DefaultApi;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.presentation.offer.OfferEntity;
 import network.misq.web.json.JsonTransform;
 import ratpack.handling.Context;
@@ -18,8 +18,8 @@ public class GetOffersHandler extends AbstractHandler implements Handler {
 
     @Override
     public void handle(Context ctx) {
-        DefaultApi api = ctx.get(DefaultApi.class);
-        List<OfferEntity> offers = api.getOfferEntities();
+        DefaultServiceProvider serviceProvider = ctx.get(DefaultServiceProvider.class);
+        List<OfferEntity> offers = serviceProvider.getOfferEntityService().getOfferEntities();
         ctx.render(toJson("offers", offers));
     }
 }

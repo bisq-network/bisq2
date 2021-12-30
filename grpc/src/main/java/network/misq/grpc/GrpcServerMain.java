@@ -1,22 +1,21 @@
 package network.misq.grpc;
 
 
-import network.misq.api.DefaultApi;
-import network.misq.application.DefaultApplicationSetup;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.application.Executable;
 import network.misq.application.ApplicationOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class GrpcServerMain extends Executable<DefaultApplicationSetup> {
+public class GrpcServerMain extends Executable<DefaultServiceProvider> {
     private static final Logger log = LoggerFactory.getLogger(GrpcServerMain.class);
 
     public static void main(String[] args) {
         new GrpcServerMain(args);
     }
 
-    protected DefaultApi api;
+    protected DefaultServiceProvider serviceProvider;
     private GrpcServer grpcServer;
 
     public GrpcServerMain(String[] args) {
@@ -24,18 +23,13 @@ public class GrpcServerMain extends Executable<DefaultApplicationSetup> {
     }
 
     @Override
-    protected DefaultApplicationSetup createApplicationSetup(ApplicationOptions applicationOptions, String[] args) {
-        return new DefaultApplicationSetup(applicationOptions, args);
+    protected DefaultServiceProvider createServiceProvider(ApplicationOptions applicationOptions, String[] args) {
+        return new DefaultServiceProvider(applicationOptions, args);
     }
 
     @Override
-    protected void createApi() {
-        api = new DefaultApi(applicationSetup);
-    }
-
-    @Override
-    protected void onInitializeDomainCompleted() {
-        grpcServer = new GrpcServer(api);
+    protected void onDomainInitialized() {
+        grpcServer = new GrpcServer(serviceProvider);
         grpcServer.start();
     }
 

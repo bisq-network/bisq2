@@ -4,6 +4,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 apply from: '../buildSrc/misq-version.gradle'
@@ -26,10 +27,8 @@ dependencies {
     implementation project(':support')
     implementation project(':user')
     implementation project(':presentation')
-    implementation project(':application')
 
     implementation 'com.google.guava:guava'
-    implementation 'io.reactivex.rxjava2:rxjava'
     implementation 'com.typesafe:config'
 }
 

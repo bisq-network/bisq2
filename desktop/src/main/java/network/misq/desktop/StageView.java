@@ -17,46 +17,38 @@
 
 package network.misq.desktop;
 
-import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.desktop.common.utils.KeyCodeUtils;
+import network.misq.desktop.common.view.View;
 import network.misq.desktop.main.MainView;
 
-import java.util.concurrent.CompletableFuture;
+import static java.util.Objects.requireNonNull;
 
 @Slf4j
-public class StageView extends Application {
-    public static final CompletableFuture<StageView> LAUNCH_APP_FUTURE = new CompletableFuture<>();
-    private StageController controller;
-    private StageModel model;
-
-    private Stage stage;
+public class StageView extends View<AnchorPane, StageModel, StageController> {
+    private final Stage stage;
     @Getter
-    private Scene scene;
-    private Pane root;
+    private final Scene scene;
 
-    public StageView() {
-    }
-
-    @Override
-    public void start(Stage stage) {
+    public StageView(StageModel model, StageController controller, Stage stage) {
+        super(new AnchorPane(), model, controller);
         this.stage = stage;
-        LAUNCH_APP_FUTURE.complete(this);
-    }
 
-    public void initialize(StageModel model, StageController controller) {
-        this.controller = controller;
-        this.model = model;
+        scene = new Scene(root);
+        this.stage.setScene(scene);
+        
         try {
-            root = new AnchorPane();
+            scene.getStylesheets().setAll(requireNonNull(getClass().getResource("/misq.css")).toExternalForm(),
+                    requireNonNull(getClass().getResource("/bisq.css")).toExternalForm(),
+                    requireNonNull(getClass().getResource("/theme-dark.css")).toExternalForm());
+
             root.prefWidthProperty().bind(model.prefWidthProperty);
             root.prefHeightProperty().bind(model.prefHeightProperty);
 
@@ -66,12 +58,7 @@ public class StageView extends Application {
             AnchorPane.setTopAnchor(preloader, 0d);
             AnchorPane.setBottomAnchor(preloader, 0d);
             root.getChildren().add(preloader);
-            scene = new Scene(root);
-            scene.getStylesheets().setAll(getClass().getResource("/misq.css").toExternalForm(),
-                    getClass().getResource("/bisq.css").toExternalForm(),
-                    getClass().getResource("/theme-dark.css").toExternalForm());
 
-            stage.setScene(scene);
             stage.minHeightProperty().bind(model.minHeightProperty);
             stage.minWidthProperty().bind(model.minWidthProperty);
             stage.titleProperty().bind(model.titleProperty);
@@ -85,19 +72,21 @@ public class StageView extends Application {
                     controller.onQuit();
                 }
             });
+
             stage.show();
             controller.onViewAdded();
         } catch (Exception exception) {
             exception.printStackTrace();
+            controller.onQuit();
         }
     }
 
-    public void activate(MainView mainView) {
+    void addMainView(MainView mainView) {
         StackPane mainViewRoot = mainView.getRoot();
-        root.getChildren().setAll(mainViewRoot);
         AnchorPane.setLeftAnchor(mainViewRoot, 0d);
         AnchorPane.setRightAnchor(mainViewRoot, 0d);
         AnchorPane.setTopAnchor(mainViewRoot, 0d);
         AnchorPane.setBottomAnchor(mainViewRoot, 0d);
+        root.getChildren().setAll(mainViewRoot);
     }
 }

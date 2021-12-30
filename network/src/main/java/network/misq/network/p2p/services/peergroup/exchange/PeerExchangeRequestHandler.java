@@ -19,7 +19,6 @@ package network.misq.network.p2p.services.peergroup.exchange;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.common.util.StringUtils;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
@@ -29,7 +28,6 @@ import network.misq.network.p2p.services.peergroup.Peer;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @Getter
 @Slf4j
@@ -47,8 +45,8 @@ class PeerExchangeRequestHandler implements Connection.Listener {
     }
 
     CompletableFuture<Set<Peer>> request(Set<Peer> peersForPeerExchange) {
-        log.debug("Node {} send PeerExchangeRequest to {} with my peers {}",
-                node, connection.getPeerAddress(), peersForPeerExchange);
+        log.debug("Node {} send PeerExchangeRequest to {} with {} peers",
+                node, connection.getPeerAddress(), peersForPeerExchange.size());
         try {
             // We get called from the IO thread, so we do not use the async send method
             node.send(new PeerExchangeRequest(nonce, peersForPeerExchange), connection);
@@ -63,11 +61,13 @@ class PeerExchangeRequestHandler implements Connection.Listener {
     public void onMessage(Message message) {
         if (message instanceof PeerExchangeResponse response) {
             if (response.nonce() == nonce) {
-                String addresses = StringUtils.truncate(response.peers().stream()
+               /* String addresses = StringUtils.truncate(response.peers().stream()
                         .map(peer -> peer.getAddress().toString())
                         .collect(Collectors.toList()).toString());
-                log.info("Node {} received PeerExchangeResponse from {} with peers: {}",
-                        node, connection.getPeerAddress(), addresses);
+                log.debug("Node {} received PeerExchangeResponse from {} with {}",
+                        node, connection.getPeerAddress(), addresses);*/
+                log.info("Node {} received PeerExchangeResponse from {} with {} peers",
+                        node, connection.getPeerAddress(), response.peers().size());
                 removeListeners();
                 future.complete(response.peers());
             } else {

@@ -53,7 +53,9 @@ public class NetworkServiceConfigFactory {
         //todo apply networkConfig
         //todo use option parser lib for args (define priority)
 
-        Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
+        // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
+        // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
+        Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
 
         ServiceNode.Config serviceNodeConfig = new ServiceNode.Config(Set.of(
                 ServiceNode.Service.CONFIDENTIAL,
@@ -87,9 +89,9 @@ public class NetworkServiceConfigFactory {
         PeerGroupService.Config clearNetConf = new PeerGroupService.Config(peerGroupConfig,
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
-                TimeUnit.SECONDS.toMillis(5),  // bootstrapTime
-                TimeUnit.SECONDS.toMillis(10),  // interval
-                TimeUnit.SECONDS.toMillis(60),  // timeout
+                TimeUnit.SECONDS.toMillis(10),  // bootstrapTime
+                TimeUnit.SECONDS.toMillis(30),  // interval
+                TimeUnit.MINUTES.toMillis(2),  // timeout
                 TimeUnit.HOURS.toMillis(2),     // maxAge
                 100,                        // maxReported
                 100,                        // maxPersisted

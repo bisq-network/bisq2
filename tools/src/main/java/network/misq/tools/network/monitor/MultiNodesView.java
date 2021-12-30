@@ -23,6 +23,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -34,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.OsUtils;
 import network.misq.common.util.StringUtils;
 import network.misq.desktop.common.threading.UIThread;
+import network.misq.desktop.common.utils.KeyCodeUtils;
 import network.misq.network.NetworkServiceConfigFactory;
 import network.misq.network.p2p.State;
 import network.misq.network.p2p.node.Address;
@@ -150,9 +152,17 @@ public class MultiNodesView extends Application implements MultiNodesModel.Handl
         stage.setTitle("Network monitor");
         stage.setScene(scene);
         stage.show();
-        stage.setOnCloseRequest(event -> {
-            multiNodesModel.shutdown().whenComplete((r, t) -> Platform.exit());
+        stage.setOnCloseRequest(event -> quit());
+        scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
+            if (KeyCodeUtils.isCtrlPressed(KeyCode.W, keyEvent) ||
+                    KeyCodeUtils.isCtrlPressed(KeyCode.Q, keyEvent)) {
+                quit();
+            }
         });
+    }
+
+    private void quit() {
+        multiNodesModel.shutdown().whenComplete((r, t) -> Platform.exit());
     }
 
     private FlowPane getFlowPane(String style, Insets bgPadding) {
