@@ -104,28 +104,24 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
 
 
         ts = System.currentTimeMillis();
-        nodesById.shutdown();
+        nodesById.shutdown().join();
         log.error("shutdown took {} ms", System.currentTimeMillis() - ts);
     }
 
     void test_initializeServer(Node.Config nodeConfig) throws InterruptedException {
         BanList banList = new BanList();
         NodesById nodesById = new NodesById(banList, nodeConfig);
-        for (int i = 0; i < 2; i++) {
-            initializeServers(2, nodesById);
-        }
-        nodesById.shutdown();
-        Thread.sleep(100);
+        initializeServers(2, nodesById);
+        nodesById.shutdown().join();
     }
 
-    private void initializeServers(int numNodes, NodesById nodesById) throws InterruptedException {
+    private void initializeServers(int numNodes, NodesById nodesById) {
         for (int i = 0; i < numNodes; i++) {
             String nodeId = "node_" + i;
             int serverPort = 1000 + i;
             nodesById.initializeServer(nodeId, serverPort);
         }
-        nodesById.shutdown();
-        Thread.sleep(100);
+        nodesById.shutdown().join();
         assertTrue(true);
     }
 

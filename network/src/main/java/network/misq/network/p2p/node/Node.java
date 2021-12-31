@@ -368,7 +368,10 @@ public class Node implements Connection.Handler {
     }
 
     public void closeConnectionGracefully(Connection connection, CloseReason closeReason) {
-        send(new CloseConnectionMessage(closeReason), connection);
+        try {
+            send(new CloseConnectionMessage(closeReason), connection);
+        } catch (Throwable ignore) {
+        }
         connection.close(CLOSE_MSG_SENT.details(closeReason.name()));
     }
 
