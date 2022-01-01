@@ -160,7 +160,7 @@ propagating data in the overlay network.
 ## Threading model
 
 Threading is complex in the network layer as many parallel execution streams happen, and we deal with blocking IO. Javas
-non-blocking IO APIs do not support socks proxy which is required for Tor, so it cannot be used. 
+non-blocking IO APIs do not support socks proxy which is required for Tor, so it cannot be used.
 
 Here are some use cases described from a threading perspective.
 

@@ -15,9 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main;
+package network.misq.desktop;
 
-import network.misq.desktop.common.view.Model;
+import lombok.Getter;
 
-public class MainViewModel implements Model {
+public enum NavigationTarget {
+    MARKETS,
+    OFFERBOOK(NavigationSink.OVERLAY),
+    CREATE_OFFER,
+    SETTINGS,
+    NETWORK_INFO;
+    @Getter
+    private final NavigationSink sink;
+
+    NavigationTarget() {
+        this.sink = NavigationSink.CONTENT;
+    }
+
+    NavigationTarget(NavigationSink sink) {
+        this.sink = sink;
+    }
 }

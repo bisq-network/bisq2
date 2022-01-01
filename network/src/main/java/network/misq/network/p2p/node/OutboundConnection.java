@@ -34,7 +34,7 @@ public class OutboundConnection extends Connection {
                        Capability peersCapability,
                        Load peersLoad,
                        Handler handler,
-                       BiConsumer<Connection,Exception> errorHandler) {
+                       BiConsumer<Connection, Exception> errorHandler) {
         super(socket, peersCapability, peersLoad, handler, errorHandler);
 
         this.address = address;

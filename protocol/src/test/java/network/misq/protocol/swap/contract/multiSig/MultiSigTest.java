@@ -75,7 +75,7 @@ public abstract class MultiSigTest {
     protected void run() {
         NetworkService networkService = new MockServiceTransport();
         // create offer
-        NetworkId makerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"),"default");
+        NetworkId makerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"), "default");
         Asset askAsset = new Asset(Fiat.of(5000, "USD"), List.of(FiatTransfer.ZELLE), AssetTransfer.Type.MANUAL);
         Asset bidAsset = new Asset(Coin.asBtc(100000), List.of(), AssetTransfer.Type.MANUAL);
         Offer offer = new Offer(List.of(SwapProtocolType.MULTISIG),
@@ -89,7 +89,7 @@ public abstract class MultiSigTest {
         ProtocolExecutor takerSwapTradeProtocolExecutor = new ProtocolExecutor(takerMultiSigProtocol);
 
         // simulated take offer protocol: Taker sends to maker the selectedProtocolType
-        NetworkId takerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(2222)), new PubKey(null, "default"),"default");
+        NetworkId takerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(2222)), new PubKey(null, "default"), "default");
         TwoPartyContract makerTrade = ContractMaker.createMakerTrade(takerNetworkId, selectedProtocolType);
         MultiSig makerMultiSig = new MultiSig(getMakerWallet(), getChain());
         MakerMultiSigProtocol makerMultiSigProtocol = new MakerMultiSigProtocol(makerTrade, networkService, makerMultiSig);

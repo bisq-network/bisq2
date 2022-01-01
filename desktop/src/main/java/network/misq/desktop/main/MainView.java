@@ -29,10 +29,10 @@ import network.misq.desktop.main.content.ContentView;
 import network.misq.desktop.main.left.NavigationView;
 import network.misq.desktop.main.top.TopPanelView;
 
-public class MainView extends View<StackPane, MainViewModel, MainViewController> {
+public class MainView extends View<StackPane, MainModel, MainController> {
 
-    public MainView(MainViewModel model,
-                    MainViewController controller,
+    public MainView(MainModel model,
+                    MainController controller,
                     ContentView contentView,
                     NavigationView navigationView,
                     TopPanelView topPanelView) {
@@ -40,6 +40,7 @@ public class MainView extends View<StackPane, MainViewModel, MainViewController>
 
         root.getStyleClass().add("content-pane");
 
+        // only for dev
         ImageView bgImage = ImageUtil.getImageView("/misq-layout.png");
         bgImage.setFitHeight(1087);
         bgImage.setFitWidth(1859);
@@ -50,11 +51,10 @@ public class MainView extends View<StackPane, MainViewModel, MainViewController>
         root.getChildren().addAll(bgImage, rootContainer);
 
         HBox leftNavAndContentBox = new HBox();
+        HBox.setHgrow(contentView.getRoot(), Priority.ALWAYS);
+        leftNavAndContentBox.getChildren().addAll(navigationView.getRoot(), contentView.getRoot());
+
         VBox.setVgrow(leftNavAndContentBox, Priority.ALWAYS);
         rootContainer.getChildren().addAll(topPanelView.getRoot(), leftNavAndContentBox);
-
-        HBox.setHgrow(contentView.getRoot(), Priority.ALWAYS);
-
-        leftNavAndContentBox.getChildren().addAll(navigationView.getRoot(), contentView.getRoot());
     }
 }

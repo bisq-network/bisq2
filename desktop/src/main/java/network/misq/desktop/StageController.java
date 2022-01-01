@@ -25,7 +25,7 @@ import network.misq.desktop.common.Browser;
 import network.misq.desktop.common.UncaughtExceptionHandler;
 import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.main.MainViewController;
+import network.misq.desktop.main.MainController;
 import network.misq.desktop.overlay.OverlayController;
 
 @Slf4j
@@ -36,11 +36,11 @@ public class StageController implements Controller {
     private final StageModel model;
     private final StageView stageView;
 
-    private final MainViewController mainViewController;
+    private final MainController mainController;
     private final OverlayController overlayController;
 
     public StageController(DefaultServiceProvider serviceProvider, JavaFXApplication.Data applicationData) {
-         this.serviceProvider = serviceProvider;
+        this.serviceProvider = serviceProvider;
         parameters = applicationData.parameters();
         Browser.setHostServices(applicationData.hostServices());
 
@@ -48,16 +48,18 @@ public class StageController implements Controller {
         stageView = new StageView(model, this, applicationData.stage());
 
         overlayController = new OverlayController(stageView.getScene());
-        mainViewController = new MainViewController(serviceProvider, overlayController);
-       
+        mainController = new MainController(serviceProvider, overlayController);
+
         initialize();
     }
 
     @Override
     public void initialize() {
-        stageView.addMainView(mainViewController.getView());
+        // todo add splash screen
+
+        stageView.addMainView(mainController.getView());
         model.setTitle(serviceProvider.getApplicationOptions().appName());
-        mainViewController.initialize();
+        mainController.initialize();
     }
 
     public void onDomainInitialized() {

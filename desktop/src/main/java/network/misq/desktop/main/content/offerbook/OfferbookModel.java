@@ -74,7 +74,7 @@ public class OfferbookModel implements Model {
     private Disposable offerEntityAddedDisposable, offerEntityRemovedDisposable, marketPriceDisposable;
 
     public OfferbookModel(DefaultServiceProvider serviceProvider) {
-         this.serviceProvider = serviceProvider;
+        this.serviceProvider = serviceProvider;
 
         amountFilterModel = new RangeFilterModel(this);
     }

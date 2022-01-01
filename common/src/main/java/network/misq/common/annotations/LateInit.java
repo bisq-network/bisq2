@@ -31,4 +31,5 @@ import java.lang.annotation.RetentionPolicy;
 @TypeQualifierNickname
 @Nonnull(when = When.MAYBE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface LateInit {} 
+public @interface LateInit {
+} 

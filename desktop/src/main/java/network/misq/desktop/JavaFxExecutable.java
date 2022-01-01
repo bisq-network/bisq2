@@ -20,8 +20,8 @@ package network.misq.desktop;
 import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
-import network.misq.application.DefaultServiceProvider;
 import network.misq.application.ApplicationOptions;
+import network.misq.application.DefaultServiceProvider;
 import network.misq.application.Executable;
 import network.misq.common.annotations.LateInit;
 

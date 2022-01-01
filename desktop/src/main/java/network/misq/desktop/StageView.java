@@ -43,10 +43,11 @@ public class StageView extends View<AnchorPane, StageModel, StageController> {
 
         scene = new Scene(root);
         this.stage.setScene(scene);
-        
+
         try {
             scene.getStylesheets().setAll(requireNonNull(getClass().getResource("/misq.css")).toExternalForm(),
                     requireNonNull(getClass().getResource("/bisq.css")).toExternalForm(),
+                    requireNonNull(getClass().getResource("/images.css")).toExternalForm(),
                     requireNonNull(getClass().getResource("/theme-dark.css")).toExternalForm());
 
             root.prefWidthProperty().bind(model.prefWidthProperty);

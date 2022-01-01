@@ -15,14 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.peergroup;
+package network.misq.desktop.main.content;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.Parent;
+import network.misq.desktop.common.view.Controller;
+import network.misq.desktop.common.view.Model;
+import network.misq.desktop.common.view.View;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
+public class ContentModel implements Model {
+    final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
-import java.util.List;
-import java.util.Map;
-
-public record SeedNodeRepository(Map<Transport.Type, List<Address>> addressesByTransportType) {
+    public void selectView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
+        this.view.set(view);
+    }
 }

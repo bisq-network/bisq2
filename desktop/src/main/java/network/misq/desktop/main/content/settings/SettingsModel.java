@@ -26,7 +26,7 @@ public class SettingsModel implements Model {
     private final DefaultServiceProvider serviceProvider;
 
     public SettingsModel(DefaultServiceProvider serviceProvider) {
-         this.serviceProvider = serviceProvider;
+        this.serviceProvider = serviceProvider;
     }
 
     public void initialize() {

@@ -17,17 +17,34 @@
 
 package network.misq.common.util;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
+@Slf4j
 public class NetworkUtils {
+    private static final Set<Integer> USED = new CopyOnWriteArraySet<>();
+
     public static int findFreeSystemPort() {
         try {
             ServerSocket server = new ServerSocket(0);
             int port = server.getLocalPort();
             server.close();
-            return port;
+            if (USED.contains(port)) {
+                try {
+                    log.warn("We had already used port {}. We try again after a short break.", port);
+                    Thread.sleep(20);
+                } catch (InterruptedException ignore) {
+                }
+                return findFreeSystemPort();
+            } else {
+                USED.add(port);
+                return port;
+            }
         } catch (IOException ignored) {
             return new Random().nextInt(10000) + 50000;
         }

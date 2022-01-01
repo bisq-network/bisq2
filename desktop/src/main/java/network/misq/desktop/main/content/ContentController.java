@@ -15,32 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.left;
+package network.misq.desktop.main.content;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.main.content.ContentViewController;
-import network.misq.desktop.main.content.createoffer.CreateOfferController;
 import network.misq.desktop.overlay.OverlayController;
 
-public class NavigationViewController implements Controller {
-    private final DefaultServiceProvider serviceProvider;
-    private final ContentViewController contentViewController;
-    private final OverlayController overlayController;
-    private final NavigationViewModel model;
-    @Getter
-    private final NavigationView view;
+@Slf4j
+public class ContentController implements Controller {
 
-    public NavigationViewController(DefaultServiceProvider serviceProvider,
-                                    ContentViewController contentViewController,
-                                    OverlayController overlayController) {
-         this.serviceProvider = serviceProvider;
-        this.contentViewController = contentViewController;
+    private final DefaultServiceProvider serviceProvider;
+    private final OverlayController overlayController;
+
+    private final ContentModel model;
+    @Getter
+    private final ContentView view;
+
+    public ContentController(DefaultServiceProvider serviceProvider, OverlayController overlayController) {
+        this.serviceProvider = serviceProvider;
         this.overlayController = overlayController;
 
-        model = new NavigationViewModel();
-        view = new NavigationView(model, this);
+        model = new ContentModel();
+        view = new ContentView(model, this);
     }
 
     @Override
@@ -55,12 +53,7 @@ public class NavigationViewController implements Controller {
     public void onViewRemoved() {
     }
 
-    public void onShowView(Class<? extends Controller> controllerClass) {
-        if (controllerClass == CreateOfferController.class) {
-            overlayController.show(new CreateOfferController(serviceProvider));
-        } else {
-            contentViewController.onNavigationRequest(controllerClass);
-        }
+    public void navigateTo(Controller controller) {
+        model.selectView(controller.getView());
     }
-
 }

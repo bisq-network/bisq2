@@ -33,12 +33,12 @@ public class CreateOfferController implements Controller {
     private final SetAmountsController setAmountsController;
 
     public CreateOfferController(DefaultServiceProvider serviceProvider) {
-         this.serviceProvider = serviceProvider;
+        this.serviceProvider = serviceProvider;
         model = new CreateOfferModel();
         view = new CreateOfferView(model, this);
 
-        reviewOfferController=  new ReviewOfferController(serviceProvider);
-        setAmountsController=  new SetAmountsController();
+        reviewOfferController = new ReviewOfferController(serviceProvider);
+        setAmountsController = new SetAmountsController();
     }
 
     @Override

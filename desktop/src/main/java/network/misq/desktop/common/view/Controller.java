@@ -22,6 +22,9 @@ import javafx.scene.Parent;
 public interface Controller {
     void initialize();
 
+    default void activate() {
+    }
+
     void onViewAdded();
 
     void onViewRemoved();

@@ -19,43 +19,43 @@ package network.misq.desktop.main;
 
 import lombok.Getter;
 import network.misq.application.DefaultServiceProvider;
+import network.misq.desktop.NavigationTarget;
 import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.main.content.ContentViewController;
-import network.misq.desktop.main.content.settings.SettingsController;
-import network.misq.desktop.main.left.NavigationViewController;
+import network.misq.desktop.main.content.ContentController;
+import network.misq.desktop.main.left.NavigationController;
 import network.misq.desktop.main.top.TopPanelController;
 import network.misq.desktop.overlay.OverlayController;
 
-public class MainViewController implements Controller {
+public class MainController implements Controller {
     private final DefaultServiceProvider serviceProvider;
-    private final MainViewModel model = new MainViewModel();
-    private final ContentViewController contentViewController;
-    private final NavigationViewController navigationViewController;
+    private final MainModel model = new MainModel();
+    private final ContentController contentController;
+    private final NavigationController navigationController;
     private final TopPanelController topPanelController;
     @Getter
     private final MainView view;
 
-    public MainViewController(DefaultServiceProvider serviceProvider, OverlayController overlayController) {
-         this.serviceProvider = serviceProvider;
+    public MainController(DefaultServiceProvider serviceProvider, OverlayController overlayController) {
+        this.serviceProvider = serviceProvider;
 
-        contentViewController = new ContentViewController(serviceProvider, overlayController);
-        navigationViewController = new NavigationViewController(serviceProvider, contentViewController, overlayController);
+        contentController = new ContentController(serviceProvider, overlayController);
+        navigationController = new NavigationController(serviceProvider, contentController, overlayController);
         topPanelController = new TopPanelController();
 
         view = new MainView(model,
                 this,
-                contentViewController.getView(),
-                navigationViewController.getView(),
+                contentController.getView(),
+                navigationController.getView(),
                 topPanelController.getView());
     }
 
     public void initialize() {
         try {
-            contentViewController.initialize();
-            navigationViewController.initialize();
+            contentController.initialize();
+            navigationController.initialize();
             topPanelController.initialize();
 
-            contentViewController.onNavigationRequest(SettingsController.class);
+            navigationController.navigateTo(NavigationTarget.NETWORK_INFO);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -21,8 +21,6 @@ import javafx.application.HostServices;
 import lombok.NonNull;
 import network.misq.common.annotations.LateInit;
 
-import static java.util.Objects.requireNonNull;
-
 public class Browser {
     @LateInit
     private static HostServices hostServices;

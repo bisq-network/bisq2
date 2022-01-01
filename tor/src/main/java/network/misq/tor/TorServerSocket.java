@@ -73,7 +73,7 @@ public class TorServerSocket extends ServerSocket {
     }
 
     public OnionAddress bind(int hiddenServicePort, String id) throws IOException, InterruptedException {
-       return bind(hiddenServicePort, NetworkUtils.findFreeSystemPort(), id);
+        return bind(hiddenServicePort, NetworkUtils.findFreeSystemPort(), id);
     }
 
     public OnionAddress bind(int hiddenServicePort, int localPort, String id) throws IOException, InterruptedException {

@@ -38,6 +38,7 @@ public class Result {
         requestAlreadyReceived = true;
         return this;
     }
+
     public Result sequenceNrInvalid() {
         sequenceNrInvalid = true;
         return this;

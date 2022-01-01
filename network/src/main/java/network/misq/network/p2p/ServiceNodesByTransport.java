@@ -20,6 +20,7 @@ package network.misq.network.p2p;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import network.misq.common.util.CompletableFutureUtils;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
@@ -42,11 +43,11 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.concurrent.CompletableFuture.runAsync;
 
 public class ServiceNodesByTransport {
     private static final Logger log = LoggerFactory.getLogger(ServiceNodesByTransport.class);
@@ -87,36 +88,18 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean initializeServer(int port) {
-        AtomicInteger completed = new AtomicInteger(0);
-        AtomicInteger failed = new AtomicInteger(0);
-        int numTransports = map.size();
-        map.values().forEach(networkNode -> {
-            try {
-                networkNode.initializeServer(Node.DEFAULT_NODE_ID, port);
-                completed.incrementAndGet();
-            } catch (Throwable throwable) {
-                failed.incrementAndGet();
-            }
-        });
-        log.info("Server initialized with {} transports.", numTransports);
-        return completed.get() == numTransports;
-    }
-
-    public boolean initializePeerGroup() {
-        AtomicInteger completed = new AtomicInteger(0);
-        AtomicInteger failed = new AtomicInteger(0);
-        int numTransports = map.size();
-        map.values().forEach(networkNode -> {
-            try {
-                networkNode.initializePeerGroup();
-                completed.incrementAndGet();
-            } catch (Throwable throwable) {
-                failed.incrementAndGet();
-            }
-        });
-        log.info("PeerGroup initialized with {} transports.", numTransports);
-        return completed.get() == numTransports;
+    // We require all servers on all transports to be initialized, but do not wait for the peer group initialisation 
+    // has completed
+    public CompletableFuture<Boolean> bootstrapAsync(int port) {
+        return CompletableFutureUtils.allOf(map.values().stream().map(networkNode ->
+                runAsync(() -> networkNode.initializeServer(Node.DEFAULT_NODE_ID, port), NetworkService.NETWORK_IO_POOL)
+                        .whenComplete((__, throwable) -> {
+                            if (throwable == null) {
+                                networkNode.initializePeerGroup();
+                            } else {
+                                log.error(throwable.toString());
+                            }
+                        }))).thenApply(List -> true);
     }
 
     public Map<Transport.Type, ConfidentialMessageService.Result> confidentialSend(Message message,

@@ -100,7 +100,9 @@ public class MarketPriceService {
     }
 
     public void shutdown() {
-        ExecutorFactory.shutdownAndAwaitTermination(executor);
+        if (executor != null) {
+            ExecutorFactory.shutdownAndAwaitTermination(executor);
+        }
         httpClient.shutdown();
     }
 

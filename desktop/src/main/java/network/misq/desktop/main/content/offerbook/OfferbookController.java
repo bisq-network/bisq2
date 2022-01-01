@@ -20,10 +20,10 @@ package network.misq.desktop.main.content.offerbook;
 import javafx.geometry.Bounds;
 import lombok.Getter;
 import network.misq.application.DefaultServiceProvider;
+import network.misq.desktop.NavigationTarget;
 import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.main.content.ContentViewController;
-import network.misq.desktop.main.content.createoffer.CreateOfferController;
 import network.misq.desktop.main.content.offerbook.details.OfferDetailsController;
+import network.misq.desktop.main.left.NavigationController;
 import network.misq.desktop.overlay.OverlayController;
 
 public class OfferbookController implements Controller {
@@ -32,12 +32,12 @@ public class OfferbookController implements Controller {
     private final OfferbookView view;
     @Getter
     private final DefaultServiceProvider serviceProvider;
-    private final ContentViewController contentViewController;
+    private final NavigationController navigationController;
     private final OverlayController overlayController;
 
-    public OfferbookController(DefaultServiceProvider serviceProvider, ContentViewController contentViewController, OverlayController overlayController) {
-         this.serviceProvider = serviceProvider;
-        this.contentViewController = contentViewController;
+    public OfferbookController(DefaultServiceProvider serviceProvider, NavigationController navigationController, OverlayController overlayController) {
+        this.serviceProvider = serviceProvider;
+        this.navigationController = navigationController;
         this.overlayController = overlayController;
         model = new OfferbookModel(serviceProvider);
         view = new OfferbookView(model, this);
@@ -82,13 +82,15 @@ public class OfferbookController implements Controller {
     }
 
     public void onCreateOffer() {
-        overlayController.show(new CreateOfferController(serviceProvider));
+        navigationController.navigateTo(NavigationTarget.CREATE_OFFER);
     }
 
     public void onTakeOffer(OfferListItem item) {
     }
 
     public void onShowMakerDetails(OfferListItem item, Bounds boundsInParent) {
-        overlayController.show(new OfferDetailsController(item, boundsInParent));
+        OfferDetailsController controller = new OfferDetailsController(item, boundsInParent);
+        controller.initialize();
+        overlayController.show(controller);
     }
 }

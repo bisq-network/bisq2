@@ -15,39 +15,36 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.content.markets;
+package network.misq.desktop.main.content.networkinfo;
 
-import lombok.Getter;
 import network.misq.application.DefaultServiceProvider;
-import network.misq.desktop.common.threading.UIThread;
-import network.misq.desktop.common.view.Controller;
+import network.misq.desktop.common.view.Model;
 
-public class MarketsController implements Controller {
+// Handled jfx only concerns, others which can be re-used by other frontends are in OfferbookEntity
+public class NetworkInfoModel implements Model {
+
     private final DefaultServiceProvider serviceProvider;
-    private final MarketsModel model;
-    @Getter
-    private final MarketsView view;
 
-    public MarketsController(DefaultServiceProvider serviceProvider) {
+    public NetworkInfoModel(DefaultServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
-        model = new MarketsModel();
-        view = new MarketsView(model, this);
     }
 
-    @Override
     public void initialize() {
     }
 
-    @Override
-    public void onViewAdded() {
+    public void activate() {
     }
 
-    @Override
-    public void onViewRemoved() {
+    public void deactivate() {
     }
 
-    void onRefresh() {
-        serviceProvider.getMarketPriceService().request()
-                .whenComplete((marketPriceMap, t) -> UIThread.run(() -> model.setMarketPriceMap(marketPriceMap)));
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Package private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 }

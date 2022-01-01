@@ -15,39 +15,44 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.content.markets;
+package network.misq.desktop.main.content.networkinfo;
 
 import lombok.Getter;
 import network.misq.application.DefaultServiceProvider;
-import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.view.Controller;
 
-public class MarketsController implements Controller {
-    private final DefaultServiceProvider serviceProvider;
-    private final MarketsModel model;
+public class NetworkInfoController implements Controller {
+    private final NetworkInfoModel model;
     @Getter
-    private final MarketsView view;
+    private final NetworkInfoView view;
+    private final DefaultServiceProvider serviceProvider;
 
-    public MarketsController(DefaultServiceProvider serviceProvider) {
+    public NetworkInfoController(DefaultServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
-        model = new MarketsModel();
-        view = new MarketsView(model, this);
+        model = new NetworkInfoModel(serviceProvider);
+        view = new NetworkInfoView(model, this);
     }
 
     @Override
     public void initialize() {
+        model.initialize();
     }
 
     @Override
     public void onViewAdded() {
+        model.activate();
+
+        // Platform.runLater(() -> onCreateOffer());
     }
 
     @Override
     public void onViewRemoved() {
+        model.deactivate();
     }
 
-    void onRefresh() {
-        serviceProvider.getMarketPriceService().request()
-                .whenComplete((marketPriceMap, t) -> UIThread.run(() -> model.setMarketPriceMap(marketPriceMap)));
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // View events
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
 }

@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.left;
+package network.misq.desktop;
 
-import network.misq.desktop.common.view.Model;
-
-public class NavigationViewModel implements Model {
+public enum NavigationSink {
+    CONTENT,
+    OVERLAY
 }

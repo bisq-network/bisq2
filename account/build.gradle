@@ -14,11 +14,11 @@ apply from: '../buildSrc/lombok-dependencies.gradle'
 
 dependencies {
     api platform(project(':platforms:common-platform'))
-    
+
     implementation project(':common')
     implementation project(':identity')
     implementation project(':persistence')
-    
+
     implementation 'com.google.guava:guava'
 }
 test {

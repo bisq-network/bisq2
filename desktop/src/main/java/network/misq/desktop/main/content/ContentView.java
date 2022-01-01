@@ -25,11 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.desktop.common.view.View;
 
 @Slf4j
-public class ContentView extends View<HBox, ContentViewModel, ContentViewController> {
+public class ContentView extends View<HBox, ContentModel, ContentController> {
 
-    public ContentView(ContentViewModel model, ContentViewController controller) {
+    public ContentView(ContentModel model, ContentController controller) {
         super(new HBox(), model, controller);
-        
+
         model.view.addListener((observable, oldValue, newValue) -> {
             HBox.setHgrow(newValue.getRoot(), Priority.ALWAYS);
             ObservableList<Node> children = root.getChildren();

@@ -73,6 +73,7 @@ public class ServiceNode {
     }
 
     private final NodesById nodesById;
+    @Getter
     private final Node defaultNode;
     private Optional<ConfidentialMessageService> confidentialMessageService;
     @Getter

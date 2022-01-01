@@ -17,12 +17,9 @@
 
 package network.misq.desktop.overlay;
 
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.common.view.Model;
-import network.misq.desktop.common.view.View;
 
 @Slf4j
 public class OverlayController {
@@ -38,9 +35,7 @@ public class OverlayController {
     }
 
     public void show(Controller controller) {
-        controller.initialize();
-        View<? extends Parent, ? extends Model, ? extends Controller> view = controller.getView();
-        model.selectView(view);
+        model.selectView(controller.getView());
     }
 
     public void onClosed() {
