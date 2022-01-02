@@ -19,6 +19,7 @@ package network.misq.application;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import network.misq.common.util.ConfigUtil;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -31,8 +32,7 @@ public abstract class ServiceProvider {
     }
 
     protected Config getConfig(String path) {
-        misqConfig.checkValid(ConfigFactory.defaultReference(), path);
-        return misqConfig.getConfig(path);
+        return ConfigUtil.getConfig(misqConfig, path);
     }
 
     public abstract CompletableFuture<Boolean> initialize();
