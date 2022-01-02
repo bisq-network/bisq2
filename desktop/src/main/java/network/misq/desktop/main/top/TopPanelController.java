@@ -29,16 +29,4 @@ public class TopPanelController implements Controller {
         model = new TopPanelModel();
         view = new TopPanelView(model, this);
     }
-
-    @Override
-    public void initialize() {
-    }
-
-    @Override
-    public void onViewAdded() {
-    }
-
-    @Override
-    public void onViewRemoved() {
-    }
 }

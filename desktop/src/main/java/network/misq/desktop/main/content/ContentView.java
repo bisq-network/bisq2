@@ -17,8 +17,6 @@
 
 package network.misq.desktop.main.content;
 
-import javafx.collections.ObservableList;
-import javafx.scene.Node;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +30,7 @@ public class ContentView extends View<HBox, ContentModel, ContentController> {
 
         model.view.addListener((observable, oldValue, newValue) -> {
             HBox.setHgrow(newValue.getRoot(), Priority.ALWAYS);
-            ObservableList<Node> children = root.getChildren();
-            children.setAll(newValue.getRoot());
+            root.getChildren().setAll(newValue.getRoot());
         });
 
      /*   Navigation.addListener((viewPath, data) -> {

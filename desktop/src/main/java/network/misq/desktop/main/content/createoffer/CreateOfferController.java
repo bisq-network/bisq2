@@ -39,23 +39,9 @@ public class CreateOfferController implements Controller {
 
         reviewOfferController = new ReviewOfferController(serviceProvider);
         setAmountsController = new SetAmountsController();
-    }
-
-    @Override
-    public void initialize() {
-        reviewOfferController.initialize();
-        setAmountsController.initialize();
 
         ReviewOfferView view = reviewOfferController.getView();
         model.selectView(view);
-    }
-
-    @Override
-    public void onViewAdded() {
-    }
-
-    @Override
-    public void onViewRemoved() {
     }
 
     public void onNavigateBack() {

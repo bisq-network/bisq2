@@ -36,7 +36,7 @@ public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferCon
         super(new VBox(), model, controller);
     }
 
-    protected void setupView() {
+    protected void initialize() {
         root.setSpacing(20);
         Label header = new AutoTooltipLabel("Review offer");
         gridPane = new GridPane();
@@ -62,11 +62,10 @@ public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferCon
         return new Pair<>(keyLabel, valueTextField);
     }
 
-    protected void configModel() {
+    @Override
+    protected void activate() {
         askTextField.textProperty().bindBidirectional(model.formattedAskAmount);
-    }
-
-    protected void configController() {
+   
     /*    ChangeListener<String> listener = new ChangeListener<>() {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -91,9 +90,6 @@ public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferCon
         publishButton.setOnAction(e -> controller.onPublish());
     }
 
-    protected void onAddedToStage() {
-    }
-
-    protected void onRemovedFromStage() {
+    protected void deactivate() {
     }
 }

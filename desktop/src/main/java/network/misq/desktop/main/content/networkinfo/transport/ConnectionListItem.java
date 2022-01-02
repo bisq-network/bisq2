@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.content.networkinfo;
+package network.misq.desktop.main.content.networkinfo.transport;
 
 import io.reactivex.subjects.BehaviorSubject;
 import javafx.application.Platform;

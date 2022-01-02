@@ -52,24 +52,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
 
     public OfferbookView(OfferbookModel model, OfferbookController controller) {
         super(new VBox(), model, controller);
-    }
 
-    @Override
-    public void onAddedToStage() {
-        controller.onViewAdded();
-
-        baseAmountSliderBox.onViewAdded();
-        // priceSliderBox.onViewAdded();
-    }
-
-    @Override
-    protected void onRemovedFromStage() {
-        controller.onViewRemoved();
-        baseAmountSliderBox.onViewRemoved();
-    }
-
-    @Override
-    protected void setupView() {
         Label askCurrencyLabel = new AutoTooltipLabel("I want (ask):");
         askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
 
@@ -133,7 +116,10 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     }
 
     @Override
-    protected void configModel() {
+    public void activate() {
+        baseAmountSliderBox.onViewAdded();
+        // priceSliderBox.onViewAdded();
+
         askCurrencyComboBox.setAutocompleteItems(model.getCurrenciesProperty());
         askCurrencyComboBox.getSelectionModel().select(model.getSelectedAskCurrencyProperty().get());
 
@@ -147,10 +133,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         model.getMarketPriceByCurrencyMapProperty().addListener(observable -> tableView.sort());
         tableView.setItems(model.getSortedItems());
         tableView.sort();
-    }
 
-    @Override
-    protected void configController() {
         flipButton.setOnAction(e -> {
             controller.onFlipCurrencies();
             String ask = askCurrencyComboBox.getSelectionModel().getSelectedItem();
@@ -162,6 +145,12 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         bidCurrencyComboBox.setOnAction(e -> controller.onSelectBidCurrency(bidCurrencyComboBox.getSelectionModel().getSelectedItem()));
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
     }
+
+    @Override
+    protected void deactivate() {
+        baseAmountSliderBox.onViewRemoved();
+    }
+
 
     private void addMakerColumn(String header) {
         AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {

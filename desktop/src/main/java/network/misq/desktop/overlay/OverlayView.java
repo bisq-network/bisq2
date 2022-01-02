@@ -17,33 +17,27 @@
 
 package network.misq.desktop.overlay;
 
-import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-
-public class OverlayView {
+import lombok.extern.slf4j.Slf4j;
+import network.misq.desktop.common.view.View;
+@Slf4j
+public class OverlayView extends View<AnchorPane, OverlayModel, OverlayController> {
     private final Scene parentScene;
     private final OverlayModel model;
     private final OverlayController controller;
-    private Stage stage;
+    private final Stage stage;
 
     public OverlayView(OverlayModel model, OverlayController controller, Scene parentScene) {
+        super(new AnchorPane(), model, controller);
         this.model = model;
         this.controller = controller;
         this.parentScene = parentScene;
-        model.view.addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                show(newValue.getRoot());
-            } else if (stage != null) {
-                stage.hide();
-            }
-        });
-    }
 
-    public void show(Parent root) {
-        Scene scene = new Scene(root);
+        Scene scene = new Scene(getRoot());
         scene.getStylesheets().setAll(parentScene.getStylesheets());
         //scene.setFill(Color.TRANSPARENT);
         stage = new Stage();
@@ -55,9 +49,19 @@ public class OverlayView {
             event.consume();
             controller.onClosed();
         });
-        //  stage.sizeToScene();
-        stage.show();
+        model.view.addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                        
+                getRoot().getChildren().setAll(newValue.getRoot());
+               // scene.setRoot(newValue.getRoot());
+                stage.show();
+            } else {
+                getRoot().getChildren().clear();
+                stage.hide();
+            }
+        });
     }
+    
   /*  protected void layout() {
         if (owner == null)
             owner = MainView.getRootContainer();

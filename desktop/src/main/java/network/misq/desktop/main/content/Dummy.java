@@ -31,18 +31,6 @@ public class Dummy {
 
     public static class DummyController implements Controller {
         @Override
-        public void initialize() {
-        }
-
-        @Override
-        public void onViewAdded() {
-        }
-
-        @Override
-        public void onViewRemoved() {
-        }
-
-        @Override
         public View<Parent, Model, Controller> getView() {
             return null;
         }

@@ -37,7 +37,7 @@ public class SetAmountsView extends View<HBox, SetAmountsModel, SetAmountsContro
         super(new HBox(), model, controller);
     }
 
-    protected void setupView() {
+    protected void initialize() {
         Label askCurrencyLabel = new AutoTooltipLabel("I want (ask):");
         askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
 
@@ -61,16 +61,12 @@ public class SetAmountsView extends View<HBox, SetAmountsModel, SetAmountsContro
     }
 
     @Override
-    protected void configModel() {
+    protected void activate() {
         askCurrencyComboBox.setAutocompleteItems(model.getCurrencies());
         askCurrencyComboBox.getSelectionModel().select(model.getSelectedAskCurrency().get());
 
         bidCurrencyComboBox.setAutocompleteItems(model.getCurrencies());
         bidCurrencyComboBox.getSelectionModel().select(model.getSelectedBidCurrency().get());
-    }
-
-    @Override
-    protected void configController() {
         flipButton.setOnAction(e -> {
             controller.onFlipCurrencies();
             String ask = askCurrencyComboBox.getSelectionModel().getSelectedItem();

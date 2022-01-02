@@ -36,7 +36,7 @@ public class OfferDetailsView extends View<StackPane, OfferDetailsModel, OfferDe
         root.getChildren().add(new AutoTooltipLabel(model.getItem().toString()));
     }
 
-    protected void onAddedToStage() {
+    protected void activate() {
         Scene scene = root.getScene();
         Stage stage = (Stage) scene.getWindow();
         stage.minHeightProperty().bind(model.minHeightProperty);

@@ -15,31 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.content.settings;
+package network.misq.desktop.main.content.networkinfo.transport;
 
 import lombok.Getter;
 import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.main.content.ContentController;
-import network.misq.desktop.overlay.OverlayController;
 
-public class SettingsController implements Controller {
-    private final SettingsModel model;
+public class TransportTypeController implements Controller {
+    private final TransportTypeModel model;
     @Getter
-    private final SettingsView view;
+    private final TransportTypeView view;
     private final DefaultServiceProvider serviceProvider;
-    private final ContentController contentController;
-    private final OverlayController overlayController;
 
-    public SettingsController(DefaultServiceProvider serviceProvider,
-                              ContentController contentController,
-                              OverlayController overlayController) {
+    public TransportTypeController(DefaultServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
-        model = new SettingsModel(serviceProvider);
-        view = new SettingsView(model, this);
-
-        this.contentController = contentController;
-        this.overlayController = overlayController;
+        model = new TransportTypeModel(serviceProvider);
+        view = new TransportTypeView(model, this);
     }
 
 

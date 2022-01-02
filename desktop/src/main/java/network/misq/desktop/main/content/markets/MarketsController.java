@@ -34,18 +34,6 @@ public class MarketsController implements Controller {
         view = new MarketsView(model, this);
     }
 
-    @Override
-    public void initialize() {
-    }
-
-    @Override
-    public void onViewAdded() {
-    }
-
-    @Override
-    public void onViewRemoved() {
-    }
-
     void onRefresh() {
         serviceProvider.getMarketPriceService().request()
                 .whenComplete((marketPriceMap, t) -> UIThread.run(() -> model.setMarketPriceMap(marketPriceMap)));

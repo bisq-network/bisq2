@@ -39,18 +39,6 @@ public class ReviewOfferController implements Controller {
         openOfferService = serviceProvider.getOpenOfferService();
     }
 
-    @Override
-    public void initialize() {
-    }
-
-    @Override
-    public void onViewAdded() {
-    }
-
-    @Override
-    public void onViewRemoved() {
-    }
-
     public void setAskValue(String value) {
         model.setAskValue(value);
     }

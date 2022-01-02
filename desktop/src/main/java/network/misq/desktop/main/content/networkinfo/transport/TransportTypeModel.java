@@ -15,36 +15,36 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.content.settings;
+package network.misq.desktop.main.content.networkinfo.transport;
 
-import lombok.Getter;
 import network.misq.application.DefaultServiceProvider;
-import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.main.content.ContentController;
-import network.misq.desktop.overlay.OverlayController;
+import network.misq.desktop.common.view.Model;
 
-public class SettingsController implements Controller {
-    private final SettingsModel model;
-    @Getter
-    private final SettingsView view;
+// Handled jfx only concerns, others which can be re-used by other frontends are in OfferbookEntity
+public class TransportTypeModel implements Model {
+
     private final DefaultServiceProvider serviceProvider;
-    private final ContentController contentController;
-    private final OverlayController overlayController;
 
-    public SettingsController(DefaultServiceProvider serviceProvider,
-                              ContentController contentController,
-                              OverlayController overlayController) {
+    public TransportTypeModel(DefaultServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
-        model = new SettingsModel(serviceProvider);
-        view = new SettingsView(model, this);
+    }
 
-        this.contentController = contentController;
-        this.overlayController = overlayController;
+    public void initialize() {
+    }
+
+    public void activate() {
+    }
+
+    public void deactivate() {
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // View events
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Package private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 }

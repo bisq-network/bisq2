@@ -41,18 +41,6 @@ public class ContentController implements Controller {
         view = new ContentView(model, this);
     }
 
-    @Override
-    public void initialize() {
-    }
-
-    @Override
-    public void onViewAdded() {
-    }
-
-    @Override
-    public void onViewRemoved() {
-    }
-
     public void navigateTo(Controller controller) {
         model.selectView(controller.getView());
     }

@@ -15,22 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.content.settings;
+package network.misq.desktop.main.content.networkinfo;
 
-import javafx.scene.layout.VBox;
-import network.misq.desktop.common.view.View;
-
-public class SettingsView extends View<VBox, SettingsModel, SettingsController> {
-
-    public SettingsView(SettingsModel model, SettingsController controller) {
-        super(new VBox(), model, controller);
-    }
-
-    @Override
-    public void activate() {
-    }
-
-    @Override
-    protected void deactivate() {
-    }
+enum NetworkInfoTab {
+    CLEAR_NET,
+    TOR,
+    I2P
 }

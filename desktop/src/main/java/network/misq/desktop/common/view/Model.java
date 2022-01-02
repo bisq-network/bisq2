@@ -18,4 +18,9 @@
 package network.misq.desktop.common.view;
 
 public interface Model {
+    default void activate() {
+    }
+
+    default void deactivate() {
+    }
 }

@@ -75,7 +75,7 @@ public class StageView extends View<AnchorPane, StageModel, StageController> {
             });
 
             stage.show();
-            controller.onViewAdded();
+            //controller.activate(); //todo
         } catch (Exception exception) {
             exception.printStackTrace();
             controller.onQuit();

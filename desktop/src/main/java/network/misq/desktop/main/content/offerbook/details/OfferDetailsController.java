@@ -35,16 +35,4 @@ public class OfferDetailsController implements Controller {
         model = new OfferDetailsModel(item);
         view = new OfferDetailsView(model, this, boundsInParent);
     }
-
-    @Override
-    public void initialize() {
-    }
-
-    @Override
-    public void onViewAdded() {
-    }
-
-    @Override
-    public void onViewRemoved() {
-    }
 }

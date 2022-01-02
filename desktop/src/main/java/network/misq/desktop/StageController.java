@@ -50,29 +50,14 @@ public class StageController implements Controller {
         overlayController = new OverlayController(stageView.getScene());
         mainController = new MainController(serviceProvider, overlayController);
 
-        initialize();
-    }
-
-    @Override
-    public void initialize() {
         // todo add splash screen
 
         stageView.addMainView(mainController.getView());
         model.setTitle(serviceProvider.getApplicationOptions().appName());
-        mainController.initialize();
     }
 
     public void onDomainInitialized() {
 
-    }
-
-    @Override
-    public void onViewAdded() {
-        //  overlayController.initialize();
-    }
-
-    @Override
-    public void onViewRemoved() {
     }
 
     @Override

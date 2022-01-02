@@ -33,26 +33,20 @@ public class NetworkInfoController implements Controller {
         view = new NetworkInfoView(model, this);
     }
 
-    @Override
-    public void initialize() {
-        model.initialize();
-    }
-
-    @Override
-    public void onViewAdded() {
-        model.activate();
-
-        // Platform.runLater(() -> onCreateOffer());
-    }
-
-    @Override
-    public void onViewRemoved() {
-        model.deactivate();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // View events
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+    public void onTabSelected(String tabIdName) {
+        NetworkInfoTab networkInfoTab = NetworkInfoTab.valueOf(tabIdName);
+        switch (networkInfoTab) {
+            case CLEAR_NET -> {
 
+            }
+            case TOR -> {
+            }
+            case I2P -> {
+            }
+        }
+    }
 }

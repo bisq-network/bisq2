@@ -17,101 +17,43 @@
 
 package network.misq.desktop.main.content.networkinfo;
 
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.StringProperty;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.layout.Priority;
+import javafx.beans.value.ChangeListener;
+import javafx.scene.control.SingleSelectionModel;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
 import network.misq.desktop.common.view.View;
-import network.misq.desktop.components.controls.AutoTooltipTableColumn;
-
-import java.util.Comparator;
-import java.util.Optional;
-import java.util.function.Function;
+import network.misq.i18n.Res;
 
 public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoController> {
-    private TableView<ConnectionListItem> tableView;
+    private final TabPane tabPane;
+    private ChangeListener<SingleSelectionModel<Tab>> tabChangeListener;
 
     public NetworkInfoView(NetworkInfoModel model, NetworkInfoController controller) {
         super(new VBox(), model, controller);
+
+        tabPane = new TabPane();
+        Tab clearNet = new Tab(Res.network.get("clearNet"));
+        clearNet.setId(NetworkInfoTab.CLEAR_NET.name());
+        Tab tor = new Tab("Tor");
+        tor.setId(NetworkInfoTab.TOR.name());
+        Tab i2p = new Tab("I2P");
+        i2p.setId(NetworkInfoTab.I2P.name());
+        tabPane.getTabs().addAll(clearNet, tor, i2p);
+
+        tabChangeListener = (observable, oldValue, newValue) ->
+                controller.onTabSelected(newValue.getSelectedItem().getId());
+
+        root.getChildren().addAll(tabPane);
     }
 
     @Override
-    public void onAddedToStage() {
-        controller.onViewAdded();
+    public void activate() {
+        tabPane.selectionModelProperty().addListener(tabChangeListener);
     }
 
     @Override
-    protected void onRemovedFromStage() {
-        controller.onViewRemoved();
-    }
-
-    @Override
-    protected void setupView() {
-        tableView = new TableView<>();
-        VBox.setVgrow(tableView, Priority.ALWAYS);
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        // addPropertyColumn(model.getOfferedAmountHeaderProperty(), ConnectionListItem::getBidAmountProperty, Optional.of(ConnectionListItem::compareBidAmount));
-
-        root.getChildren().addAll(tableView);
-    }
-
-    @Override
-    protected void configModel() {
-        // tableView.sort();
-    }
-
-    @Override
-    protected void configController() {
-    }
-
-    private void addPropertyColumn(StringProperty header, Function<ConnectionListItem, StringProperty> valueSupplier,
-                                   Optional<Comparator<ConnectionListItem>> optionalComparator) {
-        AutoTooltipTableColumn<ConnectionListItem, ConnectionListItem> column = new AutoTooltipTableColumn<>(header) {
-            {
-                setMinWidth(125);
-            }
-        };
-        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        column.setCellFactory(
-                new Callback<>() {
-                    @Override
-                    public TableCell<ConnectionListItem, ConnectionListItem> call(
-                            TableColumn<ConnectionListItem, ConnectionListItem> column) {
-                        return new TableCell<>() {
-                            ConnectionListItem previousItem;
-
-                            @Override
-                            public void updateItem(final ConnectionListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty) {
-                                    if (previousItem != null) {
-                                        previousItem.deactivate();
-                                    }
-                                    previousItem = item;
-
-                                    item.activate();
-                                    textProperty().bind(valueSupplier.apply(item));
-                                } else {
-                                    if (previousItem != null) {
-                                        previousItem.deactivate();
-                                        previousItem = null;
-                                    }
-                                    textProperty().unbind();
-                                    setText("");
-                                }
-                            }
-                        };
-                    }
-                });
-        optionalComparator.ifPresent(comparator -> {
-            column.setSortable(true);
-            column.setComparator(comparator);
-        });
-        tableView.getColumns().add(column);
+    protected void deactivate() {
+        tabPane.selectionModelProperty().removeListener(tabChangeListener);
     }
 }

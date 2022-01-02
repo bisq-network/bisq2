@@ -47,25 +47,7 @@ public class MainController implements Controller {
                 contentController.getView(),
                 navigationController.getView(),
                 topPanelController.getView());
-    }
 
-    public void initialize() {
-        try {
-            contentController.initialize();
-            navigationController.initialize();
-            topPanelController.initialize();
-
-            navigationController.navigateTo(NavigationTarget.NETWORK_INFO);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onViewAdded() {
-    }
-
-    @Override
-    public void onViewRemoved() {
+        navigationController.navigateTo(NavigationTarget.NETWORK_INFO);
     }
 }

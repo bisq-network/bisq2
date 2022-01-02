@@ -53,19 +53,6 @@ public class NavigationController implements Controller {
         view = new NavigationView(model, this);
     }
 
-    @Override
-    public void initialize() {
-    }
-
-    @Override
-    public void onViewAdded() {
-    }
-
-    @Override
-    public void onViewRemoved() {
-    }
-
-
     public void navigateTo(NavigationTarget navigationTarget) {
         Controller controller = getOrCreate(navigationTarget);
         if (navigationTarget.getSink() == NavigationSink.OVERLAY) {
@@ -77,12 +64,9 @@ public class NavigationController implements Controller {
 
     private Controller getOrCreate(NavigationTarget navigationTarget) {
         if (controllerCache.containsKey(navigationTarget)) {
-            Controller controller = controllerCache.get(navigationTarget);
-            controller.activate();
-            return controller;
+            return controllerCache.get(navigationTarget);
         } else {
             Controller controller = getController(navigationTarget);
-            controller.initialize();
             controllerCache.put(navigationTarget, controller);
             return controller;
         }

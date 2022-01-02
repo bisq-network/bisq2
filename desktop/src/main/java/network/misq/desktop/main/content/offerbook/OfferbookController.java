@@ -43,23 +43,6 @@ public class OfferbookController implements Controller {
         view = new OfferbookView(model, this);
     }
 
-    @Override
-    public void initialize() {
-        model.initialize();
-    }
-
-    @Override
-    public void onViewAdded() {
-        model.activate();
-
-        // Platform.runLater(() -> onCreateOffer());
-    }
-
-    @Override
-    public void onViewRemoved() {
-        model.deactivate();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // View events
@@ -89,8 +72,6 @@ public class OfferbookController implements Controller {
     }
 
     public void onShowMakerDetails(OfferListItem item, Bounds boundsInParent) {
-        OfferDetailsController controller = new OfferDetailsController(item, boundsInParent);
-        controller.initialize();
-        overlayController.show(controller);
+        overlayController.show(new OfferDetailsController(item, boundsInParent));
     }
 }

@@ -21,8 +21,8 @@ import lombok.Getter;
 
 public enum NavigationTarget {
     MARKETS,
-    OFFERBOOK(NavigationSink.OVERLAY),
-    CREATE_OFFER,
+    OFFERBOOK,
+    CREATE_OFFER(NavigationSink.OVERLAY),
     SETTINGS,
     NETWORK_INFO;
     @Getter
