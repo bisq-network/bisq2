@@ -47,7 +47,7 @@ public class NetworkNodeServiceProvider extends ServiceProvider {
     private final NetworkService networkService;
     private final ApplicationOptions applicationOptions;
 
-    public NetworkNodeServiceProvider(ApplicationOptions applicationOptions, String[] args) {
+    public NetworkNodeServiceProvider(ApplicationOptions applicationOptions) {
         super("Seed");
         this.applicationOptions = applicationOptions;
 
@@ -55,7 +55,7 @@ public class NetworkNodeServiceProvider extends ServiceProvider {
         keyPairService = new KeyPairService(keyPairRepositoryConf);
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
-                getConfig("misq.networkServiceConfig"), args);
+                getConfig("misq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, keyPairService);
     }
 
