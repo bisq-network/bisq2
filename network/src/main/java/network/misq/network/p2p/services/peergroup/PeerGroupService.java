@@ -33,7 +33,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.*;
 import static network.misq.network.p2p.node.CloseReason.*;
 
 @Slf4j
@@ -58,6 +58,23 @@ public class PeerGroupService {
                                 int maxReported,
                                 int maxPersisted,
                                 int maxSeeds) {
+        
+        public static Config from(PeerGroup.Config peerGroupConfig,
+                                  PeerExchangeStrategy.Config peerExchangeStrategyConfig,
+                                  KeepAliveService.Config keepAliveServiceConfig,
+                                  com.typesafe.config.Config typesafeConfig) {
+            return new PeerGroupService.Config(peerGroupConfig,
+                    peerExchangeStrategyConfig,
+                    keepAliveServiceConfig,
+                    SECONDS.toMillis(typesafeConfig.getLong("bootstrapTimeInSeconds")),
+                    SECONDS.toMillis(typesafeConfig.getLong("intervalInSeconds")),
+                    SECONDS.toMillis(typesafeConfig.getLong("timeoutInSeconds")),
+                    HOURS.toMillis(typesafeConfig.getLong("maxAgeInHours")),
+                    typesafeConfig.getInt("maxPersisted"),
+                    typesafeConfig.getInt("maxReported"),
+                    typesafeConfig.getInt("maxSeeds")
+            );
+        }
     }
 
     public PeerGroupService(Node node, BanList banList, Config config, List<Address> seedNodeAddresses) {

@@ -51,6 +51,13 @@ public class PeerExchangeStrategy {
             this.numPersistedPeersAtBoostrap = numPersistedPeersAtBoostrap;
             this.numReportedPeersAtBoostrap = numReportedPeersAtBoostrap;
         }
+
+        public static Config from(com.typesafe.config.Config typesafeConfig) {
+            return new PeerExchangeStrategy.Config(
+                    typesafeConfig.getInt("numSeedNodesAtBoostrap"),
+                    typesafeConfig.getInt("numPersistedPeersAtBoostrap"),
+                    typesafeConfig.getInt("numReportedPeersAtBoostrap"));
+        }
     }
 
     private final PeerGroup peerGroup;

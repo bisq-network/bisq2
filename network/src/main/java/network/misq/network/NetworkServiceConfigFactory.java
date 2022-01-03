@@ -29,48 +29,22 @@ import network.misq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy
 import network.misq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Parses the program arguments which are relevant for that domain and stores it in the options field.
  */
 @Slf4j
 public class NetworkServiceConfigFactory {
-
-    // TODO Resolve ambiguity between 'Config' types and variable names:
-    //      Config typesafeNetworkServiceConfig
-    //                  vs
-    //      NetworkService.Config networkServiceConfig
-    private final Config typesafeNetworkServiceConfig;
-    private final NetworkService.Config networkServiceConfig;
-
-    public NetworkService.Config get() {
-        return networkServiceConfig;
+    public static NetworkService.Config getConfig(String baseDir, Config typesafeConfig) {
+        return getConfig(baseDir, typesafeConfig, Optional.empty());
     }
 
-    public NetworkServiceConfigFactory(String baseDir) {
-        this(baseDir, Optional.empty(), Optional.empty());
+    public static NetworkService.Config getConfig(String baseDir, Config typesafeConfig, String[] args) {
+        return getConfig(baseDir, typesafeConfig, Optional.of(args));
     }
 
-    public NetworkServiceConfigFactory(String baseDir, Config typesafeNetworkServiceConfig, String[] args) {
-        this(baseDir, Optional.of(typesafeNetworkServiceConfig), Optional.of(args));
-    }
-
-    public NetworkServiceConfigFactory(String baseDir,
-                                       @SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<Config> typesafeNetworkServiceConfig,
-                                       @SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"}) Optional<String[]> args) {
-        // TODO Is throwing an exception when typesafeNetworkServiceConfig option.isEmpty too severe?
-        //  Could ALL network config values be passed as -DjvmOptions  (I assume this is not likely.)
-        this.typesafeNetworkServiceConfig = typesafeNetworkServiceConfig.orElseThrow(() ->
-                new IllegalStateException("typesafe 'misq.networkServiceConfig' not found"));
-
-        //todo apply networkConfig
-        //todo use option parser lib for args (define priority)
-
+    private static NetworkService.Config getConfig(String baseDir, Config typesafeConfig, Optional<String[]> args) {
         // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
        // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
          Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
@@ -82,56 +56,26 @@ public class NetworkServiceConfigFactory {
                 ServiceNode.Service.RELAY,
                 ServiceNode.Service.MONITOR));
 
+        Config seedConfig = typesafeConfig.getConfig("seedAddressByTransportType");
         Map<Transport.Type, List<Address>> seedAddressesByTransport = Map.of(
-                Transport.Type.TOR, getSeedAddresses(Transport.Type.TOR),
-                Transport.Type.I2P, getSeedAddresses(Transport.Type.I2P),
-                Transport.Type.CLEAR, getSeedAddresses(Transport.Type.CLEAR)
+                Transport.Type.TOR, getSeedAddresses(Transport.Type.TOR, seedConfig),
+                Transport.Type.I2P, getSeedAddresses(Transport.Type.I2P, seedConfig),
+                Transport.Type.CLEAR, getSeedAddresses(Transport.Type.CLEAR, seedConfig)
         );
 
-        Transport.Config transportConfig = new Transport.Config(baseDir);
 
-        Config typesafePeerGroupConfig = this.typesafeNetworkServiceConfig.getConfig("peerGroupConfig");
-        PeerGroup.Config peerGroupConfig = new PeerGroup.Config(
-                typesafePeerGroupConfig.getInt("minNumConnectedPeers"),
-                typesafePeerGroupConfig.getInt("maxNumConnectedPeers"),
-                typesafePeerGroupConfig.getInt("minNumReportedPeers"));
+        PeerGroup.Config peerGroupConfig = PeerGroup.Config.from(typesafeConfig.getConfig("peerGroupConfig"));
+        PeerExchangeStrategy.Config peerExchangeStrategyConfig = PeerExchangeStrategy.Config.from(typesafeConfig.getConfig("peerExchangeStrategyConfig"));
+        KeepAliveService.Config keepAliveServiceConfig = KeepAliveService.Config.from(typesafeConfig.getConfig("keepAliveServiceConfig"));
 
-        Config typesafePeerExchangeStrategyConfig = this.typesafeNetworkServiceConfig.getConfig("peerExchangeStrategyConfig");
-        PeerExchangeStrategy.Config peerExchangeStrategyConfig = new PeerExchangeStrategy.Config(
-                typesafePeerExchangeStrategyConfig.getInt("numSeedNodesAtBoostrap"),
-                typesafePeerExchangeStrategyConfig.getInt("numPersistedPeersAtBoostrap"),
-                typesafePeerExchangeStrategyConfig.getInt("numReportedPeersAtBoostrap"));
-
-        Config typesafeKeepAliveServiceConfig = this.typesafeNetworkServiceConfig.getConfig("keepAliveServiceConfig");
-        KeepAliveService.Config keepAliveServiceConfig = new KeepAliveService.Config(
-                SECONDS.toMillis(typesafeKeepAliveServiceConfig.getLong("maxIdleTimeInSeconds")),
-                SECONDS.toMillis(typesafeKeepAliveServiceConfig.getLong("intervalInSeconds")));
-
-        Config typesafeDefaultPeerGroupServiceConfig = this.typesafeNetworkServiceConfig.getConfig("defaultPeerGroupServiceConfig");
-        PeerGroupService.Config defaultConf = new PeerGroupService.Config(peerGroupConfig,
+        PeerGroupService.Config defaultConf = PeerGroupService.Config.from(peerGroupConfig,
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
-                SECONDS.toMillis(typesafeDefaultPeerGroupServiceConfig.getLong("bootstrapTimeInSeconds")),
-                SECONDS.toMillis(typesafeDefaultPeerGroupServiceConfig.getLong("intervalInSeconds")),
-                SECONDS.toMillis(typesafeDefaultPeerGroupServiceConfig.getLong("timeoutInSeconds")),
-                HOURS.toMillis(typesafeDefaultPeerGroupServiceConfig.getLong("maxAgeInHours")),
-                typesafeDefaultPeerGroupServiceConfig.getInt("maxPersisted"),
-                typesafeDefaultPeerGroupServiceConfig.getInt("maxReported"),
-                typesafeDefaultPeerGroupServiceConfig.getInt("maxSeeds")
-        );
-
-        Config typesafeClearNetPeerGroupServiceConfig = this.typesafeNetworkServiceConfig.getConfig("clearNetPeerGroupServiceConfig");
-        PeerGroupService.Config clearNetConf = new PeerGroupService.Config(peerGroupConfig,
+                typesafeConfig.getConfig("defaultPeerGroupServiceConfig"));
+        PeerGroupService.Config clearNetConf = PeerGroupService.Config.from(peerGroupConfig,
                 peerExchangeStrategyConfig,
                 keepAliveServiceConfig,
-                SECONDS.toMillis(typesafeClearNetPeerGroupServiceConfig.getLong("bootstrapTimeInSeconds")),
-                SECONDS.toMillis(typesafeClearNetPeerGroupServiceConfig.getLong("intervalInSeconds")),
-                SECONDS.toMillis(typesafeClearNetPeerGroupServiceConfig.getLong("timeoutInSeconds")),
-                HOURS.toMillis(typesafeClearNetPeerGroupServiceConfig.getLong("maxAgeInHours")),
-                typesafeClearNetPeerGroupServiceConfig.getInt("maxPersisted"),
-                typesafeClearNetPeerGroupServiceConfig.getInt("maxReported"),
-                typesafeClearNetPeerGroupServiceConfig.getInt("maxSeeds")
-        );
+                typesafeConfig.getConfig("clearNetPeerGroupServiceConfig"));
 
         Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport = Map.of(
                 Transport.Type.TOR, defaultConf,
@@ -139,7 +83,8 @@ public class NetworkServiceConfigFactory {
                 Transport.Type.CLEAR, clearNetConf
         );
 
-        networkServiceConfig = new NetworkService.Config(baseDir,
+        Transport.Config transportConfig = new Transport.Config(baseDir);
+        return new NetworkService.Config(baseDir,
                 transportConfig,
                 supportedTransportTypes,
                 serviceNodeConfig,
@@ -148,17 +93,15 @@ public class NetworkServiceConfigFactory {
                 Optional.empty());
     }
 
-    public List<Address> getSeedAddresses(Transport.Type transportType) {
-        Supplier<Config> seedAddressByTransportTypeConfig = () ->
-                typesafeNetworkServiceConfig.getConfig("seedAddressByTransportType");
+    public static List<Address> getSeedAddresses(Transport.Type transportType, Config config) {
         switch (transportType) {
             case TOR -> {
-                return ConfigUtil.getStringList(seedAddressByTransportTypeConfig.get(), "tor").stream()
+                return ConfigUtil.getStringList(config, "tor").stream()
                         .map(Address::new)
                         .collect(Collectors.toList());
             }
             case I2P -> {
-                return ConfigUtil.getStringList(seedAddressByTransportTypeConfig.get(), "i2p").stream()
+                return ConfigUtil.getStringList(config, "i2p").stream()
                         .map(Address::new)
                         .collect(Collectors.toList());
             }

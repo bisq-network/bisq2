@@ -52,6 +52,13 @@ public class PeerGroup {
             this.maxNumConnectedPeers = maxNumConnectedPeers;
             this.minNumReportedPeers = minNumReportedPeers;
         }
+
+        public static Config from(com.typesafe.config.Config typesafeConfig) {
+            return new PeerGroup.Config(
+                    typesafeConfig.getInt("minNumConnectedPeers"),
+                    typesafeConfig.getInt("maxNumConnectedPeers"),
+                    typesafeConfig.getInt("minNumReportedPeers"));
+        }
     }
 
     private final Node node;

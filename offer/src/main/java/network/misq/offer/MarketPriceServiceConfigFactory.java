@@ -25,15 +25,8 @@ import java.util.Set;
  * Parses the program arguments which are relevant for that domain and stores it in the options field.
  */
 public class MarketPriceServiceConfigFactory {
-
-    private final MarketPriceService.Config config;
-
-    public MarketPriceService.Config get() {
-        return config;
-    }
-
-    public MarketPriceServiceConfigFactory() {
-        config = new MarketPriceService.Config(Set.of(
+    public static MarketPriceService.Config getConfig() {
+        return new MarketPriceService.Config(Set.of(
                 new MarketPriceService.Provider("https://price.bisq.wiz.biz/", "wiz", Transport.Type.CLEAR),
                 new MarketPriceService.Provider("http://wizpriceje6q5tdrxkyiazsgu7irquiqjy2dptezqhrtu7l2qelqktid.onion/", "wiz", Transport.Type.TOR),
                 new MarketPriceService.Provider("http://emzypricpidesmyqg2hc6dkwitqzaxrqnpkdg3ae2wef5znncu2ambqd.onion/", "emzy", Transport.Type.TOR),
