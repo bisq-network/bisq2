@@ -19,18 +19,77 @@ package network.misq.desktop.main.content.networkinfo.transport;
 
 import lombok.Getter;
 import network.misq.application.DefaultServiceProvider;
+import network.misq.common.encoding.Hex;
 import network.misq.desktop.common.view.Controller;
+import network.misq.network.NetworkService;
+import network.misq.network.p2p.NetworkId;
+import network.misq.network.p2p.message.TextMessage;
+import network.misq.network.p2p.node.Address;
+import network.misq.network.p2p.node.Node;
+import network.misq.network.p2p.node.transport.Transport;
+import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
+import network.misq.security.KeyGeneration;
+import network.misq.security.KeyPairService;
+import network.misq.security.PubKey;
+
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PublicKey;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class TransportTypeController implements Controller {
+    private final Transport.Type transportType;
     private final TransportTypeModel model;
     @Getter
     private final TransportTypeView view;
-    private final DefaultServiceProvider serviceProvider;
+    private final NetworkService networkService;
+    private final KeyPairService keyPairService;
 
-    public TransportTypeController(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
-        model = new TransportTypeModel(serviceProvider);
+    public TransportTypeController(DefaultServiceProvider serviceProvider, Transport.Type transportType) {
+        networkService = serviceProvider.getNetworkService();
+
+        keyPairService = serviceProvider.getKeyPairService();
+        this.transportType = transportType;
+
+        model = new TransportTypeModel(serviceProvider, transportType);
         view = new TransportTypeView(model, this);
+    }
+
+    CompletableFuture<String> sendMessage(String receiver, String pubKeyAsHex, String message) {
+        Address address = new Address(receiver);
+        Transport.Type transportType = Transport.Type.from(address);
+        Map<Transport.Type, Address> addressByNetworkType = Map.of(transportType, address);
+        PublicKey publicKey;
+        try {
+            publicKey = KeyGeneration.generatePublic(Hex.decode(pubKeyAsHex));
+        } catch (GeneralSecurityException e) {
+            return CompletableFuture.failedFuture(e);
+        }
+        PubKey pubKey = new PubKey(publicKey, KeyPairService.DEFAULT);
+        NetworkId receiverNetworkId = new NetworkId(addressByNetworkType, pubKey, Node.DEFAULT_NODE_ID);
+        KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(KeyPairService.DEFAULT);
+        CompletableFuture<String> future = new CompletableFuture<>();
+        networkService.confidentialSendAsync(new TextMessage(message), receiverNetworkId, senderKeyPair, Node.DEFAULT_NODE_ID)
+                .whenComplete((resultMap, throwable) -> {
+                    if (throwable == null) {
+                        if (resultMap.containsKey(transportType)) {
+                            ConfidentialMessageService.Result result = resultMap.get(transportType);
+                            result.getMailboxFuture()
+                                    .ifPresentOrElse(broadcastFuture -> broadcastFuture
+                                                    .whenComplete((broadcastResult, error) ->
+                                                            future.complete(result.getState() + "; " + broadcastResult.toString())),
+                                            () -> {
+                                                String value = result.getState().toString();
+                                                if (result.getState() == ConfidentialMessageService.State.FAILED) {
+                                                    value += " with Error: " + result.getErrorMsg();
+                                                }
+                                                future.complete(value);
+                                            });
+                        }
+                    }
+                });
+        return future;
     }
 
 

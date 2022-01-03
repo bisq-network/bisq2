@@ -15,22 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.overlay;
+package network.misq.presentation.formatters;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.scene.Parent;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.common.view.Model;
-import network.misq.desktop.common.view.View;
-@Slf4j
-public class OverlayModel implements Model {
-    @Getter
-   private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
-
-    public void selectView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
-        this.view.set(view);
+public class TimeFormatter {
+    public static String formatTime(long duration) {
+        //todo
+        if (duration < 1000) {
+            return duration + " ms";
+        } else {
+            long sec = duration / 1000;
+            long ms = duration % 1000;
+            if (ms == 0) {
+                return sec + " sec";
+            } else {
+                return sec + " sec, " + ms + " ms";
+            }
+        }
     }
 }

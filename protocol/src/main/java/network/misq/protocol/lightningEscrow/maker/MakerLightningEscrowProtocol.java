@@ -4,6 +4,7 @@ import network.misq.contract.AssetTransfer;
 import network.misq.contract.ManyPartyContract;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.protocol.lightningEscrow.LightningEscrow;
 import network.misq.protocol.lightningEscrow.LightningEscrowProtocol;
@@ -22,5 +23,13 @@ public class MakerLightningEscrowProtocol extends LightningEscrowProtocol {
 
     @Override
     public void onMessage(Message message, Connection connection, String nodeId) {
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 }

@@ -37,6 +37,7 @@ class KeepAliveHandler implements Connection.Listener {
     private final Connection connection;
     private final CompletableFuture<Void> future = new CompletableFuture<>();
     private final int nonce;
+    private long ts;
 
     KeepAliveHandler(Node node, Connection connection) {
         this.node = node;
@@ -49,6 +50,7 @@ class KeepAliveHandler implements Connection.Listener {
     CompletableFuture<Void> request() {
         log.info("Node {} send Ping to {} with nonce {}. Connection={}",
                 node, connection.getPeerAddress(), nonce, connection.getId());
+        ts = System.currentTimeMillis();
         supplyAsync(() -> node.send(new Ping(nonce), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
@@ -66,6 +68,7 @@ class KeepAliveHandler implements Connection.Listener {
                 log.info("Node {} received Pong from {} with nonce {}. Connection={}",
                         node, connection.getPeerAddress(), pong.requestNonce(), connection.getId());
                 removeListeners();
+                connection.getMetrics().addRtt(ts = System.currentTimeMillis() - ts);
                 future.complete(null);
             } else {
                 log.warn("Node {} received Pong from {} with invalid nonce {}. Request nonce was {}. Connection={}",

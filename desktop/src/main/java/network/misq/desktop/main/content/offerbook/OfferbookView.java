@@ -35,6 +35,7 @@ import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.desktop.common.view.View;
 import network.misq.desktop.components.controls.*;
+import network.misq.desktop.components.table.MisqTableColumn;
 
 import java.util.Comparator;
 import java.util.Optional;
@@ -153,7 +154,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
 
 
     private void addMakerColumn(String header) {
-        AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {
+        MisqTableColumn<OfferListItem, OfferListItem> column = new MisqTableColumn<>(header) {
             {
                 setMinWidth(125);
             }
@@ -194,7 +195,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     }
 
     private void addTakeOfferColumn(String header) {
-        AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {
+        MisqTableColumn<OfferListItem, OfferListItem> column = new MisqTableColumn<>(header) {
             {
                 setMinWidth(125);
             }
@@ -235,7 +236,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     }
 
     private void addValueColumn(String header, Function<OfferListItem, String> displayStringSupplier, Optional<Comparator<OfferListItem>> optionalComparator) {
-        AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {
+        MisqTableColumn<OfferListItem, OfferListItem> column = new MisqTableColumn<>(header) {
             {
                 setMinWidth(125);
             }
@@ -268,7 +269,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
 
     private void addPropertyColumn(StringProperty header, Function<OfferListItem, StringProperty> valueSupplier,
                                    Optional<Comparator<OfferListItem>> optionalComparator) {
-        AutoTooltipTableColumn<OfferListItem, OfferListItem> column = new AutoTooltipTableColumn<>(header) {
+        MisqTableColumn<OfferListItem, OfferListItem> column = new MisqTableColumn<>(header) {
             {
                 setMinWidth(125);
             }

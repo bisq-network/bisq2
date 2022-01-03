@@ -79,19 +79,19 @@ public class NavigationView extends View<VBox, NavigationModel, NavigationContro
             setOnMouseClicked(e -> handler.run());
 
             HBox clearNetBox = getTransportTypeBox("clear-net",
-                    model.clearNetNumConnections,
-                    model.clearNetNumTargetConnections,
-                    model.clearNetIsVisible);
+                    model.getClearNetNumConnections(),
+                    model.getClearNetNumTargetConnections(),
+                    model.getClearNetIsVisible());
 
             HBox torBox = getTransportTypeBox("tor",
-                    model.torNumConnections,
-                    model.torNumTargetConnections,
-                    model.torIsVisible);
+                    model.getTorNumConnections(),
+                    model.getTorNumTargetConnections(),
+                    model.getTorIsVisible());
 
             HBox i2pBox = getTransportTypeBox("i2p",
-                    model.i2pNumConnections,
-                    model.i2pNumTargetConnections,
-                    model.i2pIsVisible);
+                    model.getI2pNumConnections(),
+                    model.getI2pNumTargetConnections(),
+                    model.getI2pIsVisible());
 
             getChildren().addAll(clearNetBox, torBox, i2pBox);
         }

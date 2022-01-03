@@ -18,42 +18,80 @@
 package network.misq.desktop.main.content.networkinfo;
 
 import javafx.beans.value.ChangeListener;
-import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.layout.VBox;
+import lombok.extern.slf4j.Slf4j;
 import network.misq.desktop.common.view.View;
+import network.misq.desktop.main.content.networkinfo.transport.TransportTypeView;
 import network.misq.i18n.Res;
+import network.misq.network.p2p.node.transport.Transport;
 
-public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoController> {
-    private final TabPane tabPane;
-    private ChangeListener<SingleSelectionModel<Tab>> tabChangeListener;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+@Slf4j
+public class NetworkInfoView extends View<TabPane, NetworkInfoModel, NetworkInfoController> {
+    private final Map<Transport.Type, Tab> tabByTransportType = new HashMap<>();
+    private final ChangeListener<Optional<TransportTypeView>> transportTypeViewChangeListener;
+    private final ChangeListener<Tab> tabChangeListener;
 
     public NetworkInfoView(NetworkInfoModel model, NetworkInfoController controller) {
-        super(new VBox(), model, controller);
+        super(new TabPane(), model, controller);
 
-        tabPane = new TabPane();
-        Tab clearNet = new Tab(Res.network.get("clearNet"));
-        clearNet.setId(NetworkInfoTab.CLEAR_NET.name());
-        Tab tor = new Tab("Tor");
-        tor.setId(NetworkInfoTab.TOR.name());
-        Tab i2p = new Tab("I2P");
-        i2p.setId(NetworkInfoTab.I2P.name());
-        tabPane.getTabs().addAll(clearNet, tor, i2p);
+        TabPane tabPane = getRoot();
+        Tab clearNetTab = createTab(Transport.Type.CLEAR, Res.network.get("clearNet"));
+        Tab torTab = createTab(Transport.Type.TOR, "Tor");
+        Tab i2pTab = createTab(Transport.Type.I2P, "I2P");
+        tabPane.getTabs().addAll(clearNetTab, torTab, i2pTab);
 
-        tabChangeListener = (observable, oldValue, newValue) ->
-                controller.onTabSelected(newValue.getSelectedItem().getId());
+        tabChangeListener = (observable, oldValue, newValue) -> {
+            controller.onTabSelected(Optional.ofNullable(newValue).map(tab -> Transport.Type.valueOf(tab.getId())));
+        };
 
-        root.getChildren().addAll(tabPane);
+        transportTypeViewChangeListener = (observable, oldValue, transportTypeViewOptional) -> {
+            Optional<Tab> tabOptional = model.getSelectedTransportType().flatMap(e -> Optional.ofNullable(tabByTransportType.get(e)));
+            tabOptional.ifPresent(tab -> tab.setContent(transportTypeViewOptional.map(View::getRoot).orElse(null)));
+            tabPane.getSelectionModel().select(tabOptional.orElse(null));
+            tabPane.requestFocus();
+        };
     }
 
     @Override
     public void activate() {
-        tabPane.selectionModelProperty().addListener(tabChangeListener);
+        TabPane tabPane = getRoot();
+        model.getTransportTypeView().addListener(transportTypeViewChangeListener);
+        tabPane.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
+
+        Tab clearNetTab = tabByTransportType.get(Transport.Type.CLEAR);
+        clearNetTab.disableProperty().bind(model.getClearNetDisabled());
+        Tab torTab = tabByTransportType.get(Transport.Type.TOR);
+        torTab.disableProperty().bind(model.getTorDisabled());
+        Tab i2pTab = tabByTransportType.get(Transport.Type.I2P);
+        i2pTab.disableProperty().bind(model.getI2pDisabled());
+
+        if (!model.getClearNetDisabled().get()) {
+            tabPane.getSelectionModel().select(clearNetTab);
+        } else if (!model.getTorDisabled().get()) {
+            tabPane.getSelectionModel().select(torTab);
+        } else if (!model.getI2pDisabled().get()) {
+            tabPane.getSelectionModel().select(i2pTab);
+        }
     }
 
     @Override
     protected void deactivate() {
-        tabPane.selectionModelProperty().removeListener(tabChangeListener);
+        model.getTransportTypeView().removeListener(transportTypeViewChangeListener);
+        getRoot().getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
+
+        tabByTransportType.values().forEach(tab -> tab.disableProperty().unbind());
+    }
+
+    private Tab createTab(Transport.Type transportType, String title) {
+        Tab tab = new Tab(title);
+        tab.setClosable(false);
+        tab.setId(transportType.name());
+        tabByTransportType.put(transportType, tab);
+        return tab;
     }
 }

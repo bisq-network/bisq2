@@ -23,6 +23,7 @@ import network.misq.contract.AssetTransfer;
 import network.misq.contract.TwoPartyContract;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.protocol.SecurityProvider;
 import network.misq.protocol.multiSig.MultiSig;
@@ -59,6 +60,14 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
                         setState(State.FUNDS_SENT_MSG_RECEIVED);
                     });
         }
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
     @Override

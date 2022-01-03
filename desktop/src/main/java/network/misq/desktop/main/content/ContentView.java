@@ -28,7 +28,7 @@ public class ContentView extends View<HBox, ContentModel, ContentController> {
     public ContentView(ContentModel model, ContentController controller) {
         super(new HBox(), model, controller);
 
-        model.view.addListener((observable, oldValue, newValue) -> {
+        model.getView().addListener((observable, oldValue, newValue) -> {
             HBox.setHgrow(newValue.getRoot(), Priority.ALWAYS);
             root.getChildren().setAll(newValue.getRoot());
         });

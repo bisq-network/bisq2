@@ -24,6 +24,7 @@ import network.misq.network.p2p.services.peergroup.BanList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -108,6 +109,10 @@ public class NodesById implements Node.Listener {
         return Optional.ofNullable(map.get(nodeId));
     }
 
+    public Collection<Node> getAllNodes( ) {
+        return map.values();
+    }
+
     public Map<String, Address> getAddressesByNodeId() {
         //noinspection OptionalGetWithoutIsPresent
         return map.entrySet().stream()
@@ -123,6 +128,14 @@ public class NodesById implements Node.Listener {
     @Override
     public void onMessage(Message message, Connection connection, String nodeId) {
         listeners.forEach(messageListener -> messageListener.onMessage(message, connection, nodeId));
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
 

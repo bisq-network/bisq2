@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.content.networkinfo;
+package network.misq.desktop.layout;
 
-enum NetworkInfoTab {
-    CLEAR_NET,
-    TOR,
-    I2P
+import javafx.geometry.Insets;
+
+public class Layout {
+    public static final Insets INSETS = new Insets(20);
+    public static final double SPACING = 20;
 }

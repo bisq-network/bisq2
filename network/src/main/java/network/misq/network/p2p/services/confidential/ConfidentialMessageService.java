@@ -23,10 +23,7 @@ import network.misq.common.ObjectSerializer;
 import network.misq.common.threading.ExecutorFactory;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.Connection;
-import network.misq.network.p2p.node.Node;
-import network.misq.network.p2p.node.NodesById;
+import network.misq.network.p2p.node.*;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxMessage;
@@ -63,12 +60,12 @@ public class ConfidentialMessageService implements Node.Listener {
             this.state = state;
         }
 
-        public Result mailboxFuture(CompletableFuture<BroadcastResult> mailboxFuture) {
+        public Result setMailboxFuture(CompletableFuture<BroadcastResult> mailboxFuture) {
             this.mailboxFuture = Optional.of(mailboxFuture);
             return this;
         }
 
-        public Result errorMsg(String errorMsg) {
+        public Result setErrorMsg(String errorMsg) {
             this.errorMsg = Optional.of(errorMsg);
             return this;
         }
@@ -127,6 +124,14 @@ public class ConfidentialMessageService implements Node.Listener {
         }
     }
 
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
+    }
+
     public Result send(Message message,
                        Address address,
                        PubKey receiverPubKey,
@@ -141,7 +146,7 @@ public class ConfidentialMessageService implements Node.Listener {
                 return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
             } else {
                 log.warn("Sending message failed and message is not type of MailboxMessage. message={}", message);
-                return new Result(State.FAILED).errorMsg("Sending message failed and message is not type of MailboxMessage. Exception=" + throwable);
+                return new Result(State.FAILED).setErrorMsg("Sending message failed and message is not type of MailboxMessage. Exception=" + throwable);
             }
         }
         return send(message, connection, receiverPubKey, senderKeyPair, senderNodeId);
@@ -161,7 +166,7 @@ public class ConfidentialMessageService implements Node.Listener {
                 return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
             } else {
                 log.warn("Sending message failed and message is not type of MailboxMessage. message={}", message);
-                return new Result(State.FAILED).errorMsg("Sending message failed and message is not type of MailboxMessage. Exception=" + throwable);
+                return new Result(State.FAILED).setErrorMsg("Sending message failed and message is not type of MailboxMessage. Exception=" + throwable);
             }
         }
     }
@@ -172,7 +177,7 @@ public class ConfidentialMessageService implements Node.Listener {
                                        KeyPair senderKeyPair) {
         if (dataService.isEmpty()) {
             log.warn("We cannot stored a mailboxMessage because the dataService is not present. mailboxMessage={}", mailboxMessage);
-            return new Result(State.FAILED).errorMsg("We cannot stored a mailboxMessage because the dataService is not present.");
+            return new Result(State.FAILED).setErrorMsg("We cannot stored a mailboxMessage because the dataService is not present.");
         }
 
         MailboxPayload mailboxPayload = new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
@@ -181,7 +186,7 @@ public class ConfidentialMessageService implements Node.Listener {
         CompletableFuture<BroadcastResult> mailboxFuture = dataService.get().addMailboxPayload(mailboxPayload,
                 senderKeyPair,
                 receiverPubKey.publicKey());
-        return new Result(State.ADDED_TO_MAILBOX).mailboxFuture(mailboxFuture);
+        return new Result(State.ADDED_TO_MAILBOX).setMailboxFuture(mailboxFuture);
     }
 
 

@@ -17,82 +17,144 @@
 
 package network.misq.desktop.main.content.networkinfo.transport;
 
-import io.reactivex.subjects.BehaviorSubject;
-import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
-import network.misq.offer.MarketPrice;
-import network.misq.offer.Offer;
-import network.misq.presentation.offer.OfferEntity;
+import lombok.extern.slf4j.Slf4j;
+import network.misq.common.util.StringUtils;
+import network.misq.desktop.common.threading.UIThread;
+import network.misq.desktop.components.table.TableItem;
+import network.misq.i18n.Res;
+import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.node.CloseReason;
+import network.misq.network.p2p.node.Connection;
+import network.misq.network.p2p.node.Metrics;
+import network.misq.presentation.formatters.DateFormatter;
+import network.misq.presentation.formatters.TimeFormatter;
 
-import java.util.Map;
+import java.util.Objects;
 
-public class ConnectionListItem extends OfferEntity {
+@Slf4j
+public class ConnectionListItem implements TableItem {
     @Getter
-    private final StringProperty quoteProperty = new SimpleStringProperty("");
-    @Getter
-    private final StringProperty marketPriceOffsetProperty = new SimpleStringProperty("");
-    @Getter
-    private final StringProperty quoteAmountProperty = new SimpleStringProperty("");
-    @Getter
-    private final StringProperty askAmountProperty = new SimpleStringProperty("");
-    @Getter
-    private final StringProperty bidAmountProperty = new SimpleStringProperty("");
-    private BooleanProperty showAllAskCurrencies;
-    private BooleanProperty showAllBidCurrencies;
+    private final Connection connection;
+    private final Connection.Listener listener;
 
-    public ConnectionListItem(Offer offer,
-                              BehaviorSubject<Map<String, MarketPrice>> marketPriceSubject,
-                              BooleanProperty showAllAskCurrencies,
-                              BooleanProperty showAllBidCurrencies) {
+    private final String id;
+    private final Metrics metrics;
+    @Getter
+    private final StringProperty date = new SimpleStringProperty();
+    @Getter
+    private final StringProperty address = new SimpleStringProperty();
+    @Getter
+    private final StringProperty nodeId = new SimpleStringProperty();
+    @Getter
+    private final StringProperty pubKey = new SimpleStringProperty();
+    @Getter
+    private final StringProperty direction = new SimpleStringProperty();
+    @Getter
+    private final StringProperty sent = new SimpleStringProperty();
+    @Getter
+    private final StringProperty received = new SimpleStringProperty();
+    @Getter
+    private final StringProperty rrt = new SimpleStringProperty();
 
-        super(offer, marketPriceSubject);
-        this.showAllAskCurrencies = showAllAskCurrencies;
-        this.showAllBidCurrencies = showAllBidCurrencies;
+    public ConnectionListItem(Connection connection, String nodeId) {
+        this.connection = connection;
+        id = connection.getId();
+        metrics = connection.getMetrics();
+        this.nodeId.set(nodeId);
 
-        showAllAskCurrencies.addListener(o -> applyAskAmountProperty());
-        showAllBidCurrencies.addListener(o -> applyBidAmountProperty());
+        date.set(DateFormatter.formatDateTime(metrics.getCreationDate()));
+        address.set(connection.getPeerAddress().getFullAddress());
+
+        direction.set(connection.isOutboundConnection() ? Res.network.get("table.value.outbound") : Res.network.get("table.value.inbound"));
+        updateSent();
+        updateReceived();
+        updateRtt();
+
+        listener = new Connection.Listener() {
+            @Override
+            public void onMessage(Message message) {
+                UIThread.run(() -> {
+                    updateSent();
+                    updateReceived();
+                    updateRtt();
+                });
+            }
+
+            @Override
+            public void onConnectionClosed(CloseReason closeReason) {
+            }
+        };
+    }
+
+
+    private void updateRtt() {
+        rrt.set(TimeFormatter.formatTime(Math.round(metrics.getAverageRtt())));
+    }
+
+    private void updateSent() {
+        sent.set(Res.network.get("table.value.ioData",
+                StringUtils.fromBytes(metrics.getSentBytes().get()),
+                metrics.getNumMessagesSent().get()));
+    }
+
+    private void updateReceived() {
+        received.set(Res.network.get("table.value.ioData",
+                StringUtils.fromBytes(metrics.getReceivedBytes().get()),
+                metrics.getNumMessagesReceived().get()));
+    }
+
+    public int compareDate(ConnectionListItem other) {
+        return metrics.getCreationDate().compareTo(other.metrics.getCreationDate());
+    }
+
+    public int compareAddress(ConnectionListItem other) {
+        return metrics.getCreationDate().compareTo(other.metrics.getCreationDate());
+    }
+
+    public int compareNodeId(ConnectionListItem other) {
+        return nodeId.get().compareTo(other.getNodeId().get());
+    }
+
+    public int compareDirection(ConnectionListItem other) {
+        return direction.get().compareTo(other.connection.toString());
+    }
+
+    public int compareSent(ConnectionListItem other) {
+        return 0;
+    }
+
+    public int compareReceived(ConnectionListItem other) {
+        return 0;
+    }
+
+    public int compareRtt(ConnectionListItem other) {
+        return 0;
     }
 
     @Override
-    protected void updatedPriceAndAmount(Map<String, MarketPrice> marketPriceMap) {
-        super.updatedPriceAndAmount(marketPriceMap);
-        // We get called from the constructor of our superclass, so our fields are not initialized at that moment.
-        // We delay with Platform.runLater which guards us also in case we get called from a non JavaFxApplication thread.
-        Platform.runLater(() -> {
-            applyQuote();
-            marketPriceOffsetProperty.set(formattedMarketPriceOffset);
-
-            quoteAmountProperty.set(formattedQuoteAmountWithMinAmount);
-
-            applyBidAmountProperty();
-            applyAskAmountProperty();
-        });
+    public void activate() {
+        connection.addListener(listener);
     }
 
-    private void applyQuote() {
-        quoteProperty.set(formattedQuote + getQuoteCode());
+    @Override
+    public void deactivate() {
+        connection.removeListener(listener);
     }
 
-    private void applyBidAmountProperty() {
-        bidAmountProperty.set(getFormattedBidAmountWithMinAmount() + getBidCurrencyCode());
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ConnectionListItem that = (ConnectionListItem) o;
+        return Objects.equals(id, that.id);
     }
 
-    private void applyAskAmountProperty() {
-        askAmountProperty.set(getFormattedAskAmountWithMinAmount() + getAskCurrencyCode());
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
-    private String getQuoteCode() {
-        return showAllBidCurrencies.get() || showAllAskCurrencies.get() ? " " + offer.getQuote().getQuoteCode() : "";
-    }
-
-    private String getBidCurrencyCode() {
-        return showAllBidCurrencies.get() ? " " + offer.getBidCurrencyCode() : "";
-    }
-
-    private String getAskCurrencyCode() {
-        return showAllAskCurrencies.get() ? " " + offer.getAskCurrencyCode() : "";
-    }
 }

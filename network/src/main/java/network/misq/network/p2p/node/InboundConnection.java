@@ -37,9 +37,10 @@ public class InboundConnection extends Connection {
                       Transport.ServerSocketResult serverSocketResult,
                       Capability peersCapability,
                       Load peersLoad,
+                      Metrics metrics,
                       Handler handler,
                       BiConsumer<Connection, Exception> errorHandler) {
-        super(socket, peersCapability, peersLoad, handler, errorHandler);
+        super(socket, peersCapability, peersLoad, metrics, handler, errorHandler);
         this.serverSocketResult = serverSocketResult;
         log.debug("Create inboundConnection from server: {}", serverSocketResult);
     }

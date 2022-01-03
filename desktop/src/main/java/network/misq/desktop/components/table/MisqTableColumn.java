@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.components.controls;
+package network.misq.desktop.components.table;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -25,29 +25,30 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
 import lombok.extern.slf4j.Slf4j;
+import network.misq.desktop.components.controls.AutoTooltipLabel;
 import network.misq.desktop.components.controls.controlsfx.control.PopOver;
 import network.misq.desktop.components.overlay.PopOverWrapper;
 
 @Slf4j
-public class AutoTooltipTableColumn<S, T> extends TableColumn<S, T> {
+public class MisqTableColumn<S, T> extends TableColumn<S, T> {
 
     private Label helpIcon;
     private final PopOverWrapper popoverWrapper = new PopOverWrapper();
     private final AutoTooltipLabel titleLabel = new AutoTooltipLabel();
 
-    public AutoTooltipTableColumn(String text) {
+    public MisqTableColumn(String text) {
         super();
 
         setTitle(text);
     }
 
-    public AutoTooltipTableColumn(StringProperty titleProperty) {
+    public MisqTableColumn(StringProperty titleProperty) {
         super();
 
         setTitle(titleProperty);
     }
 
-    public AutoTooltipTableColumn(String text, String help) {
+    public MisqTableColumn(String text, String help) {
 
         setTitleWithHelpText(text, help);
     }

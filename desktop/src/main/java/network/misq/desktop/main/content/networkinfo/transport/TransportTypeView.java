@@ -17,80 +17,120 @@
 
 package network.misq.desktop.main.content.networkinfo.transport;
 
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.StringProperty;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
+import network.misq.common.data.Pair;
+import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.view.View;
-import network.misq.desktop.components.controls.AutoTooltipTableColumn;
+import network.misq.desktop.components.containers.Form;
+import network.misq.desktop.components.table.MisqTableView;
+import network.misq.desktop.layout.Layout;
+import network.misq.i18n.Res;
 
-import java.util.Comparator;
 import java.util.Optional;
-import java.util.function.Function;
 
-public class TransportTypeView extends View<VBox, TransportTypeModel, TransportTypeController> {
-    private final TableView<ConnectionListItem> tableView;
+public class TransportTypeView extends View<ScrollPane, TransportTypeModel, TransportTypeController> {
+    private final MisqTableView<ConnectionListItem> tableView;
+    private final TextField pubKeyTextField;
+    private ChangeListener<ConnectionListItem> tableSelectedItemListener;
 
     public TransportTypeView(TransportTypeModel model, TransportTypeController controller) {
-        super(new VBox(), model, controller);
+        super(new ScrollPane(), model, controller);
 
-        tableView = new TableView<>();
+        Label title = new Label(model.getTitle());
+
+        tableView = new MisqTableView<>(model.getSorted());
+
         VBox.setVgrow(tableView, Priority.ALWAYS);
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        // addPropertyColumn(model.getOfferedAmountHeaderProperty(), ConnectionListItem::getBidAmountProperty, Optional.of(ConnectionListItem::compareBidAmount));
+        var dateColumn = tableView.getPropertyColumn(model.getDateHeader(),
+                180,
+                ConnectionListItem::getDate,
+                Optional.of(ConnectionListItem::compareDate));
+        tableView.getColumns().add(dateColumn);
+        tableView.getSortOrder().add(dateColumn);
 
-        root.getChildren().addAll(tableView);
-    }
+        tableView.getColumns().add(tableView.getPropertyColumn(model.getAddressHeader(),
+                220,
+                ConnectionListItem::getAddress,
+                Optional.of(ConnectionListItem::compareAddress)));
+        tableView.getColumns().add(tableView.getPropertyColumn(model.getNodeIdHeader(),
+                80,
+                ConnectionListItem::getNodeId,
+                Optional.of(ConnectionListItem::compareNodeId)));
+        tableView.getColumns().add(tableView.getPropertyColumn(model.getDirectionHeader(),
+                80,
+                ConnectionListItem::getDirection,
+                Optional.of(ConnectionListItem::compareDirection)));
+        tableView.getColumns().add(tableView.getPropertyColumn(model.getRrtHeader(),
+                80,
+                ConnectionListItem::getRrt,
+                Optional.of(ConnectionListItem::compareRtt)));
+        tableView.getColumns().add(tableView.getPropertyColumn(model.getSentHeader(),
+                80,
+                ConnectionListItem::getSent,
+                Optional.of(ConnectionListItem::compareSent)));
+        tableView.getColumns().add(tableView.getPropertyColumn(model.getReceivedHeader(),
+                80,
+                ConnectionListItem::getReceived,
+                Optional.of(ConnectionListItem::compareReceived)));
 
+        Form sendMessagesForm = new Form(Res.network.get("sendMessages.title"));
+        TextField addressTextField = sendMessagesForm.addLabelTextField(new Pair<>(Res.network.get("sendMessages.to"), "localhost:8000")).second();
+        pubKeyTextField = sendMessagesForm.addLabelTextField(new Pair<>(Res.network.get("sendMessages.pubKey"), "")).second();
+        pubKeyTextField.setPromptText(Res.network.get("sendMessages.pubKey.prompt"));
+        TextField msgTextField = sendMessagesForm.addLabelTextField(new Pair<>(Res.network.get("sendMessages.text"), "Test message")).second();
+        Pair<Button, Label> sendButtonPair = sendMessagesForm.addButton(Res.network.get("sendMessages.send"));
+        Button sendButton = sendButtonPair.first();
+        sendButton.setOnAction(e -> {
+            String to = addressTextField.getText();
+            String pubKey = pubKeyTextField.getText();
+            String msg = msgTextField.getText();
+            sendButton.setDisable(true);
+            sendButtonPair.second().setText("...");
+            controller.sendMessage(to, pubKey, msg).whenComplete((result, throwable) -> {
+                UIThread.run(() -> {
+                    if (throwable == null) {
+                        sendButtonPair.second().setText(result);
+                    } else {
+                        sendButtonPair.second().setText(throwable.toString());
+                    }
+                    sendButton.setDisable(false);
+                });
+            });
+        });
+        VBox vBox = new VBox();
+        vBox.setSpacing(Layout.SPACING);
+        vBox.setPadding(Layout.INSETS);
+        vBox.getChildren().addAll(title, tableView, sendMessagesForm);
 
-    private void addPropertyColumn(StringProperty header, Function<ConnectionListItem, StringProperty> valueSupplier,
-                                   Optional<Comparator<ConnectionListItem>> optionalComparator) {
-        AutoTooltipTableColumn<ConnectionListItem, ConnectionListItem> column = new AutoTooltipTableColumn<>(header) {
-            {
-                setMinWidth(125);
+        root.setFitToWidth(true);
+        root.setFitToHeight(true);
+        root.setContent(vBox);
+
+        tableSelectedItemListener = new ChangeListener<>() {
+            @Override
+            public void changed(ObservableValue<? extends ConnectionListItem> observable, ConnectionListItem oldValue, ConnectionListItem newValue) {
+                //newValue.getConnection().getPeersCapability().
             }
         };
-        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        column.setCellFactory(
-                new Callback<>() {
-                    @Override
-                    public TableCell<ConnectionListItem, ConnectionListItem> call(
-                            TableColumn<ConnectionListItem, ConnectionListItem> column) {
-                        return new TableCell<>() {
-                            ConnectionListItem previousItem;
+    }
 
-                            @Override
-                            public void updateItem(final ConnectionListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty) {
-                                    if (previousItem != null) {
-                                        previousItem.deactivate();
-                                    }
-                                    previousItem = item;
+    @Override
+    public void activate() {
+        pubKeyTextField.textProperty().bind(model.getPubKey());
+        tableView.getSelectionModel().selectedItemProperty().addListener(tableSelectedItemListener);
+    }
 
-                                    item.activate();
-                                    textProperty().bind(valueSupplier.apply(item));
-                                } else {
-                                    if (previousItem != null) {
-                                        previousItem.deactivate();
-                                        previousItem = null;
-                                    }
-                                    textProperty().unbind();
-                                    setText("");
-                                }
-                            }
-                        };
-                    }
-                });
-        optionalComparator.ifPresent(comparator -> {
-            column.setSortable(true);
-            column.setComparator(comparator);
-        });
-        tableView.getColumns().add(column);
+    @Override
+    protected void deactivate() {
+        pubKeyTextField.textProperty().unbind();
+        tableView.getSelectionModel().selectedItemProperty().removeListener(tableSelectedItemListener);
     }
 }

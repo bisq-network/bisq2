@@ -24,6 +24,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.desktop.common.view.View;
+
 @Slf4j
 public class OverlayView extends View<AnchorPane, OverlayModel, OverlayController> {
     private final Scene parentScene;
@@ -49,11 +50,11 @@ public class OverlayView extends View<AnchorPane, OverlayModel, OverlayControlle
             event.consume();
             controller.onClosed();
         });
-        model.view.addListener((observable, oldValue, newValue) -> {
+        model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
-                        
+
                 getRoot().getChildren().setAll(newValue.getRoot());
-               // scene.setRoot(newValue.getRoot());
+                // scene.setRoot(newValue.getRoot());
                 stage.show();
             } else {
                 getRoot().getChildren().clear();

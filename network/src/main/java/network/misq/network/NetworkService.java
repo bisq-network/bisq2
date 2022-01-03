@@ -60,6 +60,7 @@ public class NetworkService {
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
 
+
     public static record Config(String baseDir,
                                 Transport.Config transportConfig,
                                 Set<Transport.Type> supportedTransportTypes,
@@ -191,5 +192,9 @@ public class NetworkService {
 
     public Map<Transport.Type, State> getStateByTransportType() {
         return serviceNodesByTransport.getStateByTransportType();
+    }
+
+    public boolean isTransportTypeSupported(Transport.Type transportType) {
+        return getSupportedTransportTypes().contains(transportType);
     }
 }

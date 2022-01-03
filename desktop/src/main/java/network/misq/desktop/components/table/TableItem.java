@@ -17,7 +17,8 @@
 
 package network.misq.desktop.components.table;
 
-public interface VisibilityAware {
-    void setVisibility(boolean visibility);
+public interface TableItem {
+    void activate();
 
+    void deactivate();
 }

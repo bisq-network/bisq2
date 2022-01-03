@@ -17,19 +17,38 @@
 
 package network.misq.desktop.main.content.networkinfo;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import lombok.Getter;
+import lombok.Setter;
 import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Model;
+import network.misq.desktop.main.content.networkinfo.transport.TransportTypeView;
+import network.misq.network.NetworkService;
+import network.misq.network.p2p.node.transport.Transport;
+
+import java.util.Optional;
 
 // Handled jfx only concerns, others which can be re-used by other frontends are in OfferbookEntity
+@Getter
 public class NetworkInfoModel implements Model {
+    private final NetworkService networkService;
 
-    private final DefaultServiceProvider serviceProvider;
+    private final BooleanProperty clearNetDisabled = new SimpleBooleanProperty(false);
+    private final BooleanProperty torDisabled = new SimpleBooleanProperty(false);
+    private final BooleanProperty i2pDisabled = new SimpleBooleanProperty(false);
+    private final ObjectProperty<Optional<TransportTypeView>> transportTypeView = new SimpleObjectProperty<>();
+    @Setter
+    private Optional<Transport.Type> selectedTransportType = Optional.empty();
 
     public NetworkInfoModel(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
-    }
+        networkService = serviceProvider.getNetworkService();
 
-    public void initialize() {
+        clearNetDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.CLEAR));
+        torDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.TOR));
+        i2pDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.I2P));
     }
 
     public void activate() {
@@ -37,8 +56,6 @@ public class NetworkInfoModel implements Model {
 
     public void deactivate() {
     }
-
-
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////

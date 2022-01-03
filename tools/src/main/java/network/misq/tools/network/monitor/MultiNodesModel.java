@@ -184,13 +184,24 @@ public class MultiNodesModel {
                 .get();
         receiverNetworkService.findMyAddresses().forEach((type, value) -> {
             Address receiverAddress = value.get(receiverNetworkId.nodeId());
-            sendMsgListener = (msg, connection, nodeId1) -> {
-                String newLine = "\n" + getTimestamp() + " " +
-                        type.toString().substring(0, 3) + "  onReceived   " +
-                        connection.getPeerAddress() + " --> " + receiverAddress + " " + msg.toString();
-                appendToHistory(receiverAddress, newLine);
-                handler.ifPresent(handler -> handler.onMessage(receiverAddress));
-                receiverNetworkService.removeMessageListener(sendMsgListener);
+            sendMsgListener = new Node.Listener() {
+                @Override
+                public void onMessage(Message message, Connection connection, String nodeId) {
+                    String newLine = "\n" + getTimestamp() + " " +
+                            type.toString().substring(0, 3) + "  onReceived   " +
+                            connection.getPeerAddress() + " --> " + receiverAddress + " " + message.toString();
+                    appendToHistory(receiverAddress, newLine);
+                    handler.ifPresent(handler -> handler.onMessage(receiverAddress));
+                    receiverNetworkService.removeMessageListener(sendMsgListener);
+                }
+
+                @Override
+                public void onConnection(Connection connection) {
+                }
+
+                @Override
+                public void onDisconnect(Connection connection, CloseReason closeReason) {
+                }
             };
             receiverNetworkService.addMessageListener(sendMsgListener);
         });

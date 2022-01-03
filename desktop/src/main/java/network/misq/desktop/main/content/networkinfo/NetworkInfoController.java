@@ -20,12 +20,17 @@ package network.misq.desktop.main.content.networkinfo;
 import lombok.Getter;
 import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
+import network.misq.desktop.main.content.networkinfo.transport.TransportTypeController;
+import network.misq.network.p2p.node.transport.Transport;
+
+import java.util.Optional;
 
 public class NetworkInfoController implements Controller {
     private final NetworkInfoModel model;
     @Getter
     private final NetworkInfoView view;
     private final DefaultServiceProvider serviceProvider;
+    private Optional<TransportTypeController> selectedTransportTypeController;
 
     public NetworkInfoController(DefaultServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
@@ -33,20 +38,24 @@ public class NetworkInfoController implements Controller {
         view = new NetworkInfoView(model, this);
     }
 
+    @Override
+    public void activate() {
+        onTabSelected(Optional.of(Transport.Type.CLEAR));
+    }
+
+    @Override
+    public void deactivate() {
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // View events
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    public void onTabSelected(String tabIdName) {
-        NetworkInfoTab networkInfoTab = NetworkInfoTab.valueOf(tabIdName);
-        switch (networkInfoTab) {
-            case CLEAR_NET -> {
 
-            }
-            case TOR -> {
-            }
-            case I2P -> {
-            }
-        }
+    public void onTabSelected(Optional<Transport.Type> transportTypeOptional) {
+        selectedTransportTypeController = transportTypeOptional.map(transportType ->
+                new TransportTypeController(serviceProvider, transportType));
+        model.setSelectedTransportType(transportTypeOptional);
+        model.getTransportTypeView().set(selectedTransportTypeController.map(TransportTypeController::getView)
+                .or(Optional::empty));
     }
 }

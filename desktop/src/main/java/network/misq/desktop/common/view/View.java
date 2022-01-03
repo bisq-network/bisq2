@@ -36,6 +36,7 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
                 if (oldValue == null && newValue != null) {
                     if (newValue.getWindow() != null) {
                         activate(); // activate view first as it usually sets the bindings here
+                        controller.activate();
                         model.activate();
                     } else {
                         // For overlays, we need to wait until stage is available
@@ -44,13 +45,15 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
                             public void changed(ObservableValue<? extends Window> observable, Window oldValue, Window newValue) {
                                 if (newValue != null) {
                                     activate();
+                                    controller.activate();
                                     model.activate();
                                 }
                             }
                         });
                     }
                 } else if (oldValue != null && newValue == null) {
-                    deactivate(); 
+                    deactivate();
+                    controller.deactivate();
                     model.deactivate();
                 }
             });

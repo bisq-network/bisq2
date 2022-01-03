@@ -18,12 +18,16 @@
 package network.misq.network.p2p.node;
 
 import lombok.Getter;
+import lombok.ToString;
 import network.misq.network.p2p.message.Message;
 
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Getter
+@ToString
 public class Metrics {
 
     private final long created;
@@ -32,6 +36,7 @@ public class Metrics {
     private final AtomicLong receivedBytes = new AtomicLong();
     private final AtomicLong numMessagesSent = new AtomicLong();
     private final AtomicLong numMessagesReceived = new AtomicLong();
+    private final List<Long> rrtList = new CopyOnWriteArrayList<>();
 
     public Metrics() {
         created = new Date().getTime();
@@ -55,5 +60,13 @@ public class Metrics {
         lastUpdate.set(System.currentTimeMillis());
         receivedBytes.addAndGet(message.serialize().length);
         numMessagesReceived.incrementAndGet();
+    }
+
+    public void addRtt(long value) {
+        this.rrtList.add(value);
+    }
+
+    public double getAverageRtt() {
+        return rrtList.stream().mapToLong(e -> e).average().orElse(0d);
     }
 }

@@ -15,16 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.common.view;
+package network.misq.network.p2p.message;
 
-import javafx.scene.Parent;
-
-public interface Controller {
-    View<? extends Parent, ? extends Model, ? extends Controller> getView();
-
-    default void activate() {
-    }
-
-    default void deactivate() {
-    }
+public record TextMessage(String msg) implements Message {
 }

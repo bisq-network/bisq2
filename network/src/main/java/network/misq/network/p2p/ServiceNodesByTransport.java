@@ -115,7 +115,7 @@ public class ServiceNodesByTransport {
                     resultsByType.put(transportType, result);
                 } catch (Throwable throwable) {
                     resultsByType.put(transportType, new ConfidentialMessageService.Result(ConfidentialMessageService.State.FAILED)
-                            .errorMsg(throwable.getMessage()));
+                            .setErrorMsg(throwable.getMessage()));
                 }
             } else {
                 //todo

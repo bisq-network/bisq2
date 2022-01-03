@@ -20,12 +20,14 @@ package network.misq.desktop.main.content;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Parent;
+import lombok.Getter;
 import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.common.view.Model;
 import network.misq.desktop.common.view.View;
 
+@Getter
 public class ContentModel implements Model {
-    final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
+    private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
     public void selectView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
         this.view.set(view);

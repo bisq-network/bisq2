@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.Disposable;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.services.data.filter.DataFilter;
@@ -62,5 +63,13 @@ public class InventoryRequestHandler implements Node.Listener, Disposable {
             node.removeListener(this);
             future.complete(inventoryResponse.getInventory());
         }
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 }

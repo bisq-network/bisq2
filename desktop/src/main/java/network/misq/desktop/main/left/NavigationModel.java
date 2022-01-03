@@ -21,6 +21,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import lombok.Getter;
 import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.view.Model;
@@ -32,31 +33,27 @@ import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.peergroup.PeerGroup;
 
-import java.util.Set;
-
+@Getter
 public class NavigationModel implements Model {
     private final NetworkService networkService;
 
-    final StringProperty clearNetNumConnections = new SimpleStringProperty("0");
-    final StringProperty clearNetNumTargetConnections = new SimpleStringProperty("0");
-    final BooleanProperty clearNetIsVisible = new SimpleBooleanProperty(false);
-
-    final StringProperty torNumConnections = new SimpleStringProperty("0");
-    final StringProperty torNumTargetConnections = new SimpleStringProperty("0");
-    final BooleanProperty torIsVisible = new SimpleBooleanProperty(false);
-
-    final StringProperty i2pNumConnections = new SimpleStringProperty("0");
-    final StringProperty i2pNumTargetConnections = new SimpleStringProperty("0");
-    final BooleanProperty i2pIsVisible = new SimpleBooleanProperty(false);
+    private final StringProperty clearNetNumConnections = new SimpleStringProperty("0");
+    private final StringProperty clearNetNumTargetConnections = new SimpleStringProperty("0");
+    private final BooleanProperty clearNetIsVisible = new SimpleBooleanProperty(false);
+    private final StringProperty torNumConnections = new SimpleStringProperty("0");
+    private final StringProperty torNumTargetConnections = new SimpleStringProperty("0");
+    private final BooleanProperty torIsVisible = new SimpleBooleanProperty(false);
+    private final StringProperty i2pNumConnections = new SimpleStringProperty("0");
+    private final StringProperty i2pNumTargetConnections = new SimpleStringProperty("0");
+    private final BooleanProperty i2pIsVisible = new SimpleBooleanProperty(false);
 
 
     public NavigationModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
 
-        Set<Transport.Type> supportedTransportTypes = networkService.getSupportedTransportTypes();
-        clearNetIsVisible.set(supportedTransportTypes.contains(Transport.Type.CLEAR));
-        torIsVisible.set(supportedTransportTypes.contains(Transport.Type.TOR));
-        i2pIsVisible.set(supportedTransportTypes.contains(Transport.Type.I2P));
+        clearNetIsVisible.set(networkService.isTransportTypeSupported(Transport.Type.CLEAR));
+        torIsVisible.set(networkService.isTransportTypeSupported(Transport.Type.TOR));
+        i2pIsVisible.set(networkService.isTransportTypeSupported(Transport.Type.I2P));
 
         networkService.getSupportedTransportTypes().forEach(type ->
                 networkService.getServiceNodesByTransport().findServiceNode(type).ifPresent(serviceNode -> {
