@@ -24,6 +24,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import network.misq.application.DefaultServiceProvider;
 import network.misq.common.data.Pair;
 import network.misq.desktop.common.view.Model;
@@ -34,6 +35,7 @@ import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
+import network.misq.network.p2p.node.NodesById;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.security.KeyPairService;
 
@@ -45,7 +47,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-// Handled jfx only concerns, others which can be re-used by other frontends are in OfferbookEntity
+@Slf4j
 public class TransportTypeModel implements Model {
     private final NetworkService networkService;
     private final KeyPairService keyPairService;
@@ -55,7 +57,7 @@ public class TransportTypeModel implements Model {
     private final SortedList<ConnectionListItem> sorted = new SortedList<>(filtered);
 
     @Getter
-    private final String title;
+    private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.common.get("na"));
     @Getter
     private final StringProperty dateHeader = new SimpleStringProperty();
     @Getter
@@ -69,10 +71,11 @@ public class TransportTypeModel implements Model {
     @Getter
     private final StringProperty receivedHeader = new SimpleStringProperty();
     @Getter
-    private final StringProperty rrtHeader = new SimpleStringProperty();
+    private final StringProperty rttHeader = new SimpleStringProperty();
     @Getter
     private final StringProperty pubKey = new SimpleStringProperty();
     private final Collection<Node> allNodes;
+    private final Node defaultNode;
     private Map<String, Node.Listener> nodeListenersByNodeId = new HashMap<>();
 
 
@@ -80,17 +83,16 @@ public class TransportTypeModel implements Model {
         networkService = serviceProvider.getNetworkService();
         keyPairService = serviceProvider.getKeyPairService();
 
-        title = Res.network.get(switch (transportType) {
-            case TOR -> "tor";
-            case I2P -> "i2p";
-            case CLEAR -> "clearNet";
-        });
-
         Optional<ServiceNode> serviceNode = networkService.findServiceNode(transportType);
         checkArgument(serviceNode.isPresent(),
                 "ServiceNode must be present");
 
-        allNodes = serviceNode.get().getNodesById().getAllNodes();
+        defaultNode = serviceNode.get().getDefaultNode();
+        defaultNode.findMyAddress().ifPresent(e -> myDefaultNodeAddress.set(e.getFullAddress()));
+
+        NodesById nodesById = serviceNode.get().getNodesById();
+        allNodes = nodesById.getAllNodes();
+
         list.setAll(allNodes.stream()
                 .flatMap(node -> node.getAllConnections().map(c -> new Pair<>(c, node.getNodeId())))
                 .map(pair -> new ConnectionListItem(pair.first(), pair.second()))
@@ -102,7 +104,7 @@ public class TransportTypeModel implements Model {
         nodeIdHeader.set(Res.network.get("table.header.nodeId"));
         sentHeader.set(Res.network.get("table.header.sentHeader"));
         receivedHeader.set(Res.network.get("table.header.receivedHeader"));
-        rrtHeader.set(Res.network.get("rrt"));
+        rttHeader.set(Res.network.get("table.header.rtt"));
     }
 
 
@@ -111,16 +113,20 @@ public class TransportTypeModel implements Model {
             Node.Listener nodeListener = new Node.Listener() {
                 @Override
                 public void onMessage(Message message, Connection connection, String nodeId) {
+                    maybeUpdateMyAddress(node);
                 }
 
                 @Override
                 public void onConnection(Connection connection) {
                     list.add(new ConnectionListItem(connection, node.getNodeId()));
+                    maybeUpdateMyAddress(node);
                 }
 
                 @Override
                 public void onDisconnect(Connection connection, CloseReason closeReason) {
                     list.remove(new ConnectionListItem(connection, node.getNodeId()));
+                    maybeUpdateMyAddress(node);
+
                 }
             };
             node.addListener(nodeListener);
@@ -128,9 +134,14 @@ public class TransportTypeModel implements Model {
         });
     }
 
+    private void maybeUpdateMyAddress(Node node) {
+        if (node.getNodeId().equals(defaultNode.getNodeId())) {
+            defaultNode.findMyAddress().ifPresent(e -> myDefaultNodeAddress.set(e.getFullAddress()));
+        }
+    }
+
     public void deactivate() {
         allNodes.forEach(node -> node.removeListener(nodeListenersByNodeId.get(node.getNodeId())));
-        allNodes.clear();
     }
 
 

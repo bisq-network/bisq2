@@ -17,6 +17,7 @@
 
 package network.misq.desktop.main.content.networkinfo;
 
+import com.jfoenix.controls.JFXTabPane;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -31,13 +32,13 @@ import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
-public class NetworkInfoView extends View<TabPane, NetworkInfoModel, NetworkInfoController> {
+public class NetworkInfoView extends View<JFXTabPane, NetworkInfoModel, NetworkInfoController> {
     private final Map<Transport.Type, Tab> tabByTransportType = new HashMap<>();
     private final ChangeListener<Optional<TransportTypeView>> transportTypeViewChangeListener;
     private final ChangeListener<Tab> tabChangeListener;
 
     public NetworkInfoView(NetworkInfoModel model, NetworkInfoController controller) {
-        super(new TabPane(), model, controller);
+        super(new JFXTabPane(), model, controller);
 
         TabPane tabPane = getRoot();
         Tab clearNetTab = createTab(Transport.Type.CLEAR, Res.network.get("clearNet"));
@@ -88,7 +89,7 @@ public class NetworkInfoView extends View<TabPane, NetworkInfoModel, NetworkInfo
     }
 
     private Tab createTab(Transport.Type transportType, String title) {
-        Tab tab = new Tab(title);
+        Tab tab = new Tab(title.toUpperCase());
         tab.setClosable(false);
         tab.setId(transportType.name());
         tabByTransportType.put(transportType, tab);

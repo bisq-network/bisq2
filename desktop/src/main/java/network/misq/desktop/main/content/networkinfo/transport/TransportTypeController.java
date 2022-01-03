@@ -28,6 +28,7 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
+import network.misq.network.p2p.services.data.AuthenticatedTextPayload;
 import network.misq.security.KeyGeneration;
 import network.misq.security.KeyPairService;
 import network.misq.security.PubKey;
@@ -37,6 +38,7 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 public class TransportTypeController implements Controller {
     private final Transport.Type transportType;
@@ -90,6 +92,18 @@ public class TransportTypeController implements Controller {
                     }
                 });
         return future;
+    }
+
+    public CompletionStage<String> addData(String dataText, String id) {
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(id);
+        Map<Transport.Type, Address> addressByNetworkType = Map.of();
+        PubKey pubKey = new PubKey(keyPair.getPublic(), id);
+        NetworkId networkId = new NetworkId(addressByNetworkType, pubKey, id);
+        AuthenticatedTextPayload payload = new AuthenticatedTextPayload(dataText, networkId);
+        return networkService.addNetworkPayload(payload, keyPair)
+                .thenApply(list -> {
+                    return list.toString();
+                });
     }
 
 

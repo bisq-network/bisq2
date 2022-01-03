@@ -34,6 +34,7 @@ import network.misq.desktop.layout.Layout;
 import network.misq.i18n.Res;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public class TransportTypeView extends View<ScrollPane, TransportTypeModel, TransportTypeController> {
     private final MisqTableView<ConnectionListItem> tableView;
@@ -43,7 +44,8 @@ public class TransportTypeView extends View<ScrollPane, TransportTypeModel, Tran
     public TransportTypeView(TransportTypeModel model, TransportTypeController controller) {
         super(new ScrollPane(), model, controller);
 
-        Label title = new Label(model.getTitle());
+        Form nodeInfoForm = new Form(Res.network.get("nodeInfo.title"));
+        nodeInfoForm.addTextField(Res.network.get("nodeInfo.myAddress"), model.getMyDefaultNodeAddress());
 
         tableView = new MisqTableView<>(model.getSorted());
 
@@ -68,9 +70,9 @@ public class TransportTypeView extends View<ScrollPane, TransportTypeModel, Tran
                 80,
                 ConnectionListItem::getDirection,
                 Optional.of(ConnectionListItem::compareDirection)));
-        tableView.getColumns().add(tableView.getPropertyColumn(model.getRrtHeader(),
+        tableView.getColumns().add(tableView.getPropertyColumn(model.getRttHeader(),
                 80,
-                ConnectionListItem::getRrt,
+                ConnectionListItem::getRtt,
                 Optional.of(ConnectionListItem::compareRtt)));
         tableView.getColumns().add(tableView.getPropertyColumn(model.getSentHeader(),
                 80,
@@ -81,11 +83,32 @@ public class TransportTypeView extends View<ScrollPane, TransportTypeModel, Tran
                 ConnectionListItem::getReceived,
                 Optional.of(ConnectionListItem::compareReceived)));
 
+        Form addDataForm = new Form(Res.network.get("addData.title"));
+        TextField dataContentTextField = addDataForm.addTextField(Res.network.get("addData.content"), "Test data");
+        TextField idTextField = addDataForm.addTextField(Res.network.get("addData.id"), UUID.randomUUID().toString().substring(0, 8));
+        Pair<Button, Label> addDataButtonPair = addDataForm.addButton(Res.network.get("addData.add"));
+        Button addDataButton = addDataButtonPair.first();
+        addDataButton.setOnAction(e -> {
+            addDataButton.setDisable(true);
+            addDataButtonPair.second().setText("...");
+            controller.addData(dataContentTextField.getText(), idTextField.getText()).whenComplete((result, throwable) -> {
+                UIThread.run(() -> {
+                    if (throwable == null) {
+                        addDataButtonPair.second().setText(result);
+                    } else {
+                        addDataButtonPair.second().setText(throwable.toString());
+                    }
+                    addDataButton.setDisable(false);
+                });
+            });
+        });
+
+
         Form sendMessagesForm = new Form(Res.network.get("sendMessages.title"));
-        TextField addressTextField = sendMessagesForm.addLabelTextField(new Pair<>(Res.network.get("sendMessages.to"), "localhost:8000")).second();
-        pubKeyTextField = sendMessagesForm.addLabelTextField(new Pair<>(Res.network.get("sendMessages.pubKey"), "")).second();
+        TextField addressTextField = sendMessagesForm.addTextField(Res.network.get("sendMessages.to"), "localhost:8000");
+        pubKeyTextField = sendMessagesForm.addTextField(Res.network.get("sendMessages.pubKey"), "");
         pubKeyTextField.setPromptText(Res.network.get("sendMessages.pubKey.prompt"));
-        TextField msgTextField = sendMessagesForm.addLabelTextField(new Pair<>(Res.network.get("sendMessages.text"), "Test message")).second();
+        TextField msgTextField = sendMessagesForm.addTextField(Res.network.get("sendMessages.text"), "Test message");
         Pair<Button, Label> sendButtonPair = sendMessagesForm.addButton(Res.network.get("sendMessages.send"));
         Button sendButton = sendButtonPair.first();
         sendButton.setOnAction(e -> {
@@ -105,10 +128,12 @@ public class TransportTypeView extends View<ScrollPane, TransportTypeModel, Tran
                 });
             });
         });
+
+
         VBox vBox = new VBox();
-        vBox.setSpacing(Layout.SPACING);
+        vBox.setSpacing(30);
         vBox.setPadding(Layout.INSETS);
-        vBox.getChildren().addAll(title, tableView, sendMessagesForm);
+        vBox.getChildren().addAll(nodeInfoForm, tableView, addDataForm, sendMessagesForm);
 
         root.setFitToWidth(true);
         root.setFitToHeight(true);

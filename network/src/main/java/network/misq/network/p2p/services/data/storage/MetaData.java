@@ -19,9 +19,11 @@ package network.misq.network.p2p.services.data.storage;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import network.misq.network.p2p.message.Proto;
 
 @EqualsAndHashCode
+@ToString
 @Getter
 public class MetaData implements Proto {
     private final long ttl;

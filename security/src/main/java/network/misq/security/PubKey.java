@@ -17,7 +17,8 @@
 
 package network.misq.security;
 
+import java.io.Serializable;
 import java.security.PublicKey;
 
-public record PubKey(PublicKey publicKey, String keyId) {
+public record PubKey(PublicKey publicKey, String keyId) implements Serializable {
 }

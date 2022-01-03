@@ -31,7 +31,6 @@ import network.misq.network.p2p.node.transport.Transport;
 
 import java.util.Optional;
 
-// Handled jfx only concerns, others which can be re-used by other frontends are in OfferbookEntity
 @Getter
 public class NetworkInfoModel implements Model {
     private final NetworkService networkService;

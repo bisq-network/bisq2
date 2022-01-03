@@ -45,9 +45,9 @@ public class NetworkServiceConfigFactory {
     }
 
     private static NetworkService.Config getConfig(String baseDir, Config typesafeConfig, Optional<String[]> args) {
-        // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
-       // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
-         Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
+        //  Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
+        Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
+        // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
 
         ServiceNode.Config serviceNodeConfig = new ServiceNode.Config(Set.of(
                 ServiceNode.Service.CONFIDENTIAL,
