@@ -17,6 +17,7 @@
 
 package network.misq.tools.network.monitor;
 
+import com.typesafe.config.Config;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -32,10 +33,12 @@ import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+import network.misq.common.util.ConfigUtil;
 import network.misq.common.util.OsUtils;
 import network.misq.common.util.StringUtils;
 import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.utils.KeyCodeUtils;
+import network.misq.network.NetworkService;
 import network.misq.network.NetworkServiceConfigFactory;
 import network.misq.network.p2p.State;
 import network.misq.network.p2p.node.Address;
@@ -190,10 +193,11 @@ public class MultiNodesView extends Application implements MultiNodesModel.Handl
                 .map(e -> e.equalsIgnoreCase("true"))
                 .orElse(addressesToBootstrap.isEmpty() && myAddress.isEmpty());
 
-        String baseDir = OsUtils.getUserDataDir() + File.separator + "misq_MultiNodes";
-        NetworkServiceConfigFactory networkServiceConfigFactory = new NetworkServiceConfigFactory(baseDir);
 
-        multiNodesModel = new MultiNodesModel(networkServiceConfigFactory.get(), transports, bootstrapAll);
+        String appDir = OsUtils.getUserDataDir() + File.separator + "misq_MultiNodes";
+        Config typesafeConfig = ConfigUtil.load("Misq", "misq.networkServiceConfig");
+        NetworkService.Config networkServiceConfigFactory = NetworkServiceConfigFactory.getConfig(appDir, typesafeConfig);
+        multiNodesModel = new MultiNodesModel(networkServiceConfigFactory, transports, bootstrapAll);
         multiNodesModel.addNetworkInfoConsumer(this);
         multiNodesModel.bootstrap(addressesToBootstrap)
                 .forEach((transportType, addresses) -> addresses.forEach(address -> addNodeInfoBox(address, transportType)));

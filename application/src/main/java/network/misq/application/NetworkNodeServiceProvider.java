@@ -42,18 +42,20 @@ import static network.misq.common.util.OsUtils.EXIT_SUCCESS;
  */
 @Getter
 @Slf4j
-public class SeedNodeServiceProvider extends ServiceProvider {
+public class NetworkNodeServiceProvider extends ServiceProvider {
     private final KeyPairService keyPairService;
     private final NetworkService networkService;
+    private final ApplicationOptions applicationOptions;
 
-    public SeedNodeServiceProvider(ApplicationOptions applicationOptions, String[] args) {
+    public NetworkNodeServiceProvider(ApplicationOptions applicationOptions, String[] args) {
         super("Seed");
+        this.applicationOptions = applicationOptions;
 
-        KeyPairService.Conf keyPairRepositoryConf = new KeyPairRepositoryConfigFactory(applicationOptions.baseDir()).get();
+        KeyPairService.Conf keyPairRepositoryConf = KeyPairRepositoryConfigFactory.getConfig(applicationOptions.baseDir());
         keyPairService = new KeyPairService(keyPairRepositoryConf);
 
-        NetworkService.Config networkServiceConfig = new NetworkServiceConfigFactory(applicationOptions.baseDir(),
-                getConfig("misq.networkServiceConfig"), args).get();
+        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
+                getConfig("misq.networkServiceConfig"), args);
         networkService = new NetworkService(networkServiceConfig, keyPairService);
     }
 

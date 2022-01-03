@@ -71,11 +71,11 @@ public class DefaultServiceProvider extends ServiceProvider {
         Res.initialize(locale);
         FiatCurrencyRepository.applyLocale(locale);
 
-        KeyPairService.Conf keyPairRepositoryConf = new KeyPairRepositoryConfigFactory(applicationOptions.baseDir()).get();
+        KeyPairService.Conf keyPairRepositoryConf = KeyPairRepositoryConfigFactory.getConfig(applicationOptions.baseDir());
         keyPairService = new KeyPairService(keyPairRepositoryConf);
 
-        NetworkService.Config networkServiceConfig = new NetworkServiceConfigFactory(applicationOptions.baseDir(),
-                getConfig("misq.networkServiceConfig"), args).get();
+        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
+                getConfig("misq.networkServiceConfig"), args);
         networkService = new NetworkService(networkServiceConfig, keyPairService);
 
         identityService = new IdentityService(networkService);
@@ -86,7 +86,7 @@ public class DefaultServiceProvider extends ServiceProvider {
         openOfferService = new OpenOfferService(mockNetworkService);
 
 
-        MarketPriceService.Config marketPriceServiceConf = new MarketPriceServiceConfigFactory().get();
+        MarketPriceService.Config marketPriceServiceConf = MarketPriceServiceConfigFactory.getConfig();
         marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, Version.VERSION);
         offerEntityService = new OfferEntityService(offerService, marketPriceService);
     }

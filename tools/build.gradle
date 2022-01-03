@@ -33,6 +33,7 @@ dependencies {
     implementation project(':desktop')
 
     implementation 'com.google.guava:guava'
+    implementation 'com.typesafe:config'
     implementation 'io.reactivex.rxjava2:rxjava'
 
     implementation 'com.jfoenix:jfoenix:9.0.10'

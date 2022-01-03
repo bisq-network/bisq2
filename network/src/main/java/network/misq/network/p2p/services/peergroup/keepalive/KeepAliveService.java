@@ -31,11 +31,18 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 @Slf4j
 public class KeepAliveService implements Node.Listener {
     private static final long TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
     public static record Config(long maxIdleTime, long interval) {
+        public static Config from(com.typesafe.config.Config typesafeConfig) {
+            return new KeepAliveService.Config(
+                    SECONDS.toMillis(typesafeConfig.getLong("maxIdleTimeInSeconds")),
+                    SECONDS.toMillis(typesafeConfig.getLong("intervalInSeconds")));
+        }
     }
 
     private final Node node;

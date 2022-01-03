@@ -34,6 +34,17 @@ public class ConfigUtil {
     private static final BiFunction<String, Exception, IllegalStateException> toConfigValidationException = (path, ex) ->
             new IllegalStateException(format("Error resolving configuration at path '%s'.", path), ex);
 
+
+    public static Config load(String configFileName) {
+        Config config = ConfigFactory.load(configFileName);
+        config.checkValid(ConfigFactory.defaultReference(), configFileName);
+        return config;
+    }
+
+    public static Config load(String configFileName, String path) {
+        return getConfig(load(configFileName), path);
+    }
+
     public static Config getConfig(Config config, String path) {
         config.checkValid(ConfigFactory.defaultReference(), path);
         return config.getConfig(path);

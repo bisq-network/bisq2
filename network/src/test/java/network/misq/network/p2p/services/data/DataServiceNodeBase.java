@@ -17,8 +17,11 @@
 
 package network.misq.network.p2p.services.data;
 
+import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
+import network.misq.common.util.ConfigUtil;
 import network.misq.common.util.OsUtils;
+import network.misq.network.NetworkService;
 import network.misq.network.NetworkServiceConfigFactory;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
@@ -37,9 +40,12 @@ public abstract class DataServiceNodeBase {
     protected MultiNodesSetup multiNodesSetup;
 
     protected Map<Transport.Type, List<Address>> bootstrapMultiNodesSetup(Set<Transport.Type> transports, int numSeeds, int numNodes) {
-        String baseDir = OsUtils.getUserDataDir() + File.separator + "misq_MultiNodes";
-        NetworkServiceConfigFactory networkServiceConfigFactory = new NetworkServiceConfigFactory(baseDir);
-        multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory.get(), transports, false);
+        String appDir = OsUtils.getUserDataDir() + File.separator + "misq_MultiNodes";
+
+        Config typesafeConfig = ConfigUtil.load("Misq", "misq.networkServiceConfig");
+        NetworkService.Config networkServiceConfigFactory =  NetworkServiceConfigFactory.getConfig(appDir, typesafeConfig);
+
+        multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory, transports, false);
 
         Stream<Address> seeds = transports.stream().flatMap(transport -> multiNodesSetup.getSeedAddresses(transport, numSeeds).stream());
         Stream<Address> nodes = transports.stream().flatMap(transport -> multiNodesSetup.getNodeAddresses(transport, numNodes).stream());
