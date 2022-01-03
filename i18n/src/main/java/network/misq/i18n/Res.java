@@ -27,6 +27,7 @@ import java.util.ResourceBundle;
 @Slf4j
 public class Res {
     public static Res common, network;
+    private final String resourceName;
 
     public static void initialize(Locale locale) {
         common = new Res(locale, "default");
@@ -36,6 +37,7 @@ public class Res {
     private final ResourceBundle resourceBundle;
 
     private Res(Locale locale, String resourceName) {
+        this.resourceName = resourceName;
         if ("en".equalsIgnoreCase(locale.getLanguage())) {
             locale = Locale.ROOT;
         }
@@ -50,7 +52,7 @@ public class Res {
         try {
             return resourceBundle.getString(key);
         } catch (MissingResourceException e) {
-            log.warn("Missing resource for key: " + key, e);
+            log.warn("Missing resource for key: " + resourceName + "." + key, e);
             return key;
         }
     }

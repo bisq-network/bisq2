@@ -17,45 +17,56 @@
 
 package network.misq.desktop.components.containers;
 
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
 import network.misq.common.data.Pair;
+import network.misq.desktop.components.controls.AutoTooltipLabel;
+import network.misq.desktop.components.controls.MisqTextField;
 
 @Getter
 public class Form extends MisqGridPane {
-    private final Label headlineLabel;
+    private final AutoTooltipLabel label;
 
     public Form(String headline) {
-        headlineLabel = new Label(headline);
-        GridPane.setRowIndex(headlineLabel, 0);
-        GridPane.setColumnIndex(headlineLabel, 0);
-        GridPane.setColumnSpan(headlineLabel, 2);
-        getChildren().add(headlineLabel);
+        label = new AutoTooltipLabel(headline);
+        label.setLayoutX(4);
+        label.setLayoutY(-8);
+        label.setPadding(new Insets(0, 7, 0, 5));
+        label.getStyleClass().add("titled-group-bg-label-active");
+        GridPane.setMargin(label, new Insets(0,0,15,0));
+        GridPane.setRowIndex(label, 0);
+        GridPane.setColumnIndex(label, 0);
+        GridPane.setColumnSpan(label, 2);
+        getChildren().add(label);
     }
 
-    public Pair<Label, TextField> addLabelTextField(Pair<String, String> labelValuePair) {
-        Label label = new Label(labelValuePair.first());
-        int rowIndex = getRowCount() + 1;
-        GridPane.setRowIndex(label, rowIndex);
-        GridPane.setColumnIndex(label, 0);
-        getChildren().add(label);
+    public MisqTextField addTextField(String labelText, StringProperty textFieldText) {
+        MisqTextField textField = addTextField(labelText, textFieldText.get());
+        textField.textProperty().bind(textFieldText);
+        return textField;
+    }
 
-        TextField textField = new TextField(labelValuePair.second());
-        GridPane.setRowIndex(textField, rowIndex);
+    public MisqTextField addTextField(String labelText, String textFieldText) {
+        MisqTextField textField = new MisqTextField(textFieldText);
+        textField.setLabelFloat(true);
+        textField.setPromptText(labelText);
+        GridPane.setMargin(textField, new Insets(0,0,15,0));
+        GridPane.setRowIndex(textField, getRowCount() + 1);
         GridPane.setColumnIndex(textField, 1);
         getChildren().addAll(textField);
 
-        return new Pair<>(label, textField);
+        return textField;
     }
+
     public Pair<Button, Label> addButton(String text) {
         Button button = new Button(text);
         Label label = new Label();
-        label.setPadding(new Insets(5,0,0,0));
+        label.setPadding(new Insets(5, 0, 0, 0));
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);

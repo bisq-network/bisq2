@@ -21,7 +21,9 @@ import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.security.PubKey;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey, String nodeId) {
+public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey,
+                        String nodeId) implements Serializable {
 }

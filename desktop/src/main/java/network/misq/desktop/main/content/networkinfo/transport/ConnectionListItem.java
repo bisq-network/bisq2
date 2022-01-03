@@ -57,7 +57,7 @@ public class ConnectionListItem implements TableItem {
     @Getter
     private final StringProperty received = new SimpleStringProperty();
     @Getter
-    private final StringProperty rrt = new SimpleStringProperty();
+    private final StringProperty rtt = new SimpleStringProperty();
 
     public ConnectionListItem(Connection connection, String nodeId) {
         this.connection = connection;
@@ -91,7 +91,7 @@ public class ConnectionListItem implements TableItem {
 
 
     private void updateRtt() {
-        rrt.set(TimeFormatter.formatTime(Math.round(metrics.getAverageRtt())));
+        rtt.set(TimeFormatter.formatTime(Math.round(metrics.getAverageRtt())));
     }
 
     private void updateSent() {

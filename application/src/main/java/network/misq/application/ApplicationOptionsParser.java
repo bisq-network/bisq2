@@ -24,8 +24,13 @@ import java.io.File;
 
 public class ApplicationOptionsParser {
     public static ApplicationOptions parse(String[] args) {
-        //todo
         String appName = "Misq";
+        for (String arg : args) {
+            if (arg.startsWith("--appName")) {
+                appName = arg.split("=")[1];
+            }
+        }
+
         String appDir = OsUtils.getUserDataDir() + File.separator + appName;
         return new ApplicationOptions(appDir, appName);
     }
