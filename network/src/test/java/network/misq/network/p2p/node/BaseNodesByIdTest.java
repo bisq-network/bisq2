@@ -56,15 +56,26 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
             int serverPort = 1000 + i;
             nodesById.initializeServer(nodeId, serverPort);
             initializeServerLatch.countDown();
-            nodesById.addNodeListener(nodeId, (message, connection, id) -> {
-                log.info("Received " + message.toString());
-                if (message instanceof ClearNetNodesByIdIntegrationTest.Ping) {
-                    ClearNetNodesByIdIntegrationTest.Pong pong = new ClearNetNodesByIdIntegrationTest.Pong("Pong from " + finalI + " to " + connection.getPeerAddress().getPort());
-                    log.info("Send pong " + pong);
-                    nodesById.send(nodeId, pong, connection);
-                    sendPongLatch.countDown();
-                } else if (message instanceof ClearNetNodesByIdIntegrationTest.Pong) {
-                    receivedPongLatch.countDown();
+            nodesById.addNodeListener(new Node.Listener() {
+                @Override
+                public void onMessage(Message message, Connection connection, String nodeId) {
+                    log.info("Received " + message.toString());
+                    if (message instanceof ClearNetNodesByIdIntegrationTest.Ping) {
+                        ClearNetNodesByIdIntegrationTest.Pong pong = new ClearNetNodesByIdIntegrationTest.Pong("Pong from " + finalI + " to " + connection.getPeerAddress().getPort());
+                        log.info("Send pong " + pong);
+                        nodesById.send(nodeId, pong, connection);
+                        sendPongLatch.countDown();
+                    } else if (message instanceof ClearNetNodesByIdIntegrationTest.Pong) {
+                        receivedPongLatch.countDown();
+                    }
+                }
+
+                @Override
+                public void onConnection(Connection connection) {
+                }
+
+                @Override
+                public void onDisconnect(Connection connection, CloseReason closeReason) {
                 }
             });
         }
