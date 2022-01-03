@@ -59,19 +59,19 @@ public class TransportTypeModel implements Model {
     @Getter
     private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.common.get("na"));
     @Getter
-    private final StringProperty dateHeader = new SimpleStringProperty();
+    private final String dateHeader;
     @Getter
-    private final StringProperty directionHeader = new SimpleStringProperty();
+    private final String directionHeader;
     @Getter
-    private final StringProperty addressHeader = new SimpleStringProperty();
+    private final String addressHeader;
     @Getter
-    private final StringProperty nodeIdHeader = new SimpleStringProperty();
+    private final String nodeIdHeader;
     @Getter
-    private final StringProperty sentHeader = new SimpleStringProperty();
+    private final String sentHeader;
     @Getter
-    private final StringProperty receivedHeader = new SimpleStringProperty();
+    private final String receivedHeader;
     @Getter
-    private final StringProperty rttHeader = new SimpleStringProperty();
+    private final String rttHeader;
     @Getter
     private final StringProperty pubKey = new SimpleStringProperty();
     private final Collection<Node> allNodes;
@@ -98,13 +98,13 @@ public class TransportTypeModel implements Model {
                 .map(pair -> new ConnectionListItem(pair.first(), pair.second()))
                 .collect(Collectors.toList()));
 
-        dateHeader.set(Res.network.get("table.header.established"));
-        directionHeader.set(Res.network.get("table.header.connectionDirection"));
-        addressHeader.set(Res.network.get("table.header.address"));
-        nodeIdHeader.set(Res.network.get("table.header.nodeId"));
-        sentHeader.set(Res.network.get("table.header.sentHeader"));
-        receivedHeader.set(Res.network.get("table.header.receivedHeader"));
-        rttHeader.set(Res.network.get("table.header.rtt"));
+        dateHeader=Res.network.get("table.connections.header.established");
+        directionHeader=Res.network.get("table.connections.header.connectionDirection");
+        addressHeader=Res.network.get("table.connections.header.address");
+        nodeIdHeader=Res.network.get("table.connections.header.nodeId");
+        sentHeader=Res.network.get("table.connections.header.sentHeader");
+        receivedHeader=Res.network.get("table.connections.header.receivedHeader");
+        rttHeader=Res.network.get("table.connections.header.rtt");
     }
 
 

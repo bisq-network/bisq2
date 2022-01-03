@@ -28,7 +28,7 @@ import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.desktop.common.view.View;
 import network.misq.desktop.components.controls.AutoTooltipButton;
-import network.misq.desktop.components.controls.AutoTooltipLabel;
+import network.misq.desktop.components.controls.MisqLabel;
 
 @Slf4j
 public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferController> {
@@ -58,7 +58,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
     }
 
     private Node getStepNode(String title) {
-        return new AutoTooltipLabel(title);
+        return new MisqLabel(title);
     }
 
     protected void activate() {

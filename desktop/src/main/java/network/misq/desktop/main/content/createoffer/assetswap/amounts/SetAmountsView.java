@@ -24,7 +24,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import network.misq.desktop.common.view.View;
 import network.misq.desktop.components.controls.AutoTooltipButton;
-import network.misq.desktop.components.controls.AutoTooltipLabel;
+import network.misq.desktop.components.controls.MisqLabel;
 import network.misq.desktop.components.controls.AutocompleteComboBox;
 
 public class SetAmountsView extends View<HBox, SetAmountsModel, SetAmountsController> {
@@ -38,7 +38,7 @@ public class SetAmountsView extends View<HBox, SetAmountsModel, SetAmountsContro
     }
 
     protected void initialize() {
-        Label askCurrencyLabel = new AutoTooltipLabel("I want (ask):");
+        Label askCurrencyLabel = new MisqLabel("I want (ask):");
         askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
 
         askCurrencyComboBox = new AutocompleteComboBox<>();
@@ -46,7 +46,7 @@ public class SetAmountsView extends View<HBox, SetAmountsModel, SetAmountsContro
 
         flipButton = new AutoTooltipButton("<- Flip ->");
 
-        Label bidCurrencyLabel = new AutoTooltipLabel("I give (bid):");
+        Label bidCurrencyLabel = new MisqLabel("I give (bid):");
         bidCurrencyLabel.setPadding(new Insets(4, 8, 0, 60));
         bidCurrencyComboBox = new AutocompleteComboBox<>();
         bidCurrencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");

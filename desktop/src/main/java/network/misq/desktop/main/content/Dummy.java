@@ -22,7 +22,7 @@ import javafx.scene.layout.StackPane;
 import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.common.view.Model;
 import network.misq.desktop.common.view.View;
-import network.misq.desktop.components.controls.AutoTooltipLabel;
+import network.misq.desktop.components.controls.MisqLabel;
 
 public class Dummy {
 
@@ -39,7 +39,7 @@ public class Dummy {
     public static class DummyView extends View<StackPane, DummyModel, DummyController> {
         public DummyView(String label) {
             super(new StackPane(), new DummyModel(), new DummyController());
-            root.getChildren().add(new AutoTooltipLabel(label));
+            root.getChildren().add(new MisqLabel(label));
         }
     }
 }

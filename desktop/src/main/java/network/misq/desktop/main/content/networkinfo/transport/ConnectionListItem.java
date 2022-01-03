@@ -68,7 +68,7 @@ public class ConnectionListItem implements TableItem {
         date.set(DateFormatter.formatDateTime(metrics.getCreationDate()));
         address.set(connection.getPeerAddress().getFullAddress());
 
-        direction.set(connection.isOutboundConnection() ? Res.network.get("table.value.outbound") : Res.network.get("table.value.inbound"));
+        direction.set(connection.isOutboundConnection() ? Res.network.get("table.connections.value.outbound") : Res.network.get("table.connections.value.inbound"));
         updateSent();
         updateReceived();
         updateRtt();
@@ -95,13 +95,13 @@ public class ConnectionListItem implements TableItem {
     }
 
     private void updateSent() {
-        sent.set(Res.network.get("table.value.ioData",
+        sent.set(Res.network.get("table.connections.value.ioData",
                 StringUtils.fromBytes(metrics.getSentBytes().get()),
                 metrics.getNumMessagesSent().get()));
     }
 
     private void updateReceived() {
-        received.set(Res.network.get("table.value.ioData",
+        received.set(Res.network.get("table.connections.value.ioData",
                 StringUtils.fromBytes(metrics.getReceivedBytes().get()),
                 metrics.getNumMessagesReceived().get()));
     }

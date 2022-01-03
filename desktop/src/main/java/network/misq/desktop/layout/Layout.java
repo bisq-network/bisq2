@@ -18,8 +18,17 @@
 package network.misq.desktop.layout;
 
 import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.layout.AnchorPane;
 
 public class Layout {
     public static final Insets INSETS = new Insets(20);
     public static final double SPACING = 20;
+
+    public static void pinToAnchorPane(Node node, int top, int right, int bottom, int left) {
+        AnchorPane.setTopAnchor(node, (double) top);
+        AnchorPane.setRightAnchor(node, (double) right);
+        AnchorPane.setBottomAnchor(node, (double) bottom);
+        AnchorPane.setLeftAnchor(node, (double) left);
+    }
 }

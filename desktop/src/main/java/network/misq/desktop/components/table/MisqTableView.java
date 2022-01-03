@@ -17,32 +17,60 @@
 
 package network.misq.desktop.components.table;
 
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.StringProperty;
 import javafx.collections.transformation.SortedList;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.util.Callback;
-
-import java.util.Comparator;
-import java.util.Optional;
-import java.util.function.Function;
+import network.misq.desktop.components.controls.MisqLabel;
+import network.misq.i18n.Res;
 
 public class MisqTableView<S extends TableItem> extends TableView<S> {
     public MisqTableView(SortedList<S> sortedList) {
         super(sortedList);
+
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         sortedList.comparatorProperty().bind(comparatorProperty());
+
+        setPlaceholder(new MisqLabel(Res.common.get("table.placeholder.noData")));
     }
-
-
-    public MisqTableColumn<S, S> getPropertyColumn(StringProperty header,
-                                                   int headerWidth,
+/*
+    public MisqTableColumn<S> getPropertyColumn(StringProperty header,
                                                    Function<S, StringProperty> valueSupplier,
                                                    Optional<Comparator<S>> optionalComparator) {
-        MisqTableColumn<S, S> column = new MisqTableColumn<>(header) {{
-            setMinWidth(headerWidth);
+        return getPropertyColumn(header, Optional.empty(), Optional.empty(), valueSupplier, optionalComparator);
+    }
+
+    public MisqTableColumn<S> getPropertyColumn(StringProperty header,
+                                                   int minWidth,
+                                                   Function<S, StringProperty> valueSupplier,
+                                                   Optional<Comparator<S>> optionalComparator) {
+        return getPropertyColumn(header, Optional.of(minWidth), Optional.empty(), valueSupplier, optionalComparator);
+    }
+
+    public MisqTableColumn<S> getPropertyColumn(StringProperty header,
+                                                   int minWidth,
+                                                   int maxWidth,
+                                                   Function<S, StringProperty> valueSupplier,
+                                                   Optional<Comparator<S>> optionalComparator) {
+        return getPropertyColumn(header, Optional.of(minWidth), Optional.of(maxWidth), valueSupplier, optionalComparator);
+    }
+
+    public MisqTableColumn<S> getPropertyColumn(StringProperty header,
+                                                   Optional<Integer> minWidth,
+                                                   Optional<Integer> maxWidth,
+                                                   Function<S, StringProperty> valueSupplier,
+                                                   Optional<Comparator<S>> optionalComparator) {
+
+        MisqTableColumn<S> column1 = new MisqTableColumn<S>()
+                .headerProperty(header)
+                .header(header.get())
+                .minWidth(minWidth.get())
+                .maxWidth(maxWidth.get())
+                .value("valueSupplier")
+                .comparator(optionalComparator.get())
+                .valuePropertySupplier(valueSupplier);
+        
+        MisqTableColumn<S> column = new MisqTableColumn<>(header) {{
+            minWidth.ifPresent(this::setMinWidth);
+            maxWidth.ifPresent(this::setMaxWidth);
         }};
         column.setCellValueFactory((data) -> new ReadOnlyObjectWrapper<>(data.getValue()));
         column.setCellFactory(
@@ -81,5 +109,5 @@ public class MisqTableView<S extends TableItem> extends TableView<S> {
             column.setComparator(comparator);
         });
         return column;
-    }
+    }*/
 }
