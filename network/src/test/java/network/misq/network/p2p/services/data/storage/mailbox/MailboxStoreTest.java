@@ -19,13 +19,13 @@ package network.misq.network.p2p.services.data.storage.mailbox;
 
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.ObjectSerializer;
+import network.misq.common.data.ByteArray;
 import network.misq.common.util.OsUtils;
 import network.misq.network.p2p.services.data.filter.FilterItem;
 import network.misq.network.p2p.services.data.filter.ProtectedDataFilter;
 import network.misq.network.p2p.services.data.inventory.Inventory;
-import network.misq.common.data.ByteArray;
-import network.misq.network.p2p.services.data.storage.auth.RemoveRequest;
 import network.misq.network.p2p.services.data.storage.Result;
+import network.misq.network.p2p.services.data.storage.auth.RemoveRequest;
 import network.misq.security.ConfidentialData;
 import network.misq.security.DigestUtil;
 import network.misq.security.HybridEncryption;

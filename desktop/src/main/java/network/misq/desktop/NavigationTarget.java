@@ -15,14 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.network.p2p.services.peergroup;
+package network.misq.desktop;
 
+import lombok.Getter;
 
-import network.misq.network.p2p.node.Address;
-import network.misq.network.p2p.node.transport.Transport;
+public enum NavigationTarget {
+    MARKETS,
+    OFFERBOOK,
+    CREATE_OFFER(NavigationSink.OVERLAY),
+    SETTINGS,
+    NETWORK_INFO;
+    @Getter
+    private final NavigationSink sink;
 
-import java.util.List;
-import java.util.Map;
+    NavigationTarget() {
+        this.sink = NavigationSink.CONTENT;
+    }
 
-public record SeedNodeRepository(Map<Transport.Type, List<Address>> addressesByTransportType) {
+    NavigationTarget(NavigationSink sink) {
+        this.sink = sink;
+    }
 }

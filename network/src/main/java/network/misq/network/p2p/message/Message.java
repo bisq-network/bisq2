@@ -16,6 +16,7 @@
  */
 
 package network.misq.network.p2p.message;
+
 /**
  * Interface for any object sent over the network
  */

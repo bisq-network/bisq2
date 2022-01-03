@@ -33,7 +33,7 @@ public class GrpcVersionService extends GetVersionGrpc.GetVersionImplBase {
     private final DefaultServiceProvider serviceProvider;
 
     public GrpcVersionService(DefaultServiceProvider serviceProvider) {
-         this.serviceProvider = serviceProvider;
+        this.serviceProvider = serviceProvider;
     }
 
     @Override

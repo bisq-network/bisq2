@@ -17,23 +17,20 @@
 
 package network.misq.desktop.main.content;
 
-import javafx.collections.ObservableList;
-import javafx.scene.Node;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.desktop.common.view.View;
 
 @Slf4j
-public class ContentView extends View<HBox, ContentViewModel, ContentViewController> {
+public class ContentView extends View<HBox, ContentModel, ContentController> {
 
-    public ContentView(ContentViewModel model, ContentViewController controller) {
+    public ContentView(ContentModel model, ContentController controller) {
         super(new HBox(), model, controller);
-        
-        model.view.addListener((observable, oldValue, newValue) -> {
+
+        model.getView().addListener((observable, oldValue, newValue) -> {
             HBox.setHgrow(newValue.getRoot(), Priority.ALWAYS);
-            ObservableList<Node> children = root.getChildren();
-            children.setAll(newValue.getRoot());
+            root.getChildren().setAll(newValue.getRoot());
         });
 
      /*   Navigation.addListener((viewPath, data) -> {

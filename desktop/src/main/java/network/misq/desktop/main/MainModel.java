@@ -19,5 +19,5 @@ package network.misq.desktop.main;
 
 import network.misq.desktop.common.view.Model;
 
-public class MainViewModel implements Model {
+public class MainModel implements Model {
 }

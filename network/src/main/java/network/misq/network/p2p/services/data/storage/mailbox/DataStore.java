@@ -17,8 +17,8 @@
 
 package network.misq.network.p2p.services.data.storage.mailbox;
 
-import network.misq.common.util.FileUtils;
 import network.misq.common.data.ByteArray;
+import network.misq.common.util.FileUtils;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.network.p2p.services.data.storage.Storage;
 import network.misq.persistence.Persistence;

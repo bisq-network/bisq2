@@ -22,72 +22,36 @@ import lombok.extern.slf4j.Slf4j;
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 @Slf4j
 public class Res {
-    // Convenience methods
-    public static String get(String key, Object... arguments) {
-        return Default.get(key, arguments);
+    public static Res common, network;
+
+    public static void initialize(Locale locale) {
+        common = new Res(locale, "default");
+        network = new Res(locale, "network");
     }
 
-    public static String get(String key) {
-        return Default.get(key);
+    private final ResourceBundle resourceBundle;
+
+    private Res(Locale locale, String resourceName) {
+        if ("en".equalsIgnoreCase(locale.getLanguage())) {
+            locale = Locale.ROOT;
+        }
+        resourceBundle = ResourceBundle.getBundle(resourceName, locale, new UTF8Control());
     }
 
-    public static void setLocale(Locale locale) {
-        Default.setLocale(locale);
+    public String get(String key, Object... arguments) {
+        return MessageFormat.format(get(key), arguments);
     }
 
-
-    public static class Default extends Base {
-        private static Default INSTANCE = new Default(Locale.ROOT);
-
-        private Default(Locale locale) {
-            super(locale);
-        }
-
-        public static void setLocale(Locale locale) {
-            INSTANCE = new Default(locale);
-        }
-
-        public static String get(String key, Object... arguments) {
-            return MessageFormat.format(INSTANCE.getValue(key), arguments);
-        }
-
-        public static String get(String key) {
-            try {
-                return INSTANCE.getValue(key);
-            } catch (MissingResourceException e) {
-                log.warn("Missing resource for key: {}", key);
-                e.printStackTrace();
-                return key;
-            }
-        }
-    }
-
-    public static class Listing extends Base {
-        private static Listing INSTANCE = new Listing(Locale.ROOT);
-
-        private Listing(Locale locale) {
-            super(locale);
-        }
-
-        public static void setLocale(Locale locale) {
-            INSTANCE = new Listing(locale);
-        }
-
-        public static String get(String key, Object... arguments) {
-            return MessageFormat.format(INSTANCE.getValue(key), arguments);
-        }
-
-        public static String get(String key) {
-            try {
-                return INSTANCE.getValue(key);
-            } catch (MissingResourceException e) {
-                log.warn("Missing resource for key: {}", key);
-                e.printStackTrace();
-                return key;
-            }
+    public String get(String key) {
+        try {
+            return resourceBundle.getString(key);
+        } catch (MissingResourceException e) {
+            log.warn("Missing resource for key: " + key, e);
+            return key;
         }
     }
 }

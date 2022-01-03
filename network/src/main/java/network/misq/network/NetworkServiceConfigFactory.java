@@ -72,8 +72,8 @@ public class NetworkServiceConfigFactory {
         //todo use option parser lib for args (define priority)
 
         // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
-        // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
-        Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
+       // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
+         Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
 
         ServiceNode.Config serviceNodeConfig = new ServiceNode.Config(Set.of(
                 ServiceNode.Service.CONFIDENTIAL,
@@ -164,7 +164,7 @@ public class NetworkServiceConfigFactory {
             }
             default -> {
                 List<Address> seedAddresses = new ArrayList<>();
-                for (int i = 0; i < 100; i++) {
+                for (int i = 0; i < 10; i++) {
                     seedAddresses.add(Address.localHost(8000 + i));
                 }
                 return seedAddresses;

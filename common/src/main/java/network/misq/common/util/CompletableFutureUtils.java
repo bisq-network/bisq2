@@ -51,6 +51,10 @@ public class CompletableFutureUtils {
         return anyOf(collection.toArray(new CompletableFuture[0]));
     }
 
+    public static <T> CompletableFuture<List<T>> anyOf(Stream<CompletableFuture<T>> collection) {
+        return anyOf(collection.collect(Collectors.toList()));
+    }
+
     @SafeVarargs
     public static <T> CompletableFuture<T> anyOf(CompletableFuture<T>... list) {
         return CompletableFuture.anyOf(list).thenCompose(res ->

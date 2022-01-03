@@ -68,8 +68,7 @@ public abstract class Connection {
     @Getter
     private final Load peersLoad;
     @Getter
-    private final Metrics metrics = new Metrics();
-    ;
+    private final Metrics metrics;
 
     private final Socket socket;
     private final Handler handler;
@@ -85,13 +84,14 @@ public abstract class Connection {
     protected Connection(Socket socket,
                          Capability peersCapability,
                          Load peersLoad,
+                         Metrics metrics,
                          Handler handler,
                          BiConsumer<Connection, Exception> errorHandler) {
         this.socket = socket;
         this.peersCapability = peersCapability;
         this.peersLoad = peersLoad;
         this.handler = handler;
-
+        this.metrics = metrics;
         // TODO java serialisation is just for dev, will be replaced by custom serialisation
         // https://github.com/lightningnetwork/lightning-rfc/blob/master/01-messaging.md#type-length-value-format
         // ObjectOutputStream need to be set before objectInputStream otherwise we get blocked...

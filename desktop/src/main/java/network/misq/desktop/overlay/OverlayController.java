@@ -25,7 +25,7 @@ import network.misq.desktop.common.view.Model;
 import network.misq.desktop.common.view.View;
 
 @Slf4j
-public class OverlayController {
+public class OverlayController implements Controller {
     private OverlayModel model;
     private OverlayView overlayView;
 
@@ -34,16 +34,16 @@ public class OverlayController {
         overlayView = new OverlayView(model, this, parentScene);
     }
 
-    public void initialize() {
-    }
-
     public void show(Controller controller) {
-        controller.initialize();
-        View<? extends Parent, ? extends Model, ? extends Controller> view = controller.getView();
-        model.selectView(view);
+        model.selectView(controller.getView());
     }
 
-    public void onClosed() {
+    void onClosed() {
         model.selectView(null);
+    }
+
+    @Override
+    public View<? extends Parent, ? extends Model, ? extends Controller> getView() {
+        return overlayView;
     }
 }

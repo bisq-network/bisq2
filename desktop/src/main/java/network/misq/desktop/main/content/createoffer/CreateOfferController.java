@@ -33,29 +33,15 @@ public class CreateOfferController implements Controller {
     private final SetAmountsController setAmountsController;
 
     public CreateOfferController(DefaultServiceProvider serviceProvider) {
-         this.serviceProvider = serviceProvider;
+        this.serviceProvider = serviceProvider;
         model = new CreateOfferModel();
         view = new CreateOfferView(model, this);
 
-        reviewOfferController=  new ReviewOfferController(serviceProvider);
-        setAmountsController=  new SetAmountsController();
-    }
-
-    @Override
-    public void initialize() {
-        reviewOfferController.initialize();
-        setAmountsController.initialize();
+        reviewOfferController = new ReviewOfferController(serviceProvider);
+        setAmountsController = new SetAmountsController();
 
         ReviewOfferView view = reviewOfferController.getView();
         model.selectView(view);
-    }
-
-    @Override
-    public void onViewAdded() {
-    }
-
-    @Override
-    public void onViewRemoved() {
     }
 
     public void onNavigateBack() {

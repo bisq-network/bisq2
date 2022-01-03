@@ -30,18 +30,6 @@ public class SetAmountsController implements Controller {
         view = new SetAmountsView(model, this);
     }
 
-    @Override
-    public void initialize() {
-    }
-
-    @Override
-    public void onViewAdded() {
-    }
-
-    @Override
-    public void onViewRemoved() {
-    }
-
     public void onSelectAskCurrency(String currency) {
         model.setSelectAskCurrency(currency);
     }

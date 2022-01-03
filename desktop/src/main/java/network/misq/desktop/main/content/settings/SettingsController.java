@@ -20,7 +20,7 @@ package network.misq.desktop.main.content.settings;
 import lombok.Getter;
 import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.main.content.ContentViewController;
+import network.misq.desktop.main.content.ContentController;
 import network.misq.desktop.overlay.OverlayController;
 
 public class SettingsController implements Controller {
@@ -28,33 +28,18 @@ public class SettingsController implements Controller {
     @Getter
     private final SettingsView view;
     private final DefaultServiceProvider serviceProvider;
-    private final ContentViewController contentViewController;
+    private final ContentController contentController;
     private final OverlayController overlayController;
 
-    public SettingsController(DefaultServiceProvider serviceProvider, ContentViewController contentViewController, OverlayController overlayController) {
-         this.serviceProvider = serviceProvider;
+    public SettingsController(DefaultServiceProvider serviceProvider,
+                              ContentController contentController,
+                              OverlayController overlayController) {
+        this.serviceProvider = serviceProvider;
         model = new SettingsModel(serviceProvider);
         view = new SettingsView(model, this);
-        
-        this.contentViewController = contentViewController;
+
+        this.contentController = contentController;
         this.overlayController = overlayController;
-    }
-
-    @Override
-    public void initialize() {
-        model.initialize();
-    }
-
-    @Override
-    public void onViewAdded() {
-        model.activate();
-
-        // Platform.runLater(() -> onCreateOffer());
-    }
-
-    @Override
-    public void onViewRemoved() {
-        model.deactivate();
     }
 
 

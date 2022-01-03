@@ -73,11 +73,9 @@ public class Node implements Connection.Handler {
     public interface Listener {
         void onMessage(Message message, Connection connection, String nodeId);
 
-        default void onConnection(Connection connection) {
-        }
+        void onConnection(Connection connection);
 
-        default void onDisconnect(Connection connection, CloseReason closeReason) {
-        }
+        void onDisconnect(Connection connection, CloseReason closeReason);
     }
 
     public static record Config(Transport.Type transportType,
@@ -91,6 +89,7 @@ public class Node implements Connection.Handler {
     private final Transport transport;
     private final AuthorizationService authorizationService;
     private final Config config;
+    @Getter
     private final String nodeId;
     @Getter
     private final Map<Address, OutboundConnection> outboundConnectionsByAddress = new ConcurrentHashMap<>();
@@ -160,6 +159,7 @@ public class Node implements Connection.Handler {
                     serverSocketResult,
                     result.capability(),
                     result.load(),
+                    result.metrics(),
                     this,
                     this::handleException);
             inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
@@ -295,6 +295,7 @@ public class Node implements Connection.Handler {
                     address,
                     result.capability(),
                     result.load(),
+                    result.metrics(),
                     this,
                     this::handleException);
             outboundConnectionsByAddress.put(address, connection);
@@ -311,6 +312,10 @@ public class Node implements Connection.Handler {
             handleException(throwable);
             throw new ConnectionException(throwable);
         }
+    }
+
+    public Stream<Connection> getAllConnections() {
+        return Stream.concat(inboundConnectionsByAddress.values().stream(), outboundConnectionsByAddress.values().stream());
     }
 
 

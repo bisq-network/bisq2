@@ -28,7 +28,7 @@ public class StringUtils {
         return value.substring(0, Math.min(value.length(), maxLength)) + "...";
     }
 
-    public static String fileSizePrettyPrint(long size) {
+    public static String fromBytes(long size) {
         if (size <= 0) return "0";
         String[] units = new String[]{"B", "kB", "MB", "GB", "TB"};
         int digitGroups = (int) (Math.log10(size) / Math.log10(1024));

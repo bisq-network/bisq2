@@ -22,6 +22,7 @@ import network.misq.common.util.CollectionUtil;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
+import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.services.peergroup.PeerGroup;
@@ -60,6 +61,14 @@ public class Broadcaster implements Node.Listener {
         if (message instanceof BroadcastMessage broadcastMessage) {
             listeners.forEach(listener -> listener.onMessage(broadcastMessage.message(), connection, nodeId));
         }
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
     public CompletableFuture<BroadcastResult> reBroadcast(Message message) {

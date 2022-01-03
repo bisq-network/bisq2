@@ -32,15 +32,11 @@ import network.misq.desktop.components.controls.AutoTooltipLabel;
 
 @Slf4j
 public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferController> {
-
-    private AutoTooltipButton back, next;
+    private final AutoTooltipButton back, next;
 
     public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
         super(new VBox(), model, controller);
-    }
 
-    @Override
-    protected void setupView() {
         root.setSpacing(40);
         root.setPadding(new Insets(20, 20, 20, 20));
         HBox topPane = new HBox();
@@ -65,25 +61,22 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         return new AutoTooltipLabel(title);
     }
 
-    protected void configModel() {
+    protected void activate() {
+        Scene scene = root.getScene();
+        Stage window = (Stage) scene.getWindow();
+        window.titleProperty().bind(model.titleProperty);
+
         root.minWidthProperty().bind(model.minWidthProperty);
         root.minHeightProperty().bind(model.minHeightProperty);
         back.visibleProperty().bind(model.backButtonVisible);
         next.visibleProperty().bind(model.nextButtonVisible);
         model.view.addListener((observable, oldValue, newValue) -> root.getChildren().add(1, newValue.getRoot()));
-    }
 
-    protected void configController() {
         back.setOnAction(e -> controller.onNavigateBack());
         next.setOnAction(e -> controller.onNavigateNext());
     }
 
-    protected void onAddedToStage() {
-        Scene scene = root.getScene();
-        Stage window = (Stage) scene.getWindow();
-        window.titleProperty().bind(model.titleProperty);
-    }
-
-    protected void onRemovedFromStage() {
+    protected void deactivate() {
+        //todo remove bindings, listeners
     }
 }

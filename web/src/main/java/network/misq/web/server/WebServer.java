@@ -20,7 +20,7 @@ public class WebServer {
     private final DefaultServiceProvider serviceProvider;
 
     public WebServer(DefaultServiceProvider serviceProvider) {
-         this.serviceProvider = serviceProvider;
+        this.serviceProvider = serviceProvider;
     }
 
     public void start() {

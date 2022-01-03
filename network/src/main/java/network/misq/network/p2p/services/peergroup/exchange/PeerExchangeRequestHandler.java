@@ -36,6 +36,7 @@ class PeerExchangeRequestHandler implements Connection.Listener {
     private final Connection connection;
     private final CompletableFuture<Set<Peer>> future = new CompletableFuture<>();
     private final int nonce;
+    private long ts;
 
     PeerExchangeRequestHandler(Node node, Connection connection) {
         this.node = node;
@@ -47,6 +48,7 @@ class PeerExchangeRequestHandler implements Connection.Listener {
     CompletableFuture<Set<Peer>> request(Set<Peer> peersForPeerExchange) {
         log.debug("Node {} send PeerExchangeRequest to {} with {} peers",
                 node, connection.getPeerAddress(), peersForPeerExchange.size());
+        ts = System.currentTimeMillis();
         try {
             // We get called from the IO thread, so we do not use the async send method
             node.send(new PeerExchangeRequest(nonce, peersForPeerExchange), connection);
@@ -68,6 +70,7 @@ class PeerExchangeRequestHandler implements Connection.Listener {
                         node, connection.getPeerAddress(), addresses);*/
                 log.info("Node {} received PeerExchangeResponse from {} with {} peers",
                         node, connection.getPeerAddress(), response.peers().size());
+                connection.getMetrics().addRtt(ts = System.currentTimeMillis() - ts);
                 removeListeners();
                 future.complete(response.peers());
             } else {

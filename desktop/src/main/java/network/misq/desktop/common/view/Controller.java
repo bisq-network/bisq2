@@ -20,11 +20,11 @@ package network.misq.desktop.common.view;
 import javafx.scene.Parent;
 
 public interface Controller {
-    void initialize();
-
-    void onViewAdded();
-
-    void onViewRemoved();
-
     View<? extends Parent, ? extends Model, ? extends Controller> getView();
+
+    default void activate() {
+    }
+
+    default void deactivate() {
+    }
 }

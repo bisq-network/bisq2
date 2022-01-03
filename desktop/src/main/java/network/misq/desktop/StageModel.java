@@ -21,14 +21,15 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import lombok.Getter;
 import network.misq.desktop.common.view.Model;
-
+@Getter
 public class StageModel implements Model {
-    final DoubleProperty minWidthProperty = new SimpleDoubleProperty(800);
-    final DoubleProperty minHeightProperty = new SimpleDoubleProperty(600);
-    final DoubleProperty prefWidthProperty = new SimpleDoubleProperty(1900);
-    final DoubleProperty prefHeightProperty = new SimpleDoubleProperty(1000);
-    final StringProperty titleProperty = new SimpleStringProperty("");
+    private final DoubleProperty minWidthProperty = new SimpleDoubleProperty(800);
+    private final DoubleProperty minHeightProperty = new SimpleDoubleProperty(600);
+    private final DoubleProperty prefWidthProperty = new SimpleDoubleProperty(1900);
+    private final DoubleProperty prefHeightProperty = new SimpleDoubleProperty(1000);
+    private final StringProperty titleProperty = new SimpleStringProperty("");
 
     public StageModel() {
     }

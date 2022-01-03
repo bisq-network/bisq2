@@ -15,9 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.components.table;
+package network.misq.desktop.layout;
 
-public interface VisibilityAware {
-    void setVisibility(boolean visibility);
+import javafx.geometry.Insets;
 
+public class Layout {
+    public static final Insets INSETS = new Insets(20);
+    public static final double SPACING = 20;
 }

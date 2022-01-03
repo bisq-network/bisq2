@@ -22,8 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.NetworkService;
 import network.misq.network.NetworkServiceConfigFactory;
-import network.misq.security.KeyPairService;
 import network.misq.security.KeyPairRepositoryConfigFactory;
+import network.misq.security.KeyPairService;
 
 import java.util.ArrayList;
 import java.util.List;

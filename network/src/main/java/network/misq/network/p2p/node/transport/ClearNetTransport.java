@@ -59,7 +59,8 @@ public class ClearNetTransport implements Transport {
 
     @Override
     public CompletableFuture<Void> shutdown() {
-        return CompletableFuture.runAsync(()->{}, CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));
+        return CompletableFuture.runAsync(() -> {
+        }, CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));
     }
 
     @Override

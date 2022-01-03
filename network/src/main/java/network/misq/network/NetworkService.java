@@ -60,6 +60,7 @@ public class NetworkService {
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
 
+
     public static record Config(String baseDir,
                                 Transport.Config transportConfig,
                                 Set<Transport.Type> supportedTransportTypes,
@@ -96,25 +97,25 @@ public class NetworkService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public CompletableFuture<Boolean> initialize() {
+   /* public CompletableFuture<Boolean> initialize() {
         return initialize(NetworkUtils.findFreeSystemPort());
     }
 
     public CompletableFuture<Boolean> initialize(int port) {
-        return supplyAsync(() -> serviceNodesByTransport.initializeServer(port), NetworkService.NETWORK_IO_POOL);
-    }
+        return serviceNodesByTransport.initializeServerAsync(port);
+    }*/
 
-    public CompletableFuture<Boolean> initializePeerGroup() {
-        return supplyAsync(serviceNodesByTransport::initializePeerGroup, NetworkService.NETWORK_IO_POOL);
-    }
+ /*   public CompletableFuture<Boolean> initializePeerGroup() {
+        return serviceNodesByTransport.initializePeerGroupAsync();
+        //  return supplyAsync(serviceNodesByTransport::initializePeerGroup, NetworkService.NETWORK_IO_POOL);
+    }*/
 
     public CompletableFuture<Boolean> bootstrap() {
         return bootstrap(NetworkUtils.findFreeSystemPort());
     }
 
     public CompletableFuture<Boolean> bootstrap(int port) {
-        return initialize(port).thenCompose(result -> initializePeerGroup());
+        return serviceNodesByTransport.bootstrapAsync(port);
     }
 
     public CompletableFuture<Void> shutdown() {
@@ -191,5 +192,9 @@ public class NetworkService {
 
     public Map<Transport.Type, State> getStateByTransportType() {
         return serviceNodesByTransport.getStateByTransportType();
+    }
+
+    public boolean isTransportTypeSupported(Transport.Type transportType) {
+        return getSupportedTransportTypes().contains(transportType);
     }
 }

@@ -1,9 +1,9 @@
 package network.misq.grpc;
 
 
+import network.misq.application.ApplicationOptions;
 import network.misq.application.DefaultServiceProvider;
 import network.misq.application.Executable;
-import network.misq.application.ApplicationOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

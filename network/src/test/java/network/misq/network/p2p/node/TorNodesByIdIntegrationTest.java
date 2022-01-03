@@ -23,12 +23,12 @@ import org.junit.jupiter.api.Test;
 
 @Slf4j
 public class TorNodesByIdIntegrationTest extends BaseNodesByIdTest {
-   // @Test
+    // @Test
     void test_messageRoundTrip() throws InterruptedException {
         super.test_messageRoundTrip(getConfig(Transport.Type.TOR));
     }
 
-     @Test
+    @Test
     void test_initializeServer() throws InterruptedException {
         super.test_initializeServer(getConfig(Transport.Type.TOR));
     }

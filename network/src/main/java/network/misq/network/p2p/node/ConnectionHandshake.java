@@ -53,7 +53,7 @@ class ConnectionHandshake {
     private static record Response(AuthorizationToken token, Capability capability, Load load) implements Message {
     }
 
-    static record Result(Capability capability, Load load) {
+    static record Result(Capability capability, Load load, Metrics metrics) {
     }
 
     ConnectionHandshake(Socket socket, BanList banList, int socketTimeout, Capability capability, AuthorizationService authorizationService) {
@@ -74,12 +74,15 @@ class ConnectionHandshake {
     // Client side protocol
     Result start(Load myLoad) {
         try {
+            Metrics metrics = new Metrics();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             AuthorizationToken token = authorizationService.createToken(Request.class);
             Envelope requestEnvelope = new Envelope(new Request(token, capability, myLoad), Version.VERSION);
             log.debug("Client sends {}", requestEnvelope);
+            long ts = System.currentTimeMillis();
             objectOutputStream.writeObject(requestEnvelope);
             objectOutputStream.flush();
+            metrics.sent(requestEnvelope);
 
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             Object msg = objectInputStream.readObject();
@@ -101,9 +104,10 @@ class ConnectionHandshake {
             if (!authorizationService.isAuthorized(response.token())) {
                 throw new ConnectionException("Response authorization failed. response=" + response);
             }
-
+            metrics.onMessage(responseEnvelope);
+            metrics.addRtt(System.currentTimeMillis() - ts);
             log.debug("Servers capability {}, load={}", response.capability(), response.load());
-            return new Result(response.capability(), response.load());
+            return new Result(response.capability(), response.load(), metrics);
         } catch (Exception e) {
             try {
                 socket.close();
@@ -120,8 +124,10 @@ class ConnectionHandshake {
     // Server side protocol
     Result onSocket(Load myLoad) {
         try {
+            Metrics metrics = new Metrics();
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             Object msg = objectInputStream.readObject();
+            long ts = System.currentTimeMillis();
             if (!(msg instanceof Envelope requestEnvelope)) {
                 throw new ConnectionException("Received message not type of Envelope. Received data=" + msg.getClass().getSimpleName());
             }
@@ -141,13 +147,16 @@ class ConnectionHandshake {
                 throw new ConnectionException("Request authorization failed. request=" + request);
             }
             log.debug("Clients capability {}, load={}", request.capability(), request.load());
+            metrics.onMessage(requestEnvelope);
 
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             AuthorizationToken token = authorizationService.createToken(Response.class);
-            objectOutputStream.writeObject(new Envelope(new Response(token, capability, myLoad), Version.VERSION));
+            Envelope responseEnvelope = new Envelope(new Response(token, capability, myLoad), Version.VERSION);
+            objectOutputStream.writeObject(responseEnvelope);
             objectOutputStream.flush();
-
-            return new Result(request.capability(), request.load());
+            metrics.sent(responseEnvelope);
+            metrics.addRtt(System.currentTimeMillis() - ts);
+            return new Result(request.capability(), request.load(), metrics);
         } catch (Exception e) {
             try {
                 socket.close();

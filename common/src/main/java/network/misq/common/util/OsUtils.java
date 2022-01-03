@@ -24,7 +24,7 @@ import java.util.Locale;
 public class OsUtils {
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = 1;
-    
+
     public static File getUserDataDir() {
         if (isWindows()) {
             return new File(System.getenv("APPDATA"));

@@ -15,19 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.content;
+package network.misq.desktop.components.table;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.scene.Parent;
-import network.misq.desktop.common.view.Controller;
-import network.misq.desktop.common.view.Model;
-import network.misq.desktop.common.view.View;
+public interface TableItem {
+    void activate();
 
-public class ContentViewModel implements Model {
-    final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
-
-    public void selectView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
-        this.view.set(view);
-    }
+    void deactivate();
 }

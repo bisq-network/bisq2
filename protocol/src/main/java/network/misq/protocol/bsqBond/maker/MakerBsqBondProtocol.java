@@ -23,6 +23,7 @@ import network.misq.contract.AssetTransfer;
 import network.misq.contract.TwoPartyContract;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.protocol.bsqBond.BsqBond;
 import network.misq.protocol.bsqBond.BsqBondProtocol;
@@ -58,6 +59,14 @@ public class MakerBsqBondProtocol extends BsqBondProtocol {
                         }
                     });
         }
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
     public CompletableFuture<Boolean> start() {

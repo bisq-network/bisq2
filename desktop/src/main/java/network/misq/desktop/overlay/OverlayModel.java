@@ -20,12 +20,15 @@ package network.misq.desktop.overlay;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Parent;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.common.view.Model;
 import network.misq.desktop.common.view.View;
-
+@Slf4j
 public class OverlayModel implements Model {
-    final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
+    @Getter
+   private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
     public void selectView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
         this.view.set(view);

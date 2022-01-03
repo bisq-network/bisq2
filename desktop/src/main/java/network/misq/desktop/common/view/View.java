@@ -35,44 +35,38 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
             root.sceneProperty().addListener((ov, oldValue, newValue) -> {
                 if (oldValue == null && newValue != null) {
                     if (newValue.getWindow() != null) {
-                        onAddedToStage();
+                        activate(); // activate view first as it usually sets the bindings here
+                        controller.activate();
+                        model.activate();
                     } else {
                         // For overlays, we need to wait until stage is available
                         newValue.windowProperty().addListener(new ChangeListener<Window>() {
                             @Override
                             public void changed(ObservableValue<? extends Window> observable, Window oldValue, Window newValue) {
                                 if (newValue != null) {
-                                    onAddedToStage();
+                                    activate();
+                                    controller.activate();
+                                    model.activate();
                                 }
                             }
                         });
                     }
                 } else if (oldValue != null && newValue == null) {
-                    onRemovedFromStage();
+                    deactivate();
+                    controller.deactivate();
+                    model.deactivate();
                 }
             });
         }
-        setupView();
-        configModel();
-        configController();
     }
 
     public R getRoot() {
         return root;
     }
 
-    protected void setupView() {
+    protected void activate() {
     }
 
-    protected void configModel() {
-    }
-
-    protected void configController() {
-    }
-
-    protected void onAddedToStage() {
-    }
-
-    protected void onRemovedFromStage() {
+    protected void deactivate() {
     }
 }

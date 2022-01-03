@@ -29,21 +29,9 @@ public class MarketsController implements Controller {
     private final MarketsView view;
 
     public MarketsController(DefaultServiceProvider serviceProvider) {
-         this.serviceProvider = serviceProvider;
+        this.serviceProvider = serviceProvider;
         model = new MarketsModel();
         view = new MarketsView(model, this);
-    }
-
-    @Override
-    public void initialize() {
-    }
-
-    @Override
-    public void onViewAdded() {
-    }
-
-    @Override
-    public void onViewRemoved() {
     }
 
     void onRefresh() {

@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.currency.FiatCurrencyRepository;
 import network.misq.common.locale.LocaleRepository;
 import network.misq.common.util.CompletableFutureUtils;
+import network.misq.i18n.Res;
 import network.misq.id.IdentityService;
 import network.misq.network.NetworkService;
 import network.misq.network.NetworkServiceConfigFactory;
@@ -31,8 +32,8 @@ import network.misq.offer.MarketPriceServiceConfigFactory;
 import network.misq.offer.OfferService;
 import network.misq.offer.OpenOfferService;
 import network.misq.presentation.offer.OfferEntityService;
-import network.misq.security.KeyPairService;
 import network.misq.security.KeyPairRepositoryConfigFactory;
+import network.misq.security.KeyPairService;
 
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -67,6 +68,7 @@ public class DefaultServiceProvider extends ServiceProvider {
 
         Locale locale = applicationOptions.getLocale();
         LocaleRepository.setDefaultLocale(locale);
+        Res.initialize(locale);
         FiatCurrencyRepository.applyLocale(locale);
 
         KeyPairService.Conf keyPairRepositoryConf = new KeyPairRepositoryConfigFactory(applicationOptions.baseDir()).get();
@@ -97,8 +99,7 @@ public class DefaultServiceProvider extends ServiceProvider {
     public CompletableFuture<Boolean> initialize() {
         return keyPairService.initialize()
                 .thenCompose(result -> identityService.initialize())
-                .thenCompose(result -> networkService.initialize() // We need to get at least the default nodes server initialized before we move on
-                        .whenComplete((res, t) -> networkService.initializePeerGroup())) // But we do not wait for the initializePeerGroup 
+                .thenCompose(result -> networkService.bootstrap())
                 .thenCompose(result -> marketPriceService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(offerService.initialize(),
                         openOfferService.initialize(),

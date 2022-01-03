@@ -112,7 +112,7 @@ public class TorHttpClient extends BaseHttpClient {
                     log.debug("Response from {} took {} ms. Data size:{}, response: {}, param: {}",
                             baseUrl,
                             System.currentTimeMillis() - ts,
-                            StringUtils.fileSizePrettyPrint(response.getBytes().length),
+                            StringUtils.fromBytes(response.getBytes().length),
                             StringUtils.truncate(response, 2000),
                             param);
                     return response;

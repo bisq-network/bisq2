@@ -63,7 +63,7 @@ public class KeepAliveService implements Node.Listener {
                 .forEach(this::sendPing);
     }
 
-    private void sendPing(Connection connection) {
+    public void sendPing(Connection connection) {
         String key = connection.getId();
         if (requestHandlerMap.containsKey(key)) {
             log.warn("requestHandlerMap contains already {}. " +

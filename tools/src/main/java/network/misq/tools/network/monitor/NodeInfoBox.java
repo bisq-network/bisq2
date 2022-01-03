@@ -33,7 +33,10 @@ import network.misq.security.DigestUtil;
 
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 public class NodeInfoBox extends VBox {
     private final Button button;

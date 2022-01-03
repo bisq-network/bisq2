@@ -38,7 +38,6 @@ import static network.misq.network.p2p.node.CloseReason.*;
 
 @Slf4j
 public class PeerGroupService {
-
     private final Node node;
     private final BanList banList;
     private final Config config;

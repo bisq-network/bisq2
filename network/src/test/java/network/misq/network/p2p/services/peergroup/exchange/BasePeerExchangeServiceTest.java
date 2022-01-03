@@ -21,8 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.network.p2p.BaseNetworkTest;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
-import network.misq.network.p2p.services.peergroup.PeerGroup;
 import network.misq.network.p2p.services.peergroup.BanList;
+import network.misq.network.p2p.services.peergroup.PeerGroup;
 
 import java.util.ArrayList;
 import java.util.List;

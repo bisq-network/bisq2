@@ -48,8 +48,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class MarketPriceService {
 
     private static final long REQUEST_INTERVAL_SEC = 180;
-    private ExecutorService executor;
-    private BaseHttpClient httpClient;
+    private Optional<ExecutorService> executor = Optional.empty();
+    private Optional<BaseHttpClient> httpClient = Optional.empty();
 
     public static record Config(Set<Provider> providers) {
     }
@@ -78,7 +78,7 @@ public class MarketPriceService {
     }
 
     public CompletableFuture<Boolean> initialize() {
-        executor = ExecutorFactory.newSingleThreadExecutor("MarketPriceRequest");
+        executor = Optional.of(ExecutorFactory.newSingleThreadExecutor("MarketPriceRequest"));
         selectProvider();
         // We start a request but we do not block until response arrives.
         request();
@@ -86,9 +86,9 @@ public class MarketPriceService {
                         .whenComplete((map, throwable) -> {
                             if (map.isEmpty() || throwable != null) {
                                 selectProvider();
-                                httpClient.shutdown();
+                                httpClient.ifPresent(BaseHttpClient::shutdown);
                                 try {
-                                    httpClient = getHttpClient(provider).get();
+                                    httpClient = Optional.of(getHttpClient(provider).get());
                                 } catch (InterruptedException | ExecutionException e) {
                                     e.printStackTrace();
                                 }
@@ -100,8 +100,8 @@ public class MarketPriceService {
     }
 
     public void shutdown() {
-        ExecutorFactory.shutdownAndAwaitTermination(executor);
-        httpClient.shutdown();
+        executor.ifPresent(ExecutorFactory::shutdownAndAwaitTermination);
+        httpClient.ifPresent(BaseHttpClient::shutdown);
     }
 
     public Optional<MarketPrice> getMarketPrice(String currencyCode) {
@@ -109,6 +109,16 @@ public class MarketPriceService {
     }
 
     public CompletableFuture<Map<String, MarketPrice>> request() {
+        if (executor.isEmpty()) {
+            return CompletableFuture.completedFuture(new HashMap<>());
+        }
+        if (httpClient.isEmpty()) {
+            return CompletableFuture.completedFuture(new HashMap<>());
+        }
+        return request(httpClient.get(), executor.get());
+    }
+
+    private CompletableFuture<Map<String, MarketPrice>> request(BaseHttpClient httpClient, ExecutorService executor) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 while (httpClient.hasPendingRequest() && !Thread.interrupted()) {
@@ -175,7 +185,7 @@ public class MarketPriceService {
         candidates.remove(candidate);
         provider = candidate;
         try {
-            httpClient = getHttpClient(provider).get();
+            httpClient = Optional.of(getHttpClient(provider).get());
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }

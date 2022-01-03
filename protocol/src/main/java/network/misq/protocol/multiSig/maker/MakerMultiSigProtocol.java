@@ -22,6 +22,7 @@ import network.misq.contract.AssetTransfer;
 import network.misq.contract.TwoPartyContract;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -56,6 +57,14 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
                     .thenCompose(multiSig::isPayoutTxInMemPool)
                     .whenComplete((isInMemPool, t) -> setState(State.PAYOUT_TX_VISIBLE_IN_MEM_POOL));
         }
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
     @Override

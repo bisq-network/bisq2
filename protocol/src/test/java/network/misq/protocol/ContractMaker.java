@@ -52,6 +52,6 @@ public class ContractMaker {
     }
 
     private static Party self() {
-        return new Party(new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(1000)), new PubKey(null, "default"),"default"));
+        return new Party(new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(1000)), new PubKey(null, "default"), "default"));
     }
 }

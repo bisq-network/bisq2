@@ -36,7 +36,7 @@ public class MailboxData extends AuthenticatedData {
                 mailboxData.getReceiversPubKey(),
                 mailboxData.getCreated());
     }
-    
+
     private final byte[] receiversPubKeyBytes;
     private final byte[] hashOfReceiversPublicKey;
     transient final private PublicKey receiversPubKey;

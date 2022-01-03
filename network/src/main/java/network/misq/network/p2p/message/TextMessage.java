@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.left;
+package network.misq.network.p2p.message;
 
-import network.misq.desktop.common.view.Model;
-
-public class NavigationViewModel implements Model {
+public record TextMessage(String msg) implements Message {
 }

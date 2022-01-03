@@ -43,14 +43,15 @@ public class StageView extends View<AnchorPane, StageModel, StageController> {
 
         scene = new Scene(root);
         this.stage.setScene(scene);
-        
+
         try {
             scene.getStylesheets().setAll(requireNonNull(getClass().getResource("/misq.css")).toExternalForm(),
                     requireNonNull(getClass().getResource("/bisq.css")).toExternalForm(),
+                    requireNonNull(getClass().getResource("/images.css")).toExternalForm(),
                     requireNonNull(getClass().getResource("/theme-dark.css")).toExternalForm());
 
-            root.prefWidthProperty().bind(model.prefWidthProperty);
-            root.prefHeightProperty().bind(model.prefHeightProperty);
+            root.prefWidthProperty().bind(model.getPrefWidthProperty());
+            root.prefHeightProperty().bind(model.getPrefHeightProperty());
 
             Preloader preloader = new Preloader();
             AnchorPane.setLeftAnchor(preloader, 0d);
@@ -59,9 +60,9 @@ public class StageView extends View<AnchorPane, StageModel, StageController> {
             AnchorPane.setBottomAnchor(preloader, 0d);
             root.getChildren().add(preloader);
 
-            stage.minHeightProperty().bind(model.minHeightProperty);
-            stage.minWidthProperty().bind(model.minWidthProperty);
-            stage.titleProperty().bind(model.titleProperty);
+            stage.minHeightProperty().bind(model.getMinHeightProperty());
+            stage.minWidthProperty().bind(model.getMinWidthProperty());
+            stage.titleProperty().bind(model.getTitleProperty());
             stage.setOnCloseRequest(event -> {
                 event.consume();
                 controller.onQuit();
@@ -74,7 +75,7 @@ public class StageView extends View<AnchorPane, StageModel, StageController> {
             });
 
             stage.show();
-            controller.onViewAdded();
+            //controller.activate(); //todo
         } catch (Exception exception) {
             exception.printStackTrace();
             controller.onQuit();
