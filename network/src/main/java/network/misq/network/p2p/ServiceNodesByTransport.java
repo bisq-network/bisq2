@@ -90,16 +90,22 @@ public class ServiceNodesByTransport {
 
     // We require all servers on all transports to be initialized, but do not wait for the peer group initialisation 
     // has completed
-    public CompletableFuture<Boolean> bootstrapAsync(int port) {
+    public CompletableFuture<Boolean> bootstrapAsync(int port, String nodeId) {
         return CompletableFutureUtils.allOf(map.values().stream().map(networkNode ->
-                runAsync(() -> networkNode.initializeServer(Node.DEFAULT_NODE_ID, port), NetworkService.NETWORK_IO_POOL)
+                runAsync(() -> networkNode.maybeInitializeServer(nodeId, port), NetworkService.NETWORK_IO_POOL)
                         .whenComplete((__, throwable) -> {
                             if (throwable == null) {
                                 networkNode.initializePeerGroup();
                             } else {
                                 log.error(throwable.toString());
                             }
-                        }))).thenApply(List -> true);
+                        }))).thenApply(list -> true);
+    }
+
+    public CompletableFuture<Boolean> maybeInitializeServerAsync(int port, String nodeId) {
+        return CompletableFutureUtils.allOf(map.values().stream().map(networkNode ->
+                        runAsync(() -> networkNode.maybeInitializeServer(nodeId, port), NetworkService.NETWORK_IO_POOL)))
+                .thenApply(list -> true);
     }
 
     public Map<Transport.Type, ConfidentialMessageService.Result> confidentialSend(Message message,
@@ -216,8 +222,8 @@ public class ServiceNodesByTransport {
                 .flatMap(serviceNode -> serviceNode.findNode(nodeId));
     }
 
-    public Map<Transport.Type, State> getStateByTransportType() {
+    public Map<Transport.Type, ServiceNode.State> getStateByTransportType() {
         return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getState()));
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getState().get()));
     }
 }

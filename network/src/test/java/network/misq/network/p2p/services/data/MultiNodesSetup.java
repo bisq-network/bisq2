@@ -21,7 +21,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.NetworkService;
-import network.misq.network.p2p.State;
+import network.misq.network.p2p.ServiceNode;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.security.KeyPairService;
@@ -39,7 +39,7 @@ public class MultiNodesSetup {
     public interface Handler {
         void onConnectionStateChange(Transport.Type transportType, Address address, String networkInfo);
 
-        void onStateChange(Address address, State networkServiceState);
+        void onStateChange(Address address, ServiceNode.State networkServiceState);
 
         void onMessage(Address address);
 

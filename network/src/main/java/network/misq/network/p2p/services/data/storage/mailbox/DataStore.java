@@ -25,7 +25,9 @@ import network.misq.persistence.Persistence;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.io.File.separator;
 
@@ -34,7 +36,7 @@ public abstract class DataStore<T> {
     protected final String storageDirectory;
     protected final String fileName;
     protected final Persistence persistence;
-    protected final ConcurrentHashMap<ByteArray, T> map = new ConcurrentHashMap<>();
+    protected final Map<ByteArray, T> map = new HashMap<>();
 
     public DataStore(String appDirPath, MetaData metaData) {
         storageDirectory = appDirPath + File.separator + Storage.DIR + File.separator + getStoreDir();
@@ -46,7 +48,7 @@ public abstract class DataStore<T> {
         }
         fileName = metaData.getFileName();
         storageFilePath = storageDirectory + separator + fileName;
-        this.persistence = new Persistence(storageDirectory, fileName, map);
+        this.persistence = new Persistence(storageDirectory, fileName, (Serializable) map);
     }
 
     protected String getStoreDir() {

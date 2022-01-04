@@ -17,6 +17,8 @@
 
 package network.misq.network.p2p;
 
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.security.PubKey;
@@ -24,6 +26,28 @@ import network.misq.security.PubKey;
 import java.io.Serializable;
 import java.util.Map;
 
-public record NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey,
-                        String nodeId) implements Serializable {
+@EqualsAndHashCode
+@ToString
+public class NetworkId implements Serializable {
+    private final Map<Transport.Type, Address> addressByNetworkType;
+    private final PubKey pubKey;
+    private final String nodeId;
+
+    public NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey, String nodeId) {
+        this.addressByNetworkType = addressByNetworkType;
+        this.pubKey = pubKey;
+        this.nodeId = nodeId;
+    }
+
+    public Map<Transport.Type, Address> addressByNetworkType() {
+        return addressByNetworkType;
+    }
+
+    public PubKey pubKey() {
+        return pubKey;
+    }
+
+    public String nodeId() {
+        return nodeId;
+    }
 }

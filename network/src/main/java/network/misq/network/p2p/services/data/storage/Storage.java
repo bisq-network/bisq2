@@ -18,6 +18,7 @@
 package network.misq.network.p2p.services.data.storage;
 
 
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.services.data.AddDataRequest;
 import network.misq.network.p2p.services.data.NetworkPayload;
@@ -60,18 +61,18 @@ public class Storage {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Optional<NetworkPayload>> addRequest(AddDataRequest addDataRequest) {
+    public CompletableFuture<Optional<NetworkPayload>> onAddRequest(AddDataRequest addDataRequest) {
         Message message = addDataRequest.message();
         if (message instanceof AddMailboxRequest addMailboxRequest) {
-            return addRequest(addMailboxRequest);
+            return onAddRequest(addMailboxRequest);
         } else if (message instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
-            return addRequest(addAuthenticatedDataRequest);
+            return onAddRequest(addAuthenticatedDataRequest);
         } else {
             return CompletableFuture.failedFuture(new IllegalArgumentException("AddRequest called with invalid addDataRequest: " + addDataRequest.getClass().getSimpleName()));
         }
     }
 
-    private CompletableFuture<Optional<NetworkPayload>> addRequest(AddMailboxRequest request) {
+    private CompletableFuture<Optional<NetworkPayload>> onAddRequest(AddMailboxRequest request) {
         MailboxPayload payload = request.getMailboxData().getMailboxPayload();
         return getOrCreateMailboxDataStore(payload.getMetaData())
                 .thenApply(store -> {
@@ -79,7 +80,7 @@ public class Storage {
                     if (result.isSuccess()) {
                         return Optional.of(payload);
                     } else {
-                        if (!result.isRequestAlreadyReceived()) {
+                        if (!result.isRequestAlreadyReceived() && !result.isPayloadAlreadyStored()) {
                             log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
                         }
                         return Optional.empty();
@@ -87,7 +88,7 @@ public class Storage {
                 });
     }
 
-    private CompletableFuture<Optional<NetworkPayload>> addRequest(AddAuthenticatedDataRequest request) {
+    private CompletableFuture<Optional<NetworkPayload>> onAddRequest(AddAuthenticatedDataRequest request) {
         AuthenticatedPayload payload = request.getAuthenticatedData().getPayload();
         return getOrCreateAuthenticatedDataStore(payload.getMetaData())
                 .thenApply(store -> {
@@ -95,7 +96,7 @@ public class Storage {
                     if (result.isSuccess()) {
                         return Optional.of(payload);
                     } else {
-                        if (!result.isRequestAlreadyReceived()) {
+                        if (!result.isRequestAlreadyReceived() && !result.isPayloadAlreadyStored()) {
                             log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
                         }
                         return Optional.empty();
@@ -115,7 +116,7 @@ public class Storage {
         if (!authenticatedDataStores.containsKey(key)) {
             AuthenticatedDataStore dataStore = new AuthenticatedDataStore(storageDirPath, metaData);
             authenticatedDataStores.put(key, dataStore);
-            return dataStore.readPersisted().thenApply(__ -> dataStore);
+            return dataStore.readPersisted().thenApplyAsync(__ -> dataStore, NetworkService.DISPATCHER);
         } else {
             return CompletableFuture.completedFuture(authenticatedDataStores.get(key));
         }

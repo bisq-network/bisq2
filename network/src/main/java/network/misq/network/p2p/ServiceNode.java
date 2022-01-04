@@ -51,6 +51,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -62,6 +63,16 @@ public class ServiceNode {
     private static final Logger log = LoggerFactory.getLogger(ServiceNode.class);
 
     public static record Config(Set<Service> services) {
+    }
+
+    public enum State {
+        CREATED,
+        INITIALIZE_DEFAULT_NODE_SERVER,
+        DEFAULT_NODE_SERVER_INITIALIZED,
+        INITIALIZE_PEER_GROUP,
+        PEER_GROUP_INITIALIZED,
+        SHUTDOWN_STARTED,
+        SHUTDOWN_COMPLETE
     }
 
     public enum Service {
@@ -76,6 +87,7 @@ public class ServiceNode {
     private final NodesById nodesById;
     @Getter
     private final Node defaultNode;
+    @Getter
     private Optional<ConfidentialMessageService> confidentialMessageService;
     @Getter
     private Optional<PeerGroupService> peerGroupService;
@@ -85,7 +97,7 @@ public class ServiceNode {
     @Getter
     private Optional<MonitorService> monitorService;
     @Getter
-    public State state = State.INIT;
+    public AtomicReference<State> state = new AtomicReference<>(State.CREATED);
 
     public ServiceNode(Config config,
                        Node.Config nodeConfig,
@@ -124,10 +136,14 @@ public class ServiceNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initializeServer(String nodeId, int serverPort) {
-        setState(State.INITIALIZE_SERVER);
-        nodesById.initializeServer(nodeId, serverPort);
-        setState(State.SERVER_INITIALIZED);
+    public void maybeInitializeServer(String nodeId, int serverPort) {
+        if (nodeId.equals(Node.DEFAULT_NODE_ID)) {
+            setState(State.INITIALIZE_DEFAULT_NODE_SERVER);
+        }
+        nodesById.maybeInitializeServer(nodeId, serverPort);
+        if (nodeId.equals(Node.DEFAULT_NODE_ID)) {
+            setState(State.DEFAULT_NODE_SERVER_INITIALIZED);
+        }
     }
 
     public void initializePeerGroup() {
@@ -229,9 +245,10 @@ public class ServiceNode {
         return nodesById.getAddressesByNodeId();
     }
 
-    private void setState(State state) {
-        checkArgument(this.state.ordinal() < state.ordinal(),
-                "New state %s must have a higher ordinal as the current state %s", state, this.state);
-        this.state = state;
+
+    private void setState(State newState) {
+        checkArgument(state.get().ordinal() < newState.ordinal(),
+                "New state %s must have a higher ordinal as the current state %s", newState, state.get());
+        state.set(newState);
     }
 }

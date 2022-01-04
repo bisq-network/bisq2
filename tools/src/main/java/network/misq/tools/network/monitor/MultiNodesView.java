@@ -40,7 +40,7 @@ import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.utils.KeyCodeUtils;
 import network.misq.network.NetworkService;
 import network.misq.network.NetworkServiceConfigFactory;
-import network.misq.network.p2p.State;
+import network.misq.network.p2p.ServiceNode;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
@@ -227,10 +227,10 @@ public class MultiNodesView extends Application implements MultiNodesModel.Handl
     }
 
     @Override
-    public void onStateChange(Address address, State networkServiceState) {
+    public void onStateChange(Address address, ServiceNode.State networkServiceState) {
         UIThread.run(() -> Optional.ofNullable(nodeInfoBoxByAddress.get(address)).ifPresent(nodeInfoBox -> {
             nodeInfoBox.onStateChange(networkServiceState);
-            nodeInfoBox.setDefaultButton(networkServiceState == State.PEER_GROUP_INITIALIZED);
+            nodeInfoBox.setDefaultButton(networkServiceState == ServiceNode.State.PEER_GROUP_INITIALIZED);
         }));
     }
 

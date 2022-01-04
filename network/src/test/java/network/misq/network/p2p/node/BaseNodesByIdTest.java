@@ -54,7 +54,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
             String nodeId = "node_" + i;
             int finalI = i;
             int serverPort = 1000 + i;
-            nodesById.initializeServer(nodeId, serverPort);
+            nodesById.maybeInitializeServer(nodeId, serverPort);
             initializeServerLatch.countDown();
             nodesById.addNodeListener(new Node.Listener() {
                 @Override
@@ -130,7 +130,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         for (int i = 0; i < numNodes; i++) {
             String nodeId = "node_" + i;
             int serverPort = 1000 + i;
-            nodesById.initializeServer(nodeId, serverPort);
+            nodesById.maybeInitializeServer(nodeId, serverPort);
         }
         nodesById.shutdown().join();
         assertTrue(true);

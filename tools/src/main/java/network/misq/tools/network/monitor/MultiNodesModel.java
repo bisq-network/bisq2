@@ -25,7 +25,7 @@ import network.misq.common.util.CompletableFutureUtils;
 import network.misq.common.util.MathUtils;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.NetworkId;
-import network.misq.network.p2p.State;
+import network.misq.network.p2p.ServiceNode;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.CloseReason;
@@ -55,7 +55,7 @@ public class MultiNodesModel {
     public interface Handler {
         void onConnectionStateChange(Transport.Type transportType, Address address, String networkInfo);
 
-        void onStateChange(Address address, State networkServiceState);
+        void onStateChange(Address address, ServiceNode.State networkServiceState);
 
         void onMessage(Address address);
 
@@ -145,13 +145,13 @@ public class MultiNodesModel {
     }
 
     public CompletableFuture<Void> shutdown(Address address) {
-        handler.ifPresent(handler -> handler.onStateChange(address, State.SHUTDOWN_STARTED));
+        handler.ifPresent(handler -> handler.onStateChange(address, ServiceNode.State.SHUTDOWN_STARTED));
         return findNetworkService(address)
                 .map(networkService -> networkService.shutdown()
                         .whenComplete((__, t) -> {
                             networkServicesByAddress.remove(address);
                             handler.ifPresent(handler -> {
-                                State networkServiceState = supportedTransportTypes.stream()
+                                ServiceNode.State networkServiceState = supportedTransportTypes.stream()
                                         .map(e -> networkService.getStateByTransportType().get(e)).findAny().orElseThrow();
                                 handler.onStateChange(address, networkServiceState);
                             });

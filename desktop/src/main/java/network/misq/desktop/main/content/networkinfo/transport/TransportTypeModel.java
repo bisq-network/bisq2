@@ -27,61 +27,63 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.application.DefaultServiceProvider;
 import network.misq.common.data.Pair;
+import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.view.Model;
 import network.misq.i18n.Res;
 import network.misq.network.NetworkService;
+import network.misq.network.p2p.NetworkId;
 import network.misq.network.p2p.ServiceNode;
 import network.misq.network.p2p.message.Message;
-import network.misq.network.p2p.node.CloseReason;
-import network.misq.network.p2p.node.Connection;
-import network.misq.network.p2p.node.Node;
-import network.misq.network.p2p.node.NodesById;
+import network.misq.network.p2p.message.TextMessage;
+import network.misq.network.p2p.node.*;
 import network.misq.network.p2p.node.transport.Transport;
+import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
+import network.misq.network.p2p.services.data.AuthenticatedTextPayload;
+import network.misq.network.p2p.services.data.DataService;
+import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.security.KeyPairService;
+import network.misq.security.PubKey;
 
+import java.security.KeyPair;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
+@Getter
 public class TransportTypeModel implements Model {
     private final NetworkService networkService;
     private final KeyPairService keyPairService;
-    private final ObservableList<ConnectionListItem> list = FXCollections.observableArrayList();
-    private final FilteredList<ConnectionListItem> filtered = new FilteredList<>(list);
-    @Getter
-    private final SortedList<ConnectionListItem> sorted = new SortedList<>(filtered);
-
-    @Getter
+    private final Transport.Type transportType;
+    private final ObservableList<ConnectionListItem> connectionListItems = FXCollections.observableArrayList();
+    private final FilteredList<ConnectionListItem> filteredConnectionListItems = new FilteredList<>(connectionListItems);
+    private final SortedList<ConnectionListItem> sortedConnectionListItems = new SortedList<>(filteredConnectionListItems);
+    private final ObservableList<DataListItem> dataListItems = FXCollections.observableArrayList();
+    private final FilteredList<DataListItem> filteredDataListItems = new FilteredList<>(dataListItems);
+    private final SortedList<DataListItem> sortedDataListItems = new SortedList<>(filteredDataListItems);
     private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.common.get("na"));
-    @Getter
-    private final String dateHeader;
-    @Getter
-    private final String directionHeader;
-    @Getter
-    private final String addressHeader;
-    @Getter
-    private final String nodeIdHeader;
-    @Getter
-    private final String sentHeader;
-    @Getter
-    private final String receivedHeader;
-    @Getter
-    private final String rttHeader;
-    @Getter
-    private final StringProperty pubKey = new SimpleStringProperty();
+    private final StringProperty networkIdString = new SimpleStringProperty();
+    private final StringProperty messageReceiver = new SimpleStringProperty();
     private final Collection<Node> allNodes;
     private final Node defaultNode;
+    private final Optional<DataService> dataService;
+    private final NodesById nodesById;
+    private final Optional<ConfidentialMessageService> confidentialMessageService;
+    private Optional<NetworkId> selectedNetworkId = Optional.empty();
+    private DataService.Listener dataListener;
     private Map<String, Node.Listener> nodeListenersByNodeId = new HashMap<>();
 
 
     public TransportTypeModel(DefaultServiceProvider serviceProvider, Transport.Type transportType) {
         networkService = serviceProvider.getNetworkService();
         keyPairService = serviceProvider.getKeyPairService();
+        this.transportType = transportType;
 
         Optional<ServiceNode> serviceNode = networkService.findServiceNode(transportType);
         checkArgument(serviceNode.isPresent(),
@@ -90,21 +92,52 @@ public class TransportTypeModel implements Model {
         defaultNode = serviceNode.get().getDefaultNode();
         defaultNode.findMyAddress().ifPresent(e -> myDefaultNodeAddress.set(e.getFullAddress()));
 
-        NodesById nodesById = serviceNode.get().getNodesById();
+        nodesById = serviceNode.get().getNodesById();
         allNodes = nodesById.getAllNodes();
 
-        list.setAll(allNodes.stream()
+        connectionListItems.setAll(allNodes.stream()
                 .flatMap(node -> node.getAllConnections().map(c -> new Pair<>(c, node.getNodeId())))
                 .map(pair -> new ConnectionListItem(pair.first(), pair.second()))
                 .collect(Collectors.toList()));
 
-        dateHeader=Res.network.get("table.connections.header.established");
-        directionHeader=Res.network.get("table.connections.header.connectionDirection");
-        addressHeader=Res.network.get("table.connections.header.address");
-        nodeIdHeader=Res.network.get("table.connections.header.nodeId");
-        sentHeader=Res.network.get("table.connections.header.sentHeader");
-        receivedHeader=Res.network.get("table.connections.header.receivedHeader");
-        rttHeader=Res.network.get("table.connections.header.rtt");
+        dataService = serviceNode.get().getDataService();
+        dataService.ifPresent(dataService -> {
+            //log.error(" dataService.addListener(dataListener);");
+            dataListener = new DataService.Listener() {
+                @Override
+                public void onNetworkDataAdded(NetworkPayload networkPayload) {
+                    log.error("networkPayload {}", networkPayload);
+                    UIThread.run(() -> dataListItems.add(new DataListItem(networkPayload)));
+                }
+
+                @Override
+                public void onNetworkDataRemoved(NetworkPayload networkPayload) {
+                    UIThread.run(() -> dataListItems.remove(new DataListItem(networkPayload)));
+                }
+            };
+            dataService.addListener(dataListener);
+        });
+
+        confidentialMessageService = serviceNode.get().getConfidentialMessageService();
+        confidentialMessageService.ifPresent(service -> {
+            service.addMessageListener(new Node.Listener() {
+                @Override
+                public void onMessage(Message message, Connection connection, String nodeId) {
+                    log.error("message={}", message);
+                    log.error("nodeId={}", nodeId);
+                }
+
+                @Override
+                public void onConnection(Connection connection) {
+
+                }
+
+                @Override
+                public void onDisconnect(Connection connection, CloseReason closeReason) {
+
+                }
+            });
+        });
     }
 
 
@@ -118,13 +151,13 @@ public class TransportTypeModel implements Model {
 
                 @Override
                 public void onConnection(Connection connection) {
-                    list.add(new ConnectionListItem(connection, node.getNodeId()));
+                    connectionListItems.add(new ConnectionListItem(connection, node.getNodeId()));
                     maybeUpdateMyAddress(node);
                 }
 
                 @Override
                 public void onDisconnect(Connection connection, CloseReason closeReason) {
-                    list.remove(new ConnectionListItem(connection, node.getNodeId()));
+                    connectionListItems.remove(new ConnectionListItem(connection, node.getNodeId()));
                     maybeUpdateMyAddress(node);
 
                 }
@@ -144,11 +177,64 @@ public class TransportTypeModel implements Model {
         allNodes.forEach(node -> node.removeListener(nodeListenersByNodeId.get(node.getNodeId())));
     }
 
+    public void applyNetworkId(Optional<NetworkId> networkId) {
+        this.selectedNetworkId = networkId;
+        networkIdString.set(networkId.map(NetworkId::toString)
+                .orElse(Res.common.get("na")));
+        messageReceiver.set(networkId.map(n -> n.addressByNetworkType().get(transportType).getFullAddress())
+                .orElse(Res.common.get("na")));
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    CompletionStage<String> addData(String dataText, String id) {
+        // We bootstrap a node with the give id to be ready to receive messages on that node.
+        return networkService.maybeInitializeServerAsync(id)
+                .thenCompose(result -> {
+                    checkArgument(nodesById.findMyAddress(id).isPresent(),
+                            "My Address must be present after initializeServer");
+                    Map<Transport.Type, Address> addressByNetworkType = Map.of(transportType, nodesById.findMyAddress(id).get());
+                    KeyPair keyPair = keyPairService.getOrCreateKeyPair(id);
+                    PubKey pubKey = new PubKey(keyPair.getPublic(), id);
+                    NetworkId networkId = new NetworkId(addressByNetworkType, pubKey, id);
+                    AuthenticatedTextPayload payload = new AuthenticatedTextPayload(dataText, networkId);
+                    return networkService.addNetworkPayload(payload, keyPair)
+                            .thenApply(list -> {
+                                return list.toString();
+                            });
+                });
+    }
+
+
+    CompletableFuture<String> sendMessage(String message) {
+        checkArgument(selectedNetworkId.isPresent(), "Network ID must be set before calling sendMessage");
+        NetworkId receiverNetworkId = selectedNetworkId.get();
+        KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(KeyPairService.DEFAULT);
+        CompletableFuture<String> future = new CompletableFuture<>();
+        String senderNodeId = selectedNetworkId.get().nodeId();
+        networkService.confidentialSendAsync(new TextMessage(message), receiverNetworkId, senderKeyPair, senderNodeId)
+                .whenComplete((resultMap, throwable) -> {
+                    if (throwable == null) {
+                        if (resultMap.containsKey(transportType)) {
+                            ConfidentialMessageService.Result result = resultMap.get(transportType);
+                            result.getMailboxFuture()
+                                    .ifPresentOrElse(broadcastFuture -> broadcastFuture
+                                                    .whenComplete((broadcastResult, error) ->
+                                                            future.complete(result.getState() + "; " + broadcastResult.toString())),
+                                            () -> {
+                                                String value = result.getState().toString();
+                                                if (result.getState() == ConfidentialMessageService.State.FAILED) {
+                                                    value += " with Error: " + result.getErrorMsg();
+                                                }
+                                                future.complete(value);
+                                            });
+                        }
+                    }
+                });
+        return future;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Package private

@@ -22,41 +22,37 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
 import network.misq.common.data.Pair;
 import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.view.View;
 import network.misq.desktop.components.containers.MisqGridPane;
 import network.misq.desktop.components.table.MisqTableColumn;
 import network.misq.desktop.components.table.MisqTableView;
-import network.misq.desktop.layout.Layout;
 import network.misq.i18n.Res;
 
 import java.util.UUID;
 
 public class TransportTypeView extends View<ScrollPane, TransportTypeModel, TransportTypeController> {
     private MisqTableView<ConnectionListItem> connectionsTableView;
-    private TextField pubKeyTextField;
-    private ChangeListener<ConnectionListItem> tableSelectedItemListener;
+    private final MisqTableView<DataListItem> dataTableView;
+    private final TextField messageReceiverTextField, networkIdTextField;
+    private ChangeListener<DataListItem> dataTableSelectedItemListener;
 
     public TransportTypeView(TransportTypeModel model, TransportTypeController controller) {
         super(new ScrollPane(), model, controller);
-        AnchorPane anchorPane = new AnchorPane();
-        root.setContent(anchorPane);
 
         MisqGridPane misqGridPane = new MisqGridPane();
         root.setFitToWidth(true);
         root.setFitToHeight(true);
-        anchorPane.getChildren().add(misqGridPane);
-        Layout.pinToAnchorPane(misqGridPane, 0, 0, 0, 0);
-
+        root.setContent(misqGridPane);
 
         misqGridPane.startSection(Res.network.get("nodeInfo.title"));
         misqGridPane.addTextField(Res.network.get("nodeInfo.myAddress"), model.getMyDefaultNodeAddress());
         misqGridPane.endSection();
 
         misqGridPane.startSection(Res.network.get("table.connections.title"));
-        connectionsTableView = new MisqTableView<>(model.getSorted());
+        connectionsTableView = new MisqTableView<>(model.getSortedConnectionListItems());
+        connectionsTableView.setMinHeight(300);
         misqGridPane.addTableView(connectionsTableView);
         configConnectionsTableView();
         misqGridPane.endSection();
@@ -82,20 +78,25 @@ public class TransportTypeView extends View<ScrollPane, TransportTypeModel, Tran
         });
         misqGridPane.endSection();
 
+        misqGridPane.startSection(Res.network.get("table.data.title"));
+        dataTableView = new MisqTableView<>(model.getSortedDataListItems());
+        dataTableView.setMinHeight(300);
+        misqGridPane.addTableView(dataTableView);
+        configDataTableView();
+        misqGridPane.endSection();
+
         misqGridPane.startSection(Res.network.get("sendMessages.title"));
-        TextField addressTextField = misqGridPane.addTextField(Res.network.get("sendMessages.to"), "localhost:8000");
-        pubKeyTextField = misqGridPane.addTextField(Res.network.get("sendMessages.pubKey"), "");
-        pubKeyTextField.setPromptText(Res.network.get("sendMessages.pubKey.prompt"));
+        messageReceiverTextField = misqGridPane.addTextField(Res.network.get("sendMessages.to"), "localhost:8000");
+        networkIdTextField = misqGridPane.addTextField(Res.network.get("sendMessages.pubKey"), "");
+        networkIdTextField.setPromptText(Res.network.get("sendMessages.pubKey.prompt"));
         TextField msgTextField = misqGridPane.addTextField(Res.network.get("sendMessages.text"), "Test message");
         Pair<Button, Label> sendButtonPair = misqGridPane.addButton(Res.network.get("sendMessages.send"));
         Button sendButton = sendButtonPair.first();
         sendButton.setOnAction(e -> {
-            String to = addressTextField.getText();
-            String pubKey = pubKeyTextField.getText();
             String msg = msgTextField.getText();
             sendButton.setDisable(true);
             sendButtonPair.second().setText("...");
-            controller.sendMessage(to, pubKey, msg).whenComplete((result, throwable) -> {
+            controller.sendMessage(msg).whenComplete((result, throwable) -> {
                 UIThread.run(() -> {
                     if (throwable == null) {
                         sendButtonPair.second().setText(result);
@@ -108,14 +109,15 @@ public class TransportTypeView extends View<ScrollPane, TransportTypeModel, Tran
         });
         misqGridPane.endSection();
 
-        tableSelectedItemListener = (observable, oldValue, newValue) -> {
-            //newValue.getConnection().getPeersCapability().
+        dataTableSelectedItemListener = (observable, oldValue, newValue) -> {
+            controller.onSelectNetworkId(newValue.getNetworkId());
         };
     }
 
     private void configConnectionsTableView() {
+
         var dateColumn = new MisqTableColumn.Builder<ConnectionListItem>()
-                .title(model.getDateHeader())
+                .title(Res.network.get("table.connections.header.established"))
                 .minWidth(180)
                 .maxWidth(180)
                 .valuePropertySupplier(ConnectionListItem::getDate)
@@ -125,47 +127,71 @@ public class TransportTypeView extends View<ScrollPane, TransportTypeModel, Tran
         connectionsTableView.getSortOrder().add(dateColumn);
 
         connectionsTableView.getColumns().add(new MisqTableColumn.Builder<ConnectionListItem>()
-                .title(model.getAddressHeader())
+                .title(Res.network.get("table.connections.header.address"))
                 .minWidth(220)
                 .valuePropertySupplier(ConnectionListItem::getAddress)
                 .comparator(ConnectionListItem::compareAddress)
                 .build());
         connectionsTableView.getColumns().add(new MisqTableColumn.Builder<ConnectionListItem>()
-                .title(model.getNodeIdHeader())
+                .title(Res.network.get("table.connections.header.nodeId"))
                 .valuePropertySupplier(ConnectionListItem::getNodeId)
                 .comparator(ConnectionListItem::compareNodeId)
                 .build());
         connectionsTableView.getColumns().add(new MisqTableColumn.Builder<ConnectionListItem>()
-                .title(model.getDirectionHeader())
+                .title(Res.network.get("table.connections.header.connectionDirection"))
                 .valuePropertySupplier(ConnectionListItem::getDirection)
                 .comparator(ConnectionListItem::compareDirection)
                 .build());
         connectionsTableView.getColumns().add(new MisqTableColumn.Builder<ConnectionListItem>()
-                .title(model.getRttHeader())
-                .valuePropertySupplier(ConnectionListItem::getRtt)
-                .comparator(ConnectionListItem::compareRtt)
-                .build());
-        connectionsTableView.getColumns().add(new MisqTableColumn.Builder<ConnectionListItem>()
-                .title(model.getSentHeader())
+                .title(Res.network.get("table.connections.header.sentHeader"))
                 .valuePropertySupplier(ConnectionListItem::getSent)
                 .comparator(ConnectionListItem::compareSent)
                 .build());
         connectionsTableView.getColumns().add(new MisqTableColumn.Builder<ConnectionListItem>()
-                .title(model.getReceivedHeader())
+                .title(Res.network.get("table.connections.header.receivedHeader"))
                 .valuePropertySupplier(ConnectionListItem::getReceived)
                 .comparator(ConnectionListItem::compareReceived)
+                .build());
+        connectionsTableView.getColumns().add(new MisqTableColumn.Builder<ConnectionListItem>()
+                .title(Res.network.get("table.connections.header.rtt"))
+                .valuePropertySupplier(ConnectionListItem::getRtt)
+                .comparator(ConnectionListItem::compareRtt)
+                .build());
+    }
+
+    private void configDataTableView() {
+        var dateColumn = new MisqTableColumn.Builder<DataListItem>()
+                .title(Res.network.get("table.data.header.received"))
+                .minWidth(180)
+                .maxWidth(180)
+                .valueSupplier(DataListItem::getReceived)
+                .comparator(DataListItem::compareDate)
+                .build();
+        dataTableView.getColumns().add(dateColumn);
+        dataTableView.getSortOrder().add(dateColumn);
+
+        dataTableView.getColumns().add(new MisqTableColumn.Builder<DataListItem>()
+                .title(Res.network.get("table.data.header.content"))
+                .minWidth(220)
+                .valueSupplier(DataListItem::getContent)
+                .build());
+        dataTableView.getColumns().add(new MisqTableColumn.Builder<DataListItem>()
+                .title(Res.network.get("table.data.header.networkId"))
+                .valueSupplier(DataListItem::getNetworkIdInfo)
                 .build());
     }
 
     @Override
     public void activate() {
-        pubKeyTextField.textProperty().bind(model.getPubKey());
-        connectionsTableView.getSelectionModel().selectedItemProperty().addListener(tableSelectedItemListener);
+        networkIdTextField.textProperty().bind(model.getNetworkIdString());
+        messageReceiverTextField.textProperty().bind(model.getMessageReceiver());
+        dataTableView.getSelectionModel().selectedItemProperty().addListener(dataTableSelectedItemListener);
     }
 
     @Override
     protected void deactivate() {
-        pubKeyTextField.textProperty().unbind();
-        connectionsTableView.getSelectionModel().selectedItemProperty().removeListener(tableSelectedItemListener);
+        networkIdTextField.textProperty().unbind();
+        messageReceiverTextField.textProperty().unbind();
+        dataTableView.getSelectionModel().selectedItemProperty().removeListener(dataTableSelectedItemListener);
     }
 }
