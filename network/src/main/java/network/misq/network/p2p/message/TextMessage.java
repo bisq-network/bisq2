@@ -17,5 +17,26 @@
 
 package network.misq.network.p2p.message;
 
-public record TextMessage(String msg) implements Message {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import network.misq.network.p2p.services.data.storage.MetaData;
+import network.misq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+
+import java.util.concurrent.TimeUnit;
+
+@Getter
+@EqualsAndHashCode
+public class TextMessage implements MailboxMessage {
+    private final String text;
+    private final MetaData metaData;
+
+    public TextMessage(String text) {
+        this.text = text;
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return metaData;
+    }
 }

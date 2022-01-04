@@ -120,13 +120,6 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
                 return new Result(false).signatureInvalid();
             }
             map.put(byteArray, request);
-           /* log.error("add byteArray={}", byteArray);
-            if (requestFromMap != null)
-                log.error("requestFromMap.getSequenceNumber() {}", requestFromMap.getSequenceNumber());
-            log.error("data.sequenceNumber {}", data.sequenceNumber);
-            log.error("request.equals(requestFromMap) {}", request.equals(requestFromMap));
-            log.error("request {}", request);
-            log.error("requestFromMap {}", requestFromMap);*/
         }
         
         persist();
