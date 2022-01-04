@@ -26,6 +26,7 @@ import network.misq.persistence.Persistence;
 import network.misq.security.DigestUtil;
 
 import java.io.File;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -102,7 +103,7 @@ public class AppendOnlyDataStore extends DataStore<AppendOnlyPayload> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @VisibleForTesting
-    ConcurrentHashMap<ByteArray, AppendOnlyPayload> getMap() {
+    Map<ByteArray, AppendOnlyPayload> getMap() {
         return map;
     }
 }

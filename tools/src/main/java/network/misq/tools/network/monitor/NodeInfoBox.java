@@ -25,7 +25,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import network.misq.common.encoding.Hex;
 import network.misq.desktop.common.threading.UIScheduler;
-import network.misq.network.p2p.State;
+import network.misq.network.p2p.ServiceNode;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.data.NetworkPayload;
@@ -95,7 +95,7 @@ public class NodeInfoBox extends VBox {
         button.setDefaultButton(value);
     }
 
-    public void onStateChange(State networkServiceState) {
+    public void onStateChange(ServiceNode.State networkServiceState) {
         button.setText(getTitle() + " [" + networkServiceState.name() + "]");
     }
 

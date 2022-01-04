@@ -23,24 +23,24 @@ import javafx.scene.control.skin.LabelSkin;
 
 import static network.misq.desktop.common.utils.TooltipUtil.showTooltipIfTruncated;
 
-public class AutoTooltipLabel extends Label {
+public class MisqLabel extends Label {
 
-    public AutoTooltipLabel() {
+    public MisqLabel() {
         super();
     }
 
-    public AutoTooltipLabel(String text) {
+    public MisqLabel(String text) {
         super(text);
     }
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new AutoTooltipLabelSkin(this);
+        return new MisqLabelSkin(this);
     }
 
-    private static class AutoTooltipLabelSkin extends LabelSkin {
+    private static class MisqLabelSkin extends LabelSkin {
 
-        public AutoTooltipLabelSkin(Label label) {
+        public MisqLabelSkin(Label label) {
             super(label);
         }
 

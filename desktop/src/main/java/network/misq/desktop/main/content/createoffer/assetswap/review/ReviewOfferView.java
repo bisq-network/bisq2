@@ -24,7 +24,7 @@ import javafx.scene.layout.VBox;
 import network.misq.common.data.Pair;
 import network.misq.desktop.common.view.View;
 import network.misq.desktop.components.controls.AutoTooltipButton;
-import network.misq.desktop.components.controls.AutoTooltipLabel;
+import network.misq.desktop.components.controls.MisqLabel;
 import network.misq.desktop.components.controls.MisqTextField;
 
 public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferController> {
@@ -38,7 +38,7 @@ public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferCon
 
     protected void initialize() {
         root.setSpacing(20);
-        Label header = new AutoTooltipLabel("Review offer");
+        Label header = new MisqLabel("Review offer");
         gridPane = new GridPane();
         gridPane.setHgap(10);
         gridPane.setVgap(10);
@@ -51,7 +51,7 @@ public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferCon
     }
 
     private Pair<Label, TextField> addRow(int rowIndex, String key, String value) {
-        Label keyLabel = new AutoTooltipLabel(key);
+        Label keyLabel = new MisqLabel(key);
         GridPane.setRowIndex(keyLabel, rowIndex);
 
         TextField valueTextField = new MisqTextField(value);

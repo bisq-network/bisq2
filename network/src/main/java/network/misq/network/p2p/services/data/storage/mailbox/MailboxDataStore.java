@@ -30,6 +30,7 @@ import network.misq.persistence.Persistence;
 import network.misq.security.DigestUtil;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,81 +84,91 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
         MailboxPayload payload = data.getMailboxPayload();
         byte[] hash = DigestUtil.hash(payload.serialize());
         ByteArray byteArray = new ByteArray(hash);
-        MailboxRequest requestFromMap = map.get(byteArray);
-        int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
+        MailboxRequest requestFromMap;
+        synchronized (map) {
+            requestFromMap = map.get(byteArray);
+            int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
 
-        if (request.equals(requestFromMap)) {
-            return new Result(false).requestAlreadyReceived();
+            if (request.equals(requestFromMap)) {
+                return new Result(false).requestAlreadyReceived();
+            }
+
+            if (requestFromMap != null && data.isSequenceNrInvalid(sequenceNumberFromMap)) {
+                return new Result(false).sequenceNrInvalid();
+            }
+
+            if (data.isExpired()) {
+                return new Result(false).expired();
+            }
+
+            if (payload.isDataInvalid()) {
+                return new Result(false).dataInvalid();
+            }
+
+            if (request.isPublicKeyInvalid()) {
+                return new Result(false).publicKeyInvalid();
+            }
+
+            if (request.isSignatureInvalid()) {
+                return new Result(false).signatureInvalid();
+            }
+            map.put(byteArray, request);
         }
-
-        if (requestFromMap != null && data.isSequenceNrInvalid(sequenceNumberFromMap)) {
-            return new Result(false).sequenceNrInvalid();
-        }
-
-        if (data.isExpired()) {
-            return new Result(false).expired();
-        }
-
-        if (payload.isDataInvalid()) {
-            return new Result(false).dataInvalid();
-        }
-
-        if (request.isPublicKeyInvalid()) {
-            return new Result(false).publicKeyInvalid();
-        }
-
-        if (request.isSignatureInvalid()) {
-            return new Result(false).signatureInvalid();
-        }
-
-        map.put(byteArray, request);
-        listeners.forEach(listener -> listener.onAdded(payload));
         persist();
+
+        // If we had already the data (only updated seq nr) we return false as well and do not notify listeners.
+        if (requestFromMap != null) {
+            return new Result(false).payloadAlreadyStored();
+        }
+
+        listeners.forEach(listener -> listener.onAdded(payload));
         return new Result(true);
     }
 
     public Result remove(RemoveMailboxRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
         MailboxRequest requestFromMap = map.get(byteArray);
-
-        if (requestFromMap == null) {
-            // We don't have any entry but it might be that we would receive later an add request, so we need to keep
-            // track of the sequence number
-            map.put(byteArray, request);
-            persist();
-            return new Result(false).noEntry();
-        }
-
-        if (requestFromMap instanceof RemoveMailboxRequest) {
-            // We have had the entry already removed.
-            if (request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
-                // We update the request so we have latest sequence number.
+        synchronized (map) {
+            if (requestFromMap == null) {
+                // We don't have any entry but it might be that we would receive later an add request, so we need to keep
+                // track of the sequence number
                 map.put(byteArray, request);
                 persist();
+                return new Result(false).noEntry();
             }
-            return new Result(false).alreadyRemoved();
+
+            if (requestFromMap instanceof RemoveMailboxRequest) {
+                // We have had the entry already removed.
+                if (request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+                    // We update the request so we have latest sequence number.
+                    map.put(byteArray, request);
+                    persist();
+                }
+                return new Result(false).alreadyRemoved();
+            }
+
+            // At that point we know requestFromMap is an AddProtectedDataRequest
+            AddMailboxRequest addRequest = (AddMailboxRequest) requestFromMap;
+            // We have an entry, lets validate if we can remove it
+            MailboxData dataFromMap = addRequest.getMailboxData();
+            if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
+                // Sequence number has not increased
+                return new Result(false).sequenceNrInvalid();
+            }
+
+            if (request.isPublicKeyInvalid(dataFromMap)) {
+                // Hash of pubKey of data does not match provided one
+                return new Result(false).publicKeyInvalid();
+            }
+
+            if (request.isSignatureInvalid()) {
+                return new Result(false).signatureInvalid();
+            }
+
+            map.put(byteArray, request);
+            listeners.forEach(listener -> listener.onRemoved(dataFromMap.getMailboxPayload()));
         }
 
-        // At that point we know requestFromMap is an AddProtectedDataRequest
-        AddMailboxRequest addRequest = (AddMailboxRequest) requestFromMap;
-        // We have an entry, lets validate if we can remove it
-        MailboxData dataFromMap = addRequest.getMailboxData();
-        if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
-            // Sequence number has not increased
-            return new Result(false).sequenceNrInvalid();
-        }
-
-        if (request.isPublicKeyInvalid(dataFromMap)) {
-            // Hash of pubKey of data does not match provided one
-            return new Result(false).publicKeyInvalid();
-        }
-
-        if (request.isSignatureInvalid()) {
-            return new Result(false).signatureInvalid();
-        }
-
-        map.put(byteArray, request);
-        listeners.forEach(listener -> listener.onRemoved(dataFromMap.getMailboxPayload()));
         persist();
         return new Result(true);
     }
@@ -203,12 +214,12 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
     }
 
     @VisibleForTesting
-    ConcurrentHashMap<ByteArray, MailboxRequest> getMap() {
+    Map<ByteArray, MailboxRequest> getMap() {
         return map;
     }
 
     List<MailboxRequest> getInventoryList(Map<ByteArray, Integer> requesterMap) {
-        return map.entrySet().stream()
+        return new HashSet<>(map.entrySet()).stream()
                 .filter(entry -> {
                     // Any entry we have but is not included in filter gets added
                     if (!requesterMap.containsKey(entry.getKey())) {
@@ -224,10 +235,13 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
 
     int getSequenceNumber(byte[] hash) {
         ByteArray byteArray = new ByteArray(hash);
-        if (map.containsKey(byteArray)) {
-            return map.get(byteArray).getSequenceNumber();
+        int sequenceNumber = 0;
+        synchronized (map) {
+            if (map.containsKey(byteArray)) {
+                sequenceNumber = map.get(byteArray).getSequenceNumber();
+            }
         }
-        return 0;
+        return sequenceNumber;
     }
 
     boolean canAddMailboxMessage(MailboxPayload mailboxPayload) {
@@ -249,6 +263,9 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        map.putAll(pruned);
+        synchronized (map) {
+            map.clear();
+            map.putAll(pruned);
+        }
     }
 }

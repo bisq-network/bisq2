@@ -35,8 +35,8 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -69,7 +69,7 @@ public class AuthorizedDataStoreTest {
         Result result = store.add(addRequest);
         assertTrue(result.isSuccess());
 
-        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = store.getMap();
+        Map<ByteArray, AuthenticatedDataRequest> map = store.getMap();
         ByteArray byteArray = new ByteArray(hash);
         AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) map.get(byteArray);
         AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();

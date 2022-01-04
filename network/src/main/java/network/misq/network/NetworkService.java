@@ -28,7 +28,6 @@ import network.misq.network.http.common.BaseHttpClient;
 import network.misq.network.p2p.NetworkId;
 import network.misq.network.p2p.ServiceNode;
 import network.misq.network.p2p.ServiceNodesByTransport;
-import network.misq.network.p2p.State;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
@@ -115,13 +114,38 @@ public class NetworkService {
     }
 
     public CompletableFuture<Boolean> bootstrap(int port) {
-        return serviceNodesByTransport.bootstrapAsync(port);
+        return bootstrap(port, Node.DEFAULT_NODE_ID);
+    }
+
+    public CompletableFuture<Boolean> bootstrap(String nodeId) {
+        return bootstrap(NetworkUtils.findFreeSystemPort(), nodeId);
+    }
+
+    public CompletableFuture<Boolean> bootstrap(int port, String nodeId) {
+        return serviceNodesByTransport.bootstrapAsync(port, nodeId);
+    }
+
+    public CompletableFuture<Boolean> maybeInitializeServerAsync() {
+        return maybeInitializeServerAsync(NetworkUtils.findFreeSystemPort());
+    }
+
+    public CompletableFuture<Boolean> maybeInitializeServerAsync(int port) {
+        return maybeInitializeServerAsync(port, Node.DEFAULT_NODE_ID);
+    }
+
+    public CompletableFuture<Boolean> maybeInitializeServerAsync(String nodeId) {
+        return maybeInitializeServerAsync(NetworkUtils.findFreeSystemPort(), nodeId);
+    }
+
+    public CompletableFuture<Boolean> maybeInitializeServerAsync(int port, String nodeId) {
+        return serviceNodesByTransport.maybeInitializeServerAsync(port, nodeId);
     }
 
     public CompletableFuture<Void> shutdown() {
         return CompletableFutureUtils.allOf(serviceNodesByTransport.shutdown(), httpService.shutdown())
                 .thenApply(list -> null);
     }
+
 
     public CompletableFuture<Map<Transport.Type, ConfidentialMessageService.Result>> confidentialSendAsync(Message message,
                                                                                                            NetworkId receiverNetworkId,
@@ -190,7 +214,7 @@ public class NetworkService {
         return serviceNodesByTransport.findServiceNode(transport);
     }
 
-    public Map<Transport.Type, State> getStateByTransportType() {
+    public Map<Transport.Type, ServiceNode.State> getStateByTransportType() {
         return serviceNodesByTransport.getStateByTransportType();
     }
 

@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -125,7 +124,7 @@ public class AuthenticatedDataStoreTest {
         Result addRequestResult = store.add(addRequest);
         assertTrue(addRequestResult.isSuccess());
 
-        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = store.getMap();
+        Map<ByteArray, AuthenticatedDataRequest> map = store.getMap();
         ByteArray byteArray = new ByteArray(hash);
 
         map.keySet().stream().filter(e -> e.equals(byteArray)).forEach(e -> log.error("FOUND {}", e));

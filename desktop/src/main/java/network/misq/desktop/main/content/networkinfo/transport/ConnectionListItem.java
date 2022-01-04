@@ -32,8 +32,6 @@ import network.misq.network.p2p.node.Metrics;
 import network.misq.presentation.formatters.DateFormatter;
 import network.misq.presentation.formatters.TimeFormatter;
 
-import java.util.Objects;
-
 @Slf4j
 public class ConnectionListItem implements TableItem {
     @Getter
@@ -68,7 +66,7 @@ public class ConnectionListItem implements TableItem {
         date.set(DateFormatter.formatDateTime(metrics.getCreationDate()));
         address.set(connection.getPeerAddress().getFullAddress());
 
-        direction.set(connection.isOutboundConnection() ? Res.network.get("table.value.outbound") : Res.network.get("table.value.inbound"));
+        direction.set(connection.isOutboundConnection() ? Res.network.get("table.connections.value.outbound") : Res.network.get("table.connections.value.inbound"));
         updateSent();
         updateReceived();
         updateRtt();
@@ -95,13 +93,13 @@ public class ConnectionListItem implements TableItem {
     }
 
     private void updateSent() {
-        sent.set(Res.network.get("table.value.ioData",
+        sent.set(Res.network.get("table.connections.value.ioData",
                 StringUtils.fromBytes(metrics.getSentBytes().get()),
                 metrics.getNumMessagesSent().get()));
     }
 
     private void updateReceived() {
-        received.set(Res.network.get("table.value.ioData",
+        received.set(Res.network.get("table.connections.value.ioData",
                 StringUtils.fromBytes(metrics.getReceivedBytes().get()),
                 metrics.getNumMessagesReceived().get()));
     }
@@ -144,7 +142,7 @@ public class ConnectionListItem implements TableItem {
         connection.removeListener(listener);
     }
 
-    @Override
+ /*   @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -156,5 +154,5 @@ public class ConnectionListItem implements TableItem {
     public int hashCode() {
         return Objects.hash(id);
     }
-
+*/
 }

@@ -47,6 +47,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -69,6 +70,14 @@ import static network.misq.network.p2p.node.CloseReason.*;
 @Slf4j
 public class Node implements Connection.Handler {
     public static final String DEFAULT_NODE_ID = "default";
+
+    public enum State {
+        CREATED,
+        INITIALIZE_SERVER,
+        SERVER_INITIALIZED,
+        SHUTDOWN_STARTED,
+        SHUTDOWN_COMPLETE
+    }
 
     public interface Listener {
         void onMessage(Message message, Connection connection, String nodeId);
@@ -103,6 +112,8 @@ public class Node implements Connection.Handler {
     private Optional<Capability> myCapability = Optional.empty();
 
     private volatile boolean isStopped;
+    @Getter
+    public AtomicReference<State> state = new AtomicReference<>(State.CREATED);
 
     public Node(BanList banList, Config config, String nodeId) {
         this.banList = banList;
@@ -118,9 +129,34 @@ public class Node implements Connection.Handler {
     // Server
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initializeServer(int port) {
-        transport.initialize();
-        createServerAndListen(port);
+    public void maybeInitializeServer(int port) {
+        switch (state.get()) {
+            case CREATED -> {
+                setState(State.INITIALIZE_SERVER);
+                transport.initialize();
+                createServerAndListen(port);
+                setState(State.SERVER_INITIALIZED);
+            }
+            case INITIALIZE_SERVER -> {
+                log.warn("Node has started initializing. We pause the thread and check afterwards if the " +
+                        "node initialisation has been completed in the meantime.");
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                maybeInitializeServer(port);
+            }
+            case SERVER_INITIALIZED -> {
+                log.debug("Node is already initialized. We ignore the initializeServer call.");
+            }
+            case SHUTDOWN_STARTED -> {
+                log.warn("Node shutdown has been started. We ignore the initializeServer call.");
+            }
+            case SHUTDOWN_COMPLETE -> {
+                log.warn("Node is already shutdown. We ignore the initializeServer call.");
+            }
+        }
     }
 
     private void createServerAndListen(int port) {
@@ -234,7 +270,7 @@ public class Node implements Connection.Handler {
                     log.warn("We create an outbound connection but we have not initialized our server. " +
                             "We create a server on port {} now but clients better control node " +
                             "life cycle themselves.", port);
-                    initializeServer(port);
+                    maybeInitializeServer(port);
                     checkArgument(myCapability.isPresent(),
                             "myCapability must be present after initializeServer got called");
                     return createOutboundConnection(address, myCapability.get());
@@ -350,18 +386,24 @@ public class Node implements Connection.Handler {
     public void onConnectionClosed(Connection connection, CloseReason closeReason) {
         Address peerAddress = connection.getPeerAddress();
         log.debug("Node {} got called onConnectionClosed. connection={}, peerAddress={}", this, connection, peerAddress);
+        boolean wasRemoved = false;
         if (connection instanceof InboundConnection) {
-            if (inboundConnectionsByAddress.remove(peerAddress) == null) {
-                log.warn("Node {} did not had entry in inboundConnections. connection={}, peerAddress={}", this, connection, peerAddress);
+            wasRemoved = inboundConnectionsByAddress.remove(peerAddress) != null;
+            if (!wasRemoved) {
+                log.debug("Node {} did not had entry in inboundConnections at onConnectionClosed. " +
+                        "This can happen if different threads triggered a close. connection={}, peerAddress={}", this, connection, peerAddress);
             }
         } else if (connection instanceof OutboundConnection) {
-            if (outboundConnectionsByAddress.remove(peerAddress) == null) {
-                log.warn("Node {} did not had entry in outboundConnections. connection={}, peerAddress={}", this, connection, peerAddress);
+            wasRemoved = outboundConnectionsByAddress.remove(peerAddress) != null;
+            if (!wasRemoved) {
+                log.debug("Node {} did not had entry in outboundConnections at onConnectionClosed. " +
+                        "This can happen if different threads triggered a close. connection={}, peerAddress={}", this, connection, peerAddress);
             }
         }
-        listeners.forEach(listener -> listener.onDisconnect(connection, closeReason));
+        if (wasRemoved) {
+            listeners.forEach(listener -> listener.onDisconnect(connection, closeReason));
+        }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Close
@@ -389,6 +431,7 @@ public class Node implements Connection.Handler {
         if (isStopped) {
             return CompletableFuture.completedFuture(null);
         }
+        setState(State.SHUTDOWN_STARTED);
         isStopped = true;
 
         server.ifPresent(Server::shutdown);
@@ -407,6 +450,7 @@ public class Node implements Connection.Handler {
                     if (throwable != null) {
                         log.warn("Exception at node shutdown", throwable);
                     }
+                    setState(State.SHUTDOWN_COMPLETE);
                 });
     }
 
@@ -478,5 +522,11 @@ public class Node implements Connection.Handler {
 
     private Load getMyLoad() {
         return new Load(getNumConnections());
+    }
+
+    private void setState(State newState) {
+        checkArgument(state.get().ordinal() < newState.ordinal(),
+                "New state %s must have a higher ordinal as the current state %s", newState, state.get());
+        state.set(newState);
     }
 }

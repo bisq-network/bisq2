@@ -110,7 +110,7 @@ public class DataService implements Node.Listener {
         }
 
         if (message instanceof AddDataRequest addDataRequest) {
-            storage.addRequest(addDataRequest)
+            storage.onAddRequest(addDataRequest)
                     .whenComplete((optionalData, throwable) -> {
                         optionalData.ifPresent(networkData -> {
                             listeners.forEach(listener -> listener.onNetworkDataAdded(networkData));

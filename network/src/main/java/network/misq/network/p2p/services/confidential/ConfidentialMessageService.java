@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.ObjectSerializer;
 import network.misq.common.threading.ExecutorFactory;
+import network.misq.common.util.NetworkUtils;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.*;
@@ -139,6 +140,7 @@ public class ConfidentialMessageService implements Node.Listener {
                        String senderNodeId) {
         Connection connection;
         try {
+            nodesById.maybeInitializeServer(senderNodeId, NetworkUtils.findFreeSystemPort());
             connection = nodesById.getConnection(senderNodeId, address);
         } catch (Throwable throwable) {
             if (message instanceof MailboxMessage mailboxMessage) {
@@ -159,6 +161,7 @@ public class ConfidentialMessageService implements Node.Listener {
                        String senderNodeId) {
         ConfidentialMessage confidentialMessage = getConfidentialMessage(message, receiverPubKey, senderKeyPair);
         try {
+            nodesById.maybeInitializeServer(senderNodeId, NetworkUtils.findFreeSystemPort());
             nodesById.send(senderNodeId, confidentialMessage, connection);
             return new Result(State.SENT);
         } catch (Throwable throwable) {

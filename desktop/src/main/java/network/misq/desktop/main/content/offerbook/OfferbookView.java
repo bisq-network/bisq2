@@ -34,8 +34,11 @@ import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.desktop.common.view.View;
-import network.misq.desktop.components.controls.*;
-import network.misq.desktop.components.table.MisqTableColumn;
+import network.misq.desktop.components.controls.AutoTooltipButton;
+import network.misq.desktop.components.controls.AutoTooltipSlideToggleButton;
+import network.misq.desktop.components.controls.AutocompleteComboBox;
+import network.misq.desktop.components.controls.MisqLabel;
+import network.misq.desktop.components.table.MisqTableColumnOld;
 
 import java.util.Comparator;
 import java.util.Optional;
@@ -54,7 +57,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     public OfferbookView(OfferbookModel model, OfferbookController controller) {
         super(new VBox(), model, controller);
 
-        Label askCurrencyLabel = new AutoTooltipLabel("I want (ask):");
+        Label askCurrencyLabel = new MisqLabel("I want (ask):");
         askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
 
         askCurrencyComboBox = new AutocompleteComboBox<>();
@@ -62,7 +65,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
 
         flipButton = new AutoTooltipButton("<- Flip ->");
 
-        Label bidCurrencyLabel = new AutoTooltipLabel("I give (bid):");
+        Label bidCurrencyLabel = new MisqLabel("I give (bid):");
         bidCurrencyLabel.setPadding(new Insets(4, 8, 0, 60));
         bidCurrencyComboBox = new AutocompleteComboBox<>();
         bidCurrencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
@@ -154,7 +157,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
 
 
     private void addMakerColumn(String header) {
-        MisqTableColumn<OfferListItem, OfferListItem> column = new MisqTableColumn<>(header) {
+        MisqTableColumnOld<OfferListItem, OfferListItem> column = new MisqTableColumnOld<>(header) {
             {
                 setMinWidth(125);
             }
@@ -195,7 +198,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     }
 
     private void addTakeOfferColumn(String header) {
-        MisqTableColumn<OfferListItem, OfferListItem> column = new MisqTableColumn<>(header) {
+        MisqTableColumnOld<OfferListItem, OfferListItem> column = new MisqTableColumnOld<>(header) {
             {
                 setMinWidth(125);
             }
@@ -236,7 +239,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     }
 
     private void addValueColumn(String header, Function<OfferListItem, String> displayStringSupplier, Optional<Comparator<OfferListItem>> optionalComparator) {
-        MisqTableColumn<OfferListItem, OfferListItem> column = new MisqTableColumn<>(header) {
+        MisqTableColumnOld<OfferListItem, OfferListItem> column = new MisqTableColumnOld<>(header) {
             {
                 setMinWidth(125);
             }
@@ -269,7 +272,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
 
     private void addPropertyColumn(StringProperty header, Function<OfferListItem, StringProperty> valueSupplier,
                                    Optional<Comparator<OfferListItem>> optionalComparator) {
-        MisqTableColumn<OfferListItem, OfferListItem> column = new MisqTableColumn<>(header) {
+        MisqTableColumnOld<OfferListItem, OfferListItem> column = new MisqTableColumnOld<>(header) {
             {
                 setMinWidth(125);
             }
