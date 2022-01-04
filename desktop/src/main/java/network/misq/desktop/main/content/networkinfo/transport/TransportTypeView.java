@@ -26,6 +26,7 @@ import network.misq.common.data.Pair;
 import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.view.View;
 import network.misq.desktop.components.containers.MisqGridPane;
+import network.misq.desktop.components.controls.MisqTextArea;
 import network.misq.desktop.components.table.MisqTableColumn;
 import network.misq.desktop.components.table.MisqTableView;
 import network.misq.i18n.Res;
@@ -33,9 +34,10 @@ import network.misq.i18n.Res;
 import java.util.UUID;
 
 public class TransportTypeView extends View<ScrollPane, TransportTypeModel, TransportTypeController> {
+    private final MisqTextArea receivedMessagesTextArea;
     private MisqTableView<ConnectionListItem> connectionsTableView;
     private final MisqTableView<DataListItem> dataTableView;
-    private final TextField messageReceiverTextField, networkIdTextField;
+    private final TextField messageReceiverTextField, nodeIdTextField;
     private ChangeListener<DataListItem> dataTableSelectedItemListener;
 
     public TransportTypeView(TransportTypeModel model, TransportTypeController controller) {
@@ -52,7 +54,7 @@ public class TransportTypeView extends View<ScrollPane, TransportTypeModel, Tran
 
         misqGridPane.startSection(Res.network.get("table.connections.title"));
         connectionsTableView = new MisqTableView<>(model.getSortedConnectionListItems());
-        connectionsTableView.setMinHeight(300);
+        connectionsTableView.setMinHeight(200);
         misqGridPane.addTableView(connectionsTableView);
         configConnectionsTableView();
         misqGridPane.endSection();
@@ -80,15 +82,16 @@ public class TransportTypeView extends View<ScrollPane, TransportTypeModel, Tran
 
         misqGridPane.startSection(Res.network.get("table.data.title"));
         dataTableView = new MisqTableView<>(model.getSortedDataListItems());
-        dataTableView.setMinHeight(300);
+        dataTableView.setMinHeight(200);
         misqGridPane.addTableView(dataTableView);
         configDataTableView();
         misqGridPane.endSection();
 
         misqGridPane.startSection(Res.network.get("sendMessages.title"));
         messageReceiverTextField = misqGridPane.addTextField(Res.network.get("sendMessages.to"), "localhost:8000");
-        networkIdTextField = misqGridPane.addTextField(Res.network.get("sendMessages.pubKey"), "");
-        networkIdTextField.setPromptText(Res.network.get("sendMessages.pubKey.prompt"));
+        messageReceiverTextField.setEditable(false);
+        nodeIdTextField = misqGridPane.addTextField(Res.network.get("sendMessages.nodeId"), "");
+        nodeIdTextField.setEditable(false);
         TextField msgTextField = misqGridPane.addTextField(Res.network.get("sendMessages.text"), "Test message");
         Pair<Button, Label> sendButtonPair = misqGridPane.addButton(Res.network.get("sendMessages.send"));
         Button sendButton = sendButtonPair.first();
@@ -107,6 +110,9 @@ public class TransportTypeView extends View<ScrollPane, TransportTypeModel, Tran
                 });
             });
         });
+        misqGridPane.addHSpacer();
+        receivedMessagesTextArea = misqGridPane.addTextArea(Res.network.get("sendMessages.receivedMessage"), model.getReceivedMessages());
+        receivedMessagesTextArea.setMinHeight(100);
         misqGridPane.endSection();
 
         dataTableSelectedItemListener = (observable, oldValue, newValue) -> {
@@ -176,21 +182,21 @@ public class TransportTypeView extends View<ScrollPane, TransportTypeModel, Tran
                 .valueSupplier(DataListItem::getContent)
                 .build());
         dataTableView.getColumns().add(new MisqTableColumn.Builder<DataListItem>()
-                .title(Res.network.get("table.data.header.networkId"))
-                .valueSupplier(DataListItem::getNetworkIdInfo)
+                .title(Res.network.get("table.data.header.nodeId"))
+                .valueSupplier(DataListItem::getNodeId)
                 .build());
     }
 
     @Override
     public void activate() {
-        networkIdTextField.textProperty().bind(model.getNetworkIdString());
+        nodeIdTextField.textProperty().bind(model.getNodeIdString());
         messageReceiverTextField.textProperty().bind(model.getMessageReceiver());
         dataTableView.getSelectionModel().selectedItemProperty().addListener(dataTableSelectedItemListener);
     }
 
     @Override
     protected void deactivate() {
-        networkIdTextField.textProperty().unbind();
+        nodeIdTextField.textProperty().unbind();
         messageReceiverTextField.textProperty().unbind();
         dataTableView.getSelectionModel().selectedItemProperty().removeListener(dataTableSelectedItemListener);
     }

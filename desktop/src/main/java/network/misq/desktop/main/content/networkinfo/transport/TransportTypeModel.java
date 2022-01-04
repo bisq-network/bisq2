@@ -68,8 +68,9 @@ public class TransportTypeModel implements Model {
     private final FilteredList<DataListItem> filteredDataListItems = new FilteredList<>(dataListItems);
     private final SortedList<DataListItem> sortedDataListItems = new SortedList<>(filteredDataListItems);
     private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.common.get("na"));
-    private final StringProperty networkIdString = new SimpleStringProperty();
+    private final StringProperty nodeIdString = new SimpleStringProperty();
     private final StringProperty messageReceiver = new SimpleStringProperty();
+    private final StringProperty receivedMessages = new SimpleStringProperty("");
     private final Collection<Node> allNodes;
     private final Node defaultNode;
     private final Optional<DataService> dataService;
@@ -106,7 +107,6 @@ public class TransportTypeModel implements Model {
             dataListener = new DataService.Listener() {
                 @Override
                 public void onNetworkDataAdded(NetworkPayload networkPayload) {
-                    log.error("networkPayload {}", networkPayload);
                     UIThread.run(() -> dataListItems.add(new DataListItem(networkPayload)));
                 }
 
@@ -123,8 +123,7 @@ public class TransportTypeModel implements Model {
             service.addMessageListener(new Node.Listener() {
                 @Override
                 public void onMessage(Message message, Connection connection, String nodeId) {
-                    log.error("message={}", message);
-                    log.error("nodeId={}", nodeId);
+                    UIThread.run(() -> receivedMessages.set(receivedMessages.get() + "NodeId: " + nodeId + "; message: " + message.toString() + "\n"));
                 }
 
                 @Override
@@ -146,19 +145,23 @@ public class TransportTypeModel implements Model {
             Node.Listener nodeListener = new Node.Listener() {
                 @Override
                 public void onMessage(Message message, Connection connection, String nodeId) {
-                    maybeUpdateMyAddress(node);
+                    UIThread.run(() -> maybeUpdateMyAddress(node));
                 }
 
                 @Override
                 public void onConnection(Connection connection) {
-                    connectionListItems.add(new ConnectionListItem(connection, node.getNodeId()));
-                    maybeUpdateMyAddress(node);
+                    UIThread.run(() -> {
+                        connectionListItems.add(new ConnectionListItem(connection, node.getNodeId()));
+                        maybeUpdateMyAddress(node);
+                    });
                 }
 
                 @Override
                 public void onDisconnect(Connection connection, CloseReason closeReason) {
-                    connectionListItems.remove(new ConnectionListItem(connection, node.getNodeId()));
-                    maybeUpdateMyAddress(node);
+                    UIThread.run(() -> {
+                        connectionListItems.remove(new ConnectionListItem(connection, node.getNodeId()));
+                        maybeUpdateMyAddress(node);
+                    });
 
                 }
             };
@@ -179,7 +182,7 @@ public class TransportTypeModel implements Model {
 
     public void applyNetworkId(Optional<NetworkId> networkId) {
         this.selectedNetworkId = networkId;
-        networkIdString.set(networkId.map(NetworkId::toString)
+        nodeIdString.set(networkId.map(NetworkId::nodeId)
                 .orElse(Res.common.get("na")));
         messageReceiver.set(networkId.map(n -> n.addressByNetworkType().get(transportType).getFullAddress())
                 .orElse(Res.common.get("na")));

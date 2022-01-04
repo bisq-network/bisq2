@@ -37,7 +37,7 @@ public class DataListItem implements TableItem {
     private final NetworkPayload networkPayload;
     private final String received;
     private final String content;
-    private final String networkIdInfo;
+    private final String nodeId;
     private final String ttl;
     private final Date date;
     private final Optional<NetworkId> networkId;
@@ -49,11 +49,11 @@ public class DataListItem implements TableItem {
         if (networkPayload instanceof AuthenticatedTextPayload authenticatedTextPayload) {
             content = authenticatedTextPayload.getText();
             networkId = Optional.of(authenticatedTextPayload.getNetworkId());
-            networkIdInfo = networkId.toString();
+            nodeId = networkId.get().nodeId();
             ttl = TimeFormatter.formatTime(authenticatedTextPayload.getMetaData().getTtl());
         } else {
             content = networkPayload.toString();
-            networkIdInfo = Res.common.get("na");
+            nodeId = Res.common.get("na");
             ttl = Res.common.get("na");
             networkId = Optional.empty();
         }

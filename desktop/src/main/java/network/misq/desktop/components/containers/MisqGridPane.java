@@ -27,6 +27,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import network.misq.common.data.Pair;
 import network.misq.desktop.components.controls.MisqLabel;
+import network.misq.desktop.components.controls.MisqTextArea;
 import network.misq.desktop.components.controls.MisqTextField;
 import network.misq.desktop.components.table.MisqTableView;
 import network.misq.desktop.components.table.TableItem;
@@ -88,12 +89,28 @@ public class MisqGridPane extends GridPane {
         MisqTextField textField = new MisqTextField(textFieldText);
         textField.setLabelFloat(true);
         textField.setPromptText(labelText);
-        GridPane.setMargin(textField, new Insets(0, 0, 15, 0));
         GridPane.setRowIndex(textField, getRowCount());
         GridPane.setColumnIndex(textField, 1);
+        GridPane.setMargin(textField, new Insets(0, 0, 15, 0));
         getChildren().addAll(textField);
-
         return textField;
+    }
+
+    public MisqTextArea addTextArea(String labelText, StringProperty textFieldText) {
+        MisqTextArea textArea = addTextArea(labelText);
+        textArea.textProperty().bind(textFieldText);
+        return textArea;
+    }
+
+    public MisqTextArea addTextArea(String labelText) {
+        MisqTextArea textArea = new MisqTextArea();
+        textArea.setWrapText(true);
+        textArea.setPromptText(labelText);
+        GridPane.setRowIndex(textArea, getRowCount());
+        GridPane.setColumnIndex(textArea, 1);
+        GridPane.setMargin(textArea, new Insets(0, 0, 15, 0));
+        getChildren().addAll(textArea);
+        return textArea;
     }
 
     public Pair<Button, Label> addButton(String text) {
@@ -107,6 +124,7 @@ public class MisqGridPane extends GridPane {
         GridPane.setRowIndex(hBox, getRowCount());
         GridPane.setColumnIndex(hBox, 1);
         getChildren().add(hBox);
+        GridPane.setMargin(hBox, new Insets(0, 0, 15, 0));
         return new Pair<>(button, label);
     }
 
