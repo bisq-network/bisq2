@@ -75,7 +75,7 @@ public class DefaultServiceProvider extends ServiceProvider {
         keyPairService = new KeyPairService(keyPairRepositoryConf);
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
-                getConfig("misq.networkServiceConfig"), args);
+                getConfig("misq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, keyPairService);
 
         identityService = new IdentityService(networkService);

@@ -36,15 +36,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class NetworkServiceConfigFactory {
+
     public static NetworkService.Config getConfig(String baseDir, Config typesafeConfig) {
-        return getConfig(baseDir, typesafeConfig, Optional.empty());
-    }
-
-    public static NetworkService.Config getConfig(String baseDir, Config typesafeConfig, String[] args) {
-        return getConfig(baseDir, typesafeConfig, Optional.of(args));
-    }
-
-    private static NetworkService.Config getConfig(String baseDir, Config typesafeConfig, Optional<String[]> args) {
         //  Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
         Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
         // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
