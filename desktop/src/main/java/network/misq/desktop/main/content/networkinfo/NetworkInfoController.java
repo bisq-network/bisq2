@@ -40,7 +40,9 @@ public class NetworkInfoController implements Controller {
 
     @Override
     public void activate() {
-        onTabSelected(Optional.of(Transport.Type.CLEAR));
+        model.getSupportedTransportTypes().stream()
+                .min(Enum::compareTo)
+                .ifPresent(e -> onTabSelected(Optional.of(e)));
     }
 
     @Override

@@ -117,11 +117,11 @@ public class Broadcaster implements Node.Listener {
         return CollectionUtil.getRandomElement(peerGroup.getAllConnectedPeerAddresses().collect(Collectors.toSet()));
     }
 
-    public void addMessageListener(Node.Listener listener) {
+    public void addListener(Node.Listener listener) {
         listeners.add(listener);
     }
 
-    public void removeMessageListener(Node.Listener listener) {
+    public void removeListener(Node.Listener listener) {
         listeners.remove(listener);
     }
 

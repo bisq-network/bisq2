@@ -19,27 +19,47 @@ package network.misq.network.p2p;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import network.misq.common.data.Pair;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.security.PubKey;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode
 @ToString
 public class NetworkId implements Serializable {
-    private final Map<Transport.Type, Address> addressByNetworkType;
+    private final List<Pair<Transport.Type, Address>> addresses;
     private final PubKey pubKey;
     private final String nodeId;
+    @Nullable
+    private transient Map<Transport.Type, Address> addressByNetworkType;
 
     public NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey, String nodeId) {
-        this.addressByNetworkType = addressByNetworkType;
+        checkArgument(!addressByNetworkType.isEmpty(),
+                "We require at least 1 addressByNetworkType for a valid NetworkId");
+        addresses = addressByNetworkType.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(e -> new Pair<>(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
         this.pubKey = pubKey;
         this.nodeId = nodeId;
     }
 
     public Map<Transport.Type, Address> addressByNetworkType() {
+        if (addressByNetworkType == null) {
+            addressByNetworkType = new HashMap<>();
+            addresses.forEach(pair -> {
+                addressByNetworkType.put(pair.first(), pair.second());
+            });
+        }
         return addressByNetworkType;
     }
 

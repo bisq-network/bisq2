@@ -228,6 +228,9 @@ public class MultiNodesView extends Application implements MultiNodesModel.Handl
 
     @Override
     public void onStateChange(Address address, ServiceNode.State networkServiceState) {
+        if (networkServiceState == null) {
+            return;
+        }
         UIThread.run(() -> Optional.ofNullable(nodeInfoBoxByAddress.get(address)).ifPresent(nodeInfoBox -> {
             nodeInfoBox.onStateChange(networkServiceState);
             nodeInfoBox.setDefaultButton(networkServiceState == ServiceNode.State.PEER_GROUP_INITIALIZED);

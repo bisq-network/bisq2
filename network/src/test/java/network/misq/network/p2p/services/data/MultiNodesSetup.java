@@ -18,6 +18,7 @@
 package network.misq.network.p2p.services.data;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.NetworkService;
@@ -52,8 +53,10 @@ public class MultiNodesSetup {
     private final boolean bootstrapAll;
     private Optional<List<Address>> addressesToBootstrap = Optional.empty();
     private final KeyPairService keyPairService;
-    private final int numSeeds = 8;
-    private final int numNodes = 20;
+    @Setter
+    private int numSeeds = 8;
+    @Setter
+    private int numNodes = 20;
     @Getter
     private final Map<Address, NetworkService> networkServicesByAddress = new ConcurrentHashMap<>();
     private final Map<Address, String> logHistoryByAddress = new ConcurrentHashMap<>();

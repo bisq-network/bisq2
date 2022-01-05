@@ -17,6 +17,7 @@
 
 package network.misq.desktop.main.content.networkinfo.transport;
 
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
@@ -27,7 +28,6 @@ import network.misq.security.KeyPairService;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 public class TransportTypeController implements Controller {
     private final Transport.Type transportType;
@@ -51,7 +51,7 @@ public class TransportTypeController implements Controller {
         return model.sendMessage(message);
     }
 
-    public CompletionStage<String> addData(String dataText, String id) {
+    public StringProperty addData(String dataText, String id) {
         return model.addData(dataText, id);
     }
 

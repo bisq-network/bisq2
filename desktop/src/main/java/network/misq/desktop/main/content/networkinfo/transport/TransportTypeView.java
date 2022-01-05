@@ -17,6 +17,7 @@
 
 package network.misq.desktop.main.content.networkinfo.transport;
 
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -64,19 +65,14 @@ public class TransportTypeView extends View<ScrollPane, TransportTypeModel, Tran
         TextField idTextField = misqGridPane.addTextField(Res.network.get("addData.id"), UUID.randomUUID().toString().substring(0, 8));
         Pair<Button, Label> addDataButtonPair = misqGridPane.addButton(Res.network.get("addData.add"));
         Button addDataButton = addDataButtonPair.first();
+        Label label = addDataButtonPair.second();
         addDataButton.setOnAction(e -> {
             addDataButton.setDisable(true);
-            addDataButtonPair.second().setText("...");
-            controller.addData(dataContentTextField.getText(), idTextField.getText()).whenComplete((result, throwable) -> {
-                UIThread.run(() -> {
-                    if (throwable == null) {
-                        addDataButtonPair.second().setText(result);
-                    } else {
-                        addDataButtonPair.second().setText(throwable.toString());
-                    }
-                    addDataButton.setDisable(false);
-                });
-            });
+            label.textProperty().unbind();
+            label.setText("...");
+            addDataButton.setDisable(false);
+            StringProperty result = controller.addData(dataContentTextField.getText(), idTextField.getText());
+            label.textProperty().bind(result);
         });
         misqGridPane.endSection();
 

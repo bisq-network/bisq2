@@ -51,7 +51,7 @@ public class TorTransport implements Transport {
             tor.start();
             log.info("Tor initialized after {} ms", System.currentTimeMillis() - ts);
             return true;
-        } catch (IOException | InterruptedException e) {
+        } catch (Exception e) {
             log.error("tor.startAsync failed", e);
             throw new ConnectionException(e);
         }

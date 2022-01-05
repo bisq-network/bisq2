@@ -27,6 +27,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.application.DefaultServiceProvider;
 import network.misq.common.data.Pair;
+import network.misq.common.util.CompletableFutureUtils;
 import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.view.Model;
 import network.misq.i18n.Res;
@@ -35,14 +36,16 @@ import network.misq.network.p2p.NetworkId;
 import network.misq.network.p2p.ServiceNode;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.message.TextMessage;
-import network.misq.network.p2p.node.*;
+import network.misq.network.p2p.node.CloseReason;
+import network.misq.network.p2p.node.Connection;
+import network.misq.network.p2p.node.Node;
+import network.misq.network.p2p.node.NodesById;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.AuthenticatedTextPayload;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.security.KeyPairService;
-import network.misq.security.PubKey;
 
 import java.security.KeyPair;
 import java.util.Collection;
@@ -50,7 +53,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -73,9 +75,9 @@ public class TransportTypeModel implements Model {
     private final StringProperty receivedMessages = new SimpleStringProperty("");
     private final Collection<Node> allNodes;
     private final Node defaultNode;
-    private final Optional<DataService> dataService;
     private final NodesById nodesById;
     private final Optional<ConfidentialMessageService> confidentialMessageService;
+    private final Optional<DataService> dataService;
     private Optional<NetworkId> selectedNetworkId = Optional.empty();
     private DataService.Listener dataListener;
     private Map<String, Node.Listener> nodeListenersByNodeId = new HashMap<>();
@@ -101,9 +103,8 @@ public class TransportTypeModel implements Model {
                 .map(pair -> new ConnectionListItem(pair.first(), pair.second()))
                 .collect(Collectors.toList()));
 
-        dataService = serviceNode.get().getDataService();
+        dataService = networkService.getServiceNodesByTransport().getDataService();
         dataService.ifPresent(dataService -> {
-            //log.error(" dataService.addListener(dataListener);");
             dataListener = new DataService.Listener() {
                 @Override
                 public void onNetworkDataAdded(NetworkPayload networkPayload) {
@@ -116,6 +117,10 @@ public class TransportTypeModel implements Model {
                 }
             };
             dataService.addListener(dataListener);
+
+            dataListItems.addAll(dataService.getAllAuthenticatedPayload()
+                    .map(DataListItem::new)
+                    .collect(Collectors.toList()));
         });
 
         confidentialMessageService = serviceNode.get().getConfidentialMessageService();
@@ -192,22 +197,33 @@ public class TransportTypeModel implements Model {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    CompletionStage<String> addData(String dataText, String id) {
-        // We bootstrap a node with the give id to be ready to receive messages on that node.
-        return networkService.maybeInitializeServerAsync(id)
-                .thenCompose(result -> {
-                    checkArgument(nodesById.findMyAddress(id).isPresent(),
-                            "My Address must be present after initializeServer");
-                    Map<Transport.Type, Address> addressByNetworkType = Map.of(transportType, nodesById.findMyAddress(id).get());
-                    KeyPair keyPair = keyPairService.getOrCreateKeyPair(id);
-                    PubKey pubKey = new PubKey(keyPair.getPublic(), id);
-                    NetworkId networkId = new NetworkId(addressByNetworkType, pubKey, id);
+    StringProperty addData(String dataText, String nodeId) {
+        StringProperty resultProperty = new SimpleStringProperty("Create Servers for node ID");
+        // We first make sure we have our servers for that nodeId initialized so that we can get the address 
+        // for the networkId.
+        CompletableFutureUtils.allOf(networkService.maybeInitializeServerAsync(nodeId).values())
+                .thenRun(() -> {
+                    resultProperty.set("Serves created. Add data.");
+                    NetworkId networkId = networkService.getNetworkId(nodeId);
                     AuthenticatedTextPayload payload = new AuthenticatedTextPayload(dataText, networkId);
-                    return networkService.addNetworkPayload(payload, keyPair)
-                            .thenApply(list -> {
-                                return list.toString();
+                    KeyPair keyPair = keyPairService.getOrCreateKeyPair(nodeId);
+                    networkService.addNetworkPayloadAsync(payload, keyPair)
+                            .whenComplete((broadCastResultFutures, throwable) -> {
+                                broadCastResultFutures.forEach(broadCastResultFuture -> {
+                                    broadCastResultFuture.whenComplete((broadCastResult, throwable2) -> {
+                                        UIThread.run(() -> {
+                                            if (throwable2 == null) {
+                                                resultProperty.set(transportType + ": Data added. Broadcast result: " + broadCastResult);
+                                            } else {
+                                                resultProperty.set(transportType + ": Error at add data: " + throwable);
+                                            }
+                                        });
+                                    });
+                                });
                             });
+                    networkService.maybeInitializeServerAsync(nodeId);
                 });
+        return resultProperty;
     }
 
 
@@ -222,17 +238,17 @@ public class TransportTypeModel implements Model {
                     if (throwable == null) {
                         if (resultMap.containsKey(transportType)) {
                             ConfidentialMessageService.Result result = resultMap.get(transportType);
-                            result.getMailboxFuture()
-                                    .ifPresentOrElse(broadcastFuture -> broadcastFuture
-                                                    .whenComplete((broadcastResult, error) ->
-                                                            future.complete(result.getState() + "; " + broadcastResult.toString())),
-                                            () -> {
-                                                String value = result.getState().toString();
-                                                if (result.getState() == ConfidentialMessageService.State.FAILED) {
-                                                    value += " with Error: " + result.getErrorMsg();
-                                                }
-                                                future.complete(value);
-                                            });
+                            result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture.whenComplete((broadcastResult, error) -> {
+                                if (error == null) {
+                                    future.complete(result.getState() + "; " + broadcastResult.toString());
+                                } else {
+                                    String value = result.getState().toString();
+                                    if (result.getState() == ConfidentialMessageService.State.FAILED) {
+                                        value += " with Error: " + result.getErrorMsg();
+                                    }
+                                    future.complete(value);
+                                }
+                            }));
                         }
                     }
                 });

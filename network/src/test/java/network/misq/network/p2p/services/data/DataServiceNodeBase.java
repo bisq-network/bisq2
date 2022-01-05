@@ -46,6 +46,8 @@ public abstract class DataServiceNodeBase {
         NetworkService.Config networkServiceConfigFactory = NetworkServiceConfigFactory.getConfig(appDir, typesafeConfig);
 
         multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory, transports, false);
+        multiNodesSetup.setNumSeeds(numSeeds);
+        multiNodesSetup.setNumNodes(numNodes);
 
         Stream<Address> seeds = transports.stream().flatMap(transport -> multiNodesSetup.getSeedAddresses(transport, numSeeds).stream());
         Stream<Address> nodes = transports.stream().flatMap(transport -> multiNodesSetup.getNodeAddresses(transport, numNodes).stream());

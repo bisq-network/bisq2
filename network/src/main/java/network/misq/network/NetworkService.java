@@ -36,8 +36,10 @@ import network.misq.network.p2p.services.confidential.ConfidentialMessageService
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
+import network.misq.network.p2p.services.data.storage.Storage;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.security.KeyPairService;
+import network.misq.security.PubKey;
 
 import java.security.KeyPair;
 import java.util.List;
@@ -46,6 +48,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -59,7 +62,6 @@ public class NetworkService {
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
 
-
     public static record Config(String baseDir,
                                 Transport.Config transportConfig,
                                 Set<Transport.Type> supportedTransportTypes,
@@ -69,6 +71,7 @@ public class NetworkService {
                                 Optional<String> socks5ProxyAddress) {
     }
 
+    private final KeyPairService keyPairService;
     @Getter
     private final HttpService httpService;
     @Getter
@@ -79,6 +82,7 @@ public class NetworkService {
     private final ServiceNodesByTransport serviceNodesByTransport;
 
     public NetworkService(Config config, KeyPairService keyPairService) {
+        this.keyPairService = keyPairService;
         httpService = new HttpService();
         socks5ProxyAddress = config.socks5ProxyAddress;
         supportedTransportTypes = config.supportedTransportTypes();
@@ -87,7 +91,7 @@ public class NetworkService {
                 config.serviceNodeConfig(),
                 config.peerGroupServiceConfigByTransport,
                 config.seedAddressesByTransport(),
-                new DataService.Config(config.baseDir()),
+                new Storage.Config(config.baseDir()),
                 keyPairService);
     }
 
@@ -125,19 +129,19 @@ public class NetworkService {
         return serviceNodesByTransport.bootstrapAsync(port, nodeId);
     }
 
-    public CompletableFuture<Boolean> maybeInitializeServerAsync() {
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServerAsync() {
         return maybeInitializeServerAsync(NetworkUtils.findFreeSystemPort());
     }
 
-    public CompletableFuture<Boolean> maybeInitializeServerAsync(int port) {
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServerAsync(int port) {
         return maybeInitializeServerAsync(port, Node.DEFAULT_NODE_ID);
     }
 
-    public CompletableFuture<Boolean> maybeInitializeServerAsync(String nodeId) {
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServerAsync(String nodeId) {
         return maybeInitializeServerAsync(NetworkUtils.findFreeSystemPort(), nodeId);
     }
 
-    public CompletableFuture<Boolean> maybeInitializeServerAsync(int port, String nodeId) {
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServerAsync(int port, String nodeId) {
         return serviceNodesByTransport.maybeInitializeServerAsync(port, nodeId);
     }
 
@@ -162,8 +166,8 @@ public class NetworkService {
     }
 
 
-    public CompletableFuture<List<BroadcastResult>> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
-        return serviceNodesByTransport.addNetworkPayload(networkPayload, keyPair);
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addNetworkPayloadAsync(NetworkPayload networkPayload, KeyPair keyPair) {
+        return serviceNodesByTransport.addNetworkPayloadAsync(networkPayload, keyPair);
     }
 
     public void addDataServiceListener(DataService.Listener listener) {
@@ -196,6 +200,24 @@ public class NetworkService {
 
     public Optional<Address> findMyAddresses(Transport.Type transport, String nodeId) {
         return serviceNodesByTransport.findMyAddresses(transport, nodeId);
+    }
+
+    public Map<Transport.Type, Address> getAddressByNetworkType(String nodeId) {
+        return supportedTransportTypes.stream()
+                .filter(transportType -> findMyAddresses(transportType, nodeId).isPresent())
+                .collect(Collectors.toMap(transportType -> transportType,
+                        transportType -> findMyAddresses(transportType, nodeId).orElseThrow()));
+    }
+
+    public NetworkId getNetworkId(String nodeId) {
+        Map<Transport.Type, Address> addressByNetworkType = getAddressByNetworkType(nodeId);
+        if (supportedTransportTypes.size() != addressByNetworkType.size()) {
+            log.warn("addressByNetworkType does not match size of supportedTransportTypes." +
+                    "This might be the case if the servers for that nodeId have not been initialized yet. " +
+                    "AddressByNetworkType={}, supportedTransportTypes={}", addressByNetworkType, supportedTransportTypes);
+        }
+        PubKey pubKey = new PubKey(keyPairService.getOrCreateKeyPair(nodeId).getPublic(), nodeId);
+        return new NetworkId(addressByNetworkType, pubKey, nodeId);
     }
 
     public Optional<Address> findMyDefaultAddress(Transport.Type transport) {

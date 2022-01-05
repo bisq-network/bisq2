@@ -30,6 +30,7 @@ import network.misq.network.NetworkService;
 import network.misq.network.p2p.node.transport.Transport;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Getter
 public class NetworkInfoModel implements Model {
@@ -39,11 +40,14 @@ public class NetworkInfoModel implements Model {
     private final BooleanProperty torDisabled = new SimpleBooleanProperty(false);
     private final BooleanProperty i2pDisabled = new SimpleBooleanProperty(false);
     private final ObjectProperty<Optional<TransportTypeView>> transportTypeView = new SimpleObjectProperty<>();
+    private final Set<Transport.Type> supportedTransportTypes;
     @Setter
     private Optional<Transport.Type> selectedTransportType = Optional.empty();
 
     public NetworkInfoModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
+
+        supportedTransportTypes= networkService.getSupportedTransportTypes();
 
         clearNetDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.CLEAR));
         torDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.TOR));

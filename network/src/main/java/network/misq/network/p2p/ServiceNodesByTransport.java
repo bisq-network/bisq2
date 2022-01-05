@@ -19,8 +19,8 @@ package network.misq.network.p2p;
 
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import lombok.Getter;
 import network.misq.common.util.CompletableFutureUtils;
-import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
@@ -32,6 +32,8 @@ import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
+import network.misq.network.p2p.services.data.storage.Storage;
+import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.security.KeyPairService;
 import org.slf4j.Logger;
@@ -39,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,38 +51,48 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.CompletableFuture.runAsync;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static network.misq.network.NetworkService.NETWORK_IO_POOL;
 
 public class ServiceNodesByTransport {
     private static final Logger log = LoggerFactory.getLogger(ServiceNodesByTransport.class);
 
     private final Map<Transport.Type, ServiceNode> map = new ConcurrentHashMap<>();
+    private final Storage storage;
+    @Getter
+    private final Optional<DataService> dataService;
 
     public ServiceNodesByTransport(Transport.Config transportConfig,
                                    Set<Transport.Type> supportedTransportTypes,
                                    ServiceNode.Config serviceNodeConfig,
                                    Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
                                    Map<Transport.Type, List<Address>> seedAddressesByTransport,
-                                   DataService.Config dataServiceConfig,
+                                   Storage.Config storageConfig,
                                    KeyPairService keyPairService) {
-
         long socketTimeout = TimeUnit.MINUTES.toMillis(5);
+        storage = new Storage(storageConfig.baseDir());
+
+        dataService = serviceNodeConfig.services().contains(ServiceNode.Service.DATA) ?
+                Optional.of(new DataService(storage)) : Optional.empty();
+
         supportedTransportTypes.forEach(transportType -> {
             Node.Config nodeConfig = new Node.Config(transportType,
                     supportedTransportTypes,
                     new UnrestrictedAuthorizationService(),
                     transportConfig,
                     (int) socketTimeout);
-
             List<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
             PeerGroupService.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
             ServiceNode serviceNode = new ServiceNode(serviceNodeConfig,
                     nodeConfig,
                     peerGroupServiceConfig,
-                    dataServiceConfig,
+                    dataService,
                     keyPairService,
                     seedAddresses);
             map.put(transportType, serviceNode);
+
+            dataService.ifPresent(dataService -> dataService.addService(transportType, serviceNode.getDataServicePerTransport()));
         });
     }
 
@@ -92,20 +105,20 @@ public class ServiceNodesByTransport {
     // has completed
     public CompletableFuture<Boolean> bootstrapAsync(int port, String nodeId) {
         return CompletableFutureUtils.allOf(map.values().stream().map(networkNode ->
-                runAsync(() -> networkNode.maybeInitializeServer(nodeId, port), NetworkService.NETWORK_IO_POOL)
+                runAsync(() -> networkNode.maybeInitializeServer(nodeId, port), NETWORK_IO_POOL)
                         .whenComplete((__, throwable) -> {
                             if (throwable == null) {
-                                networkNode.initializePeerGroup();
+                                networkNode.maybeInitializePeerGroup();
                             } else {
                                 log.error(throwable.toString());
                             }
                         }))).thenApply(list -> true);
     }
 
-    public CompletableFuture<Boolean> maybeInitializeServerAsync(int port, String nodeId) {
-        return CompletableFutureUtils.allOf(map.values().stream().map(networkNode ->
-                        runAsync(() -> networkNode.maybeInitializeServer(nodeId, port), NetworkService.NETWORK_IO_POOL)))
-                .thenApply(list -> true);
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServerAsync(int port, String nodeId) {
+        return map.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> supplyAsync(() -> entry.getValue().maybeInitializeServer(nodeId, port), NETWORK_IO_POOL)));
     }
 
     public Map<Transport.Type, ConfidentialMessageService.Result> confidentialSend(Message message,
@@ -130,11 +143,20 @@ public class ServiceNodesByTransport {
         return resultsByType;
     }
 
-    public CompletableFuture<List<BroadcastResult>> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
-        return CompletableFutureUtils.allOf(
-                map.values().stream()
-                        .map(serviceNode -> serviceNode.addNetworkPayload(networkPayload, keyPair))
-        );
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addNetworkPayloadAsync(NetworkPayload networkPayload, KeyPair keyPair) {
+        if (dataService.isEmpty()) {
+            return CompletableFuture.failedFuture(new IllegalStateException("DataService need to be enabled when using addNetworkPayload"));
+        }
+        return dataService.get().addNetworkPayloadAsync(networkPayload, keyPair);
+    }
+
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addMailboxPayloadAsync(MailboxPayload mailboxPayload,
+                                                                                              KeyPair senderKeyPair,
+                                                                                              PublicKey receiverPublicKey) {
+        if (dataService.isEmpty()) {
+            return CompletableFuture.failedFuture(new IllegalStateException("DataService need to be enabled when using addNetworkPayload"));
+        }
+        return dataService.get().addMailboxPayloadAsync(mailboxPayload, senderKeyPair, receiverPublicKey);
     }
 
     public void requestRemoveData(Message message, Consumer<BroadcastResult> resultHandler) {
@@ -176,11 +198,11 @@ public class ServiceNodesByTransport {
     }
 
     public void addDataServiceListener(DataService.Listener listener) {
-        map.values().forEach(serviceNode -> serviceNode.addDataServiceListener(listener));
+        dataService.ifPresent(dataService -> dataService.addListener(listener));
     }
 
     public void removeDataServiceListener(DataService.Listener listener) {
-        map.values().forEach(serviceNode -> serviceNode.removeDataServiceListener(listener));
+        dataService.ifPresent(dataService -> dataService.removeListener(listener));
     }
 
     public void addMessageListener(Node.Listener listener) {
@@ -192,7 +214,9 @@ public class ServiceNodesByTransport {
     }
 
     public CompletableFuture<Void> shutdown() {
-        return CompletableFutureUtils.allOf(map.values().stream().map(ServiceNode::shutdown))
+        List<CompletableFuture<Void>> futures = map.values().stream().map(ServiceNode::shutdown).collect(Collectors.toList());
+        futures.add(dataService.map(DataService::shutdown).orElse(CompletableFuture.completedFuture(null)));
+        return CompletableFutureUtils.allOf(futures)
                 .orTimeout(6, TimeUnit.SECONDS)
                 .thenApply(list -> {
                     map.clear();

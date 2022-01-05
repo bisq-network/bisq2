@@ -19,6 +19,7 @@ package network.misq.network.p2p.node;
 
 
 import network.misq.common.util.CompletableFutureUtils;
+import network.misq.common.util.NetworkUtils;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.services.peergroup.BanList;
 import org.slf4j.Logger;
@@ -55,6 +56,10 @@ public class NodesById implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void maybeInitializeServer(String nodeId) {
+        maybeInitializeServer(nodeId, NetworkUtils.findFreeSystemPort());
+    }
 
     public void maybeInitializeServer(String nodeId, int serverPort) {
         getOrCreateNode(nodeId).maybeInitializeServer(serverPort);
@@ -109,7 +114,7 @@ public class NodesById implements Node.Listener {
         return Optional.ofNullable(map.get(nodeId));
     }
 
-    public Collection<Node> getAllNodes( ) {
+    public Collection<Node> getAllNodes() {
         return map.values();
     }
 

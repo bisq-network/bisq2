@@ -18,6 +18,7 @@
 package network.misq.network.p2p.services.data.storage;
 
 
+import lombok.extern.slf4j.Slf4j;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.services.data.AddDataRequest;
@@ -30,21 +31,22 @@ import network.misq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import network.misq.network.p2p.services.data.storage.mailbox.DataStore;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxDataStore;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import static java.io.File.separator;
 
+@Slf4j
 public class Storage {
     public static final String DIR = "db" + File.separator + "network";
 
-    private static final Logger log = LoggerFactory.getLogger(Storage.class);
+    public static record Config(String baseDir) {
+    }
 
     // Class name is key
     final Map<String, AuthenticatedDataStore> authenticatedDataStores = new ConcurrentHashMap<>();
@@ -109,6 +111,14 @@ public class Storage {
         authenticatedDataStores.values().forEach(DataStore::shutdown);
         mailboxStores.values().forEach(DataStore::shutdown);
         appendOnlyDataStores.values().forEach(DataStore::shutdown);
+    }
+
+    public Stream<AuthenticatedPayload> getAllAuthenticatedPayload() {
+        return authenticatedDataStores.values().stream()
+                .flatMap(e -> e.getMap().values().stream())
+                .filter(e -> e instanceof AddAuthenticatedDataRequest)
+                .map(e -> (AddAuthenticatedDataRequest) e)
+                .map(e -> e.getAuthenticatedData().getPayload());
     }
 
     public CompletableFuture<AuthenticatedDataStore> getOrCreateAuthenticatedDataStore(MetaData metaData) {

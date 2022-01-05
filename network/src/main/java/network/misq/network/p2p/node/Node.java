@@ -525,7 +525,7 @@ public class Node implements Connection.Handler {
     }
 
     private void setState(State newState) {
-        checkArgument(state.get().ordinal() < newState.ordinal(),
+        checkArgument(newState.ordinal() > state.get().ordinal(),
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
     }

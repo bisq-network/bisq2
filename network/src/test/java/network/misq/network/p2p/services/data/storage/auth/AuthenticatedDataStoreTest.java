@@ -124,14 +124,13 @@ public class AuthenticatedDataStoreTest {
         Result addRequestResult = store.add(addRequest);
         assertTrue(addRequestResult.isSuccess());
 
-        Map<ByteArray, AuthenticatedDataRequest> map = store.getMap();
         ByteArray byteArray = new ByteArray(hash);
 
-        map.keySet().stream().filter(e -> e.equals(byteArray)).forEach(e -> log.error("FOUND {}", e));
-        if (!map.containsKey(byteArray)) {
+        store.getMap().keySet().stream().filter(e -> e.equals(byteArray)).forEach(e -> log.error("FOUND {}", e));
+        if (!store.getMap().containsKey(byteArray)) {
             return;
         }
-        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) map.get(byteArray);
+        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getMap().get(byteArray);
         AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
@@ -158,7 +157,7 @@ public class AuthenticatedDataStoreTest {
         Result refreshResult = store.refresh(refreshRequest);
         assertTrue(refreshResult.isSuccess());
 
-        addRequestFromMap = (AddAuthenticatedDataRequest) map.get(byteArray);
+        addRequestFromMap = (AddAuthenticatedDataRequest) store.getMap().get(byteArray);
         dataFromMap = addRequestFromMap.getAuthenticatedData();
         assertEquals(initialSeqNum + 2, dataFromMap.getSequenceNumber());
 
@@ -167,7 +166,7 @@ public class AuthenticatedDataStoreTest {
         Result removeRequestResult = store.remove(removeRequest);
         assertTrue(removeRequestResult.isSuccess());
 
-        RemoveRequest removeRequestFromMap = (RemoveRequest) map.get(byteArray);
+        RemoveRequest removeRequestFromMap = (RemoveRequest) store.getMap().get(byteArray);
         assertEquals(initialSeqNum + 3, removeRequestFromMap.getSequenceNumber());
 
         // refresh on removed fails
