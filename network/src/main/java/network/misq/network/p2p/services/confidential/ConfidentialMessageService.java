@@ -129,10 +129,12 @@ public class ConfidentialMessageService implements Node.Listener {
 
     @Override
     public void onConnection(Connection connection) {
+        listeners.forEach(listener -> listener.onConnection(connection));
     }
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
+        listeners.forEach(listener -> listener.onDisconnect(connection, closeReason));
     }
 
     public Result send(Message message,
@@ -189,8 +191,8 @@ public class ConfidentialMessageService implements Node.Listener {
         // We do not wait for the broadcast result as that can take a while. We pack the future into our result, 
         // so clients can react on it as they wish.
         List<CompletableFuture<BroadcastResult>> mailboxFuture = dataService.get().addMailboxPayloadAsync(mailboxPayload,
-                senderKeyPair,
-                receiverPubKey.publicKey())
+                        senderKeyPair,
+                        receiverPubKey.publicKey())
                 .join();
         return new Result(State.ADDED_TO_MAILBOX).setMailboxFuture(mailboxFuture);
     }

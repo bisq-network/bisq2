@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.desktop.main.content.networkinfo.transport;
+package network.misq.desktop.main.content.networkinfo;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ import java.util.Optional;
 
 @Slf4j
 @Getter
-public class DataListItem implements TableItem {
+class DataListItem implements TableItem {
     private final NetworkPayload networkPayload;
     private final String received;
     private final String content;
@@ -42,7 +42,7 @@ public class DataListItem implements TableItem {
     private final Date date;
     private final Optional<NetworkId> networkId;
 
-    public DataListItem(NetworkPayload networkPayload) {
+    DataListItem(NetworkPayload networkPayload) {
         this.networkPayload = networkPayload;
         date = new Date();
         this.received = DateFormatter.formatDateTime(date);
@@ -59,7 +59,7 @@ public class DataListItem implements TableItem {
         }
     }
 
-    public int compareDate(DataListItem other) {
+    int compareDate(DataListItem other) {
         return date.compareTo(other.getDate());
     }
 
@@ -70,21 +70,6 @@ public class DataListItem implements TableItem {
     @Override
     public void deactivate() {
     }
-/*
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DataListItem that = (DataListItem) o;
-        return Objects.equals(hash, that.hash);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(hash);
-    }
-*/
 
     @Override
     public boolean equals(Object o) {
