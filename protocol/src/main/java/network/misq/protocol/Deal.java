@@ -19,7 +19,7 @@ package network.misq.protocol;
 
 import network.misq.account.Account;
 import network.misq.contract.Contract;
-import network.misq.id.IdentityService;
+import network.misq.identity.IdentityService;
 import network.misq.network.NetworkService;
 import network.misq.offer.Offer;
 import network.misq.persistence.Persistence;

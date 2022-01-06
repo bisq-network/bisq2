@@ -29,15 +29,16 @@ import network.misq.network.p2p.NetworkId;
 import network.misq.network.p2p.ServiceNode;
 import network.misq.network.p2p.ServiceNodesByTransport;
 import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.message.Proto;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
+import network.misq.network.p2p.services.data.AuthenticatedNetworkIdPayload;
 import network.misq.network.p2p.services.data.DataService;
-import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
-import network.misq.network.p2p.services.data.storage.Storage;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.KeyPairService;
 import network.misq.security.PubKey;
 
@@ -47,6 +48,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
@@ -81,7 +83,9 @@ public class NetworkService {
     @Getter
     private final ServiceNodesByTransport serviceNodesByTransport;
 
-    public NetworkService(Config config, KeyPairService keyPairService) {
+    private final Map<String, NetworkId> networkIdByNodeId = new ConcurrentHashMap<>();
+
+    public NetworkService(Config config, KeyPairService keyPairService, PersistenceService persistenceService) {
         this.keyPairService = keyPairService;
         httpService = new HttpService();
         socks5ProxyAddress = config.socks5ProxyAddress;
@@ -91,8 +95,8 @@ public class NetworkService {
                 config.serviceNodeConfig(),
                 config.peerGroupServiceConfigByTransport,
                 config.seedAddressesByTransport(),
-                new Storage.Config(config.baseDir()),
-                keyPairService);
+                keyPairService,
+                persistenceService);
     }
 
 
@@ -165,9 +169,24 @@ public class NetworkService {
         return serviceNodesByTransport.confidentialSend(message, receiverNetworkId, senderKeyPair, senderNodeId);
     }
 
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addDataAsync(Proto data, String nodeId,  String keyId) {
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
+        return CompletableFutureUtils.allOf(maybeInitializeServerAsync(nodeId).values())
+                .thenCompose(list -> {
+                    maybeInitializeServerAsync(nodeId);
+                    NetworkId networkId = findNetworkId(nodeId, pubKey).orElseThrow();
+                    AuthenticatedNetworkIdPayload netWorkPayload = new AuthenticatedNetworkIdPayload(data, networkId);
+                    return serviceNodesByTransport.addNetworkPayloadAsync(netWorkPayload, keyPair)
+                            .whenComplete((broadCastResultFutures, throwable) -> {
+                                broadCastResultFutures.forEach(broadCastResultFuture -> {
+                                    broadCastResultFuture.whenComplete((broadCastResult, throwable2) -> {
+                                        //todo apply state
+                                    });
+                                });
+                            });
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addNetworkPayloadAsync(NetworkPayload networkPayload, KeyPair keyPair) {
-        return serviceNodesByTransport.addNetworkPayloadAsync(networkPayload, keyPair);
+                });
     }
 
     public void addDataServiceListener(DataService.Listener listener) {
@@ -209,17 +228,6 @@ public class NetworkService {
                         transportType -> findMyAddresses(transportType, nodeId).orElseThrow()));
     }
 
-    public NetworkId getNetworkId(String nodeId) {
-        Map<Transport.Type, Address> addressByNetworkType = getAddressByNetworkType(nodeId);
-        if (supportedTransportTypes.size() != addressByNetworkType.size()) {
-            log.warn("addressByNetworkType does not match size of supportedTransportTypes." +
-                    "This might be the case if the servers for that nodeId have not been initialized yet. " +
-                    "AddressByNetworkType={}, supportedTransportTypes={}", addressByNetworkType, supportedTransportTypes);
-        }
-        PubKey pubKey = new PubKey(keyPairService.getOrCreateKeyPair(nodeId).getPublic(), nodeId);
-        return new NetworkId(addressByNetworkType, pubKey, nodeId);
-    }
-
     public Optional<Address> findMyDefaultAddress(Transport.Type transport) {
         return serviceNodesByTransport.findMyAddresses(transport, Node.DEFAULT_NODE_ID);
     }
@@ -242,5 +250,25 @@ public class NetworkService {
 
     public boolean isTransportTypeSupported(Transport.Type transportType) {
         return getSupportedTransportTypes().contains(transportType);
+    }
+
+    public Optional<NetworkId> findNetworkId(String nodeId, PubKey pubKey) {
+        if (networkIdByNodeId.containsKey(nodeId)) {
+            return Optional.of(networkIdByNodeId.get(nodeId));
+        } else {
+            Map<Transport.Type, Address> addressByNetworkType = getAddressByNetworkType(nodeId);
+            if (supportedTransportTypes.size() == addressByNetworkType.size()) {
+                NetworkId networkId = new NetworkId(addressByNetworkType, pubKey, nodeId);
+                networkIdByNodeId.put(nodeId, networkId);
+                persist();
+                return Optional.of(networkId);
+            } else {
+                return Optional.empty();
+            }
+        }
+    }
+
+    private void persist() {
+        //todo
     }
 }

@@ -27,6 +27,7 @@ import network.misq.network.p2p.services.data.filter.ProtectedDataFilter;
 import network.misq.network.p2p.services.data.inventory.Inventory;
 import network.misq.network.p2p.services.data.inventory.InventoryUtil;
 import network.misq.network.p2p.services.data.storage.Result;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.DigestUtil;
 import network.misq.security.KeyGeneration;
 import org.junit.jupiter.api.Test;
@@ -113,7 +114,8 @@ public class AuthenticatedDataStoreTest {
     @Test
     public void testAddAndRemove() throws GeneralSecurityException, IOException {
         MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test" + UUID.randomUUID());
-        AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, data.getMetaData());
+        PersistenceService persistenceService = new PersistenceService(appDirPath);
+        AuthenticatedDataStore store = new AuthenticatedDataStore(persistenceService, data.getMetaData());
         store.readPersisted().join();
         KeyPair keyPair = KeyGeneration.generateKeyPair();
 
@@ -192,7 +194,8 @@ public class AuthenticatedDataStoreTest {
     @Test
     public void testGetInv() throws GeneralSecurityException, IOException {
         MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test");
-        AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, data.getMetaData());
+        PersistenceService persistenceService = new PersistenceService(appDirPath);
+        AuthenticatedDataStore store = new AuthenticatedDataStore(persistenceService, data.getMetaData());
         store.readPersisted().join();
         KeyPair keyPair = KeyGeneration.generateKeyPair();
         int initialSeqNumFirstItem = 0;

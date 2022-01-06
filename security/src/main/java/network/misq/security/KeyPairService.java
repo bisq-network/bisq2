@@ -17,8 +17,14 @@
 
 package network.misq.security;
 
+import lombok.Getter;
+import network.misq.persistence.Persistence;
+import network.misq.persistence.PersistenceClient;
+import network.misq.persistence.PersistenceService;
+
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -26,21 +32,34 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-public class KeyPairService {
+public class KeyPairService implements PersistenceClient<HashMap<String, KeyPair>> {
     public static final String DEFAULT = "default";
-    private final String baseDir;
+    @Getter
+    private final Persistence<HashMap<String, KeyPair>> persistence;
 
-    public static record Conf(String baseDir) {
-    }
-
-    // Key is an arbitrary keyId, but usually associated with interaction like offer ID. 
-    // Throws when attempting to use an already existing keyId at add method.
     private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
 
-    public KeyPairService(Conf conf) {
-        baseDir = conf.baseDir;
+    public KeyPairService(PersistenceService persistenceService) {
+        persistence = persistenceService.getOrCreatePersistence(this, "db", "keyPairs");
+    }
+
+    @Override
+    public void applyPersisted(HashMap<String, KeyPair> persisted) {
+        synchronized (keyPairsById) {
+            keyPairsById.putAll(persisted);
+        }
+    }
+
+    @Override
+    public CompletableFuture<Boolean> persist() {
+        return persistence.persistAsync(getCloneForPersistence());
+    }
+
+    @Override
+    public HashMap<String, KeyPair> getCloneForPersistence() {
+        synchronized (keyPairsById) {
+            return new HashMap<>(keyPairsById);
+        }
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -50,9 +69,10 @@ public class KeyPairService {
     public void shutdown() {
     }
 
-
     public Optional<KeyPair> findKeyPair(String keyId) {
-        return Optional.ofNullable(keyPairsById.get(keyId));
+        synchronized (keyPairsById) {
+            return Optional.ofNullable(keyPairsById.get(keyId));
+        }
     }
 
     public KeyPair getOrCreateKeyPair(String keyId) {
@@ -69,22 +89,15 @@ public class KeyPairService {
                 .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
                     try {
                         KeyPair keyPair = KeyGeneration.generateKeyPair();
-                        put(keyId, keyPair);
+                        synchronized (keyPairsById) {
+                            keyPairsById.put(keyId, keyPair);
+                        }
+                        persist();
                         return keyPair;
                     } catch (GeneralSecurityException e) {
                         e.printStackTrace();
                         throw new CompletionException(e);
                     }
                 }));
-    }
-
-    private void put(String keyId, KeyPair keyPair) {
-        checkArgument(!keyPairsById.containsKey(keyId));
-        keyPairsById.put(keyId, keyPair);
-        persist();
-    }
-
-    private void persist() {
-        // todo persist
     }
 }

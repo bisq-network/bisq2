@@ -17,82 +17,97 @@
 
 package network.misq.persistence;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.threading.ExecutorFactory;
 import network.misq.common.util.FileUtils;
 
 import java.io.*;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 @Slf4j
-public class Persistence {
-    public static final ExecutorService DISK_IO_POOL = ExecutorFactory.newFixedThreadPool("Persistence.disk_IO-pool");
+public class Persistence<T extends Serializable> {
+    public static final ExecutorService PERSISTENCE_IO_POOL = ExecutorFactory.newFixedThreadPool("Persistence-io-pool");
 
     private final String directory;
+    @Getter
     private final String fileName;
+    @Getter
     private final String storagePath;
-    private final Object writeLock = new Object();
-    private File tempFile;
-    private Serializable serializable;
+    private final Object lock = new Object();
 
-    public Persistence(String directory, Serializable serializable) {
-        this(directory, serializable.getClass().getSimpleName(), serializable);
-    }
 
-    public Persistence(String directory, String fileName, Serializable serializable) {
+    public Persistence(String directory, String fileName) {
         this.directory = directory;
-        this.serializable = serializable;
         this.fileName = fileName;
         storagePath = directory + File.separator + fileName;
     }
 
-    public static CompletableFuture<Serializable> readAsync(String storagePath) {
-        return CompletableFuture.supplyAsync(() -> read(storagePath), DISK_IO_POOL);
+    public CompletableFuture<Optional<T>> readAsync(Consumer<T> consumer) {
+        return readAsync().whenComplete((result, throwable) -> result.ifPresent(consumer));
     }
 
-    public static Serializable read(String storagePath) {
+    public CompletableFuture<Optional<T>> readAsync() {
+        return CompletableFuture.supplyAsync(this::read, PERSISTENCE_IO_POOL);
+    }
+
+    public Optional<T> read() {
+        if (!new File(storagePath).exists()) {
+            return Optional.empty();
+        }
         try (FileInputStream fileInputStream = new FileInputStream(storagePath);
              ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
-            return (Serializable) objectInputStream.readObject();
-        } catch (IOException | ClassNotFoundException exception) {
+            Object object;
+            synchronized (lock) {
+                object = objectInputStream.readObject();
+            }
+            return Optional.of((T) object);
+        } catch (Throwable exception) {
             log.error(exception.toString(), exception);
-            return null;
+            return Optional.empty();
         }
     }
 
-    public CompletableFuture<Boolean> persist() {
+    public CompletableFuture<Boolean> persistAsync(T serializable) {
         return CompletableFuture.supplyAsync(() -> {
             Thread.currentThread().setName("Persistence.persist-" + fileName);
-            synchronized (writeLock) {
-                boolean success = false;
-                try {
-                    FileUtils.makeDirs(directory);
-                    // We use a temp file to not risk data corruption in case the write operation fails.
-                    // After write is done we rename the tempFile to our storageFile which is an atomic operation.
-                    tempFile = File.createTempFile("temp_" + fileName, null, new File(directory));
-                    FileUtils.deleteOnExit(tempFile);
-                    File storageFile = new File(directory, fileName);
-                    try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
-                         ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)) {
-                        objectOutputStream.writeObject(serializable);
-                        objectOutputStream.flush();
-                        fileOutputStream.flush();
-                        fileOutputStream.getFD().sync();
+            return persist(serializable);
+        }, PERSISTENCE_IO_POOL);
+    }
 
-                        // Atomic rename
-                        FileUtils.renameFile(tempFile, storageFile);
-                        success = true;
-                    } catch (IOException exception) {
-                        log.error(exception.toString(), exception);
-                    } finally {
-                        FileUtils.releaseTempFile(tempFile);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
+    public boolean persist(T serializable) {
+        synchronized (lock) {
+            boolean success = false;
+            try {
+                FileUtils.makeDirs(directory);
+                // We use a temp file to not risk data corruption in case the write operation fails.
+                // After write is done we rename the tempFile to our storageFile which is an atomic operation.
+                File tempFile = File.createTempFile("temp_" + fileName, null, new File(directory));
+                FileUtils.deleteOnExit(tempFile);
+                File storageFile = new File(directory, fileName);
+                try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
+                     ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)) {
+                    objectOutputStream.writeObject(serializable);
+                    objectOutputStream.flush();
+                    fileOutputStream.flush();
+                    fileOutputStream.getFD().sync();
+
+                    // Atomic rename
+                    FileUtils.renameFile(tempFile, storageFile);
+                    log.info("Persisted {}", serializable);
+                    success = true;
+                } catch (IOException exception) {
+                    log.error(exception.toString(), exception);
+                } finally {
+                    FileUtils.releaseTempFile(tempFile);
                 }
-                return success;
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }, DISK_IO_POOL);
+            return success;
+        }
     }
 }

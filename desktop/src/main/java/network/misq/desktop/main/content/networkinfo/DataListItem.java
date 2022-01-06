@@ -22,7 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.desktop.components.table.TableItem;
 import network.misq.i18n.Res;
 import network.misq.network.p2p.NetworkId;
-import network.misq.network.p2p.services.data.AuthenticatedTextPayload;
+import network.misq.network.p2p.message.TextData;
+import network.misq.network.p2p.services.data.AuthenticatedNetworkIdPayload;
 import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.presentation.formatters.DateFormatter;
 import network.misq.presentation.formatters.TimeFormatter;
@@ -46,16 +47,20 @@ class DataListItem implements TableItem {
         this.networkPayload = networkPayload;
         date = new Date();
         this.received = DateFormatter.formatDateTime(date);
-        if (networkPayload instanceof AuthenticatedTextPayload authenticatedTextPayload) {
-            content = authenticatedTextPayload.getText();
-            networkId = Optional.of(authenticatedTextPayload.getNetworkId());
-            nodeId = networkId.get().nodeId();
-            ttl = TimeFormatter.formatTime(authenticatedTextPayload.getMetaData().getTtl());
+        if (networkPayload instanceof AuthenticatedNetworkIdPayload authenticatedNetworkIdPayload) {
+            networkId = Optional.of(authenticatedNetworkIdPayload.getNetworkId());
+            nodeId = networkId.get().getNodeId();
+            ttl = TimeFormatter.formatTime(authenticatedNetworkIdPayload.getMetaData().getTtl());
+            if (authenticatedNetworkIdPayload.getData() instanceof TextData data) {
+                content = data.text();
+            } else {
+                content = networkPayload.toString();
+            }
         } else {
-            content = networkPayload.toString();
             nodeId = Res.common.get("na");
             ttl = Res.common.get("na");
             networkId = Optional.empty();
+            content = networkPayload.toString();
         }
     }
 

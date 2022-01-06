@@ -24,6 +24,7 @@ import network.misq.common.util.OsUtils;
 import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.storage.Result;
 import network.misq.network.p2p.services.data.storage.auth.*;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.DigestUtil;
 import network.misq.security.KeyGeneration;
 import network.misq.security.SignatureUtil;
@@ -60,7 +61,8 @@ public class AuthorizedDataStoreTest {
         MockAuthorizedPayload authorizedPayload = new MockAuthorizedPayload(networkPayload, signature, publicKey);
 
         KeyPair keyPair = KeyGeneration.generateKeyPair();
-        AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, authorizedPayload.getMetaData());
+        PersistenceService persistenceService = new PersistenceService(appDirPath);
+        AuthenticatedDataStore store = new AuthenticatedDataStore(persistenceService, authorizedPayload.getMetaData());
         store.readPersisted().join();
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authorizedPayload, keyPair);
         byte[] hash = DigestUtil.hash(authorizedPayload.serialize());

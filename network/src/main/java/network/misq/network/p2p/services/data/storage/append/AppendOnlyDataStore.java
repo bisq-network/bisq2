@@ -22,14 +22,11 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.data.ByteArray;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.network.p2p.services.data.storage.mailbox.DataStore;
-import network.misq.persistence.Persistence;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.DigestUtil;
 
-import java.io.File;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
@@ -48,39 +45,33 @@ public class AppendOnlyDataStore extends DataStore<AppendOnlyPayload> {
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public AppendOnlyDataStore(String appDirPath, MetaData metaData) {
-        super(appDirPath, metaData);
+    public AppendOnlyDataStore(PersistenceService persistenceService, MetaData metaData) {
+        super(persistenceService, metaData);
 
         maxMapSize = MAX_MAP_SIZE / metaData.getMaxSizeInBytes();
     }
 
-    public CompletableFuture<Void> readPersisted() {
-        if (!new File(storageFilePath).exists()) {
-            return CompletableFuture.completedFuture(null);
-        }
-        return Persistence.readAsync(storageFilePath)
-                .whenComplete((serializable, t) -> {
-                    if (serializable instanceof ConcurrentHashMap) {
-                        ConcurrentHashMap<ByteArray, AppendOnlyPayload> persisted = (ConcurrentHashMap<ByteArray, AppendOnlyPayload>) serializable;
-                        map.putAll(persisted);
-                    }
-                }).thenApply(serializable -> null);
+    @Override
+    protected long getMaxWriteRateInMs() {
+        return 1000;
     }
 
     public boolean append(AppendOnlyPayload appendOnlyData) {
-        if (map.size() > maxMapSize) {
-            return false;
-        }
+        synchronized (map) {
+            if (map.size() > maxMapSize) {
+                return false;
+            }
 
-        byte[] hash = DigestUtil.hash(appendOnlyData.serialize());
-        ByteArray byteArray = new ByteArray(hash);
-        if (map.containsKey(byteArray)) {
-            return false;
-        }
+            byte[] hash = DigestUtil.hash(appendOnlyData.serialize());
+            ByteArray byteArray = new ByteArray(hash);
+            if (map.containsKey(byteArray)) {
+                return false;
+            }
 
-        map.put(byteArray, appendOnlyData);
-        listeners.forEach(listener -> listener.onAppended(appendOnlyData));
+            map.put(byteArray, appendOnlyData);
+        }
         persist();
+        listeners.forEach(listener -> listener.onAppended(appendOnlyData));
         return true;
     }
 

@@ -43,6 +43,7 @@
 
 package network.misq.common.util;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -63,6 +64,8 @@ import java.util.List;
 @Slf4j
 class DeleteOnExitHook {
     private static LinkedHashSet<String> files = new LinkedHashSet<>();
+    @Getter
+    private static volatile boolean shutdownInProgress;
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -93,6 +96,7 @@ class DeleteOnExitHook {
     }
 
     private static void runHooks() {
+        shutdownInProgress = true;
         LinkedHashSet<String> theFiles;
 
         synchronized (DeleteOnExitHook.class) {

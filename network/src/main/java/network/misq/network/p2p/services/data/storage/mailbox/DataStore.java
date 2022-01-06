@@ -17,47 +17,50 @@
 
 package network.misq.network.p2p.services.data.storage.mailbox;
 
+import lombok.Getter;
 import network.misq.common.data.ByteArray;
-import network.misq.common.util.FileUtils;
 import network.misq.network.p2p.services.data.storage.MetaData;
-import network.misq.network.p2p.services.data.storage.Storage;
 import network.misq.persistence.Persistence;
+import network.misq.persistence.PersistenceService;
+import network.misq.persistence.RateLimitedPersistenceClient;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import static java.io.File.separator;
+public abstract class DataStore<T extends Serializable> extends RateLimitedPersistenceClient<HashMap<ByteArray, T>> {
+    @Getter
+    protected final Persistence<HashMap<ByteArray, T>> persistence;
+    protected final ConcurrentHashMap<ByteArray, T> map = new ConcurrentHashMap<>();
 
-public abstract class DataStore<T> {
-    protected final String storageFilePath;
-    protected final String storageDirectory;
-    protected final String fileName;
-    protected final Persistence persistence;
-    protected final Map<ByteArray, T> map = new HashMap<>();
+    public DataStore(PersistenceService persistenceService, MetaData metaData) {
+        super();
+        String subDirectory = "db" + File.separator + "network" + File.separator + getStoreDir();
+        persistence = persistenceService.getOrCreatePersistence(this, subDirectory, getFileName(metaData));
+    }
 
-    public DataStore(String appDirPath, MetaData metaData) {
-        storageDirectory = appDirPath + File.separator + Storage.DIR + File.separator + getStoreDir();
-        try {
-            FileUtils.makeDirs(storageDirectory);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+    @Override
+    public void applyPersisted(HashMap<ByteArray, T> persisted) {
+        synchronized (map) {
+            map.putAll(persisted);
         }
-        fileName = metaData.getFileName();
-        storageFilePath = storageDirectory + separator + fileName;
-        this.persistence = new Persistence(storageDirectory, fileName, (Serializable) map);
+    }
+
+    @Override
+    public HashMap<ByteArray, T> getCloneForPersistence() {
+        synchronized (map) {
+            return new HashMap<>(map);
+        }
     }
 
     protected String getStoreDir() {
-        return this.getClass().getSimpleName().replace("DataStore", "").toLowerCase();
+        return this.getClass().getSimpleName().replace("Store", "").toLowerCase();
+    }
+
+    protected String getFileName(MetaData metaData) {
+        return metaData.getFileName() + "s";
     }
 
     abstract public void shutdown();
-
-    protected void persist() {
-        persistence.persist();
-    }
 }

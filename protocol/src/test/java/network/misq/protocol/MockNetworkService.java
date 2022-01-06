@@ -31,12 +31,12 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MockServiceTransport extends NetworkService {
-    private static final Logger log = LoggerFactory.getLogger(MockServiceTransport.class);
+public class MockNetworkService extends NetworkService {
+    private static final Logger log = LoggerFactory.getLogger(MockNetworkService.class);
     private final Set<Node.Listener> listeners = ConcurrentHashMap.newKeySet();
 
-    public MockServiceTransport() {
-        super(null, null);
+    public MockNetworkService() {
+        super(null, null, null);
     }
 
     @Override

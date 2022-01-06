@@ -23,7 +23,7 @@ import network.misq.common.currency.FiatCurrencyRepository;
 import network.misq.common.locale.LocaleRepository;
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.i18n.Res;
-import network.misq.id.IdentityService;
+import network.misq.identity.IdentityService;
 import network.misq.network.NetworkService;
 import network.misq.network.NetworkServiceConfigFactory;
 import network.misq.network.p2p.MockNetworkService;
@@ -31,8 +31,8 @@ import network.misq.offer.MarketPriceService;
 import network.misq.offer.MarketPriceServiceConfigFactory;
 import network.misq.offer.OfferService;
 import network.misq.offer.OpenOfferService;
+import network.misq.persistence.PersistenceService;
 import network.misq.presentation.offer.OfferEntityService;
-import network.misq.security.KeyPairRepositoryConfigFactory;
 import network.misq.security.KeyPairService;
 
 import java.util.Locale;
@@ -61,6 +61,7 @@ public class DefaultServiceProvider extends ServiceProvider {
     private final IdentityService identityService;
     private final MarketPriceService marketPriceService;
     private final ApplicationOptions applicationOptions;
+    private final PersistenceService persistenceService;
 
     public DefaultServiceProvider(ApplicationOptions applicationOptions, String[] args) {
         super("Misq");
@@ -71,14 +72,15 @@ public class DefaultServiceProvider extends ServiceProvider {
         Res.initialize(locale);
         FiatCurrencyRepository.applyLocale(locale);
 
-        KeyPairService.Conf keyPairRepositoryConf = KeyPairRepositoryConfigFactory.getConfig(applicationOptions.baseDir());
-        keyPairService = new KeyPairService(keyPairRepositoryConf);
+        persistenceService = new PersistenceService(applicationOptions.baseDir());
+        keyPairService = new KeyPairService(persistenceService);
+
+        identityService = new IdentityService(persistenceService);
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
                 getConfig("misq.networkServiceConfig"));
-        networkService = new NetworkService(networkServiceConfig, keyPairService);
+        networkService = new NetworkService(networkServiceConfig, keyPairService, persistenceService);
 
-        identityService = new IdentityService(networkService);
 
         // add data use case is not available yet at networkService
         MockNetworkService mockNetworkService = new MockNetworkService();
@@ -89,6 +91,10 @@ public class DefaultServiceProvider extends ServiceProvider {
         MarketPriceService.Config marketPriceServiceConf = MarketPriceServiceConfigFactory.getConfig();
         marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, Version.VERSION);
         offerEntityService = new OfferEntityService(offerService, marketPriceService);
+    }
+
+    public CompletableFuture<Boolean> readAllPersisted() {
+        return persistenceService.readAllPersisted();
     }
 
     /**

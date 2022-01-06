@@ -19,10 +19,12 @@ package network.misq.application;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.ConfigUtil;
 
 import java.util.concurrent.CompletableFuture;
 
+@Slf4j
 public abstract class ServiceProvider {
     protected final Config misqConfig;
 
@@ -34,6 +36,8 @@ public abstract class ServiceProvider {
     protected Config getConfig(String path) {
         return ConfigUtil.getConfig(misqConfig, path);
     }
+
+    public abstract CompletableFuture<Boolean> readAllPersisted();
 
     public abstract CompletableFuture<Boolean> initialize();
 

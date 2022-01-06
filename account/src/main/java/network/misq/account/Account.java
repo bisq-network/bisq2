@@ -18,7 +18,7 @@
 package network.misq.account;
 
 
-import network.misq.id.IdentityService;
+import network.misq.identity.IdentityService;
 import network.misq.persistence.Persistence;
 
 public class Account {

@@ -60,14 +60,12 @@ public class DataServicePerTransport implements Node.Listener {
     private static final long BROADCAST_TIMEOUT = 90;
 
     private final Node node;
-    private final PeerGroupService peerGroupService;
     private final Broadcaster broadcaster;
     private final Map<String, InventoryResponseHandler> responseHandlerMap = new ConcurrentHashMap<>();
     private final Map<String, InventoryRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
 
-    public DataServicePerTransport(Node node, PeerGroupService peerGroupService, KeyPairService keyPairService) {
+    public DataServicePerTransport( Node node, PeerGroupService peerGroupService, KeyPairService keyPairService) {
         this.node = node;
-        this.peerGroupService = peerGroupService;
 
         broadcaster = new Broadcaster(node, peerGroupService.getPeerGroup());
         node.addListener(this);

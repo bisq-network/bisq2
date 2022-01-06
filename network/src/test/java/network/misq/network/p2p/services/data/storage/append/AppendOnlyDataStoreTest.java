@@ -18,6 +18,7 @@
 package network.misq.network.p2p.services.data.storage.append;
 
 import network.misq.common.util.OsUtils;
+import network.misq.persistence.PersistenceService;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -33,7 +34,8 @@ public class AppendOnlyDataStoreTest {
     @Test
     public void testAppend() throws IOException {
         MockAppendOnlyPayload data = new MockAppendOnlyPayload("test" + UUID.randomUUID());
-        AppendOnlyDataStore store = new AppendOnlyDataStore(appDirPath, data.getMetaData());
+        PersistenceService persistenceService = new PersistenceService(appDirPath);
+        AppendOnlyDataStore store = new AppendOnlyDataStore(persistenceService, data.getMetaData());
         store.readPersisted().join();
         int previous = store.getMap().size();
         int iterations = 10;

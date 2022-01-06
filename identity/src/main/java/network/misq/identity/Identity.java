@@ -15,30 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.misq.id;
+package network.misq.identity;
 
+import java.io.Serializable;
 
-import network.misq.network.NetworkService;
-import network.misq.persistence.Persistence;
-
-import java.util.concurrent.CompletableFuture;
-
-public class IdentityService {
-    // expected dependencies
-    Persistence persistence;
-    private NetworkService networkService;
-
-    public IdentityService(NetworkService networkService) {
-        this.networkService = networkService;
-    }
-
-    public CompletableFuture<Boolean> initialize() {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        //todo
-        future.complete(true);
-        return future;
-    }
-
-    public void shutdown() {
-    }
+public record Identity(String domainId, String nodeId, String keyId) implements Serializable {
 }

@@ -28,13 +28,10 @@ import network.misq.network.p2p.services.data.storage.Result;
 import network.misq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import network.misq.network.p2p.services.data.storage.mailbox.DataStore;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxData;
-import network.misq.persistence.Persistence;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.DigestUtil;
 
-import java.io.File;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -65,23 +62,20 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
 
-    public AuthenticatedDataStore(String appDirPath, MetaData metaData) {
-        super(appDirPath, metaData);
+    public AuthenticatedDataStore(PersistenceService persistenceService, MetaData metaData) {
+        super(persistenceService, metaData);
 
         maxItems = MAX_INVENTORY_MAP_SIZE / metaData.getMaxSizeInBytes();
     }
 
-    public CompletableFuture<Void> readPersisted() {
-        if (!new File(storageFilePath).exists()) {
-            return CompletableFuture.completedFuture(null);
-        }
-        return Persistence.readAsync(storageFilePath)
-                .whenComplete((serializable, t) -> {
-                    if (serializable instanceof ConcurrentHashMap) {
-                        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> persisted = (ConcurrentHashMap<ByteArray, AuthenticatedDataRequest>) serializable;
-                        maybePruneMap(persisted);
-                    }
-                }).thenApply(serializable -> null);
+    @Override
+    public void applyPersisted(HashMap<ByteArray, AuthenticatedDataRequest> persisted) {
+        maybePruneMap(persisted);
+    }
+
+    @Override
+    protected long getMaxWriteRateInMs() {
+        return 1000;
     }
 
     public Result add(AddAuthenticatedDataRequest request) {
@@ -91,7 +85,7 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
         ByteArray byteArray = new ByteArray(hash);
         AuthenticatedDataRequest requestFromMap;
         synchronized (map) {
-             requestFromMap = map.get(byteArray);
+            requestFromMap = map.get(byteArray);
             if (request.equals(requestFromMap)) {
                 return new Result(false).requestAlreadyReceived();
             }
@@ -112,7 +106,7 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
 
             if (request.isPublicKeyInvalid()) {
                 log.warn("PublicKey is invalid at add. request={}", request);
-                return new Result(false).publicKeyInvalid();
+                return new Result(false).publicKeyHashInvalid();
             }
 
             if (request.isSignatureInvalid()) {
@@ -121,20 +115,21 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
             }
             map.put(byteArray, request);
         }
-        
+
         persist();
 
         // If we had already the data (only updated seq nr) we return false as well and do not notify listeners.
         if (requestFromMap != null) {
             return new Result(false).payloadAlreadyStored();
         }
-        
+
         listeners.forEach(listener -> listener.onAdded(payload));
         return new Result(true);
     }
 
     public Result remove(RemoveRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
+        AuthenticatedPayload payloadFromMap;
         synchronized (map) {
             AuthenticatedDataRequest requestFromMap = map.get(byteArray);
             if (requestFromMap == null) {
@@ -149,7 +144,7 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
             if (requestFromMap instanceof RemoveRequest) {
                 log.warn("Already removed at remove. request={}", request);
                 // We have had the entry already removed.
-                if (request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+                if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                     // We update the map with the new request with the fresh sequence number.
                     map.put(byteArray, request);
                     persist();
@@ -163,17 +158,15 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
             // We have an entry, lets validate if we can remove it
             AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
-            AuthenticatedPayload payloadFromMap = dataFromMap.getPayload();
+            payloadFromMap = dataFromMap.getPayload();
             if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
-                log.warn("SequenceNr is invalid at remove. request={}", request);
-                // Sequence number has not increased
+                log.warn("SequenceNr has not increased at remove. request={}", request);
                 return new Result(false).sequenceNrInvalid();
             }
 
-            if (request.isPublicKeyInvalid(dataFromMap)) {
-                log.warn("PublicKey is invalid at remove. request={}", request);
-                // Hash of pubKey of data does not match provided one
-                return new Result(false).publicKeyInvalid();
+            if (request.isPublicKeyHashInvalid(dataFromMap)) {
+                log.warn("PublicKey hash is invalid at remove. request={}", request);
+                return new Result(false).publicKeyHashInvalid();
             }
 
             if (request.isSignatureInvalid()) {
@@ -182,14 +175,15 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
             }
 
             map.put(byteArray, request);
-            listeners.forEach(listener -> listener.onRemoved(payloadFromMap));
         }
         persist();
+        listeners.forEach(listener -> listener.onRemoved(payloadFromMap));
         return new Result(true);
     }
 
     public Result refresh(RefreshRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
+        AddAuthenticatedDataRequest updatedRequest;
         synchronized (map) {
             AuthenticatedDataRequest requestFromMap = map.get(byteArray);
 
@@ -216,7 +210,7 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
             if (request.isPublicKeyInvalid(dataFromMap)) {
                 log.warn("PublicKey is invalid at refresh. request={}", request);
                 // Hash of pubKey of data does not match provided one
-                return new Result(false).publicKeyInvalid();
+                return new Result(false).publicKeyHashInvalid();
             }
 
             if (request.isSignatureInvalid()) {
@@ -225,7 +219,6 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
             }
 
             // Update request with new sequence number
-            AddAuthenticatedDataRequest updatedRequest;
             if (addRequestFromMap instanceof AddMailboxRequest) {
                 //todo why we get AddMailboxRequest here?
                 checkArgument(dataFromMap instanceof MailboxData,
@@ -243,9 +236,9 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
             }
 
             map.put(byteArray, updatedRequest);
-            listeners.forEach(listener -> listener.onRefreshed(updatedRequest.getAuthenticatedData().payload));
         }
         persist();
+        listeners.forEach(listener -> listener.onRefreshed(updatedRequest.getAuthenticatedData().payload));
         return new Result(true);
     }
 

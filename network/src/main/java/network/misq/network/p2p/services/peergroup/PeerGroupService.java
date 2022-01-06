@@ -28,6 +28,7 @@ import network.misq.network.p2p.services.peergroup.exchange.PeerExchangeService;
 import network.misq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import network.misq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import network.misq.network.p2p.services.peergroup.validateaddress.AddressValidationService;
+import network.misq.persistence.PersistenceService;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -77,7 +78,7 @@ public class PeerGroupService {
         }
     }
 
-    public PeerGroupService(Node node, BanList banList, Config config, List<Address> seedNodeAddresses) {
+    public PeerGroupService(PersistenceService persistenceService, Node node, BanList banList, Config config, List<Address> seedNodeAddresses) {
         this.node = node;
         this.banList = banList;
         this.config = config;

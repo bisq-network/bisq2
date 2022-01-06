@@ -35,6 +35,7 @@ import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
 import network.misq.network.p2p.services.data.storage.Storage;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.KeyPairService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,10 +68,10 @@ public class ServiceNodesByTransport {
                                    ServiceNode.Config serviceNodeConfig,
                                    Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
                                    Map<Transport.Type, List<Address>> seedAddressesByTransport,
-                                   Storage.Config storageConfig,
-                                   KeyPairService keyPairService) {
+                                   KeyPairService keyPairService,
+                                   PersistenceService persistenceService) {
         long socketTimeout = TimeUnit.MINUTES.toMillis(5);
-        storage = new Storage(storageConfig.baseDir());
+        storage = new Storage(persistenceService);
 
         dataService = serviceNodeConfig.services().contains(ServiceNode.Service.DATA) ?
                 Optional.of(new DataService(storage)) : Optional.empty();
@@ -89,6 +90,7 @@ public class ServiceNodesByTransport {
                     peerGroupServiceConfig,
                     dataService,
                     keyPairService,
+                    persistenceService,
                     seedAddresses);
             map.put(transportType, serviceNode);
 
@@ -130,7 +132,7 @@ public class ServiceNodesByTransport {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);
                 try {
-                    ConfidentialMessageService.Result result = serviceNode.confidentialSend(message, address, receiverNetworkId.pubKey(), senderKeyPair, senderNodeId);
+                    ConfidentialMessageService.Result result = serviceNode.confidentialSend(message, address, receiverNetworkId.getPubKey(), senderKeyPair, senderNodeId);
                     resultsByType.put(transportType, result);
                 } catch (Throwable throwable) {
                     resultsByType.put(transportType, new ConfidentialMessageService.Result(ConfidentialMessageService.State.FAILED)

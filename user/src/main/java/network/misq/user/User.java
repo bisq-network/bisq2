@@ -18,7 +18,7 @@
 package network.misq.user;
 
 import network.misq.account.Account;
-import network.misq.id.IdentityService;
+import network.misq.identity.IdentityService;
 import network.misq.offer.OpenOffer;
 import network.misq.persistence.Persistence;
 import network.misq.protocol.Deal;

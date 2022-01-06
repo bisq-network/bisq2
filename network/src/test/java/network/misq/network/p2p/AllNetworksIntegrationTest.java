@@ -18,14 +18,13 @@
 package network.misq.network.p2p;
 
 import lombok.extern.slf4j.Slf4j;
-import network.misq.network.p2p.services.data.storage.Storage;
 
 //TODO Test commented out as network layer has changed. not sure yet the test will be reactivate/rewritten or delete later.
 // leave it for now...
 @Slf4j
 public class AllNetworksIntegrationTest {
     private ServiceNodesByTransport alice1, alice2, bob1, bob2;
-    protected final Storage storage = new Storage("");
+   // protected final Storage storage = new Storage(persistenceService, "");
 
    /* private Set<NetworkServiceConfig> getNetNetworkConfigs(Config.Role role, String keyId, int serverPort) {
         return Set.of(Config.getClearNetNetworkConfig(role, keyId, serverPort),

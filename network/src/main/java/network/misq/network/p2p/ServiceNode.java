@@ -37,6 +37,7 @@ import network.misq.network.p2p.services.monitor.MonitorService;
 import network.misq.network.p2p.services.peergroup.BanList;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.relay.RelayService;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.KeyPairService;
 import network.misq.security.PubKey;
 import org.slf4j.Logger;
@@ -105,6 +106,7 @@ public class ServiceNode {
                        PeerGroupService.Config peerGroupServiceConfig,
                        Optional<DataService> dataService,
                        KeyPairService keyPairService,
+                       PersistenceService persistenceService,
                        List<Address> seedNodeAddresses) {
         BanList banList = new BanList();
         nodesById = new NodesById(banList, nodeConfig);
@@ -112,7 +114,7 @@ public class ServiceNode {
         Set<Service> services = config.services();
 
         if (services.contains(Service.PEER_GROUP)) {
-            PeerGroupService peerGroupService = new PeerGroupService(defaultNode, banList, peerGroupServiceConfig, seedNodeAddresses);
+            PeerGroupService peerGroupService = new PeerGroupService(persistenceService, defaultNode, banList, peerGroupServiceConfig, seedNodeAddresses);
             this.peerGroupService = Optional.of(peerGroupService);
 
             if (services.contains(Service.DATA)) {

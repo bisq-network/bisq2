@@ -38,9 +38,9 @@ import java.util.stream.Collectors;
 public class NetworkServiceConfigFactory {
     public static NetworkService.Config getConfig(String baseDir, Config typesafeConfig) {
         //  Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
-         Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
-      //  Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
-       // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.TOR);
+        Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
+        //Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
+        // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.TOR);
 
         ServiceNode.Config serviceNodeConfig = new ServiceNode.Config(Set.of(
                 ServiceNode.Service.CONFIDENTIAL,

@@ -25,6 +25,7 @@ import network.misq.network.NetworkService;
 import network.misq.network.p2p.ServiceNode;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.KeyPairService;
 
 import java.io.File;
@@ -36,6 +37,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class MultiNodesSetup {
+
 
     public interface Handler {
         void onConnectionStateChange(Transport.Type transportType, Address address, String networkInfo);
@@ -71,8 +73,8 @@ public class MultiNodesSetup {
 
         seedAddressesByTransport = networkServiceConfig.seedAddressesByTransport();
 
-        KeyPairService.Conf keyPairRepositoryConf = new KeyPairService.Conf(networkServiceConfig.baseDir());
-        keyPairService = new KeyPairService(keyPairRepositoryConf);
+        PersistenceService persistenceService = new PersistenceService(networkServiceConfig.baseDir());
+        keyPairService = new KeyPairService(persistenceService);
         keyPairService.initialize().join();
     }
 
@@ -135,8 +137,8 @@ public class MultiNodesSetup {
                 networkServiceConfig.peerGroupServiceConfigByTransport(),
                 networkServiceConfig.seedAddressesByTransport(),
                 Optional.empty());
-
-        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, keyPairService);
+        PersistenceService persistenceService = new PersistenceService(networkServiceConfig.baseDir());
+        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, keyPairService, persistenceService);
         networkServicesByAddress.put(address, networkService);
         return networkService;
     }

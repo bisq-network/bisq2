@@ -31,31 +31,25 @@ import network.misq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import network.misq.network.p2p.services.data.storage.mailbox.DataStore;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxDataStore;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
+import network.misq.persistence.PersistenceService;
 
-import java.io.File;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
-import static java.io.File.separator;
-
 @Slf4j
 public class Storage {
-    public static final String DIR = "db" + File.separator + "network";
-
-    public static record Config(String baseDir) {
-    }
 
     // Class name is key
     final Map<String, AuthenticatedDataStore> authenticatedDataStores = new ConcurrentHashMap<>();
     final Map<String, MailboxDataStore> mailboxStores = new ConcurrentHashMap<>();
     final Map<String, AppendOnlyDataStore> appendOnlyDataStores = new ConcurrentHashMap<>();
-    private final String storageDirPath;
+    private final PersistenceService persistenceService;
 
-    public Storage(String appDirPath) {
-        storageDirPath = appDirPath + separator + "db" + separator + "network";
+    public Storage(PersistenceService persistenceService) {
+        this.persistenceService = persistenceService;
     }
 
 
@@ -124,7 +118,7 @@ public class Storage {
     public CompletableFuture<AuthenticatedDataStore> getOrCreateAuthenticatedDataStore(MetaData metaData) {
         String key = metaData.getFileName();
         if (!authenticatedDataStores.containsKey(key)) {
-            AuthenticatedDataStore dataStore = new AuthenticatedDataStore(storageDirPath, metaData);
+            AuthenticatedDataStore dataStore = new AuthenticatedDataStore(persistenceService, metaData);
             authenticatedDataStores.put(key, dataStore);
             return dataStore.readPersisted().thenApplyAsync(__ -> dataStore, NetworkService.DISPATCHER);
         } else {
@@ -135,7 +129,7 @@ public class Storage {
     public CompletableFuture<MailboxDataStore> getOrCreateMailboxDataStore(MetaData metaData) {
         String key = metaData.getFileName();
         if (!mailboxStores.containsKey(key)) {
-            MailboxDataStore dataStore = new MailboxDataStore(storageDirPath, metaData);
+            MailboxDataStore dataStore = new MailboxDataStore(persistenceService, metaData);
             mailboxStores.put(key, dataStore);
             return dataStore.readPersisted().thenApply(__ -> dataStore);
         } else {
@@ -146,7 +140,7 @@ public class Storage {
     public CompletableFuture<AppendOnlyDataStore> getOrCreateAppendOnlyDataStore(MetaData metaData) {
         String key = metaData.getFileName();
         if (!appendOnlyDataStores.containsKey(key)) {
-            AppendOnlyDataStore dataStore = new AppendOnlyDataStore(storageDirPath, metaData);
+            AppendOnlyDataStore dataStore = new AppendOnlyDataStore(persistenceService, metaData);
             appendOnlyDataStores.put(key, dataStore);
             return dataStore.readPersisted().thenApply(__ -> dataStore);
         } else {

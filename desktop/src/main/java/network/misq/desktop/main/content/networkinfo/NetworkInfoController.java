@@ -68,8 +68,8 @@ public class NetworkInfoController implements Controller {
         return model.sendMessage(message);
     }
 
-    public StringProperty addData(String dataText, String id) {
-        return model.addData(dataText, id);
+    public StringProperty addData(String dataText, String domainId) {
+        return model.addData(dataText, domainId);
     }
 
     public void onSelectNetworkId(Optional<NetworkId> networkId) {

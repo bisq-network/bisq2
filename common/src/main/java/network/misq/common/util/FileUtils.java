@@ -62,14 +62,18 @@ public class FileUtils {
      * @param file The file to add a shutdown hook for delete on exit
      */
     public static void deleteOnExit(File file) {
-        DeleteOnExitHook.add(file.getPath());
+        if (!DeleteOnExitHook.isShutdownInProgress()) {
+            DeleteOnExitHook.add(file.getPath());
+        }
     }
 
     /**
      * @param file The file to delete and to get removed from the `DeleteOnExitHook`.
      */
     public static void releaseTempFile(File file) {
-        DeleteOnExitHook.remove(file.getPath());
+        if (!DeleteOnExitHook.isShutdownInProgress()) {
+            DeleteOnExitHook.remove(file.getPath());
+        }
         deleteFile(file);
     }
 

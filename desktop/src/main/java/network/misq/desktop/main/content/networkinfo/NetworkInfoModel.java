@@ -25,21 +25,22 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
 import network.misq.application.DefaultServiceProvider;
-import network.misq.common.util.CompletableFutureUtils;
 import network.misq.desktop.common.threading.UIThread;
 import network.misq.desktop.common.view.Model;
 import network.misq.desktop.main.content.networkinfo.transport.TransportTypeView;
 import network.misq.i18n.Res;
+import network.misq.identity.Identity;
+import network.misq.identity.IdentityService;
 import network.misq.network.NetworkService;
 import network.misq.network.p2p.NetworkId;
 import network.misq.network.p2p.message.Message;
+import network.misq.network.p2p.message.TextData;
 import network.misq.network.p2p.message.TextMessage;
 import network.misq.network.p2p.node.CloseReason;
 import network.misq.network.p2p.node.Connection;
 import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
-import network.misq.network.p2p.services.data.AuthenticatedTextPayload;
 import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.security.KeyPairService;
@@ -61,6 +62,7 @@ public class NetworkInfoModel implements Model {
     private final BooleanProperty i2pDisabled = new SimpleBooleanProperty(false);
     private final ObjectProperty<Optional<TransportTypeView>> transportTypeView = new SimpleObjectProperty<>();
     private final Set<Transport.Type> supportedTransportTypes;
+    private final IdentityService identityService;
     @Setter
     private Optional<Transport.Type> selectedTransportType = Optional.empty();
 
@@ -79,6 +81,7 @@ public class NetworkInfoModel implements Model {
 
     public NetworkInfoModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
+        identityService = serviceProvider.getIdentityService();
 
         supportedTransportTypes = networkService.getSupportedTransportTypes();
 
@@ -137,31 +140,24 @@ public class NetworkInfoModel implements Model {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    StringProperty addData(String dataText, String nodeId) {
+    StringProperty addData(String dataText, String domainId) {
         StringProperty resultProperty = new SimpleStringProperty("Create Servers for node ID");
-        // We first make sure we have our servers for that nodeId initialized so that we can get the address 
-        // for the networkId.
-        CompletableFutureUtils.allOf(networkService.maybeInitializeServerAsync(nodeId).values())
-                .thenRun(() -> {
-                    resultProperty.set("Serves created. Add data.");
-                    NetworkId networkId = networkService.getNetworkId(nodeId);
-                    AuthenticatedTextPayload payload = new AuthenticatedTextPayload(dataText, networkId);
-                    KeyPair keyPair = keyPairService.getOrCreateKeyPair(nodeId);
-                    networkService.addNetworkPayloadAsync(payload, keyPair)
-                            .whenComplete((broadCastResultFutures, throwable) -> {
-                                broadCastResultFutures.forEach(broadCastResultFuture -> {
-                                    broadCastResultFuture.whenComplete((broadCastResult, throwable2) -> {
-                                        UIThread.run(() -> {
-                                            if (throwable2 == null) {
-                                                resultProperty.set("Data added. Broadcast result: " + broadCastResult);
-                                            } else {
-                                                resultProperty.set("Error at add data: " + throwable);
-                                            }
-                                        });
-                                    });
-                                });
+        Identity identity = identityService.getOrCreateIdentity(domainId);
+        String keyId = identity.keyId();
+        networkService.addDataAsync(new TextData(dataText), identity.nodeId(), keyId)
+                .whenComplete((broadCastResultFutures, throwable) -> {
+                    broadCastResultFutures.forEach(broadCastResultFuture -> {
+                        broadCastResultFuture.whenComplete((broadCastResult, throwable2) -> {
+                            //todo add states to networkService
+                            UIThread.run(() -> {
+                                if (throwable2 == null) {
+                                    resultProperty.set("Data added. Broadcast result: " + broadCastResult);
+                                } else {
+                                    resultProperty.set("Error at add data: " + throwable);
+                                }
                             });
-                    networkService.maybeInitializeServerAsync(nodeId);
+                        });
+                    });
                 });
         return resultProperty;
     }
@@ -171,7 +167,7 @@ public class NetworkInfoModel implements Model {
         NetworkId receiverNetworkId = selectedNetworkId.get();
         KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(KeyPairService.DEFAULT);
         CompletableFuture<String> future = new CompletableFuture<>();
-        String senderNodeId = selectedNetworkId.get().nodeId();
+        String senderNodeId = selectedNetworkId.get().getNodeId();
         networkService.confidentialSendAsync(new TextMessage(message), receiverNetworkId, senderKeyPair, senderNodeId)
                 .whenComplete((resultMap, throwable) -> {
                     if (throwable == null) {
@@ -198,7 +194,7 @@ public class NetworkInfoModel implements Model {
 
     public void applyNetworkId(Optional<NetworkId> networkId) {
         this.selectedNetworkId = networkId;
-        nodeIdString.set(networkId.map(NetworkId::nodeId)
+        nodeIdString.set(networkId.map(NetworkId::getNodeId)
                 .orElse(Res.common.get("na")));
         messageReceiver.set(networkId.map(n -> n.addressByNetworkType().values().stream().findAny().orElseThrow().getFullAddress())
                 .orElse(Res.common.get("na")));
