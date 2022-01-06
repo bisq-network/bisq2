@@ -24,7 +24,10 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
+import bisq.network.p2p.services.data.storage.Result;
 import bisq.network.p2p.services.data.storage.Storage;
+import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
+import bisq.network.p2p.services.data.storage.append.AppendOnlyPayload;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
@@ -34,10 +37,7 @@ import lombok.Getter;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,7 +75,7 @@ public class DataService implements Node.Listener {
     @Override
     public void onMessage(Message message, Connection connection, String nodeId) {
         if (message instanceof BroadcastMessage broadcastMessage) {
-            if (broadcastMessage.message() instanceof AddDataRequest addDataRequest) {
+            if (broadcastMessage instanceof AddDataRequest addDataRequest) {
                 storage.onAddRequest(addDataRequest)
                         .whenComplete((optionalData, throwable) -> {
                             optionalData.ifPresent(networkData -> {
@@ -86,7 +86,7 @@ public class DataService implements Node.Listener {
             } else if (message instanceof RemoveDataRequest removeDataRequest) {
                 // Message removedItem = storage.remove(removeDataRequest.getMapKey());
               /*  if (removedItem != null) {
-                    dataListeners.forEach(listener -> listener.onDataRemoved(message));
+                    dataListeners.forEach(listener -> listener.onDataRemoved(proto));
                 }*/
             }
         }
@@ -110,13 +110,29 @@ public class DataService implements Node.Listener {
                     .thenApply(store -> {
                         try {
                             AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
-                            store.add(addRequest);
-                            return serviceByTransportType.values().stream()
-                                    .map(e -> e.broadcast(addRequest))
-                                    .collect(Collectors.toList());
+                            Result result = store.add(addRequest);
+                            if (result.isSuccess()) {
+                                return serviceByTransportType.values().stream()
+                                        .map(service -> service.broadcast(addRequest))
+                                        .collect(Collectors.toList());
+                            } else {
+                                return new ArrayList<>();
+                            }
                         } catch (GeneralSecurityException e) {
                             e.printStackTrace();
                             throw new CompletionException(e);
+                        }
+                    });
+        } else if (networkPayload instanceof AppendOnlyPayload appendOnlyPayload) {
+            return storage.getOrCreateAppendOnlyDataStore(appendOnlyPayload.getMetaData())
+                    .thenApply(store -> {
+                        Result result = store.add(appendOnlyPayload);
+                        if (result.isSuccess()) {
+                            return serviceByTransportType.values().stream()
+                                    .map(service -> service.broadcast(new AddAppendOnlyDataRequest(appendOnlyPayload)))
+                                    .collect(Collectors.toList());
+                        } else {
+                            return new ArrayList<>();
                         }
                     });
         } else {
@@ -131,10 +147,15 @@ public class DataService implements Node.Listener {
                 .thenApply(store -> {
                     try {
                         AddMailboxRequest addRequest = AddMailboxRequest.from(store, mailboxPayload, senderKeyPair, receiverPublicKey);
-                        store.add(addRequest);
-                        return serviceByTransportType.values().stream()
-                                .map(service -> service.broadcast(addRequest))
-                                .collect(Collectors.toList());
+                        Result result = store.add(addRequest);
+                        if (result.isSuccess()) {
+                            return serviceByTransportType.values().stream()
+                                    .map(service -> service.broadcast(addRequest))
+                                    .collect(Collectors.toList());
+                        } else {
+                            return new ArrayList<>();
+                        }
+
                     } catch (GeneralSecurityException e) {
                         e.printStackTrace();
                         throw new CompletionException(e);

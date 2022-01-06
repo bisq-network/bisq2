@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.append;
 
 import bisq.common.data.ByteArray;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.Result;
 import bisq.network.p2p.services.data.storage.mailbox.DataStore;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -56,28 +57,27 @@ public class AppendOnlyDataStore extends DataStore<AppendOnlyPayload> {
         return 1000;
     }
 
-    public boolean append(AppendOnlyPayload appendOnlyData) {
+    public Result add(AppendOnlyPayload appendOnlyPayload) {
         synchronized (map) {
             if (map.size() > maxMapSize) {
-                return false;
+                return new Result(false).maxMapSizeReached();
             }
 
-            byte[] hash = DigestUtil.hash(appendOnlyData.serialize());
+            byte[] hash = DigestUtil.hash(appendOnlyPayload.serialize());
             ByteArray byteArray = new ByteArray(hash);
             if (map.containsKey(byteArray)) {
-                return false;
+                return new Result(false).payloadAlreadyStored();
             }
 
-            map.put(byteArray, appendOnlyData);
+            map.put(byteArray, appendOnlyPayload);
         }
         persist();
-        listeners.forEach(listener -> listener.onAppended(appendOnlyData));
-        return true;
+        listeners.forEach(listener -> listener.onAppended(appendOnlyPayload));
+        return new Result(true);
     }
 
     @Override
     public void shutdown() {
-
     }
 
     public void addListener(AppendOnlyDataStore.Listener listener) {

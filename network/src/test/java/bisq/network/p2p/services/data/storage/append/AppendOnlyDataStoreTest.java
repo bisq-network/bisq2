@@ -41,7 +41,7 @@ public class AppendOnlyDataStoreTest {
         int iterations = 10;
         for (int i = 0; i < iterations; i++) {
             data = new MockAppendOnlyPayload("test" + UUID.randomUUID());
-            boolean result = store.append(data);
+            boolean result = store.add(data).isSuccess();
             assertTrue(result);
         }
         assertEquals(iterations + previous, store.getMap().size());

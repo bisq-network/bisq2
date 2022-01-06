@@ -107,7 +107,7 @@ public class NetworkInfoView extends View<ScrollPane, NetworkInfoModel, NetworkI
         messageReceiverTextField.setEditable(false);
         nodeIdTextField = bisqGridPane.addTextField(Res.network.get("sendMessages.nodeId"), "");
         nodeIdTextField.setEditable(false);
-        TextField msgTextField = bisqGridPane.addTextField(Res.network.get("sendMessages.text"), "Test message");
+        TextField msgTextField = bisqGridPane.addTextField(Res.network.get("sendMessages.text"), "Test proto");
         Pair<Button, Label> sendButtonPair = bisqGridPane.addButton(Res.network.get("sendMessages.send"));
         Button sendButton = sendButtonPair.first();
         sendButton.setOnAction(e -> {

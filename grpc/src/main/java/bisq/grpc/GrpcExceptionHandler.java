@@ -30,8 +30,8 @@ import static io.grpc.Status.UNKNOWN;
 
 /**
  * The singleton instance of this class handles any expected core api Throwable by
- * wrapping its message in a gRPC StatusRuntimeException and sending it to the client.
- * An unexpected Throwable's message will be replaced with an 'unexpected' error message.
+ * wrapping its proto in a gRPC StatusRuntimeException and sending it to the client.
+ * An unexpected Throwable's proto will be replaced with an 'unexpected' error proto.
  */
 class GrpcExceptionHandler {
 
@@ -79,7 +79,7 @@ class GrpcExceptionHandler {
         // We want to be careful about what kinds of exception messages we send to the
         // client.  Expected core exceptions should be wrapped in an IllegalStateException
         // or IllegalArgumentException, with a consistently styled and worded error
-        // message.  But only a small number of the expected error types are currently
+        // proto.  But only a small number of the expected error types are currently
         // handled this way;  there is much work to do to handle the variety of errors
         // that can occur in the api.  In the meantime, we take care to not pass full,
         // unexpected error messages to the client.  If the exception type is unexpected,

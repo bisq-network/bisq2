@@ -30,7 +30,7 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 
 // We want to have fine grained control over mailbox messages.
-// As the data is encrypted we could not use it's TTL and we would merge all mailbox message into one storage file.
+// As the data is encrypted we could not use it's TTL and we would merge all mailbox proto into one storage file.
 // By wrapping the sealed data into that NetworkData we can add the fileName and ttl from the unencrypted NetworkData.
 @EqualsAndHashCode
 

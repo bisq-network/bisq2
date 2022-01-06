@@ -15,12 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data;
+package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.network.p2p.NetworkId;
 import bisq.network.p2p.message.Proto;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

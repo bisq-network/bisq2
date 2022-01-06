@@ -19,10 +19,11 @@ package bisq.network.p2p.services.data.storage;
 
 
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Message;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyDataStore;
+import bisq.network.p2p.services.data.storage.append.AppendOnlyPayload;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStore;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
@@ -58,11 +59,12 @@ public class Storage {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Optional<NetworkPayload>> onAddRequest(AddDataRequest addDataRequest) {
-        Message message = addDataRequest.message();
-        if (message instanceof AddMailboxRequest addMailboxRequest) {
+        if (addDataRequest instanceof AddMailboxRequest addMailboxRequest) {
             return onAddRequest(addMailboxRequest);
-        } else if (message instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
+        } else if (addDataRequest instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
             return onAddRequest(addAuthenticatedDataRequest);
+        } else if (addDataRequest instanceof AddAppendOnlyDataRequest addAppendOnlyDataRequest) {
+            return onAddRequest(addAppendOnlyDataRequest);
         } else {
             return CompletableFuture.failedFuture(new IllegalArgumentException("AddRequest called with invalid addDataRequest: " + addDataRequest.getClass().getSimpleName()));
         }
@@ -93,6 +95,22 @@ public class Storage {
                         return Optional.of(payload);
                     } else {
                         if (!result.isRequestAlreadyReceived() && !result.isPayloadAlreadyStored()) {
+                            log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
+                        }
+                        return Optional.empty();
+                    }
+                });
+    }
+
+    private CompletableFuture<Optional<NetworkPayload>> onAddRequest(AddAppendOnlyDataRequest request) {
+        AppendOnlyPayload payload = request.payload();
+        return getOrCreateAppendOnlyDataStore(payload.getMetaData())
+                .thenApply(store -> {
+                    Result result = store.add(payload);
+                    if (result.isSuccess()) {
+                        return Optional.of(payload);
+                    } else {
+                        if (!result.isPayloadAlreadyStored()) {
                             log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
                         }
                         return Optional.empty();

@@ -23,10 +23,15 @@ import lombok.Getter;
 public class Result {
     private final boolean success;
     private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
-            dataInvalid, expired, noEntry, alreadyRemoved;
+            dataInvalid, expired, noEntry, alreadyRemoved, maxMapSizeReached;
 
     public Result(boolean success) {
         this.success = success;
+    }
+
+    public Result maxMapSizeReached() {
+        maxMapSizeReached = true;
+        return this;
     }
 
     public Result publicKeyHashInvalid() {

@@ -48,6 +48,7 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
     // Does not contain metadata like signatures and keys as well not the overhead from encryption.
     // So this number has to be fine-tuned with real data later...
     private static final int MAX_INVENTORY_MAP_SIZE = 1_000_000;
+    private final int maxMapSize;
 
     public interface Listener {
         void onAdded(MailboxPayload mailboxPayload);
@@ -61,7 +62,8 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
     public MailboxDataStore(PersistenceService persistenceService, MetaData metaData) {
         super(persistenceService, metaData);
 
-        maxItems = MAX_INVENTORY_MAP_SIZE / metaData.getMaxSizeInBytes();
+        maxItems = MAX_INVENTORY_MAP_SIZE / metaData.getMaxSizeInBytes(); //todo
+        maxMapSize = MAX_MAP_SIZE / metaData.getMaxSizeInBytes();
     }
 
     @Override
@@ -76,6 +78,9 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
         ByteArray byteArray = new ByteArray(hash);
         MailboxRequest requestFromMap;
         synchronized (map) {
+            if (map.size() > maxMapSize) {
+                return new Result(false).maxMapSizeReached();
+            }
             requestFromMap = map.get(byteArray);
             int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
 

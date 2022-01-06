@@ -24,13 +24,13 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.broadcast.Broadcaster;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.inventory.InventoryRequestHandler;
 import bisq.network.p2p.services.data.inventory.InventoryResponseHandler;
 import bisq.network.p2p.services.data.inventory.RequestInventoryResult;
-import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.security.KeyPairService;
 import lombok.extern.slf4j.Slf4j;
@@ -108,16 +108,17 @@ public class DataServicePerTransport implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public CompletableFuture<BroadcastResult> broadcast(AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
-        return broadcaster.broadcast(new AddDataRequest(addAuthenticatedDataRequest));
+    public CompletableFuture<BroadcastResult> broadcast(BroadcastMessage broadcastMessage) {
+        return broadcaster.broadcast(broadcastMessage);
     }
 
-    public CompletableFuture<BroadcastResult> reBroadcast(AddDataRequest addDataRequest) {
-        return broadcaster.reBroadcast(addDataRequest);
+
+    public CompletableFuture<BroadcastResult> reBroadcast(BroadcastMessage broadcastMessage) {
+        return broadcaster.reBroadcast(broadcastMessage);
     }
 
-    public CompletableFuture<BroadcastResult> requestRemoveData(Message message) {
-        //   RemoveDataRequest removeDataRequest = new RemoveDataRequest(new MapKey(message));
+    public CompletableFuture<BroadcastResult> requestRemoveData(Message broadcastMessage) {
+        //   RemoveDataRequest removeDataRequest = new RemoveDataRequest(new MapKey(proto));
         //  storage.remove(removeDataRequest.getMapKey());
         // return router.broadcast(removeDataRequest);
         return null;

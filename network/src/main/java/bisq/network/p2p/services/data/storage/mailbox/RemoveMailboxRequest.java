@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.RemoveRequest;
@@ -34,7 +35,7 @@ import java.util.Arrays;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public class RemoveMailboxRequest extends RemoveRequest implements MailboxRequest {
+public class RemoveMailboxRequest extends RemoveRequest implements MailboxRequest, BroadcastMessage {
 
     public static RemoveMailboxRequest from(MailboxPayload mailboxPayload, KeyPair receiverKeyPair)
             throws GeneralSecurityException {

@@ -115,7 +115,7 @@ public class NetworkInfoModel implements Model {
         networkService.addMessageListener(new Node.Listener() {
             @Override
             public void onMessage(Message message, Connection connection, String nodeId) {
-                UIThread.run(() -> receivedMessages.set(receivedMessages.get() + "NodeId: " + nodeId + "; message: " + message.toString() + "\n"));
+                UIThread.run(() -> receivedMessages.set(receivedMessages.get() + "NodeId: " + nodeId + "; proto: " + message.toString() + "\n"));
             }
 
             @Override

@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -26,7 +27,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -35,7 +35,7 @@ import java.util.Arrays;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public class RemoveRequest implements AuthenticatedDataRequest, Serializable {
+public class RemoveRequest implements AuthenticatedDataRequest, BroadcastMessage {
 
 
     public static RemoveRequest from(AuthenticatedDataStore store, NetworkPayload networkPayload, KeyPair keyPair)

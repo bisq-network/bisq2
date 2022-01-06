@@ -113,50 +113,50 @@ public class AllNetworksIntegrationTest {
 
         // We get 3 msg for 3 networks and 2 msg per node. With 4 nodes it is in total 4*2*3=24
         CountDownLatch receivedLatch = new CountDownLatch(24);
-        alice1.addMessageListener((message, connection) -> {
-            assertTrue(message instanceof MockMessage);
-            log.info("onMessage alice1 {} {}", message, connection);
+        alice1.addMessageListener((proto, connection) -> {
+            assertTrue(proto instanceof MockMessage);
+            log.info("onMessage alice1 {} {}", proto, connection);
             if (bob1Addresses.contains(connection.getPeerAddress())) {
-                assertEquals(((MockMessage) message).getMsg(), bob1ToAlice1Msg);
+                assertEquals(((MockMessage) proto).getMsg(), bob1ToAlice1Msg);
             } else if (bob2Addresses.contains(connection.getPeerAddress())) {
-                assertEquals(((MockMessage) message).getMsg(), bob2ToAlice1Msg);
+                assertEquals(((MockMessage) proto).getMsg(), bob2ToAlice1Msg);
             } else {
                 fail();
             }
             receivedLatch.countDown();
         });
-        alice2.addMessageListener((message, connection) -> {
-            assertTrue(message instanceof MockMessage);
-            log.info("onMessage alice2 {} {}", message, connection);
+        alice2.addMessageListener((proto, connection) -> {
+            assertTrue(proto instanceof MockMessage);
+            log.info("onMessage alice2 {} {}", proto, connection);
             if (bob1Addresses.contains(connection.getPeerAddress())) {
-                assertEquals(((MockMessage) message).getMsg(), bob1ToAlice2Msg);
+                assertEquals(((MockMessage) proto).getMsg(), bob1ToAlice2Msg);
             } else if (bob2Addresses.contains(connection.getPeerAddress())) {
-                assertEquals(((MockMessage) message).getMsg(), bob2ToAlice2Msg);
+                assertEquals(((MockMessage) proto).getMsg(), bob2ToAlice2Msg);
             } else {
                 fail();
             }
             receivedLatch.countDown();
         });
 
-        bob1.addMessageListener((message, connection) -> {
-            assertTrue(message instanceof MockMessage);
-            log.info("onMessage bob1 {} {}", message, connection);
+        bob1.addMessageListener((proto, connection) -> {
+            assertTrue(proto instanceof MockMessage);
+            log.info("onMessage bob1 {} {}", proto, connection);
             if (alice1Addresses.contains(connection.getPeerAddress())) {
-                assertEquals(((MockMessage) message).getMsg(), alice1ToBob1Msg);
+                assertEquals(((MockMessage) proto).getMsg(), alice1ToBob1Msg);
             } else if (alice2Addresses.contains(connection.getPeerAddress())) {
-                assertEquals(((MockMessage) message).getMsg(), alice2ToBob1Msg);
+                assertEquals(((MockMessage) proto).getMsg(), alice2ToBob1Msg);
             } else {
                 fail();
             }
             receivedLatch.countDown();
         });
-        bob2.addMessageListener((message, connection) -> {
-            assertTrue(message instanceof MockMessage);
-            log.info("onMessage bob2 {} {}", message, connection);
+        bob2.addMessageListener((proto, connection) -> {
+            assertTrue(proto instanceof MockMessage);
+            log.info("onMessage bob2 {} {}", proto, connection);
             if (alice1Addresses.contains(connection.getPeerAddress())) {
-                assertEquals(((MockMessage) message).getMsg(), alice1ToBob2Msg);
+                assertEquals(((MockMessage) proto).getMsg(), alice1ToBob2Msg);
             } else if (alice2Addresses.contains(connection.getPeerAddress())) {
-                assertEquals(((MockMessage) message).getMsg(), alice2ToBob2Msg);
+                assertEquals(((MockMessage) proto).getMsg(), alice2ToBob2Msg);
             } else {
                 fail();
             }

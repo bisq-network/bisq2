@@ -17,8 +17,7 @@
 
 package bisq.network.p2p.services.data;
 
-import bisq.common.data.ByteArray;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 
-public record RemoveDataRequest(ByteArray byteArray) implements Message {
+public interface RemoveDataRequest extends BroadcastMessage {
 }

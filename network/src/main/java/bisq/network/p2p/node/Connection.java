@@ -113,12 +113,12 @@ public abstract class Connection {
                     if (isNotStopped()) {
                         String simpleName = msg.getClass().getSimpleName();
                         if (!(msg instanceof Envelope envelope)) {
-                            throw new ConnectionException("Received message not type of Envelope. " + simpleName);
+                            throw new ConnectionException("Received proto not type of Envelope. " + simpleName);
                         }
                         if (envelope.version() != Version.VERSION) {
                             throw new ConnectionException("Invalid network version. " + simpleName);
                         }
-                        log.debug("Received message: {} at: {}", StringUtils.truncate(envelope.payload().toString(), 200), this);
+                        log.debug("Received proto: {} at: {}", StringUtils.truncate(envelope.payload().toString(), 200), this);
                         metrics.onMessage(envelope.payload());
                         NetworkService.DISPATCHER.submit(() -> handler.onMessage(envelope.payload(), this));
                     }
@@ -157,7 +157,7 @@ public abstract class Connection {
                 close(CloseReason.EXCEPTION.exception(exception));
             }
             // We wrap any exception (also expected EOFException in case of connection close), to inform the caller 
-            // that the "send message" intent failed.
+            // that the "send proto" intent failed.
             throw new ConnectionException(exception);
         }
     }

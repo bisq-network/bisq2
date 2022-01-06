@@ -59,13 +59,16 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
     }
 
     private final int maxItems;
+    private final int maxMapSize;
+
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
 
     public AuthenticatedDataStore(PersistenceService persistenceService, MetaData metaData) {
         super(persistenceService, metaData);
 
-        maxItems = MAX_INVENTORY_MAP_SIZE / metaData.getMaxSizeInBytes();
+        maxItems = MAX_INVENTORY_MAP_SIZE / metaData.getMaxSizeInBytes();//todo
+        maxMapSize = MAX_MAP_SIZE / metaData.getMaxSizeInBytes();
     }
 
     @Override
@@ -85,6 +88,9 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
         ByteArray byteArray = new ByteArray(hash);
         AuthenticatedDataRequest requestFromMap;
         synchronized (map) {
+            if (map.size() > maxMapSize) {
+                return new Result(false).maxMapSizeReached();
+            }
             requestFromMap = map.get(byteArray);
             if (request.equals(requestFromMap)) {
                 return new Result(false).requestAlreadyReceived();

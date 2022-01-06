@@ -40,7 +40,7 @@ public class RelayService {
       Connection outboundConnection = CollectionUtil.getRandomElement(connections);
         if (outboundConnection != null) {
             //todo we need 2 diff. pub keys for encryption here
-            // ConfidentialMessage inner = seal(message);
+            // ConfidentialMessage inner = seal(proto);
             // RelayMessage relayMessage = new RelayMessage(inner, peerAddress);
             // ConfidentialMessage confidentialMessage = seal(relayMessage);
             // return node.send(confidentialMessage, outboundConnection);

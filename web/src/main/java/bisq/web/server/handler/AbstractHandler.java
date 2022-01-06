@@ -30,7 +30,7 @@ public abstract class AbstractHandler implements Handler {
 
     protected String toJson(Throwable throwable) {
         Map<String, Object> map = toMap("error", throwable.getClass().getCanonicalName());
-        map.put("message", throwable.getMessage());
+        map.put("proto", throwable.getMessage());
         return jsonTransform.toJson(map);
     }
 }

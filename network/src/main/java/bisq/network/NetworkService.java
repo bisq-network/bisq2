@@ -32,7 +32,7 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
-import bisq.network.p2p.services.data.AuthenticatedNetworkIdPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedNetworkIdPayload;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
