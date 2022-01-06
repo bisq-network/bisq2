@@ -20,7 +20,7 @@ package bisq.desktop.main.content.createoffer.assetswap.amounts;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.AutoTooltipButton;
 import bisq.desktop.components.controls.AutocompleteComboBox;
-import bisq.desktop.components.controls.MisqLabel;
+import bisq.desktop.components.controls.BisqLabel;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -38,7 +38,7 @@ public class SetAmountsView extends View<HBox, SetAmountsModel, SetAmountsContro
     }
 
     protected void initialize() {
-        Label askCurrencyLabel = new MisqLabel("I want (ask):");
+        Label askCurrencyLabel = new BisqLabel("I want (ask):");
         askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
 
         askCurrencyComboBox = new AutocompleteComboBox<>();
@@ -46,7 +46,7 @@ public class SetAmountsView extends View<HBox, SetAmountsModel, SetAmountsContro
 
         flipButton = new AutoTooltipButton("<- Flip ->");
 
-        Label bidCurrencyLabel = new MisqLabel("I give (bid):");
+        Label bidCurrencyLabel = new BisqLabel("I give (bid):");
         bidCurrencyLabel.setPadding(new Insets(4, 8, 0, 60));
         bidCurrencyComboBox = new AutocompleteComboBox<>();
         bidCurrencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");

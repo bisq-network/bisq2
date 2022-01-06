@@ -26,15 +26,15 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public abstract class ServiceProvider {
-    protected final Config misqConfig;
+    protected final Config bisqConfig;
 
     public ServiceProvider(String configFileName) {
-        misqConfig = ConfigFactory.load(configFileName);
-        misqConfig.checkValid(ConfigFactory.defaultReference(), configFileName);
+        bisqConfig = ConfigFactory.load(configFileName);
+        bisqConfig.checkValid(ConfigFactory.defaultReference(), configFileName);
     }
 
     protected Config getConfig(String path) {
-        return ConfigUtil.getConfig(misqConfig, path);
+        return ConfigUtil.getConfig(bisqConfig, path);
     }
 
     public abstract CompletableFuture<Boolean> readAllPersisted();

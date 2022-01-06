@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * TIPS
  * <p>
  * Set the Java system property -Dconfig.trace=loads to get output on stderr describing each file that is loaded.
- * (The output will show the library attempting to load misq.json, misq.properties, and reference.conf, but not fail.)
+ * (The output will show the library attempting to load bisq.json, bisq.properties, and reference.conf, but not fail.)
  * <p>
  * Use myConfig.root().render() to get a Config as a string with comments showing where each value came from.
  * This string can be printed out on console or logged to a file etc.
@@ -68,9 +68,9 @@ public class MockConfig {
 
     /**
      * Return a Config for a given configuration path, e.g.,
-     * "misq.networkConfig.torPeerGroupServiceConfig.peerExchangeConfig".
+     * "bisq.networkConfig.torPeerGroupServiceConfig.peerExchangeConfig".
      *
-     * @param path String representing a valid path in misq.conf
+     * @param path String representing a valid path in bisq.conf
      * @return Config
      */
     public static Config getConfig(String path) {

@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.table;
 
-import bisq.desktop.components.controls.MisqLabel;
+import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
 import bisq.desktop.components.overlay.PopOverWrapper;
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -37,10 +37,10 @@ import java.util.Optional;
 import java.util.function.Function;
 
 @Slf4j
-public class MisqTableColumn<S> extends TableColumn<S, S> {
+public class BisqTableColumn<S> extends TableColumn<S, S> {
     private Label helpIcon;
     private final PopOverWrapper popoverWrapper = new PopOverWrapper();
-    private final MisqLabel titleLabel = new MisqLabel();
+    private final BisqLabel titleLabel = new BisqLabel();
     private Optional<Function<S, String>> valueSupplier = Optional.empty();
     private Optional<Function<S, StringProperty>> valuePropertySupplier = Optional.empty();
     private Optional<Comparator<S>> comparator = Optional.empty();
@@ -56,8 +56,8 @@ public class MisqTableColumn<S> extends TableColumn<S, S> {
         private Optional<Function<S, StringProperty>> valuePropertySupplier = Optional.empty();
         private Optional<Comparator<S>> comparator = Optional.empty();
 
-        public MisqTableColumn<S> build() {
-            MisqTableColumn<S> tableColumn = new MisqTableColumn<>();
+        public BisqTableColumn<S> build() {
+            BisqTableColumn<S> tableColumn = new BisqTableColumn<>();
             if (title.isPresent()) {
                 tableColumn.applyTitle(title.get());
             } else {
@@ -115,7 +115,7 @@ public class MisqTableColumn<S> extends TableColumn<S, S> {
     }
 
 
-    public MisqTableColumn() {
+    public BisqTableColumn() {
         super();
 
         setCellValueFactory((data) -> new ReadOnlyObjectWrapper<>(data.getValue()));
@@ -168,23 +168,6 @@ public class MisqTableColumn<S> extends TableColumn<S, S> {
         });
     }
 
-  /*  public MisqTableColumn(String text) {
-        super();
-
-        title(text);
-    }
-
-    public MisqTableColumn(StringProperty titleProperty) {
-        super();
-
-        titleProperty(titleProperty);
-    }
-
-    public MisqTableColumn(String text, String help) {
-        setTitleWithHelpText(text, help);
-    }
-*/
-
     public void applyTitle(String title) {
         titleLabel.setText(title);
         setGraphic(titleLabel);
@@ -203,7 +186,7 @@ public class MisqTableColumn<S> extends TableColumn<S, S> {
         helpIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(() -> createInfoPopOver(help)));
         helpIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());
 
-        MisqLabel label = new MisqLabel(title);
+        BisqLabel label = new BisqLabel(title);
         HBox hBox = new HBox(label, helpIcon);
         hBox.setStyle("-fx-alignment: center-left");
         hBox.setSpacing(4);

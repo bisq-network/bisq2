@@ -3,18 +3,18 @@ package bisq.desktop.components.controls;
 import com.jfoenix.controls.JFXTextField;
 import javafx.scene.control.Skin;
 
-public class MisqTextField extends JFXTextField {
+public class BisqTextField extends JFXTextField {
 
-    public MisqTextField(String value) {
+    public BisqTextField(String value) {
         super(value);
     }
 
-    public MisqTextField() {
+    public BisqTextField() {
         super();
     }
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new JFXTextFieldSkinMisqStyle<>(this, 0);
+        return new JFXTextFieldSkinBisqStyle<>(this, 0);
     }
 }

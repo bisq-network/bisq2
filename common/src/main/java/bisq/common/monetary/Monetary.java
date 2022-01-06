@@ -17,7 +17,7 @@
 
 package bisq.common.monetary;
 
-import bisq.common.currency.MisqCurrency;
+import bisq.common.currency.BisqCurrency;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public abstract class Monetary implements Comparable<Monetary> {
     }
 
     public static Monetary from(long amount, String currencyCode) {
-        if (MisqCurrency.isFiat(currencyCode)) {
+        if (BisqCurrency.isFiat(currencyCode)) {
             return Fiat.of(amount, currencyCode);
         } else {
             return Coin.of(amount, currencyCode);

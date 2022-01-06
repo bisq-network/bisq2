@@ -20,7 +20,7 @@ package bisq.desktop.main.content;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.MisqLabel;
+import bisq.desktop.components.controls.BisqLabel;
 import javafx.scene.Parent;
 import javafx.scene.layout.StackPane;
 
@@ -39,7 +39,7 @@ public class Dummy {
     public static class DummyView extends View<StackPane, DummyModel, DummyController> {
         public DummyView(String label) {
             super(new StackPane(), new DummyModel(), new DummyController());
-            root.getChildren().add(new MisqLabel(label));
+            root.getChildren().add(new BisqLabel(label));
         }
     }
 }

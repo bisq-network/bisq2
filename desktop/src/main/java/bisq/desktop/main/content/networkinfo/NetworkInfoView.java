@@ -20,10 +20,10 @@ package bisq.desktop.main.content.networkinfo;
 import bisq.common.data.Pair;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.MisqGridPane;
-import bisq.desktop.components.controls.MisqTextArea;
-import bisq.desktop.components.table.MisqTableColumn;
-import bisq.desktop.components.table.MisqTableView;
+import bisq.desktop.components.containers.BisqGridPane;
+import bisq.desktop.components.controls.BisqTextArea;
+import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.networkinfo.transport.TransportTypeView;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.transport.Transport;
@@ -45,8 +45,8 @@ public class NetworkInfoView extends View<ScrollPane, NetworkInfoModel, NetworkI
     private final ChangeListener<Optional<TransportTypeView>> transportTypeViewChangeListener;
     private final ChangeListener<Tab> tabChangeListener;
     private final JFXTabPane tabPane;
-    private final MisqTextArea receivedMessagesTextArea;
-    private final MisqTableView<DataListItem> dataTableView;
+    private final BisqTextArea receivedMessagesTextArea;
+    private final BisqTableView<DataListItem> dataTableView;
     private final TextField messageReceiverTextField, nodeIdTextField;
     private ChangeListener<DataListItem> dataTableSelectedItemListener;
 
@@ -60,8 +60,8 @@ public class NetworkInfoView extends View<ScrollPane, NetworkInfoModel, NetworkI
         root.setContent(vBox);
         tabPane = new JFXTabPane();
         tabPane.setMinHeight(440);
-        MisqGridPane misqGridPane = new MisqGridPane();
-        vBox.getChildren().addAll(tabPane, misqGridPane);
+        BisqGridPane bisqGridPane = new BisqGridPane();
+        vBox.getChildren().addAll(tabPane, bisqGridPane);
 
         Tab clearNetTab = createTab(Transport.Type.CLEAR, Res.network.get("clearNet"));
         Tab torTab = createTab(Transport.Type.TOR, "Tor");
@@ -79,10 +79,10 @@ public class NetworkInfoView extends View<ScrollPane, NetworkInfoModel, NetworkI
             tabPane.requestFocus();
         };
 
-        misqGridPane.startSection(Res.network.get("addData.title"));
-        TextField dataContentTextField = misqGridPane.addTextField(Res.network.get("addData.content"), "Test data");
-        TextField idTextField = misqGridPane.addTextField(Res.network.get("addData.id"), UUID.randomUUID().toString().substring(0, 8));
-        Pair<Button, Label> addDataButtonPair = misqGridPane.addButton(Res.network.get("addData.add"));
+        bisqGridPane.startSection(Res.network.get("addData.title"));
+        TextField dataContentTextField = bisqGridPane.addTextField(Res.network.get("addData.content"), "Test data");
+        TextField idTextField = bisqGridPane.addTextField(Res.network.get("addData.id"), UUID.randomUUID().toString().substring(0, 8));
+        Pair<Button, Label> addDataButtonPair = bisqGridPane.addButton(Res.network.get("addData.add"));
         Button addDataButton = addDataButtonPair.first();
         Label label = addDataButtonPair.second();
         addDataButton.setOnAction(e -> {
@@ -93,22 +93,22 @@ public class NetworkInfoView extends View<ScrollPane, NetworkInfoModel, NetworkI
             StringProperty result = controller.addData(dataContentTextField.getText(), idTextField.getText());
             label.textProperty().bind(result);
         });
-        misqGridPane.endSection();
+        bisqGridPane.endSection();
 
-        misqGridPane.startSection(Res.network.get("table.data.title"));
-        dataTableView = new MisqTableView<>(model.getSortedDataListItems());
+        bisqGridPane.startSection(Res.network.get("table.data.title"));
+        dataTableView = new BisqTableView<>(model.getSortedDataListItems());
         dataTableView.setMinHeight(200);
-        misqGridPane.addTableView(dataTableView);
+        bisqGridPane.addTableView(dataTableView);
         configDataTableView();
-        misqGridPane.endSection();
+        bisqGridPane.endSection();
 
-        misqGridPane.startSection(Res.network.get("sendMessages.title"));
-        messageReceiverTextField = misqGridPane.addTextField(Res.network.get("sendMessages.to"), "localhost:8000");
+        bisqGridPane.startSection(Res.network.get("sendMessages.title"));
+        messageReceiverTextField = bisqGridPane.addTextField(Res.network.get("sendMessages.to"), "localhost:8000");
         messageReceiverTextField.setEditable(false);
-        nodeIdTextField = misqGridPane.addTextField(Res.network.get("sendMessages.nodeId"), "");
+        nodeIdTextField = bisqGridPane.addTextField(Res.network.get("sendMessages.nodeId"), "");
         nodeIdTextField.setEditable(false);
-        TextField msgTextField = misqGridPane.addTextField(Res.network.get("sendMessages.text"), "Test message");
-        Pair<Button, Label> sendButtonPair = misqGridPane.addButton(Res.network.get("sendMessages.send"));
+        TextField msgTextField = bisqGridPane.addTextField(Res.network.get("sendMessages.text"), "Test message");
+        Pair<Button, Label> sendButtonPair = bisqGridPane.addButton(Res.network.get("sendMessages.send"));
         Button sendButton = sendButtonPair.first();
         sendButton.setOnAction(e -> {
             String msg = msgTextField.getText();
@@ -125,10 +125,10 @@ public class NetworkInfoView extends View<ScrollPane, NetworkInfoModel, NetworkI
                 });
             });
         });
-        misqGridPane.addHSpacer();
-        receivedMessagesTextArea = misqGridPane.addTextArea(Res.network.get("sendMessages.receivedMessage"), model.getReceivedMessages());
+        bisqGridPane.addHSpacer();
+        receivedMessagesTextArea = bisqGridPane.addTextArea(Res.network.get("sendMessages.receivedMessage"), model.getReceivedMessages());
         receivedMessagesTextArea.setMinHeight(100);
-        misqGridPane.endSection();
+        bisqGridPane.endSection();
 
         dataTableSelectedItemListener = (observable, oldValue, newValue) -> {
             controller.onSelectNetworkId(newValue.getNetworkId());
@@ -180,7 +180,7 @@ public class NetworkInfoView extends View<ScrollPane, NetworkInfoModel, NetworkI
     }
 
     private void configDataTableView() {
-        var dateColumn = new MisqTableColumn.Builder<DataListItem>()
+        var dateColumn = new BisqTableColumn.Builder<DataListItem>()
                 .title(Res.network.get("table.data.header.received"))
                 .minWidth(180)
                 .maxWidth(180)
@@ -190,12 +190,12 @@ public class NetworkInfoView extends View<ScrollPane, NetworkInfoModel, NetworkI
         dataTableView.getColumns().add(dateColumn);
         dataTableView.getSortOrder().add(dateColumn);
 
-        dataTableView.getColumns().add(new MisqTableColumn.Builder<DataListItem>()
+        dataTableView.getColumns().add(new BisqTableColumn.Builder<DataListItem>()
                 .title(Res.network.get("table.data.header.content"))
                 .minWidth(220)
                 .valueSupplier(DataListItem::getContent)
                 .build());
-        dataTableView.getColumns().add(new MisqTableColumn.Builder<DataListItem>()
+        dataTableView.getColumns().add(new BisqTableColumn.Builder<DataListItem>()
                 .title(Res.network.get("table.data.header.nodeId"))
                 .valueSupplier(DataListItem::getNodeId)
                 .build());

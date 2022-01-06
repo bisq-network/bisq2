@@ -23,24 +23,24 @@ import javafx.scene.control.skin.LabelSkin;
 
 import static bisq.desktop.common.utils.TooltipUtil.showTooltipIfTruncated;
 
-public class MisqLabel extends Label {
+public class BisqLabel extends Label {
 
-    public MisqLabel() {
+    public BisqLabel() {
         super();
     }
 
-    public MisqLabel(String text) {
+    public BisqLabel(String text) {
         super(text);
     }
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new MisqLabelSkin(this);
+        return new BisqLabelSkin(this);
     }
 
-    private static class MisqLabelSkin extends LabelSkin {
+    private static class BisqLabelSkin extends LabelSkin {
 
-        public MisqLabelSkin(Label label) {
+        public BisqLabelSkin(Label label) {
             super(label);
         }
 

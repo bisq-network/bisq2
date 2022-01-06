@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
 public class DataServiceIntegrationTest extends DataServiceNodeBase {
-    private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "misq_DataServiceIntegrationTest";
+    private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "bisq_DataServiceIntegrationTest";
     int numSeeds = 2;
     int numNodes = 4;
 

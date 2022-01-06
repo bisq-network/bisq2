@@ -17,7 +17,7 @@
 
 package bisq.common.monetary;
 
-import bisq.common.currency.MisqCurrency;
+import bisq.common.currency.BisqCurrency;
 import bisq.common.util.MathUtils;
 import com.google.common.math.LongMath;
 import lombok.EqualsAndHashCode;
@@ -45,7 +45,7 @@ public class Fiat extends Monetary {
         String[] tokens = string.split(" ");
         if (tokens.length == 2) {
             String code = tokens[1];
-            if (MisqCurrency.isFiat(code)) {
+            if (BisqCurrency.isFiat(code)) {
                 return parse(tokens[0], code);
             }
         }

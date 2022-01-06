@@ -1,18 +1,18 @@
 /*
- * This file is part of misq.
+ * This file is part of Bisq.
  *
- * misq is free software: you can redistribute it and/or modify it
+ * Bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * misq is distributed in the hope that it will be useful, but WITHOUT
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with misq. If not, see <http://www.gnu.org/licenses/>.
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package bisq.grpc;
@@ -22,8 +22,8 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 
 /**
- * An implementation of misq.common.handlers.ErrorMessageHandler that avoids
- * an exception loop with the UI's misq.common.taskrunner framework.
+ * An implementation of bisq.common.handlers.ErrorMessageHandler that avoids
+ * an exception loop with the UI's bisq.common.taskrunner framework.
  * <p>
  * The legacy ErrorMessageHandler is for reporting error messages only to the UI, but
  * some core api tasks (takeoffer) require one.  This implementation works around

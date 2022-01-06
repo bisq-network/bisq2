@@ -15,23 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.application;
+package bisq.desktop.components.table;
 
+import bisq.desktop.components.controls.BisqLabel;
+import bisq.i18n.Res;
+import javafx.collections.transformation.SortedList;
+import javafx.scene.control.TableView;
 
-import bisq.common.util.OsUtils;
+public class BisqTableView<S extends TableItem> extends TableView<S> {
+    public BisqTableView(SortedList<S> sortedList) {
+        super(sortedList);
 
-import java.io.File;
+        setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        sortedList.comparatorProperty().bind(comparatorProperty());
 
-public class ApplicationOptionsParser {
-    public static ApplicationOptions parse(String[] args) {
-        String appName = "Bisq2";
-        for (String arg : args) {
-            if (arg.startsWith("--appName")) {
-                appName = arg.split("=")[1];
-            }
-        }
-
-        String appDir = OsUtils.getUserDataDir() + File.separator + appName;
-        return new ApplicationOptions(appDir, appName);
+        setPlaceholder(new BisqLabel(Res.common.get("table.placeholder.noData")));
     }
 }

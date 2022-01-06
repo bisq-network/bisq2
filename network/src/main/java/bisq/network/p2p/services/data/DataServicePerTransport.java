@@ -50,7 +50,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  * The data need to be sorted deterministically.
  * For non-temporary data use age and deliver historical data only on extra demand.
  * At startup give users option to use clear-net for initial sync and switch to tor after that. Might require a restart ;-(.
- * That way the user trades of speed with loss of little privacy (the other nodes learn that that IP uses misq).
+ * That way the user trades of speed with loss of little privacy (the other nodes learn that that IP uses bisq).
  * Probably acceptable trade off for many users. Would be good if the restart could be avoided. Maybe not that hard...
  * <p>
  * UPDATE: Use BloomFilter class from guava lib

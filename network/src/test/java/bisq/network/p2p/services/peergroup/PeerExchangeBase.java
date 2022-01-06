@@ -342,7 +342,7 @@ public class PeerExchangeBase {
                                                     int repeatPeerExchangeDelay,
                                                     int minNumConnectedPeers,
                                                     int maxNumConnectedPeers) {
-        String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_node_" + serverPort;
+        String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/bisq_test_node_" + serverPort;
         PeerExchangeConfig peerExchangeConfig = new PeerExchangeConfig(numSeeNodesAtBoostrap,
                 numPersistedPeersAtBoostrap,
                 numReportedPeersAtBoostrap,

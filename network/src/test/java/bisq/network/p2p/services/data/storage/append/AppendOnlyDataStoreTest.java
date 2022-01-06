@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AppendOnlyDataStoreTest {
-    private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "misq_StorageTest";
+    private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "bisq_StorageTest";
 
     @Test
     public void testAppend() throws IOException {

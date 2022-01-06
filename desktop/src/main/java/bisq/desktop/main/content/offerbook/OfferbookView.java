@@ -21,8 +21,8 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.AutoTooltipButton;
 import bisq.desktop.components.controls.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.controls.AutocompleteComboBox;
-import bisq.desktop.components.controls.MisqLabel;
-import bisq.desktop.components.table.MisqTableColumnOld;
+import bisq.desktop.components.controls.BisqLabel;
+import bisq.desktop.components.table.BisqTableColumnOld;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -57,7 +57,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     public OfferbookView(OfferbookModel model, OfferbookController controller) {
         super(new VBox(), model, controller);
 
-        Label askCurrencyLabel = new MisqLabel("I want (ask):");
+        Label askCurrencyLabel = new BisqLabel("I want (ask):");
         askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
 
         askCurrencyComboBox = new AutocompleteComboBox<>();
@@ -65,7 +65,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
 
         flipButton = new AutoTooltipButton("<- Flip ->");
 
-        Label bidCurrencyLabel = new MisqLabel("I give (bid):");
+        Label bidCurrencyLabel = new BisqLabel("I give (bid):");
         bidCurrencyLabel.setPadding(new Insets(4, 8, 0, 60));
         bidCurrencyComboBox = new AutocompleteComboBox<>();
         bidCurrencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
@@ -157,7 +157,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
 
 
     private void addMakerColumn(String header) {
-        MisqTableColumnOld<OfferListItem, OfferListItem> column = new MisqTableColumnOld<>(header) {
+        BisqTableColumnOld<OfferListItem, OfferListItem> column = new BisqTableColumnOld<>(header) {
             {
                 setMinWidth(125);
             }
@@ -198,7 +198,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     }
 
     private void addTakeOfferColumn(String header) {
-        MisqTableColumnOld<OfferListItem, OfferListItem> column = new MisqTableColumnOld<>(header) {
+        BisqTableColumnOld<OfferListItem, OfferListItem> column = new BisqTableColumnOld<>(header) {
             {
                 setMinWidth(125);
             }
@@ -239,7 +239,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     }
 
     private void addValueColumn(String header, Function<OfferListItem, String> displayStringSupplier, Optional<Comparator<OfferListItem>> optionalComparator) {
-        MisqTableColumnOld<OfferListItem, OfferListItem> column = new MisqTableColumnOld<>(header) {
+        BisqTableColumnOld<OfferListItem, OfferListItem> column = new BisqTableColumnOld<>(header) {
             {
                 setMinWidth(125);
             }
@@ -272,7 +272,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
 
     private void addPropertyColumn(StringProperty header, Function<OfferListItem, StringProperty> valueSupplier,
                                    Optional<Comparator<OfferListItem>> optionalComparator) {
-        MisqTableColumnOld<OfferListItem, OfferListItem> column = new MisqTableColumnOld<>(header) {
+        BisqTableColumnOld<OfferListItem, OfferListItem> column = new BisqTableColumnOld<>(header) {
             {
                 setMinWidth(125);
             }

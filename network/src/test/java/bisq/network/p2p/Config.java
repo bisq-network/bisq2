@@ -60,7 +60,7 @@ public abstract class Config {
     }
 
     static NetworkServiceConfig getI2pNetworkConfig(Role role, String keyId) {
-        String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
+        String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/bisq_test_" + role.name();
         NodeId nodeId = new NodeId(keyId, -1, Sets.newHashSet(NetworkType.I2P));
         return new NetworkServiceConfig(baseDirName, nodeId, NetworkType.I2P);
     }
@@ -70,7 +70,7 @@ public abstract class Config {
     }
 
     static NetworkServiceConfig getTorNetworkConfig(Role role, String keyId, int serverPort) {
-        String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
+        String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/bisq_test_" + role.name();
         NodeId nodeId = new NodeId(keyId, serverPort, Sets.newHashSet(NetworkType.TOR));
         return new NetworkServiceConfig(baseDirName, nodeId, NetworkType.TOR);
     }
@@ -93,7 +93,7 @@ public abstract class Config {
     }
 
     static NetworkServiceConfig getClearNetNetworkConfig(Role role, String keyId, int serverPort) {
-        String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_" + role.name();
+        String baseDirName = OsUtils.getUserDataDir().getAbsolutePath() + "/bisq_test_" + role.name();
         NodeId nodeId = new NodeId(keyId, serverPort, Sets.newHashSet(NetworkType.CLEAR));
         return new NetworkServiceConfig(baseDirName, nodeId, NetworkType.CLEAR);
     }*/

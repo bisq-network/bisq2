@@ -77,14 +77,14 @@ public class ClearNetIntegrationTest extends BaseTest {
         NetworkType networkType = NetworkType.CLEAR;
         ArrayList<NetworkType> networkTypes = Lists.newArrayList(networkType);
 
-        String baseDirNameAlice = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_Alice";
+        String baseDirNameAlice = OsUtils.getUserDataDir().getAbsolutePath() + "/bisq_test_Alice";
         NetworkId networkIdAlice1 = new NetworkId(baseDirNameAlice, "id_alice_1", 1111, networkTypes);
         alice = new P2pNode(new NetworkConfig(networkIdAlice1, networkType), getMySupportedNetworks(), storage, Config.aliceKeyRepository1);
 
         NetworkId networkIdAlice2 = new NetworkId(baseDirNameAlice, "id_alice_2", 1112, networkTypes);
         P2pNode alice2 = new P2pNode(new NetworkConfig(networkIdAlice2, networkType), getMySupportedNetworks(), storage, Config.aliceKeyRepository1);
 
-        String baseDirNameBob = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_Bob";
+        String baseDirNameBob = OsUtils.getUserDataDir().getAbsolutePath() + "/bisq_test_Bob";
         NetworkId networkIdBob1 = new NetworkId(baseDirNameBob, "id_bob_1", 2222, networkTypes);
         bob = new P2pNode(new NetworkConfig(networkIdBob1, networkType), getMySupportedNetworks(), storage, Config.bobKeyRepository1);
 

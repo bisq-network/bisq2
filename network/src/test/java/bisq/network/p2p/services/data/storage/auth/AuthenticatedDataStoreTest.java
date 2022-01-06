@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 public class AuthenticatedDataStoreTest {
-    private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "misq_StorageTest";
+    private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "bisq_StorageTest";
 
     @Getter
     private static class MockDataTransaction implements AuthenticatedDataRequest {

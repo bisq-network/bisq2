@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.markets;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.MisqLabel;
+import bisq.desktop.components.controls.BisqLabel;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -31,7 +31,7 @@ public class MarketsView extends View<HBox, MarketsModel, MarketsController> {
         super(new HBox(), model, controller);
 
         root.setSpacing(20);
-        label = new MisqLabel();
+        label = new BisqLabel();
         button = new Button("Update price");
         root.getChildren().addAll(label, button);
 

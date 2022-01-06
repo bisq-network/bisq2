@@ -194,8 +194,8 @@ public class MultiNodesView extends Application implements MultiNodesModel.Handl
                 .orElse(addressesToBootstrap.isEmpty() && myAddress.isEmpty());
 
 
-        String appDir = OsUtils.getUserDataDir() + File.separator + "misq_MultiNodes";
-        Config typesafeConfig = ConfigUtil.load("Misq", "misq.networkServiceConfig");
+        String appDir = OsUtils.getUserDataDir() + File.separator + "bisq_MultiNodes";
+        Config typesafeConfig = ConfigUtil.load("Bisq", "bisq.networkServiceConfig");
         NetworkService.Config networkServiceConfigFactory = NetworkServiceConfigFactory.getConfig(appDir, typesafeConfig);
         multiNodesModel = new MultiNodesModel(networkServiceConfigFactory, transports, bootstrapAll);
         multiNodesModel.addNetworkInfoConsumer(this);

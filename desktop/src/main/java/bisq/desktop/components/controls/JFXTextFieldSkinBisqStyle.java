@@ -18,7 +18,7 @@ import java.lang.reflect.Field;
  * Code copied and adapted from com.jfoenix.skins.JFXTextFieldSkin
  */
 
-public class JFXTextFieldSkinMisqStyle<T extends TextField & IFXLabelFloatControl> extends TextFieldSkin {
+public class JFXTextFieldSkinBisqStyle<T extends TextField & IFXLabelFloatControl> extends TextFieldSkin {
 
     private final double inputLineExtension;
     private boolean invalid = true;
@@ -32,7 +32,7 @@ public class JFXTextFieldSkinMisqStyle<T extends TextField & IFXLabelFloatContro
     private final ValidationPane<T> errorContainer;
     private final PromptLinesWrapper<T> linesWrapper;
 
-    public JFXTextFieldSkinMisqStyle(T textField, double inputLineExtension) {
+    public JFXTextFieldSkinBisqStyle(T textField, double inputLineExtension) {
         super(textField);
         textPane = (Pane) this.getChildren().get(0);
         this.inputLineExtension = inputLineExtension;

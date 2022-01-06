@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.table;
 
-import bisq.desktop.components.controls.MisqLabel;
+import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
 import bisq.desktop.components.overlay.PopOverWrapper;
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -29,28 +29,28 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
 import lombok.extern.slf4j.Slf4j;
 
-// still used in offerbook. should be replaced by MisqTableColumn with builder interface
+// still used in offerbook. should be replaced by BisqTableColumn with builder interface
 @Deprecated
 @Slf4j
-public class MisqTableColumnOld<S, T> extends TableColumn<S, T> {
+public class BisqTableColumnOld<S, T> extends TableColumn<S, T> {
 
     private Label helpIcon;
     private final PopOverWrapper popoverWrapper = new PopOverWrapper();
-    private final MisqLabel titleLabel = new MisqLabel();
+    private final BisqLabel titleLabel = new BisqLabel();
 
-    public MisqTableColumnOld(String text) {
+    public BisqTableColumnOld(String text) {
         super();
 
         setTitle(text);
     }
 
-    public MisqTableColumnOld(StringProperty titleProperty) {
+    public BisqTableColumnOld(StringProperty titleProperty) {
         super();
 
         setTitle(titleProperty);
     }
 
-    public MisqTableColumnOld(String text, String help) {
+    public BisqTableColumnOld(String text, String help) {
 
         setTitleWithHelpText(text, help);
     }
@@ -72,7 +72,7 @@ public class MisqTableColumnOld<S, T> extends TableColumn<S, T> {
         helpIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(() -> createInfoPopOver(help)));
         helpIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());
 
-        final MisqLabel label = new MisqLabel(title);
+        final BisqLabel label = new BisqLabel(title);
         final HBox hBox = new HBox(label, helpIcon);
         hBox.setStyle("-fx-alignment: center-left");
         hBox.setSpacing(4);

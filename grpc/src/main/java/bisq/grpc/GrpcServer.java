@@ -22,9 +22,9 @@ public class GrpcServer {
     // Examples:
     // $ grpcurl --plaintext   localhost:9999 list
     //      grpc.reflection.v1alpha.ServerReflection
-    //      io.misq.protobuffer.GetVersion
-    //      io.misq.protobuffer.Help
-    //      io.misq.protobuffer.Wallets
+    //      io.bisq.protobuffer.GetVersion
+    //      io.bisq.protobuffer.Help
+    //      io.bisq.protobuffer.Wallets
     //
     // $ grpcurl --plaintext   localhost:9999 grpc.proto.Wallets/GetBalance
     // $ grpcurl --plaintext   localhost:9999 grpc.proto.Help/GetMethodHelp

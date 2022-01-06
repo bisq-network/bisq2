@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.offerbook.details;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.MisqLabel;
+import bisq.desktop.components.controls.BisqLabel;
 import javafx.geometry.Bounds;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
@@ -33,7 +33,7 @@ public class OfferDetailsView extends View<StackPane, OfferDetailsModel, OfferDe
         super(new StackPane(), model, controller);
         this.boundsInParent = boundsInParent;
 
-        root.getChildren().add(new MisqLabel(model.getItem().toString()));
+        root.getChildren().add(new BisqLabel(model.getItem().toString()));
     }
 
     protected void activate() {

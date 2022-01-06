@@ -20,8 +20,8 @@ package bisq.desktop.main.content.createoffer.assetswap.review;
 import bisq.common.data.Pair;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.AutoTooltipButton;
-import bisq.desktop.components.controls.MisqLabel;
-import bisq.desktop.components.controls.MisqTextField;
+import bisq.desktop.components.controls.BisqLabel;
+import bisq.desktop.components.controls.BisqTextField;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -38,7 +38,7 @@ public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferCon
 
     protected void initialize() {
         root.setSpacing(20);
-        Label header = new MisqLabel("Review offer");
+        Label header = new BisqLabel("Review offer");
         gridPane = new GridPane();
         gridPane.setHgap(10);
         gridPane.setVgap(10);
@@ -51,10 +51,10 @@ public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferCon
     }
 
     private Pair<Label, TextField> addRow(int rowIndex, String key, String value) {
-        Label keyLabel = new MisqLabel(key);
+        Label keyLabel = new BisqLabel(key);
         GridPane.setRowIndex(keyLabel, rowIndex);
 
-        TextField valueTextField = new MisqTextField(value);
+        TextField valueTextField = new BisqTextField(value);
         GridPane.setRowIndex(valueTextField, rowIndex);
         GridPane.setColumnIndex(valueTextField, 1);
 

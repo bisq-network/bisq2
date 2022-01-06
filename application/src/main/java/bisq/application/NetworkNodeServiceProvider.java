@@ -56,7 +56,7 @@ public class NetworkNodeServiceProvider extends ServiceProvider {
         keyPairService = new KeyPairService(persistenceService);
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
-                getConfig("misq.networkServiceConfig"));
+                getConfig("bisq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, keyPairService, persistenceService);
     }
 

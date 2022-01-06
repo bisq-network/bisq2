@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.offerbook;
 
-import bisq.desktop.components.controls.MisqLabel;
+import bisq.desktop.components.controls.BisqLabel;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
@@ -32,11 +32,11 @@ public class RangeSliderBox extends Pane {
     public RangeSliderBox(String title, int width, OfferbookModel model, OfferbookController controller) {
         setPrefWidth(width);
 
-        titleLabel = new MisqLabel(title);
-        minLabel = new MisqLabel("Min");
-        maxLabel = new MisqLabel("Max");
-        lowLabel = new MisqLabel("lowLabel");
-        highLabel = new MisqLabel("highLabel");
+        titleLabel = new BisqLabel(title);
+        minLabel = new BisqLabel("Min");
+        maxLabel = new BisqLabel("Max");
+        lowLabel = new BisqLabel("lowLabel");
+        highLabel = new BisqLabel("highLabel");
         slider = new RangeSlider(0, 100, 0, 100);
         slider.setShowTickLabels(false);
         slider.setShowTickMarks(false);

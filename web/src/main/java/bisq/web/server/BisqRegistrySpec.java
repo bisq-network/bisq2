@@ -8,13 +8,13 @@ import ratpack.registry.RegistrySpec;
 import ratpack.registry.internal.DefaultRegistryBuilder;
 
 /**
- * The registry makes misq apis and web handlers available through the ratpack context.
+ * The registry makes bisq apis and web handlers available through the ratpack context.
  */
-class MisqRegistrySpec extends DefaultRegistryBuilder implements RegistrySpec {
+class BisqRegistrySpec extends DefaultRegistryBuilder implements RegistrySpec {
 
     private final JsonTransform jsonTransform;
 
-    MisqRegistrySpec(DefaultServiceProvider coreApi) {
+    BisqRegistrySpec(DefaultServiceProvider coreApi) {
         this.jsonTransform = new JsonTransform();
         init(coreApi);
     }

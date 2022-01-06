@@ -26,10 +26,10 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Implementation of TaskScheduler using the JavaFX Application thread based AnimationTimer (used in FxTimer).
- * Tasks are by default executed on the JavaFX Application thread, in contrast to network.misq.common.timer.Scheduler
+ * Tasks are by default executed on the JavaFX Application thread, in contrast to bisq.common.timer.Scheduler
  * which uses the ForkJoinPool for execution. If an executor is provided it is used to execute the task. Caution need
  * to be taken to not call Java FX framework methods in such cases, and it is probably better to use the
- * network.misq.common.timer.Scheduler class instead.
+ * bisq.common.timer.Scheduler class instead.
  */
 @Slf4j
 public class UIScheduler implements TaskScheduler {

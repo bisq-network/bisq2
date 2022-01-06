@@ -41,7 +41,7 @@ public class MainView extends View<StackPane, MainModel, MainController> {
         root.getStyleClass().add("content-pane");
 
         // only for dev
-        ImageView bgImage = ImageUtil.getImageView("/misq-layout.png");
+        ImageView bgImage = ImageUtil.getImageView("/bisq-layout.png");
         bgImage.setFitHeight(1087);
         bgImage.setFitWidth(1859);
         StackPane.setAlignment(bgImage, Pos.TOP_LEFT);

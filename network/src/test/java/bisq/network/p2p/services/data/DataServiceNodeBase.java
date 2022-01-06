@@ -40,9 +40,9 @@ public abstract class DataServiceNodeBase {
     protected MultiNodesSetup multiNodesSetup;
 
     protected Map<Transport.Type, List<Address>> bootstrapMultiNodesSetup(Set<Transport.Type> transports, int numSeeds, int numNodes) {
-        String appDir = OsUtils.getUserDataDir() + File.separator + "misq_MultiNodes";
+        String appDir = OsUtils.getUserDataDir() + File.separator + "bisq_MultiNodes";
 
-        Config typesafeConfig = ConfigUtil.load("test", "misq.networkServiceConfig");
+        Config typesafeConfig = ConfigUtil.load("test", "bisq.networkServiceConfig");
         NetworkService.Config networkServiceConfigFactory = NetworkServiceConfigFactory.getConfig(appDir, typesafeConfig);
 
         multiNodesSetup = new MultiNodesSetup(networkServiceConfigFactory, transports, false);

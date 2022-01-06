@@ -23,7 +23,7 @@ import javafx.scene.layout.StackPane;
 
 public class Preloader extends StackPane {
     public Preloader() {
-        Label label = new Label("Initializing Misq");
+        Label label = new Label("Initializing Bisq");
         StackPane.setAlignment(label, Pos.CENTER);
         getChildren().add(label);
     }

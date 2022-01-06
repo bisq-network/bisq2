@@ -18,10 +18,10 @@
 package bisq.desktop.components.containers;
 
 import bisq.common.data.Pair;
-import bisq.desktop.components.controls.MisqLabel;
-import bisq.desktop.components.controls.MisqTextArea;
-import bisq.desktop.components.controls.MisqTextField;
-import bisq.desktop.components.table.MisqTableView;
+import bisq.desktop.components.controls.BisqLabel;
+import bisq.desktop.components.controls.BisqTextArea;
+import bisq.desktop.components.controls.BisqTextField;
+import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.layout.Layout;
 import javafx.beans.property.StringProperty;
@@ -33,15 +33,15 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 
-public class MisqGridPane extends GridPane {
-    public MisqGridPane() {
+public class BisqGridPane extends GridPane {
+    public BisqGridPane() {
         setVgap(5);
         setHgap(5);
         setPadding(Layout.INSETS);
     }
 
-    public MisqLabel startSection(String text) {
-        MisqLabel label = new MisqLabel(text);
+    public BisqLabel startSection(String text) {
+        BisqLabel label = new BisqLabel(text);
         label.setLayoutX(4);
         label.setLayoutY(-8);
         label.setPadding(new Insets(0, 7, 0, 5));
@@ -79,14 +79,14 @@ public class MisqGridPane extends GridPane {
         return region;
     }
 
-    public MisqTextField addTextField(String labelText, StringProperty textFieldText) {
-        MisqTextField textField = addTextField(labelText, textFieldText.get());
+    public BisqTextField addTextField(String labelText, StringProperty textFieldText) {
+        BisqTextField textField = addTextField(labelText, textFieldText.get());
         textField.textProperty().bind(textFieldText);
         return textField;
     }
 
-    public MisqTextField addTextField(String labelText, String textFieldText) {
-        MisqTextField textField = new MisqTextField(textFieldText);
+    public BisqTextField addTextField(String labelText, String textFieldText) {
+        BisqTextField textField = new BisqTextField(textFieldText);
         textField.setLabelFloat(true);
         textField.setPromptText(labelText);
         GridPane.setRowIndex(textField, getRowCount());
@@ -96,14 +96,14 @@ public class MisqGridPane extends GridPane {
         return textField;
     }
 
-    public MisqTextArea addTextArea(String labelText, StringProperty textFieldText) {
-        MisqTextArea textArea = addTextArea(labelText);
+    public BisqTextArea addTextArea(String labelText, StringProperty textFieldText) {
+        BisqTextArea textArea = addTextArea(labelText);
         textArea.textProperty().bind(textFieldText);
         return textArea;
     }
 
-    public MisqTextArea addTextArea(String labelText) {
-        MisqTextArea textArea = new MisqTextArea();
+    public BisqTextArea addTextArea(String labelText) {
+        BisqTextArea textArea = new BisqTextArea();
         textArea.setWrapText(true);
         textArea.setPromptText(labelText);
         GridPane.setRowIndex(textArea, getRowCount());
@@ -134,7 +134,7 @@ public class MisqGridPane extends GridPane {
         return pair;
     }
 
-    public void addTableView(MisqTableView<? extends TableItem> tableView) {
+    public void addTableView(BisqTableView<? extends TableItem> tableView) {
         GridPane.setRowIndex(tableView, getRowCount());
         GridPane.setColumnIndex(tableView, 1);
         GridPane.setColumnSpan(tableView, getColumnCount());

@@ -31,7 +31,7 @@ public class WebServer {
                     .port(5050)
                     .findBaseDir()
             );
-            Registry registrySpec = new MisqRegistrySpec(serviceProvider).build();
+            Registry registrySpec = new BisqRegistrySpec(serviceProvider).build();
             ratpackServer = RatpackServer.start(server -> server
                     .serverConfig(serverConfig)
                     .registry(registrySpec)
@@ -44,7 +44,7 @@ public class WebServer {
                             })
                             .get("version", ctx -> ctx.get(GetVersionHandler.class).handle(ctx))
                             .get("getoffers", ctx -> ctx.get(GetOffersHandler.class).handle(ctx))
-                            .get(ctx -> ctx.render("Welcome to Misq Web"))
+                            .get(ctx -> ctx.render("Welcome to Bisq Web"))
                     )
             );
         } catch (Exception ex) {

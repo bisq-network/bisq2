@@ -6,9 +6,9 @@ import ratpack.handling.Context;
 
 import java.util.Map;
 
-public class MisqClientErrorHandler extends AbstractHandler implements ClientErrorHandler {
+public class BisqClientErrorHandler extends AbstractHandler implements ClientErrorHandler {
 
-    public MisqClientErrorHandler(JsonTransform jsonTransform) {
+    public BisqClientErrorHandler(JsonTransform jsonTransform) {
         super(jsonTransform);
     }
 

@@ -104,14 +104,14 @@ public abstract class BaseTest {
     }
 
     protected void startOfMultipleIds(NetworkType networkType, Set<NetworkType> networkTypes) throws InterruptedException {
-        String baseDirNameAlice = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_Alice";
+        String baseDirNameAlice = OsUtils.getUserDataDir().getAbsolutePath() + "/bisq_test_Alice";
         NodeId nodeIdAlice1 = new NodeId("id_alice_1", 1111, networkTypes);
         alice = new P2pServiceNode(new NetworkServiceConfig(baseDirNameAlice, nodeIdAlice1, networkType), storage, Config.aliceKeyPairSupplier1);
 
         NodeId nodeIdAlice2 = new NodeId("id_alice_2", 1112, networkTypes);
         P2pServiceNode alice2 = new P2pServiceNode(new NetworkServiceConfig(baseDirNameAlice, nodeIdAlice2, networkType), storage, Config.aliceKeyPairSupplier1);
 
-        String baseDirNameBob = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_Bob";
+        String baseDirNameBob = OsUtils.getUserDataDir().getAbsolutePath() + "/bisq_test_Bob";
         NodeId nodeIdBob1 = new NodeId("id_bob_1", 2222, networkTypes);
         bob = new P2pServiceNode(new NetworkServiceConfig(baseDirNameBob, nodeIdBob1, networkType), storage, Config.bobKeyPairSupplier1);
 
@@ -140,14 +140,14 @@ public abstract class BaseTest {
     protected void sendMsgWithMultipleIds(NetworkType networkType,
                                           Set<NetworkType> networkTypes)
             throws InterruptedException, GeneralSecurityException {
-        String baseDirNameAlice = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_Alice";
+        String baseDirNameAlice = OsUtils.getUserDataDir().getAbsolutePath() + "/bisq_test_Alice";
         NodeId nodeIdAlice1 = new NodeId("id_alice_1", 1111, networkTypes);
         P2pServiceNode alice1 = new P2pServiceNode(new NetworkServiceConfig(baseDirNameAlice, nodeIdAlice1, networkType), storage, Config.aliceKeyPairSupplier1);
 
         NodeId nodeIdAlice2 = new NodeId("id_alice_2", 1112, networkTypes);
         P2pServiceNode alice2 = new P2pServiceNode(new NetworkServiceConfig(baseDirNameAlice, nodeIdAlice2, networkType), storage, Config.aliceKeyPairSupplier2);
 
-        String baseDirNameBob = OsUtils.getUserDataDir().getAbsolutePath() + "/misq_test_Bob";
+        String baseDirNameBob = OsUtils.getUserDataDir().getAbsolutePath() + "/bisq_test_Bob";
         NodeId nodeIdBob1 = new NodeId("id_bob_1", 2222, networkTypes);
         P2pServiceNode bob1 = new P2pServiceNode(new NetworkServiceConfig(baseDirNameBob, nodeIdBob1, networkType), storage, Config.bobKeyPairSupplier1);
 

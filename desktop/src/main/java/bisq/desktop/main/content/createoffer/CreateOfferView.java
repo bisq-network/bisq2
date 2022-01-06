@@ -19,7 +19,7 @@ package bisq.desktop.main.content.createoffer;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.AutoTooltipButton;
-import bisq.desktop.components.controls.MisqLabel;
+import bisq.desktop.components.controls.BisqLabel;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -58,7 +58,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
     }
 
     private Node getStepNode(String title) {
-        return new MisqLabel(title);
+        return new BisqLabel(title);
     }
 
     protected void activate() {

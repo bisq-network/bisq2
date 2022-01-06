@@ -2,13 +2,13 @@ plugins {
     id 'java'
 }
 
-group 'network.misq'
+group 'bisq'
 
 repositories {
     mavenCentral()
 }
 
-apply from: 'buildSrc/misq-version.gradle'
+apply from: 'buildSrc/bisq-version.gradle'
 apply from: 'buildSrc/os-arch.gradle'
 
 dependencies {

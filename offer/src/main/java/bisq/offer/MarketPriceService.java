@@ -17,7 +17,7 @@
 
 package bisq.offer;
 
-import bisq.common.currency.MisqCurrency;
+import bisq.common.currency.BisqCurrency;
 import bisq.common.data.Pair;
 import bisq.common.monetary.Quote;
 import bisq.common.threading.ExecutorFactory;
@@ -142,7 +142,7 @@ public class MarketPriceService {
                         long timestampSec = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
 
                         // We only get BTC based prices not fiat-fiat or altcoin-altcoin
-                        boolean isFiat = MisqCurrency.isFiat(currencyCode);
+                        boolean isFiat = BisqCurrency.isFiat(currencyCode);
                         String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
                         String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
                         Quote quote = Quote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);

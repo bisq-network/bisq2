@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 public class MailboxStoreTest {
-    private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "misq_StorageTest";
+    private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "bisq_StorageTest";
 
     @Test
     public void testAddAndRemoveMailboxMsg() throws GeneralSecurityException, IOException, InterruptedException {

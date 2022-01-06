@@ -24,7 +24,7 @@ import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
-public final class CryptoCurrency extends MisqCurrency {
+public final class CryptoCurrency extends BisqCurrency {
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "✦ ";
 

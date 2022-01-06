@@ -7,9 +7,9 @@ import ratpack.path.InvalidPathEncodingException;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 
-public class MisqServerErrorHandler extends AbstractHandler implements ServerErrorHandler {
+public class BisqServerErrorHandler extends AbstractHandler implements ServerErrorHandler {
 
-    public MisqServerErrorHandler(JsonTransform jsonTransform) {
+    public BisqServerErrorHandler(JsonTransform jsonTransform) {
         super(jsonTransform);
     }
 

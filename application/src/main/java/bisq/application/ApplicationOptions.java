@@ -26,7 +26,7 @@ public record ApplicationOptions(String baseDir, String appName) {
     // To ensure the locale is set initially we should write it to property file instead of persisting it in 
     // preferences which might be read out to a later moment.
     public Locale getLocale() {
-        Properties properties = PropertiesReader.getProperties("misq.properties");
+        Properties properties = PropertiesReader.getProperties("bisq.properties");
         if (properties == null) {
             return Locale.getDefault();
         }

@@ -8,7 +8,7 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
-apply from: '../buildSrc/misq-version.gradle'
+apply from: '../buildSrc/bisq-version.gradle'
 
 javafx {
     version = '16'
