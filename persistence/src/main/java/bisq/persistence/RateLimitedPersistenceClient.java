@@ -25,10 +25,10 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * This implementation of PersistenceClient drops persist requests if they happen too frequently.
- * It registers a shutdown hook and persists at shutdown. If the JVM got terminated non-gracefully 
- * (e.g. kill signal or JVM crash) the shutdown hook is not executed (but any other approach to write in such cases 
+ * It registers a shutdown hook and persists at shutdown. If the JVM got terminated non-gracefully
+ * (e.g. kill signal or JVM crash) the shutdown hook is not executed (but any other approach to write in such cases
  * would fail as well).
- * As there is no guarantee that the last data are persisted in case of such unexpected terminations, it should be only 
+ * As there is no guarantee that the last data are persisted in case of such unexpected terminations, it should be only
  * used if data loss is not critical (e.g. network data) and when write frequency is rather high.
  */
 @Slf4j

@@ -55,7 +55,7 @@ public class NetworkInfoView extends View<ScrollPane, NetworkInfoModel, NetworkI
 
         root.setFitToWidth(true);
         root.setFitToHeight(true);
-        
+
         VBox vBox = new VBox();
         root.setContent(vBox);
         tabPane = new JFXTabPane();

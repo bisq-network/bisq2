@@ -22,6 +22,6 @@ import bisq.network.p2p.node.transport.Transport;
 import java.io.Serializable;
 import java.util.Set;
 
-public record Capability(Address address, 
+public record Capability(Address address,
                          Set<Transport.Type> supportedTransportTypes) implements Serializable {
 }

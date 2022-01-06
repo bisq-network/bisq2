@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AllNetworksIntegrationTest {
     private ServiceNodesByTransport alice1, alice2, bob1, bob2;
-   // protected final Storage storage = new Storage(persistenceService, "");
+    // protected final Storage storage = new Storage(persistenceService, "");
 
    /* private Set<NetworkServiceConfig> getNetNetworkConfigs(Config.Role role, String keyId, int serverPort) {
         return Set.of(Config.getClearNetNetworkConfig(role, keyId, serverPort),

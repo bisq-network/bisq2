@@ -58,7 +58,7 @@ public class PeerGroupService {
                                 int maxReported,
                                 int maxPersisted,
                                 int maxSeeds) {
-        
+
         public static Config from(PeerGroup.Config peerGroupConfig,
                                   PeerExchangeStrategy.Config peerExchangeStrategyConfig,
                                   KeepAliveService.Config keepAliveServiceConfig,
