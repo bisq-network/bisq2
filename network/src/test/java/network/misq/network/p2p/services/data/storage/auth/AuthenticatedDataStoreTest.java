@@ -27,6 +27,7 @@ import network.misq.network.p2p.services.data.filter.ProtectedDataFilter;
 import network.misq.network.p2p.services.data.inventory.Inventory;
 import network.misq.network.p2p.services.data.inventory.InventoryUtil;
 import network.misq.network.p2p.services.data.storage.Result;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.DigestUtil;
 import network.misq.security.KeyGeneration;
 import org.junit.jupiter.api.Test;
@@ -113,7 +114,8 @@ public class AuthenticatedDataStoreTest {
     @Test
     public void testAddAndRemove() throws GeneralSecurityException, IOException {
         MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test" + UUID.randomUUID());
-        AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, data.getMetaData());
+        PersistenceService persistenceService = new PersistenceService(appDirPath);
+        AuthenticatedDataStore store = new AuthenticatedDataStore(persistenceService, data.getMetaData());
         store.readPersisted().join();
         KeyPair keyPair = KeyGeneration.generateKeyPair();
 
@@ -124,14 +126,13 @@ public class AuthenticatedDataStoreTest {
         Result addRequestResult = store.add(addRequest);
         assertTrue(addRequestResult.isSuccess());
 
-        Map<ByteArray, AuthenticatedDataRequest> map = store.getMap();
         ByteArray byteArray = new ByteArray(hash);
 
-        map.keySet().stream().filter(e -> e.equals(byteArray)).forEach(e -> log.error("FOUND {}", e));
-        if (!map.containsKey(byteArray)) {
+        store.getMap().keySet().stream().filter(e -> e.equals(byteArray)).forEach(e -> log.error("FOUND {}", e));
+        if (!store.getMap().containsKey(byteArray)) {
             return;
         }
-        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) map.get(byteArray);
+        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getMap().get(byteArray);
         AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
@@ -158,7 +159,7 @@ public class AuthenticatedDataStoreTest {
         Result refreshResult = store.refresh(refreshRequest);
         assertTrue(refreshResult.isSuccess());
 
-        addRequestFromMap = (AddAuthenticatedDataRequest) map.get(byteArray);
+        addRequestFromMap = (AddAuthenticatedDataRequest) store.getMap().get(byteArray);
         dataFromMap = addRequestFromMap.getAuthenticatedData();
         assertEquals(initialSeqNum + 2, dataFromMap.getSequenceNumber());
 
@@ -167,7 +168,7 @@ public class AuthenticatedDataStoreTest {
         Result removeRequestResult = store.remove(removeRequest);
         assertTrue(removeRequestResult.isSuccess());
 
-        RemoveRequest removeRequestFromMap = (RemoveRequest) map.get(byteArray);
+        RemoveRequest removeRequestFromMap = (RemoveRequest) store.getMap().get(byteArray);
         assertEquals(initialSeqNum + 3, removeRequestFromMap.getSequenceNumber());
 
         // refresh on removed fails
@@ -193,7 +194,8 @@ public class AuthenticatedDataStoreTest {
     @Test
     public void testGetInv() throws GeneralSecurityException, IOException {
         MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test");
-        AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, data.getMetaData());
+        PersistenceService persistenceService = new PersistenceService(appDirPath);
+        AuthenticatedDataStore store = new AuthenticatedDataStore(persistenceService, data.getMetaData());
         store.readPersisted().join();
         KeyPair keyPair = KeyGeneration.generateKeyPair();
         int initialSeqNumFirstItem = 0;

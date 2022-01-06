@@ -26,6 +26,7 @@ import network.misq.network.p2p.services.data.filter.ProtectedDataFilter;
 import network.misq.network.p2p.services.data.inventory.Inventory;
 import network.misq.network.p2p.services.data.storage.Result;
 import network.misq.network.p2p.services.data.storage.auth.RemoveRequest;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.ConfidentialData;
 import network.misq.security.DigestUtil;
 import network.misq.security.HybridEncryption;
@@ -52,7 +53,8 @@ public class MailboxStoreTest {
     @Test
     public void testAddAndRemoveMailboxMsg() throws GeneralSecurityException, IOException, InterruptedException {
         MockMailboxMessage message = new MockMailboxMessage("test" + UUID.randomUUID());
-        MailboxDataStore store = new MailboxDataStore(appDirPath, message.getMetaData());
+        PersistenceService persistenceService = new PersistenceService(appDirPath);
+        MailboxDataStore store = new MailboxDataStore(persistenceService, message.getMetaData());
         store.readPersisted().join();
         KeyPair senderKeyPair = KeyGeneration.generateKeyPair();
         KeyPair receiverKeyPair = KeyGeneration.generateKeyPair();

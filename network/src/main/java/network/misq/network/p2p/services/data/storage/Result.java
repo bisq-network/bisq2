@@ -22,15 +22,15 @@ import lombok.Getter;
 @Getter
 public class Result {
     private final boolean success;
-    private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyInvalid, sequenceNrInvalid, signatureInvalid,
+    private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
             dataInvalid, expired, noEntry, alreadyRemoved;
 
     public Result(boolean success) {
         this.success = success;
     }
 
-    public Result publicKeyInvalid() {
-        publicKeyInvalid = true;
+    public Result publicKeyHashInvalid() {
+        publicKeyHashInvalid = true;
         return this;
     }
 
@@ -80,7 +80,7 @@ public class Result {
         return "Result{" +
                 "\r\n     success=" + success +
                 ",\r\n     requestAlreadyReceived=" + requestAlreadyReceived +
-                ",\r\n     publicKeyInvalid=" + publicKeyInvalid +
+                ",\r\n     publicKeyInvalid=" + publicKeyHashInvalid +
                 ",\r\n     sequenceNrInvalid=" + sequenceNrInvalid +
                 ",\r\n     signatureInvalid=" + signatureInvalid +
                 ",\r\n     dataInvalid=" + dataInvalid +

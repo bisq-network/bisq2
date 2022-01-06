@@ -19,12 +19,14 @@ package network.misq.network.p2p.message;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 
 import java.util.concurrent.TimeUnit;
 
 @Getter
+@ToString
 @EqualsAndHashCode
 public class TextMessage implements MailboxMessage {
     private final String text;

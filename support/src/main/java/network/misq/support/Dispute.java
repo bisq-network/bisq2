@@ -17,7 +17,7 @@
 
 package network.misq.support;
 
-import network.misq.id.IdentityService;
+import network.misq.identity.IdentityService;
 
 public class Dispute {
     // expected dependencies

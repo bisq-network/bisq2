@@ -20,48 +20,15 @@ package network.misq.desktop.main.content.networkinfo.transport;
 import lombok.Getter;
 import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
-import network.misq.network.NetworkService;
-import network.misq.network.p2p.NetworkId;
 import network.misq.network.p2p.node.transport.Transport;
-import network.misq.security.KeyPairService;
-
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 public class TransportTypeController implements Controller {
-    private final Transport.Type transportType;
     private final TransportTypeModel model;
     @Getter
     private final TransportTypeView view;
-    private final NetworkService networkService;
-    private final KeyPairService keyPairService;
 
     public TransportTypeController(DefaultServiceProvider serviceProvider, Transport.Type transportType) {
-        networkService = serviceProvider.getNetworkService();
-
-        keyPairService = serviceProvider.getKeyPairService();
-        this.transportType = transportType;
-
         model = new TransportTypeModel(serviceProvider, transportType);
         view = new TransportTypeView(model, this);
     }
-
-    CompletableFuture<String> sendMessage(String message) {
-        return model.sendMessage(message);
-    }
-
-    public CompletionStage<String> addData(String dataText, String id) {
-        return model.addData(dataText, id);
-    }
-
-    public void onSelectNetworkId(Optional<NetworkId> networkId) {
-        model.applyNetworkId(networkId);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // View events
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
 }

@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -45,6 +46,7 @@ public class TorController {
     private volatile boolean isStopped;
     private volatile boolean isTorEventHandlerSet;
     private final Object isTorEventHandlerSetLock = new Object();
+    private final Set<Runnable> listeners = new CopyOnWriteArraySet<>();
 
     TorController(File cookieFile) {
         this.cookieFile = cookieFile;
@@ -79,6 +81,7 @@ public class TorController {
             }
         }
         isStarted = true;
+        listeners.forEach(Runnable::run);
     }
 
     void shutdown() {
@@ -144,7 +147,7 @@ public class TorController {
         return checkNotNull(torControlConnection);
     }
 
-    public void addHiddenServiceReadyListener(String serviceId, Runnable listener) {
+    void addHiddenServiceReadyListener(String serviceId, Runnable listener) {
         // We set it on demand once needed, but ensure its not overwritten in case we use multiple servers for the
         // same tor instance.
         synchronized (isTorEventHandlerSetLock) {
@@ -157,7 +160,15 @@ public class TorController {
         torEventHandler.addHiddenServiceReadyListener(serviceId, listener);
     }
 
-    public void removeHiddenServiceReadyListener(String serviceId) {
+    void removeHiddenServiceReadyListener(String serviceId) {
         torEventHandler.removeHiddenServiceReadyListener(serviceId);
+    }
+
+    void addListener(Runnable listener) {
+        listeners.add(listener);
+    }
+
+    void removeListener(Runnable listener) {
+        listeners.remove(listener);
     }
 }

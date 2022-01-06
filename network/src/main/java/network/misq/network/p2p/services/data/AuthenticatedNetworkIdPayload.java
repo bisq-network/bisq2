@@ -21,6 +21,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import network.misq.network.p2p.NetworkId;
+import network.misq.network.p2p.message.Proto;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 
@@ -29,13 +30,13 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 @ToString
 @Getter
-public class AuthenticatedTextPayload implements AuthenticatedPayload {
-    private final String text;
+public class AuthenticatedNetworkIdPayload implements AuthenticatedPayload {
+    private final Proto data;
     private final NetworkId networkId;
     final MetaData metaData;
 
-    public AuthenticatedTextPayload(String text, NetworkId networkId) {
-        this.text = text;
+    public AuthenticatedNetworkIdPayload(Proto data, NetworkId networkId) {
+        this.data = data;
         this.networkId = networkId;
         // 463 is overhead of sig/pubkeys,...
         // 582 is pubkey+sig+hash

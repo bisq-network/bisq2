@@ -24,6 +24,7 @@ import network.misq.common.util.OsUtils;
 import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.storage.Result;
 import network.misq.network.p2p.services.data.storage.auth.*;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.DigestUtil;
 import network.misq.security.KeyGeneration;
 import network.misq.security.SignatureUtil;
@@ -35,7 +36,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -61,7 +61,8 @@ public class AuthorizedDataStoreTest {
         MockAuthorizedPayload authorizedPayload = new MockAuthorizedPayload(networkPayload, signature, publicKey);
 
         KeyPair keyPair = KeyGeneration.generateKeyPair();
-        AuthenticatedDataStore store = new AuthenticatedDataStore(appDirPath, authorizedPayload.getMetaData());
+        PersistenceService persistenceService = new PersistenceService(appDirPath);
+        AuthenticatedDataStore store = new AuthenticatedDataStore(persistenceService, authorizedPayload.getMetaData());
         store.readPersisted().join();
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authorizedPayload, keyPair);
         byte[] hash = DigestUtil.hash(authorizedPayload.serialize());
@@ -69,9 +70,8 @@ public class AuthorizedDataStoreTest {
         Result result = store.add(addRequest);
         assertTrue(result.isSuccess());
 
-        Map<ByteArray, AuthenticatedDataRequest> map = store.getMap();
         ByteArray byteArray = new ByteArray(hash);
-        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) map.get(byteArray);
+        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getMap().get(byteArray);
         AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
@@ -83,7 +83,7 @@ public class AuthorizedDataStoreTest {
         Result refreshResult = store.refresh(refreshRequest);
         assertTrue(refreshResult.isSuccess());
 
-        addRequestFromMap = (AddAuthenticatedDataRequest) map.get(byteArray);
+        addRequestFromMap = (AddAuthenticatedDataRequest) store.getMap().get(byteArray);
         dataFromMap = addRequestFromMap.getAuthenticatedData();
         assertEquals(initialSeqNum + 2, dataFromMap.getSequenceNumber());
 
@@ -92,7 +92,7 @@ public class AuthorizedDataStoreTest {
         Result removeDataResult = store.remove(removeRequest);
         assertTrue(removeDataResult.isSuccess());
 
-        RemoveRequest removeRequestFromMap = (RemoveRequest) map.get(byteArray);
+        RemoveRequest removeRequestFromMap = (RemoveRequest) store.getMap().get(byteArray);
         assertEquals(initialSeqNum + 3, removeRequestFromMap.getSequenceNumber());
     }
 }

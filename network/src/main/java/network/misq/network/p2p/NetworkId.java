@@ -18,36 +18,50 @@
 package network.misq.network.p2p;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
+import network.misq.common.data.Pair;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.security.PubKey;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode
 @ToString
 public class NetworkId implements Serializable {
-    private final Map<Transport.Type, Address> addressByNetworkType;
+    // We avoid maps in serialized data as it is used in hashes and maps do not have deterministic order.
+    // The list is sorted by Transport.Type.
+    private final List<Pair<Transport.Type, Address>> addresses;
+    @Getter
     private final PubKey pubKey;
+    @Getter
     private final String nodeId;
+    // Lazy init convenience field. With java serialisation its always null even if declared in field.
+    @Nullable
+    private transient Map<Transport.Type, Address> addressByNetworkType;
 
     public NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey, String nodeId) {
-        this.addressByNetworkType = addressByNetworkType;
         this.pubKey = pubKey;
         this.nodeId = nodeId;
+        checkArgument(!addressByNetworkType.isEmpty(),
+                "We require at least 1 addressByNetworkType for a valid NetworkId");
+        addresses = addressByNetworkType.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(e -> new Pair<>(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
     }
 
     public Map<Transport.Type, Address> addressByNetworkType() {
+        if (addressByNetworkType == null) {
+            addressByNetworkType = addresses.stream().collect(Collectors.toMap(Pair::first, Pair::second));
+        }
         return addressByNetworkType;
-    }
-
-    public PubKey pubKey() {
-        return pubKey;
-    }
-
-    public String nodeId() {
-        return nodeId;
     }
 }

@@ -38,6 +38,8 @@ import network.misq.security.PubKey;
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -54,15 +56,15 @@ public class ConfidentialMessageService implements Node.Listener {
     @Getter
     public static class Result {
         private final State state;
-        private Optional<CompletableFuture<BroadcastResult>> mailboxFuture = Optional.empty();
+        private List<CompletableFuture<BroadcastResult>> mailboxFuture = new ArrayList<>();
         private Optional<String> errorMsg = Optional.empty();
 
         public Result(State state) {
             this.state = state;
         }
 
-        public Result setMailboxFuture(CompletableFuture<BroadcastResult> mailboxFuture) {
-            this.mailboxFuture = Optional.of(mailboxFuture);
+        public Result setMailboxFuture(List<CompletableFuture<BroadcastResult>> mailboxFuture) {
+            this.mailboxFuture = mailboxFuture;
             return this;
         }
 
@@ -127,10 +129,12 @@ public class ConfidentialMessageService implements Node.Listener {
 
     @Override
     public void onConnection(Connection connection) {
+        listeners.forEach(listener -> listener.onConnection(connection));
     }
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
+        listeners.forEach(listener -> listener.onDisconnect(connection, closeReason));
     }
 
     public Result send(Message message,
@@ -186,9 +190,10 @@ public class ConfidentialMessageService implements Node.Listener {
         MailboxPayload mailboxPayload = new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
         // We do not wait for the broadcast result as that can take a while. We pack the future into our result, 
         // so clients can react on it as they wish.
-        CompletableFuture<BroadcastResult> mailboxFuture = dataService.get().addMailboxPayload(mailboxPayload,
-                senderKeyPair,
-                receiverPubKey.publicKey());
+        List<CompletableFuture<BroadcastResult>> mailboxFuture = dataService.get().addMailboxPayloadAsync(mailboxPayload,
+                        senderKeyPair,
+                        receiverPubKey.publicKey())
+                .join();
         return new Result(State.ADDED_TO_MAILBOX).setMailboxFuture(mailboxFuture);
     }
 

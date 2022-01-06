@@ -17,7 +17,7 @@
 
 package network.misq.support;
 
-import network.misq.id.IdentityService;
+import network.misq.identity.IdentityService;
 import network.misq.network.NetworkService;
 import network.misq.persistence.Persistence;
 

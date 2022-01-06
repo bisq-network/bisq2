@@ -219,5 +219,11 @@ We have this structure of threads:
             - `DISPATCHER`: After decryption `ConfidentialMessageService` notifies their listeners via the dispatcher
               thread.
 
-Last update: 28.12.2021
+### Important notes:
+
+Avoid using maps or sets in serialized data as if the hash of the data is used for signatures it can lead to different
+hashes as the order of the maps and sets is not deterministic. The EC signature is not deterministic as well (
+malleability) and must not be used inside a data structure used for hashing.
+
+Last update: 04.01.2022 (not updated latest changes in class structure)
 

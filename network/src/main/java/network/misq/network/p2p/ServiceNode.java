@@ -21,6 +21,7 @@ package network.misq.network.p2p;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import network.misq.common.util.CompletableFutureUtils;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.message.Message;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.Connection;
@@ -28,15 +29,15 @@ import network.misq.network.p2p.node.Node;
 import network.misq.network.p2p.node.NodesById;
 import network.misq.network.p2p.services.confidential.ConfidentialMessageService;
 import network.misq.network.p2p.services.data.DataService;
-import network.misq.network.p2p.services.data.NetworkPayload;
+import network.misq.network.p2p.services.data.DataServicePerTransport;
 import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
 import network.misq.network.p2p.services.data.filter.DataFilter;
 import network.misq.network.p2p.services.data.inventory.RequestInventoryResult;
-import network.misq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import network.misq.network.p2p.services.monitor.MonitorService;
 import network.misq.network.p2p.services.peergroup.BanList;
 import network.misq.network.p2p.services.peergroup.PeerGroupService;
 import network.misq.network.p2p.services.relay.RelayService;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.KeyPairService;
 import network.misq.security.PubKey;
 import org.slf4j.Logger;
@@ -44,7 +45,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.security.PublicKey;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,6 +54,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.concurrent.CompletableFuture.runAsync;
 
 /**
  * Creates nodeRepository and a default node
@@ -92,7 +93,8 @@ public class ServiceNode {
     @Getter
     private Optional<PeerGroupService> peerGroupService;
     @Getter
-    private Optional<DataService> dataService;
+    private Optional<DataServicePerTransport> dataServicePerTransport;
+
     private Optional<RelayService> relayService;
     @Getter
     private Optional<MonitorService> monitorService;
@@ -102,8 +104,9 @@ public class ServiceNode {
     public ServiceNode(Config config,
                        Node.Config nodeConfig,
                        PeerGroupService.Config peerGroupServiceConfig,
-                       DataService.Config dataServiceConfig,
+                       Optional<DataService> dataService,
                        KeyPairService keyPairService,
+                       PersistenceService persistenceService,
                        List<Address> seedNodeAddresses) {
         BanList banList = new BanList();
         nodesById = new NodesById(banList, nodeConfig);
@@ -111,11 +114,11 @@ public class ServiceNode {
         Set<Service> services = config.services();
 
         if (services.contains(Service.PEER_GROUP)) {
-            PeerGroupService peerGroupService = new PeerGroupService(defaultNode, banList, peerGroupServiceConfig, seedNodeAddresses);
+            PeerGroupService peerGroupService = new PeerGroupService(persistenceService, defaultNode, banList, peerGroupServiceConfig, seedNodeAddresses);
             this.peerGroupService = Optional.of(peerGroupService);
 
             if (services.contains(Service.DATA)) {
-                dataService = Optional.of(new DataService(defaultNode, peerGroupService, keyPairService, dataServiceConfig));
+                dataServicePerTransport = Optional.of(new DataServicePerTransport(defaultNode, peerGroupService, keyPairService));
             }
 
             if (services.contains(Service.RELAY)) {
@@ -126,6 +129,7 @@ public class ServiceNode {
                 monitorService = Optional.of(new MonitorService(defaultNode, peerGroupService));
             }
         }
+
         if (services.contains(Service.CONFIDENTIAL)) {
             confidentialMessageService = Optional.of(new ConfidentialMessageService(nodesById, keyPairService, dataService));
         }
@@ -136,17 +140,41 @@ public class ServiceNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void maybeInitializeServer(String nodeId, int serverPort) {
+    public boolean maybeInitializeServer(String nodeId, int serverPort) {
         if (nodeId.equals(Node.DEFAULT_NODE_ID)) {
             setState(State.INITIALIZE_DEFAULT_NODE_SERVER);
         }
-        nodesById.maybeInitializeServer(nodeId, serverPort);
-        if (nodeId.equals(Node.DEFAULT_NODE_ID)) {
-            setState(State.DEFAULT_NODE_SERVER_INITIALIZED);
+        try {
+            nodesById.maybeInitializeServer(nodeId, serverPort);
+            if (nodeId.equals(Node.DEFAULT_NODE_ID)) {
+                setState(State.DEFAULT_NODE_SERVER_INITIALIZED);
+            }
+            return true;
+        } catch (Throwable throwable) {
+            log.error("maybeInitializeServer failed. nodeId=" + nodeId + ";serverPort=" + serverPort, throwable);
+            return false;
         }
     }
 
-    public void initializePeerGroup() {
+    public CompletableFuture<Void> maybeInitializePeerGroupAsync() {
+        return runAsync(this::maybeInitializePeerGroup, NetworkService.NETWORK_IO_POOL);
+    }
+
+    public void maybeInitializePeerGroup() {
+        if (state.get() == State.PEER_GROUP_INITIALIZED) {
+            log.debug("We had the peer group already initialized and ignore that call.");
+            return;
+        }
+        if (state.get() == State.INITIALIZE_PEER_GROUP) {
+            log.debug("We had the peer group already initialized but initialization is not completed yet.");
+            try {
+                Thread.sleep(1000);
+                maybeInitializePeerGroup();
+                return;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         setState(State.INITIALIZE_PEER_GROUP);
         peerGroupService.ifPresent(PeerGroupService::initialize);
         setState(State.PEER_GROUP_INITIALIZED);
@@ -157,7 +185,7 @@ public class ServiceNode {
         return CompletableFutureUtils.allOf(nodesById.shutdown(),
                         confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(CompletableFuture.completedFuture(null)),
                         peerGroupService.map(PeerGroupService::shutdown).orElse(CompletableFuture.completedFuture(null)),
-                        dataService.map(DataService::shutdown).orElse(CompletableFuture.completedFuture(null)),
+                        dataServicePerTransport.map(DataServicePerTransport::shutdown).orElse(CompletableFuture.completedFuture(null)),
                         relayService.map(RelayService::shutdown).orElse(CompletableFuture.completedFuture(null)),
                         monitorService.map(MonitorService::shutdown).orElse(CompletableFuture.completedFuture(null)))
                 .orTimeout(4, TimeUnit.SECONDS)
@@ -180,45 +208,19 @@ public class ServiceNode {
                 .orElseThrow(() -> new RuntimeException("RelayService not present at relay"));
     }
 
-    public CompletableFuture<BroadcastResult> addMailboxPayload(MailboxPayload mailboxPayload,
-                                                                KeyPair senderKeyPair,
-                                                                PublicKey receiverPublicKey) {
-        return dataService.map(dataService -> dataService.addMailboxPayload(mailboxPayload,
-                        senderKeyPair,
-                        receiverPublicKey))
-                .orElseThrow(() -> new RuntimeException("DataService not present at addMailboxPayload"));
-    }
-
-    public CompletableFuture<BroadcastResult> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
-        return dataService.map(dataService -> dataService.addNetworkPayload(networkPayload, keyPair))
-                .orElseThrow(() -> new RuntimeException("DataService not present at addNetworkPayload"));
-    }
-
-    public CompletableFuture<BroadcastResult> requestAddData(Message message) {
-        //  return dataService.requestAddData(message);
-        return null;
-    }
 
     public CompletableFuture<BroadcastResult> requestRemoveData(Message message) {
-        checkArgument(dataService.isPresent());
-        return dataService.get().requestRemoveData(message);
+        checkArgument(dataServicePerTransport.isPresent());
+        return dataServicePerTransport.get().requestRemoveData(message);
     }
 
     public CompletableFuture<RequestInventoryResult> requestInventory(DataFilter dataFilter) {
-        checkArgument(dataService.isPresent());
-        return dataService.get().requestInventory(dataFilter);
+        checkArgument(dataServicePerTransport.isPresent());
+        return dataServicePerTransport.get().requestInventory(dataFilter);
     }
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return defaultNode.getSocksProxy();
-    }
-
-    public void addDataServiceListener(DataService.Listener listener) {
-        dataService.ifPresent(dataService -> dataService.addListener(listener));
-    }
-
-    public void removeDataServiceListener(DataService.Listener listener) {
-        dataService.ifPresent(dataService -> dataService.removeListener(listener));
     }
 
     public void addMessageListener(Node.Listener listener) {

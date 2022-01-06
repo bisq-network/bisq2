@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.CompletableFutureUtils;
 import network.misq.network.NetworkService;
 import network.misq.network.NetworkServiceConfigFactory;
-import network.misq.security.KeyPairRepositoryConfigFactory;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.KeyPairService;
 
 import java.util.ArrayList;
@@ -46,17 +46,22 @@ public class NetworkNodeServiceProvider extends ServiceProvider {
     private final KeyPairService keyPairService;
     private final NetworkService networkService;
     private final ApplicationOptions applicationOptions;
+    private final PersistenceService persistenceService;
 
     public NetworkNodeServiceProvider(ApplicationOptions applicationOptions) {
         super("Seed");
         this.applicationOptions = applicationOptions;
 
-        KeyPairService.Conf keyPairRepositoryConf = KeyPairRepositoryConfigFactory.getConfig(applicationOptions.baseDir());
-        keyPairService = new KeyPairService(keyPairRepositoryConf);
+        persistenceService = new PersistenceService(applicationOptions.baseDir());
+        keyPairService = new KeyPairService(persistenceService);
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
                 getConfig("misq.networkServiceConfig"));
-        networkService = new NetworkService(networkServiceConfig, keyPairService);
+        networkService = new NetworkService(networkServiceConfig, keyPairService, persistenceService);
+    }
+
+    public CompletableFuture<Boolean> readAllPersisted() {
+        return persistenceService.readAllPersisted();
     }
 
     /**

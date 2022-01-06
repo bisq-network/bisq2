@@ -36,6 +36,7 @@ import network.misq.network.p2p.services.data.DataService;
 import network.misq.network.p2p.services.data.NetworkPayload;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.KeyPairService;
 import network.misq.security.PubKey;
 
@@ -74,11 +75,11 @@ public class MultiNodesModel {
     private final Set<Transport.Type> supportedTransportTypes;
     private final boolean bootstrapAll;
     private Optional<List<Address>> addressesToBootstrap = Optional.empty();
-    private final KeyPairService keyPairService;
     private final int numSeeds = 8;
     private final int numNodes = 20;
     @Getter
     private final Map<Address, NetworkService> networkServicesByAddress = new ConcurrentHashMap<>();
+    private final Map<Address, KeyPairService> keyPairServicesByAddress = new ConcurrentHashMap<>();
     private final Map<Address, String> logHistoryByAddress = new ConcurrentHashMap<>();
     private final Map<Transport.Type, List<Address>> seedAddressesByTransport;
 
@@ -92,10 +93,6 @@ public class MultiNodesModel {
         this.bootstrapAll = bootstrapAll;
 
         seedAddressesByTransport = networkServiceConfig.seedAddressesByTransport();
-
-        KeyPairService.Conf keyPairRepositoryConf = new KeyPairService.Conf(networkServiceConfig.baseDir());
-        keyPairService = new KeyPairService(keyPairRepositoryConf);
-        keyPairService.initialize().join();
     }
 
 
@@ -160,10 +157,12 @@ public class MultiNodesModel {
     }
 
     public void send(Address senderAddress, Address receiverAddress, String nodeId, String message) {
+        KeyPairService sendersKeyPairService = keyPairServicesByAddress.get(senderAddress);
+        KeyPairService receiversKeyPairService = keyPairServicesByAddress.get(senderAddress);
         String senderKeyId = senderAddress + nodeId;
-        KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(senderKeyId);
+        KeyPair senderKeyPair = sendersKeyPairService.getOrCreateKeyPair(senderKeyId);
         String receiverKeyId = receiverAddress + nodeId;
-        KeyPair receiverKeyPair = keyPairService.getOrCreateKeyPair(receiverKeyId);
+        KeyPair receiverKeyPair = receiversKeyPairService.getOrCreateKeyPair(receiverKeyId);
         NetworkId receiverNetworkId = new NetworkId(Map.of(Transport.Type.from(receiverAddress), receiverAddress),
                 new PubKey(receiverKeyPair.getPublic(), receiverKeyId),
                 nodeId);
@@ -183,7 +182,7 @@ public class MultiNodesModel {
                 .findAny()
                 .get();
         receiverNetworkService.findMyAddresses().forEach((type, value) -> {
-            Address receiverAddress = value.get(receiverNetworkId.nodeId());
+            Address receiverAddress = value.get(receiverNetworkId.getNodeId());
             sendMsgListener = new Node.Listener() {
                 @Override
                 public void onMessage(Message message, Connection connection, String nodeId) {
@@ -210,10 +209,10 @@ public class MultiNodesModel {
         senderNetworkService.confidentialSendAsync(mailBoxMessage,
                         receiverNetworkId,
                         senderKeyPair,
-                        senderNetworkId.nodeId())
+                        senderNetworkId.getNodeId())
                 .whenComplete((result, throwable) -> {
                     senderNetworkService.findMyAddresses().forEach((type, value) -> {
-                        Address senderAddress = value.get(senderNetworkId.nodeId());
+                        Address senderAddress = value.get(senderNetworkId.getNodeId());
                         String newLine = "\n" + getTimestamp() + " " +
                                 type.toString().substring(0, 3) + "  onSent       " +
                                 senderAddress + " --> " + receiverNetworkId.addressByNetworkType().get(type) + " " +
@@ -252,7 +251,11 @@ public class MultiNodesModel {
                 networkServiceConfig.seedAddressesByTransport(),
                 Optional.empty());
 
-        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, keyPairService);
+        PersistenceService persistenceService = new PersistenceService(specificNetworkServiceConfig.baseDir());
+        KeyPairService keyPairService = new KeyPairService(persistenceService);
+        keyPairServicesByAddress.put(address, keyPairService);
+        keyPairService.initialize().join();
+        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, keyPairService, persistenceService);
         handler.ifPresent(handler -> handler.onStateChange(address, networkService.getStateByTransportType().get(transportType)));
         networkServicesByAddress.put(address, networkService);
         setupConnectionListener(networkService, transportType);

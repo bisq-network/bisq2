@@ -33,7 +33,7 @@ import network.misq.network.p2p.node.transport.Transport;
 import network.misq.offer.Asset;
 import network.misq.offer.Offer;
 import network.misq.protocol.ContractMaker;
-import network.misq.protocol.MockServiceTransport;
+import network.misq.protocol.MockNetworkService;
 import network.misq.protocol.ProtocolExecutor;
 import network.misq.protocol.multiSig.MultiSig;
 import network.misq.protocol.multiSig.MultiSigProtocol;
@@ -63,7 +63,7 @@ public abstract class MultiSigTest {
     public void setup() {
         // We share a network mock to call MessageListeners when sending a msg (e.g. alice send a msg and
         // bob receives the event)
-        networkService = new MockServiceTransport();
+        networkService = new MockNetworkService();
     }
 
     protected abstract Chain getChain();
@@ -73,7 +73,7 @@ public abstract class MultiSigTest {
     protected abstract Wallet getMakerWallet();
 
     protected void run() {
-        NetworkService networkService = new MockServiceTransport();
+        NetworkService networkService = new MockNetworkService();
         // create offer
         NetworkId makerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"), "default");
         Asset askAsset = new Asset(Fiat.of(5000, "USD"), List.of(FiatTransfer.ZELLE), AssetTransfer.Type.MANUAL);

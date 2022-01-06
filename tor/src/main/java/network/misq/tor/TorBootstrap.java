@@ -226,8 +226,9 @@ class TorBootstrap {
     private void terminateProcessBuilder(Process torProcess) throws InterruptedException, IOException {
         // TODO investigate how to handle windows case?
         if (osType != OsType.WIN) {
-            if (torProcess.waitFor() != 0) {
-                throw new IOException("Terminate processBuilder exited with an error");
+            int result = torProcess.waitFor();
+            if (result != 0) {
+                throw new IOException("Terminate processBuilder exited with an error. result="+result);
             }
         }
         log.debug("Process builder terminated");

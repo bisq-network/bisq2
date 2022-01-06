@@ -19,11 +19,8 @@ public abstract class Executable<T extends ServiceProvider> {
     }
 
     protected void onApplicationLaunched() {
-        initializeDomain();
-    }
-
-    protected void initializeDomain() {
-        serviceProvider.initialize()
+        serviceProvider.readAllPersisted()
+                .thenCompose(r -> serviceProvider.initialize())
                 .whenComplete((success, throwable) -> {
                     if (success) {
                         onDomainInitialized();

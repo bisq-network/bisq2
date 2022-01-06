@@ -18,13 +18,24 @@
 package network.misq.persistence;
 
 import java.io.Serializable;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Interface for the outside envelope object persisted to disk.
  */
-public interface Persistable extends Serializable {
-
-    default String getDefaultStorageFileName() {
-        return this.getClass().getSimpleName();
+public interface PersistenceClient<T extends Serializable> {
+    default CompletableFuture<Optional<T>> readPersisted() {
+        return getPersistence().readAsync(this::applyPersisted);
     }
+
+    Persistence<T> getPersistence();
+
+    void applyPersisted(T persisted);
+
+    default CompletableFuture<Boolean> persist() {
+        return getPersistence().persistAsync(getCloneForPersistence());
+    }
+
+    T getCloneForPersistence();
 }

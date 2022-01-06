@@ -26,15 +26,13 @@ import network.misq.network.p2p.services.data.inventory.InventoryUtil;
 import network.misq.network.p2p.services.data.storage.MetaData;
 import network.misq.network.p2p.services.data.storage.Result;
 import network.misq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
-import network.misq.persistence.Persistence;
+import network.misq.persistence.PersistenceService;
 import network.misq.security.DigestUtil;
 
-import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
@@ -60,23 +58,15 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
     private final int maxItems;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public MailboxDataStore(String appDirPath, MetaData metaData) {
-        super(appDirPath, metaData);
+    public MailboxDataStore(PersistenceService persistenceService, MetaData metaData) {
+        super(persistenceService, metaData);
 
         maxItems = MAX_INVENTORY_MAP_SIZE / metaData.getMaxSizeInBytes();
     }
 
-    public CompletableFuture<Void> readPersisted() {
-        if (!new File(storageFilePath).exists()) {
-            return CompletableFuture.completedFuture(null);
-        }
-        return Persistence.readAsync(storageFilePath)
-                .whenComplete((serializable, t) -> {
-                    if (serializable instanceof ConcurrentHashMap) {
-                        ConcurrentHashMap<ByteArray, MailboxRequest> persisted = (ConcurrentHashMap<ByteArray, MailboxRequest>) serializable;
-                        map.putAll(persisted);
-                    }
-                }).thenApply(serializable -> null);
+    @Override
+    protected long getMaxWriteRateInMs() {
+        return 1000;
     }
 
     public Result add(AddMailboxRequest request) {
@@ -106,7 +96,7 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
             }
 
             if (request.isPublicKeyInvalid()) {
-                return new Result(false).publicKeyInvalid();
+                return new Result(false).publicKeyHashInvalid();
             }
 
             if (request.isSignatureInvalid()) {
@@ -117,6 +107,7 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
         persist();
 
         // If we had already the data (only updated seq nr) we return false as well and do not notify listeners.
+        // This should only happen if client re-publishes mailbox data 
         if (requestFromMap != null) {
             return new Result(false).payloadAlreadyStored();
         }
@@ -139,8 +130,8 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
 
             if (requestFromMap instanceof RemoveMailboxRequest) {
                 // We have had the entry already removed.
-                if (request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
-                    // We update the request so we have latest sequence number.
+                if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+                    // We update the request, so we have latest sequence number.
                     map.put(byteArray, request);
                     persist();
                 }
@@ -156,9 +147,9 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
                 return new Result(false).sequenceNrInvalid();
             }
 
-            if (request.isPublicKeyInvalid(dataFromMap)) {
+            if (request.isPublicKeyHashInvalid(dataFromMap)) {
                 // Hash of pubKey of data does not match provided one
-                return new Result(false).publicKeyInvalid();
+                return new Result(false).publicKeyHashInvalid();
             }
 
             if (request.isSignatureInvalid()) {

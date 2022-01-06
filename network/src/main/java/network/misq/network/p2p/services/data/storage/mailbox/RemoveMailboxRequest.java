@@ -59,7 +59,7 @@ public class RemoveMailboxRequest extends RemoveRequest implements MailboxReques
     }
 
     @Override
-    public boolean isPublicKeyInvalid(AuthenticatedData entryFromMap) {
+    public boolean isPublicKeyHashInvalid(AuthenticatedData entryFromMap) {
         try {
             MailboxData mailboxData = (MailboxData) entryFromMap;
             return !Arrays.equals(mailboxData.getHashOfReceiversPublicKey(), DigestUtil.hash(ownerPublicKeyBytes));

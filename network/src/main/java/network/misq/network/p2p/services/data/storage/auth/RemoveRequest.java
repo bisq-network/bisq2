@@ -90,7 +90,7 @@ public class RemoveRequest implements AuthenticatedDataRequest, Serializable {
         }
     }
 
-    public boolean isPublicKeyInvalid(AuthenticatedData entryFromMap) {
+    public boolean isPublicKeyHashInvalid(AuthenticatedData entryFromMap) {
         try {
             return !Arrays.equals(entryFromMap.getHashOfPublicKey(), DigestUtil.hash(ownerPublicKeyBytes));
         } catch (Exception e) {

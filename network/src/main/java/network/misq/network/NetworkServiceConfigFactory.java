@@ -36,11 +36,11 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class NetworkServiceConfigFactory {
-
     public static NetworkService.Config getConfig(String baseDir, Config typesafeConfig) {
         //  Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
-       // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
-         Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
+        Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
+        //Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
+        // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.TOR);
 
         ServiceNode.Config serviceNodeConfig = new ServiceNode.Config(Set.of(
                 ServiceNode.Service.CONFIDENTIAL,
@@ -55,7 +55,6 @@ public class NetworkServiceConfigFactory {
                 Transport.Type.I2P, getSeedAddresses(Transport.Type.I2P, seedConfig),
                 Transport.Type.CLEAR, getSeedAddresses(Transport.Type.CLEAR, seedConfig)
         );
-
 
         PeerGroup.Config peerGroupConfig = PeerGroup.Config.from(typesafeConfig.getConfig("peerGroupConfig"));
         PeerExchangeStrategy.Config peerExchangeStrategyConfig = PeerExchangeStrategy.Config.from(typesafeConfig.getConfig("peerExchangeStrategyConfig"));

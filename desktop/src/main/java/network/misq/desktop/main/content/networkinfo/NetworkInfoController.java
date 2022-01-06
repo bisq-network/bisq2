@@ -17,13 +17,16 @@
 
 package network.misq.desktop.main.content.networkinfo;
 
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import network.misq.application.DefaultServiceProvider;
 import network.misq.desktop.common.view.Controller;
 import network.misq.desktop.main.content.networkinfo.transport.TransportTypeController;
+import network.misq.network.p2p.NetworkId;
 import network.misq.network.p2p.node.transport.Transport;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class NetworkInfoController implements Controller {
     private final NetworkInfoModel model;
@@ -40,7 +43,9 @@ public class NetworkInfoController implements Controller {
 
     @Override
     public void activate() {
-        onTabSelected(Optional.of(Transport.Type.CLEAR));
+        model.getSupportedTransportTypes().stream()
+                .min(Enum::compareTo)
+                .ifPresent(e -> onTabSelected(Optional.of(e)));
     }
 
     @Override
@@ -58,4 +63,17 @@ public class NetworkInfoController implements Controller {
         model.getTransportTypeView().set(selectedTransportTypeController.map(TransportTypeController::getView)
                 .or(Optional::empty));
     }
+
+    CompletableFuture<String> sendMessage(String message) {
+        return model.sendMessage(message);
+    }
+
+    public StringProperty addData(String dataText, String domainId) {
+        return model.addData(dataText, domainId);
+    }
+
+    public void onSelectNetworkId(Optional<NetworkId> networkId) {
+        model.applyNetworkId(networkId);
+    }
+
 }

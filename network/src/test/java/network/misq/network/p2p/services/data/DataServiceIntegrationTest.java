@@ -19,6 +19,7 @@ package network.misq.network.p2p.services.data;
 
 import lombok.extern.slf4j.Slf4j;
 import network.misq.common.util.OsUtils;
+import network.misq.network.NetworkService;
 import network.misq.network.p2p.node.Address;
 import network.misq.network.p2p.node.transport.Transport;
 import network.misq.network.p2p.services.data.broadcast.BroadcastResult;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -42,21 +44,22 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
-public class DataServiceServiceIntegrationTest extends DataServiceNodeBase {
-    private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "misq_DataServiceServiceIntegrationTest";
+public class DataServiceIntegrationTest extends DataServiceNodeBase {
+    private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "misq_DataServiceIntegrationTest";
     int numSeeds = 2;
     int numNodes = 4;
 
     // @Test
     public void testBroadcast() throws InterruptedException, ExecutionException, GeneralSecurityException {
-        List<DataService> dataServices = getBootstrappedDataServices();
-        DataService dataService = dataServices.get(0);
+        List<DataService> dataServicePerTransports = getBootstrappedDataServices();
+        DataService dataServicePerTransport = dataServicePerTransports.get(0);
         int minExpectedConnections = numSeeds + numNodes - 2;
         KeyPair keyPair = KeyGeneration.generateKeyPair();
         MockAuthenticatedPayload payload = new MockAuthenticatedPayload("Test offer " + UUID.randomUUID());
-        BroadcastResult result = dataService.addNetworkPayload(payload, keyPair).get();
-        log.error("result={}", result.toString());
-        assertTrue(result.numSuccess() >= minExpectedConnections);
+        //todo
+        // BroadcastResult result = dataServicePerTransport.addNetworkPayload(payload, keyPair).get();
+        // log.error("result={}", result.toString());
+        // assertTrue(result.numSuccess() >= minExpectedConnections);
     }
 
 
@@ -72,7 +75,7 @@ public class DataServiceServiceIntegrationTest extends DataServiceNodeBase {
         DataService dataService_1 = dataServices.get(1);
         DataService dataService_2 = dataServices.get(2);
 
-        CountDownLatch latch = new CountDownLatch(2);
+        CountDownLatch latch = new CountDownLatch(1);
         dataService_1.addListener(new DataService.Listener() {
             @Override
             public void onNetworkDataAdded(NetworkPayload networkPayload) {
@@ -95,37 +98,40 @@ public class DataServiceServiceIntegrationTest extends DataServiceNodeBase {
             public void onNetworkDataRemoved(NetworkPayload networkPayload) {
             }
         });
-        int minExpectedConnections = numSeeds + numNodes - 1;
-        BroadcastResult broadcastResult = dataService_0.addNetworkPayload(payload, keyPair).get();
+        List<CompletableFuture<BroadcastResult>> broadcastResultFutures = dataService_0.addNetworkPayloadAsync(payload, keyPair).get();
+        broadcastResultFutures.forEach(CompletableFuture::join);
 
-        assertTrue(broadcastResult.numSuccess() >= minExpectedConnections);
-        latch.countDown();
-        log.info("broadcastResult={}", broadcastResult);
-        assertTrue(latch.await(30, TimeUnit.SECONDS));
+        assertTrue(latch.await(10, TimeUnit.SECONDS));
     }
 
-    private List<DataService> getBootstrappedDataServices() throws InterruptedException {
+    //todo
+    private List<DataService> getBootstrappedDataServices() {
         Transport.Type type = Transport.Type.CLEAR;
         bootstrapMultiNodesSetup(Set.of(type), numSeeds, numNodes);
         List<Address> nodes = multiNodesSetup.getNodeAddresses(type, numNodes);
-        List<DataService> dataServices = multiNodesSetup.getNetworkServicesByAddress().entrySet().stream()
+        List<NetworkService> networkServices = multiNodesSetup.getNetworkServicesByAddress().entrySet().stream()
                 .filter(e -> nodes.contains(e.getKey()))
                 .map(Map.Entry::getValue)
-                .flatMap(e -> e.findServiceNode(type).stream())
-                .flatMap(e -> e.getDataService().stream())
+                /* .flatMap(networkService -> networkService.getServiceNodesByTransport().getDataService().stream())*/
                 .collect(Collectors.toList());
 
-        DataService dataService = dataServices.get(0);
+        PeerGroup peerGroup = networkServices.get(0).getServiceNodesByTransport().findServiceNode(type).orElseThrow()
+                .getPeerGroupService().orElseThrow().getPeerGroup();
+
         int expectedConnections = numSeeds + numNodes - 2;
-        PeerGroup peerGroup = dataService.getPeerGroupService().getPeerGroup();
         while (true) {
             long numCon = peerGroup.getAllConnections().count();
             if (numCon >= expectedConnections) {
                 break;
             }
-            Thread.sleep(5000);
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+            }
         }
 
-        return dataServices;
+        return networkServices.stream()
+                .flatMap(networkService -> networkService.getServiceNodesByTransport().getDataService().stream())
+                .collect(Collectors.toList());
     }
 }
