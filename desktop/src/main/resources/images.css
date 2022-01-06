@@ -1,7 +1,7 @@
 /* splash screen */
 /*noinspection CssUnknownTarget*/
 
-/* used in misq.*/
+/* used in bisq2.*/
 #clear-net {
     -fx-image: url("images/connection/direct.png");
 }

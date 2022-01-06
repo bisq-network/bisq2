@@ -10,10 +10,10 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
-apply from: '../buildSrc/misq-version.gradle'
+apply from: '../buildSrc/bisq-version.gradle'
 
 application {
-    project.mainClassName = 'network.misq.desktop.Main'
+    project.mainClassName = 'bisq.desktop.Main'
 }
 
 distributions {
@@ -26,7 +26,7 @@ tasks.named('jar') {
     manifest {
         attributes('Implementation-Title': project.name,
                 'Implementation-Version': project.version,
-                'Main-Class': 'network.misq.desktop.Main')
+                'Main-Class': 'bisq.desktop.Main')
     }
 }
 

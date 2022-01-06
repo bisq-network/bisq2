@@ -9,7 +9,7 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
-apply from: 'misq-version.gradle'
+apply from: 'bisq-version.gradle'
 
 ext {
     createTestReports = false

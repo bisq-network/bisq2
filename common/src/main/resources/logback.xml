@@ -11,6 +11,6 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="network.misq.tor" level="INFO"/>
-    <logger name="network.misq.i2p" level="INFO"/>
+    <logger name="bisq.tor" level="INFO"/>
+    <logger name="bisq.i2p" level="INFO"/>
 </configuration>
