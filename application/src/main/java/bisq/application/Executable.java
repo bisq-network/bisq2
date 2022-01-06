@@ -7,6 +7,7 @@ public abstract class Executable<T extends ServiceProvider> {
     protected final T serviceProvider;
 
     public Executable(String[] args) {
+        setDefaultUncaughtExceptionHandler();
         ApplicationOptions applicationOptions = ApplicationOptionsParser.parse(args);
         serviceProvider = createServiceProvider(applicationOptions, args);
         launchApplication(args);
@@ -19,6 +20,7 @@ public abstract class Executable<T extends ServiceProvider> {
     }
 
     protected void onApplicationLaunched() {
+
         serviceProvider.readAllPersisted()
                 .thenCompose(r -> serviceProvider.initialize())
                 .whenComplete((success, throwable) -> {
@@ -38,5 +40,11 @@ public abstract class Executable<T extends ServiceProvider> {
 
     public void shutdown() {
         serviceProvider.shutdown();
+    }
+
+    protected void setDefaultUncaughtExceptionHandler() {
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            log.error("Uncaught exception", throwable);
+        });
     }
 }

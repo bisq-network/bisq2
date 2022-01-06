@@ -226,7 +226,7 @@ class TorBootstrap {
         if (osType != OsType.WIN) {
             int result = torProcess.waitFor();
             if (result != 0) {
-                throw new IOException("Terminate processBuilder exited with an error. result="+result);
+                throw new IOException("Terminate processBuilder exited with an error. result=" + result);
             }
         }
         log.debug("Process builder terminated");

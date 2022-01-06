@@ -144,7 +144,7 @@ public class PeerExchangeService implements Node.Listener {
     @Override
     public void onMessage(Message message, Connection connection, String nodeId) {
         if (message instanceof PeerExchangeRequest request) {
-            log.debug("Node {} received PeerExchangeRequest with myPeers {}", node, request.peers());
+            //log.debug("Node {} received PeerExchangeRequest with myPeers {}", node, request.peers());
             Address peerAddress = connection.getPeerAddress();
             peerExchangeStrategy.addReportedPeers(request.peers(), peerAddress);
             Set<Peer> myPeers = peerExchangeStrategy.getPeers(peerAddress);

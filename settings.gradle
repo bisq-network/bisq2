@@ -1,4 +1,4 @@
-rootProject.name = 'misq'
+rootProject.name = 'bisq'
 
 include 'platforms:cli-platform'
 include 'platforms:common-platform'

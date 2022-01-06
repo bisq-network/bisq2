@@ -19,8 +19,6 @@ package bisq.desktop;
 
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.Browser;
-import bisq.desktop.common.UncaughtExceptionHandler;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.MainController;
 import bisq.desktop.overlay.OverlayController;
@@ -57,7 +55,10 @@ public class StageController implements Controller {
     }
 
     public void onDomainInitialized() {
+    }
 
+    public void onUncaughtException(Thread thread, Throwable throwable) {
+        // todo show error popup
     }
 
     @Override
@@ -67,31 +68,6 @@ public class StageController implements Controller {
 
     public void onQuit() {
         shutdown();
-    }
-
-    //todo
-    public static void setupUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {
-        Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
-            // Might come from another thread
-            if (throwable.getCause() != null && throwable.getCause().getCause() != null) {
-                log.error(throwable.getMessage());
-            } else if (throwable instanceof ClassCastException &&
-                    "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
-                log.warn(throwable.getMessage());
-            } else if (throwable instanceof UnsupportedOperationException &&
-                    "The system tray is not supported on the current platform.".equals(throwable.getMessage())) {
-                log.warn(throwable.getMessage());
-            } else {
-                log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
-                log.error("throwableMessage= " + throwable.getMessage());
-                log.error("throwableClass= " + throwable.getClass());
-                // log.error("Stack trace:\n" + ExceptionUtils.getStackTrace(throwable));
-                throwable.printStackTrace();
-                UIThread.run(() -> uncaughtExceptionHandler.handleUncaughtException(throwable, false));
-            }
-        };
-        Thread.setDefaultUncaughtExceptionHandler(handler);
-        Thread.currentThread().setUncaughtExceptionHandler(handler);
     }
 
     public void onInitializeDomainFailed() {

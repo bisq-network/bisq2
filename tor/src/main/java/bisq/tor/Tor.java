@@ -134,35 +134,40 @@ public class Tor {
     // Blocking start
     // TODO find better solution for handling repeated start calls
     public void start() throws IOException, InterruptedException {
-        if (state.get() == State.STARTED) {
-            log.debug("Tor already started");
-            return;
-        }
-        if (state.get() == State.STARTING) {
-            log.debug("Tor is starting but has not completed yet. We wait until torController has started.");
-            CountDownLatch latch = new CountDownLatch(1);
-            torController.addListener(latch::countDown);
-            latch.await(30, TimeUnit.SECONDS);
-            while (state.get() == State.STARTING) {
-                Thread.sleep(1000);
-            }
+        try {
             if (state.get() == State.STARTED) {
                 log.debug("Tor already started");
-            } else {
-                log.debug("Seems Tor got shut down in the meantime");
+                return;
             }
-            return;
-        }
-        if (state.get() == State.NOT_STARTED) {
-            state.set(State.STARTING);
-            long ts = System.currentTimeMillis();
-            int controlPort = torBootstrap.start();
-            torController.start(controlPort);
-            proxyPort = torController.getProxyPort();
-            state.set(State.STARTED);
-            log.info(">> Starting Tor took {} ms", System.currentTimeMillis() - ts);
-        } else {
-            throw new IllegalStateException("Invalid state at start. state=" + state.get());
+            if (state.get() == State.STARTING) {
+                log.debug("Tor is starting but has not completed yet. We wait until torController has started.");
+                CountDownLatch latch = new CountDownLatch(1);
+                torController.addListener(latch::countDown);
+                latch.await(30, TimeUnit.SECONDS);
+                while (state.get() == State.STARTING) {
+                    Thread.sleep(1000);
+                }
+                if (state.get() == State.STARTED) {
+                    log.debug("Tor already started");
+                } else {
+                    log.debug("Seems Tor got shut down in the meantime");
+                }
+                return;
+            }
+            if (state.get() == State.NOT_STARTED) {
+                state.set(State.STARTING);
+                long ts = System.currentTimeMillis();
+                int controlPort = torBootstrap.start();
+                torController.start(controlPort);
+                proxyPort = torController.getProxyPort();
+                state.set(State.STARTED);
+                log.info(">> Starting Tor took {} ms", System.currentTimeMillis() - ts);
+            } else {
+                throw new IllegalStateException("Invalid state at start. state=" + state.get());
+            }
+        } catch (Exception exception) {
+            torBootstrap.deleteVersionFile();
+            throw exception;
         }
     }
 

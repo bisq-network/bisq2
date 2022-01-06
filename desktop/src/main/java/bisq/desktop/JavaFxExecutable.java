@@ -21,6 +21,7 @@ import bisq.application.ApplicationOptions;
 import bisq.application.DefaultServiceProvider;
 import bisq.application.Executable;
 import bisq.common.annotations.LateInit;
+import bisq.desktop.common.threading.UIThread;
 import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
@@ -51,9 +52,13 @@ public class JavaFxExecutable extends Executable<DefaultServiceProvider> {
         JavaFXApplication.onApplicationLaunched
                 .whenComplete((applicationData, throwable) -> {
                     if (throwable == null) {
-                        stageController = new StageController(serviceProvider, applicationData);
-                        log.info("Java FX Application launched");
-                        onApplicationLaunched();
+                        try {
+                            stageController = new StageController(serviceProvider, applicationData);
+                            log.info("Java FX Application launched");
+                            onApplicationLaunched();
+                        } catch (Throwable t) {
+                            t.printStackTrace();
+                        }
                     } else {
                         log.error("Could not launch JavaFX application.", throwable);
                         shutdown();
@@ -70,6 +75,14 @@ public class JavaFxExecutable extends Executable<DefaultServiceProvider> {
     protected void onInitializeDomainFailed(Throwable throwable) {
         super.onInitializeDomainFailed(throwable);
         requireNonNull(stageController).onInitializeDomainFailed();
+    }
+
+    @Override
+    protected void setDefaultUncaughtExceptionHandler() {
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            log.error("Uncaught exception", throwable);
+            UIThread.run(() -> stageController.onUncaughtException(thread, throwable));
+        });
     }
 
     @Override

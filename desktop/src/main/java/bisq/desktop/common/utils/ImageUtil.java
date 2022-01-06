@@ -30,7 +30,13 @@ public class ImageUtil {
     }
 
     public static Image getImage(String imagePath) {
-        InputStream resourceAsStream = ImageView.class.getResourceAsStream(imagePath);
-        return new Image(resourceAsStream);
+        try {
+            InputStream resourceAsStream = ImageView.class.getResourceAsStream(imagePath);
+            return new Image(resourceAsStream);
+        } catch (Throwable t) {
+            log.error("getImage failed: imagePath={}", imagePath);
+            t.printStackTrace();
+            throw t;
+        }
     }
 }
