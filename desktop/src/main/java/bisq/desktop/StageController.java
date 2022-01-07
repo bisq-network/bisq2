@@ -55,6 +55,7 @@ public class StageController implements Controller {
     }
 
     public void onDomainInitialized() {
+        mainController.onDomainInitialized();
     }
 
     public void onUncaughtException(Thread thread, Throwable throwable) {

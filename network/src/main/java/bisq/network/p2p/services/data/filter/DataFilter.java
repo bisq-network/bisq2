@@ -18,7 +18,9 @@
 package bisq.network.p2p.services.data.filter;
 
 
-import java.io.Serializable;
+import bisq.common.data.ByteArray;
+import bisq.network.p2p.message.Proto;
 
-public interface DataFilter extends Serializable {
+public interface DataFilter extends Proto {
+    boolean doInclude(ByteArray key);
 }

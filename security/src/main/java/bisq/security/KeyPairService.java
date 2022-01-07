@@ -52,11 +52,11 @@ public class KeyPairService implements PersistenceClient<HashMap<String, KeyPair
 
     @Override
     public CompletableFuture<Boolean> persist() {
-        return persistence.persistAsync(getCloneForPersistence());
+        return persistence.persistAsync(getClonedMap());
     }
 
     @Override
-    public HashMap<String, KeyPair> getCloneForPersistence() {
+    public HashMap<String, KeyPair> getClonedMap() {
         synchronized (keyPairsById) {
             return new HashMap<>(keyPairsById);
         }

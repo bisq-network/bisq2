@@ -18,15 +18,12 @@
 package bisq.network.p2p.services.data.storage.append;
 
 import bisq.common.data.ByteArray;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.Result;
-import bisq.network.p2p.services.data.storage.mailbox.DataStore;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
-import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -35,10 +32,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * If key already exists we return. If map size exceeds MAX_MAP_SIZE we ignore new data.
  */
 @Slf4j
-public class AppendOnlyDataStore extends DataStore<AppendOnlyPayload> {
+public class AppendOnlyDataStore extends DataStore<AddAppendOnlyDataRequest> {
     private static final int MAX_MAP_SIZE = 10_000_000; // in bytes
-
-    private final int maxMapSize;
 
     public interface Listener {
         void onAppended(AppendOnlyPayload appendOnlyData);
@@ -46,10 +41,8 @@ public class AppendOnlyDataStore extends DataStore<AppendOnlyPayload> {
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public AppendOnlyDataStore(PersistenceService persistenceService, MetaData metaData) {
-        super(persistenceService, metaData);
-
-        maxMapSize = MAX_MAP_SIZE / metaData.getMaxSizeInBytes();
+    public AppendOnlyDataStore(PersistenceService persistenceService, String storeName, String fileName) {
+        super(persistenceService, storeName, fileName);
     }
 
     @Override
@@ -57,9 +50,10 @@ public class AppendOnlyDataStore extends DataStore<AppendOnlyPayload> {
         return 1000;
     }
 
-    public Result add(AppendOnlyPayload appendOnlyPayload) {
+    public Result add(AddAppendOnlyDataRequest addAppendOnlyDataRequest) {
+        AppendOnlyPayload appendOnlyPayload = addAppendOnlyDataRequest.payload();
         synchronized (map) {
-            if (map.size() > maxMapSize) {
+            if (map.size() > MAX_MAP_SIZE) {
                 return new Result(false).maxMapSizeReached();
             }
 
@@ -69,7 +63,7 @@ public class AppendOnlyDataStore extends DataStore<AppendOnlyPayload> {
                 return new Result(false).payloadAlreadyStored();
             }
 
-            map.put(byteArray, appendOnlyPayload);
+            map.put(byteArray, addAppendOnlyDataRequest);
         }
         persist();
         listeners.forEach(listener -> listener.onAppended(appendOnlyPayload));
@@ -86,15 +80,5 @@ public class AppendOnlyDataStore extends DataStore<AppendOnlyPayload> {
 
     public void removeListener(AppendOnlyDataStore.Listener listener) {
         listeners.remove(listener);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @VisibleForTesting
-    Map<ByteArray, AppendOnlyPayload> getMap() {
-        return map;
     }
 }

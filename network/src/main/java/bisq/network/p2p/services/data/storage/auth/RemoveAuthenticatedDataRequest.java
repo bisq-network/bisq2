@@ -19,7 +19,7 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.NetworkPayload;
-import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
+import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -35,15 +35,15 @@ import java.util.Arrays;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public class RemoveRequest implements AuthenticatedDataRequest, BroadcastMessage {
+public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest, RemoveDataRequest {
 
 
-    public static RemoveRequest from(AuthenticatedDataStore store, NetworkPayload networkPayload, KeyPair keyPair)
+    public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStore store, NetworkPayload networkPayload, KeyPair keyPair)
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(networkPayload.serialize());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
-        return new RemoveRequest(networkPayload.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
+        return new RemoveAuthenticatedDataRequest(networkPayload.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
     }
 
     protected final MetaData metaData;
@@ -54,11 +54,11 @@ public class RemoveRequest implements AuthenticatedDataRequest, BroadcastMessage
     protected final byte[] signature;         // 47 bytes
     protected final long created;
 
-    public RemoveRequest(MetaData metaData,
-                         byte[] hash,
-                         PublicKey ownerPublicKey,
-                         int sequenceNumber,
-                         byte[] signature) {
+    public RemoveAuthenticatedDataRequest(MetaData metaData,
+                                          byte[] hash,
+                                          PublicKey ownerPublicKey,
+                                          int sequenceNumber,
+                                          byte[] signature) {
         this(metaData,
                 hash,
                 ownerPublicKey.getEncoded(),
@@ -67,12 +67,12 @@ public class RemoveRequest implements AuthenticatedDataRequest, BroadcastMessage
                 signature);
     }
 
-    protected RemoveRequest(MetaData metaData,
-                            byte[] hash,
-                            byte[] ownerPublicKeyBytes,
-                            PublicKey ownerPublicKey,
-                            int sequenceNumber,
-                            byte[] signature) {
+    protected RemoveAuthenticatedDataRequest(MetaData metaData,
+                                             byte[] hash,
+                                             byte[] ownerPublicKeyBytes,
+                                             PublicKey ownerPublicKey,
+                                             int sequenceNumber,
+                                             byte[] signature) {
         this.metaData = metaData;
         this.hash = hash;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;

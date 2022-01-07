@@ -17,17 +17,8 @@
 
 package bisq.network.p2p.services.data.inventory;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.filter.DataFilter;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 
-@EqualsAndHashCode
-@Getter
-public class InventoryRequest implements Message {
-    private final DataFilter dataFilter;
-
-    public InventoryRequest(DataFilter dataFilter) {
-        this.dataFilter = dataFilter;
-    }
+public record InventoryRequest(DataFilter dataFilter, int nonce) implements BroadcastMessage {
 }

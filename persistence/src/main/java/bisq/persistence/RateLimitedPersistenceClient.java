@@ -55,7 +55,7 @@ public abstract class RateLimitedPersistenceClient<T extends Serializable> imple
             lastWrite = System.currentTimeMillis();
             writeInProgress = true;
             dropped = false;
-            return getPersistence().persistAsync(getCloneForPersistence()).whenComplete((r, t) -> {
+            return getPersistence().persistAsync(getClonedMap()).whenComplete((r, t) -> {
                 writeInProgress = false;
             });
         }
@@ -68,7 +68,7 @@ public abstract class RateLimitedPersistenceClient<T extends Serializable> imple
     private void persistOnShutdown() {
         if (dropped) {
             dropped = false;
-            getPersistence().persist(getCloneForPersistence());
+            getPersistence().persist(getClonedMap());
         }
     }
 }

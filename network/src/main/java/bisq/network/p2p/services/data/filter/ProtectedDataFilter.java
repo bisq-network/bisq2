@@ -53,4 +53,9 @@ public class ProtectedDataFilter implements DataFilter {
         this.range = range;
         this.offset = offset;
     }
+
+    @Override
+    public boolean doInclude(ByteArray key) {
+        return false;
+    }
 }

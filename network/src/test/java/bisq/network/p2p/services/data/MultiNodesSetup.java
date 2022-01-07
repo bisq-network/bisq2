@@ -101,7 +101,7 @@ public class MultiNodesSetup {
 
     public void bootstrap(Address address, Transport.Type transportType) {
         NetworkService networkService = createNetworkService(address, transportType);
-        networkService.bootstrap(address.getPort()).join();
+        networkService.bootstrapPeerGroup(address.getPort()).join();
     }
 
     public CompletableFuture<List<Void>> shutdown() {

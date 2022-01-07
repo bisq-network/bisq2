@@ -105,7 +105,7 @@ public class DefaultServiceProvider extends ServiceProvider {
     public CompletableFuture<Boolean> initialize() {
         return keyPairService.initialize()
                 .thenCompose(result -> identityService.initialize())
-                .thenCompose(result -> networkService.bootstrap())
+                .thenCompose(result -> networkService.bootstrapPeerGroup())
                 .thenCompose(result -> marketPriceService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(offerService.initialize(),
                         openOfferService.initialize(),

@@ -22,9 +22,8 @@ import bisq.common.data.ByteArray;
 import bisq.common.util.OsUtils;
 import bisq.network.p2p.services.data.filter.FilterItem;
 import bisq.network.p2p.services.data.filter.ProtectedDataFilter;
-import bisq.network.p2p.services.data.inventory.Inventory;
 import bisq.network.p2p.services.data.storage.Result;
-import bisq.network.p2p.services.data.storage.auth.RemoveRequest;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.persistence.PersistenceService;
 import bisq.security.ConfidentialData;
 import bisq.security.DigestUtil;
@@ -44,6 +43,7 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.network.p2p.services.data.storage.Storage.StoreType.MAILBOX_DATA_STORE;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
@@ -54,13 +54,15 @@ public class MailboxStoreTest {
     public void testAddAndRemoveMailboxMsg() throws GeneralSecurityException, IOException, InterruptedException {
         MockMailboxMessage message = new MockMailboxMessage("test" + UUID.randomUUID());
         PersistenceService persistenceService = new PersistenceService(appDirPath);
-        MailboxDataStore store = new MailboxDataStore(persistenceService, message.getMetaData());
+        MailboxDataStore store = new MailboxDataStore(persistenceService,
+                MAILBOX_DATA_STORE.getStoreName(),
+                message.getMetaData().getFileName());
         store.readPersisted().join();
         KeyPair senderKeyPair = KeyGeneration.generateKeyPair();
         KeyPair receiverKeyPair = KeyGeneration.generateKeyPair();
 
         MailboxPayload payload = MailboxPayload.createMailboxPayload(message, senderKeyPair, receiverKeyPair.getPublic());
-        Map<ByteArray, MailboxRequest> map = store.getMap();
+        Map<ByteArray, MailboxRequest> map = store.getClonedMap();
         int initialMapSize = map.size();
         byte[] hash = DigestUtil.hash(payload.serialize());
         int initialSeqNum = store.getSequenceNumber(hash);
@@ -120,9 +122,9 @@ public class MailboxStoreTest {
         // request inventory with old seqNum
         String dataType = payload.getMetaData().getFileName();
         Set<FilterItem> filterItems = new HashSet<>();
-        filterItems.add(new FilterItem(byteArray.getHash(), initialSeqNum));
+        filterItems.add(new FilterItem(byteArray.getBytes(), initialSeqNum));
         ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
-        Inventory inventory = store.getInventoryList(filter);
+        // Inventory inventory = store.getInventoryList(filter);
         // assertEquals(initialMapSize + 1, inventory.getEntries().size());
 
         // remove
@@ -134,8 +136,8 @@ public class MailboxStoreTest {
         log.info(removeDataResult.toString());
         assertTrue(removeDataResult.isSuccess());
 
-        RemoveRequest removeRequestFromMap = (RemoveRequest) map.get(byteArray);
-        assertEquals(Integer.MAX_VALUE, removeRequestFromMap.getSequenceNumber());
+        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequestFromMap = (RemoveAuthenticatedDataRequest) map.get(byteArray);
+        assertEquals(Integer.MAX_VALUE, removeAuthenticatedDataRequestFromMap.getSequenceNumber());
 
         // we must not create a new sealed data as it would have a diff. secret key and so a diff hash...
         // If users re-publish mailbox messages they need to keep the original sealed data and re-use that instead

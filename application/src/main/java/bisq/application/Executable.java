@@ -10,6 +10,7 @@ public abstract class Executable<T extends ServiceProvider> {
         setDefaultUncaughtExceptionHandler();
         ApplicationOptions applicationOptions = ApplicationOptionsParser.parse(args);
         serviceProvider = createServiceProvider(applicationOptions, args);
+        serviceProvider.readAllPersisted().join();
         launchApplication(args);
     }
 
@@ -20,9 +21,7 @@ public abstract class Executable<T extends ServiceProvider> {
     }
 
     protected void onApplicationLaunched() {
-
-        serviceProvider.readAllPersisted()
-                .thenCompose(r -> serviceProvider.initialize())
+        serviceProvider.initialize()
                 .whenComplete((success, throwable) -> {
                     if (success) {
                         onDomainInitialized();

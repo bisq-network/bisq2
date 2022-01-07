@@ -111,6 +111,16 @@ public class FileUtils {
         return tempDirPath;
     }
 
+    public static Set<String> listFilesInDirectory(String directory, int depth) throws IOException {
+        try (Stream<Path> stream = Files.walk(Paths.get(directory), depth)) {
+            return stream
+                    .filter(file -> !Files.isDirectory(file))
+                    .map(Path::getFileName)
+                    .map(Path::toString)
+                    .collect(Collectors.toSet());
+        }
+    }
+
     public static void recursiveDeleteOnShutdownHook(Path path) {
         Runtime.getRuntime().addShutdownHook(new Thread(
                 () -> {

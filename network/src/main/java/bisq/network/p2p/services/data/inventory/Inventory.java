@@ -17,29 +17,10 @@
 
 package bisq.network.p2p.services.data.inventory;
 
-import bisq.network.p2p.message.Message;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import bisq.network.p2p.message.Proto;
+import bisq.network.p2p.services.data.DataRequest;
 
 import java.util.List;
 
-@EqualsAndHashCode
-@Getter
-public class Inventory implements Message {
-    private final List<? extends AuthenticatedDataRequest> entries;
-    private final int numDropped;
-
-    public Inventory(List<? extends AuthenticatedDataRequest> entries, int numDropped) {
-        this.entries = entries;
-        this.numDropped = numDropped;
-    }
-
-    @Override
-    public String toString() {
-        return "Inventory{" +
-                "\r\n     entries=" + entries +
-                ",\r\n     numDropped=" + numDropped +
-                "\r\n}";
-    }
+public record Inventory(List<? extends DataRequest> entries, int numDropped) implements Proto {
 }

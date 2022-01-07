@@ -17,7 +17,5 @@
 
 package bisq.network.p2p.services.data;
 
-import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
-
-public interface RemoveDataRequest extends BroadcastMessage {
+public interface RemoveDataRequest extends DataRequest {
 }

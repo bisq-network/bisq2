@@ -183,7 +183,7 @@ public class ConfidentialMessageService implements Node.Listener {
                                        PubKey receiverPubKey,
                                        KeyPair senderKeyPair) {
         if (dataService.isEmpty()) {
-            log.warn("We cannot stored a mailboxMessage because the dataService is not present. mailboxMessage={}", mailboxMessage);
+            log.warn("We have not stored a mailboxMessage because the dataService is not present. mailboxMessage={}", mailboxMessage);
             return new Result(State.FAILED).setErrorMsg("We cannot stored a mailboxMessage because the dataService is not present.");
         }
 

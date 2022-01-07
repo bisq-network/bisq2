@@ -78,7 +78,7 @@ public class NetworkInfoView extends View<ScrollPane, NetworkInfoModel, NetworkI
             tabPane.getSelectionModel().select(tabOptional.orElse(null));
             tabPane.requestFocus();
         };
-
+        
         bisqGridPane.startSection(Res.network.get("addData.title"));
         TextField dataContentTextField = bisqGridPane.addTextField(Res.network.get("addData.content"), "Test data");
         TextField idTextField = bisqGridPane.addTextField(Res.network.get("addData.id"), UUID.randomUUID().toString().substring(0, 8));
@@ -192,10 +192,11 @@ public class NetworkInfoView extends View<ScrollPane, NetworkInfoModel, NetworkI
 
         dataTableView.getColumns().add(new BisqTableColumn.Builder<DataListItem>()
                 .title(Res.network.get("table.data.header.content"))
-                .minWidth(220)
+                .minWidth(320)
                 .valueSupplier(DataListItem::getContent)
                 .build());
         dataTableView.getColumns().add(new BisqTableColumn.Builder<DataListItem>()
+                .minWidth(320)
                 .title(Res.network.get("table.data.header.nodeId"))
                 .valueSupplier(DataListItem::getNodeId)
                 .build());

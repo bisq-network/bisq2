@@ -56,7 +56,7 @@ public class NetworkInfoController implements Controller {
     // View events
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onTabSelected(Optional<Transport.Type> transportTypeOptional) {
+    void onTabSelected(Optional<Transport.Type> transportTypeOptional) {
         selectedTransportTypeController = transportTypeOptional.map(transportType ->
                 new TransportTypeController(serviceProvider, transportType));
         model.setSelectedTransportType(transportTypeOptional);
@@ -68,11 +68,11 @@ public class NetworkInfoController implements Controller {
         return model.sendMessage(message);
     }
 
-    public StringProperty addData(String dataText, String domainId) {
+    StringProperty addData(String dataText, String domainId) {
         return model.addData(dataText, domainId);
     }
 
-    public void onSelectNetworkId(Optional<NetworkId> networkId) {
+    void onSelectNetworkId(Optional<NetworkId> networkId) {
         model.applyNetworkId(networkId);
     }
 

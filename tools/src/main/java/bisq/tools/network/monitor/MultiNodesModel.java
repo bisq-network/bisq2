@@ -131,7 +131,7 @@ public class MultiNodesModel {
 
     public void bootstrap(Address address, Transport.Type transportType) {
         NetworkService networkService = createNetworkService(address, transportType);
-        networkService.bootstrap(address.getPort())
+        networkService.bootstrapPeerGroup(address.getPort())
                 .whenComplete((r, t) -> handler.ifPresent(handler ->
                         handler.onStateChange(address, networkService.getStateByTransportType().get(transportType))));
     }

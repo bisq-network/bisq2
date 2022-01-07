@@ -17,9 +17,9 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.services.data.DataRequest;
 
-public interface AuthenticatedDataRequest extends Message {
+public interface AuthenticatedDataRequest extends DataRequest {
     int getSequenceNumber();
 
     long getCreated();

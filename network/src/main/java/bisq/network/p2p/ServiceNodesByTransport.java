@@ -28,8 +28,6 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
-import bisq.network.p2p.services.data.filter.DataFilter;
-import bisq.network.p2p.services.data.inventory.RequestInventoryResult;
 import bisq.network.p2p.services.data.storage.Storage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
@@ -47,7 +45,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
@@ -59,7 +56,7 @@ public class ServiceNodesByTransport {
     private static final Logger log = LoggerFactory.getLogger(ServiceNodesByTransport.class);
 
     private final Map<Transport.Type, ServiceNode> map = new ConcurrentHashMap<>();
-    private final Storage storage;
+    private final Optional<Storage> storage;
     @Getter
     private final Optional<DataService> dataService;
 
@@ -71,10 +68,10 @@ public class ServiceNodesByTransport {
                                    KeyPairService keyPairService,
                                    PersistenceService persistenceService) {
         long socketTimeout = TimeUnit.MINUTES.toMillis(5);
-        storage = new Storage(persistenceService);
 
-        dataService = serviceNodeConfig.services().contains(ServiceNode.Service.DATA) ?
-                Optional.of(new DataService(storage)) : Optional.empty();
+        boolean supportDataService = serviceNodeConfig.services().contains(ServiceNode.Service.DATA);
+        storage = supportDataService ? Optional.of(new Storage(persistenceService)) : Optional.empty();
+        dataService = supportDataService ? Optional.of(new DataService(storage.orElseThrow())) : Optional.empty();
 
         supportedTransportTypes.forEach(transportType -> {
             Node.Config nodeConfig = new Node.Config(transportType,
@@ -93,8 +90,6 @@ public class ServiceNodesByTransport {
                     persistenceService,
                     seedAddresses);
             map.put(transportType, serviceNode);
-
-            dataService.ifPresent(dataService -> dataService.addService(transportType, serviceNode.getDataServicePerTransport()));
         });
     }
 
@@ -105,7 +100,7 @@ public class ServiceNodesByTransport {
 
     // We require all servers on all transports to be initialized, but do not wait for the peer group initialisation 
     // has completed
-    public CompletableFuture<Boolean> bootstrapAsync(int port, String nodeId) {
+    public CompletableFuture<Boolean> bootstrapPeerGroupAsync(int port, String nodeId) {
         return CompletableFutureUtils.allOf(map.values().stream().map(networkNode ->
                 runAsync(() -> networkNode.maybeInitializeServer(nodeId, port), NETWORK_IO_POOL)
                         .whenComplete((__, throwable) -> {
@@ -161,30 +156,18 @@ public class ServiceNodesByTransport {
         return dataService.get().addMailboxPayloadAsync(mailboxPayload, senderKeyPair, receiverPublicKey);
     }
 
-    public void requestRemoveData(Message message, Consumer<BroadcastResult> resultHandler) {
-        map.values().forEach(dataService -> {
-            dataService.requestRemoveData(message)
-                    .whenComplete((gossipResult, throwable) -> {
-                        if (gossipResult != null) {
-                            resultHandler.accept(gossipResult);
-                        } else {
-                            log.error(throwable.toString());
-                        }
-                    });
-        });
+    public void removeNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
+        if (dataService.isEmpty()) {
+            throw new IllegalStateException("DataService need to be enabled when using removeNetworkPayload");
+        }
+        dataService.get().removeNetworkPayload(networkPayload, keyPair);
     }
 
-    public void requestInventory(DataFilter dataFilter, Consumer<RequestInventoryResult> resultHandler) {
-        map.values().forEach(serviceNode -> {
-            serviceNode.requestInventory(dataFilter)
-                    .whenComplete((requestInventoryResult, throwable) -> {
-                        if (requestInventoryResult != null) {
-                            resultHandler.accept(requestInventoryResult);
-                        } else {
-                            log.error(throwable.toString());
-                        }
-                    });
-        });
+    public void requestInventory(Storage.StoreType storeType) {
+        if (dataService.isEmpty()) {
+            throw new IllegalStateException("DataService need to be enabled when using requestInventory");
+        }
+        dataService.get().requestInventory(storeType);
     }
 
     public Optional<Socks5Proxy> getSocksProxy() {
@@ -218,6 +201,7 @@ public class ServiceNodesByTransport {
     public CompletableFuture<Void> shutdown() {
         List<CompletableFuture<Void>> futures = map.values().stream().map(ServiceNode::shutdown).collect(Collectors.toList());
         futures.add(dataService.map(DataService::shutdown).orElse(CompletableFuture.completedFuture(null)));
+        storage.ifPresent(Storage::shutdown);
         return CompletableFutureUtils.allOf(futures)
                 .orTimeout(6, TimeUnit.SECONDS)
                 .thenApply(list -> {
