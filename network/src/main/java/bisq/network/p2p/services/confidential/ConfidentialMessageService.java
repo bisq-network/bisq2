@@ -102,9 +102,9 @@ public class ConfidentialMessageService implements Node.Listener {
         if (message instanceof ConfidentialMessage confidentialMessage) {
             if (confidentialMessage instanceof RelayMessage) {
                 //todo
-                // RelayMessage relayMessage = (RelayMessage) message;
+                // RelayMessage relayMessage = (RelayMessage) proto;
                 // Address targetAddress = relayMessage.getTargetAddress();
-                // send(message, targetAddress);
+                // send(proto, targetAddress);
             } else {
                 ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
                 keyPairService.findKeyPair(confidentialMessage.getKeyId()).ifPresent(receiversKeyPair -> {
@@ -151,8 +151,8 @@ public class ConfidentialMessageService implements Node.Listener {
                 ConfidentialMessage confidentialMessage = getConfidentialMessage(message, receiverPubKey, senderKeyPair);
                 return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
             } else {
-                log.warn("Sending message failed and message is not type of MailboxMessage. message={}", message);
-                return new Result(State.FAILED).setErrorMsg("Sending message failed and message is not type of MailboxMessage. Exception=" + throwable);
+                log.warn("Sending proto failed and proto is not type of MailboxMessage. proto={}", message);
+                return new Result(State.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
             }
         }
         return send(message, connection, receiverPubKey, senderKeyPair, senderNodeId);
@@ -172,8 +172,8 @@ public class ConfidentialMessageService implements Node.Listener {
             if (message instanceof MailboxMessage mailboxMessage) {
                 return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
             } else {
-                log.warn("Sending message failed and message is not type of MailboxMessage. message={}", message);
-                return new Result(State.FAILED).setErrorMsg("Sending message failed and message is not type of MailboxMessage. Exception=" + throwable);
+                log.warn("Sending proto failed and proto is not type of MailboxMessage. proto={}", message);
+                return new Result(State.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
             }
         }
     }
@@ -183,7 +183,7 @@ public class ConfidentialMessageService implements Node.Listener {
                                        PubKey receiverPubKey,
                                        KeyPair senderKeyPair) {
         if (dataService.isEmpty()) {
-            log.warn("We cannot stored a mailboxMessage because the dataService is not present. mailboxMessage={}", mailboxMessage);
+            log.warn("We have not stored a mailboxMessage because the dataService is not present. mailboxMessage={}", mailboxMessage);
             return new Result(State.FAILED).setErrorMsg("We cannot stored a mailboxMessage because the dataService is not present.");
         }
 

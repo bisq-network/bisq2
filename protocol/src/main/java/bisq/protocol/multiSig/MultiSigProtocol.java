@@ -32,17 +32,17 @@ import bisq.protocol.TwoPartyProtocol;
  * <ol>
  *   <li value="1">Maker sends tx inputs.
  *   <li value="3">Maker receives signed 2of MS tx from Taker, signs it and broadcasts it. Wait for confirmation.
- *   <li value="4">After Tx is confirmed she sends funds to Taker and sends Taker a message including her signature for
+ *   <li value="4">After Tx is confirmed she sends funds to Taker and sends Taker a proto including her signature for
  *   the payout tx.
- *   <li value="6">After Maker has received Takers message and sees the payout tx in the network she has completed.
+ *   <li value="6">After Maker has received Takers proto and sees the payout tx in the network she has completed.
  * </ol>
  * <p>
  * Taker awaits Maker commitment.
  * <ol>
  *   <li value="2">Taker receives tx inputs of Maker and creates 2of MS tx, signs it and send it back to Maker. Wait for
  *   confirmation once Maker has broadcast tx.
- *   <li value="5">After Taker has received Maker message, checks if he has received the funds and if so he signs the
- *   payout tx and broadcasts it and sends Maker a message that the payout tx is broadcast.
+ *   <li value="5">After Taker has received Maker proto, checks if he has received the funds and if so he signs the
+ *   payout tx and broadcasts it and sends Maker a proto that the payout tx is broadcast.
  * </ol>
  */
 public abstract class MultiSigProtocol extends TwoPartyProtocol implements Node.Listener {

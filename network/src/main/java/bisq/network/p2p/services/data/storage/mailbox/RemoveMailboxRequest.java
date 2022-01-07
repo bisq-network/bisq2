@@ -19,7 +19,7 @@ package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import bisq.network.p2p.services.data.storage.auth.RemoveRequest;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import lombok.EqualsAndHashCode;
@@ -34,7 +34,7 @@ import java.util.Arrays;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public class RemoveMailboxRequest extends RemoveRequest implements MailboxRequest {
+public class RemoveMailboxRequest extends RemoveAuthenticatedDataRequest implements MailboxRequest {
 
     public static RemoveMailboxRequest from(MailboxPayload mailboxPayload, KeyPair receiverKeyPair)
             throws GeneralSecurityException {

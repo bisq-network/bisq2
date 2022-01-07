@@ -18,22 +18,15 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.data.ByteArray;
-import bisq.network.p2p.services.data.filter.ProtectedDataFilter;
-import bisq.network.p2p.services.data.inventory.Inventory;
-import bisq.network.p2p.services.data.inventory.InventoryUtil;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.Result;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
-import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -43,25 +36,21 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(10);
     private static final int MAX_MAP_SIZE = 10000;
 
-    // Max size of serialized NetworkData or MailboxMessage. Used to limit response map.
-    // Depends on data types max. expected size.
-    // Does not contain metadata like signatures and keys as well not the overhead from encryption.
-    // So this number has to be fine-tuned with real data later...
-    private static final int MAX_INVENTORY_MAP_SIZE = 1_000_000;
-
     public interface Listener {
         void onAdded(MailboxPayload mailboxPayload);
 
         void onRemoved(MailboxPayload mailboxPayload);
     }
 
-    private final int maxItems;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public MailboxDataStore(PersistenceService persistenceService, MetaData metaData) {
-        super(persistenceService, metaData);
+    public MailboxDataStore(PersistenceService persistenceService, String storeName, String fileName) {
+        super(persistenceService, storeName, fileName);
+    }
 
-        maxItems = MAX_INVENTORY_MAP_SIZE / metaData.getMaxSizeInBytes();
+    @Override
+    public void applyPersisted(HashMap<ByteArray, MailboxRequest> persisted) {
+        maybePruneMap(persisted);
     }
 
     @Override
@@ -76,6 +65,9 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
         ByteArray byteArray = new ByteArray(hash);
         MailboxRequest requestFromMap;
         synchronized (map) {
+            if (map.size() > MAX_MAP_SIZE) {
+                return new Result(false).maxMapSizeReached();
+            }
             requestFromMap = map.get(byteArray);
             int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
 
@@ -121,7 +113,7 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
         MailboxRequest requestFromMap = map.get(byteArray);
         synchronized (map) {
             if (requestFromMap == null) {
-                // We don't have any entry but it might be that we would receive later an add request, so we need to keep
+                // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
                 map.put(byteArray, request);
                 persist();
@@ -164,25 +156,8 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
         return new Result(true);
     }
 
-    public Inventory getInventoryList(ProtectedDataFilter dataFilter) {
-        List<MailboxRequest> inventoryList = getInventoryList(dataFilter.getFilterMap());
-        int maxItems = getMaxItems();
-        int size = inventoryList.size();
-        if (size <= maxItems) {
-            return new Inventory(inventoryList, 0);
-        }
-
-        List<? extends AuthenticatedDataRequest> result = InventoryUtil.getSubList(inventoryList,
-                dataFilter.getOffset(),
-                dataFilter.getRange(),
-                maxItems);
-        int numDropped = size - result.size();
-        return new Inventory(result, numDropped);
-    }
-
     @Override
     public void shutdown() {
-
     }
 
     public void addListener(Listener listener) {
@@ -197,32 +172,6 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-    @VisibleForTesting
-    int getMaxItems() {
-        return maxItems;
-    }
-
-    @VisibleForTesting
-    Map<ByteArray, MailboxRequest> getMap() {
-        return map;
-    }
-
-    List<MailboxRequest> getInventoryList(Map<ByteArray, Integer> requesterMap) {
-        return new HashSet<>(map.entrySet()).stream()
-                .filter(entry -> {
-                    // Any entry we have but is not included in filter gets added
-                    if (!requesterMap.containsKey(entry.getKey())) {
-                        return true;
-                    }
-                    // If there is a match we add entry if sequence number is higher
-                    return entry.getValue().getSequenceNumber() > requesterMap.get(entry.getKey());
-                })
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
-    }
-
 
     int getSequenceNumber(byte[] hash) {
         ByteArray byteArray = new ByteArray(hash);
@@ -240,14 +189,13 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
         return getSequenceNumber(hash) < Integer.MAX_VALUE;
     }
 
-    // todo call by time interval
-    private void maybePruneMap(ConcurrentHashMap<ByteArray, MailboxRequest> current) {
+    private void maybePruneMap(HashMap<ByteArray, MailboxRequest> persisted) {
         long now = System.currentTimeMillis();
         // Remove entries older than MAX_AGE
         // Remove expired ProtectedEntry in case value is of type AddProtectedDataRequest
         // Sort by created date
         // Limit to MAX_MAP_SIZE
-        Map<ByteArray, MailboxRequest> pruned = current.entrySet().stream()
+        Map<ByteArray, MailboxRequest> pruned = persisted.entrySet().stream()
                 .filter(entry -> now - entry.getValue().getCreated() < MAX_AGE)
                 .filter(entry -> entry.getValue() instanceof RemoveMailboxRequest ||
                         !((AddMailboxRequest) entry.getValue()).getMailboxData().isExpired())

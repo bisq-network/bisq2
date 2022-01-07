@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
+import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
@@ -27,7 +28,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -37,7 +37,7 @@ import java.util.Optional;
 
 @EqualsAndHashCode
 @Slf4j
-public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Serializable {
+public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, AddDataRequest {
 
     public static AddAuthenticatedDataRequest from(AuthenticatedDataStore store, AuthenticatedPayload payload, KeyPair keyPair)
             throws GeneralSecurityException {

@@ -60,11 +60,11 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - Creates Transport based on TransportType
  * - Creates 1 Server associated with that server
  * - Creates inbound and outbound connections.
- * - Checks if a connection has been created when sending a message and creates one otherwise.
+ * - Checks if a connection has been created when sending a proto and creates one otherwise.
  * - Performs initial connection handshake for exchanging capability and performing authorization
  * - Performs authorization protocol at sending and receiving messages
  * - Notifies ConnectionListeners when a new connection has been created or closed.
- * - Notifies MessageListeners when a new message has been received.
+ * - Notifies MessageListeners when a new proto has been received.
  */
 @Slf4j
 public class Node implements Connection.Handler {

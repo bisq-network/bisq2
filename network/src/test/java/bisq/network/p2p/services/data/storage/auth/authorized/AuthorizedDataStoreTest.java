@@ -38,6 +38,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.UUID;
 
+import static bisq.network.p2p.services.data.storage.Storage.StoreType.AUTHENTICATED_DATA_STORE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -62,7 +63,9 @@ public class AuthorizedDataStoreTest {
 
         KeyPair keyPair = KeyGeneration.generateKeyPair();
         PersistenceService persistenceService = new PersistenceService(appDirPath);
-        AuthenticatedDataStore store = new AuthenticatedDataStore(persistenceService, authorizedPayload.getMetaData());
+        AuthenticatedDataStore store = new AuthenticatedDataStore(persistenceService, 
+                AUTHENTICATED_DATA_STORE.getStoreName(),
+                authorizedPayload.getMetaData().getFileName());
         store.readPersisted().join();
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authorizedPayload, keyPair);
         byte[] hash = DigestUtil.hash(authorizedPayload.serialize());
@@ -71,7 +74,7 @@ public class AuthorizedDataStoreTest {
         assertTrue(result.isSuccess());
 
         ByteArray byteArray = new ByteArray(hash);
-        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getMap().get(byteArray);
+        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getClonedMap().get(byteArray);
         AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
@@ -83,16 +86,16 @@ public class AuthorizedDataStoreTest {
         Result refreshResult = store.refresh(refreshRequest);
         assertTrue(refreshResult.isSuccess());
 
-        addRequestFromMap = (AddAuthenticatedDataRequest) store.getMap().get(byteArray);
+        addRequestFromMap = (AddAuthenticatedDataRequest) store.getClonedMap().get(byteArray);
         dataFromMap = addRequestFromMap.getAuthenticatedData();
         assertEquals(initialSeqNum + 2, dataFromMap.getSequenceNumber());
 
         //remove
-        RemoveRequest removeRequest = RemoveRequest.from(store, authorizedPayload, keyPair);
-        Result removeDataResult = store.remove(removeRequest);
+        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = RemoveAuthenticatedDataRequest.from(store, authorizedPayload, keyPair);
+        Result removeDataResult = store.remove(removeAuthenticatedDataRequest);
         assertTrue(removeDataResult.isSuccess());
 
-        RemoveRequest removeRequestFromMap = (RemoveRequest) store.getMap().get(byteArray);
-        assertEquals(initialSeqNum + 3, removeRequestFromMap.getSequenceNumber());
+        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequestFromMap = (RemoveAuthenticatedDataRequest) store.getClonedMap().get(byteArray);
+        assertEquals(initialSeqNum + 3, removeAuthenticatedDataRequestFromMap.getSequenceNumber());
     }
 }

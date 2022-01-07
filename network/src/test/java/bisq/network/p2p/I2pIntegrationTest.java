@@ -109,10 +109,10 @@ public class I2pIntegrationTest extends BaseTest {
         int numMsg = 2;
         Map<Integer, Long> tsMap = new HashMap<>();
         CountDownLatch receivedLatch = new CountDownLatch(numMsg);
-        bob.addMessageListener((message, connection) -> {
-            assertTrue(message instanceof MockMessage);
-            // assertEquals(((MockMessage) message).getMsg(), msg);
-            int key = Integer.parseInt(((MockMessage) message).getMsg());
+        bob.addMessageListener((proto, connection) -> {
+            assertTrue(proto instanceof MockMessage);
+            // assertEquals(((MockMessage) proto).getMsg(), msg);
+            int key = Integer.parseInt(((MockMessage) proto).getMsg());
             if (tsMap.containsKey(key)) {
                 log.info("Sending msg {} took {}", key, System.currentTimeMillis() - tsMap.get(key));
             }

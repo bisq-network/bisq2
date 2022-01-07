@@ -25,10 +25,11 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Parent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
 public class OverlayModel implements Model {
     @Getter
-   private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
+    private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
     public void selectView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
         this.view.set(view);

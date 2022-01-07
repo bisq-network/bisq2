@@ -17,16 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
-import bisq.network.p2p.message.Message;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 
-@EqualsAndHashCode
-@Getter
-public class InventoryResponse implements Message {
-    private final Inventory inventory;
-
-    public InventoryResponse(Inventory inventory) {
-        this.inventory = inventory;
-    }
+public record InventoryResponse(Inventory inventory, int requestNonce) implements BroadcastMessage {
 }

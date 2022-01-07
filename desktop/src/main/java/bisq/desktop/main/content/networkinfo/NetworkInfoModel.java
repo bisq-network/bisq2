@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.networkinfo;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.networkinfo.transport.TransportTypeView;
@@ -36,6 +37,7 @@ import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.Storage;
 import bisq.security.KeyPairService;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -44,6 +46,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
 import java.util.Optional;
@@ -53,6 +56,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 @Getter
 public class NetworkInfoModel implements Model {
     private final NetworkService networkService;
@@ -105,27 +109,35 @@ public class NetworkInfoModel implements Model {
                 }
             };
             dataService.addListener(dataListener);
-
-            dataListItems.addAll(dataService.getAllAuthenticatedPayload()
-                    .map(DataListItem::new)
-                    .collect(Collectors.toList()));
+            fillDataListItems(dataService);
         });
 
         //todo
         networkService.addMessageListener(new Node.Listener() {
             @Override
             public void onMessage(Message message, Connection connection, String nodeId) {
-                UIThread.run(() -> receivedMessages.set(receivedMessages.get() + "NodeId: " + nodeId + "; message: " + message.toString() + "\n"));
+                UIThread.run(() -> receivedMessages.set(receivedMessages.get() + "NodeId: " + nodeId + "; proto: " + message.toString() + "\n"));
             }
 
             @Override
             public void onConnection(Connection connection) {
+                log.error("onConnection");
+                // requestInventory();
             }
 
             @Override
             public void onDisconnect(Connection connection, CloseReason closeReason) {
             }
         });
+
+        //todo listen on bootstrap
+        UIScheduler.run(this::requestInventory).after(2000);
+    }
+
+    private void fillDataListItems(DataService dataService) {
+        dataListItems.addAll(dataService.getAllAuthenticatedPayload()
+                .map(DataListItem::new)
+                .collect(Collectors.toList()));
     }
 
     public void activate() {
@@ -140,11 +152,16 @@ public class NetworkInfoModel implements Model {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+    void requestInventory() {
+        // We get updated our data listener once we get responses
+        networkService.requestInventory(Storage.StoreType.ALL);
+    }
+
     StringProperty addData(String dataText, String domainId) {
         StringProperty resultProperty = new SimpleStringProperty("Create Servers for node ID");
         Identity identity = identityService.getOrCreateIdentity(domainId);
         String keyId = identity.keyId();
-        networkService.addDataAsync(new TextData(dataText), identity.nodeId(), keyId)
+        networkService.addData(new TextData(dataText), identity.nodeId(), keyId)
                 .whenComplete((broadCastResultFutures, throwable) -> {
                     broadCastResultFutures.forEach(broadCastResultFuture -> {
                         broadCastResultFuture.whenComplete((broadCastResult, throwable2) -> {

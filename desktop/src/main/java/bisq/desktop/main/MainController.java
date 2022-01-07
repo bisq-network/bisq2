@@ -50,4 +50,8 @@ public class MainController implements Controller {
 
         navigationController.navigateTo(NavigationTarget.NETWORK_INFO);
     }
+
+    public void onDomainInitialized() {
+        
+    }
 }

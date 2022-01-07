@@ -19,9 +19,7 @@ package bisq.network.p2p.services.data.broadcast;
 
 import bisq.common.util.CollectionUtil;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.PeerGroup;
@@ -37,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class Broadcaster implements Node.Listener {
+public class Broadcaster {
     private static final long BROADCAST_TIMEOUT = 90;
     private static final long RE_BROADCAST_DELAY_MS = 100;
 
@@ -49,38 +47,18 @@ public class Broadcaster implements Node.Listener {
         this.node = node;
         this.peerGroup = peerGroup;
 
-        node.addListener(this);
     }
 
-    @Override
-    public void onMessage(Message message, Connection connection, String nodeId) {
-        if (listeners.isEmpty()) {
-            return;
-        }
-
-        if (message instanceof BroadcastMessage broadcastMessage) {
-            listeners.forEach(listener -> listener.onMessage(broadcastMessage.message(), connection, nodeId));
-        }
-    }
-
-    @Override
-    public void onConnection(Connection connection) {
-    }
-
-    @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
-    }
-
-    public CompletableFuture<BroadcastResult> reBroadcast(Message message) {
-        return CompletableFuture.supplyAsync(() -> broadcast(message, 0.75).join(),
+    public CompletableFuture<BroadcastResult> reBroadcast(BroadcastMessage broadcastMessage) {
+        return CompletableFuture.supplyAsync(() -> broadcast(broadcastMessage, 0.75).join(),
                 CompletableFuture.delayedExecutor(RE_BROADCAST_DELAY_MS, TimeUnit.MILLISECONDS));
     }
 
-    public CompletableFuture<BroadcastResult> broadcast(Message message) {
-        return broadcast(message, 1);
+    public CompletableFuture<BroadcastResult> broadcast(BroadcastMessage broadcastMessage) {
+        return broadcast(broadcastMessage, 1);
     }
 
-    public CompletableFuture<BroadcastResult> broadcast(Message message, double distributionFactor) {
+    public CompletableFuture<BroadcastResult> broadcast(BroadcastMessage broadcastMessage, double distributionFactor) {
         long ts = System.currentTimeMillis();
         CompletableFuture<BroadcastResult> future = new CompletableFuture<BroadcastResult>()
                 .orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
@@ -88,7 +66,7 @@ public class Broadcaster implements Node.Listener {
         AtomicInteger numFaults = new AtomicInteger(0);
         long numConnections = peerGroup.getAllConnections().count();
         long numBroadcasts = Math.min(numConnections, Math.round(numConnections * distributionFactor));
-        log.debug("Broadcast message to {} out of {} peers. distributionFactor={}",
+        log.debug("Broadcast proto to {} out of {} peers. distributionFactor={}",
                 numBroadcasts, numConnections, distributionFactor);
         List<Connection> allConnections = peerGroup.getAllConnections().collect(Collectors.toList());
         Collections.shuffle(allConnections);
@@ -98,7 +76,7 @@ public class Broadcaster implements Node.Listener {
                     .forEach(connection -> {
                         log.debug("Node {} broadcast to {}", node, connection.getPeerAddress());
                         try {
-                            node.send(new BroadcastMessage(message), connection);
+                            node.send(broadcastMessage, connection);
                             numSuccess.incrementAndGet();
                         } catch (Throwable throwable) {
                             numFaults.incrementAndGet();
@@ -117,17 +95,7 @@ public class Broadcaster implements Node.Listener {
         return CollectionUtil.getRandomElement(peerGroup.getAllConnectedPeerAddresses().collect(Collectors.toSet()));
     }
 
-    public void addListener(Node.Listener listener) {
-        listeners.add(listener);
-    }
-
-    public void removeListener(Node.Listener listener) {
-        listeners.remove(listener);
-    }
-
     public void shutdown() {
         listeners.clear();
-
-        node.removeListener(this);
     }
 }

@@ -30,7 +30,7 @@ public class RelayMessage extends ConfidentialMessage {
 
     public RelayMessage(Message message, Address targetAddress) {
         super(null, null);
-        // super(message, peersPublicKey);
+        // super(proto, peersPublicKey);
         this.targetAddress = targetAddress;
     }
 }

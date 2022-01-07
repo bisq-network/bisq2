@@ -15,17 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.inventory;
+package bisq.network.p2p.services.data.storage.append;
 
-import lombok.Getter;
+import bisq.network.p2p.services.data.AddDataRequest;
+import bisq.network.p2p.services.data.DataRequest;
 
-@Getter
-public class RequestInventoryResult {
-    private final Inventory inventory;
-    private final long duration;
-
-    public RequestInventoryResult(Inventory inventory, long duration) {
-        this.inventory = inventory;
-        this.duration = duration;
-    }
+public record AddAppendOnlyDataRequest(AppendOnlyPayload payload) implements AddDataRequest, DataRequest {
 }

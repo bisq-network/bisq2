@@ -15,16 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.filter;
+package bisq.network.p2p.services.data;
 
+import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 
-public class BloomFilter implements DataFilter {
-  /*  public boolean matches(MapKey mapKey, MapValue value) {
-        return true;
-    }*/
-
-    @Override
-    public String toString() {
-        return "BloomFilter{}";
-    }
+public interface DataRequest extends BroadcastMessage {
 }

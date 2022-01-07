@@ -1632,7 +1632,7 @@ textfield */
     -fx-padding: 0.333333em 0.583em 0.333333em 0.583em; /* 4 7 4 7 */
 }
 
-/* message-list-view*/
+/* proto-list-view*/
 #message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
     -fx-background-color: -bs-background-color;
 }

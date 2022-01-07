@@ -19,5 +19,5 @@ package bisq.network.p2p.services.data.broadcast;
 
 import bisq.network.p2p.message.Message;
 
-public record BroadcastMessage(Message message) implements Message {
-}
+public interface BroadcastMessage extends Message {}
+

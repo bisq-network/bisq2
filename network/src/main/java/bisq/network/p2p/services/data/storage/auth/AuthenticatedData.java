@@ -19,14 +19,13 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.ObjectSerializer;
 import bisq.common.encoding.Hex;
+import bisq.network.p2p.message.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.io.Serializable;
-
 @Getter
 @EqualsAndHashCode
-public class AuthenticatedData implements Serializable {
+public class AuthenticatedData implements Proto {
 
     public static AuthenticatedData from(AuthenticatedData data, int sequenceNumber) {
         return new AuthenticatedData(data.getPayload(),

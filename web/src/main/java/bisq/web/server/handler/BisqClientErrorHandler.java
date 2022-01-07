@@ -16,7 +16,7 @@ public class BisqClientErrorHandler extends AbstractHandler implements ClientErr
     public void error(Context context, int statusCode) {
         String whatNotFound = context.getRequest().getPath();
         Map<String, Object> error = toMap("error", Integer.toString(statusCode));
-        error.put("message", whatNotFound + " not found");
+        error.put("proto", whatNotFound + " not found");
         context.getResponse().status(statusCode).send(toJson(error));
     }
 

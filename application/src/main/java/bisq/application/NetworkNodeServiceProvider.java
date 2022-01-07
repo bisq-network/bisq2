@@ -72,7 +72,7 @@ public class NetworkNodeServiceProvider extends ServiceProvider {
         List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
         // Assuming identityRepository depends on keyPairRepository being initialized... 
         allFutures.add(keyPairService.initialize());
-        allFutures.add(networkService.bootstrap());
+        allFutures.add(networkService.bootstrapPeerGroup());
         // Once all have successfully completed our initialize is complete as well
         return CompletableFutureUtils.allOf(allFutures)
                 .thenApply(success -> success.stream().allMatch(e -> e))

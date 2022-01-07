@@ -87,7 +87,7 @@ class ConnectionHandshake {
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             Object msg = objectInputStream.readObject();
             if (!(msg instanceof Envelope responseEnvelope)) {
-                throw new ConnectionException("Received message not type of Envelope. " + msg.getClass().getSimpleName());
+                throw new ConnectionException("Received proto not type of Envelope. " + msg.getClass().getSimpleName());
             }
             log.debug("Client received {}", msg);
             if (responseEnvelope.version() != Version.VERSION) {
@@ -129,7 +129,7 @@ class ConnectionHandshake {
             Object msg = objectInputStream.readObject();
             long ts = System.currentTimeMillis();
             if (!(msg instanceof Envelope requestEnvelope)) {
-                throw new ConnectionException("Received message not type of Envelope. Received data=" + msg.getClass().getSimpleName());
+                throw new ConnectionException("Received proto not type of Envelope. Received data=" + msg.getClass().getSimpleName());
             }
             log.debug("Server received {}", msg);
             if (requestEnvelope.version() != Version.VERSION) {

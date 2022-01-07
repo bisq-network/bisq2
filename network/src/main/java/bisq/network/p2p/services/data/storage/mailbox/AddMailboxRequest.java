@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -31,7 +32,7 @@ import java.security.PublicKey;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public class AddMailboxRequest extends AddAuthenticatedDataRequest implements MailboxRequest {
+public class AddMailboxRequest extends AddAuthenticatedDataRequest implements MailboxRequest, AddDataRequest {
 
     public static AddMailboxRequest from(MailboxDataStore store,
                                          MailboxPayload payload,

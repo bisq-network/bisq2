@@ -33,14 +33,14 @@ import java.io.Serializable;
 @EqualsAndHashCode
 @Getter
 public class ByteArray implements Serializable {
-    private final byte[] hash;
+    private final byte[] bytes;
 
-    public ByteArray(byte[] hash) {
-        this.hash = hash;
+    public ByteArray(byte[] bytes) {
+        this.bytes = bytes;
     }
 
     @Override
     public String toString() {
-        return Hex.encode(hash);
+        return Hex.encode(bytes);
     }
 }

@@ -32,9 +32,10 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
-import bisq.network.p2p.services.data.AuthenticatedNetworkIdPayload;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
+import bisq.network.p2p.services.data.storage.Storage;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedNetworkIdPayload;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
@@ -104,54 +105,36 @@ public class NetworkService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-   /* public CompletableFuture<Boolean> initialize() {
-        return initialize(NetworkUtils.findFreeSystemPort());
+    public CompletableFuture<Boolean> bootstrapPeerGroup() {
+        return bootstrapPeerGroup(NetworkUtils.findFreeSystemPort());
     }
 
-    public CompletableFuture<Boolean> initialize(int port) {
-        return serviceNodesByTransport.initializeServerAsync(port);
-    }*/
-
- /*   public CompletableFuture<Boolean> initializePeerGroup() {
-        return serviceNodesByTransport.initializePeerGroupAsync();
-        //  return supplyAsync(serviceNodesByTransport::initializePeerGroup, NetworkService.NETWORK_IO_POOL);
-    }*/
-
-    public CompletableFuture<Boolean> bootstrap() {
-        return bootstrap(NetworkUtils.findFreeSystemPort());
+    public CompletableFuture<Boolean> bootstrapPeerGroup(int port) {
+        return bootstrapPeerGroup(port, Node.DEFAULT_NODE_ID);
     }
 
-    public CompletableFuture<Boolean> bootstrap(int port) {
-        return bootstrap(port, Node.DEFAULT_NODE_ID);
+    public CompletableFuture<Boolean> bootstrapPeerGroup(String nodeId) {
+        return bootstrapPeerGroup(NetworkUtils.findFreeSystemPort(), nodeId);
     }
 
-    public CompletableFuture<Boolean> bootstrap(String nodeId) {
-        return bootstrap(NetworkUtils.findFreeSystemPort(), nodeId);
+    public CompletableFuture<Boolean> bootstrapPeerGroup(int port, String nodeId) {
+        return serviceNodesByTransport.bootstrapPeerGroupAsync(port, nodeId);
     }
 
-    public CompletableFuture<Boolean> bootstrap(int port, String nodeId) {
-        return serviceNodesByTransport.bootstrapAsync(port, nodeId);
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer() {
+        return maybeInitializeServer(NetworkUtils.findFreeSystemPort());
     }
 
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServerAsync() {
-        return maybeInitializeServerAsync(NetworkUtils.findFreeSystemPort());
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(int port) {
+        return maybeInitializeServer(port, Node.DEFAULT_NODE_ID);
     }
 
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServerAsync(int port) {
-        return maybeInitializeServerAsync(port, Node.DEFAULT_NODE_ID);
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(String nodeId) {
+        return maybeInitializeServer(NetworkUtils.findFreeSystemPort(), nodeId);
     }
 
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServerAsync(String nodeId) {
-        return maybeInitializeServerAsync(NetworkUtils.findFreeSystemPort(), nodeId);
-    }
-
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServerAsync(int port, String nodeId) {
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(int port, String nodeId) {
         return serviceNodesByTransport.maybeInitializeServerAsync(port, nodeId);
-    }
-
-    public CompletableFuture<Void> shutdown() {
-        return CompletableFutureUtils.allOf(serviceNodesByTransport.shutdown(), httpService.shutdown())
-                .thenApply(list -> null);
     }
 
 
@@ -169,12 +152,12 @@ public class NetworkService {
         return serviceNodesByTransport.confidentialSend(message, receiverNetworkId, senderKeyPair, senderNodeId);
     }
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addDataAsync(Proto data, String nodeId, String keyId) {
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addData(Proto data, String nodeId, String keyId) {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-        return CompletableFutureUtils.allOf(maybeInitializeServerAsync(nodeId).values())
+        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId).values())
                 .thenCompose(list -> {
-                    maybeInitializeServerAsync(nodeId);
+                    maybeInitializeServer(nodeId);
                     NetworkId networkId = findNetworkId(nodeId, pubKey).orElseThrow();
                     AuthenticatedNetworkIdPayload netWorkPayload = new AuthenticatedNetworkIdPayload(data, networkId);
                     return serviceNodesByTransport.addNetworkPayloadAsync(netWorkPayload, keyPair)
@@ -188,6 +171,20 @@ public class NetworkService {
 
                 });
     }
+
+    public void requestInventory(Storage.StoreType storeType) {
+        serviceNodesByTransport.requestInventory(storeType);
+    }
+
+    public CompletableFuture<Void> shutdown() {
+        return CompletableFutureUtils.allOf(serviceNodesByTransport.shutdown(), httpService.shutdown())
+                .thenApply(list -> null);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Listeners
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void addDataServiceListener(DataService.Listener listener) {
         serviceNodesByTransport.addDataServiceListener(listener);
@@ -204,6 +201,11 @@ public class NetworkService {
     public void removeMessageListener(Node.Listener listener) {
         serviceNodesByTransport.removeMessageListener(listener);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<BaseHttpClient> getHttpClient(String url, String userAgent, Transport.Type transportType) {
         return httpService.getHttpClient(url, userAgent, transportType, serviceNodesByTransport.getSocksProxy(), socks5ProxyAddress);

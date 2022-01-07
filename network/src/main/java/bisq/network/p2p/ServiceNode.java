@@ -27,10 +27,7 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.DataServicePerTransport;
-import bisq.network.p2p.services.data.broadcast.BroadcastResult;
-import bisq.network.p2p.services.data.filter.DataFilter;
-import bisq.network.p2p.services.data.inventory.RequestInventoryResult;
+import bisq.network.p2p.services.data.DataNetworkService;
 import bisq.network.p2p.services.monitor.MonitorService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
@@ -93,7 +90,7 @@ public class ServiceNode {
     @Getter
     private Optional<PeerGroupService> peerGroupService;
     @Getter
-    private Optional<DataServicePerTransport> dataServicePerTransport;
+    private Optional<DataNetworkService> dataServicePerTransport;
 
     private Optional<RelayService> relayService;
     @Getter
@@ -118,7 +115,9 @@ public class ServiceNode {
             this.peerGroupService = Optional.of(peerGroupService);
 
             if (services.contains(Service.DATA)) {
-                dataServicePerTransport = Optional.of(new DataServicePerTransport(defaultNode, peerGroupService, keyPairService));
+                dataServicePerTransport = Optional.of(dataService.orElseThrow().getDataServicePerTransport(nodeConfig.transportType(),
+                        defaultNode,
+                        peerGroupService));
             }
 
             if (services.contains(Service.RELAY)) {
@@ -180,20 +179,6 @@ public class ServiceNode {
         setState(State.PEER_GROUP_INITIALIZED);
     }
 
-    public CompletableFuture<Void> shutdown() {
-        setState(State.SHUTDOWN_STARTED);
-        return CompletableFutureUtils.allOf(nodesById.shutdown(),
-                        confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(CompletableFuture.completedFuture(null)),
-                        peerGroupService.map(PeerGroupService::shutdown).orElse(CompletableFuture.completedFuture(null)),
-                        dataServicePerTransport.map(DataServicePerTransport::shutdown).orElse(CompletableFuture.completedFuture(null)),
-                        relayService.map(RelayService::shutdown).orElse(CompletableFuture.completedFuture(null)),
-                        monitorService.map(MonitorService::shutdown).orElse(CompletableFuture.completedFuture(null)))
-                .orTimeout(4, TimeUnit.SECONDS)
-                .whenComplete((list, throwable) -> {
-                    setState(State.SHUTDOWN_COMPLETE);
-                }).thenApply(list -> null);
-    }
-
     public ConfidentialMessageService.Result confidentialSend(Message message,
                                                               Address address,
                                                               PubKey receiverPubKey,
@@ -208,15 +193,18 @@ public class ServiceNode {
                 .orElseThrow(() -> new RuntimeException("RelayService not present at relay"));
     }
 
-
-    public CompletableFuture<BroadcastResult> requestRemoveData(Message message) {
-        checkArgument(dataServicePerTransport.isPresent());
-        return dataServicePerTransport.get().requestRemoveData(message);
-    }
-
-    public CompletableFuture<RequestInventoryResult> requestInventory(DataFilter dataFilter) {
-        checkArgument(dataServicePerTransport.isPresent());
-        return dataServicePerTransport.get().requestInventory(dataFilter);
+    public CompletableFuture<Void> shutdown() {
+        setState(State.SHUTDOWN_STARTED);
+        return CompletableFutureUtils.allOf(nodesById.shutdown(),
+                        confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(CompletableFuture.completedFuture(null)),
+                        peerGroupService.map(PeerGroupService::shutdown).orElse(CompletableFuture.completedFuture(null)),
+                        dataServicePerTransport.map(DataNetworkService::shutdown).orElse(CompletableFuture.completedFuture(null)),
+                        relayService.map(RelayService::shutdown).orElse(CompletableFuture.completedFuture(null)),
+                        monitorService.map(MonitorService::shutdown).orElse(CompletableFuture.completedFuture(null)))
+                .orTimeout(4, TimeUnit.SECONDS)
+                .whenComplete((list, throwable) -> {
+                    setState(State.SHUTDOWN_COMPLETE);
+                }).thenApply(list -> null);
     }
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {

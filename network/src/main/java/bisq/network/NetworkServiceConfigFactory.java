@@ -21,6 +21,8 @@ import bisq.common.util.ConfigUtil;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.Storage;
 import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
@@ -38,8 +40,8 @@ import java.util.stream.Collectors;
 public class NetworkServiceConfigFactory {
     public static NetworkService.Config getConfig(String baseDir, Config typesafeConfig) {
         //  Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
-        Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
-        //Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
+        // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
+        Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.CLEAR);
         // Set<Transport.Type> supportedTransportTypes = Set.of(Transport.Type.TOR);
 
         ServiceNode.Config serviceNodeConfig = new ServiceNode.Config(Set.of(
@@ -73,6 +75,12 @@ public class NetworkServiceConfigFactory {
                 Transport.Type.TOR, defaultConf,
                 Transport.Type.I2P, defaultConf,
                 Transport.Type.CLEAR, clearNetConf
+        );
+
+        Map<Storage.StoreType, Set<MetaData>> metaDataSetByStoreType = Map.of(
+                Storage.StoreType.AUTHENTICATED_DATA_STORE, Set.of(new MetaData(1, "AuthenticatedNetworkIdPayloads")),
+                Storage.StoreType.MAILBOX_DATA_STORE, Set.of(new MetaData(1, "TextMessage")),
+                Storage.StoreType.APPEND_ONLY_DATA_STORE, Set.of()
         );
 
         Transport.Config transportConfig = new Transport.Config(baseDir);

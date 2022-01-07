@@ -17,7 +17,5 @@
 
 package bisq.network.p2p.services.data;
 
-import bisq.network.p2p.message.Message;
-
-public record AddDataRequest(Message message) implements Message {
+public interface AddDataRequest extends DataRequest {
 }

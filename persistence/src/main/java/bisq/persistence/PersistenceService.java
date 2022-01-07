@@ -50,19 +50,20 @@ public class PersistenceService {
 
     public CompletableFuture<Boolean> readAllPersisted() {
         return CompletableFutureUtils.allOf(clients.stream()
-                        .map(persistenceClient -> persistenceClient.readPersisted().whenComplete((optionalResult, throwable) -> {
-                            String storagePath = persistenceClient.getPersistence().getStoragePath();
-                            if (throwable == null) {
-                                if (optionalResult.isPresent()) {
-                                    log.info("Read persisted data from {}", storagePath);
-                                } else {
-                                    log.info("No persisted data at {} found", storagePath);
-                                }
-                            } else {
-                                log.error("Error at read persisted data from: {}", storagePath);
-                                throwable.printStackTrace();
-                            }
-                        })))
+                        .map(persistenceClient -> persistenceClient.readPersisted()
+                                .whenComplete((optionalResult, throwable) -> {
+                                    String storagePath = persistenceClient.getPersistence().getStoragePath();
+                                    if (throwable == null) {
+                                        if (optionalResult.isPresent()) {
+                                            log.info("Read persisted data from {}", storagePath);
+                                        } else {
+                                            log.debug("No persisted data at {} found", storagePath);
+                                        }
+                                    } else {
+                                        log.error("Error at read persisted data from: {}", storagePath);
+                                        throwable.printStackTrace();
+                                    }
+                                })))
                 .thenApply(list -> true);
     }
 }
