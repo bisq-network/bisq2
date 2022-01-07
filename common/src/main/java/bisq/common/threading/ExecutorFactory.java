@@ -70,6 +70,7 @@ public class ExecutorFactory {
                 .build();
         ExecutorService executorService = Executors.newCachedThreadPool(threadFactory);
         ((ThreadPoolExecutor) executorService).setKeepAliveTime(5, TimeUnit.SECONDS);
+        ((ThreadPoolExecutor) executorService).setMaximumPoolSize(1000);
         return executorService;
     }
 

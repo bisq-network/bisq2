@@ -48,7 +48,7 @@ public class MainController implements Controller {
                 navigationController.getView(),
                 topPanelController.getView());
 
-        navigationController.navigateTo(NavigationTarget.NETWORK_INFO);
+        navigationController.navigateTo(NavigationTarget.SETTINGS);
     }
 
     public void onDomainInitialized() {

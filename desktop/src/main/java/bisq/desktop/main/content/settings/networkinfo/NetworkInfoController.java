@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.networkinfo;
+package bisq.desktop.main.content.settings.networkinfo;
 
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.networkinfo.transport.TransportTypeController;
+import bisq.desktop.main.content.settings.networkinfo.transport.TransportTypeController;
 import bisq.network.p2p.NetworkId;
 import bisq.network.p2p.node.transport.Transport;
 import javafx.beans.property.StringProperty;
@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class NetworkInfoController implements Controller {
+    public static final String ID = "NetworkInfoController";
     private final NetworkInfoModel model;
     @Getter
     private final NetworkInfoView view;

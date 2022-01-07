@@ -78,24 +78,24 @@ public class DataServiceIntegrationTest extends DataServiceNodeBase {
         CountDownLatch latch = new CountDownLatch(1);
         dataService_1.addListener(new DataService.Listener() {
             @Override
-            public void onNetworkDataAdded(NetworkPayload networkPayload) {
+            public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
                 log.info("onNetworkDataAdded at dataService_1");
                 latch.countDown();
             }
 
             @Override
-            public void onNetworkDataRemoved(NetworkPayload networkPayload) {
+            public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
             }
         });
         dataService_2.addListener(new DataService.Listener() {
             @Override
-            public void onNetworkDataAdded(NetworkPayload networkPayload) {
+            public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
                 log.info("onNetworkDataAdded at dataService_2");
                 latch.countDown();
             }
 
             @Override
-            public void onNetworkDataRemoved(NetworkPayload networkPayload) {
+            public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
             }
         });
         List<CompletableFuture<BroadcastResult>> broadcastResultFutures = dataService_0.addNetworkPayloadAsync(payload, keyPair).get();

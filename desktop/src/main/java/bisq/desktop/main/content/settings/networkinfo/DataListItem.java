@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.networkinfo;
+package bisq.desktop.main.content.settings.networkinfo;
 
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;

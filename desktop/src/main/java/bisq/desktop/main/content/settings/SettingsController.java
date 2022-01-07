@@ -18,28 +18,58 @@
 package bisq.desktop.main.content.settings;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.NavigationTargetController;
 import bisq.desktop.main.content.ContentController;
+import bisq.desktop.main.content.settings.networkinfo.NetworkInfoController;
 import bisq.desktop.overlay.OverlayController;
 import lombok.Getter;
 
-public class SettingsController implements Controller {
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class SettingsController extends NavigationTargetController implements Controller {
     private final SettingsModel model;
+    private final NavigationTarget childNavigationTarget;
     @Getter
     private final SettingsView view;
     private final DefaultServiceProvider serviceProvider;
-    private final ContentController contentController;
-    private final OverlayController overlayController;
+
+    private Controller selectedController;
+    private final Map<NavigationTarget, Controller> controllerCache = new ConcurrentHashMap<>();
 
     public SettingsController(DefaultServiceProvider serviceProvider,
                               ContentController contentController,
-                              OverlayController overlayController) {
+                              OverlayController overlayController,
+                              NavigationTarget navigationTarget) {
+        super(contentController, overlayController);
         this.serviceProvider = serviceProvider;
         model = new SettingsModel(serviceProvider);
+        this.childNavigationTarget = navigationTarget;
         view = new SettingsView(model, this);
 
-        this.contentController = contentController;
-        this.overlayController = overlayController;
+        List<NavigationTarget> path = navigationTarget.getPath();
+        NavigationTarget child = path.size() > 1 ? path.get(1) :
+                path.size() > 0 ? navigationTarget :
+                        model.getSelectedNavigationTarget();
+        switch (child) {
+            case PREFERENCES -> {
+                //todo
+            }
+            case ABOUT -> {
+                //todo
+            }
+            case NETWORK_INFO -> {
+                selectedController = getNetworkInfoController(navigationTarget);
+                model.selectView(navigationTarget, selectedController.getView());
+            }
+        }
+    }
+
+    protected Controller getNetworkInfoController(NavigationTarget navigationTarget) {
+        return new NetworkInfoController(serviceProvider);
     }
 
 
@@ -47,4 +77,16 @@ public class SettingsController implements Controller {
     // View events
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    void onTabSelected(NavigationTarget navigationTarget) {
+        switch (navigationTarget) {
+            case PREFERENCES -> {
+            }
+            case NETWORK_INFO -> {
+                selectedController = new NetworkInfoController(serviceProvider);
+                model.selectView(navigationTarget, selectedController.getView());
+            }
+            case ABOUT -> {
+            }
+        }
+    }
 }

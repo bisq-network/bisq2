@@ -18,67 +18,50 @@
 package bisq.desktop.main.left;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.desktop.NavigationSink;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.NavigationTargetController;
 import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.content.createoffer.CreateOfferController;
 import bisq.desktop.main.content.markets.MarketsController;
-import bisq.desktop.main.content.networkinfo.NetworkInfoController;
 import bisq.desktop.main.content.offerbook.OfferbookController;
 import bisq.desktop.main.content.settings.SettingsController;
 import bisq.desktop.overlay.OverlayController;
 import lombok.Getter;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-public class NavigationController implements Controller {
+public class NavigationController extends NavigationTargetController implements Controller {
     private final DefaultServiceProvider serviceProvider;
-    private final ContentController contentController;
-    private final OverlayController overlayController;
     private final NavigationModel model;
     @Getter
     private final NavigationView view;
-    private final Map<NavigationTarget, Controller> controllerCache = new ConcurrentHashMap<>();
 
     public NavigationController(DefaultServiceProvider serviceProvider,
                                 ContentController contentController,
                                 OverlayController overlayController) {
-        this.serviceProvider = serviceProvider;
-        this.contentController = contentController;
-        this.overlayController = overlayController;
+        super(contentController, overlayController);
 
+        this.serviceProvider = serviceProvider;
         model = new NavigationModel(serviceProvider);
         view = new NavigationView(model, this);
     }
 
-    public void navigateTo(NavigationTarget navigationTarget) {
-        Controller controller = getOrCreate(navigationTarget);
-        if (navigationTarget.getSink() == NavigationSink.OVERLAY) {
-            overlayController.show(controller);
-        } else {
-            contentController.navigateTo(controller);
-        }
+    @Override
+    protected Controller getMarketsController(NavigationTarget navigationTarget) {
+        return new MarketsController(serviceProvider);
     }
 
-    private Controller getOrCreate(NavigationTarget navigationTarget) {
-        if (controllerCache.containsKey(navigationTarget)) {
-            return controllerCache.get(navigationTarget);
-        } else {
-            Controller controller = getController(navigationTarget);
-            controllerCache.put(navigationTarget, controller);
-            return controller;
-        }
+    @Override
+    protected Controller getCreateOfferController(NavigationTarget navigationTarget) {
+        return new CreateOfferController(serviceProvider);
     }
 
-    private Controller getController(NavigationTarget navigationTarget) {
-        return switch (navigationTarget) {
-            case MARKETS -> new MarketsController(serviceProvider);
-            case CREATE_OFFER -> new CreateOfferController(serviceProvider);
-            case OFFERBOOK -> new OfferbookController(serviceProvider, this, overlayController);
-            case SETTINGS -> new SettingsController(serviceProvider, contentController, overlayController);
-            case NETWORK_INFO -> new NetworkInfoController(serviceProvider);
-        };
+    @Override
+    protected Controller getOfferbookController(NavigationTarget navigationTarget) {
+        return new OfferbookController(serviceProvider, this, overlayController);
+    }
+
+    @Override
+    protected Controller getSettingsController(NavigationTarget navigationTarget) {
+        return new SettingsController(serviceProvider, contentController, overlayController, navigationTarget);
     }
 }

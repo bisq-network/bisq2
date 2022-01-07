@@ -75,8 +75,8 @@ public class MultiNodesModel {
     private final Set<Transport.Type> supportedTransportTypes;
     private final boolean bootstrapAll;
     private Optional<List<Address>> addressesToBootstrap = Optional.empty();
-    private final int numSeeds = 8;
-    private final int numNodes = 20;
+    private final int numSeeds = 2;
+    private final int numNodes = 2;
     @Getter
     private final Map<Address, NetworkService> networkServicesByAddress = new ConcurrentHashMap<>();
     private final Map<Address, KeyPairService> keyPairServicesByAddress = new ConcurrentHashMap<>();
@@ -284,12 +284,12 @@ public class MultiNodesModel {
 
         networkService.addDataServiceListener(new DataService.Listener() {
             @Override
-            public void onNetworkDataAdded(NetworkPayload networkPayload) {
+            public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
                 onNetworkDataChanged(networkService, networkPayload, transportType, true);
             }
 
             @Override
-            public void onNetworkDataRemoved(NetworkPayload networkPayload) {
+            public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
                 onNetworkDataChanged(networkService, networkPayload, transportType, false);
             }
         });

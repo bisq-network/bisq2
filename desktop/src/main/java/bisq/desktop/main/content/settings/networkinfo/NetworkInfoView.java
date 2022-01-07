@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.networkinfo;
+package bisq.desktop.main.content.settings.networkinfo;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.threading.UIThread;
@@ -24,7 +24,7 @@ import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.main.content.networkinfo.transport.TransportTypeView;
+import bisq.desktop.main.content.settings.networkinfo.transport.TransportTypeView;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.transport.Transport;
 import com.jfoenix.controls.JFXTabPane;
@@ -34,10 +34,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 public class NetworkInfoView extends View<ScrollPane, NetworkInfoModel, NetworkInfoController> {
@@ -188,8 +185,9 @@ public class NetworkInfoView extends View<ScrollPane, NetworkInfoModel, NetworkI
                 .comparator(DataListItem::compareDate)
                 .build();
         dataTableView.getColumns().add(dateColumn);
+        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         dataTableView.getSortOrder().add(dateColumn);
-
+      
         dataTableView.getColumns().add(new BisqTableColumn.Builder<DataListItem>()
                 .title(Res.network.get("table.data.header.content"))
                 .minWidth(320)

@@ -60,9 +60,9 @@ public class DataService implements Node.Listener {
 
 
     public interface Listener {
-        void onNetworkDataAdded(NetworkPayload networkPayload);
+        void onNetworkPayloadAdded(NetworkPayload networkPayload);
 
-        void onNetworkDataRemoved(NetworkPayload networkPayload);
+        void onNetworkPayloadRemoved(NetworkPayload networkPayload);
     }
 
     @Getter
@@ -128,6 +128,7 @@ public class DataService implements Node.Listener {
                             AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
                             Result result = store.add(addRequest);
                             if (result.isSuccess()) {
+                                listeners.forEach(listener -> listener.onNetworkPayloadAdded(networkPayload));
                                 return dataNetworkServices.values().stream()
                                         .map(service -> service.broadcast(addRequest))
                                         .collect(Collectors.toList());
@@ -145,6 +146,7 @@ public class DataService implements Node.Listener {
                         AddAppendOnlyDataRequest addAppendOnlyDataRequest = new AddAppendOnlyDataRequest(appendOnlyPayload);
                         Result result = store.add(addAppendOnlyDataRequest);
                         if (result.isSuccess()) {
+                            listeners.forEach(listener -> listener.onNetworkPayloadAdded(networkPayload));
                             return dataNetworkServices.values().stream()
                                     .map(service -> service.broadcast(new AddAppendOnlyDataRequest(appendOnlyPayload)))
                                     .collect(Collectors.toList());
@@ -231,7 +233,7 @@ public class DataService implements Node.Listener {
                         // We get called on dispatcher thread with onMessage, and we don't switch thread in 
                         // async calls (todo check if in all cases true)
                         log.error("processAddDataRequest");
-                        listeners.forEach(listener -> listener.onNetworkDataAdded(networkData));
+                        listeners.forEach(listener -> listener.onNetworkPayloadAdded(networkData));
                         // runAsync(() -> listeners.forEach(listener -> listener.onNetworkDataAdded(networkData)), NetworkService.DISPATCHER);
                         if (allowReBroadcast) {
                             dataNetworkServices.values().forEach(e -> e.reBroadcast(addDataRequest));

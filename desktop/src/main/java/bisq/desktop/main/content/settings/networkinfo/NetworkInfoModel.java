@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.networkinfo;
+package bisq.desktop.main.content.settings.networkinfo;
 
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.networkinfo.transport.TransportTypeView;
+import bisq.desktop.main.content.settings.networkinfo.transport.TransportTypeView;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
@@ -99,12 +99,12 @@ public class NetworkInfoModel implements Model {
         dataService.ifPresent(dataService -> {
             dataListener = new DataService.Listener() {
                 @Override
-                public void onNetworkDataAdded(NetworkPayload networkPayload) {
+                public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
                     UIThread.run(() -> dataListItems.add(new DataListItem(networkPayload)));
                 }
 
                 @Override
-                public void onNetworkDataRemoved(NetworkPayload networkPayload) {
+                public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
                     UIThread.run(() -> dataListItems.remove(new DataListItem(networkPayload)));
                 }
             };

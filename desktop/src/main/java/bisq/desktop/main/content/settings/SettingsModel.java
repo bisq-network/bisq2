@@ -18,18 +18,26 @@
 package bisq.desktop.main.content.settings;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.View;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.Parent;
+import lombok.Getter;
 
 // Handled jfx only concerns, others which can be re-used by other frontends are in OfferbookEntity
 public class SettingsModel implements Model {
 
     private final DefaultServiceProvider serviceProvider;
+    @Getter
+    private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
+    @Getter
+    private NavigationTarget selectedNavigationTarget = NavigationTarget.NETWORK_INFO;
 
     public SettingsModel(DefaultServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
-    }
-
-    public void initialize() {
     }
 
     public void activate() {
@@ -38,6 +46,10 @@ public class SettingsModel implements Model {
     public void deactivate() {
     }
 
+    public void selectView(NavigationTarget navigationTarget, View<? extends Parent, ? extends Model, ? extends Controller> view) {
+        this.selectedNavigationTarget = navigationTarget;
+        this.view.set(view);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
