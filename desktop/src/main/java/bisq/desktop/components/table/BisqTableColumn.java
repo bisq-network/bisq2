@@ -68,7 +68,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             tableColumn.value = value;
             tableColumn.valueSupplier = valueSupplier;
             tableColumn.valuePropertySupplier = valuePropertySupplier;
-            tableColumn.comparator = comparator;
+            comparator.ifPresent(tableColumn::applyComparator);
             return tableColumn;
         }
 
@@ -114,6 +114,11 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         }
     }
 
+
+    public void applyComparator(Comparator<S> comparator) {
+        setSortable(true);
+        setComparator(comparator);
+    }
 
     public BisqTableColumn() {
         super();
@@ -162,10 +167,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                         };
                     }
                 });
-        comparator.ifPresent(comparator -> {
-            setSortable(true);
-            setComparator(comparator);
-        });
     }
 
     public void applyTitle(String title) {

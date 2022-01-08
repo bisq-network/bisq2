@@ -26,12 +26,13 @@ import java.util.ResourceBundle;
 
 @Slf4j
 public class Res {
-    public static Res common, network;
+    public static Res common, network, offerbook;
     private final String resourceName;
 
     public static void initialize(Locale locale) {
         common = new Res(locale, "default");
         network = new Res(locale, "network");
+        offerbook = new Res(locale, "offerbook");
     }
 
     private final ResourceBundle resourceBundle;

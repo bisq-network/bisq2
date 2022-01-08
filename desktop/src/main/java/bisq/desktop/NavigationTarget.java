@@ -19,20 +19,53 @@ package bisq.desktop;
 
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkArgument;
+
 public enum NavigationTarget {
     MARKETS,
+    SOCIAL,
+    TRADE_INTENT(SOCIAL),
+    HANGOUT(SOCIAL),
     OFFERBOOK,
-    CREATE_OFFER(NavigationSink.OVERLAY),
+    PORTFOLIO,
+    WALLET,
+    CREATE_OFFER(StageType.OVERLAY),
     SETTINGS,
-    NETWORK_INFO;
+    PREFERENCES(SETTINGS),
+    ABOUT(SETTINGS),
+    NETWORK_INFO(SETTINGS),
+    CLEAR_NET(SETTINGS, NETWORK_INFO),
+    TOR(SETTINGS, NETWORK_INFO),
+    I2P(SETTINGS, NETWORK_INFO);
+
     @Getter
-    private final NavigationSink sink;
+    private final StageType sink;
+    @Getter
+    private final List<NavigationTarget> path = new ArrayList<>();
 
     NavigationTarget() {
-        this.sink = NavigationSink.CONTENT;
+        this(StageType.PRIMARY);
     }
 
-    NavigationTarget(NavigationSink sink) {
+    NavigationTarget(StageType sink) {
+        this(sink, new NavigationTarget[]{});
+    }
+
+    NavigationTarget(NavigationTarget... path) {
+        this(StageType.PRIMARY, path);
+    }
+
+    NavigationTarget(StageType sink, NavigationTarget... path) {
         this.sink = sink;
+        this.path.addAll(List.of(path));
+
+        if (!this.path.isEmpty()) {
+            checkArgument(this.path.get(0).getPath().isEmpty(),
+                    "First element in path must point to a root NavigationTarget. " +
+                            "NavigationTarget=" + this);
+        }
     }
 }

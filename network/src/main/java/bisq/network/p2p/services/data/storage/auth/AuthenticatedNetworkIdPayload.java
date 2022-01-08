@@ -39,7 +39,7 @@ public class AuthenticatedNetworkIdPayload implements AuthenticatedPayload {
         this.networkId = networkId;
         // 463 is overhead of sig/pubkeys,...
         // 582 is pubkey+sig+hash
-        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, data.getClass().getSimpleName());
     }
 
     @Override

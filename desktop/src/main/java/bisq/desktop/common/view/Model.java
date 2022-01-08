@@ -18,9 +18,9 @@
 package bisq.desktop.common.view;
 
 public interface Model {
-    default void activate() {
+    default void onViewAttached() {
     }
 
-    default void deactivate() {
+    default void onViewDetached() {
     }
 }

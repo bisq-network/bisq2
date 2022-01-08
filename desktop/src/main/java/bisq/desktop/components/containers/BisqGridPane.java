@@ -37,7 +37,6 @@ public class BisqGridPane extends GridPane {
     public BisqGridPane() {
         setVgap(5);
         setHgap(5);
-        setPadding(Layout.INSETS);
     }
 
     public BisqLabel startSection(String text) {

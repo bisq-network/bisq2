@@ -22,9 +22,9 @@ import javafx.scene.Parent;
 public interface Controller {
     View<? extends Parent, ? extends Model, ? extends Controller> getView();
 
-    default void activate() {
+    default void onViewAttached() {
     }
 
-    default void deactivate() {
+    default void onViewDetached() {
     }
 }

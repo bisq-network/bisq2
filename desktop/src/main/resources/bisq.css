@@ -1,32 +1,23 @@
-/*
-Taken from Bisq. We should have it more modular and cleaned up
-*/
-
 @font-face {
     src: url("/fonts/IBMPlexSans-Regular.ttf");
 }
-
 @font-face {
     src: url("/fonts/IBMPlexSans-Bold.ttf");
 }
-
 @font-face {
     src: url("/fonts/IBMPlexSans-Medium.ttf");
 }
-
 @font-face {
     src: url("/fonts/IBMPlexSans-Light.ttf");
 }
-
 @font-face {
     src: url("/fonts/IBMPlexMono-Regular.ttf");
 }
-
 .root {
     -fx-font-size: 13;
 }
 
-.root:dir(ltr) {
+.root:dir(ltr){
     -fx-font-family: "IBM Plex Sans";
 }
 
@@ -184,6 +175,14 @@ Taken from Bisq. We should have it more modular and cleaned up
     -fx-padding: 0 10 0 10;
 }
 
+.tiny-button,
+.action-button.tiny-button {
+    -fx-font-size: 0.769em;
+    -fx-pref-height: 20;
+    -fx-padding: 3 8 3 8;
+    -fx-border-radius: 5;
+}
+
 .text-button {
     -fx-background-color: transparent;
     -fx-underline: true;
@@ -251,15 +250,12 @@ Taken from Bisq. We should have it more modular and cleaned up
 .list-view .list-cell {
     -fx-background-color: -bs-background-color;
 }
-
 .list-view .list-cell:odd {
     -fx-background-color: derive(-bs-background-color, -5%);
 }
-
 .list-view .list-cell:even {
     -fx-background-color: derive(-bs-background-color, 5%);
 }
-
 .list-view .list-cell:hover,
 .list-view .list-cell:selected,
 .table-view .table-cell:hover,
@@ -281,7 +277,6 @@ Taken from Bisq. We should have it more modular and cleaned up
 tree-table-view:focused {
     -fx-background-insets: 0;
 }
-
 .list-view:focused {
     -fx-background-color: -bs-color-primary;
     -fx-background-insets: 0;
@@ -438,7 +433,6 @@ tree-table-view:focused {
     -fx-padding: 2;
 }
 
-/*
 .jfx-badge .badge-pane {
     -fx-background-color: -bs-red;
     -fx-background-radius: 15;
@@ -464,7 +458,7 @@ tree-table-view:focused {
 
 .jfx-badge {
     -fx-padding: -3 0 0 0;
-}*/
+}
 
 .jfx-toggle-button,
 .jfx-toggle-button:armed,
@@ -623,6 +617,11 @@ tree-table-view:focused {
     -fx-font-size: 13;
 }
 
+.bold-text,
+.bold-text .text {
+    -fx-font-weight: bold;
+}
+
 /* Splash */
 #splash {
     -fx-background-color: -bs-background-color;
@@ -662,7 +661,7 @@ tree-table-view:focused {
 }
 
 .top-navigation .separator:vertical .line {
-    -fx-border-color: transparent transparent transparent -bs-rd-nav-border-color;
+    -fx-border-color: transparent transparent transparent transparent;
     -fx-border-width: 1;
     -fx-border-insets: 0 0 0 1;
 }
@@ -698,8 +697,6 @@ tree-table-view:focused {
     -fx-pref-height: 0px;
 }
 
-/*
-
 .jfx-badge > .nav-button {
     -fx-translate-y: 1;
 }
@@ -729,7 +726,6 @@ tree-table-view:focused {
 .nav-button:selected .text {
     -fx-fill: -bs-rd-nav-selected;
 }
-*/
 
 .nav-balance-display {
     -fx-alignment: center-left;
@@ -938,30 +934,25 @@ textfield */
  ******************************************************************************/
 .table-view .table-row-cell:even .table-cell {
     -fx-background-color: derive(-bs-background-color, 5%);
-    -fx-border-color: derive(-bs-background-color, 5%);
+    -fx-border-color: derive(-bs-background-color,5%);
 }
-
 .table-view .table-row-cell:odd .table-cell {
-    -fx-background-color: derive(-bs-background-color, -5%);
-    -fx-border-color: derive(-bs-background-color, -5%);
+    -fx-background-color: derive(-bs-background-color,-5%);
+    -fx-border-color: derive(-bs-background-color,-5%);
 }
-
 .table-view .table-row-cell:hover .table-cell,
 .table-view .table-row-cell:selected .table-cell {
     -fx-background: -fx-accent;
     -fx-background-color: -fx-selection-bar;
     -fx-border-color: -fx-selection-bar;
 }
-
 .table-row-cell {
     -fx-border-color: -bs-background-color;
 }
-
 .table-row-cell:empty, .table-row-cell:empty:even, .table-row-cell:empty:odd {
     -fx-background-color: -bs-background-color;
     -fx-min-height: 36;
 }
-
 .offer-table .table-row-cell {
     -fx-background: -fx-accent;
     -fx-background-color: -bs-color-gray-6;
@@ -1632,7 +1623,7 @@ textfield */
     -fx-padding: 0.333333em 0.583em 0.333333em 0.583em; /* 4 7 4 7 */
 }
 
-/* proto-list-view*/
+/* message-list-view*/
 #message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
     -fx-background-color: -bs-background-color;
 }
@@ -1728,9 +1719,9 @@ textfield */
     -fx-font-size: 0.880em;
 }
 
-#price-chart .axis-tick-mark-text-node,
+#price-chart  .axis-tick-mark-text-node,
 #volume-chart .axis-tick-mark-text-node,
-#charts-dao .axis-tick-mark-text-node {
+#charts-dao   .axis-tick-mark-text-node {
     -fx-text-alignment: center;
 }
 
@@ -1755,74 +1746,39 @@ textfield */
 }
 
 /* The .chart-line-symbol rules change the color of the legend symbol */
-#charts-dao .default-color0.chart-series-line {
-    -fx-stroke: -bs-chart-dao-line1;
-}
+#charts-dao .default-color0.chart-series-line { -fx-stroke: -bs-chart-dao-line1; }
+#charts-dao .default-color0.chart-line-symbol { -fx-background-color: -bs-chart-dao-line1, -bs-chart-dao-line1; }
 
-#charts-dao .default-color0.chart-line-symbol {
-    -fx-background-color: -bs-chart-dao-line1, -bs-chart-dao-line1;
-}
+#charts-dao .default-color1.chart-series-line { -fx-stroke: -bs-chart-dao-line2; }
+#charts-dao .default-color1.chart-line-symbol { -fx-background-color: -bs-chart-dao-line2, -bs-chart-dao-line2; }
 
-#charts-dao .default-color1.chart-series-line {
-    -fx-stroke: -bs-chart-dao-line2;
-}
+#charts-dao .default-color2.chart-series-line { -fx-stroke: -bs-chart-dao-line3; }
+#charts-dao .default-color2.chart-line-symbol { -fx-background-color: -bs-chart-dao-line3, -bs-chart-dao-line3; }
 
-#charts-dao .default-color1.chart-line-symbol {
-    -fx-background-color: -bs-chart-dao-line2, -bs-chart-dao-line2;
-}
+#charts-dao .default-color3.chart-series-line { -fx-stroke: -bs-chart-dao-line4; }
+#charts-dao .default-color3.chart-line-symbol { -fx-background-color: -bs-chart-dao-line4, -bs-chart-dao-line4; }
 
-#charts-dao .default-color2.chart-series-line {
-    -fx-stroke: -bs-chart-dao-line3;
-}
+#charts-dao .default-color4.chart-series-line { -fx-stroke: -bs-chart-dao-line5; }
+#charts-dao .default-color4.chart-line-symbol { -fx-background-color: -bs-chart-dao-line5, -bs-chart-dao-line5; }
 
-#charts-dao .default-color2.chart-line-symbol {
-    -fx-background-color: -bs-chart-dao-line3, -bs-chart-dao-line3;
-}
-
-#charts-dao .default-color3.chart-series-line {
-    -fx-stroke: -bs-chart-dao-line4;
-}
-
-#charts-dao .default-color3.chart-line-symbol {
-    -fx-background-color: -bs-chart-dao-line4, -bs-chart-dao-line4;
-}
-
-#charts-dao .default-color4.chart-series-line {
-    -fx-stroke: -bs-chart-dao-line5;
-}
-
-#charts-dao .default-color4.chart-line-symbol {
-    -fx-background-color: -bs-chart-dao-line5, -bs-chart-dao-line5;
-}
-
-#charts-dao .default-color5.chart-series-line {
-    -fx-stroke: -bs-chart-dao-line6;
-}
-
-#charts-dao .default-color5.chart-line-symbol {
-    -fx-background-color: -bs-chart-dao-line6, -bs-chart-dao-line6;
-}
+#charts-dao .default-color5.chart-series-line { -fx-stroke: -bs-chart-dao-line6; }
+#charts-dao .default-color5.chart-line-symbol { -fx-background-color: -bs-chart-dao-line6, -bs-chart-dao-line6; }
 
 #charts-legend-toggle0 {
     -jfx-toggle-color: -bs-chart-dao-line1
 }
-
 #charts-legend-toggle1 {
     -jfx-toggle-color: -bs-chart-dao-line2;
 }
-
 #charts-legend-toggle2 {
     -jfx-toggle-color: -bs-chart-dao-line3;
 }
-
 #charts-legend-toggle3 {
     -jfx-toggle-color: -bs-chart-dao-line4;
 }
-
 #charts-legend-toggle4 {
     -jfx-toggle-color: -bs-chart-dao-line5;
 }
-
 #charts-legend-toggle5 {
     -jfx-toggle-color: -bs-chart-dao-line6;
 }
@@ -1838,7 +1794,6 @@ textfield */
 #charts .default-color1.chart-series-area-fill, #charts-dao .default-color0.chart-series-area-fill {
     -fx-fill: -bs-buy-transparent;
 }
-
 .chart-vertical-grid-lines {
     -fx-stroke: transparent;
 }
@@ -1972,6 +1927,21 @@ textfield */
     -fx-font-size: 0.846em;
     -fx-background-insets: 44;
     -fx-effect: dropshadow(gaussian, -bs-text-color-transparent-dark, 44, 0, -1, 3);
+}
+
+.account-status-title {
+    -fx-font-size: 0.769em;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.account-status-inactive-info-item {
+    -fx-text-fill: -bs-color-gray-dim;
+    -fx-fill: -bs-color-gray-dim;
+}
+
+.account-status-active-info-item {
+    -fx-text-fill: -fx-accent;
+    -fx-fill: -fx-accent;
 }
 
 #price-feed-combo {
@@ -2135,6 +2105,11 @@ textfield */
     -fx-text-fill: -bs-color-green-3;
 }
 
+.dao-tx-type-bsq-swap-icon,
+.dao-tx-type-bsq-swap-icon:hover {
+    -fx-text-fill: -bs-color-blue-4;
+}
+
 .dao-accepted-icon {
     -fx-text-fill: -bs-color-primary;
 }
@@ -2257,7 +2232,6 @@ textfield */
     -fx-border-width: 1;
     -fx-border-color: -bs-rd-separator-dark;
 }
-
 /********************************************************************************************************************
  *                                                                                                                  *
  * Notifications                                                                                                    *
