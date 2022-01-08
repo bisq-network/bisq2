@@ -40,7 +40,7 @@ public class TradeIntentController implements Controller {
     public void onViewDetached() {
     }
 
-    StringProperty addData(String dataText, String domainId) {
-        return model.addData(dataText, domainId);
+    StringProperty addData(String ask, String bid) {
+        return model.addData(ask, bid);
     }
 }

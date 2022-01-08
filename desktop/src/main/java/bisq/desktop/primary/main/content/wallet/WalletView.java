@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.portfolio;
+package bisq.desktop.primary.main.content.wallet;
 
 import bisq.desktop.common.view.View;
 import javafx.geometry.Insets;
@@ -24,11 +24,11 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PortfolioView extends View<VBox, PortfolioModel, PortfolioController> {
+public class WalletView extends View<VBox, WalletModel, WalletController> {
 
-    public PortfolioView(PortfolioModel model, PortfolioController controller) {
+    public WalletView(WalletModel model, WalletController controller) {
         super(new VBox(), model, controller);
-        root.setPadding(new Insets(20, 20, 20, 0));
+        root.setPadding(new Insets(20,20,20,0));
         root.getChildren().add(new Label(getClass().getSimpleName()));
     }
 

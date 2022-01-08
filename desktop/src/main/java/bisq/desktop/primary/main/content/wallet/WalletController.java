@@ -15,13 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.funds;
+package bisq.desktop.primary.main.content.wallet;
 
-import bisq.desktop.primary.main.content.Dummy;
+import bisq.application.DefaultServiceProvider;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
 
-public class FundsView extends Dummy.DummyView {
+public class WalletController implements Controller {
+    private final WalletModel model;
+    @Getter
+    private final WalletView view;
+    private final DefaultServiceProvider serviceProvider;
 
-    public FundsView() {
-        super("FundsView");
+    public WalletController(DefaultServiceProvider serviceProvider) {
+        this.serviceProvider = serviceProvider;
+        model = new WalletModel(serviceProvider);
+        view = new WalletView(model, this);
+    }
+
+    @Override
+    public void onViewAttached() {
+    }
+
+    @Override
+    public void onViewDetached() {
     }
 }

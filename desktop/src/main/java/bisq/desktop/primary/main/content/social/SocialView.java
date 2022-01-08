@@ -31,9 +31,9 @@ public class SocialView extends TabView<JFXTabPane, SocialModel, SocialControlle
 
     @Override
     protected void createAndAddTabs() {
-        Tab hangoutTab = createTab(Res.common.get("social.hangout"), NavigationTarget.HANGOUT);
         Tab tradeIntentTab = createTab(Res.common.get("social.tradeIntent"), NavigationTarget.TRADE_INTENT);
-        root.getTabs().setAll(hangoutTab, tradeIntentTab);
+        Tab hangoutTab = createTab(Res.common.get("social.hangout"), NavigationTarget.HANGOUT);
+        root.getTabs().setAll(tradeIntentTab, hangoutTab);
     }
 
     @Override

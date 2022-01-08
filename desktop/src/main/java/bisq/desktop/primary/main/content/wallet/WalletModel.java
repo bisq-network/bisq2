@@ -15,29 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.portfolio;
+package bisq.desktop.primary.main.content.wallet;
 
-import bisq.desktop.common.view.View;
-import javafx.geometry.Insets;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
+import bisq.application.DefaultServiceProvider;
+import bisq.desktop.common.view.Model;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PortfolioView extends View<VBox, PortfolioModel, PortfolioController> {
+@Getter
+public class WalletModel implements Model {
 
-    public PortfolioView(PortfolioModel model, PortfolioController controller) {
-        super(new VBox(), model, controller);
-        root.setPadding(new Insets(20, 20, 20, 0));
-        root.getChildren().add(new Label(getClass().getSimpleName()));
+    public WalletModel(DefaultServiceProvider serviceProvider) {
     }
 
-    @Override
     public void onViewAttached() {
     }
 
-    @Override
-    protected void onViewDetached() {
+    public void onViewDetached() {
     }
-
 }

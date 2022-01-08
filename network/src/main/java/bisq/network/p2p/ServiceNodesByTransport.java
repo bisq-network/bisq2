@@ -170,6 +170,13 @@ public class ServiceNodesByTransport {
         dataService.get().requestInventory(storeType);
     }
 
+    public void requestInventory(String storeName) {
+        if (dataService.isEmpty()) {
+            throw new IllegalStateException("DataService need to be enabled when using requestInventory");
+        }
+        dataService.get().requestInventory(storeName);
+    }
+   
     public Optional<Socks5Proxy> getSocksProxy() {
         return findServiceNode(Transport.Type.TOR)
                 .flatMap(serviceNode -> {

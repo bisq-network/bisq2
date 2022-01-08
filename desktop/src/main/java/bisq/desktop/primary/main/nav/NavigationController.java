@@ -29,6 +29,7 @@ import bisq.desktop.primary.main.content.offerbook.OfferbookController;
 import bisq.desktop.primary.main.content.portfolio.PortfolioController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
 import bisq.desktop.primary.main.content.social.SocialController;
+import bisq.desktop.primary.main.content.wallet.WalletController;
 import lombok.Getter;
 
 public class NavigationController extends NavigationTargetController implements Controller {
@@ -65,7 +66,7 @@ public class NavigationController extends NavigationTargetController implements 
     }
 
     @Override
-    protected Controller getController(NavigationTarget localTarget,NavigationTarget navigationTarget) {
+    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget) {
         switch (localTarget) {
             case MARKETS -> {
                 return new MarketsController(serviceProvider);
@@ -78,6 +79,9 @@ public class NavigationController extends NavigationTargetController implements 
             }
             case PORTFOLIO -> {
                 return new PortfolioController(serviceProvider);
+            }
+            case WALLET -> {
+                return new WalletController(serviceProvider);
             }
             case SETTINGS -> {
                 return new SettingsController(serviceProvider, contentController, overlayController, navigationTarget);

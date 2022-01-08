@@ -20,7 +20,6 @@ package bisq.desktop.primary.main.content.social.tradeintent;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.network.p2p.NetworkId;
-import bisq.network.p2p.message.TextData;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedNetworkIdPayload;
 import bisq.presentation.formatters.DateFormatter;
@@ -36,31 +35,30 @@ import java.util.Optional;
 @Getter
 class TradeIntentListItem implements TableItem {
     private final NetworkPayload networkPayload;
-    private final String received;
-    private final String content;
-    private final String nodeId;
+    private final String dateString;
+    private final String bid;
+    private final String ask;
     private final String ttl;
     private final Date date;
     private final Optional<NetworkId> networkId;
 
     TradeIntentListItem(NetworkPayload networkPayload) {
         this.networkPayload = networkPayload;
-        date = new Date();
-        this.received = DateFormatter.formatDateTime(date);
-        if (networkPayload instanceof AuthenticatedNetworkIdPayload authenticatedNetworkIdPayload) {
-            networkId = Optional.of(authenticatedNetworkIdPayload.getNetworkId());
-            nodeId = networkId.get().getNodeId();
-            ttl = TimeFormatter.formatTime(authenticatedNetworkIdPayload.getMetaData().getTtl());
-            if (authenticatedNetworkIdPayload.getData() instanceof TextData data) {
-                content = data.text();
-            } else {
-                content = networkPayload.toString();
-            }
+        if (networkPayload instanceof AuthenticatedNetworkIdPayload payload &&
+                payload.getData() instanceof TradeIntent tradeIntent) {
+            networkId = Optional.of(payload.getNetworkId());
+            ttl = TimeFormatter.formatTime(payload.getMetaData().getTtl());
+            ask = tradeIntent.ask();
+            bid = tradeIntent.bid();
+            date = new Date(tradeIntent.date());
+            dateString = DateFormatter.formatDateTime(date);
         } else {
-            nodeId = Res.common.get("na");
+            ask = Res.common.get("na");
             ttl = Res.common.get("na");
             networkId = Optional.empty();
-            content = networkPayload.toString();
+            bid = networkPayload.toString();
+            dateString = Res.common.get("na");
+            date = new Date(0);
         }
     }
 

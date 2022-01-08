@@ -24,10 +24,8 @@ import bisq.desktop.common.view.Model;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.TextData;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
-import bisq.network.p2p.services.data.storage.Storage;
 import bisq.security.KeyPairService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -38,6 +36,7 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -79,7 +78,7 @@ public class TradeIntentModel implements Model {
     }
 
     private void fillDataListItems(DataService dataService) {
-        tradeIntentListItems.addAll(dataService.getAllAuthenticatedPayload()
+        tradeIntentListItems.addAll(dataService.getNetworkPayloads("TradeIntent")
                 .map(TradeIntentListItem::new)
                 .collect(Collectors.toList()));
     }
@@ -98,14 +97,14 @@ public class TradeIntentModel implements Model {
 
     void requestInventory() {
         // We get updated our data listener once we get responses
-        networkService.requestInventory(Storage.StoreType.ALL);
+        networkService.requestInventory("TradeIntent");
     }
 
-    StringProperty addData(String dataText, String domainId) {
+    StringProperty addData(String ask, String bid) {
         StringProperty resultProperty = new SimpleStringProperty("Create Servers for node ID");
-        Identity identity = identityService.getOrCreateIdentity(domainId);
+        Identity identity = identityService.getOrCreateIdentity("tradeIntent");
         String keyId = identity.keyId();
-        networkService.addData(new TextData(dataText), identity.nodeId(), keyId)
+        networkService.addData(new TradeIntent(ask, bid, new Date().getTime()), identity.nodeId(), keyId)
                 .whenComplete((broadCastResultFutures, throwable) -> {
                     broadCastResultFutures.forEach(broadCastResultFuture -> {
                         broadCastResultFuture.whenComplete((broadCastResult, throwable2) -> {

@@ -68,10 +68,10 @@ public class NetworkInfoView extends TabView<JFXTabPane, NetworkInfoModel, Netwo
             root.requestFocus();
         };
 
-        bisqGridPane.startSection(Res.network.get("addData.title"));
-        TextField dataContentTextField = bisqGridPane.addTextField(Res.network.get("addData.content"), "Test data");
-        TextField idTextField = bisqGridPane.addTextField(Res.network.get("addData.id"), UUID.randomUUID().toString().substring(0, 8));
-        Pair<Button, Label> addDataButtonPair = bisqGridPane.addButton(Res.network.get("addData.add"));
+        bisqGridPane.startSection(Res.network.get("tradeIntent.create.title"));
+        TextField dataContentTextField = bisqGridPane.addTextField(Res.network.get("tradeIntent.create.ask"), "Test data");
+        TextField idTextField = bisqGridPane.addTextField(Res.network.get("tradeIntent.create.bid"), UUID.randomUUID().toString().substring(0, 8));
+        Pair<Button, Label> addDataButtonPair = bisqGridPane.addButton(Res.network.get("tradeIntent.create.publish"));
         Button addDataButton = addDataButtonPair.first();
         Label label = addDataButtonPair.second();
         addDataButton.setOnAction(e -> {
@@ -84,7 +84,7 @@ public class NetworkInfoView extends TabView<JFXTabPane, NetworkInfoModel, Netwo
         });
         bisqGridPane.endSection();
 
-        bisqGridPane.startSection(Res.network.get("table.data.title"));
+        bisqGridPane.startSection(Res.network.get("tradeIntent.table.title"));
         dataTableView = new BisqTableView<>(model.getSortedDataListItems());
         dataTableView.setMinHeight(200);
         bisqGridPane.addTableView(dataTableView);
@@ -182,7 +182,7 @@ public class NetworkInfoView extends TabView<JFXTabPane, NetworkInfoModel, Netwo
 
     private void configDataTableView() {
         var dateColumn = new BisqTableColumn.Builder<DataListItem>()
-                .title(Res.network.get("table.data.header.received"))
+                .title(Res.network.get("date"))
                 .minWidth(180)
                 .maxWidth(180)
                 .valueSupplier(DataListItem::getReceived)
@@ -193,13 +193,13 @@ public class NetworkInfoView extends TabView<JFXTabPane, NetworkInfoModel, Netwo
         dataTableView.getSortOrder().add(dateColumn);
 
         dataTableView.getColumns().add(new BisqTableColumn.Builder<DataListItem>()
-                .title(Res.network.get("table.data.header.content"))
+                .title(Res.network.get("amount"))
                 .minWidth(320)
                 .valueSupplier(DataListItem::getContent)
                 .build());
         dataTableView.getColumns().add(new BisqTableColumn.Builder<DataListItem>()
                 .minWidth(320)
-                .title(Res.network.get("table.data.header.nodeId"))
+                .title(Res.network.get("market"))
                 .valueSupplier(DataListItem::getNodeId)
                 .build());
     }

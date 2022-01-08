@@ -32,22 +32,20 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.UUID;
-
 @Slf4j
 public class TradeIntentView extends View<BisqGridPane, TradeIntentModel, TradeIntentController> {
-    private final BisqTableView<TradeIntentListItem> dataTableView;
+    private final BisqTableView<TradeIntentListItem> tableView;
     private ChangeListener<TradeIntentListItem> dataTableSelectedItemListener;
 
     public TradeIntentView(TradeIntentModel model, TradeIntentController controller) {
         super(new BisqGridPane(), model, controller);
 
-        root.setPadding(new Insets(20,20,20,0));
-        
-        root.startSection(Res.network.get("addData.title"));
-        TextField dataContentTextField = root.addTextField(Res.network.get("addData.content"), "Test data");
-        TextField idTextField = root.addTextField(Res.network.get("addData.id"), UUID.randomUUID().toString().substring(0, 8));
-        Pair<Button, Label> addDataButtonPair = root.addButton(Res.network.get("addData.add"));
+        root.setPadding(new Insets(20, 20, 20, 0));
+
+        root.startSection(Res.offerbook.get("tradeIntent.create.title"));
+        TextField askTextField = root.addTextField(Res.offerbook.get("tradeIntent.create.ask"), "I want 0.01 BTC");
+        TextField bidTextField = root.addTextField(Res.offerbook.get("tradeIntent.create.bid"), "Pay EUR via SEPA at market rate");
+        Pair<Button, Label> addDataButtonPair = root.addButton(Res.common.get("publish"));
         Button addDataButton = addDataButtonPair.first();
         Label label = addDataButtonPair.second();
         addDataButton.setOnAction(e -> {
@@ -55,15 +53,15 @@ public class TradeIntentView extends View<BisqGridPane, TradeIntentModel, TradeI
             label.textProperty().unbind();
             label.setText("...");
             addDataButton.setDisable(false);
-            StringProperty result = controller.addData(dataContentTextField.getText(), idTextField.getText());
+            StringProperty result = controller.addData(askTextField.getText(), bidTextField.getText());
             label.textProperty().bind(result);
         });
         root.endSection();
 
-        root.startSection(Res.network.get("table.data.title"));
-        dataTableView = new BisqTableView<>(model.getSortedTradeIntentListItems());
-        dataTableView.setMinHeight(200);
-        root.addTableView(dataTableView);
+        root.startSection(Res.offerbook.get("tradeIntent.table.title"));
+        tableView = new BisqTableView<>(model.getSortedTradeIntentListItems());
+        tableView.setMinHeight(200);
+        root.addTableView(tableView);
         configDataTableView();
         root.endSection();
 
@@ -73,35 +71,35 @@ public class TradeIntentView extends View<BisqGridPane, TradeIntentModel, TradeI
 
     @Override
     public void onViewAttached() {
-        dataTableView.getSelectionModel().selectedItemProperty().addListener(dataTableSelectedItemListener);
+        tableView.getSelectionModel().selectedItemProperty().addListener(dataTableSelectedItemListener);
     }
 
     @Override
     protected void onViewDetached() {
-        dataTableView.getSelectionModel().selectedItemProperty().removeListener(dataTableSelectedItemListener);
+        tableView.getSelectionModel().selectedItemProperty().removeListener(dataTableSelectedItemListener);
     }
 
     private void configDataTableView() {
         var dateColumn = new BisqTableColumn.Builder<TradeIntentListItem>()
-                .title(Res.network.get("table.data.header.received"))
+                .title(Res.common.get("date"))
                 .minWidth(180)
                 .maxWidth(180)
-                .valueSupplier(TradeIntentListItem::getReceived)
+                .valueSupplier(TradeIntentListItem::getDateString)
                 .comparator(TradeIntentListItem::compareDate)
                 .build();
-        dataTableView.getColumns().add(dateColumn);
+        tableView.getColumns().add(dateColumn);
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
-        dataTableView.getSortOrder().add(dateColumn);
-      
-        dataTableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
-                .title(Res.network.get("table.data.header.content"))
+        tableView.getSortOrder().add(dateColumn);
+
+        tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
+                .title(Res.common.get("ask"))
                 .minWidth(320)
-                .valueSupplier(TradeIntentListItem::getContent)
+                .valueSupplier(TradeIntentListItem::getAsk)
                 .build());
-        dataTableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
                 .minWidth(320)
-                .title(Res.network.get("table.data.header.nodeId"))
-                .valueSupplier(TradeIntentListItem::getNodeId)
+                .title(Res.common.get("bid"))
+                .valueSupplier(TradeIntentListItem::getBid)
                 .build());
     }
 

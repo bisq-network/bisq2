@@ -176,6 +176,10 @@ public class NetworkService {
         serviceNodesByTransport.requestInventory(storeType);
     }
 
+    public void requestInventory(String storeName) {
+        serviceNodesByTransport.requestInventory(storeName);
+    }
+
     public CompletableFuture<Void> shutdown() {
         return CompletableFutureUtils.allOf(serviceNodesByTransport.shutdown(), httpService.shutdown())
                 .thenApply(list -> null);

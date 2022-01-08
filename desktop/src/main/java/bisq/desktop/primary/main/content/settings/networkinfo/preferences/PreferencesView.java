@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.settings.networkinfo.preferences;
 
 import bisq.desktop.common.view.View;
+import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(), model, controller);
+        root.setPadding(new Insets(20, 20, 20, 0));
         root.getChildren().add(new Label(getClass().getSimpleName()));
     }
 

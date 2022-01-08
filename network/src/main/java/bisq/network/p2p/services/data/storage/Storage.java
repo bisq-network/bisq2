@@ -210,12 +210,30 @@ public class Storage {
 
 
     public Stream<AuthenticatedPayload> getAllAuthenticatedPayload() {
-        return authenticatedDataStores.values().stream()
+        return authenticatedDataStores.values().stream().flatMap(this::getAuthenticatedPayload);
+        
+      /*  return authenticatedDataStores.values().stream()
                 .flatMap(e -> e.getClonedMap().values().stream())
+                .filter(e -> e instanceof AddAuthenticatedDataRequest)
+                .map(e -> (AddAuthenticatedDataRequest) e)
+                .map(e -> e.getAuthenticatedData().getPayload());*/
+    }
+
+    public Stream<AuthenticatedPayload> getAuthenticatedPayload(DataStore<? extends DataRequest> store) {
+        return store.getClonedMap().values().stream()
                 .filter(e -> e instanceof AddAuthenticatedDataRequest)
                 .map(e -> (AddAuthenticatedDataRequest) e)
                 .map(e -> e.getAuthenticatedData().getPayload());
     }
+
+    public Stream<AuthenticatedPayload> getNetworkPayloads(String storeName) {
+        return getNetworkPayloads(getStoreByStoreName(storeName));
+    }
+
+    public Stream<AuthenticatedPayload> getNetworkPayloads(Stream<DataStore<? extends DataRequest>> stores) {
+        return stores.flatMap(this::getAuthenticatedPayload);
+    }
+
 
     public CompletableFuture<AuthenticatedDataStore> getOrCreateAuthenticatedDataStore(MetaData metaData) {
         String key = getStoreKey(metaData);

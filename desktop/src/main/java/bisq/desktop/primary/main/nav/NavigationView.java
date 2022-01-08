@@ -64,17 +64,17 @@ public class NavigationView extends View<VBox, NavigationModel, NavigationContro
         NavigationButton social = createNavigationButton(Res.common.get("social"), NavigationTarget.SOCIAL);
         NavigationButton offerBook = createNavigationButton(Res.common.get("offerbook"), NavigationTarget.OFFERBOOK);
         NavigationButton portfolio = createNavigationButton(Res.common.get("portfolio"), NavigationTarget.PORTFOLIO);
+        NavigationButton wallet = createNavigationButton(Res.common.get("wallet"), NavigationTarget.WALLET);
         NavigationButton settings = createNavigationButton(Res.common.get("settings"), NavigationTarget.SETTINGS);
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
         networkInfoBox = new NetworkInfoBox(model, () -> controller.navigateTo(NavigationTarget.NETWORK_INFO));
-        root.getChildren().addAll(markets, social, offerBook, portfolio, settings, spacer, networkInfoBox);
+        root.getChildren().addAll(markets, social, offerBook, portfolio, wallet, settings, spacer, networkInfoBox);
 
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
                 NavigationButton navigationButton = navigationButtonByNavigationTarget.get(model.getNavigationTarget());
-                // navigationButton.setSelected(true);
                 toggleGroup.selectToggle(navigationButton);
             }
         };

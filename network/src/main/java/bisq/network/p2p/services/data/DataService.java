@@ -102,6 +102,10 @@ public class DataService implements Node.Listener {
         requestInventory(new BisqBloomFilter(storage.getHashes(storeName)));
     }
 
+    public Stream<AuthenticatedPayload> getNetworkPayloads(String storeName) {
+        return storage.getNetworkPayloads(storeName);
+    }
+
     public void requestInventory(DataFilter dataFilter) {
         log.error("requestInventory dataFilter={}", dataFilter);
         dataNetworkServices.values().stream()

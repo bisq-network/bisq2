@@ -31,6 +31,7 @@ public enum NavigationTarget {
     HANGOUT(SOCIAL),
     OFFERBOOK,
     PORTFOLIO,
+    WALLET,
     CREATE_OFFER(StageType.OVERLAY),
     SETTINGS,
     PREFERENCES(SETTINGS),

@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.settings.networkinfo.about;
 
 import bisq.desktop.common.view.View;
+import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class AboutView extends View<VBox, AboutModel, AboutController> {
 
     public AboutView(AboutModel model, AboutController controller) {
         super(new VBox(), model, controller);
+        root.setPadding(new Insets(20, 20, 20, 0));
         root.getChildren().add(new Label(getClass().getSimpleName()));
     }
 
