@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class JavaFXApplication extends Application {
-    record Data(Stage stage, Parameters parameters, HostServices hostServices) {
+    public record Data(Stage stage, Parameters parameters, HostServices hostServices) {
     }
 
     static final CompletableFuture<Data> onApplicationLaunched = new CompletableFuture<>();

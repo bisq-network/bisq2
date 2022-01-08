@@ -18,20 +18,19 @@
 package bisq.desktop.overlay;
 
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class OverlayController implements Controller {
     private OverlayModel model;
-    private OverlayView overlayView;
+    @Getter
+    private OverlayView view;
 
     public OverlayController(Scene parentScene) {
         model = new OverlayModel();
-        overlayView = new OverlayView(model, this, parentScene);
+        view = new OverlayView(model, this, parentScene);
     }
 
     public void show(Controller controller) {
@@ -40,10 +39,5 @@ public class OverlayController implements Controller {
 
     void onClosed() {
         model.selectView(null);
-    }
-
-    @Override
-    public View<? extends Parent, ? extends Model, ? extends Controller> getView() {
-        return overlayView;
     }
 }

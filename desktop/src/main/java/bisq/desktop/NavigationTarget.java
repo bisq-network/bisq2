@@ -26,33 +26,38 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public enum NavigationTarget {
     MARKETS,
+    SOCIAL,
+    TRADE_INTENT(SOCIAL),
+    HANGOUT(SOCIAL),
     OFFERBOOK,
-    CREATE_OFFER(NavigationSink.OVERLAY),
+    PORTFOLIO,
+    CREATE_OFFER(StageType.OVERLAY),
     SETTINGS,
     PREFERENCES(SETTINGS),
     ABOUT(SETTINGS),
     NETWORK_INFO(SETTINGS),
-    TRANSPORT_TYPE(SETTINGS, NETWORK_INFO);
-
+    CLEAR_NET(SETTINGS, NETWORK_INFO),
+    TOR(SETTINGS, NETWORK_INFO),
+    I2P(SETTINGS, NETWORK_INFO);
 
     @Getter
-    private final NavigationSink sink;
+    private final StageType sink;
     @Getter
     private final List<NavigationTarget> path = new ArrayList<>();
 
     NavigationTarget() {
-        this(NavigationSink.CONTENT);
+        this(StageType.PRIMARY);
     }
 
-    NavigationTarget(NavigationSink sink) {
+    NavigationTarget(StageType sink) {
         this(sink, new NavigationTarget[]{});
     }
 
     NavigationTarget(NavigationTarget... path) {
-        this(NavigationSink.CONTENT, path);
+        this(StageType.PRIMARY, path);
     }
 
-    NavigationTarget(NavigationSink sink, NavigationTarget... path) {
+    NavigationTarget(StageType sink, NavigationTarget... path) {
         this.sink = sink;
         this.path.addAll(List.of(path));
 

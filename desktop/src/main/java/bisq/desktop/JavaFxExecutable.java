@@ -22,6 +22,7 @@ import bisq.application.DefaultServiceProvider;
 import bisq.application.Executable;
 import bisq.common.annotations.LateInit;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.primary.PrimaryStageController;
 import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,7 @@ import static java.util.Objects.requireNonNull;
 @Slf4j
 public class JavaFxExecutable extends Executable<DefaultServiceProvider> {
     @LateInit
-    private StageController stageController;
+    private PrimaryStageController primaryStageController;
 
     public JavaFxExecutable(String[] args) {
         super(args);
@@ -53,7 +54,7 @@ public class JavaFxExecutable extends Executable<DefaultServiceProvider> {
                 .whenComplete((applicationData, throwable) -> {
                     if (throwable == null) {
                         try {
-                            stageController = new StageController(serviceProvider, applicationData);
+                            primaryStageController = new PrimaryStageController(serviceProvider, applicationData);
                             log.info("Java FX Application launched");
                             onApplicationLaunched();
                         } catch (Throwable t) {
@@ -68,27 +69,27 @@ public class JavaFxExecutable extends Executable<DefaultServiceProvider> {
 
     @Override
     protected void onDomainInitialized() {
-        Platform.runLater(() -> requireNonNull(stageController).onDomainInitialized());
+        Platform.runLater(() -> requireNonNull(primaryStageController).onDomainInitialized());
     }
 
     @Override
     protected void onInitializeDomainFailed(Throwable throwable) {
         super.onInitializeDomainFailed(throwable);
-        requireNonNull(stageController).onInitializeDomainFailed();
+        requireNonNull(primaryStageController).onInitializeDomainFailed();
     }
 
     @Override
     protected void setDefaultUncaughtExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             log.error("Uncaught exception", throwable);
-            UIThread.run(() -> stageController.onUncaughtException(thread, throwable));
+            UIThread.run(() -> primaryStageController.onUncaughtException(thread, throwable));
         });
     }
 
     @Override
     public void shutdown() {
-        if (stageController != null) {
-            stageController.shutdown();
+        if (primaryStageController != null) {
+            primaryStageController.shutdown();
         } else {
             super.shutdown();
         }

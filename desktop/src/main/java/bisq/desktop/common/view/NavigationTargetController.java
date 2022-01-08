@@ -17,80 +17,61 @@
 
 package bisq.desktop.common.view;
 
-import bisq.desktop.NavigationSink;
+import bisq.desktop.StageType;
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.main.content.ContentController;
+import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.overlay.OverlayController;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class NavigationTargetController {
+public abstract class NavigationTargetController implements Controller {
     protected final Map<NavigationTarget, Controller> controllerCache = new ConcurrentHashMap<>();
     protected final ContentController contentController;
     protected final OverlayController overlayController;
 
-    public <contentController> NavigationTargetController(ContentController contentController, OverlayController overlayController) {
+    public NavigationTargetController(ContentController contentController, OverlayController overlayController) {
         this.contentController = contentController;
         this.overlayController = overlayController;
     }
 
     public void navigateTo(NavigationTarget navigationTarget) {
-        Controller controller = getOrCreateController(navigationTarget);
-        if (navigationTarget.getSink() == NavigationSink.OVERLAY) {
+        NavigationTarget localTarget = resolveLocalTarget(navigationTarget);
+        Controller controller = getOrCreateController(localTarget, navigationTarget);
+        if (localTarget.getSink() == StageType.OVERLAY) {
             overlayController.show(controller);
         } else {
-            contentController.navigateTo(controller);
+            contentController.navigateTo(navigationTarget, controller);
         }
     }
 
-    protected Controller getOrCreateController(NavigationTarget navigationTarget) {
-        if (controllerCache.containsKey(navigationTarget)) {
-            return controllerCache.get(navigationTarget);
+    protected Controller getOrCreateController(NavigationTarget localTarget, NavigationTarget navigationTarget) {
+        if (controllerCache.containsKey(localTarget)) {
+            return controllerCache.get(localTarget);
         } else {
-            Controller controller = getController(navigationTarget);
-            controllerCache.put(navigationTarget, controller);
+            Controller controller = getController(localTarget, navigationTarget);
+            controllerCache.put(localTarget, controller);
             return controller;
         }
     }
 
+    protected abstract Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget);
 
-    protected Controller getController(NavigationTarget navigationTarget) {
-        //  TRANSPORT_TYPE(SETTINGS, NETWORK_INFO);
+    protected abstract NavigationTarget resolveLocalTarget(NavigationTarget navigationTarget);
+
+    protected NavigationTarget resolveAsRootHost(NavigationTarget navigationTarget) {
         List<NavigationTarget> path = navigationTarget.getPath();
-        NavigationTarget root = path.isEmpty() ? navigationTarget : path.get(0);
-        return switch (root) {
-            // Root NavigationTargets
-            case MARKETS -> getMarketsController(navigationTarget);
-            case CREATE_OFFER -> getCreateOfferController(navigationTarget);
-            case OFFERBOOK -> getOfferbookController(navigationTarget);
-            case SETTINGS -> getSettingsController(navigationTarget);
-            // Children not handled here but on defined root inside the path 
-            case PREFERENCES -> null; //todo
-            case ABOUT -> null; //todo
-            case NETWORK_INFO -> getNetworkInfoController(navigationTarget);
-            case TRANSPORT_TYPE -> null; //todo
-        };
+        return path.isEmpty() ? navigationTarget : path.get(0);
     }
 
-    protected Controller getMarketsController(NavigationTarget navigationTarget) {
-        throw new RuntimeException("Need to be implemented by concrete controller");
+    protected NavigationTarget resolveAsLevel1Host(NavigationTarget navigationTarget) {
+        List<NavigationTarget> path = navigationTarget.getPath();
+        return path.size() == 1 ? navigationTarget : path.get(1);
     }
 
-    protected Controller getCreateOfferController(NavigationTarget navigationTarget) {
-        throw new RuntimeException("Need to be implemented by concrete controller");
-    }
-
-    protected Controller getOfferbookController(NavigationTarget navigationTarget) {
-        throw new RuntimeException("Need to be implemented by concrete controller");
-    }
-
-    protected Controller getSettingsController(NavigationTarget navigationTarget) {
-        throw new RuntimeException("Need to be implemented by concrete controller");
-    }
-
-    protected Controller getNetworkInfoController(NavigationTarget navigationTarget) {
-        throw new RuntimeException("Need to be implemented by concrete controller");
+    protected NavigationTarget resolveAsLevel2Host(NavigationTarget navigationTarget) {
+        List<NavigationTarget> path = navigationTarget.getPath();
+        return path.size() == 2 ? navigationTarget : path.get(2);
     }
 }

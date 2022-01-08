@@ -17,56 +17,61 @@
 
 package bisq.desktop.common.view;
 
+import bisq.desktop.common.threading.UIThread;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.stage.Window;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class View<R extends Node, M extends Model, C extends Controller> {
     protected final R root;
     protected final M model;
     protected final C controller;
+    private final ChangeListener<Scene> sceneChangeListener;
+    private ChangeListener<Window> windowChangeListener;
 
     public View(R root, M model, C controller) {
+        checkNotNull(root, "Root must not be null");
         this.root = root;
         this.model = model;
         this.controller = controller;
-        if (root != null) {
-            root.sceneProperty().addListener((ov, oldValue, newValue) -> {
-                if (oldValue == null && newValue != null) {
-                    if (newValue.getWindow() != null) {
-                        activate(); // activate view first as it usually sets the bindings here
-                        controller.activate();
-                        model.activate();
-                    } else {
-                        // For overlays, we need to wait until stage is available
-                        newValue.windowProperty().addListener(new ChangeListener<Window>() {
-                            @Override
-                            public void changed(ObservableValue<? extends Window> observable, Window oldValue, Window newValue) {
-                                if (newValue != null) {
-                                    activate();
-                                    controller.activate();
-                                    model.activate();
-                                }
-                            }
-                        });
-                    }
-                } else if (oldValue != null && newValue == null) {
-                    deactivate();
-                    controller.deactivate();
-                    model.deactivate();
+
+        sceneChangeListener = (ov, oldValue, newScene) -> {
+            if (oldValue == null && newScene != null) {
+                if (newScene.getWindow() != null) {
+                    onViewAttached(); // activate view first as we usually set the bindings here
+                    controller.onViewAttached();
+                    model.onViewAttached();
+                    UIThread.run(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
+                } else {
+                    // For overlays, we need to wait until window is available
+                    windowChangeListener = (observable, oldValue1, newWindow) -> {
+                        checkNotNull(newWindow, "Window must not be null");
+                        onViewAttached();
+                        controller.onViewAttached();
+                        model.onViewAttached();
+                        UIThread.run(() -> newScene.windowProperty().removeListener(View.this.windowChangeListener));
+                    };
+                    newScene.windowProperty().addListener(windowChangeListener);
                 }
-            });
-        }
+            } else if (oldValue != null && newScene == null) {
+                onViewDetached();
+                controller.onViewDetached();
+                model.onViewDetached();
+            }
+        };
+        root.sceneProperty().addListener(sceneChangeListener);
     }
 
     public R getRoot() {
         return root;
     }
 
-    protected void activate() {
+    protected void onViewAttached() {
     }
 
-    protected void deactivate() {
+    protected void onViewDetached() {
     }
 }
