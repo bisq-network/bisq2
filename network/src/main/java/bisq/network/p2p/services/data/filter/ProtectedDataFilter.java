@@ -55,7 +55,7 @@ public class ProtectedDataFilter implements DataFilter {
     }
 
     @Override
-    public boolean doInclude(ByteArray key) {
+    public boolean doInclude(byte[] bytes) {
         return false;
     }
 }

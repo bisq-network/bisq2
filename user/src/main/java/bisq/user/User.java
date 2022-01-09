@@ -17,21 +17,21 @@
 
 package bisq.user;
 
-import bisq.account.Account;
-import bisq.identity.IdentityService;
-import bisq.offer.OpenOffer;
-import bisq.persistence.Persistence;
-import bisq.protocol.Deal;
-import bisq.support.Dispute;
+import lombok.Getter;
 
-import java.util.Collection;
+import java.io.Serializable;
 
-public class User {
-    // expected dependencies
-    Collection<IdentityService> identities; // A user can manage multiple identities and assign it to offers or other interactions
-    Collection<Account> accounts;
-    Collection<OpenOffer> openOffers;
-    Collection<Deal> deals;
-    Collection<Dispute> disputes;
-    Persistence persistence;
+public class User implements Serializable {
+    @Getter
+    private Cookie cookie;
+
+    public User() {
+        cookie = new Cookie();
+    }
+
+    public static User cloneFrom(User user) {
+        User clone = new User();
+        clone.cookie = user.cookie;
+        return clone;
+    }
 }

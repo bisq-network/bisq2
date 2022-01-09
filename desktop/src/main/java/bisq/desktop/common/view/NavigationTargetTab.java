@@ -15,11 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.filter;
+package bisq.desktop.common.view;
 
+import bisq.desktop.NavigationTarget;
+import javafx.scene.control.Tab;
+import lombok.Getter;
 
-import bisq.network.p2p.message.Proto;
+import java.util.Optional;
 
-public interface DataFilter extends Proto {
-    boolean doInclude(byte[] bytes);
+public class NavigationTargetTab extends Tab {
+    @Getter
+    private Optional<NavigationTarget> navigationTarget = Optional.empty();
+
+    public NavigationTargetTab(String title, NavigationTarget navigationTarget) {
+        super(title);
+        this.navigationTarget = Optional.of(navigationTarget);
+    }
 }

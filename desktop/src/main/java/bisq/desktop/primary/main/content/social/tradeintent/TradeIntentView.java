@@ -59,7 +59,7 @@ public class TradeIntentView extends View<BisqGridPane, TradeIntentModel, TradeI
         root.endSection();
 
         root.startSection(Res.offerbook.get("tradeIntent.table.title"));
-        tableView = new BisqTableView<>(model.getSortedTradeIntentListItems());
+        tableView = new BisqTableView<>(model.getSortedItems());
         tableView.setMinHeight(200);
         root.addTableView(tableView);
         configDataTableView();
@@ -67,6 +67,46 @@ public class TradeIntentView extends View<BisqGridPane, TradeIntentModel, TradeI
 
         dataTableSelectedItemListener = (observable, oldValue, newValue) -> {
         };
+        
+        /*
+        bisqGridPane.startSection(Res.network.get("tradeIntent.table.title"));
+        dataTableView = new BisqTableView<>(model.getSortedDataListItems());
+        dataTableView.setMinHeight(200);
+        bisqGridPane.addTableView(dataTableView);
+        configDataTableView();
+        bisqGridPane.endSection();
+
+        bisqGridPane.startSection(Res.network.get("sendMessages.title"));
+        messageReceiverTextField = bisqGridPane.addTextField(Res.network.get("sendMessages.to"), "localhost:8000");
+        messageReceiverTextField.setEditable(false);
+        nodeIdTextField = bisqGridPane.addTextField(Res.network.get("sendMessages.nodeId"), "");
+        nodeIdTextField.setEditable(false);
+        TextField msgTextField = bisqGridPane.addTextField(Res.network.get("sendMessages.text"), "Test proto");
+        Pair<Button, Label> sendButtonPair = bisqGridPane.addButton(Res.network.get("sendMessages.send"));
+        Button sendButton = sendButtonPair.first();
+        sendButton.setOnAction(e -> {
+            String msg = msgTextField.getText();
+            sendButton.setDisable(true);
+            sendButtonPair.second().setText("...");
+            controller.sendMessage(msg).whenComplete((result, throwable) -> {
+                UIThread.run(() -> {
+                    if (throwable == null) {
+                        sendButtonPair.second().setText(result);
+                    } else {
+                        sendButtonPair.second().setText(throwable.toString());
+                    }
+                    sendButton.setDisable(false);
+                });
+            });
+        });
+        bisqGridPane.addHSpacer();
+        receivedMessagesTextArea = bisqGridPane.addTextArea(Res.network.get("sendMessages.receivedMessage"), model.getReceivedMessages());
+        receivedMessagesTextArea.setMinHeight(100);
+        bisqGridPane.endSection();
+
+        dataTableSelectedItemListener = (observable, oldValue, newValue) -> {
+            controller.onSelectNetworkId(newValue.getNetworkId());
+        };*/
     }
 
     @Override
@@ -101,6 +141,13 @@ public class TradeIntentView extends View<BisqGridPane, TradeIntentModel, TradeI
                 .title(Res.common.get("bid"))
                 .valueSupplier(TradeIntentListItem::getBid)
                 .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
+                .minWidth(80)
+                .title(Res.common.get("bid"))
+                .value(Res.common.get("remove"))
+                .cellFactory(BisqTableColumn.CellFactory.BUTTON)
+                .actionHandler(controller::onRemoveItem)
+                .isVisibleFunction(model::isMyTradeIntent)
+                .build());
     }
-
 }

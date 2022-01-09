@@ -25,7 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
-import static bisq.network.p2p.services.data.storage.Storage.StoreType.APPEND_ONLY_DATA_STORE;
+import static bisq.network.p2p.services.data.storage.StorageService.StoreType.APPEND_ONLY_DATA_STORE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -39,13 +39,13 @@ public class AppendOnlyDataStoreTest {
         AppendOnlyDataStore store = new AppendOnlyDataStore(persistenceService, APPEND_ONLY_DATA_STORE.getStoreName(),
                 data.getMetaData().getFileName());
         store.readPersisted().join();
-        int previous = store.getClonedMap().size();
+        int previous = store.getClone().size();
         int iterations = 10;
         for (int i = 0; i < iterations; i++) {
             data = new MockAppendOnlyPayload("test" + UUID.randomUUID());
             boolean result = store.add(new AddAppendOnlyDataRequest(data)).isSuccess();
             assertTrue(result);
         }
-        assertEquals(iterations + previous, store.getClonedMap().size());
+        assertEquals(iterations + previous, store.getClone().size());
     }
 }

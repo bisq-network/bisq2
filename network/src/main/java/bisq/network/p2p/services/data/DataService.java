@@ -18,7 +18,6 @@
 package bisq.network.p2p.services.data;
 
 import bisq.network.p2p.message.Message;
-import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
@@ -26,11 +25,12 @@ import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.filter.BisqBloomFilter;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.storage.Result;
-import bisq.network.p2p.services.data.storage.Storage;
+import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyPayload;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
@@ -56,7 +56,7 @@ import java.util.stream.Stream;
  * messages on the supported transport networks as well for the inventory service.
  */
 @Slf4j
-public class DataService implements Node.Listener {
+public class DataService implements DataNetworkService.Listener {
 
 
     public interface Listener {
@@ -66,67 +66,74 @@ public class DataService implements Node.Listener {
     }
 
     @Getter
-    private final Storage storage;
+    private final StorageService storageService;
     private final Set<DataService.Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<Transport.Type, DataNetworkService> dataNetworkServices = new ConcurrentHashMap<>();
 
-    public DataService(Storage storage) {
-        this.storage = storage;
+    public DataService(StorageService storageService) {
+        this.storageService = storageService;
     }
 
+    // todo a bit of a hack that way...
     public DataNetworkService getDataServicePerTransport(Transport.Type transportType, Node defaultNode, PeerGroupService peerGroupService) {
-        DataNetworkService dataNetworkService = new DataNetworkService(defaultNode, peerGroupService, storage::getInventoryOfAllStores);
+        DataNetworkService dataNetworkService = new DataNetworkService(defaultNode, peerGroupService, storageService::getInventoryOfAllStores);
         dataNetworkServices.put(transportType, dataNetworkService);
         dataNetworkService.addListener(this);
         return dataNetworkService;
     }
 
+    public void initialize() {
+
+    }
+
+    public CompletableFuture<Void> shutdown() {
+        storageService.shutdown();
+        listeners.clear();
+        return CompletableFuture.completedFuture(null);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // DataNetworkService.Listeners
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMessage(Message message, Connection connection, String nodeId) {
+        if (message instanceof AddDataRequest addDataRequest) {
+            processAddDataRequest(addDataRequest, true);
+        } else if (message instanceof RemoveDataRequest removeDataRequest) {
+            processRemoveDataRequest(removeDataRequest, true);
+        }
+    }
+
+    @Override
+    public void onStateChanged(PeerGroupService.State state, DataNetworkService dataNetworkService) {
+        if (state == PeerGroupService.State.RUNNING) {
+            requestInventory(new BisqBloomFilter(storageService.getHashes(StorageService.StoreType.ALL)), dataNetworkService);
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Get data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Stream<AuthenticatedPayload> getAllAuthenticatedPayload() {
-        return storage.getAllAuthenticatedPayload();
+        return storageService.getAllAuthenticatedPayload();
     }
 
-    public void requestInventory() {
-        requestInventory(Storage.StoreType.ALL);
+    public Stream<AuthenticatedPayload> getAuthenticatedPayloadByStoreName(String storeName) {
+        return storageService.getAuthenticatedPayloadStream(storeName);
     }
 
-    public void requestInventory(Storage.StoreType storeType) {
-        requestInventory(new BisqBloomFilter(storage.getHashes(storeType)));
-    }
 
-    public void requestInventory(String storeName) {
-        requestInventory(new BisqBloomFilter(storage.getHashes(storeName)));
-    }
-
-    public Stream<AuthenticatedPayload> getNetworkPayloads(String storeName) {
-        return storage.getNetworkPayloads(storeName);
-    }
-
-    public void requestInventory(DataFilter dataFilter) {
-        log.error("requestInventory dataFilter={}", dataFilter);
-        dataNetworkServices.values().stream()
-                .flatMap(service -> service.requestInventory(dataFilter).stream())
-                .forEach(future -> {
-                    future.whenComplete(((inventory, throwable) -> {
-                        inventory.entries().forEach(dataRequest -> {
-                            if (dataRequest instanceof AddDataRequest addDataRequest) {
-                                processAddDataRequest(addDataRequest, false);
-                            } else if (dataRequest instanceof RemoveDataRequest removeDataRequest) {
-                                processRemoveDataRequest(removeDataRequest, false);
-                            }
-                        });
-                    }));
-                });
-    }
-
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Add data
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addNetworkPayloadAsync(NetworkPayload networkPayload, KeyPair keyPair) {
         if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
-            return storage.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
+            return storageService.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
                     .thenApply(store -> {
                         try {
                             AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
@@ -145,7 +152,7 @@ public class DataService implements Node.Listener {
                         }
                     });
         } else if (networkPayload instanceof AppendOnlyPayload appendOnlyPayload) {
-            return storage.getOrCreateAppendOnlyDataStore(appendOnlyPayload.getMetaData())
+            return storageService.getOrCreateAppendOnlyDataStore(appendOnlyPayload.getMetaData())
                     .thenApply(store -> {
                         AddAppendOnlyDataRequest addAppendOnlyDataRequest = new AddAppendOnlyDataRequest(appendOnlyPayload);
                         Result result = store.add(addAppendOnlyDataRequest);
@@ -166,7 +173,7 @@ public class DataService implements Node.Listener {
     public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addMailboxPayloadAsync(MailboxPayload mailboxPayload,
                                                                                               KeyPair senderKeyPair,
                                                                                               PublicKey receiverPublicKey) {
-        return storage.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
+        return storageService.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
                 .thenApply(store -> {
                     try {
                         AddMailboxRequest addRequest = AddMailboxRequest.from(store, mailboxPayload, senderKeyPair, receiverPublicKey);
@@ -186,14 +193,78 @@ public class DataService implements Node.Listener {
                 });
     }
 
-    public void removeNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
-        //todo
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Remove data
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeNetworkPayloadAsync(NetworkPayload networkPayload, KeyPair keyPair) {
+        if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
+            return storageService.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
+                    .thenApply(store -> {
+                        try {
+                            RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
+                            Result result = store.remove(request);
+                            if (result.isSuccess()) {
+                                listeners.forEach(listener -> listener.onNetworkPayloadRemoved(networkPayload));
+                                return dataNetworkServices.values().stream()
+                                        .map(service -> service.broadcast(request))
+                                        .collect(Collectors.toList());
+                            } else {
+                                return new ArrayList<>();
+                            }
+                        } catch (GeneralSecurityException e) {
+                            e.printStackTrace();
+                            throw new CompletionException(e);
+                        }
+                    });
+        } else if (networkPayload instanceof AppendOnlyPayload) {
+            throw new IllegalArgumentException("AppendOnlyPayload cannot be removed");
+        } else {
+            return CompletableFuture.failedFuture(new IllegalArgumentException(""));
+        }
     }
 
-    public CompletableFuture<Void> shutdown() {
-        listeners.clear();
-        return CompletableFuture.completedFuture(null);
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Inventory
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public void requestInventory() {
+        requestInventory(StorageService.StoreType.ALL);
     }
+
+    public void requestInventory(StorageService.StoreType storeType) {
+        requestInventory(new BisqBloomFilter(storageService.getHashes(storeType)));
+    }
+
+    public void requestInventory(String storeName) {
+        requestInventory(new BisqBloomFilter(storageService.getHashes(storeName)));
+    }
+
+
+    public void requestInventory(DataFilter dataFilter) {
+        dataNetworkServices.values().forEach(service -> requestInventory(dataFilter, service));
+    }
+
+    public void requestInventory(DataFilter dataFilter, DataNetworkService dataNetworkService) {
+        dataNetworkService.requestInventory(dataFilter).forEach(future -> {
+            future.whenComplete(((inventory, throwable) -> {
+                inventory.entries().forEach(dataRequest -> {
+                    if (dataRequest instanceof AddDataRequest addDataRequest) {
+                        processAddDataRequest(addDataRequest, false);
+                    } else if (dataRequest instanceof RemoveDataRequest removeDataRequest) {
+                        processRemoveDataRequest(removeDataRequest, false);
+                    }
+                });
+            }));
+        });
+    }
+
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void addListener(DataService.Listener listener) {
         listeners.add(listener);
@@ -205,38 +276,15 @@ public class DataService implements Node.Listener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Node.Listeners on  DataServicePerTransports
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onMessage(Message message, Connection connection, String nodeId) {
-        if (message instanceof AddDataRequest addDataRequest) {
-            processAddDataRequest(addDataRequest, true);
-        } else if (message instanceof RemoveDataRequest removeDataRequest) {
-            processRemoveDataRequest(removeDataRequest, true);
-        }
-    }
-
-    @Override
-    public void onConnection(Connection connection) {
-    }
-
-    @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void processAddDataRequest(AddDataRequest addDataRequest, boolean allowReBroadcast) {
-        storage.onAddDataRequest(addDataRequest)
+        storageService.onAddDataRequest(addDataRequest)
                 .whenComplete((optionalData, throwable) -> {
                     optionalData.ifPresent(networkData -> {
                         // We get called on dispatcher thread with onMessage, and we don't switch thread in 
                         // async calls (todo check if in all cases true)
-                        log.error("processAddDataRequest");
                         listeners.forEach(listener -> listener.onNetworkPayloadAdded(networkData));
                         // runAsync(() -> listeners.forEach(listener -> listener.onNetworkDataAdded(networkData)), NetworkService.DISPATCHER);
                         if (allowReBroadcast) {
@@ -247,6 +295,16 @@ public class DataService implements Node.Listener {
     }
 
     private void processRemoveDataRequest(RemoveDataRequest removeDataRequest, boolean allowReBroadcast) {
-        //todo
+        storageService.onRemoveDataRequest(removeDataRequest)
+                .whenComplete((optionalData, throwable) -> {
+                    optionalData.ifPresent(networkData -> {
+                        // We get called on dispatcher thread with onMessage, and we don't switch thread in 
+                        // async calls
+                        listeners.forEach(listener -> listener.onNetworkPayloadRemoved(networkData));
+                        if (allowReBroadcast) {
+                            dataNetworkServices.values().forEach(e -> e.reBroadcast(removeDataRequest));
+                        }
+                    });
+                });
     }
 }

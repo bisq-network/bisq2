@@ -25,21 +25,21 @@ import javafx.scene.control.Skin;
 import static bisq.desktop.common.utils.TooltipUtil.showTooltipIfTruncated;
 
 
-public class AutoTooltipButton extends JFXButton {
+public class BisqButton extends JFXButton {
 
-    public AutoTooltipButton() {
+    public BisqButton() {
         super();
     }
 
-    public AutoTooltipButton(String text) {
+    public BisqButton(String text) {
         super(text.toUpperCase());
     }
 
-    public AutoTooltipButton(String text, Node graphic) {
+    public BisqButton(String text, Node graphic) {
         super(text.toUpperCase(), graphic);
     }
 
-    public void updateText(String text) {
+    public void setTextAsUppercase(String text) {
         setText(text.toUpperCase());
     }
 

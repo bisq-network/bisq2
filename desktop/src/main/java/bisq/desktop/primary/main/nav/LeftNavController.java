@@ -21,7 +21,7 @@ import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.StageType;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTargetController;
+import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.content.markets.MarketsController;
@@ -32,20 +32,20 @@ import bisq.desktop.primary.main.content.social.SocialController;
 import bisq.desktop.primary.main.content.wallet.WalletController;
 import lombok.Getter;
 
-public class NavigationController extends NavigationTargetController implements Controller {
+public class LeftNavController extends NavigationController implements Controller {
     private final DefaultServiceProvider serviceProvider;
-    private final NavigationModel model;
+    private final LeftNavModel model;
     @Getter
-    private final NavigationView view;
+    private final LeftNavView view;
 
-    public NavigationController(DefaultServiceProvider serviceProvider,
-                                ContentController contentController,
-                                OverlayController overlayController) {
+    public LeftNavController(DefaultServiceProvider serviceProvider,
+                             ContentController contentController,
+                             OverlayController overlayController) {
         super(contentController, overlayController);
 
         this.serviceProvider = serviceProvider;
-        model = new NavigationModel(serviceProvider);
-        view = new NavigationView(model, this);
+        model = new LeftNavModel(serviceProvider);
+        view = new LeftNavView(model, this);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class NavigationController extends NavigationTargetController implements 
     public void navigateTo(NavigationTarget navigationTarget) {
         NavigationTarget localTarget = resolveLocalTarget(navigationTarget);
         Controller controller = getOrCreateController(localTarget, navigationTarget);
-        if (localTarget.getSink() == StageType.OVERLAY) {
+        if (navigationTarget.getSink() == StageType.OVERLAY) {
             overlayController.show(controller);
         } else {
             contentController.navigateTo(navigationTarget, controller);
@@ -72,10 +72,10 @@ public class NavigationController extends NavigationTargetController implements 
                 return new MarketsController(serviceProvider);
             }
             case SOCIAL -> {
-                return new SocialController(serviceProvider, contentController, overlayController, navigationTarget);
+                return new SocialController(serviceProvider, contentController, overlayController);
             }
             case OFFERBOOK -> {
-                return new OfferbookController(serviceProvider, this, overlayController);
+                return new OfferbookController(serviceProvider, contentController, overlayController);
             }
             case PORTFOLIO -> {
                 return new PortfolioController(serviceProvider);
@@ -84,7 +84,7 @@ public class NavigationController extends NavigationTargetController implements 
                 return new WalletController(serviceProvider);
             }
             case SETTINGS -> {
-                return new SettingsController(serviceProvider, contentController, overlayController, navigationTarget);
+                return new SettingsController(serviceProvider, contentController, overlayController);
             }
             default -> throw new IllegalArgumentException("Invalid navigationTarget for this host. localTarget=" + localTarget);
         }

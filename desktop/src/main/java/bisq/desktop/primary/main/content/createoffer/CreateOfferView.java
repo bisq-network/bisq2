@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.createoffer;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.AutoTooltipButton;
+import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferController> {
-    private final AutoTooltipButton back, next;
+    private final BisqButton back, next;
 
     public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
         super(new VBox(), model, controller);
@@ -48,10 +48,10 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
                 getStepNode("Options"),
                 getStepNode("Review offer"));
         HBox footer = new HBox();
-        back = new AutoTooltipButton("Back");
+        back = new BisqButton("Back");
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        next = new AutoTooltipButton("Next");
+        next = new BisqButton("Next");
         footer.getChildren().addAll(back, spacer, next);
 
         root.getChildren().addAll(topPane, footer);

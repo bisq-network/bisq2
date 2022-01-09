@@ -36,8 +36,10 @@ public class SettingsModel extends TabModel {
     }
 
     public void onViewAttached() {
+        super.onViewAttached();
     }
 
     public void onViewDetached() {
+        super.onViewDetached();
     }
 }

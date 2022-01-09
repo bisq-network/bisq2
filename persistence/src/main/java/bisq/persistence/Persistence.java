@@ -66,7 +66,7 @@ public class Persistence<T extends Serializable> {
             }
             return Optional.of((T) object);
         } catch (Throwable exception) {
-            log.error(exception.toString(), exception);
+            log.error("Error at read for " + storagePath, exception);
             return Optional.empty();
         }
     }

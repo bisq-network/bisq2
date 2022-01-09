@@ -26,8 +26,8 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
-import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.DataNetworkService;
+import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.monitor.MonitorService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -61,6 +62,10 @@ public class ServiceNode {
     private static final Logger log = LoggerFactory.getLogger(ServiceNode.class);
 
     public static record Config(Set<Service> services) {
+    }
+
+    public interface Listener {
+        void onStateChanged(ServiceNode.State state);
     }
 
     public enum State {
@@ -97,6 +102,7 @@ public class ServiceNode {
     private Optional<MonitorService> monitorService;
     @Getter
     public AtomicReference<State> state = new AtomicReference<>(State.CREATED);
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public ServiceNode(Config config,
                        Node.Config nodeConfig,
@@ -175,7 +181,7 @@ public class ServiceNode {
             }
         }
         setState(State.INITIALIZE_PEER_GROUP);
-        peerGroupService.ifPresent(PeerGroupService::initialize);
+        peerGroupService.ifPresent(PeerGroupService::start);
         setState(State.PEER_GROUP_INITIALIZED);
     }
 
@@ -235,10 +241,18 @@ public class ServiceNode {
         return nodesById.getAddressesByNodeId();
     }
 
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
 
     private void setState(State newState) {
         checkArgument(state.get().ordinal() < newState.ordinal(),
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
+        runAsync(() -> listeners.forEach(e -> e.onStateChanged(newState)), NetworkService.DISPATCHER);
     }
 }

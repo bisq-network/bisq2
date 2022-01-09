@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage;
 
 
 import bisq.common.data.ByteArray;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.FileUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.AddDataRequest;
@@ -33,10 +34,13 @@ import bisq.network.p2p.services.data.storage.append.AppendOnlyPayload;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStore;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStore;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
+import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.PersistenceService;
+import com.google.common.primitives.Bytes;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,10 +52,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static bisq.network.p2p.services.data.storage.Storage.StoreType.*;
+import static bisq.network.p2p.services.data.storage.StorageService.StoreType.*;
 
 @Slf4j
-public class Storage {
+public class StorageService {
     public enum StoreType {
         ALL(""), //todo remove
         AUTHENTICATED_DATA_STORE("AuthenticatedDataStore"),
@@ -70,7 +74,7 @@ public class Storage {
     final Map<String, AppendOnlyDataStore> appendOnlyDataStores = new ConcurrentHashMap<>();
     private final PersistenceService persistenceService;
 
-    public Storage(PersistenceService persistenceService) {
+    public StorageService(PersistenceService persistenceService) {
         this.persistenceService = persistenceService;
 
         // We create all stores for those files we have already persisted.
@@ -110,30 +114,34 @@ public class Storage {
         }
     }
 
+    public void shutdown() {
+        authenticatedDataStores.values().forEach(DataStore::shutdown);
+        mailboxStores.values().forEach(DataStore::shutdown);
+        appendOnlyDataStores.values().forEach(DataStore::shutdown);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Inventory
+    // Get data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Inventory getInventoryOfAllStores(DataFilter dataFilter) {
-        var entrySet = getAllStores()
-                .flatMap(store -> store.getClonedMap().entrySet().stream())
-                .collect(Collectors.toSet());
-        return getInventory(dataFilter, entrySet);
+    public Stream<AuthenticatedPayload> getAllAuthenticatedPayload() {
+        return authenticatedDataStores.values().stream().flatMap(this::getAuthenticatedPayloadStream);
     }
 
-    public Inventory getInventoryFromStore(DataFilter dataFilter, DataStore<? extends DataRequest> store) {
-        Set<? extends Map.Entry<ByteArray, ? extends DataRequest>> entrySet = store.getClonedMap().entrySet();
-        return getInventory(dataFilter, entrySet);
+    public Stream<AuthenticatedPayload> getAuthenticatedPayloadStream(String storeName) {
+        return getAuthenticatedPayloadStream(getStoreByStoreName(storeName));
     }
 
-
-    public Set<byte[]> getHashes(StoreType storeType) {
-        return getHashes(getStoresByStoreType(storeType));
+    public Stream<AuthenticatedPayload> getAuthenticatedPayloadStream(Stream<DataStore<? extends DataRequest>> stores) {
+        return stores.flatMap(this::getAuthenticatedPayloadStream);
     }
 
-    public Set<byte[]> getHashes(String storeName) {
-        return getHashes(getStoreByStoreName(storeName));
+    private Stream<AuthenticatedPayload> getAuthenticatedPayloadStream(DataStore<? extends DataRequest> store) {
+        return store.getClone().values().stream()
+                .filter(e -> e instanceof AddAuthenticatedDataRequest)
+                .map(e -> (AddAuthenticatedDataRequest) e)
+                .map(e -> e.getAuthenticatedData().getPayload());
     }
 
 
@@ -155,11 +163,6 @@ public class Storage {
         }
     }
 
-    public CompletableFuture<Optional<NetworkPayload>> onRemoveRequest(RemoveDataRequest removeDataRequest) {
-        //todo
-        return CompletableFuture.completedFuture(Optional.empty());
-    }
-
     private CompletableFuture<Optional<NetworkPayload>> onAddMailboxRequest(AddMailboxRequest request) {
         MailboxPayload payload = request.getMailboxData().getMailboxPayload();
         return getOrCreateMailboxDataStore(payload.getMetaData())
@@ -168,7 +171,7 @@ public class Storage {
                     if (result.isSuccess()) {
                         return Optional.of(payload);
                     } else {
-                        if (!result.isRequestAlreadyReceived() && !result.isPayloadAlreadyStored()) {
+                        if (result.isSevereFailure()) {
                             log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
                         }
                         return Optional.empty();
@@ -184,7 +187,7 @@ public class Storage {
                     if (result.isSuccess()) {
                         return Optional.of(payload);
                     } else {
-                        if (!result.isRequestAlreadyReceived() && !result.isPayloadAlreadyStored()) {
+                        if (result.isSevereFailure()) {
                             log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
                         }
                         return Optional.empty();
@@ -200,7 +203,7 @@ public class Storage {
                     if (result.isSuccess()) {
                         return Optional.of(payload);
                     } else {
-                        if (!result.isPayloadAlreadyStored()) {
+                        if (result.isSevereFailure()) {
                             log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
                         }
                         return Optional.empty();
@@ -209,31 +212,118 @@ public class Storage {
     }
 
 
-    public Stream<AuthenticatedPayload> getAllAuthenticatedPayload() {
-        return authenticatedDataStores.values().stream().flatMap(this::getAuthenticatedPayload);
-        
-      /*  return authenticatedDataStores.values().stream()
-                .flatMap(e -> e.getClonedMap().values().stream())
-                .filter(e -> e instanceof AddAuthenticatedDataRequest)
-                .map(e -> (AddAuthenticatedDataRequest) e)
-                .map(e -> e.getAuthenticatedData().getPayload());*/
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Remove data
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<Optional<NetworkPayload>> onRemoveDataRequest(RemoveDataRequest removeDataRequest) {
+        if (removeDataRequest instanceof RemoveMailboxRequest removeMailboxRequest) {
+            return onRemoveMailboxRequest(removeMailboxRequest);
+        } else if (removeDataRequest instanceof RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest) {
+            return onRemoveAuthenticatedDataRequest(removeAuthenticatedDataRequest);
+        } else {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("AddRequest called with invalid addDataRequest: " +
+                            removeDataRequest.getClass().getSimpleName()));
+        }
     }
 
-    public Stream<AuthenticatedPayload> getAuthenticatedPayload(DataStore<? extends DataRequest> store) {
-        return store.getClonedMap().values().stream()
-                .filter(e -> e instanceof AddAuthenticatedDataRequest)
-                .map(e -> (AddAuthenticatedDataRequest) e)
-                .map(e -> e.getAuthenticatedData().getPayload());
+    private CompletableFuture<Optional<NetworkPayload>> onRemoveMailboxRequest(RemoveMailboxRequest request) {
+        return getOrCreateMailboxDataStore(request.getMetaData())
+                .thenApply(store -> {
+                    Result result = store.remove(request);
+                    if (result.isSuccess()) {
+                        return Optional.of(result.getRemovedPayload());
+                    } else {
+                        if (result.isSevereFailure()) {
+                            log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
+                        }
+                        return Optional.empty();
+                    }
+                });
     }
 
-    public Stream<AuthenticatedPayload> getNetworkPayloads(String storeName) {
-        return getNetworkPayloads(getStoreByStoreName(storeName));
+    private CompletableFuture<Optional<NetworkPayload>> onRemoveAuthenticatedDataRequest(RemoveAuthenticatedDataRequest request) {
+        return getOrCreateAuthenticatedDataStore(request.getMetaData())
+                .thenApply(store -> {
+                    Result result = store.remove(request);
+                    if (result.isSuccess()) {
+                        return Optional.of(result.getRemovedPayload());
+                    } else {
+                        if (result.isSevereFailure()) {
+                            log.warn("RemoveAuthenticatedDataRequest was not added to store. Result={}", result);
+                        }
+                        return Optional.empty();
+                    }
+                });
     }
 
-    public Stream<AuthenticatedPayload> getNetworkPayloads(Stream<DataStore<? extends DataRequest>> stores) {
-        return stores.flatMap(this::getAuthenticatedPayload);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Inventory
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Inventory getInventoryOfAllStores(DataFilter dataFilter) {
+        var entrySet = getAllStores()
+                .flatMap(store -> store.getClone().entrySet().stream())
+                .collect(Collectors.toSet());
+        return getInventory(dataFilter, entrySet);
     }
 
+    public Inventory getInventoryFromStore(DataFilter dataFilter, DataStore<? extends DataRequest> store) {
+        Set<? extends Map.Entry<ByteArray, ? extends DataRequest>> entrySet = store.getClone().entrySet();
+        return getInventory(dataFilter, entrySet);
+    }
+
+    private Inventory getInventory(DataFilter dataFilter,
+                                   Set<? extends Map.Entry<ByteArray, ? extends DataRequest>> entrySet) {
+        List<? extends DataRequest> result = entrySet.stream()
+                .filter(entry -> dataFilter.doInclude(getHashWithSeqNrAsBytes(entry)))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+        return new Inventory(result, entrySet.size() - result.size());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Hashes for BloomFilter
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Set<byte[]> getHashes(StoreType storeType) {
+        return getHashes(getStoresByStoreType(storeType));
+    }
+
+    public Set<byte[]> getHashes(String storeName) {
+        return getHashes(getStoreByStoreName(storeName));
+    }
+
+    private Set<byte[]> getHashes(Stream<DataStore<? extends DataRequest>> stores) {
+        return stores.flatMap(store -> store.getClone().entrySet().stream())
+                .map(this::getHashWithSeqNrAsBytes)
+                .collect(Collectors.toSet());
+    }
+
+    // We need to add the sequenceNumber to the hash, so that we get updated data if we have stale ones
+    private byte[] getHashWithSeqNrAsBytes(Map.Entry<ByteArray, ? extends DataRequest> entry) {
+        DataRequest dataRequest = entry.getValue();
+        int sequenceNumber = 0;
+        if (dataRequest instanceof AddAppendOnlyDataRequest) {
+            // AddAppendOnlyDataRequest does not use a seq nr.
+            return entry.getKey().getBytes();
+        } else if (dataRequest instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
+            // AddMailboxRequest extends AddAuthenticatedDataRequest so its covered here as well
+            sequenceNumber = addAuthenticatedDataRequest.getAuthenticatedData().getSequenceNumber();
+        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest) {
+            // RemoveMailboxRequest extends RemoveAuthenticatedDataRequest so its covered here as well
+            sequenceNumber = removeAuthenticatedDataRequest.getSequenceNumber();
+        }
+        return Bytes.concat(entry.getKey().getBytes(), ByteArrayUtils.integerToByteArray(sequenceNumber, 4));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Get or create stores
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<AuthenticatedDataStore> getOrCreateAuthenticatedDataStore(MetaData metaData) {
         String key = getStoreKey(metaData);
@@ -247,7 +337,6 @@ public class Storage {
             return CompletableFuture.completedFuture(authenticatedDataStores.get(key));
         }
     }
-
 
     public CompletableFuture<MailboxDataStore> getOrCreateMailboxDataStore(MetaData metaData) {
         String key = getStoreKey(metaData);
@@ -275,11 +364,14 @@ public class Storage {
         }
     }
 
-    public void shutdown() {
-        authenticatedDataStores.values().forEach(DataStore::shutdown);
-        mailboxStores.values().forEach(DataStore::shutdown);
-        appendOnlyDataStores.values().forEach(DataStore::shutdown);
+    private String getStoreKey(MetaData metaData) {
+        return metaData.getFileName();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Get stores
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private Stream<DataStore<? extends DataRequest>> getAllStores() {
         return Stream.concat(Stream.concat(authenticatedDataStores.values().stream(),
@@ -301,24 +393,5 @@ public class Storage {
     private Stream<DataStore<? extends DataRequest>> getStoreByStoreName(String storeName) {
         return getAllStores()
                 .filter(store -> storeName.equals(store.getFileName()));
-    }
-
-    private Set<byte[]> getHashes(Stream<DataStore<? extends DataRequest>> stores) {
-        return stores.flatMap(store -> store.getClonedMap().keySet().stream())
-                .map(ByteArray::getBytes)
-                .collect(Collectors.toSet());
-    }
-
-    private Inventory getInventory(DataFilter dataFilter,
-                                   Set<? extends Map.Entry<ByteArray, ? extends DataRequest>> entrySet) {
-        List<? extends DataRequest> result = entrySet.stream()
-                .filter(e -> dataFilter.doInclude(e.getKey()))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
-        return new Inventory(result, entrySet.size() - result.size());
-    }
-
-    private String getStoreKey(MetaData metaData) {
-        return metaData.getFileName();
     }
 }

@@ -17,36 +17,70 @@
 
 package bisq.desktop.primary;
 
+import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
-import javafx.beans.property.*;
+import bisq.user.Cookie;
+import bisq.user.CookieKey;
+import bisq.user.UserService;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Parent;
 import lombok.Getter;
 
+import java.util.Optional;
+
 @Getter
 public class PrimaryStageModel implements Model {
-    private final DoubleProperty minWidthProperty = new SimpleDoubleProperty(800);
-    private final DoubleProperty minHeightProperty = new SimpleDoubleProperty(600);
-    private final DoubleProperty prefWidthProperty = new SimpleDoubleProperty(1100);
-    private final DoubleProperty prefHeightProperty = new SimpleDoubleProperty(1300);
-    private final StringProperty titleProperty = new SimpleStringProperty("");
-
+    private final UserService userService;
+    private final String title;
+    private final Optional<Double> stageX;
+    private final Optional<Double> stageY;
+    private final Optional<Double> stageWidth;
+    private final Optional<Double> stageHeight;
+    private final double minWidth = 800;
+    private final double minHeight = 600;
+    private final double prefWidth = 1600;
+    private final double prefHeight = 1300;
+    protected NavigationTarget navigationTarget;
     @Getter
     protected final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
-    @Getter
-    protected NavigationTarget navigationTarget;
+    public PrimaryStageModel(DefaultServiceProvider serviceProvider) {
+        userService = serviceProvider.getUserService();
 
-    public PrimaryStageModel() {
+        title = serviceProvider.getApplicationOptions().appName();
+
+        Cookie cookie = userService.getUser().getCookie();
+        stageX = cookie.getAsOptionalDouble(CookieKey.STAGE_X);
+        stageY = cookie.getAsOptionalDouble(CookieKey.STAGE_Y);
+        stageWidth = cookie.getAsOptionalDouble(CookieKey.STAGE_W);
+        stageHeight = cookie.getAsOptionalDouble(CookieKey.STAGE_H);
     }
 
-    public void select(View<? extends Parent, ? extends Model, ? extends Controller> view) {
+    public void setView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
         this.view.set(view);
     }
 
-    public void setTitle(String appName) {
-        titleProperty.set(appName);
+    public void setStageX(double value) {
+        userService.getUser().getCookie().putAsDouble(CookieKey.STAGE_X, value);
+        userService.persist();
+    }
+
+    public void setStageY(double value) {
+        userService.getUser().getCookie().putAsDouble(CookieKey.STAGE_Y, value);
+        userService.persist();
+    }
+
+    public void setStageWidth(double value) {
+        userService.getUser().getCookie().putAsDouble(CookieKey.STAGE_W, value);
+        userService.persist();
+    }
+
+    public void setStageHeight(double value) {
+        userService.getUser().getCookie().putAsDouble(CookieKey.STAGE_H, value);
+        userService.persist();
     }
 }

@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.peergroup;
 
 import bisq.common.timer.Scheduler;
+import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -32,12 +33,28 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.*;
 
 @Slf4j
 public class PeerGroupService {
+    public enum State {
+        NEW,
+        STARTING,
+        RUNNING,
+        STOPPING,
+        TERMINATED
+    }
+
+    public interface Listener {
+        void onStateChanged(PeerGroupService.State state);
+    }
+
     private final Node node;
     private final BanList banList;
     private final Config config;
@@ -47,6 +64,9 @@ public class PeerGroupService {
     private final KeepAliveService keepAliveService;
     private final AddressValidationService addressValidationService;
     private Optional<Scheduler> scheduler = Optional.empty();
+    @Getter
+    public AtomicReference<PeerGroupService.State> state = new AtomicReference<>(PeerGroupService.State.NEW);
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public static record Config(PeerGroup.Config peerGroupConfig,
                                 PeerExchangeStrategy.Config peerExchangeConfig,
@@ -87,8 +107,9 @@ public class PeerGroupService {
         addressValidationService = new AddressValidationService(node, banList);
     }
 
-    public void initialize() {
+    public void start() {
         log.debug("Node {} called initialize", node);
+        setState(PeerGroupService.State.STARTING);
         peerExchangeService.doInitialPeerExchange().join();
         log.info("Node {} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
                 node, config.interval());
@@ -96,6 +117,7 @@ public class PeerGroupService {
                 .periodically(config.interval())
                 .name("PeerGroupService.scheduler-" + node));
         keepAliveService.initialize();
+        setState(State.RUNNING);
     }
 
     private void runBlockingTasks() {
@@ -123,10 +145,12 @@ public class PeerGroupService {
     }
 
     public CompletableFuture<Void> shutdown() {
+        setState(State.STOPPING);
         peerExchangeService.shutdown();
         addressValidationService.shutdown();
         keepAliveService.shutdown();
         scheduler.ifPresent(Scheduler::stop);
+        setState(State.TERMINATED);
         return CompletableFuture.completedFuture(null);
     }
 
@@ -297,6 +321,20 @@ public class PeerGroupService {
         }
     }
 
+    public void addListener(PeerGroupService.Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(PeerGroupService.Listener listener) {
+        listeners.remove(listener);
+    }
+
+    private void setState(PeerGroupService.State newState) {
+        checkArgument(state.get().ordinal() < newState.ordinal(),
+                "New state %s must have a higher ordinal as the current state %s", newState, state.get());
+        state.set(newState);
+        runAsync(() -> listeners.forEach(e -> e.onStateChanged(newState)), NetworkService.DISPATCHER);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Utils

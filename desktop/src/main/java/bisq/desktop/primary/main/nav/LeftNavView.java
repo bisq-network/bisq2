@@ -41,14 +41,14 @@ import lombok.Getter;
 import java.util.HashMap;
 import java.util.Map;
 
-public class NavigationView extends View<VBox, NavigationModel, NavigationController> {
+public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
     private final ToggleGroup toggleGroup = new ToggleGroup();
     @Getter
     private final NetworkInfoBox networkInfoBox;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
     private final Map<NavigationTarget, NavigationButton> navigationButtonByNavigationTarget = new HashMap<>();
 
-    public NavigationView(NavigationModel model, NavigationController controller) {
+    public LeftNavView(LeftNavModel model, LeftNavController controller) {
         super(new VBox(), model, controller);
 
         root.setMaxWidth(240);
@@ -150,7 +150,7 @@ public class NavigationView extends View<VBox, NavigationModel, NavigationContro
     }
 
     private static class NetworkInfoBox extends VBox {
-        private NetworkInfoBox(NavigationModel model, Runnable handler) {
+        private NetworkInfoBox(LeftNavModel model, Runnable handler) {
             setSpacing(5);
             setPadding(new Insets(10, 10, 10, 10));
             setOnMouseClicked(e -> handler.run());

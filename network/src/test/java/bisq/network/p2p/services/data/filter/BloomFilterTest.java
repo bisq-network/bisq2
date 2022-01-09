@@ -18,7 +18,6 @@
 package bisq.network.p2p.services.data.filter;
 
 import bisq.common.ObjectSerializer;
-import bisq.common.data.ByteArray;
 import bisq.common.util.FileUtils;
 import com.google.common.hash.BloomFilter;
 import lombok.extern.slf4j.Slf4j;
@@ -49,13 +48,13 @@ public class BloomFilterTest {
         BisqBloomFilter bisqBloomFilter = new BisqBloomFilter(filterContent, expectedInsertions, fpp);
 
         // All initial data must be found
-        filterContent.forEach(hash -> assertFalse(bisqBloomFilter.doInclude(new ByteArray(hash))));
+        filterContent.forEach(hash -> assertFalse(bisqBloomFilter.doInclude(hash)));
 
         int falsePositives = 0;
         // Create new additional data not in the bisqBloomFilter
         long ts = System.currentTimeMillis();
         for (int i = (int) entries; i < 2 * entries; i++) {
-            if (!bisqBloomFilter.doInclude(new ByteArray(getBytes()))) {
+            if (!bisqBloomFilter.doInclude(getBytes())) {
                 falsePositives++;
             }
         }

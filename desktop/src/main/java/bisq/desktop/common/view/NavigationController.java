@@ -26,12 +26,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class NavigationTargetController implements Controller {
+public abstract class NavigationController implements Controller {
     protected final Map<NavigationTarget, Controller> controllerCache = new ConcurrentHashMap<>();
     protected final ContentController contentController;
     protected final OverlayController overlayController;
 
-    public NavigationTargetController(ContentController contentController, OverlayController overlayController) {
+    public NavigationController(ContentController contentController, OverlayController overlayController) {
         this.contentController = contentController;
         this.overlayController = overlayController;
     }

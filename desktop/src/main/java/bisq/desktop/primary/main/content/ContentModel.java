@@ -34,7 +34,6 @@ public class ContentModel implements Model {
     private NavigationTarget navigationTarget;
 
     public ContentModel() {
-       log.error("saf");
     }
 
     public void select(NavigationTarget navigationTarget, View<? extends Parent, ? extends Model, ? extends Controller> view) {

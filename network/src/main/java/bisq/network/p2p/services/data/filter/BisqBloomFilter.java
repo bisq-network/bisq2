@@ -18,7 +18,6 @@
 package bisq.network.p2p.services.data.filter;
 
 
-import bisq.common.data.ByteArray;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
@@ -48,15 +47,14 @@ public class BisqBloomFilter implements DataFilter {
 
     @VisibleForTesting
     BisqBloomFilter(Set<byte[]> hashes, int expectedInsertions, double fpp) {
-        log.error("Num hashes {}", hashes.size());
         filter = BloomFilter.create(Funnels.byteArrayFunnel(), expectedInsertions, fpp);
         hashes.forEach(filter::put);
     }
 
     @Override
-    public boolean doInclude(ByteArray key) {
+    public boolean doInclude(byte[] bytes) {
         //log.error("doInclude result={}",  !filter.mightContain(key.getBytes()));
-        return !filter.mightContain(key.getBytes());
+        return !filter.mightContain(bytes);
     }
 
     public static BloomFilter<byte[]> readFrom(InputStream inputStream) throws IOException {

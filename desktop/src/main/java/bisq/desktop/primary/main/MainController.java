@@ -20,17 +20,19 @@ package bisq.desktop.primary.main;
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.ContentController;
-import bisq.desktop.primary.main.nav.NavigationController;
-import bisq.desktop.primary.main.top.TopPanelController;
 import bisq.desktop.overlay.OverlayController;
+import bisq.desktop.primary.main.content.ContentController;
+import bisq.desktop.primary.main.nav.LeftNavController;
+import bisq.desktop.primary.main.top.TopPanelController;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class MainController implements Controller {
     private final DefaultServiceProvider serviceProvider;
     private final MainModel model = new MainModel();
     private final ContentController contentController;
-    private final NavigationController navigationController;
+    private final LeftNavController leftNavController;
     private final TopPanelController topPanelController;
     @Getter
     private final MainView view;
@@ -39,24 +41,23 @@ public class MainController implements Controller {
         this.serviceProvider = serviceProvider;
 
         contentController = new ContentController(serviceProvider, overlayController);
-        navigationController = new NavigationController(serviceProvider, contentController, overlayController);
+        leftNavController = new LeftNavController(serviceProvider, contentController, overlayController);
         topPanelController = new TopPanelController();
 
         view = new MainView(model,
                 this,
                 contentController.getView(),
-                navigationController.getView(),
+                leftNavController.getView(),
                 topPanelController.getView());
     }
 
     public void onViewAttached() {
-        navigationController.navigateTo(NavigationTarget.TRADE_INTENT);
+        leftNavController.navigateTo(NavigationTarget.TRADE_INTENT);
     }
 
     public void onViewDetached() {
     }
 
     public void onDomainInitialized() {
-
     }
 }

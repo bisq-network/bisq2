@@ -22,21 +22,28 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Parent;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class TabModel implements Model {
     @Getter
     protected final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
     @Getter
-    protected NavigationTarget navigationTarget;
-
-    public TabModel() {
-    }
+    protected NavigationTarget navigationTarget = getDefaultNavigationTarget();
 
     public abstract NavigationTarget getDefaultNavigationTarget();
 
     public void select(NavigationTarget navigationTarget, View<? extends Parent, ? extends Model, ? extends Controller> view) {
         this.navigationTarget = navigationTarget;
         this.view.set(view);
+    }
+
+    @Override
+    public void onViewAttached() {
+    }
+
+    @Override
+    public void onViewDetached() {
     }
 }

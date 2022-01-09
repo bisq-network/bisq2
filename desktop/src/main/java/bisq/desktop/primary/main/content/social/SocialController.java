@@ -36,9 +36,8 @@ public class SocialController extends TabController<SocialModel> {
 
     public SocialController(DefaultServiceProvider serviceProvider,
                             ContentController contentController,
-                            OverlayController overlayController,
-                            NavigationTarget navigationTarget) {
-        super(contentController, overlayController, navigationTarget);
+                            OverlayController overlayController) {
+        super(contentController, overlayController);
 
         this.serviceProvider = serviceProvider;
         model = new SocialModel(serviceProvider);

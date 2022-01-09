@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.createoffer.assetswap.review;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.AutoTooltipButton;
+import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.controls.BisqTextField;
 import javafx.scene.control.Label;
@@ -30,7 +30,7 @@ import javafx.scene.layout.VBox;
 public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferController> {
     private GridPane gridPane;
     private TextField askTextField;
-    private AutoTooltipButton publishButton;
+    private BisqButton publishButton;
 
     public ReviewOfferView(ReviewOfferModel model, ReviewOfferController controller) {
         super(new VBox(), model, controller);
@@ -46,7 +46,7 @@ public class ReviewOfferView extends View<VBox, ReviewOfferModel, ReviewOfferCon
         int rowIndex = 0;
         askTextField = addRow(rowIndex, "I want (ask):", "").second();
 
-        publishButton = new AutoTooltipButton("Publish");
+        publishButton = new BisqButton("Publish");
         root.getChildren().addAll(header, gridPane, publishButton);
     }
 

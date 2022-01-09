@@ -127,7 +127,7 @@ public class PersistenceIntegrationTest {
         }
 
         @Override
-        public MockObject getClonedMap() {
+        public MockObject getClone() {
             return new MockObject(mockObject.value);
         }
     }

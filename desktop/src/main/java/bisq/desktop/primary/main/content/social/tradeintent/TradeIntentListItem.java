@@ -20,7 +20,6 @@ package bisq.desktop.primary.main.content.social.tradeintent;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.network.p2p.NetworkId;
-import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedNetworkIdPayload;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
@@ -34,7 +33,7 @@ import java.util.Optional;
 @Slf4j
 @Getter
 class TradeIntentListItem implements TableItem {
-    private final NetworkPayload networkPayload;
+    private final AuthenticatedNetworkIdPayload payload;
     private final String dateString;
     private final String bid;
     private final String ask;
@@ -42,10 +41,9 @@ class TradeIntentListItem implements TableItem {
     private final Date date;
     private final Optional<NetworkId> networkId;
 
-    TradeIntentListItem(NetworkPayload networkPayload) {
-        this.networkPayload = networkPayload;
-        if (networkPayload instanceof AuthenticatedNetworkIdPayload payload &&
-                payload.getData() instanceof TradeIntent tradeIntent) {
+    TradeIntentListItem(AuthenticatedNetworkIdPayload payload) {
+        this.payload = payload;
+        if (payload.getData() instanceof TradeIntent tradeIntent) {
             networkId = Optional.of(payload.getNetworkId());
             ttl = TimeFormatter.formatTime(payload.getMetaData().getTtl());
             ask = tradeIntent.ask();
@@ -56,7 +54,7 @@ class TradeIntentListItem implements TableItem {
             ask = Res.common.get("na");
             ttl = Res.common.get("na");
             networkId = Optional.empty();
-            bid = networkPayload.toString();
+            bid = this.payload.toString();
             dateString = Res.common.get("na");
             date = new Date(0);
         }
@@ -79,11 +77,11 @@ class TradeIntentListItem implements TableItem {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TradeIntentListItem that = (TradeIntentListItem) o;
-        return Objects.equals(networkPayload, that.networkPayload);
+        return Objects.equals(payload, that.payload);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(networkPayload);
+        return Objects.hash(payload);
     }
 }

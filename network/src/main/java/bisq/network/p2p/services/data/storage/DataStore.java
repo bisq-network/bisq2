@@ -19,8 +19,6 @@ package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
 import bisq.network.p2p.services.data.DataRequest;
-import bisq.network.p2p.services.data.filter.DataFilter;
-import bisq.network.p2p.services.data.inventory.Inventory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
@@ -28,10 +26,7 @@ import lombok.Getter;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public abstract class DataStore<T extends DataRequest> extends RateLimitedPersistenceClient<HashMap<ByteArray, T>> {
     public static final String SUB_PATH = "db" + File.separator + "network";
@@ -58,20 +53,20 @@ public abstract class DataStore<T extends DataRequest> extends RateLimitedPersis
     }
 
     @Override
-    public HashMap<ByteArray, T> getClonedMap() {
+    public HashMap<ByteArray, T> getClone() {
         synchronized (map) {
             return new HashMap<>(map);
         }
     }
 
-    public Inventory getInventory(DataFilter dataFilter) {
-        Map<ByteArray, T> mapClone = getClonedMap();
+  /*  public Inventory getInventory(DataFilter dataFilter) {
+        Map<ByteArray, T> mapClone = getClone();
         List<T> result = mapClone.entrySet().stream()
                 .filter(e -> dataFilter.doInclude(e.getKey()))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
         return new Inventory(result, mapClone.size() - result.size());
-    }
+    }*/
 
     abstract public void shutdown();
 }

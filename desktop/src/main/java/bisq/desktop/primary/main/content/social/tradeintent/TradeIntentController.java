@@ -43,4 +43,8 @@ public class TradeIntentController implements Controller {
     StringProperty addData(String ask, String bid) {
         return model.addData(ask, bid);
     }
+
+    public void onRemoveItem(TradeIntentListItem item) {
+        model.removeTradeIntent(item);
+    }
 }

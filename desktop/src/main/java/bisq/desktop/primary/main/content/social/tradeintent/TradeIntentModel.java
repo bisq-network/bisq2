@@ -26,6 +26,7 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedNetworkIdPayload;
 import bisq.security.KeyPairService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -46,54 +47,62 @@ public class TradeIntentModel implements Model {
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final KeyPairService keyPairService;
-    private final ObservableList<TradeIntentListItem> tradeIntentListItems = FXCollections.observableArrayList();
-    private final FilteredList<TradeIntentListItem> filteredTradeIntentListItems = new FilteredList<>(tradeIntentListItems);
-    private final SortedList<TradeIntentListItem> sortedTradeIntentListItems = new SortedList<>(filteredTradeIntentListItems);
+    private final ObservableList<TradeIntentListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<TradeIntentListItem> filteredItems = new FilteredList<>(listItems);
+    private final SortedList<TradeIntentListItem> sortedItems = new SortedList<>(filteredItems);
     private final Optional<DataService> dataService;
-    private DataService.Listener dataListener;
+    private Optional<DataService.Listener> dataListener = Optional.empty();
 
     public TradeIntentModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
         keyPairService = serviceProvider.getKeyPairService();
-        dataService = networkService.getServiceNodesByTransport().getDataService();
-        dataService.ifPresent(dataService -> {
-            dataListener = new DataService.Listener() {
-                @Override
-                public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
-                    UIThread.run(() -> tradeIntentListItems.add(new TradeIntentListItem(networkPayload)));
-                }
-
-                @Override
-                public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
-                    UIThread.run(() -> tradeIntentListItems.remove(new TradeIntentListItem(networkPayload)));
-                }
-            };
-            dataService.addListener(dataListener);
-            fillDataListItems(dataService);
-        });
+        dataService = networkService.getDataService();
 
         //todo listen on bootstrap
         UIScheduler.run(this::requestInventory).after(2000);
     }
 
-    private void fillDataListItems(DataService dataService) {
-        tradeIntentListItems.addAll(dataService.getNetworkPayloads("TradeIntent")
-                .map(TradeIntentListItem::new)
-                .collect(Collectors.toList()));
-    }
-
     public void onViewAttached() {
+        dataService.ifPresent(dataService -> {
+            dataListener = Optional.of(new DataService.Listener() {
+                @Override
+                public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
+                    log.error("onNetworkPayloadAdded {}", networkPayload);
+                    if (networkPayload instanceof AuthenticatedNetworkIdPayload payload && payload.getData() instanceof TradeIntent) {
+                        UIThread.run(() -> listItems.add(new TradeIntentListItem(payload)));
+                    }
+                }
+
+                @Override
+                public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
+                    log.error("onNetworkPayloadRemoved {}", networkPayload);
+                    if (networkPayload instanceof AuthenticatedNetworkIdPayload payload && payload.getData() instanceof TradeIntent) {
+                        UIThread.run(() -> listItems.remove(new TradeIntentListItem(payload)));
+                    }
+                }
+            });
+            dataService.addListener(dataListener.get());
+            
+            listItems.setAll(dataService.getAuthenticatedPayloadByStoreName("TradeIntent")
+                    .filter(payload -> payload instanceof AuthenticatedNetworkIdPayload)
+                    .map(payload -> (AuthenticatedNetworkIdPayload) payload)
+                    .peek(e -> {
+                        log.error("getNetworkPayloads {}", e);
+                    })
+                    .map(TradeIntentListItem::new)
+                    .collect(Collectors.toList()));
+        });
     }
 
     public void onViewDetached() {
+        dataService.ifPresent(dataService -> dataListener.ifPresent(dataService::removeListener));
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
 
     void requestInventory() {
         // We get updated our data listener once we get responses
@@ -104,7 +113,8 @@ public class TradeIntentModel implements Model {
         StringProperty resultProperty = new SimpleStringProperty("Create Servers for node ID");
         Identity identity = identityService.getOrCreateIdentity("tradeIntent");
         String keyId = identity.keyId();
-        networkService.addData(new TradeIntent(ask, bid, new Date().getTime()), identity.nodeId(), keyId)
+        TradeIntent tradeIntent = new TradeIntent(ask, bid, new Date().getTime());
+        networkService.addData(tradeIntent, identity.nodeId(), keyId)
                 .whenComplete((broadCastResultFutures, throwable) -> {
                     broadCastResultFutures.forEach(broadCastResultFuture -> {
                         broadCastResultFuture.whenComplete((broadCastResult, throwable2) -> {
@@ -121,4 +131,60 @@ public class TradeIntentModel implements Model {
                 });
         return resultProperty;
     }
+
+    public void removeTradeIntent(TradeIntentListItem item) {
+        StringProperty resultProperty = new SimpleStringProperty("Remove data");
+        Identity identity = identityService.getOrCreateIdentity("tradeIntent");
+        String keyId = identity.keyId();
+        networkService.removeData(item.getPayload().getData(), identity.nodeId(), keyId)
+                .whenComplete((broadCastResultFutures, throwable) -> {
+                    broadCastResultFutures.forEach(broadCastResultFuture -> {
+                        broadCastResultFuture.whenComplete((broadCastResult, throwable2) -> {
+                            //todo add states to networkService
+                            UIThread.run(() -> {
+                                if (throwable2 == null) {
+                                    resultProperty.set("Remove added. Broadcast result: " + broadCastResult);
+                                } else {
+                                    resultProperty.set("Error at remove data: " + throwable);
+                                }
+                            });
+                        });
+                    });
+                });
+    }
+
+    public boolean isMyTradeIntent(TradeIntentListItem item) {
+        return item.getNetworkId().map(networkId -> keyPairService.findKeyPair(networkId.getPubKey().keyId()).isPresent())
+                .orElse(false);
+    }
+
+/*
+    CompletableFuture<String> sendMessage(String message) {
+        checkArgument(selectedNetworkId.isPresent(), "Network ID must be set before calling sendMessage");
+        NetworkId receiverNetworkId = selectedNetworkId.get();
+        KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(KeyPairService.DEFAULT);
+        CompletableFuture<String> future = new CompletableFuture<>();
+        String senderNodeId = selectedNetworkId.get().getNodeId();
+        networkService.confidentialSendAsync(new TextMessage(message), receiverNetworkId, senderKeyPair, senderNodeId)
+                .whenComplete((resultMap, throwable) -> {
+                    if (throwable == null) {
+                        resultMap.entrySet().stream().forEach(typeResultEntry -> {
+                            Transport.Type transportType = typeResultEntry.getKey();
+                            ConfidentialMessageService.Result result = resultMap.get(transportType);
+                            result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture.whenComplete((broadcastResult, error) -> {
+                                if (error == null) {
+                                    future.complete(result.getState() + "; " + broadcastResult.toString());
+                                } else {
+                                    String value = result.getState().toString();
+                                    if (result.getState() == ConfidentialMessageService.State.FAILED) {
+                                        value += " with Error: " + result.getErrorMsg();
+                                    }
+                                    future.complete(value);
+                                }
+                            }));
+                        });
+                    }
+                });
+        return future;
+    }*/
 }

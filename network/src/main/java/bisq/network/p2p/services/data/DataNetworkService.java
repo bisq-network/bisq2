@@ -17,6 +17,9 @@
 
 package bisq.network.p2p.services.data;
 
+import bisq.network.p2p.message.Message;
+import bisq.network.p2p.node.CloseReason;
+import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
@@ -29,28 +32,63 @@ import bisq.network.p2p.services.peergroup.PeerGroupService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Function;
 
 /**
  * Responsible for broadcast and inventory service. One instance per transport type.
  */
 @Slf4j
-public class DataNetworkService {
+public class DataNetworkService implements PeerGroupService.Listener, Node.Listener {
+
+    public interface Listener {
+        void onMessage(Message message, Connection connection, String nodeId);
+
+        void onStateChanged(PeerGroupService.State state, DataNetworkService dataNetworkService);
+    }
+
     private final Node node;
     private final Broadcaster broadcaster;
     private final InventoryService inventoryService;
+    private final Set<DataNetworkService.Listener> listeners = new CopyOnWriteArraySet<>();
 
     public DataNetworkService(Node node,
                               PeerGroupService peerGroupService,
                               Function<DataFilter, Inventory> inventoryProvider) {
         this.node = node;
-
         PeerGroup peerGroup = peerGroupService.getPeerGroup();
+        peerGroupService.addListener(this);
         broadcaster = new Broadcaster(node, peerGroup);
         inventoryService = new InventoryService(node, peerGroup, inventoryProvider);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // PeerGroupService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    @Override
+    public void onStateChanged(PeerGroupService.State state) {
+        listeners.forEach(listener -> listener.onStateChanged(state, this));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Node.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMessage(Message message, Connection connection, String nodeId) {
+        listeners.forEach(listener -> listener.onMessage(message, connection, nodeId));
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -69,12 +107,12 @@ public class DataNetworkService {
         return inventoryService.request(dataFilter);
     }
 
-    public void addListener(Node.Listener listener) {
-        node.addListener(listener);
+    public void addListener(DataNetworkService.Listener listener) {
+        listeners.add(listener);
     }
 
-    public void removeListener(Node.Listener listener) {
-        node.removeListener(listener);
+    public void removeListener(DataNetworkService.Listener listener) {
+        listeners.remove(listener);
     }
 
 
@@ -87,4 +125,5 @@ public class DataNetworkService {
         broadcaster.shutdown();
         return CompletableFuture.completedFuture(null);
     }
+
 }

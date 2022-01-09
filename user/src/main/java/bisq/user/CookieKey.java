@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.filter;
+package bisq.user;
 
-
-import bisq.network.p2p.message.Proto;
-
-public interface DataFilter extends Proto {
-    boolean doInclude(byte[] bytes);
+// Used for persistence of Cookie. Entries must not be changes or removed. Only adding entries is permitted.
+public enum CookieKey {
+    STAGE_X,
+    STAGE_Y,
+    STAGE_W,
+    STAGE_H
 }

@@ -43,7 +43,7 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.network.p2p.services.data.storage.Storage.StoreType.MAILBOX_DATA_STORE;
+import static bisq.network.p2p.services.data.storage.StorageService.StoreType.MAILBOX_DATA_STORE;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
@@ -62,7 +62,7 @@ public class MailboxStoreTest {
         KeyPair receiverKeyPair = KeyGeneration.generateKeyPair();
 
         MailboxPayload payload = MailboxPayload.createMailboxPayload(message, senderKeyPair, receiverKeyPair.getPublic());
-        Map<ByteArray, MailboxRequest> map = store.getClonedMap();
+        Map<ByteArray, MailboxRequest> map = store.getClone();
         int initialMapSize = map.size();
         byte[] hash = DigestUtil.hash(payload.serialize());
         int initialSeqNum = store.getSequenceNumber(hash);

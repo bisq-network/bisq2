@@ -17,13 +17,17 @@
 
 package bisq.network.p2p.services.data.storage;
 
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import lombok.Getter;
+import lombok.ToString;
 
+@ToString
 @Getter
 public class Result {
     private final boolean success;
     private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
-            dataInvalid, expired, noEntry, alreadyRemoved, maxMapSizeReached;
+            dataInvalid, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure;
+    private AuthenticatedPayload removedPayload;
 
     public Result(boolean success) {
         this.success = success;
@@ -36,6 +40,7 @@ public class Result {
 
     public Result publicKeyHashInvalid() {
         publicKeyHashInvalid = true;
+        isSevereFailure =true;
         return this;
     }
 
@@ -55,7 +60,7 @@ public class Result {
     }
 
     public Result signatureInvalid() {
-        signatureInvalid = true;
+        signatureInvalid = true;   isSevereFailure =true;
         return this;
     }
 
@@ -65,7 +70,7 @@ public class Result {
     }
 
     public Result dataInvalid() {
-        dataInvalid = true;
+        dataInvalid = true;   isSevereFailure =true;
         return this;
     }
 
@@ -80,18 +85,8 @@ public class Result {
         return this;
     }
 
-    @Override
-    public String toString() {
-        return "Result{" +
-                "\r\n     success=" + success +
-                ",\r\n     requestAlreadyReceived=" + requestAlreadyReceived +
-                ",\r\n     publicKeyInvalid=" + publicKeyHashInvalid +
-                ",\r\n     sequenceNrInvalid=" + sequenceNrInvalid +
-                ",\r\n     signatureInvalid=" + signatureInvalid +
-                ",\r\n     dataInvalid=" + dataInvalid +
-                ",\r\n     expired=" + expired +
-                ",\r\n     noEntry=" + noEntry +
-                ",\r\n     alreadyRemoved=" + alreadyRemoved +
-                "\r\n}";
+    public Result removedPayload(AuthenticatedPayload removedPayload) {
+        this.removedPayload = removedPayload;
+        return this;
     }
 }

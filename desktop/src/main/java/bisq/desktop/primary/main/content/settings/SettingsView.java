@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.settings;
 
 import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTargetTab;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
 import com.jfoenix.controls.JFXTabPane;
-import javafx.scene.control.Tab;
 
 public class SettingsView extends TabView<JFXTabPane, SettingsModel, SettingsController> {
 
@@ -31,9 +31,9 @@ public class SettingsView extends TabView<JFXTabPane, SettingsModel, SettingsCon
 
     @Override
     protected void createAndAddTabs() {
-        Tab preferencesTab = createTab(Res.common.get("settings.preferences"), NavigationTarget.PREFERENCES);
-        Tab networkTab = createTab(Res.common.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
-        Tab aboutTab = createTab(Res.common.get("settings.about"), NavigationTarget.ABOUT);
+        NavigationTargetTab preferencesTab = createTab(Res.common.get("settings.preferences"), NavigationTarget.PREFERENCES);
+        NavigationTargetTab networkTab = createTab(Res.common.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
+        NavigationTargetTab aboutTab = createTab(Res.common.get("settings.about"), NavigationTarget.ABOUT);
         root.getTabs().setAll(preferencesTab, networkTab, aboutTab);
     }
 
