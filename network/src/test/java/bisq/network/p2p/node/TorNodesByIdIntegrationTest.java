@@ -19,7 +19,6 @@ package bisq.network.p2p.node;
 
 import bisq.network.p2p.node.transport.Transport;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Test;
 
 @Slf4j
 public class TorNodesByIdIntegrationTest extends BaseNodesByIdTest {
@@ -28,7 +27,7 @@ public class TorNodesByIdIntegrationTest extends BaseNodesByIdTest {
         super.test_messageRoundTrip(getConfig(Transport.Type.TOR));
     }
 
-    @Test
+   // @Test
     void test_initializeServer() throws InterruptedException {
         super.test_initializeServer(getConfig(Transport.Type.TOR));
     }

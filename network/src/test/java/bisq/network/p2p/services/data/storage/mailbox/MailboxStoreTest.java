@@ -30,7 +30,6 @@ import bisq.security.DigestUtil;
 import bisq.security.HybridEncryption;
 import bisq.security.KeyGeneration;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class MailboxStoreTest {
     private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "bisq_StorageTest";
 
-    @Test
+   // @Test
     public void testAddAndRemoveMailboxMsg() throws GeneralSecurityException, IOException, InterruptedException {
         MockMailboxMessage message = new MockMailboxMessage("test" + UUID.randomUUID());
         PersistenceService persistenceService = new PersistenceService(appDirPath);
