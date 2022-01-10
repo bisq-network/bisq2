@@ -18,35 +18,31 @@
 package bisq.desktop.primary.main.content.offerbook;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.common.data.Pair;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.overlay.OverlayController;
-import bisq.desktop.primary.main.content.ContentController;
-import bisq.desktop.primary.main.content.createoffer.CreateOfferController;
-import bisq.desktop.primary.main.content.offerbook.details.OfferDetailsController;
 import javafx.geometry.Bounds;
 import lombok.Getter;
 
 import java.util.Optional;
 
 import static bisq.desktop.NavigationTarget.CREATE_OFFER;
+import static bisq.desktop.NavigationTarget.OFFER_DETAILS;
 
 public class OfferbookController extends NavigationController {
+    @Getter
     private final OfferbookModel model;
     @Getter
     private final OfferbookView view;
     @Getter
     private final DefaultServiceProvider serviceProvider;
-    private final OverlayController overlayController;
 
-    public OfferbookController(DefaultServiceProvider serviceProvider,
-                               ContentController contentController,
-                               OverlayController overlayController) {
-        super(contentController, overlayController, CREATE_OFFER);
+    public OfferbookController(DefaultServiceProvider serviceProvider) {
+        super(NavigationTarget.OFFERBOOK);
+        
         this.serviceProvider = serviceProvider;
-        this.overlayController = overlayController;
         model = new OfferbookModel(serviceProvider);
         view = new OfferbookView(model, this);
     }
@@ -80,21 +76,24 @@ public class OfferbookController extends NavigationController {
     }
 
     public void onShowMakerDetails(OfferListItem item, Bounds boundsInParent) {
-        overlayController.show(new OfferDetailsController(item, boundsInParent));
+        Navigation.navigateTo(OFFER_DETAILS, new Pair<>(item, boundsInParent));
     }
 
     @Override
-    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget, Optional<Object> data) {
-        switch (localTarget) {
-            case CREATE_OFFER -> {
-                return new CreateOfferController(serviceProvider);
+    protected Optional<Controller> createController(NavigationTarget navigationTarget, Optional<Object> data) {
+        switch (navigationTarget) {
+          /*  case CREATE_OFFER -> {
+                return Optional.of(new CreateOfferController(serviceProvider));
+            }*/
+           /* case OFFER_DETAILS -> {
+                Pair<OfferListItem, Bounds> pair = (Pair) data.get();
+                OfferListItem item = pair.first();
+                Bounds boundsInParent = pair.second();
+                return Optional.of(new OfferDetailsController(item, boundsInParent));
+            }*/
+            default -> {
+                return Optional.empty();
             }
-            default -> throw new IllegalArgumentException("Invalid navigationTarget for this host. localTarget=" + localTarget);
         }
-    }
-
-    @Override
-    protected NavigationTarget resolveLocalTarget(NavigationTarget navigationTarget) {
-        return resolveAsRootHost(navigationTarget);
     }
 }

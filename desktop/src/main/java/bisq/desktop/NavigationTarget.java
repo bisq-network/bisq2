@@ -18,54 +18,59 @@
 package bisq.desktop;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
+@Slf4j
 public enum NavigationTarget {
-    MARKETS,
-    SOCIAL,
+    NONE(),
+    ROOT(),
+    PRIMARY_STAGE(ROOT),
+    OVERLAY(ROOT),
+    MAIN(PRIMARY_STAGE),
+    CONTENT(MAIN),
+    SETTINGS(CONTENT),
+    
+    SOCIAL(CONTENT),
     TRADE_INTENT(SOCIAL),
     HANGOUT(SOCIAL),
-    OFFERBOOK,
-    PORTFOLIO,
-    WALLET,
-    CREATE_OFFER(StageType.OVERLAY),
-    SETTINGS,
+    
+    MARKETS(CONTENT),
+    OFFERBOOK(CONTENT),
+    OFFER_DETAILS(OVERLAY),
+    CREATE_OFFER(OVERLAY),
+    PORTFOLIO(CONTENT),
+    WALLET(CONTENT),
+    
     PREFERENCES(SETTINGS),
-    ABOUT(SETTINGS),
     NETWORK_INFO(SETTINGS),
-    CLEAR_NET(SETTINGS, NETWORK_INFO),
-    TOR(SETTINGS, NETWORK_INFO),
-    I2P(SETTINGS, NETWORK_INFO);
+    ABOUT(SETTINGS),
+    CLEAR_NET(NETWORK_INFO),
+    TOR(NETWORK_INFO),
+    I2P(NETWORK_INFO);
+   
 
     @Getter
-    private final StageType stageType;
+    private final Optional<NavigationTarget> parent;
     @Getter
-    private final List<NavigationTarget> path = new ArrayList<>();
+    private final List<NavigationTarget> path;
 
     NavigationTarget() {
-        this(StageType.PRIMARY);
+        parent = Optional.empty();
+        path = new ArrayList<>();
     }
 
-    NavigationTarget(StageType stageType) {
-        this(stageType, new NavigationTarget[]{});
-    }
-
-    NavigationTarget(NavigationTarget... path) {
-        this(StageType.PRIMARY, path);
-    }
-
-    NavigationTarget(StageType stageType, NavigationTarget... path) {
-        this.stageType = stageType;
-        this.path.addAll(List.of(path));
-
-        if (!this.path.isEmpty()) {
-            checkArgument(this.path.get(0).getPath().isEmpty(),
-                    "First element in path must point to a root NavigationTarget. " +
-                            "NavigationTarget=" + this);
+    NavigationTarget(NavigationTarget parent) {
+        this.parent = Optional.of(parent);
+        List<NavigationTarget> temp = new ArrayList<>();
+        Optional<NavigationTarget> candidate = Optional.of(parent);
+        while (candidate.isPresent()) {
+            temp.add(0, candidate.get());
+            candidate = candidate.get().getParent();
         }
+        this.path = temp;
     }
 }

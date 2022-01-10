@@ -19,47 +19,44 @@ package bisq.desktop.primary.main.content.settings.networkinfo;
 
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
-import bisq.desktop.primary.main.content.settings.networkinfo.transport.TransportTypeView;
+import bisq.desktop.common.view.NavigationModel;
 import bisq.i18n.Res;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.p2p.NetworkId;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.security.KeyPairService;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
-public class NetworkInfoModel extends TabModel {
+public class NetworkInfoModel extends NavigationModel {
     private final NetworkService networkService;
-    @Getter
-    private final Transport.Type defaultTransportType = Transport.Type.CLEAR;
 
     private final BooleanProperty clearNetDisabled = new SimpleBooleanProperty(false);
     private final BooleanProperty torDisabled = new SimpleBooleanProperty(false);
     private final BooleanProperty i2pDisabled = new SimpleBooleanProperty(false);
-    private final ObjectProperty<Optional<TransportTypeView>> transportTypeView = new SimpleObjectProperty<>();
+    // private final ObjectProperty<Optional<TransportTypeView>> transportTypeView = new SimpleObjectProperty<>();
     private final Set<Transport.Type> supportedTransportTypes;
-    private final IdentityService identityService;
-    @Setter
-    private Optional<Transport.Type> selectedTransportType = Optional.empty();
+    private final Set<NavigationTarget> supportedNavigationTarget;
+    // private final Optional<Transport.Type> selectedTransportType = Optional.empty();
 
     private final KeyPairService keyPairService;
     private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.common.get("na"));
-    private Optional<NetworkId> selectedNetworkId = Optional.empty();
 
     public NetworkInfoModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
-        identityService = serviceProvider.getIdentityService();
 
         supportedTransportTypes = networkService.getSupportedTransportTypes();
+        supportedNavigationTarget = supportedTransportTypes.stream()
+                .map(this::getNavigationTargetFromTransportType)
+                .collect(Collectors.toSet());
 
         clearNetDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.CLEAR));
         torDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.TOR));
@@ -70,22 +67,25 @@ public class NetworkInfoModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.CLEAR_NET;
+        if (supportedTransportTypes == null) {
+            return NavigationTarget.CLEAR_NET;
+        }
+        return supportedTransportTypes.stream()
+                .min(Enum::compareTo)
+                .map(this::getNavigationTargetFromTransportType)
+                .orElse(NavigationTarget.CLEAR_NET);
     }
 
-    public void onViewAttached() {
-        super.onViewAttached();
+    boolean isDisabled(NavigationTarget navigationTarget) {
+        return !supportedNavigationTarget.contains(navigationTarget);
     }
 
-    public void onViewDetached() {
-        super.onViewDetached();
-    }
-
-    public NavigationTarget getNavigationTargetFromTransportType(Transport.Type type) {
+    private NavigationTarget getNavigationTargetFromTransportType(Transport.Type type) {
         return switch (type) {
             case CLEAR -> NavigationTarget.CLEAR_NET;
             case TOR -> NavigationTarget.TOR;
             case I2P -> NavigationTarget.I2P;
         };
     }
+
 }

@@ -20,9 +20,7 @@ package bisq.desktop.primary.main.nav;
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.CloseReason;
@@ -31,18 +29,17 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.peergroup.PeerGroup;
 import javafx.beans.property.*;
-import javafx.scene.Parent;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
+import java.util.Set;
+
+@Slf4j
 @Getter
 public class LeftNavModel implements Model {
     private final NetworkService networkService;
-    @Getter
-    protected final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
-
-    @Getter
-    protected NavigationTarget navigationTarget;
-
+    private final ObjectProperty<NavigationTarget> navigationTarget = new SimpleObjectProperty<>();
     private final StringProperty clearNetNumConnections = new SimpleStringProperty("0");
     private final StringProperty clearNetNumTargetConnections = new SimpleStringProperty("0");
     private final BooleanProperty clearNetIsVisible = new SimpleBooleanProperty(false);
@@ -52,7 +49,7 @@ public class LeftNavModel implements Model {
     private final StringProperty i2pNumConnections = new SimpleStringProperty("0");
     private final StringProperty i2pNumTargetConnections = new SimpleStringProperty("0");
     private final BooleanProperty i2pIsVisible = new SimpleBooleanProperty(false);
-
+    private final Set<NavigationTarget> navigationTargets = new HashSet<>();
 
     public LeftNavModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
@@ -92,9 +89,19 @@ public class LeftNavModel implements Model {
         );
     }
 
-    public void select(NavigationTarget navigationTarget, View<? extends Parent, ? extends Model, ? extends Controller> view) {
-        this.navigationTarget = navigationTarget;
-        this.view.set(view);
+    void addNavigationTarget(NavigationTarget navigationTarget) {
+        navigationTargets.add(navigationTarget);
+    }
+
+    void select(NavigationTarget navigationTarget) {
+        if (navigationTargets.contains(navigationTarget)) {
+            this.navigationTarget.set(navigationTarget);
+            return;
+        }
+        navigationTarget.getPath().stream()
+                .filter(navigationTargets::contains)
+                .findAny()
+                .ifPresent(this.navigationTarget::set);
     }
 
     private void onNumConnectionsChanged(Transport.Type type, PeerGroup peerGroup) {
@@ -106,4 +113,6 @@ public class LeftNavModel implements Model {
             }
         });
     }
+
+
 }

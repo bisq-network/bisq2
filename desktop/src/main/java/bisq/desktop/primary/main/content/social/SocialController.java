@@ -21,28 +21,23 @@ import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.overlay.OverlayController;
-import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.content.social.hangout.HangoutController;
 import bisq.desktop.primary.main.content.social.tradeintent.TradeIntentController;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.desktop.NavigationTarget.HANGOUT;
-import static bisq.desktop.NavigationTarget.TRADE_INTENT;
-
-public class SocialController extends TabController<SocialModel> {
+@Slf4j
+public class SocialController extends TabController {
     private final DefaultServiceProvider serviceProvider;
     @Getter
     private final SocialModel model;
     @Getter
     private final SocialView view;
 
-    public SocialController(DefaultServiceProvider serviceProvider,
-                            ContentController contentController,
-                            OverlayController overlayController) {
-        super(contentController, overlayController, TRADE_INTENT, HANGOUT);
+    public SocialController(DefaultServiceProvider serviceProvider) {
+        super(NavigationTarget.SOCIAL);
 
         this.serviceProvider = serviceProvider;
         model = new SocialModel(serviceProvider);
@@ -50,22 +45,17 @@ public class SocialController extends TabController<SocialModel> {
     }
 
     @Override
-    protected NavigationTarget resolveLocalTarget(NavigationTarget navigationTarget) {
-        return resolveAsLevel1Host(navigationTarget);
-    }
-
-    @Override
-    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget, Optional<Object> data) {
-        switch (localTarget) {
+    protected Optional<Controller> createController(NavigationTarget navigationTarget, Optional<Object> data) {
+        switch (navigationTarget) {
             case TRADE_INTENT -> {
-                return new TradeIntentController(serviceProvider);
+                return Optional.of(new TradeIntentController(serviceProvider));
             }
             case HANGOUT -> {
-                return new HangoutController(serviceProvider, data);
+                return Optional.of(new HangoutController(serviceProvider, data));
             }
-            default -> throw new IllegalArgumentException("Invalid navigationTarget for this host. localTarget=" + localTarget);
+            default -> {
+                return Optional.empty();
+            }
         }
     }
-
-
 }

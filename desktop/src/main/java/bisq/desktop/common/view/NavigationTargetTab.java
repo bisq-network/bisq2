@@ -21,14 +21,12 @@ import bisq.desktop.NavigationTarget;
 import javafx.scene.control.Tab;
 import lombok.Getter;
 
-import java.util.Optional;
-
 public class NavigationTargetTab extends Tab {
     @Getter
-    private Optional<NavigationTarget> navigationTarget = Optional.empty();
+    private NavigationTarget navigationTarget;
 
     public NavigationTargetTab(String title, NavigationTarget navigationTarget) {
         super(title);
-        this.navigationTarget = Optional.of(navigationTarget);
+        this.navigationTarget = navigationTarget;
     }
 }

@@ -44,6 +44,6 @@ public class SocialView extends TabView<JFXTabPane, SocialModel, SocialControlle
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
-       // root.getTabs().clear(); 
+        //root.getTabs().clear(); 
     }
 }

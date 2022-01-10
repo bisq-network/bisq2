@@ -21,52 +21,44 @@ import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.overlay.OverlayController;
-import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.content.settings.networkinfo.NetworkInfoController;
 import bisq.desktop.primary.main.content.settings.networkinfo.about.AboutController;
 import bisq.desktop.primary.main.content.settings.networkinfo.preferences.PreferencesController;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.desktop.NavigationTarget.*;
-
-public class SettingsController extends TabController<SettingsModel> implements Controller {
+@Slf4j
+public class SettingsController extends TabController {
     private final DefaultServiceProvider serviceProvider;
     @Getter
     private final SettingsModel model;
     @Getter
     private final SettingsView view;
 
-    public SettingsController(DefaultServiceProvider serviceProvider,
-                              ContentController contentController,
-                              OverlayController overlayController) {
-        super(contentController, overlayController, PREFERENCES, NETWORK_INFO, ABOUT);
+    public SettingsController(DefaultServiceProvider serviceProvider) {
+        super(NavigationTarget.SETTINGS);
 
         this.serviceProvider = serviceProvider;
         model = new SettingsModel(serviceProvider);
         view = new SettingsView(model, this);
     }
 
-    @Override
-    protected NavigationTarget resolveLocalTarget(NavigationTarget navigationTarget) {
-        return resolveAsLevel1Host(navigationTarget);
-    }
-
-    @Override
-    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget, Optional<Object> data) {
-        switch (localTarget) {
+    protected Optional<Controller> createController(NavigationTarget navigationTarget, Optional<Object> data) {
+        switch (navigationTarget) {
             case PREFERENCES -> {
-                return new PreferencesController(serviceProvider);
+                return Optional.of(new PreferencesController(serviceProvider));
             }
             case NETWORK_INFO -> {
-                return new NetworkInfoController(serviceProvider, contentController, overlayController);
+                return Optional.of(new NetworkInfoController(serviceProvider));
             }
             case ABOUT -> {
-                return new AboutController(serviceProvider);
+                return Optional.of(new AboutController(serviceProvider));
             }
-            default -> throw new IllegalArgumentException("Invalid navigationTarget for this host. localTarget=" + localTarget);
+            default -> {
+                return Optional.empty();
+            }
         }
     }
 }

@@ -18,7 +18,6 @@
 package bisq.desktop.primary;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
@@ -44,7 +43,6 @@ public class PrimaryStageModel implements Model {
     private final double minHeight = 600;
     private final double prefWidth = 1600;
     private final double prefHeight = 1300;
-    protected NavigationTarget navigationTarget;
     @Getter
     protected final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 

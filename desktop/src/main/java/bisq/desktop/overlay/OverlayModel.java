@@ -17,21 +17,14 @@
 
 package bisq.desktop.overlay;
 
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.scene.Parent;
-import lombok.Getter;
+import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationModel;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OverlayModel implements Model {
-    @Getter
-    private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
-
-    public void selectView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
-        this.view.set(view);
+public class OverlayModel extends NavigationModel {
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.NONE;
     }
 }

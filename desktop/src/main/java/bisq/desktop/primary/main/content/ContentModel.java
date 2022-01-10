@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.View;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -29,11 +30,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class ContentModel implements Model {
+public class ContentModel extends NavigationModel {
     private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
     private NavigationTarget navigationTarget;
 
     public ContentModel() {
+    }
+
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.SOCIAL;
     }
 
     public void select(NavigationTarget navigationTarget, View<? extends Parent, ? extends Model, ? extends Controller> view) {

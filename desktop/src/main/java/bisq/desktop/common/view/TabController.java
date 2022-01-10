@@ -19,32 +19,16 @@ package bisq.desktop.common.view;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.overlay.OverlayController;
-import bisq.desktop.primary.main.content.ContentController;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
 @Slf4j
-public abstract class TabController<M extends TabModel> extends NavigationController {
+public abstract class TabController extends NavigationController {
 
-    public TabController(ContentController contentController,
-                         OverlayController overlayController,
-                         NavigationTarget... navigationTargets) {
-        super(contentController, overlayController, navigationTargets);
-    }
-
-    protected abstract M getModel();
-
-    @Override
-    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        NavigationTarget localTarget = resolveLocalTarget(navigationTarget);
-        Controller controller = getOrCreateController(localTarget, navigationTarget, data);
-        getModel().select(localTarget, controller.getView());
+    public TabController(NavigationTarget host) {
+        super(host);
     }
 
     public void onTabSelected(NavigationTarget navigationTarget) {
-        log.error("onTabSelected {} {}", navigationTarget, this.getClass().getSimpleName());
         Navigation.navigateTo(navigationTarget);
     }
 }

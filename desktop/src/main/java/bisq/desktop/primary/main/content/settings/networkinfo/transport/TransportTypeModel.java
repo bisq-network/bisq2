@@ -84,7 +84,6 @@ public class TransportTypeModel implements Model {
                 .collect(Collectors.toList()));
     }
 
-
     public void onViewAttached() {
         allNodes.forEach(node -> {
             Node.Listener nodeListener = new Node.Listener() {

@@ -23,6 +23,8 @@ import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
 public class MarketsController implements Controller {
+    public static final Class<? extends Controller> controllerClass  =MarketsController.class;
+
     private final DefaultServiceProvider serviceProvider;
     private final MarketsModel model;
     @Getter
@@ -34,6 +36,7 @@ public class MarketsController implements Controller {
         view = new MarketsView(model, this);
     }
 
+   
     void onRefresh() {
         serviceProvider.getMarketPriceService().request()
                 .whenComplete((marketPriceMap, t) -> UIThread.run(() -> model.setMarketPriceMap(marketPriceMap)));

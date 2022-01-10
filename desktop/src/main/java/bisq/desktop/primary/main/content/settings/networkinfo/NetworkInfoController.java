@@ -18,31 +18,24 @@
 package bisq.desktop.primary.main.content.settings.networkinfo;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.overlay.OverlayController;
-import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.content.settings.networkinfo.transport.TransportTypeController;
 import bisq.network.p2p.node.transport.Transport;
 import lombok.Getter;
 
 import java.util.Optional;
 
-import static bisq.desktop.NavigationTarget.*;
-
-public class NetworkInfoController extends TabController<NetworkInfoModel> {
+public class NetworkInfoController extends TabController {
     private final DefaultServiceProvider serviceProvider;
     @Getter
     private final NetworkInfoModel model;
     @Getter
     private final NetworkInfoView view;
 
-    public NetworkInfoController(DefaultServiceProvider serviceProvider,
-                                 ContentController contentController,
-                                 OverlayController overlayController) {
-        super(contentController, overlayController, CLEAR_NET, TOR, I2P);
+    public NetworkInfoController(DefaultServiceProvider serviceProvider) {
+        super(NavigationTarget.NETWORK_INFO);
 
         this.serviceProvider = serviceProvider;
         model = new NetworkInfoModel(serviceProvider);
@@ -50,26 +43,28 @@ public class NetworkInfoController extends TabController<NetworkInfoModel> {
     }
 
     @Override
-    protected NavigationTarget resolveLocalTarget(NavigationTarget navigationTarget) {
-        return resolveAsLevel2Host(navigationTarget);
+    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+        super.onNavigate(navigationTarget, data);
     }
 
     @Override
-    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget, Optional<Object> data) {
-        switch (localTarget) {
+    protected Optional<Controller> createController(NavigationTarget navigationTarget, Optional<Object> data) {
+        switch (navigationTarget) {
             case CLEAR_NET -> {
-                return new TransportTypeController(serviceProvider, Transport.Type.CLEAR);
+                return Optional.of(new TransportTypeController(serviceProvider, Transport.Type.CLEAR));
             }
             case TOR -> {
-                return new TransportTypeController(serviceProvider, Transport.Type.TOR);
+                return Optional.of(new TransportTypeController(serviceProvider, Transport.Type.TOR));
             }
             case I2P -> {
-                return new TransportTypeController(serviceProvider, Transport.Type.I2P);
+                return Optional.of(new TransportTypeController(serviceProvider, Transport.Type.I2P));
             }
-            default -> throw new IllegalArgumentException("Invalid navigationTarget for this host. NavigationTarget=" + localTarget);
+            default -> {
+                return Optional.empty();
+            }
         }
     }
-
+/*
     @Override
     public void onViewAttached() {
         super.onViewAttached();
@@ -77,5 +72,5 @@ public class NetworkInfoController extends TabController<NetworkInfoModel> {
                 .min(Enum::compareTo)
                 .map(model::getNavigationTargetFromTransportType)
                 .ifPresent(Navigation::navigateTo);
-    }
+    }*/
 }
