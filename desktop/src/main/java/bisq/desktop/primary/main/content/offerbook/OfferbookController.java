@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.offerbook;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
@@ -28,6 +29,10 @@ import bisq.desktop.primary.main.content.offerbook.details.OfferDetailsControlle
 import javafx.geometry.Bounds;
 import lombok.Getter;
 
+import java.util.Optional;
+
+import static bisq.desktop.NavigationTarget.CREATE_OFFER;
+
 public class OfferbookController extends NavigationController {
     private final OfferbookModel model;
     @Getter
@@ -36,10 +41,10 @@ public class OfferbookController extends NavigationController {
     private final DefaultServiceProvider serviceProvider;
     private final OverlayController overlayController;
 
-    public OfferbookController(DefaultServiceProvider serviceProvider, 
-                               ContentController contentController, 
+    public OfferbookController(DefaultServiceProvider serviceProvider,
+                               ContentController contentController,
                                OverlayController overlayController) {
-        super(contentController, overlayController);
+        super(contentController, overlayController, CREATE_OFFER);
         this.serviceProvider = serviceProvider;
         this.overlayController = overlayController;
         model = new OfferbookModel(serviceProvider);
@@ -68,7 +73,7 @@ public class OfferbookController extends NavigationController {
     }
 
     public void onCreateOffer() {
-        navigateTo(NavigationTarget.CREATE_OFFER);
+        Navigation.navigateTo(CREATE_OFFER);
     }
 
     public void onTakeOffer(OfferListItem item) {
@@ -79,7 +84,7 @@ public class OfferbookController extends NavigationController {
     }
 
     @Override
-    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget) {
+    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget, Optional<Object> data) {
         switch (localTarget) {
             case CREATE_OFFER -> {
                 return new CreateOfferController(serviceProvider);

@@ -42,7 +42,7 @@ public enum NavigationTarget {
     I2P(SETTINGS, NETWORK_INFO);
 
     @Getter
-    private final StageType sink;
+    private final StageType stageType;
     @Getter
     private final List<NavigationTarget> path = new ArrayList<>();
 
@@ -50,16 +50,16 @@ public enum NavigationTarget {
         this(StageType.PRIMARY);
     }
 
-    NavigationTarget(StageType sink) {
-        this(sink, new NavigationTarget[]{});
+    NavigationTarget(StageType stageType) {
+        this(stageType, new NavigationTarget[]{});
     }
 
     NavigationTarget(NavigationTarget... path) {
         this(StageType.PRIMARY, path);
     }
 
-    NavigationTarget(StageType sink, NavigationTarget... path) {
-        this.sink = sink;
+    NavigationTarget(StageType stageType, NavigationTarget... path) {
+        this.stageType = stageType;
         this.path.addAll(List.of(path));
 
         if (!this.path.isEmpty()) {

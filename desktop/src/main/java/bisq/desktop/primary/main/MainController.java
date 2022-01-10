@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.OverlayController;
@@ -52,7 +53,7 @@ public class MainController implements Controller {
     }
 
     public void onViewAttached() {
-        leftNavController.navigateTo(NavigationTarget.TRADE_INTENT);
+        Navigation.navigateTo(NavigationTarget.TRADE_INTENT);
     }
 
     public void onViewDetached() {

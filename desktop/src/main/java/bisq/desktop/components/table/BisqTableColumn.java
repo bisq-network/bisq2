@@ -143,9 +143,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             this.onActionHandler = actionHandler;
             return this;
         }
-
     }
-
 
     public void applyComparator(Comparator<S> comparator) {
         setSortable(true);
@@ -268,19 +266,12 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                         return new TableCell<>() {
                             S previousItem;
                             private final BisqButton button = new BisqButton();
-                            ;
 
                             @Override
                             public void updateItem(final S item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     button.setOnAction(event -> onActionHandler.accept(item));
-                                    Function<S, Boolean> visible = new Function<>() {
-                                        @Override
-                                        public Boolean apply(S item) {
-                                            return true;
-                                        }
-                                    };
                                     isVisibleFunction.ifPresent(function -> button.setVisible(function.apply(item)));
                                     setGraphic(button);
                                     if (previousItem instanceof TableItem tableItem) {
@@ -309,7 +300,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                         textProperty().unbind();
                                     }
                                     button.setOnAction(null);
-                                    setText("");
+                                    setGraphic(null);
                                 }
                             }
                         };

@@ -62,6 +62,7 @@ public class DataNetworkService implements PeerGroupService.Listener, Node.Liste
         peerGroupService.addListener(this);
         broadcaster = new Broadcaster(node, peerGroup);
         inventoryService = new InventoryService(node, peerGroup, inventoryProvider);
+        node.addListener(this);
     }
 
 

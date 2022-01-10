@@ -28,6 +28,10 @@ import bisq.desktop.primary.main.content.settings.networkinfo.about.AboutControl
 import bisq.desktop.primary.main.content.settings.networkinfo.preferences.PreferencesController;
 import lombok.Getter;
 
+import java.util.Optional;
+
+import static bisq.desktop.NavigationTarget.*;
+
 public class SettingsController extends TabController<SettingsModel> implements Controller {
     private final DefaultServiceProvider serviceProvider;
     @Getter
@@ -38,7 +42,7 @@ public class SettingsController extends TabController<SettingsModel> implements 
     public SettingsController(DefaultServiceProvider serviceProvider,
                               ContentController contentController,
                               OverlayController overlayController) {
-        super(contentController, overlayController);
+        super(contentController, overlayController, PREFERENCES, NETWORK_INFO, ABOUT);
 
         this.serviceProvider = serviceProvider;
         model = new SettingsModel(serviceProvider);
@@ -51,7 +55,7 @@ public class SettingsController extends TabController<SettingsModel> implements 
     }
 
     @Override
-    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget) {
+    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget, Optional<Object> data) {
         switch (localTarget) {
             case PREFERENCES -> {
                 return new PreferencesController(serviceProvider);

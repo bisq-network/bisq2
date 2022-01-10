@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.nav;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
@@ -69,7 +70,7 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
-        networkInfoBox = new NetworkInfoBox(model, () -> controller.navigateTo(NavigationTarget.NETWORK_INFO));
+        networkInfoBox = new NetworkInfoBox(model, () -> Navigation.navigateTo(NavigationTarget.NETWORK_INFO));
         root.getChildren().addAll(markets, social, offerBook, portfolio, wallet, settings, spacer, networkInfoBox);
 
         viewChangeListener = (observable, oldValue, newValue) -> {
@@ -86,7 +87,7 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
     }
 
     private NavigationButton createNavigationButton(String title, NavigationTarget navigationTarget) {
-        NavigationButton button = new NavigationButton(title, toggleGroup, () -> controller.navigateTo(navigationTarget));
+        NavigationButton button = new NavigationButton(title, toggleGroup, () -> Navigation.navigateTo(navigationTarget));
         navigationButtonByNavigationTarget.put(navigationTarget, button);
         return button;
     }

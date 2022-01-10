@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.social.tradeintent;
 
 import bisq.desktop.components.table.TableItem;
-import bisq.i18n.Res;
 import bisq.network.p2p.NetworkId;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedNetworkIdPayload;
 import bisq.presentation.formatters.DateFormatter;
@@ -30,34 +29,32 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 @Getter
-class TradeIntentListItem implements TableItem {
+public class TradeIntentListItem implements TableItem {
     private final AuthenticatedNetworkIdPayload payload;
+    private final TradeIntent tradeIntent;
+    private final Optional<NetworkId> networkId;
+    private final String id;
     private final String dateString;
     private final String bid;
     private final String ask;
     private final String ttl;
     private final Date date;
-    private final Optional<NetworkId> networkId;
 
     TradeIntentListItem(AuthenticatedNetworkIdPayload payload) {
         this.payload = payload;
-        if (payload.getData() instanceof TradeIntent tradeIntent) {
-            networkId = Optional.of(payload.getNetworkId());
-            ttl = TimeFormatter.formatTime(payload.getMetaData().getTtl());
-            ask = tradeIntent.ask();
-            bid = tradeIntent.bid();
-            date = new Date(tradeIntent.date());
-            dateString = DateFormatter.formatDateTime(date);
-        } else {
-            ask = Res.common.get("na");
-            ttl = Res.common.get("na");
-            networkId = Optional.empty();
-            bid = this.payload.toString();
-            dateString = Res.common.get("na");
-            date = new Date(0);
-        }
+        checkArgument(payload.getData() instanceof TradeIntent);
+        this.tradeIntent = (TradeIntent) payload.getData();
+        networkId = Optional.of(payload.getNetworkId());
+        id = tradeIntent.id();
+        ttl = TimeFormatter.formatTime(payload.getMetaData().getTtl());
+        ask = tradeIntent.ask();
+        bid = tradeIntent.bid();
+        date = new Date(tradeIntent.date());
+        dateString = DateFormatter.formatDateTime(date);
     }
 
     int compareDate(TradeIntentListItem other) {

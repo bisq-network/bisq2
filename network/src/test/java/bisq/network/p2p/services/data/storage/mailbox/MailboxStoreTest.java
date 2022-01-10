@@ -20,8 +20,6 @@ package bisq.network.p2p.services.data.storage.mailbox;
 import bisq.common.ObjectSerializer;
 import bisq.common.data.ByteArray;
 import bisq.common.util.OsUtils;
-import bisq.network.p2p.services.data.filter.FilterItem;
-import bisq.network.p2p.services.data.filter.ProtectedDataFilter;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.persistence.PersistenceService;
@@ -35,9 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -120,9 +116,9 @@ public class MailboxStoreTest {
 
         // request inventory with old seqNum
         String dataType = payload.getMetaData().getFileName();
-        Set<FilterItem> filterItems = new HashSet<>();
-        filterItems.add(new FilterItem(byteArray.getBytes(), initialSeqNum));
-        ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
+      //  Set<FilterItem> filterItems = new HashSet<>();
+      //  filterItems.add(new FilterItem(byteArray.getBytes(), initialSeqNum));
+       // ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
         // Inventory inventory = store.getInventoryList(filter);
         // assertEquals(initialMapSize + 1, inventory.getEntries().size());
 

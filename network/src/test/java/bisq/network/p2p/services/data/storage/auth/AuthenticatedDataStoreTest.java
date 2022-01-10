@@ -19,8 +19,6 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.data.ByteArray;
 import bisq.common.util.OsUtils;
-import bisq.network.p2p.services.data.filter.FilterItem;
-import bisq.network.p2p.services.data.filter.ProtectedDataFilter;
 import bisq.network.p2p.services.data.inventory.InventoryUtil;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.persistence.PersistenceService;
@@ -34,7 +32,9 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import static bisq.network.p2p.services.data.storage.StorageService.StoreType.AUTHENTICATED_DATA_STORE;
 import static org.junit.jupiter.api.Assertions.*;
@@ -222,9 +222,9 @@ public class AuthenticatedDataStoreTest {
         // request inventory with first item and same seq num
         // We should get iterations-1 items
         String dataType = data.getMetaData().getFileName();
-        Set<FilterItem> filterItems = new HashSet<>();
-        filterItems.add(new FilterItem(new ByteArray(hashOfFirst).getBytes(), initialSeqNumFirstItem + 1));
-        ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
+     //   Set<FilterItem> filterItems = new HashSet<>();
+      //  filterItems.add(new FilterItem(new ByteArray(hashOfFirst).getBytes(), initialSeqNumFirstItem + 1));
+       // ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
         // int maxItems = store.getMaxItems();
       /*  int expectedSize = Math.min(maxItems, store.getMap().size() - 1);
         int expectedTruncated = Math.max(0, store.getMap().size() - maxItems - 1);

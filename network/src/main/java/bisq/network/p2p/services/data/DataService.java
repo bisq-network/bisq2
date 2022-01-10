@@ -22,7 +22,6 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
-import bisq.network.p2p.services.data.filter.BisqBloomFilter;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.network.p2p.services.data.storage.StorageService;
@@ -40,10 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -109,7 +105,7 @@ public class DataService implements DataNetworkService.Listener {
     @Override
     public void onStateChanged(PeerGroupService.State state, DataNetworkService dataNetworkService) {
         if (state == PeerGroupService.State.RUNNING) {
-            requestInventory(new BisqBloomFilter(storageService.getHashes(StorageService.StoreType.ALL)), dataNetworkService);
+            requestInventory(new DataFilter(new HashSet<>(storageService.getFilterEntries(StorageService.StoreType.ALL))), dataNetworkService);
         }
     }
 
@@ -235,11 +231,11 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     public void requestInventory(StorageService.StoreType storeType) {
-        requestInventory(new BisqBloomFilter(storageService.getHashes(storeType)));
+        requestInventory(new DataFilter(new HashSet<>(storageService.getFilterEntries(storeType))));
     }
 
     public void requestInventory(String storeName) {
-        requestInventory(new BisqBloomFilter(storageService.getHashes(storeName)));
+        requestInventory(new DataFilter(new HashSet<>(storageService.getFilterEntries(storeName))));
     }
 
 
@@ -261,7 +257,7 @@ public class DataService implements DataNetworkService.Listener {
         });
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////

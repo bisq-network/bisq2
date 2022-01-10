@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.settings.networkinfo;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
@@ -26,6 +27,10 @@ import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.content.settings.networkinfo.transport.TransportTypeController;
 import bisq.network.p2p.node.transport.Transport;
 import lombok.Getter;
+
+import java.util.Optional;
+
+import static bisq.desktop.NavigationTarget.*;
 
 public class NetworkInfoController extends TabController<NetworkInfoModel> {
     private final DefaultServiceProvider serviceProvider;
@@ -37,7 +42,7 @@ public class NetworkInfoController extends TabController<NetworkInfoModel> {
     public NetworkInfoController(DefaultServiceProvider serviceProvider,
                                  ContentController contentController,
                                  OverlayController overlayController) {
-        super(contentController, overlayController);
+        super(contentController, overlayController, CLEAR_NET, TOR, I2P);
 
         this.serviceProvider = serviceProvider;
         model = new NetworkInfoModel(serviceProvider);
@@ -50,7 +55,7 @@ public class NetworkInfoController extends TabController<NetworkInfoModel> {
     }
 
     @Override
-    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget) {
+    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget, Optional<Object> data) {
         switch (localTarget) {
             case CLEAR_NET -> {
                 return new TransportTypeController(serviceProvider, Transport.Type.CLEAR);
@@ -67,9 +72,10 @@ public class NetworkInfoController extends TabController<NetworkInfoModel> {
 
     @Override
     public void onViewAttached() {
+        super.onViewAttached();
         model.getSupportedTransportTypes().stream()
                 .min(Enum::compareTo)
                 .map(model::getNavigationTargetFromTransportType)
-                .ifPresent(this::navigateTo);
+                .ifPresent(Navigation::navigateTo);
     }
 }

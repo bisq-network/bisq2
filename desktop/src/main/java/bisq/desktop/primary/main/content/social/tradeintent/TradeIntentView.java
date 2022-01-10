@@ -132,18 +132,29 @@ public class TradeIntentView extends View<BisqGridPane, TradeIntentModel, TradeI
         tableView.getSortOrder().add(dateColumn);
 
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
+                .title(Res.common.get("id"))
+                .minWidth(80)
+                .valueSupplier(TradeIntentListItem::getId)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
                 .title(Res.common.get("ask"))
-                .minWidth(320)
+                .minWidth(100)
                 .valueSupplier(TradeIntentListItem::getAsk)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
-                .minWidth(320)
+                .minWidth(100)
                 .title(Res.common.get("bid"))
                 .valueSupplier(TradeIntentListItem::getBid)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
                 .minWidth(80)
-                .title(Res.common.get("bid"))
+                .value(Res.common.get("contact"))
+                .cellFactory(BisqTableColumn.CellFactory.BUTTON)
+                .actionHandler(controller::onContact)
+                .isVisibleFunction(model::isNotMyTradeIntent)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
+                .minWidth(80)
                 .value(Res.common.get("remove"))
                 .cellFactory(BisqTableColumn.CellFactory.BUTTON)
                 .actionHandler(controller::onRemoveItem)

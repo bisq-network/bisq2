@@ -18,6 +18,8 @@
 package bisq.desktop.primary.main.content.social.tradeintent;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.desktop.Navigation;
+import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
@@ -32,13 +34,13 @@ public class TradeIntentController implements Controller {
         view = new TradeIntentView(model, this);
     }
 
-    @Override
+  /*  @Override
     public void onViewAttached() {
     }
 
     @Override
     public void onViewDetached() {
-    }
+    }*/
 
     StringProperty addData(String ask, String bid) {
         return model.addData(ask, bid);
@@ -46,5 +48,9 @@ public class TradeIntentController implements Controller {
 
     public void onRemoveItem(TradeIntentListItem item) {
         model.removeTradeIntent(item);
+    }
+
+    public void onContact(TradeIntentListItem item) {
+        Navigation.navigateTo(NavigationTarget.HANGOUT, item);
     }
 }

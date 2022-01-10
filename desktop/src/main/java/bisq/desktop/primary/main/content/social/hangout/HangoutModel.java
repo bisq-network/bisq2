@@ -19,12 +19,22 @@ package bisq.desktop.primary.main.content.social.hangout;
 
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Getter
 public class HangoutModel implements Model {
+
+    public StringProperty chatText = new SimpleStringProperty("");
+    public List<String> chatPeers = new ArrayList<>();
+    public Optional<String> selectedChatPeer = Optional.empty();
 
     public HangoutModel(DefaultServiceProvider serviceProvider) {
     }
@@ -33,5 +43,13 @@ public class HangoutModel implements Model {
     }
 
     public void onViewDetached() {
+    }
+
+    public void setSelectedChatPeer(String chatPeer) {
+        selectedChatPeer = Optional.of(chatPeer);
+    }
+
+    public void send(String text) {
+        
     }
 }

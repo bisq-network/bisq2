@@ -32,6 +32,10 @@ import bisq.desktop.primary.main.content.social.SocialController;
 import bisq.desktop.primary.main.content.wallet.WalletController;
 import lombok.Getter;
 
+import java.util.Optional;
+
+import static bisq.desktop.NavigationTarget.*;
+
 public class LeftNavController extends NavigationController implements Controller {
     private final DefaultServiceProvider serviceProvider;
     private final LeftNavModel model;
@@ -41,7 +45,7 @@ public class LeftNavController extends NavigationController implements Controlle
     public LeftNavController(DefaultServiceProvider serviceProvider,
                              ContentController contentController,
                              OverlayController overlayController) {
-        super(contentController, overlayController);
+        super(contentController, overlayController, MARKETS, SOCIAL, OFFERBOOK, PORTFOLIO, WALLET, SETTINGS);
 
         this.serviceProvider = serviceProvider;
         model = new LeftNavModel(serviceProvider);
@@ -54,10 +58,10 @@ public class LeftNavController extends NavigationController implements Controlle
     }
 
     @Override
-    public void navigateTo(NavigationTarget navigationTarget) {
+    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
         NavigationTarget localTarget = resolveLocalTarget(navigationTarget);
-        Controller controller = getOrCreateController(localTarget, navigationTarget);
-        if (navigationTarget.getSink() == StageType.OVERLAY) {
+        Controller controller = getOrCreateController(localTarget, navigationTarget, data);
+        if (navigationTarget.getStageType() == StageType.OVERLAY) {
             overlayController.show(controller);
         } else {
             contentController.navigateTo(navigationTarget, controller);
@@ -66,7 +70,7 @@ public class LeftNavController extends NavigationController implements Controlle
     }
 
     @Override
-    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget) {
+    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget, Optional<Object> data) {
         switch (localTarget) {
             case MARKETS -> {
                 return new MarketsController(serviceProvider);

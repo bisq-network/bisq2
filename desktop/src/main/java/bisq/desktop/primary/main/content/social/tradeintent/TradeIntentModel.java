@@ -24,6 +24,9 @@ import bisq.desktop.common.view.Model;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.p2p.message.TextMessage;
+import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedNetworkIdPayload;
@@ -37,8 +40,11 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
 import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -68,7 +74,6 @@ public class TradeIntentModel implements Model {
             dataListener = Optional.of(new DataService.Listener() {
                 @Override
                 public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
-                    log.error("onNetworkPayloadAdded {}", networkPayload);
                     if (networkPayload instanceof AuthenticatedNetworkIdPayload payload && payload.getData() instanceof TradeIntent) {
                         UIThread.run(() -> listItems.add(new TradeIntentListItem(payload)));
                     }
@@ -76,20 +81,16 @@ public class TradeIntentModel implements Model {
 
                 @Override
                 public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
-                    log.error("onNetworkPayloadRemoved {}", networkPayload);
                     if (networkPayload instanceof AuthenticatedNetworkIdPayload payload && payload.getData() instanceof TradeIntent) {
                         UIThread.run(() -> listItems.remove(new TradeIntentListItem(payload)));
                     }
                 }
             });
             dataService.addListener(dataListener.get());
-            
+
             listItems.setAll(dataService.getAuthenticatedPayloadByStoreName("TradeIntent")
                     .filter(payload -> payload instanceof AuthenticatedNetworkIdPayload)
                     .map(payload -> (AuthenticatedNetworkIdPayload) payload)
-                    .peek(e -> {
-                        log.error("getNetworkPayloads {}", e);
-                    })
                     .map(TradeIntentListItem::new)
                     .collect(Collectors.toList()));
         });
@@ -111,9 +112,9 @@ public class TradeIntentModel implements Model {
 
     StringProperty addData(String ask, String bid) {
         StringProperty resultProperty = new SimpleStringProperty("Create Servers for node ID");
-        Identity identity = identityService.getOrCreateIdentity("tradeIntent");
+        TradeIntent tradeIntent = new TradeIntent(UUID.randomUUID().toString().substring(0, 8), ask, bid, new Date().getTime());
+        Identity identity = identityService.getOrCreateIdentity(tradeIntent.id());
         String keyId = identity.keyId();
-        TradeIntent tradeIntent = new TradeIntent(ask, bid, new Date().getTime());
         networkService.addData(tradeIntent, identity.nodeId(), keyId)
                 .whenComplete((broadCastResultFutures, throwable) -> {
                     broadCastResultFutures.forEach(broadCastResultFuture -> {
@@ -134,7 +135,7 @@ public class TradeIntentModel implements Model {
 
     public void removeTradeIntent(TradeIntentListItem item) {
         StringProperty resultProperty = new SimpleStringProperty("Remove data");
-        Identity identity = identityService.getOrCreateIdentity("tradeIntent");
+        Identity identity = identityService.getOrCreateIdentity(item.getTradeIntent().id());
         String keyId = identity.keyId();
         networkService.removeData(item.getPayload().getData(), identity.nodeId(), keyId)
                 .whenComplete((broadCastResultFutures, throwable) -> {
@@ -151,6 +152,64 @@ public class TradeIntentModel implements Model {
                         });
                     });
                 });
+    }
+
+    public void contactPeer(TradeIntentListItem item) {
+        item.getNetworkId().ifPresent(receiverNetworkId -> {
+            Identity identity = identityService.getOrCreateIdentity(item.getTradeIntent().id());
+            KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(identity.keyId());
+            CompletableFuture<String> future = new CompletableFuture<>();
+            String senderNodeId = identity.nodeId();
+            networkService.confidentialSendAsync(new TextMessage("Test msg"), receiverNetworkId, senderKeyPair, senderNodeId)
+                    .whenComplete((resultMap, throwable) -> {
+                        if (throwable == null) {
+                            resultMap.entrySet().stream().forEach(typeResultEntry -> {
+                                Transport.Type transportType = typeResultEntry.getKey();
+                                ConfidentialMessageService.Result result = resultMap.get(transportType);
+                                result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture.whenComplete((broadcastResult, error) -> {
+                                    if (error == null) {
+                                        future.complete(result.getState() + "; " + broadcastResult.toString());
+                                    } else {
+                                        String value = result.getState().toString();
+                                        if (result.getState() == ConfidentialMessageService.State.FAILED) {
+                                            value += " with Error: " + result.getErrorMsg();
+                                        }
+                                        future.complete(value);
+                                    }
+                                }));
+                            });
+                        }
+                    });
+        });
+    }
+
+    /*     checkArgument(selectedNetworkId.isPresent(), "Network ID must be set before calling sendMessage");
+         NetworkId receiverNetworkId = selectedNetworkId.get();
+         KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(KeyPairService.DEFAULT);
+         CompletableFuture<String> future = new CompletableFuture<>();
+         String senderNodeId = selectedNetworkId.get().getNodeId();
+         networkService.confidentialSendAsync(new TextMessage(message), receiverNetworkId, senderKeyPair, senderNodeId)
+                 .whenComplete((resultMap, throwable) -> {
+                     if (throwable == null) {
+                         resultMap.entrySet().stream().forEach(typeResultEntry -> {
+                             Transport.Type transportType = typeResultEntry.getKey();
+                             ConfidentialMessageService.Result result = resultMap.get(transportType);
+                             result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture.whenComplete((broadcastResult, error) -> {
+                                 if (error == null) {
+                                     future.complete(result.getState() + "; " + broadcastResult.toString());
+                                 } else {
+                                     String value = result.getState().toString();
+                                     if (result.getState() == ConfidentialMessageService.State.FAILED) {
+                                         value += " with Error: " + result.getErrorMsg();
+                                     }
+                                     future.complete(value);
+                                 }
+                             }));
+                         });
+                     }
+                 });*/
+    public boolean isNotMyTradeIntent(TradeIntentListItem item) {
+        return !isMyTradeIntent(item);
     }
 
     public boolean isMyTradeIntent(TradeIntentListItem item) {
