@@ -19,7 +19,7 @@ package bisq.desktop.primary.main;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.primary.main.content.ContentView;
-import bisq.desktop.primary.main.nav.NavigationView;
+import bisq.desktop.primary.main.nav.LeftNavView;
 import bisq.desktop.primary.main.top.TopPanelView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -31,7 +31,7 @@ public class MainView extends View<StackPane, MainModel, MainController> {
     public MainView(MainModel model,
                     MainController controller,
                     ContentView contentView,
-                    NavigationView navigationView,
+                    LeftNavView leftNavView,
                     TopPanelView topPanelView) {
         super(new StackPane(), model, controller);
 
@@ -49,7 +49,7 @@ public class MainView extends View<StackPane, MainModel, MainController> {
 
         HBox leftNavAndContentBox = new HBox();
         HBox.setHgrow(contentView.getRoot(), Priority.ALWAYS);
-        leftNavAndContentBox.getChildren().addAll(navigationView.getRoot(), contentView.getRoot());
+        leftNavAndContentBox.getChildren().addAll(leftNavView.getRoot(), contentView.getRoot());
 
         VBox.setVgrow(leftNavAndContentBox, Priority.ALWAYS);
         rootContainer.getChildren().addAll(topPanelView.getRoot(), leftNavAndContentBox);

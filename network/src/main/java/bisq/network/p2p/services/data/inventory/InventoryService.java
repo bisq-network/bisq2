@@ -57,13 +57,12 @@ public class InventoryService implements Node.Listener {
     public List<CompletableFuture<Inventory>> request(DataFilter dataFilter) {
         int maxRequests = 400;
         return peerGroup.getAllConnections()
-                /*.filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
-                .limit(maxRequests)*/
+                .filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
+                .limit(maxRequests)
                 .map(connection -> {
                     String key = connection.getId();
                     InventoryHandler handler = new InventoryHandler(node, connection);
                     requestHandlerMap.put(key, handler);
-                    log.error("request {}", connection.getPeerAddress());
                     return handler.request(dataFilter)
                             .orTimeout(TIMEOUT, TimeUnit.SECONDS)
                             .whenComplete((__, throwable) -> requestHandlerMap.remove(key));
@@ -79,7 +78,7 @@ public class InventoryService implements Node.Listener {
     @Override
     public void onMessage(Message message, Connection connection, String nodeId) {
         if (message instanceof InventoryRequest request) {
-            log.error("Node {} received GetInventoryRequest with nonce {} from {}", node, request.nonce(), connection.getPeerAddress());
+            log.debug("Node {} received GetInventoryRequest with nonce {} from {}", node, request.nonce(), connection.getPeerAddress());
             Inventory inventory = inventoryProvider.apply(request.dataFilter());
             NetworkService.NETWORK_IO_POOL.submit(() -> node.send(new InventoryResponse(inventory, request.nonce()), connection));
             log.debug("Node {} sent GetInventoryResponse with inventory {} and nonce {} to {}. Connection={}",

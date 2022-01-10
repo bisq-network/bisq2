@@ -26,21 +26,14 @@ import bisq.network.p2p.node.authorization.UnrestrictedAuthorizationService;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.NetworkPayload;
-import bisq.network.p2p.services.data.broadcast.BroadcastResult;
-import bisq.network.p2p.services.data.storage.Storage;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import lombok.Getter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,26 +45,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
+@Slf4j
 public class ServiceNodesByTransport {
-    private static final Logger log = LoggerFactory.getLogger(ServiceNodesByTransport.class);
-
     private final Map<Transport.Type, ServiceNode> map = new ConcurrentHashMap<>();
-    private final Optional<Storage> storage;
-    @Getter
-    private final Optional<DataService> dataService;
 
     public ServiceNodesByTransport(Transport.Config transportConfig,
                                    Set<Transport.Type> supportedTransportTypes,
                                    ServiceNode.Config serviceNodeConfig,
                                    Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
                                    Map<Transport.Type, List<Address>> seedAddressesByTransport,
+                                   Optional<DataService> dataService,
                                    KeyPairService keyPairService,
                                    PersistenceService persistenceService) {
         long socketTimeout = TimeUnit.MINUTES.toMillis(5);
-
-        boolean supportDataService = serviceNodeConfig.services().contains(ServiceNode.Service.DATA);
-        storage = supportDataService ? Optional.of(new Storage(persistenceService)) : Optional.empty();
-        dataService = supportDataService ? Optional.of(new DataService(storage.orElseThrow())) : Optional.empty();
 
         supportedTransportTypes.forEach(transportType -> {
             Node.Config nodeConfig = new Node.Config(transportType,
@@ -98,9 +84,7 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // We require all servers on all transports to be initialized, but do not wait for the peer group initialisation 
-    // has completed
-    public CompletableFuture<Boolean> bootstrapPeerGroupAsync(int port, String nodeId) {
+    public CompletableFuture<Boolean> bootstrapToNetwork(int port, String nodeId) {
         return CompletableFutureUtils.allOf(map.values().stream().map(networkNode ->
                 runAsync(() -> networkNode.maybeInitializeServer(nodeId, port), NETWORK_IO_POOL)
                         .whenComplete((__, throwable) -> {
@@ -134,49 +118,12 @@ public class ServiceNodesByTransport {
                             .setErrorMsg(throwable.getMessage()));
                 }
             } else {
-                //todo
+                //todo relay case
             }
         });
         return resultsByType;
     }
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addNetworkPayloadAsync(NetworkPayload networkPayload, KeyPair keyPair) {
-        if (dataService.isEmpty()) {
-            return CompletableFuture.failedFuture(new IllegalStateException("DataService need to be enabled when using addNetworkPayload"));
-        }
-        return dataService.get().addNetworkPayloadAsync(networkPayload, keyPair);
-    }
-
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addMailboxPayloadAsync(MailboxPayload mailboxPayload,
-                                                                                              KeyPair senderKeyPair,
-                                                                                              PublicKey receiverPublicKey) {
-        if (dataService.isEmpty()) {
-            return CompletableFuture.failedFuture(new IllegalStateException("DataService need to be enabled when using addNetworkPayload"));
-        }
-        return dataService.get().addMailboxPayloadAsync(mailboxPayload, senderKeyPair, receiverPublicKey);
-    }
-
-    public void removeNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
-        if (dataService.isEmpty()) {
-            throw new IllegalStateException("DataService need to be enabled when using removeNetworkPayload");
-        }
-        dataService.get().removeNetworkPayload(networkPayload, keyPair);
-    }
-
-    public void requestInventory(Storage.StoreType storeType) {
-        if (dataService.isEmpty()) {
-            throw new IllegalStateException("DataService need to be enabled when using requestInventory");
-        }
-        dataService.get().requestInventory(storeType);
-    }
-
-    public void requestInventory(String storeName) {
-        if (dataService.isEmpty()) {
-            throw new IllegalStateException("DataService need to be enabled when using requestInventory");
-        }
-        dataService.get().requestInventory(storeName);
-    }
-   
     public Optional<Socks5Proxy> getSocksProxy() {
         return findServiceNode(Transport.Type.TOR)
                 .flatMap(serviceNode -> {
@@ -189,13 +136,6 @@ public class ServiceNodesByTransport {
                 });
     }
 
-    public void addDataServiceListener(DataService.Listener listener) {
-        dataService.ifPresent(dataService -> dataService.addListener(listener));
-    }
-
-    public void removeDataServiceListener(DataService.Listener listener) {
-        dataService.ifPresent(dataService -> dataService.removeListener(listener));
-    }
 
     public void addMessageListener(Node.Listener listener) {
         map.values().forEach(serviceNode -> serviceNode.addMessageListener(listener));
@@ -206,10 +146,7 @@ public class ServiceNodesByTransport {
     }
 
     public CompletableFuture<Void> shutdown() {
-        List<CompletableFuture<Void>> futures = map.values().stream().map(ServiceNode::shutdown).collect(Collectors.toList());
-        futures.add(dataService.map(DataService::shutdown).orElse(CompletableFuture.completedFuture(null)));
-        storage.ifPresent(Storage::shutdown);
-        return CompletableFutureUtils.allOf(futures)
+        return CompletableFutureUtils.allOf(map.values().stream().map(ServiceNode::shutdown))
                 .orTimeout(6, TimeUnit.SECONDS)
                 .thenApply(list -> {
                     map.clear();

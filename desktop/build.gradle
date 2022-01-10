@@ -48,6 +48,7 @@ dependencies {
     implementation project(':identity')
     implementation project(':network')
     implementation project(':persistence')
+    implementation project(':user')
     implementation project(':contract')
     implementation project(':offer')
     implementation project(':presentation')

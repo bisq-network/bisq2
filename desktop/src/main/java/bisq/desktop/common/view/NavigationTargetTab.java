@@ -15,25 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node;
+package bisq.desktop.common.view;
 
-import bisq.network.p2p.node.transport.Transport;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.NavigationTarget;
+import javafx.scene.control.Tab;
+import lombok.Getter;
 
-@Slf4j
-public class TorNodesByIdIntegrationTest extends BaseNodesByIdTest {
-    // @Test
-    void test_messageRoundTrip() throws InterruptedException {
-        super.test_messageRoundTrip(getConfig(Transport.Type.TOR));
-    }
+import java.util.Optional;
 
-   // @Test
-    void test_initializeServer() throws InterruptedException {
-        super.test_initializeServer(getConfig(Transport.Type.TOR));
-    }
+public class NavigationTargetTab extends Tab {
+    @Getter
+    private Optional<NavigationTarget> navigationTarget = Optional.empty();
 
-    @Override
-    protected long getTimeout() {
-        return numNodes * 30;
+    public NavigationTargetTab(String title, NavigationTarget navigationTarget) {
+        super(title);
+        this.navigationTarget = Optional.of(navigationTarget);
     }
 }

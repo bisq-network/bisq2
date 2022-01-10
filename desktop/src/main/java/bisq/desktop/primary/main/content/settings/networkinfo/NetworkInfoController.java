@@ -18,19 +18,19 @@
 package bisq.desktop.primary.main.content.settings.networkinfo;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
+import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.content.settings.networkinfo.transport.TransportTypeController;
-import bisq.desktop.overlay.OverlayController;
-import bisq.network.p2p.NetworkId;
 import bisq.network.p2p.node.transport.Transport;
-import javafx.beans.property.StringProperty;
 import lombok.Getter;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
+
+import static bisq.desktop.NavigationTarget.*;
 
 public class NetworkInfoController extends TabController<NetworkInfoModel> {
     private final DefaultServiceProvider serviceProvider;
@@ -41,10 +41,9 @@ public class NetworkInfoController extends TabController<NetworkInfoModel> {
 
     public NetworkInfoController(DefaultServiceProvider serviceProvider,
                                  ContentController contentController,
-                                 OverlayController overlayController,
-                                 NavigationTarget navigationTarget) {
-        super(contentController, overlayController, navigationTarget);
-       
+                                 OverlayController overlayController) {
+        super(contentController, overlayController, CLEAR_NET, TOR, I2P);
+
         this.serviceProvider = serviceProvider;
         model = new NetworkInfoModel(serviceProvider);
         view = new NetworkInfoView(model, this);
@@ -56,7 +55,7 @@ public class NetworkInfoController extends TabController<NetworkInfoModel> {
     }
 
     @Override
-    protected Controller getController(NavigationTarget localTarget,NavigationTarget navigationTarget) {
+    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget, Optional<Object> data) {
         switch (localTarget) {
             case CLEAR_NET -> {
                 return new TransportTypeController(serviceProvider, Transport.Type.CLEAR);
@@ -73,44 +72,10 @@ public class NetworkInfoController extends TabController<NetworkInfoModel> {
 
     @Override
     public void onViewAttached() {
+        super.onViewAttached();
         model.getSupportedTransportTypes().stream()
                 .min(Enum::compareTo)
                 .map(model::getNavigationTargetFromTransportType)
-                .ifPresent(this::navigateTo);
+                .ifPresent(Navigation::navigateTo);
     }
-
-
-
-    @Override
-    public void onViewDetached() {
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // View events
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    @Override
-    public void onTabSelected(NavigationTarget navigationTarget) {
-        super.onTabSelected(navigationTarget);
-    }
-
-    void onTabSelected(Optional<Transport.Type> transportTypeOptional) {
-       /* co = transportTypeOptional.map(transportType ->
-                new TransportTypeController(serviceProvider, transportType));
-        model.setSelectedTransportType(transportTypeOptional);
-        model.getTransportTypeView().set(selectedTransportTypeController.map(TransportTypeController::getView)
-                .or(Optional::empty));*/
-    }
-
-    CompletableFuture<String> sendMessage(String message) {
-        return model.sendMessage(message);
-    }
-
-    StringProperty addData(String dataText, String domainId) {
-        return model.addData(dataText, domainId);
-    }
-
-    void onSelectNetworkId(Optional<NetworkId> networkId) {
-        model.applyNetworkId(networkId);
-    }
-
 }

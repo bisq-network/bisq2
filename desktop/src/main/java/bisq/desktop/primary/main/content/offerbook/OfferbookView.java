@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.offerbook;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.AutoTooltipButton;
+import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.controls.AutocompleteComboBox;
 import bisq.desktop.components.controls.BisqLabel;
@@ -49,10 +49,10 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     private TableView<OfferListItem> tableView;
     private RangeSliderBox baseAmountSliderBox, priceSliderBox;
     private AutocompleteComboBox<String> askCurrencyComboBox, bidCurrencyComboBox;
-    private AutoTooltipButton flipButton;
+    private BisqButton flipButton;
     private AutoTooltipSlideToggleButton showAmountPriceFilterToggle;
     private HBox amountPriceFilterBox;
-    private AutoTooltipButton createOfferButton;
+    private BisqButton createOfferButton;
 
     public OfferbookView(OfferbookModel model, OfferbookController controller) {
         super(new VBox(), model, controller);
@@ -63,7 +63,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         askCurrencyComboBox = new AutocompleteComboBox<>();
         askCurrencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
 
-        flipButton = new AutoTooltipButton("<- Flip ->");
+        flipButton = new BisqButton("<- Flip ->");
 
         Label bidCurrencyLabel = new BisqLabel("I give (bid):");
         bidCurrencyLabel.setPadding(new Insets(4, 8, 0, 60));
@@ -75,7 +75,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        createOfferButton = new AutoTooltipButton("Create offer");
+        createOfferButton = new BisqButton("Create offer");
         HBox.setMargin(createOfferButton, new Insets(20, 20, 20, 20));
 
         HBox currencySelectionBox = new HBox();
@@ -170,7 +170,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
                             TableColumn<OfferListItem, OfferListItem> column) {
                         return new TableCell<>() {
                             final ImageView iconView = new ImageView();
-                            final AutoTooltipButton button = new AutoTooltipButton("Show details");
+                            final BisqButton button = new BisqButton("Show details");
 
                             {
                                 button.setGraphic(iconView);
@@ -211,7 +211,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
                             TableColumn<OfferListItem, OfferListItem> column) {
                         return new TableCell<>() {
                             final ImageView iconView = new ImageView();
-                            final AutoTooltipButton button = new AutoTooltipButton("Take offer");
+                            final BisqButton button = new BisqButton("Take offer");
 
                             {
                                 button.setGraphic(iconView);

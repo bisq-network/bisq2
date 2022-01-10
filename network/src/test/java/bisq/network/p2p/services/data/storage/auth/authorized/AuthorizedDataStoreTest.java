@@ -38,7 +38,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.UUID;
 
-import static bisq.network.p2p.services.data.storage.Storage.StoreType.AUTHENTICATED_DATA_STORE;
+import static bisq.network.p2p.services.data.storage.StorageService.StoreType.AUTHENTICATED_DATA_STORE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -74,7 +74,7 @@ public class AuthorizedDataStoreTest {
         assertTrue(result.isSuccess());
 
         ByteArray byteArray = new ByteArray(hash);
-        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getClonedMap().get(byteArray);
+        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getClone().get(byteArray);
         AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
@@ -86,7 +86,7 @@ public class AuthorizedDataStoreTest {
         Result refreshResult = store.refresh(refreshRequest);
         assertTrue(refreshResult.isSuccess());
 
-        addRequestFromMap = (AddAuthenticatedDataRequest) store.getClonedMap().get(byteArray);
+        addRequestFromMap = (AddAuthenticatedDataRequest) store.getClone().get(byteArray);
         dataFromMap = addRequestFromMap.getAuthenticatedData();
         assertEquals(initialSeqNum + 2, dataFromMap.getSequenceNumber());
 
@@ -95,7 +95,7 @@ public class AuthorizedDataStoreTest {
         Result removeDataResult = store.remove(removeAuthenticatedDataRequest);
         assertTrue(removeDataResult.isSuccess());
 
-        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequestFromMap = (RemoveAuthenticatedDataRequest) store.getClonedMap().get(byteArray);
+        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequestFromMap = (RemoveAuthenticatedDataRequest) store.getClone().get(byteArray);
         assertEquals(initialSeqNum + 3, removeAuthenticatedDataRequestFromMap.getSequenceNumber());
     }
 }

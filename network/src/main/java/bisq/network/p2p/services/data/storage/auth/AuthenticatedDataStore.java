@@ -130,7 +130,7 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
         synchronized (map) {
             AuthenticatedDataRequest requestFromMap = map.get(byteArray);
             if (requestFromMap == null) {
-                log.warn("No entry at remove. request={}", request);
+                log.warn("No entry at remove. hash={}", byteArray);
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
                 map.put(byteArray, request);
@@ -139,7 +139,7 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
             }
 
             if (requestFromMap instanceof RemoveAuthenticatedDataRequest) {
-                log.warn("Already removed at remove. request={}", request);
+                log.debug("Already removed. request={}", request);
                 // We have had the entry already removed.
                 if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                     // We update the map with the new request with the fresh sequence number.
@@ -175,7 +175,7 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
         }
         persist();
         listeners.forEach(listener -> listener.onRemoved(payloadFromMap));
-        return new Result(true);
+        return new Result(true).removedPayload(payloadFromMap);
     }
 
     public Result refresh(RefreshRequest request) {

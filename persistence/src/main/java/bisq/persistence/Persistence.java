@@ -55,7 +55,8 @@ public class Persistence<T extends Serializable> {
     }
 
     public Optional<T> read() {
-        if (!new File(storagePath).exists()) {
+        File storageFile = new File(storagePath);
+        if (!storageFile.exists()) {
             return Optional.empty();
         }
         try (FileInputStream fileInputStream = new FileInputStream(storagePath);
@@ -66,7 +67,12 @@ public class Persistence<T extends Serializable> {
             }
             return Optional.of((T) object);
         } catch (Throwable exception) {
-            log.error(exception.toString(), exception);
+            log.error("Error at read for " + storagePath, exception);
+            try {
+                FileUtils.backupCorruptedFile(directory, storageFile, fileName, "corruptedFilesAtRead");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return Optional.empty();
         }
     }
@@ -87,7 +93,7 @@ public class Persistence<T extends Serializable> {
                 // After write is done we rename the tempFile to our storageFile which is an atomic operation.
                 File tempFile = File.createTempFile("temp_" + fileName, null, new File(directory));
                 FileUtils.deleteOnExit(tempFile);
-                File storageFile = new File(directory, fileName);
+                File storageFile = new File(storagePath);
                 try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
                      ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)) {
                     objectOutputStream.writeObject(serializable);
@@ -101,6 +107,12 @@ public class Persistence<T extends Serializable> {
                     success = true;
                 } catch (IOException exception) {
                     log.error(exception.toString(), exception);
+                    log.error("Error at read for " + storagePath, exception);
+                    try {
+                        FileUtils.backupCorruptedFile(directory, storageFile, fileName, "corruptedFilesAtWrite");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 } finally {
                     FileUtils.releaseTempFile(tempFile);
                 }

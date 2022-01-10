@@ -40,7 +40,7 @@ public class MockNetworkService extends NetworkService {
     }
 
     @Override
-    public CompletableFuture<Boolean> bootstrapPeerGroup() {
+    public CompletableFuture<Boolean> bootstrapToNetwork() {
         return CompletableFuture.completedFuture(true);
     }
 

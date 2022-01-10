@@ -19,8 +19,6 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.data.ByteArray;
 import bisq.common.util.OsUtils;
-import bisq.network.p2p.services.data.filter.FilterItem;
-import bisq.network.p2p.services.data.filter.ProtectedDataFilter;
 import bisq.network.p2p.services.data.inventory.InventoryUtil;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.persistence.PersistenceService;
@@ -34,9 +32,11 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
-import static bisq.network.p2p.services.data.storage.Storage.StoreType.AUTHENTICATED_DATA_STORE;
+import static bisq.network.p2p.services.data.storage.StorageService.StoreType.AUTHENTICATED_DATA_STORE;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
@@ -121,7 +121,7 @@ public class AuthenticatedDataStoreTest {
         KeyPair keyPair = KeyGeneration.generateKeyPair();
 
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, data, keyPair);
-        int initialMapSize = store.getClonedMap().size();
+        int initialMapSize = store.getClone().size();
         byte[] hash = DigestUtil.hash(data.serialize());
         int initialSeqNum = store.getSequenceNumber(hash);
         Result addRequestResult = store.add(addRequest);
@@ -129,11 +129,11 @@ public class AuthenticatedDataStoreTest {
 
         ByteArray byteArray = new ByteArray(hash);
 
-        store.getClonedMap().keySet().stream().filter(e -> e.equals(byteArray)).forEach(e -> log.error("FOUND {}", e));
-        if (!store.getClonedMap().containsKey(byteArray)) {
+        store.getClone().keySet().stream().filter(e -> e.equals(byteArray)).forEach(e -> log.error("FOUND {}", e));
+        if (!store.getClone().containsKey(byteArray)) {
             return;
         }
-        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getClonedMap().get(byteArray);
+        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getClone().get(byteArray);
         AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
@@ -160,7 +160,7 @@ public class AuthenticatedDataStoreTest {
         Result refreshResult = store.refresh(refreshRequest);
         assertTrue(refreshResult.isSuccess());
 
-        addRequestFromMap = (AddAuthenticatedDataRequest) store.getClonedMap().get(byteArray);
+        addRequestFromMap = (AddAuthenticatedDataRequest) store.getClone().get(byteArray);
         dataFromMap = addRequestFromMap.getAuthenticatedData();
         assertEquals(initialSeqNum + 2, dataFromMap.getSequenceNumber());
 
@@ -169,7 +169,7 @@ public class AuthenticatedDataStoreTest {
         Result removeRequestResult = store.remove(removeAuthenticatedDataRequest);
         assertTrue(removeRequestResult.isSuccess());
 
-        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequestFromMap = (RemoveAuthenticatedDataRequest) store.getClonedMap().get(byteArray);
+        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequestFromMap = (RemoveAuthenticatedDataRequest) store.getClone().get(byteArray);
         assertEquals(initialSeqNum + 3, removeAuthenticatedDataRequestFromMap.getSequenceNumber());
 
         // refresh on removed fails
@@ -222,9 +222,9 @@ public class AuthenticatedDataStoreTest {
         // request inventory with first item and same seq num
         // We should get iterations-1 items
         String dataType = data.getMetaData().getFileName();
-        Set<FilterItem> filterItems = new HashSet<>();
-        filterItems.add(new FilterItem(new ByteArray(hashOfFirst).getBytes(), initialSeqNumFirstItem + 1));
-        ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
+     //   Set<FilterItem> filterItems = new HashSet<>();
+      //  filterItems.add(new FilterItem(new ByteArray(hashOfFirst).getBytes(), initialSeqNumFirstItem + 1));
+       // ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
         // int maxItems = store.getMaxItems();
       /*  int expectedSize = Math.min(maxItems, store.getMap().size() - 1);
         int expectedTruncated = Math.max(0, store.getMap().size() - maxItems - 1);

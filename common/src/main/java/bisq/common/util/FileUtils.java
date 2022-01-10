@@ -277,4 +277,14 @@ public class FileUtils {
             throw new IOException("Failed to rename " + oldFile + " to " + target);
         }
     }
+
+    public static void backupCorruptedFile(String directory, File storageFile, String fileName, String backupFolderName)
+            throws IOException {
+        if (storageFile.exists()) {
+            File corruptedBackupDir = new File(Paths.get(directory, backupFolderName).toString());
+            makeDirs(corruptedBackupDir);
+            File target = new File(Paths.get(directory, backupFolderName, fileName).toString());
+            renameFile(storageFile, target);
+        }
+    }
 }

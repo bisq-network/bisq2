@@ -17,44 +17,34 @@
 
 package bisq.desktop.common.view;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.overlay.OverlayController;
+import bisq.desktop.primary.main.content.ContentController;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
+import java.util.Optional;
 
 @Slf4j
-public abstract class TabController<M extends TabModel> extends NavigationTargetController {
-    private final NavigationTarget navigationTarget;
+public abstract class TabController<M extends TabModel> extends NavigationController {
 
     public TabController(ContentController contentController,
                          OverlayController overlayController,
-                         NavigationTarget navigationTarget) {
-        super(contentController, overlayController);
-
-        this.navigationTarget = navigationTarget;
+                         NavigationTarget... navigationTargets) {
+        super(contentController, overlayController, navigationTargets);
     }
 
     protected abstract M getModel();
 
     @Override
-    public void onViewAttached() {
-        List<NavigationTarget> path = navigationTarget.getPath();
-        NavigationTarget child = path.size() > 1 ? path.get(1) :
-                path.size() > 0 ? navigationTarget :
-                        getModel().getDefaultNavigationTarget();
-        navigateTo(child);
-    }
-
-    @Override
-    public void navigateTo(NavigationTarget navigationTarget) {
+    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
         NavigationTarget localTarget = resolveLocalTarget(navigationTarget);
-        Controller controller = getOrCreateController(localTarget, navigationTarget);
+        Controller controller = getOrCreateController(localTarget, navigationTarget, data);
         getModel().select(localTarget, controller.getView());
     }
 
     public void onTabSelected(NavigationTarget navigationTarget) {
-        navigateTo(navigationTarget);
+        log.error("onTabSelected {} {}", navigationTarget, this.getClass().getSimpleName());
+        Navigation.navigateTo(navigationTarget);
     }
 }

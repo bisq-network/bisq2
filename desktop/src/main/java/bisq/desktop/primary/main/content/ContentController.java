@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ContentController implements Controller {
-
     private final DefaultServiceProvider serviceProvider;
     private final OverlayController overlayController;
 

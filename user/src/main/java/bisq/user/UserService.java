@@ -15,16 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop;
+package bisq.user;
 
-import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
+import bisq.persistence.PersistenceService;
+import lombok.Getter;
 
-public class Preloader extends StackPane {
-    public Preloader() {
-        Label label = new Label("Initializing Bisq");
-        StackPane.setAlignment(label, Pos.CENTER);
-        getChildren().add(label);
+public class UserService implements PersistenceClient<User> {
+    @Getter
+    private final Persistence<User> persistence;
+    @Getter
+    private User user = new User();
+
+    public UserService(PersistenceService persistenceService) {
+        persistence = persistenceService.getOrCreatePersistence(this, "db", "user");
+    }
+
+    @Override
+    public void applyPersisted(User persisted) {
+        user = persisted;
+    }
+
+    @Override
+    public User getClone() {
+        return User.cloneFrom(user);
     }
 }

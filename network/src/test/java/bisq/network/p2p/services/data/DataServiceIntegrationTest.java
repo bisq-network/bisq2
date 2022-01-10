@@ -26,7 +26,6 @@ import bisq.network.p2p.services.data.storage.auth.MockAuthenticatedPayload;
 import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.security.KeyGeneration;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.security.GeneralSecurityException;
@@ -66,7 +65,7 @@ public class DataServiceIntegrationTest extends DataServiceNodeBase {
     // TODO with getBootstrappedDataServices(); we don't get a deterministic set up nodes connected to each other.
     // Mostly the small test network is well enough connected that the test succeeds, but not always.
     // We would likely need a more deterministic peerGroup management for tests (e.g. all nodes are connected to each other).
-    @Test
+   // @Test
     public void testAddAuthenticatedDataRequest() throws GeneralSecurityException, InterruptedException, ExecutionException {
         MockAuthenticatedPayload payload = new MockAuthenticatedPayload("Test offer " + UUID.randomUUID());
         KeyPair keyPair = KeyGeneration.generateKeyPair();
@@ -112,7 +111,7 @@ public class DataServiceIntegrationTest extends DataServiceNodeBase {
         List<NetworkService> networkServices = multiNodesSetup.getNetworkServicesByAddress().entrySet().stream()
                 .filter(e -> nodes.contains(e.getKey()))
                 .map(Map.Entry::getValue)
-                /* .flatMap(networkService -> networkService.getServiceNodesByTransport().getDataService().stream())*/
+                /* .flatMap(networkService -> networkService.getDataService().stream())*/
                 .collect(Collectors.toList());
 
         PeerGroup peerGroup = networkServices.get(0).getServiceNodesByTransport().findServiceNode(type).orElseThrow()
@@ -131,7 +130,7 @@ public class DataServiceIntegrationTest extends DataServiceNodeBase {
         }
 
         return networkServices.stream()
-                .flatMap(networkService -> networkService.getServiceNodesByTransport().getDataService().stream())
+                .flatMap(networkService -> networkService.getDataService().stream())
                 .collect(Collectors.toList());
     }
 }

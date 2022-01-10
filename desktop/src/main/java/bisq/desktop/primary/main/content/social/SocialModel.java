@@ -27,18 +27,19 @@ public class SocialModel extends TabModel {
     private final DefaultServiceProvider serviceProvider;
 
     public SocialModel(DefaultServiceProvider serviceProvider) {
-        super();
         this.serviceProvider = serviceProvider;
     }
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.HANGOUT;
+        return NavigationTarget.TRADE_INTENT;
     }
 
     public void onViewAttached() {
+        super.onViewAttached();
     }
 
     public void onViewDetached() {
+        super.onViewDetached();
     }
 }

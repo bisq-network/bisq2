@@ -18,10 +18,10 @@
 package bisq.common.data;
 
 import bisq.common.encoding.Hex;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * We do not use a record here because a byte array would be compared for identity equality instead of content
@@ -30,13 +30,25 @@ import java.io.Serializable;
  * See: https://stackoverflow.com/questions/61261226/java-14-records-and-arrays
  */
 @SuppressWarnings("ClassCanBeRecord")
-@EqualsAndHashCode
 @Getter
 public class ByteArray implements Serializable {
     private final byte[] bytes;
 
     public ByteArray(byte[] bytes) {
         this.bytes = bytes;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ByteArray byteArray = (ByteArray) o;
+        return Arrays.equals(bytes, byteArray.bytes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(bytes);
     }
 
     @Override

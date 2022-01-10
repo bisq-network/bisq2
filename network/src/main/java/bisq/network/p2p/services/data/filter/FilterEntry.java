@@ -17,19 +17,7 @@
 
 package bisq.network.p2p.services.data.filter;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-
 import java.io.Serializable;
 
-@Getter
-@EqualsAndHashCode
-public class FilterItem implements Serializable {
-    private final byte[] hash;
-    private final int sequenceNumber;
-
-    public FilterItem(byte[] hash, int sequenceNumber) {
-        this.hash = hash;
-        this.sequenceNumber = sequenceNumber;
-    }
+public record FilterEntry(byte[] hash, int sequenceNumber) implements Serializable {
 }

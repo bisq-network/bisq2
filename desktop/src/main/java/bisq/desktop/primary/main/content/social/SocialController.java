@@ -21,11 +21,16 @@ import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
+import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.content.social.hangout.HangoutController;
 import bisq.desktop.primary.main.content.social.tradeintent.TradeIntentController;
-import bisq.desktop.overlay.OverlayController;
 import lombok.Getter;
+
+import java.util.Optional;
+
+import static bisq.desktop.NavigationTarget.HANGOUT;
+import static bisq.desktop.NavigationTarget.TRADE_INTENT;
 
 public class SocialController extends TabController<SocialModel> {
     private final DefaultServiceProvider serviceProvider;
@@ -36,9 +41,8 @@ public class SocialController extends TabController<SocialModel> {
 
     public SocialController(DefaultServiceProvider serviceProvider,
                             ContentController contentController,
-                            OverlayController overlayController,
-                            NavigationTarget navigationTarget) {
-        super(contentController, overlayController, navigationTarget);
+                            OverlayController overlayController) {
+        super(contentController, overlayController, TRADE_INTENT, HANGOUT);
 
         this.serviceProvider = serviceProvider;
         model = new SocialModel(serviceProvider);
@@ -51,15 +55,17 @@ public class SocialController extends TabController<SocialModel> {
     }
 
     @Override
-    protected Controller getController(NavigationTarget localTarget,NavigationTarget navigationTarget) {
+    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget, Optional<Object> data) {
         switch (localTarget) {
             case TRADE_INTENT -> {
                 return new TradeIntentController(serviceProvider);
             }
             case HANGOUT -> {
-                return new HangoutController(serviceProvider);
+                return new HangoutController(serviceProvider, data);
             }
             default -> throw new IllegalArgumentException("Invalid navigationTarget for this host. localTarget=" + localTarget);
         }
     }
+
+
 }

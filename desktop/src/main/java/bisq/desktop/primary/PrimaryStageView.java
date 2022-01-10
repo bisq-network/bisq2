@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary;
 
-import bisq.desktop.Preloader;
 import bisq.desktop.common.utils.KeyCodeUtils;
 import bisq.desktop.common.view.View;
 import javafx.scene.Parent;
@@ -39,57 +38,52 @@ public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, Primar
 
     public PrimaryStageView(PrimaryStageModel model, PrimaryStageController controller, Stage stage) {
         super(new AnchorPane(), model, controller);
-
         this.stage = stage;
-        scene = new Scene(root);
-
+        scene = new Scene(root); // takes about  50 ms
         try {
             scene.getStylesheets().setAll(requireNonNull(getClass().getResource("/bisq.css")).toExternalForm(),
                     requireNonNull(getClass().getResource("/bisq2.css")).toExternalForm(),
                     requireNonNull(getClass().getResource("/images.css")).toExternalForm(),
                     requireNonNull(getClass().getResource("/theme-dark.css")).toExternalForm());
-
-            root.prefWidthProperty().bind(model.getPrefWidthProperty());
-            root.prefHeightProperty().bind(model.getPrefHeightProperty());
-
-            Preloader preloader = new Preloader();
-            AnchorPane.setLeftAnchor(preloader, 0d);
-            AnchorPane.setRightAnchor(preloader, 0d);
-            AnchorPane.setTopAnchor(preloader, 0d);
-            AnchorPane.setBottomAnchor(preloader, 0d);
-            root.getChildren().add(preloader);
-
-            stage.minHeightProperty().bind(model.getMinHeightProperty());
-            stage.minWidthProperty().bind(model.getMinWidthProperty());
-            stage.titleProperty().bind(model.getTitleProperty());
-            stage.setOnCloseRequest(event -> {
-                event.consume();
-                controller.onQuit();
-            });
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
                 if (KeyCodeUtils.isCtrlPressed(KeyCode.W, keyEvent) ||
                         KeyCodeUtils.isCtrlPressed(KeyCode.Q, keyEvent)) {
                     controller.onQuit();
                 }
             });
-            show();
+
+            root.setPrefWidth(model.getPrefWidth());
+            root.setPrefHeight(model.getPrefHeight());
+            model.view.addListener((observable, oldValue, newValue) -> {
+                Parent mainViewRoot = newValue.getRoot();
+                AnchorPane.setLeftAnchor(mainViewRoot, 0d);
+                AnchorPane.setRightAnchor(mainViewRoot, 0d);
+                AnchorPane.setTopAnchor(mainViewRoot, 0d);
+                AnchorPane.setBottomAnchor(mainViewRoot, 0d);
+                root.getChildren().setAll(mainViewRoot);
+            });
+
+            stage.setTitle(model.getTitle());
+            model.getStageX().ifPresent(stage::setX);
+            model.getStageY().ifPresent(stage::setY);
+            model.getStageWidth().ifPresent(stage::setWidth);
+            model.getStageHeight().ifPresent(stage::setHeight);
+            stage.setMinWidth(model.getMinWidth());
+            stage.setMinHeight(model.getMinHeight());
+            stage.xProperty().addListener((observable, oldValue, newValue) -> controller.onStageXChanged((double) newValue));
+            stage.yProperty().addListener((observable, oldValue, newValue) -> controller.onStageYChanged((double) newValue));
+            stage.widthProperty().addListener((observable, oldValue, newValue) -> controller.onStageWidthChanged((double) newValue));
+            stage.heightProperty().addListener((observable, oldValue, newValue) -> controller.onStageHeightChanged((double) newValue));
+            stage.setOnCloseRequest(event -> {
+                event.consume();
+                controller.onQuit();
+            });
+
+            stage.setScene(scene);
+            stage.show(); // takes about 90 ms
         } catch (Exception exception) {
             exception.printStackTrace();
             controller.onQuit();
         }
-
-        model.view.addListener((observable, oldValue, newValue) -> {
-            Parent mainViewRoot = newValue.getRoot();
-            AnchorPane.setLeftAnchor(mainViewRoot, 0d);
-            AnchorPane.setRightAnchor(mainViewRoot, 0d);
-            AnchorPane.setTopAnchor(mainViewRoot, 0d);
-            AnchorPane.setBottomAnchor(mainViewRoot, 0d);
-            root.getChildren().setAll(mainViewRoot);
-        });
-    }
-
-    private void show() {
-        this.stage.setScene(scene);
-        stage.show();
     }
 }

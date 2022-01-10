@@ -17,14 +17,15 @@
 
 package bisq.desktop.common.view;
 
-import bisq.desktop.common.threading.UIThread;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.stage.Window;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public abstract class View<R extends Node, M extends Model, C extends Controller> {
     protected final R root;
     protected final M model;
@@ -44,7 +45,7 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
                     onViewAttached(); // activate view first as we usually set the bindings here
                     controller.onViewAttached();
                     model.onViewAttached();
-                    UIThread.run(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
+                  //  UIThread.run(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
                 } else {
                     // For overlays, we need to wait until window is available
                     windowChangeListener = (observable, oldValue1, newWindow) -> {
@@ -52,7 +53,7 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
                         onViewAttached();
                         controller.onViewAttached();
                         model.onViewAttached();
-                        UIThread.run(() -> newScene.windowProperty().removeListener(View.this.windowChangeListener));
+                       // UIThread.run(() -> newScene.windowProperty().removeListener(View.this.windowChangeListener));
                     };
                     newScene.windowProperty().addListener(windowChangeListener);
                 }

@@ -20,7 +20,7 @@ package bisq.network.p2p.services.data.inventory;
 import bisq.network.p2p.message.Proto;
 import bisq.network.p2p.services.data.DataRequest;
 
-import java.util.List;
+import java.util.HashSet;
 
-public record Inventory(List<? extends DataRequest> entries, int numDropped) implements Proto {
+public record Inventory(HashSet<? extends DataRequest> entries, int numDropped) implements Proto {
 }

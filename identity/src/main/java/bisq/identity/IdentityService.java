@@ -55,7 +55,7 @@ public class IdentityService implements PersistenceClient<HashMap<String, Identi
     }
 
     @Override
-    public HashMap<String, Identity> getClonedMap() {
+    public HashMap<String, Identity> getClone() {
         synchronized (identityById) {
             return new HashMap<>(identityById);
         }

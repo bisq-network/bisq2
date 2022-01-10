@@ -82,7 +82,7 @@ public class JavaFxExecutable extends Executable<DefaultServiceProvider> {
     protected void setDefaultUncaughtExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             log.error("Uncaught exception", throwable);
-            UIThread.run(() -> primaryStageController.onUncaughtException(thread, throwable));
+            UIThread.run(() -> requireNonNull(primaryStageController).onUncaughtException(thread, throwable));
         });
     }
 

@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.social;
 
 import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTargetTab;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
 import com.jfoenix.controls.JFXTabPane;
-import javafx.scene.control.Tab;
 
 public class SocialView extends TabView<JFXTabPane, SocialModel, SocialController> {
 
@@ -31,8 +31,8 @@ public class SocialView extends TabView<JFXTabPane, SocialModel, SocialControlle
 
     @Override
     protected void createAndAddTabs() {
-        Tab tradeIntentTab = createTab(Res.common.get("social.tradeIntent"), NavigationTarget.TRADE_INTENT);
-        Tab hangoutTab = createTab(Res.common.get("social.hangout"), NavigationTarget.HANGOUT);
+        NavigationTargetTab tradeIntentTab = createTab(Res.common.get("social.tradeIntent"), NavigationTarget.TRADE_INTENT);
+        NavigationTargetTab hangoutTab = createTab(Res.common.get("social.hangout"), NavigationTarget.HANGOUT);
         root.getTabs().setAll(tradeIntentTab, hangoutTab);
     }
 
@@ -44,5 +44,6 @@ public class SocialView extends TabView<JFXTabPane, SocialModel, SocialControlle
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
+       // root.getTabs().clear(); 
     }
 }

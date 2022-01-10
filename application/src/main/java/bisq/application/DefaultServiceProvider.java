@@ -32,6 +32,7 @@ import bisq.offer.OpenOfferService;
 import bisq.persistence.PersistenceService;
 import bisq.presentation.offer.OfferEntityService;
 import bisq.security.KeyPairService;
+import bisq.user.UserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,6 +63,7 @@ public class DefaultServiceProvider extends ServiceProvider {
     private final MarketPriceService marketPriceService;
     private final ApplicationOptions applicationOptions;
     private final PersistenceService persistenceService;
+    private final UserService userService;
 
     public DefaultServiceProvider(ApplicationOptions applicationOptions, String[] args) {
         super("Bisq");
@@ -74,6 +76,8 @@ public class DefaultServiceProvider extends ServiceProvider {
 
         persistenceService = new PersistenceService(applicationOptions.baseDir());
         keyPairService = new KeyPairService(persistenceService);
+
+        userService = new UserService(persistenceService);
 
         identityService = new IdentityService(persistenceService);
 
@@ -105,7 +109,7 @@ public class DefaultServiceProvider extends ServiceProvider {
     public CompletableFuture<Boolean> initialize() {
         return keyPairService.initialize()
                 .thenCompose(result -> identityService.initialize())
-                .thenCompose(result -> networkService.bootstrapPeerGroup())
+                .thenCompose(result -> networkService.bootstrapToNetwork())
                 .thenCompose(result -> marketPriceService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(offerService.initialize(),
                         openOfferService.initialize(),

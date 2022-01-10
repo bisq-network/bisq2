@@ -18,26 +18,34 @@
 package bisq.desktop.primary.main.content.offerbook;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.offerbook.details.OfferDetailsController;
-import bisq.desktop.primary.main.nav.NavigationController;
+import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.overlay.OverlayController;
+import bisq.desktop.primary.main.content.ContentController;
+import bisq.desktop.primary.main.content.createoffer.CreateOfferController;
+import bisq.desktop.primary.main.content.offerbook.details.OfferDetailsController;
 import javafx.geometry.Bounds;
 import lombok.Getter;
 
-public class OfferbookController implements Controller {
+import java.util.Optional;
+
+import static bisq.desktop.NavigationTarget.CREATE_OFFER;
+
+public class OfferbookController extends NavigationController {
     private final OfferbookModel model;
     @Getter
     private final OfferbookView view;
     @Getter
     private final DefaultServiceProvider serviceProvider;
-    private final NavigationController navigationController;
     private final OverlayController overlayController;
 
-    public OfferbookController(DefaultServiceProvider serviceProvider, NavigationController navigationController, OverlayController overlayController) {
+    public OfferbookController(DefaultServiceProvider serviceProvider,
+                               ContentController contentController,
+                               OverlayController overlayController) {
+        super(contentController, overlayController, CREATE_OFFER);
         this.serviceProvider = serviceProvider;
-        this.navigationController = navigationController;
         this.overlayController = overlayController;
         model = new OfferbookModel(serviceProvider);
         view = new OfferbookView(model, this);
@@ -65,7 +73,7 @@ public class OfferbookController implements Controller {
     }
 
     public void onCreateOffer() {
-        navigationController.navigateTo(NavigationTarget.CREATE_OFFER);
+        Navigation.navigateTo(CREATE_OFFER);
     }
 
     public void onTakeOffer(OfferListItem item) {
@@ -73,5 +81,20 @@ public class OfferbookController implements Controller {
 
     public void onShowMakerDetails(OfferListItem item, Bounds boundsInParent) {
         overlayController.show(new OfferDetailsController(item, boundsInParent));
+    }
+
+    @Override
+    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget, Optional<Object> data) {
+        switch (localTarget) {
+            case CREATE_OFFER -> {
+                return new CreateOfferController(serviceProvider);
+            }
+            default -> throw new IllegalArgumentException("Invalid navigationTarget for this host. localTarget=" + localTarget);
+        }
+    }
+
+    @Override
+    protected NavigationTarget resolveLocalTarget(NavigationTarget navigationTarget) {
+        return resolveAsRootHost(navigationTarget);
     }
 }

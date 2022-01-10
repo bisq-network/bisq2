@@ -23,7 +23,6 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.primary.main.MainController;
-import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PrimaryStageController implements Controller {
     private final DefaultServiceProvider serviceProvider;
-    private final Application.Parameters parameters;
     private final PrimaryStageModel model;
     @Getter
     private final PrimaryStageView view;
@@ -40,24 +38,22 @@ public class PrimaryStageController implements Controller {
 
     public PrimaryStageController(DefaultServiceProvider serviceProvider, JavaFXApplication.Data applicationData) {
         this.serviceProvider = serviceProvider;
-        parameters = applicationData.parameters();
+
         Browser.setHostServices(applicationData.hostServices());
 
-        model = new PrimaryStageModel();
+        model = new PrimaryStageModel(serviceProvider);
         view = new PrimaryStageView(model, this, applicationData.stage());
         overlayController = new OverlayController(view.getScene());
         mainController = new MainController(serviceProvider, overlayController);
-
-        model.select(mainController.getView());
-        model.setTitle(serviceProvider.getApplicationOptions().appName());
-        
-       // UIThread.run(()->view.show());
+        model.setView(mainController.getView());
     }
+
     @Override
     public void onViewAttached() {
         // called at view creation
         // todo add splash screen
     }
+
 
     public void onDomainInitialized() {
         mainController.onDomainInitialized();
@@ -76,6 +72,23 @@ public class PrimaryStageController implements Controller {
     }
 
     public void shutdown() {
-        serviceProvider.shutdown().whenComplete((__, throwable) -> Platform.exit());
+        serviceProvider.shutdown()
+                .whenComplete((__, throwable) -> Platform.exit());
+    }
+
+    public void onStageXChanged(double value) {
+        model.setStageX(value);
+    }
+
+    public void onStageYChanged(double value) {
+        model.setStageY(value);
+    }
+
+    public void onStageWidthChanged(double value) {
+        model.setStageWidth(value);
+    }
+
+    public void onStageHeightChanged(double value) {
+        model.setStageHeight(value);
     }
 }

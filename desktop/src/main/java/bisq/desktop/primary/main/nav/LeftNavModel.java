@@ -35,7 +35,7 @@ import javafx.scene.Parent;
 import lombok.Getter;
 
 @Getter
-public class NavigationModel implements Model {
+public class LeftNavModel implements Model {
     private final NetworkService networkService;
     @Getter
     protected final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
@@ -54,7 +54,7 @@ public class NavigationModel implements Model {
     private final BooleanProperty i2pIsVisible = new SimpleBooleanProperty(false);
 
 
-    public NavigationModel(DefaultServiceProvider serviceProvider) {
+    public LeftNavModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
 
         clearNetIsVisible.set(networkService.isTransportTypeSupported(Transport.Type.CLEAR));

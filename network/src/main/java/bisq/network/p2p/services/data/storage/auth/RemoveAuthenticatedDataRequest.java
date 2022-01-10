@@ -18,15 +18,16 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
-import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
+import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -37,19 +38,22 @@ import java.util.Arrays;
 @Slf4j
 public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest, RemoveDataRequest {
 
-
-    public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStore store, NetworkPayload networkPayload, KeyPair keyPair)
+    public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStore store, AuthenticatedPayload payload, KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(networkPayload.serialize());
+        byte[] hash = DigestUtil.hash(payload.serialize());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
-        return new RemoveAuthenticatedDataRequest(networkPayload.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
+        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = new RemoveAuthenticatedDataRequest(payload.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
+        log.error(payload.toString());
+        log.error(removeAuthenticatedDataRequest.toString());
+        return removeAuthenticatedDataRequest;
     }
 
     protected final MetaData metaData;
     protected final byte[] hash;
     protected final byte[] ownerPublicKeyBytes; // 442 bytes
-    transient protected final PublicKey ownerPublicKey;
+    @Nullable
+    transient protected PublicKey ownerPublicKey;
     protected final int sequenceNumber;
     protected final byte[] signature;         // 47 bytes
     protected final long created;
@@ -84,6 +88,9 @@ public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest,
 
     public boolean isSignatureInvalid() {
         try {
+            if (ownerPublicKey == null) {
+                ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
+            }
             return !SignatureUtil.verify(hash, signature, ownerPublicKey);
         } catch (Exception e) {
             return true;
@@ -105,14 +112,14 @@ public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest,
 
     @Override
     public String toString() {
-        return "RemoveProtectedDataRequest{" +
-              /*  "\r\n     metaData=" + metaData +
-                ",\r\n     hash=" + Hex.encode(hash) +*/
+        return "RemoveAuthenticatedDataRequest{" +
+                "\r\n     metaData=" + metaData +
+                ",\r\n     hash=" + Hex.encode(hash) +
                 ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
-             /*   ",\r\n     ownerPublicKey=" + ownerPublicKey +
+                ",\r\n     ownerPublicKey=" + ownerPublicKey +
                 ",\r\n     sequenceNumber=" + sequenceNumber +
                 ",\r\n     signature=" + Hex.encode(signature) +
-                ",\r\n     created=" + created +*/
+                ",\r\n     created=" + created +
                 "\r\n}";
     }
 }
