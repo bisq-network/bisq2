@@ -139,7 +139,7 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
             }
 
             if (requestFromMap instanceof RemoveAuthenticatedDataRequest) {
-                log.debug("Already removed. request={}", request);
+                log.debug("Already removed. request={}, map={}", request, map);
                 // We have had the entry already removed.
                 if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                     // We update the map with the new request with the fresh sequence number.

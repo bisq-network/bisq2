@@ -19,7 +19,7 @@ package bisq.protocol;
 
 
 import bisq.network.NetworkService;
-import bisq.network.p2p.NetworkId;
+import bisq.network.NetworkId;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;

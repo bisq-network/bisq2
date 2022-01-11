@@ -79,11 +79,11 @@ public class DefaultServiceProvider extends ServiceProvider {
 
         userService = new UserService(persistenceService);
 
-        identityService = new IdentityService(persistenceService);
+        identityService = new IdentityService(persistenceService, keyPairService);
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
                 getConfig("bisq.networkServiceConfig"));
-        networkService = new NetworkService(networkServiceConfig, keyPairService, persistenceService);
+        networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
 
 
         // add data use case is not available yet at networkService

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.social.hangout;
 
-import bisq.network.p2p.NetworkId;
+import bisq.network.NetworkId;
 
 import java.io.Serializable;
 

@@ -23,7 +23,7 @@ import bisq.common.monetary.Fiat;
 import bisq.contract.AssetTransfer;
 import bisq.contract.SwapProtocolType;
 import bisq.network.p2p.INetworkService;
-import bisq.network.p2p.NetworkId;
+import bisq.network.NetworkId;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.security.PubKey;

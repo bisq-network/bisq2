@@ -22,8 +22,9 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.security.ConfidentialData;
 import bisq.security.HybridEncryption;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.ToString;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -32,9 +33,9 @@ import java.security.PublicKey;
 // We want to have fine grained control over mailbox messages.
 // As the data is encrypted we could not use it's TTL and we would merge all mailbox proto into one storage file.
 // By wrapping the sealed data into that NetworkData we can add the fileName and ttl from the unencrypted NetworkData.
-@EqualsAndHashCode
-
-public class MailboxPayload implements AuthenticatedPayload {
+@EqualsAndHashCode(callSuper = true)
+@ToString
+public class MailboxPayload extends AuthenticatedPayload {
     public static MailboxPayload createMailboxPayload(MailboxMessage mailboxMessage,
                                                       KeyPair senderKeyPair,
                                                       PublicKey receiverPublicKey)
@@ -44,30 +45,12 @@ public class MailboxPayload implements AuthenticatedPayload {
         return new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
     }
 
-    @Getter
-    private final ConfidentialMessage confidentialMessage;
-    private final MetaData metaData;
-
     public MailboxPayload(ConfidentialMessage confidentialMessage, MetaData metaData) {
-        this.confidentialMessage = confidentialMessage;
-        this.metaData = metaData;
+        super(confidentialMessage, metaData);
     }
 
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return "MailboxPayload{" +
-                "\r\n     confidentialMessage=" + confidentialMessage +
-                ",\r\n     metaData='" + metaData + '\'' +
-                "\r\n}";
+    @VisibleForTesting
+    ConfidentialMessage getConfidentialMessage() {
+        return (ConfidentialMessage) data;
     }
 }

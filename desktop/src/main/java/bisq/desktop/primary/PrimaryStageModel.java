@@ -41,8 +41,8 @@ public class PrimaryStageModel implements Model {
     private final Optional<Double> stageHeight;
     private final double minWidth = 800;
     private final double minHeight = 600;
-    private final double prefWidth = 1200;
-    private final double prefHeight = 1000;
+    private final double prefWidth = 1100;
+    private final double prefHeight = 800;
     @Getter
     protected final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 

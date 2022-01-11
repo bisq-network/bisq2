@@ -17,7 +17,7 @@
 
 package bisq.offer.options;
 
-import bisq.network.p2p.NetworkId;
+import bisq.network.NetworkId;
 
 import java.util.Set;
 

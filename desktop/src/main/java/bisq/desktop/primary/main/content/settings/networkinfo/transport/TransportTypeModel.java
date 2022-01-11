@@ -23,7 +23,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.p2p.NetworkId;
+import bisq.network.NetworkId;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.CloseReason;

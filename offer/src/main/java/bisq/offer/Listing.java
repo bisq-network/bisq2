@@ -18,7 +18,7 @@
 package bisq.offer;
 
 import bisq.contract.ProtocolType;
-import bisq.network.p2p.NetworkId;
+import bisq.network.NetworkId;
 import bisq.offer.options.OfferOption;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

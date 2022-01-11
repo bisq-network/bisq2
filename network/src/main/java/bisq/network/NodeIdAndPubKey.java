@@ -15,16 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.contract;
+package bisq.network;
 
-import bisq.network.NetworkId;
-import lombok.Getter;
+import bisq.security.PubKey;
 
-@Getter
-public class Party {
-    private final NetworkId makerNetworkId;
+import java.io.Serializable;
 
-    public Party(NetworkId makerNetworkId) {
-        this.makerNetworkId = makerNetworkId;
-    }
+public record NodeIdAndPubKey(String nodeId, PubKey pubKey) implements Serializable {
 }

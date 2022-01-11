@@ -103,7 +103,7 @@ public class Persistence<T extends Serializable> {
 
                     // Atomic rename
                     FileUtils.renameFile(tempFile, storageFile);
-                    log.info("Persisted {}", serializable);
+                    log.debug("Persisted {}", serializable);
                     success = true;
                 } catch (IOException exception) {
                     log.error(exception.toString(), exception);

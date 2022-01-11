@@ -26,7 +26,7 @@ import bisq.contract.ProtocolType;
 import bisq.contract.SwapProtocolType;
 import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkService;
-import bisq.network.p2p.NetworkId;
+import bisq.network.NetworkId;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.offer.Asset;

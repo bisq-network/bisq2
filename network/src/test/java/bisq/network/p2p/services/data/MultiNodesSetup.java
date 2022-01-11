@@ -138,7 +138,7 @@ public class MultiNodesSetup {
                 networkServiceConfig.seedAddressesByTransport(),
                 Optional.empty());
         PersistenceService persistenceService = new PersistenceService(networkServiceConfig.baseDir());
-        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, keyPairService, persistenceService);
+        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, persistenceService, keyPairService);
         networkServicesByAddress.put(address, networkService);
         return networkService;
     }

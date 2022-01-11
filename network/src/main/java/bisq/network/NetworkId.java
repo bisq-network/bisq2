@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p;
+package bisq.network;
 
 import bisq.common.data.Pair;
 import bisq.network.p2p.node.Address;

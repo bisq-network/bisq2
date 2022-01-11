@@ -47,6 +47,8 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
         AuthenticatedData data = new AuthenticatedData(payload, sequenceNumber, hashOfPublicKey, System.currentTimeMillis());
         byte[] serialized = data.serialize();
         byte[] signature = SignatureUtil.sign(serialized, keyPair.getPrivate());
+        log.error("payload={}",payload);
+        log.error("hash={}", Hex.encode(hash));
         return new AddAuthenticatedDataRequest(data, signature, keyPair.getPublic());
     }
 

@@ -21,8 +21,8 @@ import bisq.common.timer.Scheduler;
 import bisq.common.util.ByteUnit;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.MathUtils;
+import bisq.network.NetworkId;
 import bisq.network.NetworkService;
-import bisq.network.p2p.NetworkId;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.Address;
@@ -181,7 +181,7 @@ public class MultiNodesModel {
                 .map(e -> getOrCreateNetworkService(e.getValue(), e.getKey()))
                 .findAny()
                 .get();
-        receiverNetworkService.findMyAddresses().forEach((type, value) -> {
+        receiverNetworkService.getMyAddresses().forEach((type, value) -> {
             Address receiverAddress = value.get(receiverNetworkId.getNodeId());
             sendMsgListener = new Node.Listener() {
                 @Override
@@ -211,7 +211,7 @@ public class MultiNodesModel {
                         senderKeyPair,
                         senderNetworkId.getNodeId())
                 .whenComplete((result, throwable) -> {
-                    senderNetworkService.findMyAddresses().forEach((type, value) -> {
+                    senderNetworkService.getMyAddresses().forEach((type, value) -> {
                         Address senderAddress = value.get(senderNetworkId.getNodeId());
                         String newLine = "\n" + getTimestamp() + " " +
                                 type.toString().substring(0, 3) + "  onSent       " +
@@ -255,7 +255,7 @@ public class MultiNodesModel {
         KeyPairService keyPairService = new KeyPairService(persistenceService);
         keyPairServicesByAddress.put(address, keyPairService);
         keyPairService.initialize().join();
-        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, keyPairService, persistenceService);
+        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, persistenceService, keyPairService);
         handler.ifPresent(handler -> handler.onStateChange(address, networkService.getStateByTransportType().get(transportType)));
         networkServicesByAddress.put(address, networkService);
         setupConnectionListener(networkService, transportType);

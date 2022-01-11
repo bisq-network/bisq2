@@ -18,19 +18,45 @@
 package bisq.desktop.primary.main.content.social.hangout;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.identity.IdentityService;
+import bisq.network.NetworkId;
+import bisq.network.NetworkService;
+import bisq.network.NodeIdAndKeyPair;
+import bisq.network.NodeIdAndPubKey;
+import bisq.network.p2p.message.Message;
+import bisq.network.p2p.node.CloseReason;
+import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import lombok.Getter;
 
-public class HangoutController implements Controller {
+public class HangoutController implements Controller, Node.Listener {
+    private final DefaultServiceProvider serviceProvider;
+    private final NetworkService networkService;
+    private final IdentityService identityService;
     private final HangoutModel model;
     @Getter
     private final HangoutView view;
-    private final DefaultServiceProvider serviceProvider;
 
     public HangoutController(DefaultServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
+        networkService = serviceProvider.getNetworkService();
+        identityService = serviceProvider.getIdentityService();
         model = new HangoutModel(serviceProvider);
         view = new HangoutView(model, this);
+
+    }
+
+    @Override
+    public void onViewAttached() {
+        networkService.addMessageListener(this);
+    }
+
+    @Override
+    public void onViewDetached() {
+        networkService.removeMessageListener(this);
     }
 
     @Override
@@ -38,8 +64,53 @@ public class HangoutController implements Controller {
         model.setData(data);
     }
 
+    @Override
+    public void onMessage(Message message, Connection connection, String nodeId) {
+        if (message instanceof ChatMessage chatMessage) {
+            UIThread.run(() -> model.addChatMessage(chatMessage));
+        }
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
+    }
+
     public void send(String text) {
-        model.sendMessage(text);
+        model.getChannelId().ifPresent(channelId -> {
+            NodeIdAndPubKey nodeIdAndPubKey = identityService.getNodeIdAndPubKey(channelId);
+            networkService.getInitializedNetworkIdAsync(nodeIdAndPubKey)
+                    .whenComplete((senderNetworkId, throwable) -> {
+                        if (throwable != null) {
+                            UIThread.run(() -> model.setSendMessageError(channelId, throwable));
+                            return;
+                        }
+                        ChatMessage chatMessage = model.createAndAddChatMessage(text, channelId, senderNetworkId);
+                        NetworkId receiverNetworkId = model.getPeer().orElseThrow().networkId();
+                        NodeIdAndKeyPair nodeIdAndKeyPair = identityService.getNodeIdAndKeyPair(channelId);
+                        networkService.confidentialSendAsync(chatMessage, receiverNetworkId, nodeIdAndKeyPair)
+                                .whenComplete((resultMap, throwable2) -> {
+                                    if (throwable2 != null) {
+                                        UIThread.run(() -> model.setSendMessageError(channelId, throwable2));
+                                        return;
+                                    }
+                                    resultMap.forEach((transportType, res) -> {
+                                        ConfidentialMessageService.Result result = resultMap.get(transportType);
+                                        result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture
+                                                .whenComplete((broadcastResult, throwable3) -> {
+                                                    if (throwable3 != null) {
+                                                        UIThread.run(() -> model.setSendMessageError(channelId, throwable3));
+                                                        return;
+                                                    }
+                                                    UIThread.run(() -> model.setSendMessageResult(channelId, result, broadcastResult));
+                                                }));
+                                    });
+                                });
+                    });
+        });
     }
 
     public void onSelectChannel(String channelId) {

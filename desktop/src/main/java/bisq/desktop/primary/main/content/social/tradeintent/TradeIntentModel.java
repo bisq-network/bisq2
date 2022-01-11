@@ -18,21 +18,15 @@
 package bisq.desktop.primary.main.content.social.tradeintent;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.primary.main.content.social.hangout.ChatUser;
 import bisq.i18n.Res;
-import bisq.identity.Identity;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.p2p.NetworkId;
-import bisq.network.p2p.node.transport.Transport;
-import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.NetworkPayload;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedNetworkIdPayload;
+import bisq.network.p2p.services.data.broadcast.BroadcastResult;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.security.KeyPairService;
-import bisq.security.PubKey;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -42,126 +36,43 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.KeyPair;
 import java.util.Date;
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Getter
 public class TradeIntentModel implements Model {
     private final NetworkService networkService;
-    private final IdentityService identityService;
     private final KeyPairService keyPairService;
     private final ObservableList<TradeIntentListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<TradeIntentListItem> filteredItems = new FilteredList<>(listItems);
     private final SortedList<TradeIntentListItem> sortedItems = new SortedList<>(filteredItems);
-    private final Optional<DataService> dataService;
-    private Optional<DataService.Listener> dataListener = Optional.empty();
+    private final StringProperty addDataResultProperty = new SimpleStringProperty("");
+    private final StringProperty removeDataResultProperty = new SimpleStringProperty("");
+    private ObjectProperty<ChatUser> myChatIdentity = new SimpleObjectProperty<>();
 
     public TradeIntentModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
-        identityService = serviceProvider.getIdentityService();
         keyPairService = serviceProvider.getKeyPairService();
-        dataService = networkService.getDataService();
-
-        //todo listen on bootstrap
-        UIScheduler.run(this::requestInventory).after(2000);
     }
 
-    public void onViewAttached() {
-        dataService.ifPresent(dataService -> {
-            dataListener = Optional.of(new DataService.Listener() {
-                @Override
-                public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
-                    if (networkPayload instanceof AuthenticatedNetworkIdPayload payload && payload.getData() instanceof TradeIntent) {
-                        UIThread.run(() -> listItems.add(new TradeIntentListItem(payload)));
-                    }
-                }
-
-                @Override
-                public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
-                    if (networkPayload instanceof AuthenticatedNetworkIdPayload payload && payload.getData() instanceof TradeIntent) {
-                        UIThread.run(() -> listItems.remove(new TradeIntentListItem(payload)));
-                    }
-                }
-            });
-            dataService.addListener(dataListener.get());
-
-            listItems.setAll(dataService.getAuthenticatedPayloadByStoreName("TradeIntent")
-                    .filter(payload -> payload instanceof AuthenticatedNetworkIdPayload)
-                    .map(payload -> (AuthenticatedNetworkIdPayload) payload)
-                    .map(TradeIntentListItem::new)
-                    .collect(Collectors.toList()));
-        });
+    void addPayload(AuthenticatedPayload payload) {
+        listItems.add(new TradeIntentListItem(payload));
     }
 
-    public void onViewDetached() {
-        dataService.ifPresent(dataService -> dataListener.ifPresent(dataService::removeListener));
+    void removePayload(AuthenticatedPayload payload) {
+        listItems.remove(new TradeIntentListItem(payload));
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void requestInventory() {
-        // We get updated our data listener once we get responses
-        networkService.requestInventory("TradeIntent");
+    void fillTradeIntentListItem(List<TradeIntentListItem> list) {
+        listItems.setAll(list);
     }
 
-    StringProperty addData(String userId, String ask, String bid) {
-        StringProperty resultProperty = new SimpleStringProperty("Create Servers for node ID");
-        String id = UUID.randomUUID().toString().substring(0, 8);
-        Identity identity = identityService.getOrCreateIdentity(id);
-        String keyId = identity.keyId();
-        networkService.maybeInitializeServer(identity.nodeId())
-                .get(Transport.Type.CLEAR)
-                .whenComplete((r, t) -> {
-                    KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
-                    PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-                    NetworkId networkId = networkService.findNetworkId(identity.nodeId(), pubKey).orElseThrow();
-                    ChatUser maker = new ChatUser(id, id, networkId);
-                    TradeIntent tradeIntent = new TradeIntent(id, maker, ask, bid, new Date().getTime());
-                    networkService.addData(tradeIntent, identity.nodeId(), keyId)
-                            .whenComplete((broadCastResultFutures, throwable) -> {
-                                broadCastResultFutures.forEach(broadCastResultFuture -> {
-                                    broadCastResultFuture.whenComplete((broadCastResult, throwable2) -> {
-                                        //todo add states to networkService
-                                        UIThread.run(() -> {
-                                            if (throwable2 == null) {
-                                                resultProperty.set("Data added. Broadcast result: " + broadCastResult);
-                                            } else {
-                                                resultProperty.set("Error at add data: " + throwable);
-                                            }
-                                        });
-                                    });
-                                });
-                            });
-                });
-        return resultProperty;
-    }
-
-    public void removeTradeIntent(TradeIntentListItem item) {
-        StringProperty resultProperty = new SimpleStringProperty("Remove data");
-        Identity identity = identityService.getOrCreateIdentity(item.getTradeIntent().id());
-        String keyId = identity.keyId();
-        networkService.removeData(item.getPayload().getData(), identity.nodeId(), keyId)
-                .whenComplete((broadCastResultFutures, throwable) -> {
-                    broadCastResultFutures.forEach(broadCastResultFuture -> {
-                        broadCastResultFuture.whenComplete((broadCastResult, throwable2) -> {
-                            //todo add states to networkService
-                            UIThread.run(() -> {
-                                if (throwable2 == null) {
-                                    resultProperty.set("Remove added. Broadcast result: " + broadCastResult);
-                                } else {
-                                    resultProperty.set("Error at remove data: " + throwable);
-                                }
-                            });
-                        });
-                    });
-                });
+    void setMyChatIdentity(ChatUser chatUser) {
+        myChatIdentity.set(chatUser);
     }
 
     boolean isMyTradeIntent(TradeIntentListItem item) {
@@ -170,5 +81,31 @@ public class TradeIntentModel implements Model {
 
     String getActionButtonTitle(TradeIntentListItem item) {
         return isMyTradeIntent(item) ? Res.common.get("remove") : Res.common.get("contact");
+    }
+
+    TradeIntent createTradeIntent(String ask, String bid) {
+        checkNotNull(myChatIdentity.get(),"myChatIdentity must be set");
+        String id = UUID.randomUUID().toString().substring(0, 8);
+        return new TradeIntent(id, myChatIdentity.get(), ask, bid, new Date().getTime());
+    }
+
+    void setAddTradeIntentError(TradeIntent tradeIntent, Throwable throwable) {
+        log.error("Error at add tradeIntent: tradeIntent={}, error={}", tradeIntent, throwable.toString());  //todo
+    }
+
+    void setAddTradeIntentResult(TradeIntent tradeIntent, BroadcastResult broadcastResult) {
+        log.info("Add tradeIntent result for tradeIntent {}: {}",
+                tradeIntent, broadcastResult.toString()); //todo
+        addDataResultProperty.set(broadcastResult.toString());
+    }
+
+    void setRemoveTradeIntentError(TradeIntent tradeIntent, Throwable throwable) {
+        log.error("Error at remove tradeIntent: tradeIntent={}, error={}", tradeIntent, throwable.toString());  //todo
+    }
+
+    void setRemoveTradeIntentResult(TradeIntent tradeIntent, BroadcastResult broadcastResult) {
+        log.info("Add tradeIntent result for tradeIntent {}: {}",
+                tradeIntent, broadcastResult.toString()); //todo
+        removeDataResultProperty.set(broadcastResult.toString());
     }
 }

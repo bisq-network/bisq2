@@ -15,16 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.contract;
+package bisq.desktop.components.controls;
 
-import bisq.network.NetworkId;
-import lombok.Getter;
+import com.jfoenix.controls.JFXComboBox;
 
-@Getter
-public class Party {
-    private final NetworkId makerNetworkId;
+public class BisqComboBox<T> extends JFXComboBox<T> {
+    public BisqComboBox(String title) {
+        this();
+        setPromptText(title);
+    }
 
-    public Party(NetworkId makerNetworkId) {
-        this.makerNetworkId = makerNetworkId;
+    public BisqComboBox() {
+        setLabelFloat(true);
     }
 }

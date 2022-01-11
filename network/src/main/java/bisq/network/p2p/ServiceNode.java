@@ -19,6 +19,7 @@ package bisq.network.p2p;
 
 
 import bisq.common.util.CompletableFutureUtils;
+import bisq.network.NetworkId;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.Address;
@@ -140,6 +141,20 @@ public class ServiceNode {
         }
     }
 
+    public CompletableFuture<Void> shutdown() {
+        setState(State.SHUTDOWN_STARTED);
+        return CompletableFutureUtils.allOf(nodesById.shutdown(),
+                        confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(CompletableFuture.completedFuture(null)),
+                        peerGroupService.map(PeerGroupService::shutdown).orElse(CompletableFuture.completedFuture(null)),
+                        dataServicePerTransport.map(DataNetworkService::shutdown).orElse(CompletableFuture.completedFuture(null)),
+                        relayService.map(RelayService::shutdown).orElse(CompletableFuture.completedFuture(null)),
+                        monitorService.map(MonitorService::shutdown).orElse(CompletableFuture.completedFuture(null)))
+                .orTimeout(4, TimeUnit.SECONDS)
+                .whenComplete((list, throwable) -> {
+                    setState(State.SHUTDOWN_COMPLETE);
+                }).thenApply(list -> null);
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -159,10 +174,6 @@ public class ServiceNode {
             log.error("maybeInitializeServer failed. nodeId=" + nodeId + ";serverPort=" + serverPort, throwable);
             return false;
         }
-    }
-
-    public CompletableFuture<Void> maybeInitializePeerGroupAsync() {
-        return runAsync(this::maybeInitializePeerGroup, NetworkService.NETWORK_IO_POOL);
     }
 
     public void maybeInitializePeerGroup() {
@@ -199,24 +210,6 @@ public class ServiceNode {
                 .orElseThrow(() -> new RuntimeException("RelayService not present at relay"));
     }
 
-    public CompletableFuture<Void> shutdown() {
-        setState(State.SHUTDOWN_STARTED);
-        return CompletableFutureUtils.allOf(nodesById.shutdown(),
-                        confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(CompletableFuture.completedFuture(null)),
-                        peerGroupService.map(PeerGroupService::shutdown).orElse(CompletableFuture.completedFuture(null)),
-                        dataServicePerTransport.map(DataNetworkService::shutdown).orElse(CompletableFuture.completedFuture(null)),
-                        relayService.map(RelayService::shutdown).orElse(CompletableFuture.completedFuture(null)),
-                        monitorService.map(MonitorService::shutdown).orElse(CompletableFuture.completedFuture(null)))
-                .orTimeout(4, TimeUnit.SECONDS)
-                .whenComplete((list, throwable) -> {
-                    setState(State.SHUTDOWN_COMPLETE);
-                }).thenApply(list -> null);
-    }
-
-    public Optional<Socks5Proxy> getSocksProxy() throws IOException {
-        return defaultNode.getSocksProxy();
-    }
-
     public void addMessageListener(Node.Listener listener) {
         confidentialMessageService.ifPresent(service -> service.addMessageListener(listener));
     }
@@ -225,28 +218,32 @@ public class ServiceNode {
         confidentialMessageService.ifPresent(service -> service.removeMessageListener(listener));
     }
 
-    public Optional<Address> findMyAddress(String nodeId) {
-        return nodesById.findMyAddress(nodeId);
-    }
-
-    public Optional<Address> findMyDefaultAddresses() {
-        return findMyAddress(Node.DEFAULT_NODE_ID);
-    }
-
-    public Optional<Node> findNode(String nodeId) {
-        return nodesById.findNode(nodeId);
-    }
-
-    public Map<String, Address> getAddressesByNodeId() {
-        return nodesById.getAddressesByNodeId();
-    }
-
     public void addListener(Listener listener) {
         listeners.add(listener);
     }
 
     public void removeListener(Listener listener) {
         listeners.remove(listener);
+    }
+
+    public Optional<Socks5Proxy> getSocksProxy() throws IOException {
+        return defaultNode.getSocksProxy();
+    }
+
+    public Map<String, Address> getAddressesByNodeId() {
+        return nodesById.getAddressesByNodeId();
+    }
+
+    public Optional<Node> findNode(String nodeId) {
+        return nodesById.findNode(nodeId);
+    }
+
+    public Optional<Address> findMyAddress(String nodeId) {
+        return nodesById.findMyAddress(nodeId);
+    }
+
+    public Optional<Address> findMyDefaultAddresses() {
+        return findMyAddress(Node.DEFAULT_NODE_ID);
     }
 
     private void setState(State newState) {

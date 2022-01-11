@@ -18,12 +18,18 @@
 package bisq.identity;
 
 
+import bisq.network.NodeIdAndKeyId;
+import bisq.network.NodeIdAndKeyPair;
+import bisq.network.NodeIdAndPubKey;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.KeyPairService;
+import bisq.security.PubKey;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -37,10 +43,12 @@ public class IdentityService implements PersistenceClient<HashMap<String, Identi
 
     @Getter
     private final Persistence<HashMap<String, Identity>> persistence;
+    private final KeyPairService keyPairService;
     private final Map<String, Identity> identityByDomainId = new ConcurrentHashMap<>();
 
-    public IdentityService(PersistenceService persistenceService) {
+    public IdentityService(PersistenceService persistenceService, KeyPairService keyPairService) {
         persistence = persistenceService.getOrCreatePersistence(this, "db", "identities");
+        this.keyPairService = keyPairService;
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -91,5 +99,24 @@ public class IdentityService implements PersistenceClient<HashMap<String, Identi
                     .filter(identity -> identity.nodeId().equals(nodeId))
                     .findAny();
         }
+    }
+
+    public NodeIdAndPubKey getNodeIdAndPubKey(String domainId) {
+        Identity identity = getOrCreateIdentity(domainId);
+        String keyId = identity.keyId();
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
+        return new NodeIdAndPubKey(identity.nodeId(), pubKey);
+    }
+
+    public NodeIdAndKeyPair getNodeIdAndKeyPair(String domainId) {
+        Identity identity = getOrCreateIdentity(domainId);
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(identity.keyId());
+        return new NodeIdAndKeyPair(identity.nodeId(), keyPair);
+    }
+
+    public NodeIdAndKeyId getNodeIdAndKeyId(String domainId) {
+        Identity identity = getOrCreateIdentity(domainId);
+        return new NodeIdAndKeyId(identity.nodeId(), identity.keyId());
     }
 }

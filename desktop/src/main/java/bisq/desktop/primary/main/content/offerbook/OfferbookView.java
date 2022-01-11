@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.offerbook;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.AutoTooltipSlideToggleButton;
-import bisq.desktop.components.controls.AutocompleteComboBox;
+import bisq.desktop.components.controls.BisqComboBox;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.table.BisqTableColumnOld;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -48,7 +48,7 @@ import java.util.function.Function;
 public class OfferbookView extends View<VBox, OfferbookModel, OfferbookController> {
     private TableView<OfferListItem> tableView;
     private RangeSliderBox baseAmountSliderBox, priceSliderBox;
-    private AutocompleteComboBox<String> askCurrencyComboBox, bidCurrencyComboBox;
+    private BisqComboBox<String> askCurrencyComboBox, bidCurrencyComboBox;
     private BisqButton flipButton;
     private AutoTooltipSlideToggleButton showAmountPriceFilterToggle;
     private HBox amountPriceFilterBox;
@@ -60,14 +60,14 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         Label askCurrencyLabel = new BisqLabel("I want (ask):");
         askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
 
-        askCurrencyComboBox = new AutocompleteComboBox<>();
+        askCurrencyComboBox = new BisqComboBox<>();
         askCurrencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
 
         flipButton = new BisqButton("<- Flip ->");
 
         Label bidCurrencyLabel = new BisqLabel("I give (bid):");
         bidCurrencyLabel.setPadding(new Insets(4, 8, 0, 60));
-        bidCurrencyComboBox = new AutocompleteComboBox<>();
+        bidCurrencyComboBox = new BisqComboBox<>();
         bidCurrencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
 
         HBox.setMargin(flipButton, new Insets(-2, 0, 0, 60));
@@ -124,10 +124,10 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         baseAmountSliderBox.onViewAdded();
         // priceSliderBox.onViewAdded();
 
-        askCurrencyComboBox.setAutocompleteItems(model.getCurrenciesProperty());
+        askCurrencyComboBox.setItems(model.getCurrenciesProperty());
         askCurrencyComboBox.getSelectionModel().select(model.getSelectedAskCurrencyProperty().get());
 
-        bidCurrencyComboBox.setAutocompleteItems(model.getCurrenciesProperty());
+        bidCurrencyComboBox.setItems(model.getCurrenciesProperty());
         bidCurrencyComboBox.getSelectionModel().select(model.getSelectedBidCurrencyProperty().get());
 
         amountPriceFilterBox.visibleProperty().bind(model.getAmountFilterModel().getVisible());

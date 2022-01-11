@@ -57,7 +57,7 @@ public class NetworkNodeServiceProvider extends ServiceProvider {
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
                 getConfig("bisq.networkServiceConfig"));
-        networkService = new NetworkService(networkServiceConfig, keyPairService, persistenceService);
+        networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {

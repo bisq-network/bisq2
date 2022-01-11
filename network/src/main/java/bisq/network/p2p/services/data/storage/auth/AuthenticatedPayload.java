@@ -17,7 +17,40 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.network.p2p.message.Proto;
 import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.MetaData;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public interface AuthenticatedPayload extends NetworkPayload {
+import java.util.concurrent.TimeUnit;
+
+@ToString
+@EqualsAndHashCode
+public class AuthenticatedPayload implements NetworkPayload {
+    @Getter
+    protected final Proto data;
+    protected final MetaData metaData;
+
+    public AuthenticatedPayload(Proto data) {
+        // 463 is overhead of sig/pubkeys,...
+        // 582 is pubkey+sig+hash
+        this(data, new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, data.getClass().getSimpleName()));
+    }
+
+    public AuthenticatedPayload(Proto data, MetaData metaData) {
+        this.data = data;
+        this.metaData = metaData;
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return metaData;
+    }
+
+    @Override
+    public boolean isDataInvalid() {
+        return false;
+    }
 }

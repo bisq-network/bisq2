@@ -78,10 +78,6 @@ public class DataService implements DataNetworkService.Listener {
         return dataNetworkService;
     }
 
-    public void initialize() {
-
-    }
-
     public CompletableFuture<Void> shutdown() {
         storageService.shutdown();
         listeners.clear();
