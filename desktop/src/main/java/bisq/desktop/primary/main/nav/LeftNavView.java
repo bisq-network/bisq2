@@ -17,10 +17,7 @@
 
 package bisq.desktop.primary.main.nav;
 
-import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import com.jfoenix.controls.JFXButton;
@@ -28,7 +25,6 @@ import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
@@ -41,13 +37,14 @@ import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
     private final ToggleGroup toggleGroup = new ToggleGroup();
     @Getter
     private final NetworkInfoBox networkInfoBox;
-    private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
-    private final Map<NavigationTarget, NavigationButton> navigationButtonByNavigationTarget = new HashMap<>();
+    private final ChangeListener<NavigationTarget> navigationTargetChangeListener;
+    private final Map<NavigationTarget, NavigationButton> map = new HashMap<>();
 
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
         super(new VBox(), model, controller);
@@ -70,25 +67,27 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
-        networkInfoBox = new NetworkInfoBox(model, () -> Navigation.navigateTo(NavigationTarget.NETWORK_INFO));
+        networkInfoBox = new NetworkInfoBox(model, () -> controller.select(NavigationTarget.NETWORK_INFO));
+        model.addNavigationTarget(NavigationTarget.NETWORK_INFO);
         root.getChildren().addAll(markets, social, offerBook, portfolio, wallet, settings, spacer, networkInfoBox);
 
-        viewChangeListener = (observable, oldValue, newValue) -> {
+        navigationTargetChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
-                NavigationButton navigationButton = navigationButtonByNavigationTarget.get(model.getNavigationTarget());
-                toggleGroup.selectToggle(navigationButton);
+                Optional.ofNullable(map.get(newValue)).ifPresent(toggleGroup::selectToggle);
             }
         };
     }
 
     @Override
     public void onViewAttached() {
-        model.getView().addListener(viewChangeListener);
+        model.getNavigationTarget().addListener(navigationTargetChangeListener);
+        Optional.ofNullable(map.get(model.getNavigationTarget().get())).ifPresent(toggleGroup::selectToggle);
     }
 
     private NavigationButton createNavigationButton(String title, NavigationTarget navigationTarget) {
-        NavigationButton button = new NavigationButton(title, toggleGroup, () -> Navigation.navigateTo(navigationTarget));
-        navigationButtonByNavigationTarget.put(navigationTarget, button);
+        NavigationButton button = new NavigationButton(title, toggleGroup, () -> controller.select(navigationTarget));
+        map.put(navigationTarget, button);
+        model.addNavigationTarget(navigationTarget);
         return button;
     }
 

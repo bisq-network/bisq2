@@ -34,14 +34,6 @@ public class TradeIntentController implements Controller {
         view = new TradeIntentView(model, this);
     }
 
-  /*  @Override
-    public void onViewAttached() {
-    }
-
-    @Override
-    public void onViewDetached() {
-    }*/
-
     StringProperty addData(String ask, String bid) {
         return model.addData(ask, bid);
     }

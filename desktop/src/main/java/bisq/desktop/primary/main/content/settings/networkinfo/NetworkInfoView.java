@@ -20,40 +20,18 @@ package bisq.desktop.primary.main.content.settings.networkinfo;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.NavigationTargetTab;
 import bisq.desktop.common.view.TabView;
-import bisq.desktop.common.view.View;
-import bisq.desktop.primary.main.content.settings.networkinfo.transport.TransportTypeView;
 import bisq.i18n.Res;
 import com.jfoenix.controls.JFXTabPane;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
-import javafx.scene.control.Tab;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 public class NetworkInfoView extends TabView<JFXTabPane, NetworkInfoModel, NetworkInfoController> {
-    private final Map<NavigationTarget, Tab> tabByNavigationTarget = new HashMap<>();
-    private final ChangeListener<Optional<TransportTypeView>> transportTypeViewChangeListener;
-   // private final ChangeListener<Tab> tabChangeListener;
 
     public NetworkInfoView(NetworkInfoModel model, NetworkInfoController controller) {
         super(new JFXTabPane(), model, controller);
 
         root.setPadding(new Insets(20, 20, 20, 0));
-
-      /*  tabChangeListener = (observable, oldValue, newValue) -> {
-            Optional.ofNullable(newValue).ifPresent(tab -> controller.onTabSelected((NavigationTarget) tab.getUserData()));
-        };*/
-
-        transportTypeViewChangeListener = (observable, oldValue, transportTypeViewOptional) -> {
-            Optional<Tab> tabOptional = model.getSelectedTransportType().flatMap(e -> Optional.ofNullable(tabByNavigationTarget.get(e)));
-            tabOptional.ifPresent(tab -> tab.setContent(transportTypeViewOptional.map(View::getRoot).orElse(null)));
-            root.getSelectionModel().select(tabOptional.orElse(null));
-            root.requestFocus();
-        };
     }
 
     @Override
@@ -67,36 +45,7 @@ public class NetworkInfoView extends TabView<JFXTabPane, NetworkInfoModel, Netwo
     @Override
     protected NavigationTargetTab createTab(String title, NavigationTarget navigationTarget) {
         NavigationTargetTab tab = super.createTab(title.toUpperCase(), navigationTarget);
-        tabByNavigationTarget.put(navigationTarget, tab);
+        tab.setDisable(model.isDisabled(navigationTarget));
         return tab;
-    }
-
-    @Override
-    public void onViewAttached() {
-        super.onViewAttached();
-
-        model.getTransportTypeView().addListener(transportTypeViewChangeListener);
-        Tab clearNetTab = tabByNavigationTarget.get(NavigationTarget.CLEAR_NET);
-        clearNetTab.disableProperty().bind(model.getClearNetDisabled());
-        Tab torTab = tabByNavigationTarget.get(NavigationTarget.TOR);
-        torTab.disableProperty().bind(model.getTorDisabled());
-        Tab i2pTab = tabByNavigationTarget.get(NavigationTarget.I2P);
-        i2pTab.disableProperty().bind(model.getI2pDisabled());
-
-        if (!model.getClearNetDisabled().get()) {
-            root.getSelectionModel().select(clearNetTab);
-        } else if (!model.getTorDisabled().get()) {
-            root.getSelectionModel().select(torTab);
-        } else if (!model.getI2pDisabled().get()) {
-            root.getSelectionModel().select(i2pTab);
-        }
-    }
-
-    @Override
-    protected void onViewDetached() {
-        super.onViewDetached();
-
-        model.getTransportTypeView().removeListener(transportTypeViewChangeListener);
-        tabByNavigationTarget.values().forEach(tab -> tab.disableProperty().unbind());
     }
 }

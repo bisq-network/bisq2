@@ -25,25 +25,21 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class TabModel implements Model {
+public abstract class NavigationModel implements Model {
     @Getter
     protected final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
     @Getter
-    protected NavigationTarget navigationTarget = getDefaultNavigationTarget();
+    protected NavigationTarget navigationTarget = getLastNavigationTarget();
+
+    private NavigationTarget getLastNavigationTarget() {
+        return navigationTarget == null ? getDefaultNavigationTarget() : navigationTarget;
+    }
 
     public abstract NavigationTarget getDefaultNavigationTarget();
 
     public void select(NavigationTarget navigationTarget, View<? extends Parent, ? extends Model, ? extends Controller> view) {
         this.navigationTarget = navigationTarget;
         this.view.set(view);
-    }
-
-    @Override
-    public void onViewAttached() {
-    }
-
-    @Override
-    public void onViewDetached() {
     }
 }

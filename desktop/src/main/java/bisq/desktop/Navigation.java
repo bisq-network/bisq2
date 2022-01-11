@@ -17,49 +17,80 @@
 
 package bisq.desktop;
 
+import bisq.desktop.common.view.Controller;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
 public class Navigation {
-    public static void addListener(Listener listener, NavigationTarget... targets) {
-        List.of(targets).forEach(navigationTarget -> {
-            listeners.putIfAbsent(navigationTarget, new HashSet<>());
-            listeners.get(navigationTarget).add(listener);
-        });
+
+    public interface Listener extends Controller {
+        void onNavigate(NavigationTarget navigationTarget, Optional<Object> data);
     }
 
-    public static void removeListener(Listener listener, NavigationTarget... targets) {
-        List.of(targets).forEach(navigationTarget -> {
-            if (listeners.containsKey(navigationTarget)) {
-                listeners.get(navigationTarget).remove(listener);
+    private static final Map<NavigationTarget, Set<Listener>> listeners = new ConcurrentHashMap<>();
+    private static final LinkedList<NavigationTarget> history = new LinkedList<>();
+    private static final LinkedList<NavigationTarget> alt = new LinkedList<>();
+
+    public static void addListener(NavigationTarget host, Listener listener) {
+        listeners.putIfAbsent(host, new CopyOnWriteArraySet<>());
+        listeners.get(host).add(listener);
+    }
+
+    public static void removeListener(NavigationTarget host, Listener listener) {
+        Optional.ofNullable(listeners.get(host)).ifPresent(set -> set.remove(listener));
+    }
+
+    public static void navigateTo(NavigationTarget navigationTarget) {
+        history.add(navigationTarget);
+        listeners.forEach((key, value) -> {
+            if (navigationTarget.getPath().contains(key)) {
+                value.forEach(l -> l.onNavigate(navigationTarget, Optional.empty()));
             }
         });
     }
 
-    public static void navigateTo(NavigationTarget target) {
-        collectListeners(target).forEach(listener -> listener.onNavigate(target, Optional.empty()));
+    // If data is passed we don't add it to the history as we would need to store the data as well, and it could be 
+    // stale anyway at a later moment.  
+    public static void navigateTo(NavigationTarget navigationTarget, Object data) {
+        listeners.forEach((key, value) -> {
+            if (navigationTarget.getPath().contains(key)) {
+                value.forEach(l -> l.onNavigate(navigationTarget, Optional.of(data)));
+            }
+        });
     }
 
-    public static void navigateTo(NavigationTarget target, Object data) {
-        collectListeners(target).forEach(listener -> listener.onNavigate(target, Optional.of(data)));
+    public static void back() {
+        if (history.isEmpty()) {
+            return;
+        }
+        NavigationTarget navigationTarget = history.pollLast();
+        alt.add(navigationTarget);
+        listeners.forEach((key, value) -> {
+            if (navigationTarget.getPath().contains(key)) {
+                value.forEach(l -> l.onNavigate(navigationTarget, Optional.empty()));
+            }
+        });
     }
 
-    public interface Listener {
-        void onNavigate(NavigationTarget target, Optional<Object> data);
+    public static void forth() {
+        if (alt.isEmpty()) {
+            return;
+        }
+        NavigationTarget navigationTarget = alt.pollLast();
+        history.add(navigationTarget);
+        listeners.forEach((key, value) -> {
+            if (navigationTarget.getPath().contains(key)) {
+                value.forEach(l -> l.onNavigate(navigationTarget, Optional.empty()));
+            }
+        });
     }
 
-    private static Set<Listener> collectListeners(NavigationTarget target) {
-        Set<NavigationTarget> targets = new HashSet<>(target.getPath());
-        targets.add(target);
-        return targets.stream()
-                .filter(listeners::containsKey)
-                .flatMap(e -> listeners.get(e).stream())
-                .collect(Collectors.toSet());
-    }
-
-    private static final Map<NavigationTarget, Set<Listener>> listeners = new HashMap<>();
 
 }

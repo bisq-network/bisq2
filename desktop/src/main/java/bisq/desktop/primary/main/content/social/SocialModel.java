@@ -19,10 +19,10 @@ package bisq.desktop.primary.main.content.social;
 
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.common.view.NavigationModel;
 
 // Handled jfx only concerns, others which can be re-used by other frontends are in OfferbookEntity
-public class SocialModel extends TabModel {
+public class SocialModel extends NavigationModel {
 
     private final DefaultServiceProvider serviceProvider;
 
@@ -33,13 +33,5 @@ public class SocialModel extends TabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.TRADE_INTENT;
-    }
-
-    public void onViewAttached() {
-        super.onViewAttached();
-    }
-
-    public void onViewDetached() {
-        super.onViewDetached();
     }
 }

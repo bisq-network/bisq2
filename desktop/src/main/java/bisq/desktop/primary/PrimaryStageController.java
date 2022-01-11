@@ -43,8 +43,8 @@ public class PrimaryStageController implements Controller {
 
         model = new PrimaryStageModel(serviceProvider);
         view = new PrimaryStageView(model, this, applicationData.stage());
-        overlayController = new OverlayController(view.getScene());
-        mainController = new MainController(serviceProvider, overlayController);
+        overlayController = new OverlayController(view.getScene(), serviceProvider);
+        mainController = new MainController(serviceProvider);
         model.setView(mainController.getView());
     }
 

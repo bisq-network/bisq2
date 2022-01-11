@@ -52,9 +52,7 @@ public class OverlayView extends View<AnchorPane, OverlayModel, OverlayControlle
         });
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
-
                 getRoot().getChildren().setAll(newValue.getRoot());
-                // scene.setRoot(newValue.getRoot());
                 stage.show();
             } else {
                 getRoot().getChildren().clear();

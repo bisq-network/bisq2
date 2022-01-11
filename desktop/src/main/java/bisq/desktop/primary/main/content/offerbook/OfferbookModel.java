@@ -18,7 +18,8 @@
 package bisq.desktop.primary.main.content.offerbook;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.desktop.common.view.Model;
+import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationModel;
 import bisq.offer.MarketPrice;
 import io.reactivex.disposables.Disposable;
 import javafx.beans.property.*;
@@ -35,7 +36,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 // Handled jfx only concerns, others which can be re-used by other frontends are in OfferbookEntity
-public class OfferbookModel implements Model {
+public class OfferbookModel extends NavigationModel {
 
     static final String SHOW_ALL = "Show all";
 
@@ -79,11 +80,17 @@ public class OfferbookModel implements Model {
         amountFilterModel = new RangeFilterModel(this);
     }
 
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.NONE;
+    }
+
     public void initialize() {
         selectedAskCurrencyProperty.set("BTC");
         selectedBidCurrencyProperty.set("USD");
         amountFilterModel.initialize();
     }
+
 
     public void onViewAttached() {
         serviceProvider.getOfferEntityService().activate();

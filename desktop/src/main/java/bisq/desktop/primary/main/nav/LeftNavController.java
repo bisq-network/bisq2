@@ -18,79 +18,35 @@
 package bisq.desktop.primary.main.nav;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.StageType;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.overlay.OverlayController;
-import bisq.desktop.primary.main.content.ContentController;
-import bisq.desktop.primary.main.content.markets.MarketsController;
-import bisq.desktop.primary.main.content.offerbook.OfferbookController;
-import bisq.desktop.primary.main.content.portfolio.PortfolioController;
-import bisq.desktop.primary.main.content.settings.SettingsController;
-import bisq.desktop.primary.main.content.social.SocialController;
-import bisq.desktop.primary.main.content.wallet.WalletController;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.desktop.NavigationTarget.*;
-
-public class LeftNavController extends NavigationController implements Controller {
-    private final DefaultServiceProvider serviceProvider;
+@Slf4j
+public class LeftNavController implements Controller, Navigation.Listener {
     private final LeftNavModel model;
     @Getter
     private final LeftNavView view;
 
-    public LeftNavController(DefaultServiceProvider serviceProvider,
-                             ContentController contentController,
-                             OverlayController overlayController) {
-        super(contentController, overlayController, MARKETS, SOCIAL, OFFERBOOK, PORTFOLIO, WALLET, SETTINGS);
-
-        this.serviceProvider = serviceProvider;
+    public LeftNavController(DefaultServiceProvider serviceProvider) {
         model = new LeftNavModel(serviceProvider);
         view = new LeftNavView(model, this);
+
+        // By using ROOT we listen to all NavigationTargets
+        Navigation.addListener(NavigationTarget.ROOT, this);
     }
 
-    @Override
-    protected NavigationTarget resolveLocalTarget(NavigationTarget navigationTarget) {
-        return resolveAsRootHost(navigationTarget);
+    void select(NavigationTarget navigationTarget) {
+        model.select(navigationTarget);
+        Navigation.navigateTo(navigationTarget);
     }
 
     @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        NavigationTarget localTarget = resolveLocalTarget(navigationTarget);
-        Controller controller = getOrCreateController(localTarget, navigationTarget, data);
-        if (navigationTarget.getStageType() == StageType.OVERLAY) {
-            overlayController.show(controller);
-        } else {
-            contentController.navigateTo(navigationTarget, controller);
-        }
-        model.select(localTarget, controller.getView());
-    }
-
-    @Override
-    protected Controller getController(NavigationTarget localTarget, NavigationTarget navigationTarget, Optional<Object> data) {
-        switch (localTarget) {
-            case MARKETS -> {
-                return new MarketsController(serviceProvider);
-            }
-            case SOCIAL -> {
-                return new SocialController(serviceProvider, contentController, overlayController);
-            }
-            case OFFERBOOK -> {
-                return new OfferbookController(serviceProvider, contentController, overlayController);
-            }
-            case PORTFOLIO -> {
-                return new PortfolioController(serviceProvider);
-            }
-            case WALLET -> {
-                return new WalletController(serviceProvider);
-            }
-            case SETTINGS -> {
-                return new SettingsController(serviceProvider, contentController, overlayController);
-            }
-            default -> throw new IllegalArgumentException("Invalid navigationTarget for this host. localTarget=" + localTarget);
-        }
+        model.select(navigationTarget);
     }
 }

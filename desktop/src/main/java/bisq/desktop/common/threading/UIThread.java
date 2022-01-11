@@ -25,4 +25,8 @@ public class UIThread {
             Platform.runLater(task);
         }
     }
+
+    public static void runLater(Runnable task) {
+        Platform.runLater(task);
+    }
 }

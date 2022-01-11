@@ -21,7 +21,6 @@ import bisq.application.DefaultServiceProvider;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.nav.LeftNavController;
 import bisq.desktop.primary.main.top.TopPanelController;
@@ -38,11 +37,11 @@ public class MainController implements Controller {
     @Getter
     private final MainView view;
 
-    public MainController(DefaultServiceProvider serviceProvider, OverlayController overlayController) {
+    public MainController(DefaultServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
 
-        contentController = new ContentController(serviceProvider, overlayController);
-        leftNavController = new LeftNavController(serviceProvider, contentController, overlayController);
+        contentController = new ContentController(serviceProvider);
+        leftNavController = new LeftNavController(serviceProvider);
         topPanelController = new TopPanelController();
 
         view = new MainView(model,
