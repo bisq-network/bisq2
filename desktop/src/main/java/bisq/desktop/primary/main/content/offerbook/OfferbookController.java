@@ -80,7 +80,7 @@ public class OfferbookController extends NavigationController {
     }
 
     @Override
-    protected Optional<Controller> createController(NavigationTarget navigationTarget, Optional<Object> data) {
+    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
           /*  case CREATE_OFFER -> {
                 return Optional.of(new CreateOfferController(serviceProvider));

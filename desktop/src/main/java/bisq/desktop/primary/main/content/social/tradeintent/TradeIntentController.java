@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.social.tradeintent;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.common.data.Pair;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
@@ -34,15 +35,15 @@ public class TradeIntentController implements Controller {
         view = new TradeIntentView(model, this);
     }
 
-    StringProperty addData(String ask, String bid) {
-        return model.addData(ask, bid);
+    StringProperty addData(String userId, String ask, String bid) {
+        return model.addData(userId, ask, bid);
     }
 
-    public void onRemoveItem(TradeIntentListItem item) {
-        model.removeTradeIntent(item);
-    }
-
-    public void onContact(TradeIntentListItem item) {
-        Navigation.navigateTo(NavigationTarget.HANGOUT, item);
+    public void onActionButtonClicked(TradeIntentListItem item) {
+        if (model.isMyTradeIntent(item)) {
+            model.removeTradeIntent(item);
+        } else {
+            Navigation.navigateTo(NavigationTarget.HANGOUT, new Pair<>(item.getTradeIntent(), item.getNetworkId()));
+        }
     }
 }

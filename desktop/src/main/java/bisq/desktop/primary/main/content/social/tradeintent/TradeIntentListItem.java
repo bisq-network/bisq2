@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.Objects;
-import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -36,20 +35,22 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class TradeIntentListItem implements TableItem {
     private final AuthenticatedNetworkIdPayload payload;
     private final TradeIntent tradeIntent;
-    private final Optional<NetworkId> networkId;
+    private final NetworkId networkId;
     private final String id;
     private final String dateString;
     private final String bid;
     private final String ask;
     private final String ttl;
     private final Date date;
+    private final String userId;
 
     TradeIntentListItem(AuthenticatedNetworkIdPayload payload) {
         this.payload = payload;
         checkArgument(payload.getData() instanceof TradeIntent);
         this.tradeIntent = (TradeIntent) payload.getData();
-        networkId = Optional.of(payload.getNetworkId());
+        networkId = payload.getNetworkId();
         id = tradeIntent.id();
+        userId = tradeIntent.userId();
         ttl = TimeFormatter.formatTime(payload.getMetaData().getTtl());
         ask = tradeIntent.ask();
         bid = tradeIntent.bid();

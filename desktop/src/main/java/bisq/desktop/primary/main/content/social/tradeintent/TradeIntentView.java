@@ -43,6 +43,7 @@ public class TradeIntentView extends View<BisqGridPane, TradeIntentModel, TradeI
         root.setPadding(new Insets(20, 20, 20, 0));
 
         root.startSection(Res.offerbook.get("tradeIntent.create.title"));
+        TextField userIdField = root.addTextField(Res.offerbook.get("tradeIntent.create.userId"), "Alice");
         TextField askTextField = root.addTextField(Res.offerbook.get("tradeIntent.create.ask"), "I want 0.01 BTC");
         TextField bidTextField = root.addTextField(Res.offerbook.get("tradeIntent.create.bid"), "Pay EUR via SEPA at market rate");
         Pair<Button, Label> addDataButtonPair = root.addButton(Res.common.get("publish"));
@@ -53,7 +54,7 @@ public class TradeIntentView extends View<BisqGridPane, TradeIntentModel, TradeI
             label.textProperty().unbind();
             label.setText("...");
             addDataButton.setDisable(false);
-            StringProperty result = controller.addData(askTextField.getText(), bidTextField.getText());
+            StringProperty result = controller.addData(userIdField.getText(), askTextField.getText(), bidTextField.getText());
             label.textProperty().bind(result);
         });
         root.endSection();
@@ -137,28 +138,25 @@ public class TradeIntentView extends View<BisqGridPane, TradeIntentModel, TradeI
                 .valueSupplier(TradeIntentListItem::getId)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
+                .title(Res.common.get("userName"))
+                .minWidth(120)
+                .valueSupplier(TradeIntentListItem::getUserId)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
                 .title(Res.common.get("ask"))
-                .minWidth(100)
+                .minWidth(150)
                 .valueSupplier(TradeIntentListItem::getAsk)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
-                .minWidth(100)
+                .minWidth(150)
                 .title(Res.common.get("bid"))
                 .valueSupplier(TradeIntentListItem::getBid)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
                 .minWidth(80)
-                .value(Res.common.get("contact"))
+                .valueSupplier(model::getActionButtonTitle)
                 .cellFactory(BisqTableColumn.CellFactory.BUTTON)
-                .actionHandler(controller::onContact)
-                .isVisibleFunction(model::isNotMyTradeIntent)
-                .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
-                .minWidth(80)
-                .value(Res.common.get("remove"))
-                .cellFactory(BisqTableColumn.CellFactory.BUTTON)
-                .actionHandler(controller::onRemoveItem)
-                .isVisibleFunction(model::isMyTradeIntent)
+                .actionHandler(controller::onActionButtonClicked)
                 .build());
     }
 }

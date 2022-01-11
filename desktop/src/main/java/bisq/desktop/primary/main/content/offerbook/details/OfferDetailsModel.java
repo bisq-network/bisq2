@@ -17,23 +17,31 @@
 
 package bisq.desktop.primary.main.content.offerbook.details;
 
+import bisq.common.data.Pair;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.primary.main.content.offerbook.OfferListItem;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.geometry.Bounds;
 import lombok.Getter;
 
 @Getter
 public class OfferDetailsModel implements Model {
-    private final OfferListItem item;
+    private OfferListItem item;
     final DoubleProperty minWidthProperty = new SimpleDoubleProperty(800);
     final DoubleProperty minHeightProperty = new SimpleDoubleProperty(400);
     final StringProperty titleProperty = new SimpleStringProperty();
+    private Bounds boundsInParent;
 
-    public OfferDetailsModel(OfferListItem item) {
-        this.item = item;
+    public OfferDetailsModel() {
+    }
+
+    public void setData(Object data) {
+        Pair<OfferListItem, Bounds> pair = (Pair) data;
+        item = pair.first();
+        boundsInParent = pair.second();
         titleProperty.set("Offer " + item.getOffer().getId().substring(0, 8));
     }
 }

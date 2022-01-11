@@ -33,16 +33,21 @@ public abstract class TabView<R extends TabPane, M extends NavigationModel, C ex
     public TabView(R root, M model, C controller) {
         super(root, model, controller);
 
+        tabChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue instanceof NavigationTargetTab navigationTargetTab) {
+                controller.onTabSelected(navigationTargetTab.getNavigationTarget());
+            }
+        };
+
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
                 NavigationTargetTab tab = getTabFromTarget(model.getNavigationTarget());
                 tab.setContent(newValue.getRoot());
+                
+                // Remove listener temporarily to avoid that the tabChangeListener gets called from the selection call
+                root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
                 root.getSelectionModel().select(tab);
-            }
-        };
-        tabChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue instanceof NavigationTargetTab navigationTargetTab) {
-                controller.onTabSelected(navigationTargetTab.getNavigationTarget());
+                root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
             }
         };
     }

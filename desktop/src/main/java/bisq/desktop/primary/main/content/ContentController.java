@@ -49,7 +49,7 @@ public class ContentController extends NavigationController {
     }
 
     @Override
-    protected Optional<Controller> createController(NavigationTarget navigationTarget, Optional<Object> data) {
+    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case SOCIAL -> {
                 return Optional.of(new SocialController(serviceProvider));

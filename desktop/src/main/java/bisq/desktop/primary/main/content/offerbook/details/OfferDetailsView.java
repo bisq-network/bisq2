@@ -27,16 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class OfferDetailsView extends View<StackPane, OfferDetailsModel, OfferDetailsController> {
-    private final Bounds boundsInParent;
 
-    public OfferDetailsView(OfferDetailsModel model, OfferDetailsController controller, Bounds boundsInParent) {
+    public OfferDetailsView(OfferDetailsModel model, OfferDetailsController controller) {
         super(new StackPane(), model, controller);
-        this.boundsInParent = boundsInParent;
-
-        root.getChildren().add(new BisqLabel(model.getItem().toString()));
     }
 
     protected void onViewAttached() {
+        root.getChildren().add(new BisqLabel(model.getItem().toString()));
+        Bounds boundsInParent = model.getBoundsInParent();
         Scene scene = root.getScene();
         Stage stage = (Stage) scene.getWindow();
         stage.minHeightProperty().bind(model.minHeightProperty);
