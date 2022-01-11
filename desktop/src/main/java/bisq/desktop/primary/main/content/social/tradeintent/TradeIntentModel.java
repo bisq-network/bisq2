@@ -25,10 +25,6 @@ import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.p2p.NetworkId;
-import bisq.network.p2p.message.TextMessage;
-import bisq.network.p2p.node.transport.Transport;
-import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedNetworkIdPayload;
@@ -42,11 +38,9 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.KeyPair;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -156,60 +150,6 @@ public class TradeIntentModel implements Model {
                 });
     }
 
-    public void contactPeer(TradeIntentListItem item) {
-        NetworkId receiverNetworkId = item.getNetworkId();
-        Identity identity = identityService.getOrCreateIdentity(item.getTradeIntent().id());
-        KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(identity.keyId());
-        CompletableFuture<String> future = new CompletableFuture<>();
-        String senderNodeId = identity.nodeId();
-        networkService.confidentialSendAsync(new TextMessage("Test msg"), receiverNetworkId, senderKeyPair, senderNodeId)
-                .whenComplete((resultMap, throwable) -> {
-                    if (throwable == null) {
-                        resultMap.entrySet().stream().forEach(typeResultEntry -> {
-                            Transport.Type transportType = typeResultEntry.getKey();
-                            ConfidentialMessageService.Result result = resultMap.get(transportType);
-                            result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture.whenComplete((broadcastResult, error) -> {
-                                if (error == null) {
-                                    future.complete(result.getState() + "; " + broadcastResult.toString());
-                                } else {
-                                    String value = result.getState().toString();
-                                    if (result.getState() == ConfidentialMessageService.State.FAILED) {
-                                        value += " with Error: " + result.getErrorMsg();
-                                    }
-                                    future.complete(value);
-                                }
-                            }));
-                        });
-                    }
-                });
-    }
-
-    /*     checkArgument(selectedNetworkId.isPresent(), "Network ID must be set before calling sendMessage");
-         NetworkId receiverNetworkId = selectedNetworkId.get();
-         KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(KeyPairService.DEFAULT);
-         CompletableFuture<String> future = new CompletableFuture<>();
-         String senderNodeId = selectedNetworkId.get().getNodeId();
-         networkService.confidentialSendAsync(new TextMessage(message), receiverNetworkId, senderKeyPair, senderNodeId)
-                 .whenComplete((resultMap, throwable) -> {
-                     if (throwable == null) {
-                         resultMap.entrySet().stream().forEach(typeResultEntry -> {
-                             Transport.Type transportType = typeResultEntry.getKey();
-                             ConfidentialMessageService.Result result = resultMap.get(transportType);
-                             result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture.whenComplete((broadcastResult, error) -> {
-                                 if (error == null) {
-                                     future.complete(result.getState() + "; " + broadcastResult.toString());
-                                 } else {
-                                     String value = result.getState().toString();
-                                     if (result.getState() == ConfidentialMessageService.State.FAILED) {
-                                         value += " with Error: " + result.getErrorMsg();
-                                     }
-                                     future.complete(value);
-                                 }
-                             }));
-                         });
-                     }
-                 });*/
-
     boolean isMyTradeIntent(TradeIntentListItem item) {
         return keyPairService.findKeyPair(item.getNetworkId().getPubKey().keyId()).isPresent();
     }
@@ -217,34 +157,4 @@ public class TradeIntentModel implements Model {
     String getActionButtonTitle(TradeIntentListItem item) {
         return isMyTradeIntent(item) ? Res.common.get("remove") : Res.common.get("contact");
     }
-
-/*
-    CompletableFuture<String> sendMessage(String message) {
-        checkArgument(selectedNetworkId.isPresent(), "Network ID must be set before calling sendMessage");
-        NetworkId receiverNetworkId = selectedNetworkId.get();
-        KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(KeyPairService.DEFAULT);
-        CompletableFuture<String> future = new CompletableFuture<>();
-        String senderNodeId = selectedNetworkId.get().getNodeId();
-        networkService.confidentialSendAsync(new TextMessage(message), receiverNetworkId, senderKeyPair, senderNodeId)
-                .whenComplete((resultMap, throwable) -> {
-                    if (throwable == null) {
-                        resultMap.entrySet().stream().forEach(typeResultEntry -> {
-                            Transport.Type transportType = typeResultEntry.getKey();
-                            ConfidentialMessageService.Result result = resultMap.get(transportType);
-                            result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture.whenComplete((broadcastResult, error) -> {
-                                if (error == null) {
-                                    future.complete(result.getState() + "; " + broadcastResult.toString());
-                                } else {
-                                    String value = result.getState().toString();
-                                    if (result.getState() == ConfidentialMessageService.State.FAILED) {
-                                        value += " with Error: " + result.getErrorMsg();
-                                    }
-                                    future.complete(value);
-                                }
-                            }));
-                        });
-                    }
-                });
-        return future;
-    }*/
 }

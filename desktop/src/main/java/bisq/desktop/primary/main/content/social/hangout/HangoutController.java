@@ -39,7 +39,7 @@ public class HangoutController implements Controller {
     }
 
     public void send(String text) {
-        model.send(text);
+        model.sendMessage(text);
     }
 
     public void selectChatPeer(String chatPeer) {

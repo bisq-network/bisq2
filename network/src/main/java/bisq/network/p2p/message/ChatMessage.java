@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.message;
 
+import bisq.network.p2p.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import lombok.EqualsAndHashCode;
@@ -28,12 +29,19 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class TextMessage implements MailboxMessage {
+public class ChatMessage implements MailboxMessage {
     private final String text;
+    private final String tradeIntentId;
+    private final NetworkId senderNetworkId;
+    private final String senderUseName;
     private final MetaData metaData;
 
-    public TextMessage(String text) {
+    //just temp for dev
+    public ChatMessage(String text, String tradeIntentId, NetworkId senderNetworkId, String senderUseName) {
         this.text = text;
+        this.tradeIntentId = tradeIntentId;
+        this.senderNetworkId = senderNetworkId;
+        this.senderUseName = senderUseName;
         metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
     }
 
