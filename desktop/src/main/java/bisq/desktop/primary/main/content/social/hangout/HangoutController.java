@@ -21,27 +21,22 @@ import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-import java.util.Optional;
-
 public class HangoutController implements Controller {
     private final HangoutModel model;
     @Getter
     private final HangoutView view;
     private final DefaultServiceProvider serviceProvider;
 
-    public HangoutController(DefaultServiceProvider serviceProvider, Optional<Object> data) {
+    public HangoutController(DefaultServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         model = new HangoutModel(serviceProvider);
         view = new HangoutView(model, this);
     }
 
-  /*  @Override
-    public void onViewAttached() {
-    }
-
     @Override
-    public void onViewDetached() {
-    }*/
+    public void setData(Object data) {
+        model.setData(data);
+    }
 
     public void send(String text) {
         model.send(text);

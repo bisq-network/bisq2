@@ -28,6 +28,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Toggle;
@@ -36,6 +37,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,54 +45,63 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
     private final ToggleGroup toggleGroup = new ToggleGroup();
     private final BisqButton sendButton;
     private final BisqTextField inputTextField;
+    private final VBox userList;
+    private final BisqTextArea textArea;
+    private final ListChangeListener<String> peerListChangeListener;
 
     public HangoutView(HangoutModel model, HangoutController controller) {
         super(new HBox(), model, controller);
+
+        root.setSpacing(Layout.SPACING);
         root.setPadding(new Insets(20, 20, 20, 0));
-
-        VBox userList = new VBox();
-        userList.setSpacing(Layout.SPACING);
-        userList.getChildren().addAll(model.getChatPeers().stream()
-                .map(chatPeer -> new NavigationButton(chatPeer, toggleGroup, () -> controller.selectChatPeer(chatPeer)))
-                .collect(Collectors.toList()));
-
+        userList = new VBox();
+        userList.setMinWidth(150);
+        userList.setSpacing(10);
         VBox chatSpace = new VBox();
         chatSpace.setSpacing(Layout.SPACING);
-
-        BisqTextArea textArea = new BisqTextArea();
-        textArea.textProperty().bind(model.chatText);
-
+        textArea = new BisqTextArea();
         HBox sendBox = new HBox();
         sendBox.setSpacing(Layout.SPACING);
-
         inputTextField = new BisqTextField();
         sendButton = new BisqButton(Res.common.get("send"));
         sendBox.getChildren().addAll(inputTextField, sendButton);
-
         chatSpace.getChildren().addAll(textArea, sendBox);
-
         root.getChildren().addAll(userList, chatSpace);
+
+        peerListChangeListener = c -> updatePeerList();
+    }
+
+    private void updatePeerList() {
+        List<PeerButton> collect = model.getChatPeers().stream()
+                .map(chatPeer -> new PeerButton(chatPeer, toggleGroup, () -> controller.selectChatPeer(chatPeer)))
+                .collect(Collectors.toList());
+        userList.getChildren().setAll(collect);
     }
 
     @Override
     public void onViewAttached() {
+        model.chatPeers.addListener(peerListChangeListener);
+        textArea.textProperty().bind(model.chatText);
+        inputTextField.setPromptText(Res.common.get("inputFieldPrompt", model.getSelectedChatPeer().orElse("")));
         sendButton.setOnAction(e -> controller.send(inputTextField.getText()));
+        updatePeerList();
     }
 
     @Override
     protected void onViewDetached() {
+        model.chatPeers.removeListener(peerListChangeListener);
         sendButton.setOnAction(null);
     }
 
-    private static class NavigationButton extends JFXButton implements Toggle {
+    private static class PeerButton extends JFXButton implements Toggle {
         private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
         private final BooleanProperty selectedProperty = new SimpleBooleanProperty();
 
-        private NavigationButton(String title, ToggleGroup toggleGroup, Runnable handler) {
+        private PeerButton(String title, ToggleGroup toggleGroup, Runnable handler) {
             super(title.toUpperCase());
 
             setPrefHeight(40);
-            setPrefWidth(240);
+            setPrefWidth(150);
             setAlignment(Pos.CENTER_LEFT);
 
             this.setToggleGroup(toggleGroup);

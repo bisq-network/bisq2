@@ -18,31 +18,50 @@
 package bisq.desktop.primary.main.content.social.hangout;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.common.data.Pair;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.primary.main.content.social.tradeintent.TradeIntent;
+import bisq.identity.IdentityService;
+import bisq.network.NetworkService;
+import bisq.network.p2p.NetworkId;
+import bisq.security.KeyPairService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j
 @Getter
 public class HangoutModel implements Model {
-
+    private final NetworkService networkService;
+    private final IdentityService identityService;
+    private final KeyPairService keyPairService;
+    private Optional<TradeIntent> tradeIntent = Optional.empty();
+    private Optional<NetworkId> networkId = Optional.empty();
     public StringProperty chatText = new SimpleStringProperty("");
-    public List<String> chatPeers = new ArrayList<>();
+    public ObservableList<String> chatPeers = FXCollections.observableArrayList();
     public Optional<String> selectedChatPeer = Optional.empty();
 
     public HangoutModel(DefaultServiceProvider serviceProvider) {
+        networkService = serviceProvider.getNetworkService();
+        identityService = serviceProvider.getIdentityService();
+        keyPairService = serviceProvider.getKeyPairService();
     }
 
-    public void onViewAttached() {
-    }
+    void setData(Object data) {
+        Pair<TradeIntent, NetworkId> pair = Pair.class.cast(data);
+        tradeIntent = Optional.of(pair.first());
+        networkId = Optional.of(pair.second());
 
-    public void onViewDetached() {
+        String userId = tradeIntent.get().userId();
+        setSelectedChatPeer(userId);
+        if (!chatPeers.contains(userId)) {
+            chatPeers.add(userId);
+        }
     }
 
     public void setSelectedChatPeer(String chatPeer) {
@@ -50,6 +69,6 @@ public class HangoutModel implements Model {
     }
 
     public void send(String text) {
-        
+        chatText.set(chatText.get() + ">> " + text + "\n");
     }
 }

@@ -21,9 +21,11 @@ import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
+import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.p2p.NetworkId;
 import bisq.network.p2p.message.TextMessage;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -110,9 +112,9 @@ public class TradeIntentModel implements Model {
         networkService.requestInventory("TradeIntent");
     }
 
-    StringProperty addData(String ask, String bid) {
+    StringProperty addData(String userId, String ask, String bid) {
         StringProperty resultProperty = new SimpleStringProperty("Create Servers for node ID");
-        TradeIntent tradeIntent = new TradeIntent(UUID.randomUUID().toString().substring(0, 8), ask, bid, new Date().getTime());
+        TradeIntent tradeIntent = new TradeIntent(UUID.randomUUID().toString().substring(0, 8), userId, ask, bid, new Date().getTime());
         Identity identity = identityService.getOrCreateIdentity(tradeIntent.id());
         String keyId = identity.keyId();
         networkService.addData(tradeIntent, identity.nodeId(), keyId)
@@ -155,32 +157,31 @@ public class TradeIntentModel implements Model {
     }
 
     public void contactPeer(TradeIntentListItem item) {
-        item.getNetworkId().ifPresent(receiverNetworkId -> {
-            Identity identity = identityService.getOrCreateIdentity(item.getTradeIntent().id());
-            KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(identity.keyId());
-            CompletableFuture<String> future = new CompletableFuture<>();
-            String senderNodeId = identity.nodeId();
-            networkService.confidentialSendAsync(new TextMessage("Test msg"), receiverNetworkId, senderKeyPair, senderNodeId)
-                    .whenComplete((resultMap, throwable) -> {
-                        if (throwable == null) {
-                            resultMap.entrySet().stream().forEach(typeResultEntry -> {
-                                Transport.Type transportType = typeResultEntry.getKey();
-                                ConfidentialMessageService.Result result = resultMap.get(transportType);
-                                result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture.whenComplete((broadcastResult, error) -> {
-                                    if (error == null) {
-                                        future.complete(result.getState() + "; " + broadcastResult.toString());
-                                    } else {
-                                        String value = result.getState().toString();
-                                        if (result.getState() == ConfidentialMessageService.State.FAILED) {
-                                            value += " with Error: " + result.getErrorMsg();
-                                        }
-                                        future.complete(value);
+        NetworkId receiverNetworkId = item.getNetworkId();
+        Identity identity = identityService.getOrCreateIdentity(item.getTradeIntent().id());
+        KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(identity.keyId());
+        CompletableFuture<String> future = new CompletableFuture<>();
+        String senderNodeId = identity.nodeId();
+        networkService.confidentialSendAsync(new TextMessage("Test msg"), receiverNetworkId, senderKeyPair, senderNodeId)
+                .whenComplete((resultMap, throwable) -> {
+                    if (throwable == null) {
+                        resultMap.entrySet().stream().forEach(typeResultEntry -> {
+                            Transport.Type transportType = typeResultEntry.getKey();
+                            ConfidentialMessageService.Result result = resultMap.get(transportType);
+                            result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture.whenComplete((broadcastResult, error) -> {
+                                if (error == null) {
+                                    future.complete(result.getState() + "; " + broadcastResult.toString());
+                                } else {
+                                    String value = result.getState().toString();
+                                    if (result.getState() == ConfidentialMessageService.State.FAILED) {
+                                        value += " with Error: " + result.getErrorMsg();
                                     }
-                                }));
-                            });
-                        }
-                    });
-        });
+                                    future.complete(value);
+                                }
+                            }));
+                        });
+                    }
+                });
     }
 
     /*     checkArgument(selectedNetworkId.isPresent(), "Network ID must be set before calling sendMessage");
@@ -208,13 +209,13 @@ public class TradeIntentModel implements Model {
                          });
                      }
                  });*/
-    public boolean isNotMyTradeIntent(TradeIntentListItem item) {
-        return !isMyTradeIntent(item);
+
+    boolean isMyTradeIntent(TradeIntentListItem item) {
+        return keyPairService.findKeyPair(item.getNetworkId().getPubKey().keyId()).isPresent();
     }
 
-    public boolean isMyTradeIntent(TradeIntentListItem item) {
-        return item.getNetworkId().map(networkId -> keyPairService.findKeyPair(networkId.getPubKey().keyId()).isPresent())
-                .orElse(false);
+    String getActionButtonTitle(TradeIntentListItem item) {
+        return isMyTradeIntent(item) ? Res.common.get("remove") : Res.common.get("contact");
     }
 
 /*

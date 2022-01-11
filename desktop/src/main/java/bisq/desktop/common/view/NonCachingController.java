@@ -15,23 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.offerbook.details;
+package bisq.desktop.common.view;
 
-import bisq.desktop.common.view.Controller;
-import lombok.Getter;
-
-public class OfferDetailsController implements Controller {
-    @Getter
-    private OfferDetailsView view;
-    private OfferDetailsModel model;
-
-    public OfferDetailsController() {
-        model = new OfferDetailsModel();
-        view = new OfferDetailsView(model, this);
-    }
-
-    @Override
-    public void setData(Object data) {
-        model.setData(data);
-    }
+public interface NonCachingController {
 }

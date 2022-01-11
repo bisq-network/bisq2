@@ -49,19 +49,17 @@ public abstract class NavigationController implements Controller, Navigation.Lis
     }
 
     protected Optional<Controller> findController(NavigationTarget navigationTarget, Optional<Object> data) {
-        // We only cache in case there are no data, as otherwise usually a cached would be stale when visited again 
-        // and data might be missing. If we want to cache that we need to pack the data with the target into a different
-        // cache data structure.
-        if (data.isPresent()) {
-            return createController(navigationTarget, data);
-        }
-
         if (controllerCache.containsKey(navigationTarget)) {
-            return Optional.of(controllerCache.get(navigationTarget));
+            Controller controller = controllerCache.get(navigationTarget);
+            data.ifPresent(controller::setData);
+            return Optional.of(controller);
         } else {
-            return createController(navigationTarget, data)
+            return createController(navigationTarget)
                     .map(controller -> {
-                        controllerCache.put(navigationTarget, controller);
+                        data.ifPresent(controller::setData);
+                        if (!(controller instanceof NonCachingController)) {
+                            controllerCache.put(navigationTarget, controller);
+                        }
                         return controller;
                     });
         }
@@ -77,7 +75,7 @@ public abstract class NavigationController implements Controller, Navigation.Lis
         Navigation.removeListener(host, this);
     }
 
-    protected abstract Optional<Controller> createController(NavigationTarget navigationTarget, Optional<Object> data);
+    protected abstract Optional<Controller> createController(NavigationTarget navigationTarget);
 
     protected abstract NavigationModel getModel();
 }
