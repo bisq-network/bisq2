@@ -18,20 +18,19 @@
 package bisq.desktop.primary.main.content.social.hangout;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.common.data.Pair;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.primary.main.content.social.tradeintent.TradeIntent;
+import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.NetworkId;
-import bisq.network.p2p.message.ChatMessage;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
 import javafx.beans.property.SimpleStringProperty;
@@ -42,6 +41,9 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -53,13 +55,15 @@ public class HangoutModel implements Model, Node.Listener {
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final KeyPairService keyPairService;
-    private final String myUseName;
+   // private final String myUserName;
+  //  private final String myUserId;
     private Optional<TradeIntent> selectedTradeIntent = Optional.empty();
-    private Optional<NetworkId> selectedNetworkId = Optional.empty();
-    public StringProperty chatText = new SimpleStringProperty("");
-    public ObservableList<String> chatPeers = FXCollections.observableArrayList();
-    public Optional<String> selectedChatPeer = Optional.empty();
-    private String tradeIntentId;
+    public StringProperty chatHistory = new SimpleStringProperty("");
+    public Map<String, Channel> channelsById = new HashMap<>();
+    public Optional<String> selectedChannelId = Optional.empty();
+    private Optional<String> tradeIntentId;
+    private ObservableList<String> channelIds = FXCollections.observableArrayList();
+    private Optional<ChatUser> peer = Optional.empty();
 
     public HangoutModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
@@ -67,22 +71,46 @@ public class HangoutModel implements Model, Node.Listener {
         keyPairService = serviceProvider.getKeyPairService();
         networkService.addMessageListener(this);
 
-        myUseName = "Bob"; //todo
+      //  myUserName = "Bob"; //todo
+      //  myUserId = "id"; //todo
+
+        String id = Channel.ChannelType.BTC_EUR.name();
+        channelsById.put(id, new Channel(id, "BTC-EUR market"));
+        id = Channel.ChannelType.BTC_USD.name();
+        channelsById.put(id, new Channel(id, "BTC-USD market"));
+        id = Channel.ChannelType.PUBLIC.name();
+        channelsById.put(id, new Channel(id, "Anything"));
+    }
+
+    void setData(Object data) {
+        selectedTradeIntent = Optional.of(TradeIntent.class.cast(data));
+        tradeIntentId = Optional.of(selectedTradeIntent.orElseThrow().id());
+        peer = Optional.of(selectedTradeIntent.get().maker());
+        maybeAddChannel(peer.get().id(), peer.get().userName());
     }
 
     @Override
     public void onMessage(Message message, Connection connection, String nodeId) {
         if (message instanceof ChatMessage chatMessage) {
             UIThread.run(() -> {
-                chatText.set(chatText.get() + "<< " + chatMessage.getText() + "\n");
-                tradeIntentId = chatMessage.getTradeIntentId();
-                selectedNetworkId = Optional.of(chatMessage.getSenderNetworkId());
-                String senderUseName = chatMessage.getSenderUseName();
-                if (!chatPeers.contains(senderUseName)) {
-                    chatPeers.add(senderUseName);
-                }
+                tradeIntentId = Optional.of(chatMessage.getTradeIntentId());
+                peer = Optional.of(chatMessage.getSender());
+                String channelId = chatMessage.getChannelId();
+                Channel channel = maybeAddChannel(channelId, peer.get().userName());
+                channel.addMessages(new ChatEntry(peer.get(), chatMessage.getText(), new Date().getTime()));
+                updateChatHistory(channelId);
             });
         }
+    }
+
+    private Channel maybeAddChannel(String channelId, String userName) {
+        if (channelsById.containsKey(channelId)) {
+            return channelsById.get(channelId);
+        }
+        Channel channel = new Channel(channelId, userName);
+        channelsById.put(channelId, channel);
+        channelIds.add(channelId);
+        return channel;
     }
 
     @Override
@@ -93,39 +121,41 @@ public class HangoutModel implements Model, Node.Listener {
     public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
-    void setData(Object data) {
-        Pair<TradeIntent, NetworkId> pair = Pair.class.cast(data);
-        selectedTradeIntent = Optional.of(pair.first());
-        selectedNetworkId = Optional.of(pair.second());
-        tradeIntentId = selectedTradeIntent.orElseThrow().id();
-        String userId = selectedTradeIntent.get().userId();
-        setSelectedChatPeer(userId);
-        if (!chatPeers.contains(userId)) {
-            chatPeers.add(userId);
+    public void selectChannel(String channelId) {
+        selectedChannelId = Optional.of(channelId);
+        if (channelsById.containsKey(channelId)) {
+            updateChatHistory(channelId);
         }
     }
 
-    public void setSelectedChatPeer(String chatPeer) {
-        selectedChatPeer = Optional.of(chatPeer);
-    }
-
-    public void sendMessage(String message) {
-        chatText.set(chatText.get() + ">> " + message + "\n");
-        checkArgument(selectedNetworkId.isPresent(), "Network ID must be set before calling sendMessage");
-        NetworkId receiverNetworkId = selectedNetworkId.get();
-        KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(tradeIntentId);
+    public void sendMessage(String text) {
+        checkArgument(peer.isPresent(), "Network ID must be set before calling sendMessage");
         CompletableFuture<String> future = new CompletableFuture<>();
-        String senderNodeId = selectedNetworkId.get().getNodeId();
-        PubKey senderPubKey = new PubKey(senderKeyPair.getPublic(), tradeIntentId);
-        networkService.maybeInitializeServer(senderNodeId).get(Transport.Type.CLEAR)
-                .whenComplete((result1, throwable1) -> {
-                    NetworkId senderNetworkId = networkService.findNetworkId(senderNodeId, senderPubKey).orElseThrow();
-                    ChatMessage chatMessage = new ChatMessage(message, tradeIntentId, senderNetworkId, myUseName);
+        NetworkId receiverNetworkId = peer.get().networkId();
+        String channelId = peer.get().id();
+        Channel channel = maybeAddChannel(channelId, peer.get().userName());
+        String tradeIntentId = this.tradeIntentId.orElseThrow();
 
+        // todo Simplify API
+        // input: domainId
+        // derived: senderPubKey,senderNodeId,senderNetworkId,senderKeyPair
+        
+        Identity senderIdentity = identityService.getOrCreateIdentity(channelId);
+        String keyId = senderIdentity.keyId();
+        KeyPair senderKeyPair = keyPairService.getOrCreateKeyPair(keyId);
+        PubKey senderPubKey = new PubKey(senderKeyPair.getPublic(), keyId);
+        String senderNodeId = senderIdentity.nodeId();
+        
+        networkService.getInitializedNetworkIdAsync(senderNodeId, senderPubKey)
+                .whenComplete((senderNetworkId, throwable) -> {
+                    ChatUser senderChatUser = new ChatUser(tradeIntentId, tradeIntentId, senderNetworkId);
+                    ChatMessage chatMessage = new ChatMessage(channelId, text, tradeIntentId, senderChatUser);
+                    channel.addMessages(new ChatEntry(senderChatUser, text, new Date().getTime()));
+                    updateChatHistory(channelId);
                     networkService.confidentialSendAsync(chatMessage, receiverNetworkId, senderKeyPair, senderNodeId)
-                            .whenComplete((resultMap, throwable) -> {
-                                if (throwable == null) {
-                                    resultMap.forEach((transportType, value1) -> {
+                            .whenComplete((resultMap, throwable2) -> {
+                                if (throwable2 == null) {
+                                    resultMap.forEach((transportType, res) -> {
                                         ConfidentialMessageService.Result result = resultMap.get(transportType);
                                         result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture.whenComplete((broadcastResult, error) -> {
                                             if (error == null) {
@@ -142,5 +172,15 @@ public class HangoutModel implements Model, Node.Listener {
                                 }
                             });
                 });
+    }
+
+    private void updateChatHistory(String channelId) {
+        StringBuilder sb = new StringBuilder();
+        channelsById.get(channelId).getMessages()
+                .forEach(chatEntry -> sb.append(DateFormatter.formatDateTime(new Date(chatEntry.date())))
+                        .append(": ")
+                        .append(chatEntry.text())
+                        .append("\n"));
+        chatHistory.set(sb.toString());
     }
 }

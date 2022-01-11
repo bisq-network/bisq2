@@ -21,14 +21,18 @@ import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.primary.main.content.social.hangout.ChatUser;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.p2p.NetworkId;
+import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedNetworkIdPayload;
 import bisq.security.KeyPairService;
+import bisq.security.PubKey;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -38,6 +42,7 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
@@ -108,23 +113,32 @@ public class TradeIntentModel implements Model {
 
     StringProperty addData(String userId, String ask, String bid) {
         StringProperty resultProperty = new SimpleStringProperty("Create Servers for node ID");
-        TradeIntent tradeIntent = new TradeIntent(UUID.randomUUID().toString().substring(0, 8), userId, ask, bid, new Date().getTime());
-        Identity identity = identityService.getOrCreateIdentity(tradeIntent.id());
+        String id = UUID.randomUUID().toString().substring(0, 8);
+        Identity identity = identityService.getOrCreateIdentity(id);
         String keyId = identity.keyId();
-        networkService.addData(tradeIntent, identity.nodeId(), keyId)
-                .whenComplete((broadCastResultFutures, throwable) -> {
-                    broadCastResultFutures.forEach(broadCastResultFuture -> {
-                        broadCastResultFuture.whenComplete((broadCastResult, throwable2) -> {
-                            //todo add states to networkService
-                            UIThread.run(() -> {
-                                if (throwable2 == null) {
-                                    resultProperty.set("Data added. Broadcast result: " + broadCastResult);
-                                } else {
-                                    resultProperty.set("Error at add data: " + throwable);
-                                }
+        networkService.maybeInitializeServer(identity.nodeId())
+                .get(Transport.Type.CLEAR)
+                .whenComplete((r, t) -> {
+                    KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+                    PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
+                    NetworkId networkId = networkService.findNetworkId(identity.nodeId(), pubKey).orElseThrow();
+                    ChatUser maker = new ChatUser(id, id, networkId);
+                    TradeIntent tradeIntent = new TradeIntent(id, maker, ask, bid, new Date().getTime());
+                    networkService.addData(tradeIntent, identity.nodeId(), keyId)
+                            .whenComplete((broadCastResultFutures, throwable) -> {
+                                broadCastResultFutures.forEach(broadCastResultFuture -> {
+                                    broadCastResultFuture.whenComplete((broadCastResult, throwable2) -> {
+                                        //todo add states to networkService
+                                        UIThread.run(() -> {
+                                            if (throwable2 == null) {
+                                                resultProperty.set("Data added. Broadcast result: " + broadCastResult);
+                                            } else {
+                                                resultProperty.set("Error at add data: " + throwable);
+                                            }
+                                        });
+                                    });
+                                });
                             });
-                        });
-                    });
                 });
         return resultProperty;
     }

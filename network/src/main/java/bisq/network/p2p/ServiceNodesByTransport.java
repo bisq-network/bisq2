@@ -123,7 +123,7 @@ public class ServiceNodesByTransport {
         });
         return resultsByType;
     }
-
+    
     public Optional<Socks5Proxy> getSocksProxy() {
         return findServiceNode(Transport.Type.TOR)
                 .flatMap(serviceNode -> {

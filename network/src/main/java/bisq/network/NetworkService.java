@@ -321,4 +321,20 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
             }
         }
     }
+
+    public CompletableFuture<NetworkId> getInitializedNetworkIdAsync(String nodeId, PubKey pubKey) {
+        CompletableFuture<NetworkId> future = new CompletableFuture<>();
+        maybeInitializeServer(nodeId).forEach((transportType, resultFuture) -> {
+            resultFuture.whenComplete((initializeServerResult, throwable) -> {
+                if (throwable != null) {
+                    log.error(throwable.toString()); //todo
+                }
+                Map<Transport.Type, Address> addressByNetworkType = getAddressByNetworkType(nodeId);
+                if (supportedTransportTypes.size() == addressByNetworkType.size()) {
+                    future.complete(findNetworkId(nodeId, pubKey).orElseThrow());
+                }
+            });
+        });
+        return future;
+    }
 }

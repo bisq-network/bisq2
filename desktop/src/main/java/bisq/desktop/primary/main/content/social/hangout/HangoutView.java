@@ -47,7 +47,7 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
     private final BisqTextField inputTextField;
     private final VBox userList;
     private final BisqTextArea textArea;
-    private final ListChangeListener<String> peerListChangeListener;
+    private final ListChangeListener<String> channelIdsChangeListener;
 
     public HangoutView(HangoutModel model, HangoutController controller) {
         super(new HBox(), model, controller);
@@ -68,28 +68,29 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
         chatSpace.getChildren().addAll(textArea, sendBox);
         root.getChildren().addAll(userList, chatSpace);
 
-        peerListChangeListener = c -> updatePeerList();
+        channelIdsChangeListener = c -> updateChannelIds();
     }
 
-    private void updatePeerList() {
-        List<PeerButton> collect = model.getChatPeers().stream()
-                .map(chatPeer -> new PeerButton(chatPeer, toggleGroup, () -> controller.selectChatPeer(chatPeer)))
+    private void updateChannelIds() {
+        List<PeerButton> collect = model.getChannelIds().stream()
+                .map(channelId -> new PeerButton(channelId, toggleGroup, () -> controller.onSelectChannel(channelId)))
                 .collect(Collectors.toList());
         userList.getChildren().setAll(collect);
     }
 
+
     @Override
     public void onViewAttached() {
-        model.chatPeers.addListener(peerListChangeListener);
-        textArea.textProperty().bind(model.chatText);
-        inputTextField.setPromptText(Res.common.get("inputFieldPrompt", model.getSelectedChatPeer().orElse("")));
+        model.getChannelIds().addListener(channelIdsChangeListener);
+        textArea.textProperty().bind(model.chatHistory);
+        inputTextField.setPromptText(Res.common.get("sendMessagePrompt"));
         sendButton.setOnAction(e -> controller.send(inputTextField.getText()));
-        updatePeerList();
+        updateChannelIds();
     }
 
     @Override
     protected void onViewDetached() {
-        model.chatPeers.removeListener(peerListChangeListener);
+        model.getChannelIds().removeListener(channelIdsChangeListener);
         sendButton.setOnAction(null);
     }
 
@@ -97,8 +98,8 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
         private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
         private final BooleanProperty selectedProperty = new SimpleBooleanProperty();
 
-        private PeerButton(String title, ToggleGroup toggleGroup, Runnable handler) {
-            super(title.toUpperCase());
+        private PeerButton(String channelId, ToggleGroup toggleGroup, Runnable handler) {
+            super(channelId);
 
             setPrefHeight(40);
             setPrefWidth(150);

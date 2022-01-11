@@ -42,7 +42,7 @@ public class HangoutController implements Controller {
         model.sendMessage(text);
     }
 
-    public void selectChatPeer(String chatPeer) {
-        model.setSelectedChatPeer(chatPeer);
+    public void onSelectChannel(String channelId) {
+        model.selectChannel(channelId);
     }
 }

@@ -37,7 +37,7 @@ public class IdentityService implements PersistenceClient<HashMap<String, Identi
 
     @Getter
     private final Persistence<HashMap<String, Identity>> persistence;
-    private final Map<String, Identity> identityById = new ConcurrentHashMap<>();
+    private final Map<String, Identity> identityByDomainId = new ConcurrentHashMap<>();
 
     public IdentityService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, "db", "identities");
@@ -49,15 +49,15 @@ public class IdentityService implements PersistenceClient<HashMap<String, Identi
 
     @Override
     public void applyPersisted(HashMap<String, Identity> persisted) {
-        synchronized (identityById) {
-            identityById.putAll(persisted);
+        synchronized (identityByDomainId) {
+            identityByDomainId.putAll(persisted);
         }
     }
 
     @Override
     public HashMap<String, Identity> getClone() {
-        synchronized (identityById) {
-            return new HashMap<>(identityById);
+        synchronized (identityByDomainId) {
+            return new HashMap<>(identityByDomainId);
         }
     }
 
@@ -68,26 +68,26 @@ public class IdentityService implements PersistenceClient<HashMap<String, Identi
         return getOrCreateIdentity(DEFAULT);
     }
 
-    public Identity getOrCreateIdentity(String id) {
-        synchronized (identityById) {
-            if (identityById.containsKey(id)) {
-                return identityById.get(id);
+    public Identity getOrCreateIdentity(String domainId) {
+        synchronized (identityByDomainId) {
+            if (identityByDomainId.containsKey(domainId)) {
+                return identityByDomainId.get(domainId);
             }
         }
         Identity identity;
         String keyId = UUID.randomUUID().toString().substring(0, 8);
         String nodeId = UUID.randomUUID().toString().substring(0, 8);
-        identity = new Identity(id, nodeId, keyId);
-        synchronized (identityById) {
-            identityById.put(id, identity);
+        identity = new Identity(domainId, nodeId, keyId);
+        synchronized (identityByDomainId) {
+            identityByDomainId.put(domainId, identity);
         }
         persist();
         return identity;
     }
 
     public Optional<Identity> findIdentityByNodeId(String nodeId) {
-        synchronized (identityById) {
-            return identityById.values().stream()
+        synchronized (identityByDomainId) {
+            return identityByDomainId.values().stream()
                     .filter(identity -> identity.nodeId().equals(nodeId))
                     .findAny();
         }

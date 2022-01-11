@@ -50,7 +50,7 @@ public class TradeIntentListItem implements TableItem {
         this.tradeIntent = (TradeIntent) payload.getData();
         networkId = payload.getNetworkId();
         id = tradeIntent.id();
-        userId = tradeIntent.userId();
+        userId = tradeIntent.maker().id();
         ttl = TimeFormatter.formatTime(payload.getMetaData().getTtl());
         ask = tradeIntent.ask();
         bid = tradeIntent.bid();
