@@ -42,9 +42,9 @@ public class PrimaryStageModel implements Model {
     private final double minWidth = 800;
     private final double minHeight = 600;
     private final double prefWidth = 1100;
-    private final double prefHeight = 800;
+    private final double prefHeight = 1000;
     @Getter
-    protected final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
+    private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
     public PrimaryStageModel(DefaultServiceProvider serviceProvider) {
         userService = serviceProvider.getUserService();

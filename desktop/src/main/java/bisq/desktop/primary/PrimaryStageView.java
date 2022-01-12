@@ -17,10 +17,13 @@
 
 package bisq.desktop.primary;
 
+import bisq.common.util.OsUtils;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.KeyCodeUtils;
 import bisq.desktop.common.view.View;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
@@ -41,20 +44,18 @@ public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, Primar
         this.stage = stage;
         scene = new Scene(root); // takes about  50 ms
         try {
-            scene.getStylesheets().setAll(requireNonNull(getClass().getResource("/bisq.css")).toExternalForm(),
-                    requireNonNull(getClass().getResource("/bisq2.css")).toExternalForm(),
-                    requireNonNull(getClass().getResource("/images.css")).toExternalForm(),
-                    requireNonNull(getClass().getResource("/theme-dark.css")).toExternalForm());
-            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
-                if (KeyCodeUtils.isCtrlPressed(KeyCode.W, keyEvent) ||
-                        KeyCodeUtils.isCtrlPressed(KeyCode.Q, keyEvent)) {
-                    controller.onQuit();
-                }
-            });
+            stage.setTitle(model.getTitle());
+            stage.getIcons().add(getApplicationIconImage());
 
-            root.setPrefWidth(model.getPrefWidth());
-            root.setPrefHeight(model.getPrefHeight());
-            model.view.addListener((observable, oldValue, newValue) -> {
+            configCss();
+            configSizeAndPosition();
+            configKeyEventHandlers();
+            
+            stage.setOnCloseRequest(event -> {
+                event.consume();
+                controller.onQuit();
+            });
+            model.getView().addListener((observable, oldValue, newValue) -> {
                 Parent mainViewRoot = newValue.getRoot();
                 AnchorPane.setLeftAnchor(mainViewRoot, 0d);
                 AnchorPane.setRightAnchor(mainViewRoot, 0d);
@@ -62,28 +63,55 @@ public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, Primar
                 AnchorPane.setBottomAnchor(mainViewRoot, 0d);
                 root.getChildren().setAll(mainViewRoot);
             });
-
-            stage.setTitle(model.getTitle());
-            model.getStageX().ifPresent(stage::setX);
-            model.getStageY().ifPresent(stage::setY);
-            model.getStageWidth().ifPresent(stage::setWidth);
-            model.getStageHeight().ifPresent(stage::setHeight);
-            stage.setMinWidth(model.getMinWidth());
-            stage.setMinHeight(model.getMinHeight());
-            stage.xProperty().addListener((observable, oldValue, newValue) -> controller.onStageXChanged((double) newValue));
-            stage.yProperty().addListener((observable, oldValue, newValue) -> controller.onStageYChanged((double) newValue));
-            stage.widthProperty().addListener((observable, oldValue, newValue) -> controller.onStageWidthChanged((double) newValue));
-            stage.heightProperty().addListener((observable, oldValue, newValue) -> controller.onStageHeightChanged((double) newValue));
-            stage.setOnCloseRequest(event -> {
-                event.consume();
-                controller.onQuit();
-            });
-
+            
             stage.setScene(scene);
             stage.show(); // takes about 90 ms
         } catch (Exception exception) {
             exception.printStackTrace();
             controller.onQuit();
         }
+    }
+
+    private boolean configCss() {
+        return scene.getStylesheets().setAll(requireNonNull(getClass().getResource("/bisq.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/bisq2.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/images.css")).toExternalForm(),
+                requireNonNull(getClass().getResource("/theme-dark.css")).toExternalForm());
+    }
+
+    private void configSizeAndPosition() {
+        root.setPrefWidth(model.getPrefWidth());
+        root.setPrefHeight(model.getPrefHeight());
+        model.getStageX().ifPresent(stage::setX);
+        model.getStageY().ifPresent(stage::setY);
+        model.getStageWidth().ifPresent(stage::setWidth);
+        model.getStageHeight().ifPresent(stage::setHeight);
+        stage.setMinWidth(model.getMinWidth());
+        stage.setMinHeight(model.getMinHeight());
+        stage.xProperty().addListener((observable, oldValue, newValue) -> controller.onStageXChanged((double) newValue));
+        stage.yProperty().addListener((observable, oldValue, newValue) -> controller.onStageYChanged((double) newValue));
+        stage.widthProperty().addListener((observable, oldValue, newValue) -> controller.onStageWidthChanged((double) newValue));
+        stage.heightProperty().addListener((observable, oldValue, newValue) -> controller.onStageHeightChanged((double) newValue));
+    }
+
+    private void configKeyEventHandlers() {
+        scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
+            if (KeyCodeUtils.isCtrlPressed(KeyCode.W, keyEvent) ||
+                    KeyCodeUtils.isCtrlPressed(KeyCode.Q, keyEvent)) {
+                controller.onQuit();
+            }
+        });
+    }
+
+    private Image getApplicationIconImage() {
+        String iconPath;
+        if (OsUtils.isOSX())
+            iconPath = ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png";
+        else if (OsUtils.isWindows())
+            iconPath = "/images/task_bar_icon_windows.png";
+        else
+            iconPath = "/images/task_bar_icon_linux.png";
+
+        return ImageUtil.getImageByPath(iconPath);
     }
 }

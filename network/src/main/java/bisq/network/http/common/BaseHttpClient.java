@@ -18,6 +18,7 @@
 package bisq.network.http.common;
 
 import bisq.common.data.Pair;
+import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -25,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 public abstract class BaseHttpClient implements HttpClient {
@@ -39,7 +39,7 @@ public abstract class BaseHttpClient implements HttpClient {
         this.baseUrl = baseUrl;
         this.userAgent = userAgent;
 
-        uid = UUID.randomUUID().toString();
+        uid = StringUtils.createUid();
     }
 
     @Override

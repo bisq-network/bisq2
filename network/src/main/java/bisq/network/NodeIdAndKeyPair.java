@@ -17,8 +17,10 @@
 
 package bisq.network;
 
+import bisq.security.PubKey;
+
 import java.io.Serializable;
 import java.security.KeyPair;
 
-public record NodeIdAndKeyPair(String nodeId, KeyPair keyPair) implements Serializable {
+public record NodeIdAndKeyPair(String nodeId, PubKey pubKey, KeyPair keyPair) implements Serializable {
 }

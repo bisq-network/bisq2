@@ -45,7 +45,7 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
                     onViewAttached(); // activate view first as we usually set the bindings here
                     controller.onViewAttached();
                     model.onViewAttached();
-                  //  UIThread.run(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
+                    //  UIThread.run(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
                 } else {
                     // For overlays, we need to wait until window is available
                     windowChangeListener = (observable, oldValue1, newWindow) -> {

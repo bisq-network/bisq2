@@ -22,6 +22,7 @@ import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTextField;
 import bisq.desktop.layout.Layout;
+import bisq.desktop.primary.main.content.social.user.ChatUserView;
 import bisq.i18n.Res;
 import com.jfoenix.controls.JFXButton;
 import javafx.beans.property.BooleanProperty;
@@ -31,6 +32,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
@@ -49,8 +51,10 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
     private final BisqTextArea textArea;
     private final ListChangeListener<String> channelIdsChangeListener;
 
-    public HangoutView(HangoutModel model, HangoutController controller) {
+    public HangoutView(HangoutModel model, HangoutController controller, ChatUserView chatUserView) {
         super(new HBox(), model, controller);
+        
+        Node userViewRoot = chatUserView.getRoot();
 
         root.setSpacing(Layout.SPACING);
         root.setPadding(new Insets(20, 20, 20, 0));
@@ -66,14 +70,14 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
         sendButton = new BisqButton(Res.common.get("send"));
         sendBox.getChildren().addAll(inputTextField, sendButton);
         chatSpace.getChildren().addAll(textArea, sendBox);
-        root.getChildren().addAll(userList, chatSpace);
+        root.getChildren().addAll(userList, chatSpace, userViewRoot);
 
         channelIdsChangeListener = c -> updateChannelIds();
     }
 
     private void updateChannelIds() {
-        List<PeerButton> collect = model.getChannelIds().stream()
-                .map(channelId -> new PeerButton(channelId, toggleGroup, () -> controller.onSelectChannel(channelId)))
+        List<PeerButton> collect = model.getChannelsById().entrySet().stream()
+                .map(entry -> new PeerButton(entry.getValue().getName(), toggleGroup, () -> controller.onSelectChannel(entry.getValue())))
                 .collect(Collectors.toList());
         userList.getChildren().setAll(collect);
     }

@@ -19,10 +19,10 @@ package bisq.desktop.primary.main.content.social.user;
 
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.primary.main.content.social.hangout.ChatUser;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.NodeIdAndPubKey;
+import bisq.social.chat.ChatService;
+import bisq.social.chat.ChatUser;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -30,33 +30,28 @@ import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
+
 @Slf4j
 @Getter
-public class UserModel implements Model {
-
+public class ChatUserModel implements Model {
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final ObservableList<ChatUser> chatUsers = FXCollections.observableArrayList();
     private final ObjectProperty<ChatUser> selectedChatUser = new SimpleObjectProperty<>(null);
+    private final ChatService chatService;
 
-    public UserModel(DefaultServiceProvider serviceProvider) {
+    public ChatUserModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
-
-        NodeIdAndPubKey defaultIdentity = identityService.getNodeIdAndPubKey(IdentityService.DEFAULT);
-        networkService.getInitializedNetworkIdAsync(defaultIdentity)
-                .whenComplete((networkId, throwable) -> {
-                    if (throwable != null) {
-                        log.error(throwable.toString());
-                        return;
-                    }
-                    if (chatUsers.isEmpty()) {
-                        chatUsers.add(new ChatUser("default", "Default user", networkId));
-                    }
-                });
+        chatService = serviceProvider.getChatService();
     }
 
-    public void addChatUser(ChatUser chatUser) {
+    void setAllChatUsers(Collection<ChatUser> chatUser) {
+        chatUsers.setAll(chatUser);
+    }
+
+    void addChatUser(ChatUser chatUser) {
         if (!chatUsers.contains(chatUser)) {
             chatUsers.add(chatUser);
         }

@@ -50,6 +50,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.concurrent.CompletableFuture.runAsync;
+
 @Slf4j
 public class MultiNodesModel {
 
@@ -131,9 +133,15 @@ public class MultiNodesModel {
 
     public void bootstrap(Address address, Transport.Type transportType) {
         NetworkService networkService = createNetworkService(address, transportType);
-        networkService.bootstrapToNetwork(address.getPort())
-                .whenComplete((r, t) -> handler.ifPresent(handler ->
-                        handler.onStateChange(address, networkService.getStateByTransportType().get(transportType))));
+        ServiceNode serviceNode = networkService.getServiceNodesByTransport().findServiceNode(transportType).orElseThrow();
+        runAsync(() -> {
+            serviceNode.maybeInitializeServer(Node.DEFAULT_NODE_ID, address.getPort());
+            serviceNode.maybeInitializePeerGroup();
+        }, NetworkService.NETWORK_IO_POOL)
+                .whenComplete((r, t) -> {
+                    handler.ifPresent(handler ->
+                            handler.onStateChange(address, networkService.getStateByTransportType().get(transportType)));
+                });
     }
 
     public CompletableFuture<List<Void>> shutdown() {

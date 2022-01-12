@@ -15,11 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.hangout;
+package bisq.desktop.components.containers;
 
-import bisq.network.NetworkId;
 
-import java.io.Serializable;
+import javafx.scene.layout.Region;
 
-public record ChatUser(String id, String userName, NetworkId networkId) implements Serializable {
+public class BisqHSpacer extends Region {
+    public BisqHSpacer(int distance) {
+        setMinWidth(distance);
+        setMaxWidth(distance);
+    }
 }

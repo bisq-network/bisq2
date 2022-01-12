@@ -139,20 +139,12 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     // Initialize server
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer() {
-        return maybeInitializeServer(NetworkUtils.findFreeSystemPort());
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(String nodeId, PubKey pubKey) {
+        return maybeInitializeServer(getPortByTransport(nodeId, pubKey), nodeId);
     }
 
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(int port) {
-        return maybeInitializeServer(port, Node.DEFAULT_NODE_ID);
-    }
-
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(String nodeId) {
-        return maybeInitializeServer(NetworkUtils.findFreeSystemPort(), nodeId);
-    }
-
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(int port, String nodeId) {
-        return serviceNodesByTransport.maybeInitializeServerAsync(port, nodeId);
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(Map<Transport.Type, Integer> portByTransport, String nodeId) {
+        return serviceNodesByTransport.maybeInitializeServerAsync(portByTransport, nodeId);
     }
 
 
@@ -166,7 +158,7 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
 
     public CompletableFuture<NetworkId> getInitializedNetworkIdAsync(String nodeId, PubKey pubKey) {
         CompletableFuture<NetworkId> future = new CompletableFuture<>();
-        maybeInitializeServer(nodeId).forEach((transportType, resultFuture) -> {
+        maybeInitializeServer(nodeId, pubKey).forEach((transportType, resultFuture) -> {
             resultFuture.whenComplete((initializeServerResult, throwable) -> {
                 if (throwable != null) {
                     log.error(throwable.toString()); //todo
@@ -186,19 +178,17 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> bootstrapToNetwork() {
-        return bootstrapToNetwork(NetworkUtils.findFreeSystemPort());
+        return bootstrapToNetwork(getDefaultPortByTransport(), Node.DEFAULT_NODE_ID);
     }
 
-    public CompletableFuture<Boolean> bootstrapToNetwork(int port) {
-        return bootstrapToNetwork(port, Node.DEFAULT_NODE_ID);
-    }
-
-    public CompletableFuture<Boolean> bootstrapToNetwork(String nodeId) {
-        return bootstrapToNetwork(NetworkUtils.findFreeSystemPort(), nodeId);
-    }
-
-    public CompletableFuture<Boolean> bootstrapToNetwork(int port, String nodeId) {
-        return serviceNodesByTransport.bootstrapToNetwork(port, nodeId);
+    public CompletableFuture<Boolean> bootstrapToNetwork(Map<Transport.Type, Integer> portByTransport, String nodeId) {
+        return serviceNodesByTransport.bootstrapToNetwork(portByTransport, nodeId)
+                .whenComplete((result, throwable) -> {
+                    // If networkNode has not been created we create now once with the default PubKey (default keyId)
+                    // and persist it.
+                    findNetworkId(nodeId, keyPairService.getDefaultPubKey()); //todo
+                    persist();
+                });
     }
 
 
@@ -231,18 +221,13 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     // Add/remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //  NodeIdAndKeyId nodeIdAndKeyId
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addData(Proto data, NodeIdAndKeyId nodeIdAndKeyId) {
-        return addData(data, nodeIdAndKeyId.nodeId(), nodeIdAndKeyId.keyId());
-    }
-
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addData(Proto data, String nodeId, String keyId) {
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addData(Proto data, NodeIdAndKeyPair getNodeIdAndKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when this method is called.");
-        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId).values())
+        String nodeId = getNodeIdAndKeyPair.nodeId();
+        PubKey pubKey = getNodeIdAndKeyPair.pubKey();
+        KeyPair keyPair = getNodeIdAndKeyPair.keyPair();
+        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> {
-                    KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
-                    PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-                    NetworkId networkId = findNetworkId(nodeId, pubKey).orElseThrow();
                     AuthenticatedPayload netWorkPayload = new AuthenticatedPayload(data);
                     return dataService.get().addNetworkPayloadAsync(netWorkPayload, keyPair)
                             .whenComplete((broadCastResultFutures, throwable) -> {
@@ -256,17 +241,12 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
                 });
     }
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeData(Proto data, NodeIdAndKeyId nodeIdAndKeyId) {
-        return removeData(data, nodeIdAndKeyId.nodeId(), nodeIdAndKeyId.keyId());
-    }
-
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeData(Proto data, String nodeId, String keyId) {
-        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
-        PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId).values())
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeData(Proto data, NodeIdAndKeyPair getNodeIdAndKeyPair) {
+        String nodeId = getNodeIdAndKeyPair.nodeId();
+        PubKey pubKey = getNodeIdAndKeyPair.pubKey();
+        KeyPair keyPair = getNodeIdAndKeyPair.keyPair();
+        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> {
-                    maybeInitializeServer(nodeId);
-                    NetworkId networkId = findNetworkId(nodeId, pubKey).orElseThrow();
                     AuthenticatedPayload netWorkPayload = new AuthenticatedPayload(data);
                     return dataService.orElseThrow().removeNetworkPayloadAsync(netWorkPayload, keyPair)
                             .whenComplete((broadCastResultFutures, throwable) -> {
@@ -340,6 +320,29 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
 
     public boolean isTransportTypeSupported(Transport.Type transportType) {
         return getSupportedTransportTypes().contains(transportType);
+    }
+
+    // We return the port by transport type if found from the persisted networkId, otherwise we
+    // fill in a random free system port for all supported transport types. 
+    public Map<Transport.Type, Integer> getDefaultPortByTransport() {
+        return getPortByTransport(Node.DEFAULT_NODE_ID, keyPairService.getDefaultPubKey());
+    }
+
+    public Map<Transport.Type, Integer> getPortByTransport(String nodeId, PubKey pubKey) {
+        Optional<NetworkId> networkIdOptional = findNetworkId(nodeId, pubKey);
+        return supportedTransportTypes.stream()
+                .collect(Collectors.toMap(e -> e,
+                        transportType -> networkIdOptional.stream()
+                                .map(NetworkId::addressByNetworkType)
+                                .flatMap(map -> Optional.ofNullable(map.get(transportType)).stream())
+                                .map(Address::getPort)
+                                .findAny()
+                                .orElse(NetworkUtils.findFreeSystemPort())));
+    }
+
+    public Map<Transport.Type, Integer> getFreeSystemPortByTransport() {
+        return supportedTransportTypes.stream()
+                .collect(Collectors.toMap(e -> e, transportType -> NetworkUtils.findFreeSystemPort()));
     }
 
 

@@ -54,10 +54,6 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
         root.setSpacing(5);
         root.setPadding(new Insets(0, 20, 20, 20));
 
-        // <VBox fx:id="leftVBox" prefWidth="240" spacing="5" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="15"
-        //          AnchorPane.topAnchor="15"/>
-        // root.setPadding(new Insets(0, 0, 0, 20));
-
         NavigationButton markets = createNavigationButton(Res.common.get("markets"), NavigationTarget.MARKETS);
         NavigationButton social = createNavigationButton(Res.common.get("social"), NavigationTarget.SOCIAL);
         NavigationButton offerBook = createNavigationButton(Res.common.get("offerbook"), NavigationTarget.OFFERBOOK);

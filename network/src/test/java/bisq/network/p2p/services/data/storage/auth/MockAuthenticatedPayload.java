@@ -25,11 +25,12 @@ import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode
 @Getter
-public class MockAuthenticatedPayload implements AuthenticatedPayload {
+public class MockAuthenticatedPayload extends AuthenticatedPayload {
     private final String offerDummy;
     final MetaData metaData;
 
     public MockAuthenticatedPayload(String offerDummy) {
+        super(null, null);
         this.offerDummy = offerDummy;
         metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
     }

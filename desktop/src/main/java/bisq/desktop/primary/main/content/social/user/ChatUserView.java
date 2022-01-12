@@ -18,29 +18,48 @@
 package bisq.desktop.primary.main.content.social.user;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqComboBox;
-import bisq.desktop.primary.main.content.social.hangout.ChatUser;
+import bisq.desktop.components.controls.BisqTextField;
+import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
+import bisq.social.chat.ChatUser;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
-import javafx.geometry.Insets;
+import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 @Slf4j
-public class UserView extends View<BisqComboBox<ChatUser>, UserModel, UserController> {
+public class ChatUserView extends View<VBox, ChatUserModel, ChatUserController> {
 
     private final BisqComboBox<ChatUser> comboBox;
     private final ListChangeListener<ChatUser> listener;
     private final ChangeListener<ChatUser> selectionListener;
     private final ChangeListener<ChatUser> selectedChatUserListener;
 
-    public UserView(UserModel model, UserController controller) {
-        super(new BisqComboBox<>(Res.common.get("selectUser")), model, controller);
-        comboBox = root;
-        comboBox.setPadding(new Insets(20, 20, 20, 0));
+    public ChatUserView(ChatUserModel model, ChatUserController controller) {
+        super(new VBox(), model, controller);
+
+        root.setPadding(Layout.PADDING);
+        root.setSpacing(Layout.SPACING);
+
+        comboBox = new BisqComboBox<>(Res.common.get("social.selectChatUser"));
+        comboBox.setMinWidth(200);
+
+        root.maxWidthProperty().bind(comboBox.widthProperty());
+        root.maxHeightProperty().bind(comboBox.heightProperty());
+
+        BisqButton createUserButton = new BisqButton(Res.common.get("social.createChatUser"));
+        BisqTextField textField = new BisqTextField();
+        textField.setPromptText(Res.common.get("social.createChatUser.prompt"));
+        createUserButton.disableProperty().bind(textField.textProperty().isEmpty());
+        
+        createUserButton.setOnAction(e -> controller.onCreateNewChatUser(textField.getText()));
+        root.getChildren().addAll(comboBox, createUserButton, textField);
+
         listener = c -> updateItems();
         comboBox.setConverter(new StringConverter<>() {
             @Override
@@ -65,7 +84,6 @@ public class UserView extends View<BisqComboBox<ChatUser>, UserModel, UserContro
 
     private void updateItems() {
         comboBox.setItems(model.getChatUsers());
-
     }
 
     @Override
@@ -74,7 +92,7 @@ public class UserView extends View<BisqComboBox<ChatUser>, UserModel, UserContro
         comboBox.getSelectionModel().selectedItemProperty().addListener(selectionListener);
         model.getSelectedChatUser().addListener(selectedChatUserListener);
         updateItems();
-        comboBox.getSelectionModel().select(model.getSelectedChatUser().get());
+        //comboBox.getSelectionModel().select(model.getSelectedChatUser().get());
     }
 
     @Override

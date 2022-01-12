@@ -44,8 +44,6 @@ public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest,
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
         RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = new RemoveAuthenticatedDataRequest(payload.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
-        log.error("payload={}", payload);
-        log.error("hash={}", Hex.encode(hash));
         return removeAuthenticatedDataRequest;
     }
 

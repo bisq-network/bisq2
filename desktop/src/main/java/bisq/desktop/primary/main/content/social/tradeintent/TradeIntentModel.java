@@ -18,13 +18,14 @@
 package bisq.desktop.primary.main.content.social.tradeintent;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.primary.main.content.social.hangout.ChatUser;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.security.KeyPairService;
+import bisq.social.chat.ChatUser;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -38,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -52,7 +52,7 @@ public class TradeIntentModel implements Model {
     private final SortedList<TradeIntentListItem> sortedItems = new SortedList<>(filteredItems);
     private final StringProperty addDataResultProperty = new SimpleStringProperty("");
     private final StringProperty removeDataResultProperty = new SimpleStringProperty("");
-    private ObjectProperty<ChatUser> myChatIdentity = new SimpleObjectProperty<>();
+    private ObjectProperty<ChatUser> mySelectedChatUser = new SimpleObjectProperty<>();
 
     public TradeIntentModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
@@ -71,8 +71,8 @@ public class TradeIntentModel implements Model {
         listItems.setAll(list);
     }
 
-    void setMyChatIdentity(ChatUser chatUser) {
-        myChatIdentity.set(chatUser);
+    void selectMyChatUser(ChatUser chatUser) {
+        mySelectedChatUser.set(chatUser);
     }
 
     boolean isMyTradeIntent(TradeIntentListItem item) {
@@ -84,9 +84,8 @@ public class TradeIntentModel implements Model {
     }
 
     TradeIntent createTradeIntent(String ask, String bid) {
-        checkNotNull(myChatIdentity.get(),"myChatIdentity must be set");
-        String id = UUID.randomUUID().toString().substring(0, 8);
-        return new TradeIntent(id, myChatIdentity.get(), ask, bid, new Date().getTime());
+        checkNotNull(mySelectedChatUser.get(),"myChatIdentity must be set");
+        return new TradeIntent(StringUtils.createUid(), mySelectedChatUser.get(), ask, bid, new Date().getTime());
     }
 
     void setAddTradeIntentError(TradeIntent tradeIntent, Throwable throwable) {

@@ -24,6 +24,7 @@ import lombok.Getter;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -48,11 +49,6 @@ public class KeyPairService implements PersistenceClient<HashMap<String, KeyPair
         synchronized (keyPairsById) {
             keyPairsById.putAll(persisted);
         }
-    }
-
-    @Override
-    public CompletableFuture<Boolean> persist() {
-        return persistence.persistAsync(getClone());
     }
 
     @Override
@@ -99,5 +95,11 @@ public class KeyPairService implements PersistenceClient<HashMap<String, KeyPair
                         throw new CompletionException(e);
                     }
                 }));
+    }
+
+    public PubKey getDefaultPubKey() {
+        String keyId = KeyPairService.DEFAULT;
+        PublicKey publicKey = getOrCreateKeyPair(keyId).getPublic();
+        return new PubKey(publicKey, keyId);
     }
 }

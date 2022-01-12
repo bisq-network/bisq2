@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.hangout;
+package bisq.social.chat;
 
 import lombok.Getter;
 
@@ -27,20 +27,22 @@ import java.util.Set;
 
 @Getter
 public class Channel {
-    enum ChannelType implements Serializable {
+    public enum ChannelType implements Serializable {
         BTC_EUR,
         BTC_USD,
         PUBLIC,
         PRIVATE
     }
 
-    private final String channelId;
+    private final ChannelType channelType;
+    private final String id;
     private final String name;
     private final Set<ChatUser> members = new HashSet<>();
     private final List<ChatEntry> messages = new ArrayList<>();
 
-    public Channel(String channelId, String name) {
-        this.channelId = channelId;
+    public Channel(Channel.ChannelType channelType, String id, String name) {
+        this.channelType = channelType;
+        this.id = id;
         this.name = name;
     }
 

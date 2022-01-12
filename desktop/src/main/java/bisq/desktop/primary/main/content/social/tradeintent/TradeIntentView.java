@@ -22,7 +22,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.primary.main.content.social.user.UserView;
+import bisq.desktop.primary.main.content.social.user.ChatUserView;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -42,15 +42,15 @@ public class TradeIntentView extends View<StackPane, TradeIntentModel, TradeInte
     private final Label addDataResultLabel;
     private ChangeListener<TradeIntentListItem> dataTableSelectedItemListener;
 
-    public TradeIntentView(TradeIntentModel model, TradeIntentController controller, UserView userView) {
+    public TradeIntentView(TradeIntentModel model, TradeIntentController controller, ChatUserView chatUserView) {
         super(new StackPane(), model, controller);
 
         gridPane = new BisqGridPane();
         gridPane.setPadding(new Insets(20, 20, 20, 0));
 
-        Node userViewRoot = userView.getRoot();
+        Node userViewRoot = chatUserView.getRoot();
         StackPane.setAlignment(userViewRoot, Pos.TOP_RIGHT);
-        this.root.getChildren().addAll(gridPane, userViewRoot);
+        root.getChildren().addAll(gridPane, userViewRoot);
 
         gridPane.startSection(Res.offerbook.get("tradeIntent.create.title"));
         TextField askTextField = gridPane.addTextField(Res.offerbook.get("tradeIntent.create.ask"), "I want 0.01 BTC");
@@ -100,14 +100,9 @@ public class TradeIntentView extends View<StackPane, TradeIntentModel, TradeInte
         tableView.getSortOrder().add(dateColumn);
 
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
-                .title(Res.common.get("id"))
-                .minWidth(80)
-                .valueSupplier(TradeIntentListItem::getId)
-                .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
-                .title(Res.common.get("userName"))
+                .title(Res.common.get("social.userName"))
                 .minWidth(120)
-                .valueSupplier(TradeIntentListItem::getUserId)
+                .valueSupplier(TradeIntentListItem::getUserName)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
                 .title(Res.common.get("ask"))

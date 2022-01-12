@@ -17,6 +17,7 @@
 
 package bisq.offer;
 
+import bisq.common.util.StringUtils;
 import bisq.contract.ProtocolType;
 import bisq.network.NetworkId;
 import bisq.offer.options.OfferOption;
@@ -26,7 +27,6 @@ import lombok.Getter;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 @EqualsAndHashCode
 @Getter
@@ -61,7 +61,7 @@ public abstract class Listing implements Serializable {
     public Listing(List<? extends ProtocolType> protocolTypes,
                    NetworkId makerNetworkId,
                    Set<OfferOption> offerOptions) {
-        this(UUID.randomUUID().toString(),
+        this(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 protocolTypes,
                 makerNetworkId,

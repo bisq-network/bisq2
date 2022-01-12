@@ -33,7 +33,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
@@ -62,7 +61,7 @@ public abstract class Connection {
 
 
     @Getter
-    protected final String id = UUID.randomUUID().toString();
+    protected final String id = StringUtils.createUid();
     @Getter
     private final Capability peersCapability;
     @Getter

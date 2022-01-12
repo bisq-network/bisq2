@@ -14,6 +14,10 @@
     -fx-image: url("images/connection/i2p.png");
 }
 
+#logo-small {
+    -fx-image: url("images/logo_small.png");
+}
+
 
 /* unused....*/
 

@@ -23,14 +23,15 @@ import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.social.hangout.ChatUser;
-import bisq.desktop.primary.main.content.social.user.UserController;
+import bisq.desktop.primary.main.content.social.user.ChatUserController;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.NodeIdAndKeyId;
+import bisq.network.NodeIdAndKeyPair;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.social.chat.ChatService;
+import bisq.social.chat.ChatUser;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,26 +41,38 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class TradeIntentController implements Controller, UserController.Listener {
+public class TradeIntentController implements Controller, ChatService.Listener {
     private final NetworkService networkService;
     private final IdentityService identityService;
+    private final ChatService chatService;
     private final Optional<DataService> dataService;
     private final TradeIntentModel model;
     @Getter
     private final TradeIntentView view;
-    private final UserController userController;
     private Optional<DataService.Listener> dataListener = Optional.empty();
 
     public TradeIntentController(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
-        userController = new UserController(serviceProvider);
+        chatService = serviceProvider.getChatService();
         dataService = networkService.getDataService();
 
+        ChatUserController chatUserController = new ChatUserController(serviceProvider);
         model = new TradeIntentModel(serviceProvider);
-        view = new TradeIntentView(model, this, userController.getView());
+        view = new TradeIntentView(model, this, chatUserController.getView());
+
         //todo listen on bootstrap
         UIScheduler.run(this::requestInventory).after(2000);
+    }
+
+    // ChatService.Listener
+    @Override
+    public void onChatUserAdded(ChatUser chatUser) {
+    }
+
+    @Override
+    public void onChatUserSelected(ChatUser chatUser) {
+        UIThread.run(() -> model.selectMyChatUser(chatUser));
     }
 
     void requestInventory() {
@@ -69,8 +82,8 @@ public class TradeIntentController implements Controller, UserController.Listene
 
     @Override
     public void onViewAttached() {
-        userController.addListener(this);
-        model.setMyChatIdentity(userController.getModel().getSelectedChatUser().get());
+        chatService.addListener(this);
+        model.selectMyChatUser(chatService.getChatServiceData().getSelected());
 
         dataService.ifPresent(dataService -> {
             dataListener = Optional.of(new DataService.Listener() {
@@ -92,8 +105,6 @@ public class TradeIntentController implements Controller, UserController.Listene
             dataService.addListener(dataListener.get());
 
             model.fillTradeIntentListItem(dataService.getAuthenticatedPayloadByStoreName("TradeIntent")
-                    .filter(payload -> payload instanceof AuthenticatedPayload)
-                    .map(payload -> (AuthenticatedPayload) payload)
                     .map(TradeIntentListItem::new)
                     .collect(Collectors.toList()));
         });
@@ -101,16 +112,15 @@ public class TradeIntentController implements Controller, UserController.Listene
 
     @Override
     public void onViewDetached() {
-        userController.removeListener(this);
+        chatService.removeListener(this);
     }
 
     void onAddTradeIntent(String ask, String bid) {
-        checkNotNull(model.getMyChatIdentity().get(), "myChatIdentity must be set");
-        NodeIdAndKeyId nodeIdAndKeyId = identityService.getNodeIdAndKeyId(model.getMyChatIdentity().get().id());
+        checkNotNull(model.getMySelectedChatUser().get(), "myChatIdentity must be set");
         TradeIntent tradeIntent = model.createTradeIntent(ask, bid);
+        NodeIdAndKeyPair nodeIdAndKeyPair = identityService.getNodeIdAndKeyPair(tradeIntent.id());
         model.getAddDataResultProperty().set("...");
-        log.error("Add {}", nodeIdAndKeyId);
-        networkService.addData(tradeIntent, nodeIdAndKeyId)
+        networkService.addData(tradeIntent, nodeIdAndKeyPair)
                 .whenComplete((broadCastResultFutures, throwable) -> {
                     if (throwable != null) {
                         UIThread.run(() -> model.setAddTradeIntentError(tradeIntent, throwable));
@@ -128,10 +138,6 @@ public class TradeIntentController implements Controller, UserController.Listene
                 });
     }
 
-    @Override
-    public void onSelectChatUser(ChatUser chatUser) {
-        model.setMyChatIdentity(chatUser);
-    }
 
     public void onActionButtonClicked(TradeIntentListItem item) {
         if (model.isMyTradeIntent(item)) {
@@ -146,10 +152,10 @@ public class TradeIntentController implements Controller, UserController.Listene
     }
 
     private void onRemoveTradeIntent(TradeIntentListItem item) {
-        checkNotNull(model.getMyChatIdentity().get(), "myChatIdentity must be set");
-        NodeIdAndKeyId nodeIdAndKeyId = identityService.getNodeIdAndKeyId(model.getMyChatIdentity().get().id());
-        log.error("remove {}", nodeIdAndKeyId);
-        networkService.removeData(item.getPayload().getData(), nodeIdAndKeyId)
+        checkNotNull(model.getMySelectedChatUser().get(), "myChatIdentity must be set");
+        NodeIdAndKeyPair nodeIdAndKeyPair = identityService.getNodeIdAndKeyPair(item.getTradeIntent().id());
+        log.error("remove {}", nodeIdAndKeyPair);
+        networkService.removeData(item.getPayload().getData(), nodeIdAndKeyPair)
                 .whenComplete((broadCastResultFutures, throwable) -> {
                     if (throwable != null) {
                         UIThread.run(() -> model.setRemoveTradeIntentError(item.getTradeIntent(), throwable));

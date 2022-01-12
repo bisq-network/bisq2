@@ -18,6 +18,7 @@
 package bisq.identity;
 
 
+import bisq.common.util.StringUtils;
 import bisq.network.NodeIdAndKeyId;
 import bisq.network.NodeIdAndKeyPair;
 import bisq.network.NodeIdAndPubKey;
@@ -33,7 +34,6 @@ import java.security.KeyPair;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -83,8 +83,8 @@ public class IdentityService implements PersistenceClient<HashMap<String, Identi
             }
         }
         Identity identity;
-        String keyId = UUID.randomUUID().toString().substring(0, 8);
-        String nodeId = UUID.randomUUID().toString().substring(0, 8);
+        String keyId = StringUtils.createUid();
+        String nodeId = StringUtils.createUid();
         identity = new Identity(domainId, nodeId, keyId);
         synchronized (identityByDomainId) {
             identityByDomainId.put(domainId, identity);
@@ -111,8 +111,10 @@ public class IdentityService implements PersistenceClient<HashMap<String, Identi
 
     public NodeIdAndKeyPair getNodeIdAndKeyPair(String domainId) {
         Identity identity = getOrCreateIdentity(domainId);
-        KeyPair keyPair = keyPairService.getOrCreateKeyPair(identity.keyId());
-        return new NodeIdAndKeyPair(identity.nodeId(), keyPair);
+        String keyId = identity.keyId();
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
+        return new NodeIdAndKeyPair(identity.nodeId(), pubKey, keyPair);
     }
 
     public NodeIdAndKeyId getNodeIdAndKeyId(String domainId) {

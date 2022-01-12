@@ -44,7 +44,6 @@ import java.util.stream.Collectors;
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ServiceNodesByTransport {
@@ -94,22 +93,29 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServerAsync(int port, String nodeId) {
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServerAsync(Map<Transport.Type, Integer> portByTransport, String nodeId) {
         return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> supplyAsync(() -> entry.getValue().maybeInitializeServer(nodeId, port), NETWORK_IO_POOL)));
+                .collect(Collectors.toMap(Map.Entry::getKey, entry ->
+                        runAsync(() -> {
+                            int port = portByTransport.get(entry.getKey());
+                            entry.getValue().maybeInitializeServer(nodeId, port);
+                        }, NETWORK_IO_POOL).thenApply(__ -> true)));
     }
 
-    public CompletableFuture<Boolean> bootstrapToNetwork(int port, String nodeId) {
-        return CompletableFutureUtils.allOf(map.values().stream().map(networkNode ->
-                runAsync(() -> networkNode.maybeInitializeServer(nodeId, port), NETWORK_IO_POOL)
-                        .whenComplete((__, throwable) -> {
-                            if (throwable == null) {
-                                networkNode.maybeInitializePeerGroup();
-                            } else {
-                                log.error(throwable.toString());
-                            }
-                        }))).thenApply(list -> true);
+    public CompletableFuture<Boolean> bootstrapToNetwork(Map<Transport.Type, Integer> portByTransport, String nodeId) {
+        return CompletableFutureUtils.allOf(map.entrySet().stream()
+                .map(entry -> {
+                    int port = portByTransport.get(entry.getKey());
+                    ServiceNode serviceNode = entry.getValue();
+                    return runAsync(() -> serviceNode.maybeInitializeServer(nodeId, port), NETWORK_IO_POOL)
+                            .whenComplete((__, throwable) -> {
+                                if (throwable == null) {
+                                    serviceNode.maybeInitializePeerGroup();
+                                } else {
+                                    log.error(throwable.toString());
+                                }
+                            });
+                })).thenApply(list -> true);
     }
 
     public Map<Transport.Type, ConfidentialMessageService.Result> confidentialSend(Message message,

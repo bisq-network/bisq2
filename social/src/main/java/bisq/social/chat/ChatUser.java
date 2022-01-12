@@ -15,9 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.hangout;
+package bisq.social.chat;
+
+import bisq.network.NetworkId;
 
 import java.io.Serializable;
 
-public record ChatEntry(ChatUser author, String text, long date) implements Serializable {
+public record ChatUser(String id, String userName, NetworkId networkId) implements Serializable {
 }

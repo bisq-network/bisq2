@@ -15,9 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.hangout;
+package bisq.desktop.components.containers;
 
-import bisq.network.NetworkId;
+import bisq.desktop.common.utils.StageUtil;
+import bisq.desktop.components.controls.BisqTextField;
+import javafx.stage.Stage;
 
-public record ChatIdentity(String id, String userName, NetworkId networkId, String keyId) {
+public class OverlayTextField extends BisqTextField {
+    public OverlayTextField(String title, String text) {
+        setText(text);
+        Stage stage = StageUtil.addToOverlayStage(this, title);
+    }
 }

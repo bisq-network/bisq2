@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.social.hangout;
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.primary.main.content.social.user.ChatUserController;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
@@ -30,8 +31,12 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.social.chat.Channel;
+import bisq.social.chat.ChatMessage;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class HangoutController implements Controller, Node.Listener {
     private final DefaultServiceProvider serviceProvider;
     private final NetworkService networkService;
@@ -44,9 +49,15 @@ public class HangoutController implements Controller, Node.Listener {
         this.serviceProvider = serviceProvider;
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
-        model = new HangoutModel(serviceProvider);
-        view = new HangoutView(model, this);
 
+        ChatUserController chatUserController = new ChatUserController(serviceProvider);
+        model = new HangoutModel(serviceProvider);
+        view = new HangoutView(model, this, chatUserController.getView());
+
+
+        model.addPublicChannel(Channel.ChannelType.BTC_EUR);
+        model.addPublicChannel(Channel.ChannelType.BTC_USD);
+        model.addPublicChannel(Channel.ChannelType.PUBLIC);
     }
 
     @Override
@@ -81,6 +92,7 @@ public class HangoutController implements Controller, Node.Listener {
 
     public void send(String text) {
         model.getChannelId().ifPresent(channelId -> {
+            log.error("channelId {}", channelId);
             NodeIdAndPubKey nodeIdAndPubKey = identityService.getNodeIdAndPubKey(channelId);
             networkService.getInitializedNetworkIdAsync(nodeIdAndPubKey)
                     .whenComplete((senderNetworkId, throwable) -> {
@@ -89,7 +101,7 @@ public class HangoutController implements Controller, Node.Listener {
                             return;
                         }
                         ChatMessage chatMessage = model.createAndAddChatMessage(text, channelId, senderNetworkId);
-                        NetworkId receiverNetworkId = model.getPeer().orElseThrow().networkId();
+                        NetworkId receiverNetworkId = model.getSelectedChatPeer().orElseThrow().networkId();
                         NodeIdAndKeyPair nodeIdAndKeyPair = identityService.getNodeIdAndKeyPair(channelId);
                         networkService.confidentialSendAsync(chatMessage, receiverNetworkId, nodeIdAndKeyPair)
                                 .whenComplete((resultMap, throwable2) -> {
@@ -113,7 +125,7 @@ public class HangoutController implements Controller, Node.Listener {
         });
     }
 
-    public void onSelectChannel(String channelId) {
-        model.selectChannel(channelId);
+    public void onSelectChannel(Channel channel) {
+        model.selectChannel(channel);
     }
 }

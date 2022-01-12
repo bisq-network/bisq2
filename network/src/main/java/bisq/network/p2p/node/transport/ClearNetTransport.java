@@ -39,7 +39,7 @@ public class ClearNetTransport implements Transport {
 
     @Override
     public ServerSocketResult getServerSocket(int port, String nodeId) {
-        log.debug("Create serverSocket at port {}", port);
+        log.info("Create serverSocket at port {}", port);
         try {
             ServerSocket serverSocket = new ServerSocket(port);
             Address address = Address.localHost(port);

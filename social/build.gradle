@@ -1,0 +1,34 @@
+plugins {
+    id 'java-library'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+apply from: '../buildSrc/bisq-version.gradle'
+apply from: '../buildSrc/logging-dependencies.gradle'
+apply from: '../buildSrc/test-dependencies.gradle'
+apply from: '../buildSrc/lombok-dependencies.gradle'
+
+dependencies {
+    api platform(project(':platforms:common-platform'))
+
+    implementation project(':common')
+    implementation project(':i18n')
+    implementation project(':persistence')
+    implementation project(':security')
+    implementation project(':network')
+    implementation project(':identity')
+    implementation project(':social')
+    implementation project(':user')
+
+    implementation 'com.google.guava:guava'
+    implementation 'com.typesafe:config'
+}
+
+test {
+    useJUnitPlatform()
+    exclude '**/**Integration*'
+}

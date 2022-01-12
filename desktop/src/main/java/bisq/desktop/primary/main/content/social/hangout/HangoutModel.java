@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.social.hangout;
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.primary.main.content.social.tradeintent.TradeIntent;
+import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
@@ -27,6 +28,7 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.security.KeyPairService;
+import bisq.social.chat.*;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -45,53 +47,44 @@ public class HangoutModel implements Model {
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final KeyPairService keyPairService;
-    // private final String myUserName;
-    //  private final String myUserId;
+    private final ChatService chatService;
     private Optional<TradeIntent> selectedTradeIntent = Optional.empty();
-    public StringProperty chatHistory = new SimpleStringProperty("");
+    public final StringProperty chatHistory = new SimpleStringProperty("");
     public Map<String, Channel> channelsById = new HashMap<>();
     public Optional<String> selectedChannelId = Optional.empty();
     private Optional<String> tradeIntentId;
-    private ObservableList<String> channelIds = FXCollections.observableArrayList();
-    private Optional<ChatUser> peer = Optional.empty();
+    private final ObservableList<String> channelIds = FXCollections.observableArrayList();
+    private Optional<ChatUser> selectedChatPeer = Optional.empty();
 
     public HangoutModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
         keyPairService = serviceProvider.getKeyPairService();
-
-
-        //  myUserName = "Bob"; //todo
-        //  myUserId = "id"; //todo
-
-        String id = Channel.ChannelType.BTC_EUR.name();
-        channelsById.put(id, new Channel(id, "BTC-EUR market"));
-        id = Channel.ChannelType.BTC_USD.name();
-        channelsById.put(id, new Channel(id, "BTC-USD market"));
-        id = Channel.ChannelType.PUBLIC.name();
-        channelsById.put(id, new Channel(id, "Anything"));
+        chatService= serviceProvider.getChatService();
     }
 
     void setData(Object data) {
         selectedTradeIntent = Optional.of(TradeIntent.class.cast(data));
         tradeIntentId = Optional.of(selectedTradeIntent.orElseThrow().id());
-        peer = Optional.of(selectedTradeIntent.get().maker());
-        maybeAddChannel(peer.get().id(), peer.get().userName());
+        selectedChatPeer = Optional.of(selectedTradeIntent.get().maker());
+        maybeAddChannel(selectedChatPeer.get().id(), selectedChatPeer.get().userName());
     }
 
-    void selectChannel(String channelId) {
+    void selectChannel(Channel channel) {
+        String channelId = channel.getId();
         selectedChannelId = Optional.of(channelId);
         if (channelsById.containsKey(channelId)) {
-            updateChatHistory(channelId);
+            updateChatHistory(channel);
         }
     }
 
     void addChatMessage(ChatMessage chatMessage) {
         tradeIntentId = Optional.of(chatMessage.getTradeIntentId());
-        peer = Optional.of(chatMessage.getSender());
+        selectedChatPeer = Optional.of(chatMessage.getSender());
         String channelId = chatMessage.getChannelId();
-        Channel channel = maybeAddChannel(channelId, peer.get().userName());
-        channel.addMessages(new ChatEntry(peer.get(), chatMessage.getText(), new Date().getTime()));
+        Channel channel = maybeAddChannel(channelId, selectedChatPeer.get().userName());
+        channel.addMessages(new ChatEntry(selectedChatPeer.get(), chatMessage.getText(), new Date().getTime()));
+        updateChatHistory(channel);
     }
 
     void setSendMessageResult(String channelId, ConfidentialMessageService.Result result, BroadcastResult broadcastResult) {
@@ -107,19 +100,19 @@ public class HangoutModel implements Model {
         String tradeIntentId = this.tradeIntentId.orElseThrow();
         ChatUser senderChatUser = new ChatUser(tradeIntentId, tradeIntentId, senderNetworkId);
         ChatMessage chatMessage = new ChatMessage(channelId, text, tradeIntentId, senderChatUser);
-        Channel channel = maybeAddChannel(channelId, peer.get().userName());
+        Channel channel = maybeAddChannel(channelId, selectedChatPeer.get().userName());
         channel.addMessages(new ChatEntry(senderChatUser, text, new Date().getTime()));
-        updateChatHistory(channelId);
+        updateChatHistory(channel);
         return chatMessage;
     }
 
     Optional<String> getChannelId() {
-        return peer.map(ChatUser::id);
+        return selectedChatPeer.map(ChatUser::id);
     }
 
-    private void updateChatHistory(String channelId) {
+    private void updateChatHistory(Channel channel) {
         StringBuilder sb = new StringBuilder();
-        channelsById.get(channelId).getMessages()
+        channel.getMessages()
                 .forEach(chatEntry -> sb.append(DateFormatter.formatDateTime(new Date(chatEntry.date())))
                         .append(": ")
                         .append(chatEntry.text())
@@ -127,13 +120,27 @@ public class HangoutModel implements Model {
         chatHistory.set(sb.toString());
     }
 
-    private Channel maybeAddChannel(String channelId, String userName) {
+    Channel maybeAddChannel(String channelId, String name) {
+        return maybeAddChannel(Channel.ChannelType.PRIVATE, channelId, name);
+    }
+
+    Channel maybeAddChannel(Channel.ChannelType channelType, String channelId, String name) {
         if (channelsById.containsKey(channelId)) {
             return channelsById.get(channelId);
         }
-        Channel channel = new Channel(channelId, userName);
+        Channel channel = new Channel(channelType, channelId, name);
         channelsById.put(channelId, channel);
         channelIds.add(channelId);
         return channel;
+    }
+
+    public void addPublicChannel(Channel.ChannelType channelType) {
+        String name = switch (channelType) {
+            case BTC_EUR -> Res.common.get("social.hangout.btcEurMarket");
+            case BTC_USD -> Res.common.get("social.hangout.btcUsdMarket");
+            case PUBLIC -> Res.common.get("social.hangout.anyMarket");
+            default -> throw new IllegalStateException("Unexpected value: " + channelType);
+        };
+        maybeAddChannel(channelType, channelType.name(), name);
     }
 }

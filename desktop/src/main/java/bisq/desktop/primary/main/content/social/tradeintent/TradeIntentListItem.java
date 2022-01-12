@@ -42,7 +42,7 @@ public class TradeIntentListItem implements TableItem {
     private final String ask;
     private final String ttl;
     private final Date date;
-    private final String userId;
+    private final String userName;
 
     TradeIntentListItem(AuthenticatedPayload payload) {
         this.payload = payload;
@@ -50,7 +50,7 @@ public class TradeIntentListItem implements TableItem {
         this.tradeIntent = (TradeIntent) payload.getData();
         networkId = tradeIntent.maker().networkId();
         id = tradeIntent.id();
-        userId = tradeIntent.maker().id();
+        userName = tradeIntent.maker().userName();
         ttl = TimeFormatter.formatTime(payload.getMetaData().getTtl());
         ask = tradeIntent.ask();
         bid = tradeIntent.bid();

@@ -27,8 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class TabView<R extends TabPane, M extends NavigationModel, C extends TabController> extends View<R, M, C> {
-    private final ChangeListener<Tab> tabChangeListener;
-    private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
+    protected final ChangeListener<Tab> tabChangeListener;
+    protected final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
 
     public TabView(R root, M model, C controller) {
         super(root, model, controller);

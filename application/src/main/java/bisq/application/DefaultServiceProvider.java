@@ -32,6 +32,7 @@ import bisq.offer.OpenOfferService;
 import bisq.persistence.PersistenceService;
 import bisq.presentation.offer.OfferEntityService;
 import bisq.security.KeyPairService;
+import bisq.social.chat.ChatService;
 import bisq.user.UserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +65,7 @@ public class DefaultServiceProvider extends ServiceProvider {
     private final ApplicationOptions applicationOptions;
     private final PersistenceService persistenceService;
     private final UserService userService;
+    private final ChatService chatService;
 
     public DefaultServiceProvider(ApplicationOptions applicationOptions, String[] args) {
         super("Bisq");
@@ -78,13 +80,14 @@ public class DefaultServiceProvider extends ServiceProvider {
         keyPairService = new KeyPairService(persistenceService);
 
         userService = new UserService(persistenceService);
-
+       
         identityService = new IdentityService(persistenceService, keyPairService);
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
                 getConfig("bisq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
 
+        chatService = new ChatService(persistenceService, identityService, networkService);
 
         // add data use case is not available yet at networkService
         MockNetworkService mockNetworkService = new MockNetworkService();
@@ -107,6 +110,7 @@ public class DefaultServiceProvider extends ServiceProvider {
      */
     @Override
     public CompletableFuture<Boolean> initialize() {
+
         return keyPairService.initialize()
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> networkService.bootstrapToNetwork())
