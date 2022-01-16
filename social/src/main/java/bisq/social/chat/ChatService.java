@@ -18,103 +18,232 @@
 package bisq.social.chat;
 
 import bisq.common.util.StringUtils;
+import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.NodeIdAndPubKey;
+import bisq.network.p2p.message.Message;
+import bisq.network.p2p.node.CloseReason;
+import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.node.Node;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 @Getter
-public class ChatService implements PersistenceClient<ChatService.PersistedChatServiceData> {
+public class ChatService implements PersistenceClient<ChatModel>, Node.Listener {
+
+
     public interface Listener {
-        void onChatUserAdded(ChatUser chatUser);
+        void onChatUserAdded(ChatPeer chatPeer); //todo
 
-        void onChatUserSelected(ChatUser chatUser);
-    }
+        void onChatUserSelected(ChatPeer chatPeer);
 
-    @Getter
-    public static class PersistedChatServiceData implements Serializable {
-        private final HashMap<String, ChatUser> map;
-        private ChatUser selected;
+        void onChannelAdded(Channel channel);
 
-        public PersistedChatServiceData() {
-            this(new HashMap<>(), null);
-        }
+        void onChannelSelected(Channel channel);
 
-        public PersistedChatServiceData(HashMap<String, ChatUser> map,
-                                        ChatUser selected) {
-            this.map = map;
-            this.selected = selected;
-        }
+        void onChatMessageAdded(Channel channel, ChatMessage newChatMessage);
 
-        public PersistedChatServiceData(PersistedChatServiceData chatServiceData) {
-            this(chatServiceData.map, chatServiceData.selected);
-        }
-
-        public void setAll(Map<String, ChatUser> map, ChatUser selectedChatUser) {
-            this.map.putAll(map);
-            this.selected = selectedChatUser;
-        }
+        void onChatIdentityChanged(ChatIdentity previousValue, ChatIdentity newValue);
     }
 
     private final PersistenceService persistenceService;
     private final IdentityService identityService;
     private final NetworkService networkService;
-    private final PersistedChatServiceData chatServiceData = new PersistedChatServiceData();
-    private final Persistence<PersistedChatServiceData> persistence;
+    private final ChatModel chatModel = new ChatModel();
+    private final Persistence<ChatModel> persistence;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public ChatService(PersistenceService persistenceService, IdentityService identityService, NetworkService networkService) {
         this.persistenceService = persistenceService;
         this.identityService = identityService;
         this.networkService = networkService;
-        persistence = persistenceService.getOrCreatePersistence(this, "db", "chatUser");
+        persistence = persistenceService.getOrCreatePersistence(this, "db", "chatModel");
+
+        networkService.addListener(this);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // PersistenceClient
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
-    public void applyPersisted(PersistedChatServiceData persisted) {
-        synchronized (chatServiceData) {
-            chatServiceData.setAll(persisted.getMap(), persisted.getSelected());
+    public void applyPersisted(ChatModel persisted) {
+        synchronized (chatModel) {
+            chatModel.fromPersisted(persisted);
         }
     }
 
     @Override
-    public PersistedChatServiceData getClone() {
-        synchronized (chatServiceData) {
-            return new PersistedChatServiceData(chatServiceData);
+    public ChatModel getClone() {
+        synchronized (chatModel) {
+            return new ChatModel(chatModel);
         }
     }
 
-    public CompletableFuture<ChatUser> createNewChatUser(String userName) {
-        if (chatServiceData.map.containsKey(userName)) {
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Node.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMessage(Message message, Connection connection, String nodeId) {
+        if (message instanceof ChatMessage chatMessage) {
+            String domainId = chatMessage.getChannelId();
+            String userName = findUserName(domainId).orElse("Maker@" + StringUtils.truncate(domainId, 8));
+            ChatIdentity chatIdentity = getOrCreateChatIdentity(userName, domainId);
+            ChatPeer chatPeer = new ChatPeer(chatMessage.getSenderUserName(), chatMessage.getSenderNetworkId());
+            PrivateChannel privateChannel = getOrCreatePrivateChannel(chatMessage.getChannelId(),
+                    chatPeer,
+                    chatIdentity,
+                    chatMessage.getContext());
+            addChatMessage(chatMessage, privateChannel);
+        }
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Channels
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public PrivateChannel getOrCreatePrivateChannel(String id, ChatPeer chatPeer, ChatIdentity chatIdentity, PrivateChannel.Context context) {
+        PrivateChannel previousChannel;
+        PrivateChannel privateChannel = new PrivateChannel(id, chatPeer, chatIdentity, context);
+        synchronized (chatModel) {
+            previousChannel = chatModel.getPrivateChannelsById().putIfAbsent(id, privateChannel);
+        }
+
+        if (previousChannel == null) {
+            persist();
+            listeners.forEach(listener -> listener.onChannelAdded(privateChannel));
+            return privateChannel;
+        } else {
+            return previousChannel;
+        }
+    }
+
+    public void selectChannel(Channel channel) {
+        chatModel.setSelectedChannel(channel);
+        persist();
+        listeners.forEach(listener -> listener.onChannelSelected(channel));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ChatPeer
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<ChatPeer> createNewChatUser(String domainId, String userName) {
+        if (chatModel.getChatPeerByUserName().containsKey(userName)) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("Username exists already"));
         }
-        NodeIdAndPubKey nodeIdAndPubKey = identityService.getNodeIdAndPubKey(userName);
+
+        return identityService.getOrCreateIdentity(domainId)
+                .thenApply(identity -> {
+                    ChatPeer chatPeer = new ChatPeer(userName, identity.networkId());
+                    boolean alreadyExist;
+                    synchronized (chatModel) {
+                        alreadyExist = chatModel.getChatPeerByUserName().containsKey(userName);
+                        if (!alreadyExist) {
+                            chatModel.getChatPeerByUserName().put(chatPeer.userName(), chatPeer);
+                        }
+                    }
+                    if (!alreadyExist) {
+                        persist();
+                        listeners.forEach(listener -> listener.onChatUserAdded(chatPeer));
+                    }
+                    return chatPeer;
+                });
+
+      /*  NetworkIdWithKeyPair nodeIdAndPubKey = identityService.getNodeIdAndKeyPair(userName);
+        //todo move to identity service? 
         return networkService.getInitializedNetworkIdAsync(nodeIdAndPubKey)
                 .thenApply(networkId -> {
-                    ChatUser chatUser = new ChatUser(StringUtils.createUid(), userName, networkId);
-                    addChatUser(chatUser);
-                    selectChatUser(chatUser);
+                    //todo add check if user got added in the meantime 
+                    ChatUser chatUser = new ChatUser(userName, networkId);
+                    synchronized (chatModel) {
+                        chatModel.getChatPeerByUserName().put(chatUser.userName(), chatUser);
+                    }
+                    // persist for add can be omitted as we do it in selectChatUser
+                    listeners.forEach(listener -> listener.onChatUserAdded(chatUser));
+                    selectChatPeer(chatUser);
                     return chatUser;
-                });
+                });*/
     }
 
-    public void selectChatUser(ChatUser chatUser) {
-        chatServiceData.selected = chatUser;
+    public void selectChatPeer(ChatPeer chatPeer) {
+        chatModel.setSelectedChatPeer(chatPeer);
         persist();
-        listeners.forEach(listener -> listener.onChatUserSelected(chatUser));
+        listeners.forEach(listener -> listener.onChatUserSelected(chatPeer));
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ChatMessage
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addChatMessage(ChatMessage chatMessage, Channel privateChannel) {
+        synchronized (chatModel) {
+            privateChannel.addChatMessage(chatMessage);
+        }
+        persist();
+        listeners.forEach(listener -> listener.onChatMessageAdded(privateChannel, chatMessage));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ChatIdentity
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Optional<ChatIdentity> findChatIdentity(String domainId) {
+        if (chatModel.getUserNameByDomainId().containsKey(domainId)) {
+            String userName = chatModel.getUserNameByDomainId().get(domainId);
+            Identity identity = identityService.getOrCreateIdentity(domainId).join();
+            return Optional.of(new ChatIdentity(userName, identity));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<String> findUserName(String domainId) {
+        //todo add mapping strategy
+        return Optional.ofNullable(chatModel.getUserNameByDomainId().get(domainId));
+    }
+
+    public ChatIdentity getOrCreateChatIdentity(String userName, String domainId) {
+        synchronized (chatModel) {
+            if (chatModel.getUserNameByDomainId().containsKey(domainId)) {
+                checkArgument(chatModel.getUserNameByDomainId().get(domainId).equals(userName));
+            } else {
+                chatModel.getUserNameByDomainId().put(domainId, userName);
+            }
+        }
+        persist();
+        Identity identity = identityService.getOrCreateIdentity(domainId).join(); //todo
+        return new ChatIdentity(userName, identity);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Misc
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void addListener(Listener listener) {
         listeners.add(listener);
@@ -123,16 +252,4 @@ public class ChatService implements PersistenceClient<ChatService.PersistedChatS
     public void removeListener(Listener listener) {
         listeners.remove(listener);
     }
-
-    private void addChatUser(ChatUser chatUser) {
-        synchronized (chatServiceData) {
-            boolean notContaining = !chatServiceData.map.containsKey(chatUser.userName());
-            if (notContaining) {
-                chatServiceData.map.put(chatUser.userName(), chatUser);
-                listeners.forEach(listener -> listener.onChatUserAdded(chatUser));
-                persist();
-            }
-        }
-    }
-
 }

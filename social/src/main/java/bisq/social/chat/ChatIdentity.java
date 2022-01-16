@@ -17,7 +17,9 @@
 
 package bisq.social.chat;
 
-import bisq.network.NetworkId;
+import bisq.identity.Identity;
 
-public record ChatIdentity(String id, String userName, NetworkId networkId, String keyId) {
+import java.io.Serializable;
+
+public record ChatIdentity(String userName, Identity identity) implements Serializable {
 }

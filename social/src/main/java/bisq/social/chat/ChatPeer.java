@@ -17,9 +17,14 @@
 
 package bisq.social.chat;
 
+import bisq.common.encoding.Hex;
 import bisq.network.NetworkId;
+import bisq.security.DigestUtil;
 
 import java.io.Serializable;
 
-public record ChatUser(String id, String userName, NetworkId networkId) implements Serializable {
+public record ChatPeer(String userName, NetworkId networkId) implements Serializable {
+    public String id() {
+        return Hex.encode(DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded()));
+    }
 }

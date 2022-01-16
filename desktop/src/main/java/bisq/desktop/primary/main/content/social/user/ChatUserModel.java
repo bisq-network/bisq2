@@ -22,7 +22,7 @@ import bisq.desktop.common.view.Model;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.social.chat.ChatService;
-import bisq.social.chat.ChatUser;
+import bisq.social.chat.ChatPeer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -37,8 +37,8 @@ import java.util.Collection;
 public class ChatUserModel implements Model {
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final ObservableList<ChatUser> chatUsers = FXCollections.observableArrayList();
-    private final ObjectProperty<ChatUser> selectedChatUser = new SimpleObjectProperty<>(null);
+    private final ObservableList<ChatPeer> chatPeers = FXCollections.observableArrayList();
+    private final ObjectProperty<ChatPeer> selectedChatUser = new SimpleObjectProperty<>(null);
     private final ChatService chatService;
 
     public ChatUserModel(DefaultServiceProvider serviceProvider) {
@@ -47,17 +47,17 @@ public class ChatUserModel implements Model {
         chatService = serviceProvider.getChatService();
     }
 
-    void setAllChatUsers(Collection<ChatUser> chatUser) {
-        chatUsers.setAll(chatUser);
+    void setAllChatUsers(Collection<ChatPeer> chatPeer) {
+        chatPeers.setAll(chatPeer);
     }
 
-    void addChatUser(ChatUser chatUser) {
-        if (!chatUsers.contains(chatUser)) {
-            chatUsers.add(chatUser);
+    void addChatUser(ChatPeer chatPeer) {
+        if (!chatPeers.contains(chatPeer)) {
+            chatPeers.add(chatPeer);
         }
     }
 
-    public void selectChatUser(ChatUser chatUser) {
-        selectedChatUser.set(chatUser);
+    public void selectChatUser(ChatPeer chatPeer) {
+        selectedChatUser.set(chatPeer);
     }
 }

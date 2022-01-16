@@ -18,12 +18,12 @@
 package bisq.desktop.overlay.window;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.InitWithDataController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PopupWindowController implements Controller {
+public class PopupWindowController implements InitWithDataController<Object> {
     private final PopupWindowModel model;
     @Getter
     private final PopupWindowView view;
@@ -36,7 +36,7 @@ public class PopupWindowController implements Controller {
     }
 
     @Override
-    public void setData(Object data) {
+    public void initWithData(Object data) {
         if (data != null) {
             log.info(data.toString()); //todo
         }

@@ -199,7 +199,7 @@ public class MultiNodesModel {
                             connection.getPeerAddress() + " --> " + receiverAddress + " " + message.toString();
                     appendToHistory(receiverAddress, newLine);
                     handler.ifPresent(handler -> handler.onMessage(receiverAddress));
-                    receiverNetworkService.removeMessageListener(sendMsgListener);
+                    receiverNetworkService.removeListener(sendMsgListener);
                 }
 
                 @Override
@@ -210,7 +210,7 @@ public class MultiNodesModel {
                 public void onDisconnect(Connection connection, CloseReason closeReason) {
                 }
             };
-            receiverNetworkService.addMessageListener(sendMsgListener);
+            receiverNetworkService.addListener(sendMsgListener);
         });
 
         MockMailBoxMessage mailBoxMessage = new MockMailBoxMessage(message);
@@ -309,7 +309,7 @@ public class MultiNodesModel {
                                       Transport.Type transportType,
                                       boolean wasAdded) {
         StringBuilder sb = new StringBuilder("\n");
-        Address address = networkService.findMyDefaultAddress(transportType).get();
+        Address address = networkService.findDefaultAddress(transportType).get();
         sb.append(getTimestamp())
                 .append(" ").append(transportType.name(), 0, 3)
                 .append(wasAdded ? " +onDataAdded " : " -onDataRemoved ")

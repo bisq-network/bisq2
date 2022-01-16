@@ -18,30 +18,30 @@
 package bisq.desktop.primary.main.content.social.tradeintent;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.common.util.StringUtils;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.social.user.ChatUserController;
+import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.NodeIdAndKeyPair;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.social.chat.ChatPeer;
 import bisq.social.chat.ChatService;
-import bisq.social.chat.ChatUser;
+import bisq.social.intent.TradeIntent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
-public class TradeIntentController implements Controller, ChatService.Listener {
+public class TradeIntentController implements Controller/*, ChatService.Listener*/ {
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final ChatService chatService;
@@ -60,30 +60,12 @@ public class TradeIntentController implements Controller, ChatService.Listener {
         ChatUserController chatUserController = new ChatUserController(serviceProvider);
         model = new TradeIntentModel(serviceProvider);
         view = new TradeIntentView(model, this, chatUserController.getView());
-
-        //todo listen on bootstrap
-        UIScheduler.run(this::requestInventory).after(2000);
-    }
-
-    // ChatService.Listener
-    @Override
-    public void onChatUserAdded(ChatUser chatUser) {
-    }
-
-    @Override
-    public void onChatUserSelected(ChatUser chatUser) {
-        UIThread.run(() -> model.selectMyChatUser(chatUser));
-    }
-
-    void requestInventory() {
-        // We get updated our data listener once we get responses
-        networkService.requestInventory("TradeIntent");
     }
 
     @Override
     public void onViewAttached() {
-        chatService.addListener(this);
-        model.selectMyChatUser(chatService.getChatServiceData().getSelected());
+        //  chatService.addListener(this);
+        //chatService.getChatModel().getSelectedChatPeer().ifPresent(model::selectMyChatUser); //todo
 
         dataService.ifPresent(dataService -> {
             dataListener = Optional.of(new DataService.Listener() {
@@ -112,32 +94,76 @@ public class TradeIntentController implements Controller, ChatService.Listener {
 
     @Override
     public void onViewDetached() {
-        chatService.removeListener(this);
+        //    chatService.removeListener(this);
     }
+
+/*
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ChatService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onChatUserAdded(ChatPeer chatPeer) {
+    }
+
+    @Override
+    public void onChatUserSelected(ChatPeer chatPeer) {
+      //  UIThread.run(() -> model.selectMyChatUser(chatPeer));
+    }
+
+    @Override
+    public void onChannelAdded(Channel channel) {
+    }
+
+    @Override
+    public void onChannelSelected(Channel channel) {
+    }
+
+    @Override
+    public void onChatMessageAdded(Channel channel, ChatMessage newChatMessage) {
+    }
+
+    @Override
+    public void onChatIdentityChanged(ChatIdentity previousValue, ChatIdentity newValue) {
+    }*/
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // UI
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     void onAddTradeIntent(String ask, String bid) {
-        checkNotNull(model.getMySelectedChatUser().get(), "myChatIdentity must be set");
-        TradeIntent tradeIntent = model.createTradeIntent(ask, bid);
-        NodeIdAndKeyPair nodeIdAndKeyPair = identityService.getNodeIdAndKeyPair(tradeIntent.id());
-        model.getAddDataResultProperty().set("...");
-        networkService.addData(tradeIntent, nodeIdAndKeyPair)
-                .whenComplete((broadCastResultFutures, throwable) -> {
-                    if (throwable != null) {
-                        UIThread.run(() -> model.setAddTradeIntentError(tradeIntent, throwable));
+        //todo select user
+        String tradeIntentId = StringUtils.createUid();
+        identityService.getOrCreateIdentity(tradeIntentId)
+                .whenComplete((identity, throwable1) -> {
+                    if (throwable1 != null) {
+                        UIThread.run(() -> model.setAddTradeIntentError(throwable1));
                         return;
                     }
-                    broadCastResultFutures.forEach(broadCastResultFuture -> {
-                        broadCastResultFuture.whenComplete((broadcastResult, throwable2) -> {
-                            if (throwable2 != null) {
-                                UIThread.run(() -> model.setAddTradeIntentError(tradeIntent, throwable2));
-                                return;
-                            }
-                            UIThread.run(() -> model.setAddTradeIntentResult(tradeIntent, broadcastResult));
-                        });
-                    });
+                    String userName = chatService.findUserName(tradeIntentId).orElse("Maker@" + StringUtils.truncate(tradeIntentId));
+                    ChatPeer maker = new ChatPeer(userName, identity.networkId());
+                    TradeIntent tradeIntent = new TradeIntent(tradeIntentId, maker, ask, bid, new Date().getTime());
+                    model.getAddDataResultProperty().set("...");
+                    log.error("onAddTradeIntent nodeIdAndKeyPair={}", identity.getNodeIdAndKeyPair());
+                    networkService.addData(tradeIntent, identity.getNodeIdAndKeyPair())
+                            .whenComplete((broadCastResultFutures, throwable2) -> {
+                                if (throwable2 != null) {
+                                    UIThread.run(() -> model.setAddTradeIntentError(tradeIntent, throwable2));
+                                    return;
+                                }
+                                broadCastResultFutures.forEach(broadCastResultFuture -> {
+                                    broadCastResultFuture.whenComplete((broadcastResult, throwable3) -> {
+                                        if (throwable3 != null) {
+                                            UIThread.run(() -> model.setAddTradeIntentError(tradeIntent, throwable3));
+                                            return;
+                                        }
+                                        UIThread.run(() -> model.setAddTradeIntentResult(tradeIntent, broadcastResult));
+                                    });
+                                });
+                            });
                 });
     }
-
 
     public void onActionButtonClicked(TradeIntentListItem item) {
         if (model.isMyTradeIntent(item)) {
@@ -147,29 +173,28 @@ public class TradeIntentController implements Controller, ChatService.Listener {
         }
     }
 
-    private void onContactPeer(TradeIntentListItem item) {
-        Navigation.navigateTo(NavigationTarget.HANGOUT, item.getTradeIntent());
-    }
-
     private void onRemoveTradeIntent(TradeIntentListItem item) {
-        checkNotNull(model.getMySelectedChatUser().get(), "myChatIdentity must be set");
-        NodeIdAndKeyPair nodeIdAndKeyPair = identityService.getNodeIdAndKeyPair(item.getTradeIntent().id());
-        log.error("remove {}", nodeIdAndKeyPair);
-        networkService.removeData(item.getPayload().getData(), nodeIdAndKeyPair)
-                .whenComplete((broadCastResultFutures, throwable) -> {
-                    if (throwable != null) {
-                        UIThread.run(() -> model.setRemoveTradeIntentError(item.getTradeIntent(), throwable));
+        Identity identity = identityService.findIdentityByDomainId(item.getId()).orElseThrow();
+        log.error("onRemoveTradeIntent nodeIdAndKeyPair={}", identity.getNodeIdAndKeyPair());
+        networkService.removeData(item.getPayload().getData(), identity.getNodeIdAndKeyPair())
+                .whenComplete((broadCastResultFutures, throwable2) -> {
+                    if (throwable2 != null) {
+                        UIThread.run(() -> model.setRemoveTradeIntentError(item.getTradeIntent(), throwable2));
                         return;
                     }
                     broadCastResultFutures.forEach(broadCastResultFuture -> {
-                        broadCastResultFuture.whenComplete((broadcastResult, throwable2) -> {
-                            if (throwable2 != null) {
-                                UIThread.run(() -> model.setRemoveTradeIntentError(item.getTradeIntent(), throwable2));
+                        broadCastResultFuture.whenComplete((broadcastResult, throwable3) -> {
+                            if (throwable3 != null) {
+                                UIThread.run(() -> model.setRemoveTradeIntentError(item.getTradeIntent(), throwable3));
                                 return;
                             }
                             UIThread.run(() -> model.setRemoveTradeIntentResult(item.getTradeIntent(), broadcastResult));
                         });
                     });
                 });
+    }
+
+    private void onContactPeer(TradeIntentListItem item) {
+        Navigation.navigateTo(NavigationTarget.HANGOUT, item.getTradeIntent());
     }
 }

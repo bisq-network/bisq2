@@ -140,21 +140,26 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(String nodeId, PubKey pubKey) {
-        return maybeInitializeServer(getPortByTransport(nodeId, pubKey), nodeId);
+        return maybeInitializeServer(getOrCreatePortByTransport(nodeId, pubKey), nodeId, pubKey);
     }
 
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(Map<Transport.Type, Integer> portByTransport, String nodeId) {
-        return serviceNodesByTransport.maybeInitializeServerAsync(portByTransport, nodeId);
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(Map<Transport.Type, Integer> portByTransport, String nodeId, PubKey pubKey) {
+        Map<Transport.Type, CompletableFuture<Boolean>> futureMap = serviceNodesByTransport.maybeInitializeServerAsync(portByTransport, nodeId);
+        // After server has been started we can be sure the networkId is available. 
+        // If it was not already available before we persist it.
+        futureMap.values().forEach(future -> future.whenComplete((result, throwable) -> {
+            if (throwable != null) {
+                log.error(throwable.toString()); //todo
+            }
+            persistNetworkId(nodeId, pubKey);
+        }));
+        return futureMap;
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Get networkId and initialize server
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public CompletableFuture<NetworkId> getInitializedNetworkIdAsync(NodeIdAndPubKey nodeIdAndPubKey) {
-        return getInitializedNetworkIdAsync(nodeIdAndPubKey.nodeId(), nodeIdAndPubKey.pubKey());
-    }
 
     public CompletableFuture<NetworkId> getInitializedNetworkIdAsync(String nodeId, PubKey pubKey) {
         CompletableFuture<NetworkId> future = new CompletableFuture<>();
@@ -165,7 +170,12 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
                 }
                 Map<Transport.Type, Address> addressByNetworkType = getAddressByNetworkType(nodeId);
                 if (supportedTransportTypes.size() == addressByNetworkType.size()) {
-                    future.complete(findNetworkId(nodeId, pubKey).orElseThrow());
+                    Optional<NetworkId> optionalNetworkId = findNetworkId(nodeId, pubKey);
+                    if (optionalNetworkId.isPresent()) {
+                        future.complete(optionalNetworkId.get());
+                    } else {
+                        future.completeExceptionally(new IllegalStateException("NetworkId must be present at getInitializedNetworkIdAsync"));
+                    }
                 }
             });
         });
@@ -178,16 +188,12 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> bootstrapToNetwork() {
-        return bootstrapToNetwork(getDefaultPortByTransport(), Node.DEFAULT_NODE_ID);
-    }
-
-    public CompletableFuture<Boolean> bootstrapToNetwork(Map<Transport.Type, Integer> portByTransport, String nodeId) {
-        return serviceNodesByTransport.bootstrapToNetwork(portByTransport, nodeId)
+        String nodeId = Node.DEFAULT_NODE_ID;
+        return serviceNodesByTransport.bootstrapToNetwork(getDefaultPortByTransport(), nodeId)
                 .whenComplete((result, throwable) -> {
-                    // If networkNode has not been created we create now once with the default PubKey (default keyId)
+                    // If networkNode has not been created we create now one with the default pubKey (default keyId)
                     // and persist it.
-                    findNetworkId(nodeId, keyPairService.getDefaultPubKey()); //todo
-                    persist();
+                    persistNetworkId(nodeId, keyPairService.getDefaultPubKey());
                 });
     }
 
@@ -205,8 +211,12 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
 
     public CompletableFuture<Map<Transport.Type, ConfidentialMessageService.Result>> confidentialSendAsync(Message message,
                                                                                                            NetworkId receiverNetworkId,
-                                                                                                           NodeIdAndKeyPair nodeIdAndKeyPair) {
-        return supplyAsync(() -> confidentialSend(message, receiverNetworkId, nodeIdAndKeyPair.keyPair(), nodeIdAndKeyPair.nodeId()), NETWORK_IO_POOL);
+                                                                                                           NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
+        return supplyAsync(() -> confidentialSend(message,
+                        receiverNetworkId,
+                        senderNetworkIdWithKeyPair.keyPair(),
+                        senderNetworkIdWithKeyPair.nodeId()),
+                NETWORK_IO_POOL);
     }
 
     public Map<Transport.Type, ConfidentialMessageService.Result> confidentialSend(Message message,
@@ -221,12 +231,12 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     // Add/remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addData(Proto data, NodeIdAndKeyPair getNodeIdAndKeyPair) {
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addData(Proto data, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when this method is called.");
-        String nodeId = getNodeIdAndKeyPair.nodeId();
-        PubKey pubKey = getNodeIdAndKeyPair.pubKey();
-        KeyPair keyPair = getNodeIdAndKeyPair.keyPair();
-        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
+        String nodeId = ownerNetworkIdWithKeyPair.nodeId();
+        PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
+        KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
+        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
                 .thenCompose(list -> {
                     AuthenticatedPayload netWorkPayload = new AuthenticatedPayload(data);
                     return dataService.get().addNetworkPayloadAsync(netWorkPayload, keyPair)
@@ -241,10 +251,10 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
                 });
     }
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeData(Proto data, NodeIdAndKeyPair getNodeIdAndKeyPair) {
-        String nodeId = getNodeIdAndKeyPair.nodeId();
-        PubKey pubKey = getNodeIdAndKeyPair.pubKey();
-        KeyPair keyPair = getNodeIdAndKeyPair.keyPair();
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeData(Proto data, NetworkIdWithKeyPair getNetworkIdWithKeyPair) {
+        String nodeId = getNetworkIdWithKeyPair.nodeId();
+        PubKey pubKey = getNetworkIdWithKeyPair.pubKey();
+        KeyPair keyPair = getNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> {
                     AuthenticatedPayload netWorkPayload = new AuthenticatedPayload(data);
@@ -286,12 +296,12 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
         dataService.orElseThrow().removeListener(listener);
     }
 
-    public void addMessageListener(Node.Listener listener) {
-        serviceNodesByTransport.addMessageListener(listener);
+    public void addListener(Node.Listener listener) {
+        serviceNodesByTransport.addListener(listener);
     }
 
-    public void removeMessageListener(Node.Listener listener) {
-        serviceNodesByTransport.removeMessageListener(listener);
+    public void removeListener(Node.Listener listener) {
+        serviceNodesByTransport.removeListener(listener);
     }
 
 
@@ -304,14 +314,14 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     }
 
     public Map<Transport.Type, Map<String, Address>> getMyAddresses() {
-        return serviceNodesByTransport.findMyAddresses();
+        return serviceNodesByTransport.getAddressesByNodeIdMapByTransportType();
     }
 
     public Map<Transport.Type, Address> getAddressByNetworkType(String nodeId) {
         return supportedTransportTypes.stream()
-                .filter(transportType -> findMyAddresses(transportType, nodeId).isPresent())
+                .filter(transportType -> findAddress(transportType, nodeId).isPresent())
                 .collect(Collectors.toMap(transportType -> transportType,
-                        transportType -> findMyAddresses(transportType, nodeId).orElseThrow()));
+                        transportType -> findAddress(transportType, nodeId).orElseThrow()));
     }
 
     public Map<Transport.Type, ServiceNode.State> getStateByTransportType() {
@@ -325,19 +335,20 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     // We return the port by transport type if found from the persisted networkId, otherwise we
     // fill in a random free system port for all supported transport types. 
     public Map<Transport.Type, Integer> getDefaultPortByTransport() {
-        return getPortByTransport(Node.DEFAULT_NODE_ID, keyPairService.getDefaultPubKey());
+        return getOrCreatePortByTransport(Node.DEFAULT_NODE_ID, keyPairService.getDefaultPubKey());
     }
 
-    public Map<Transport.Type, Integer> getPortByTransport(String nodeId, PubKey pubKey) {
+    public Map<Transport.Type, Integer> getOrCreatePortByTransport(String nodeId, PubKey pubKey) {
         Optional<NetworkId> networkIdOptional = findNetworkId(nodeId, pubKey);
-        return supportedTransportTypes.stream()
-                .collect(Collectors.toMap(e -> e,
+        Map<Transport.Type, Integer> result = supportedTransportTypes.stream()
+                .collect(Collectors.toMap(transportType -> transportType,
                         transportType -> networkIdOptional.stream()
                                 .map(NetworkId::addressByNetworkType)
-                                .flatMap(map -> Optional.ofNullable(map.get(transportType)).stream())
+                                .flatMap(addressByNetworkType -> Optional.ofNullable(addressByNetworkType.get(transportType)).stream())
                                 .map(Address::getPort)
                                 .findAny()
                                 .orElse(NetworkUtils.findFreeSystemPort())));
+        return result;
     }
 
     public Map<Transport.Type, Integer> getFreeSystemPortByTransport() {
@@ -362,20 +373,16 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
         return serviceNodesByTransport.findNode(transport, nodeId);
     }
 
-    public Optional<Map<String, Address>> findMyAddresses(Transport.Type transport) {
-        return serviceNodesByTransport.findMyAddresses(transport);
+    public Optional<Map<String, Address>> findAddressesByNodeId(Transport.Type transport) {
+        return serviceNodesByTransport.findAddressesByNodeId(transport);
     }
 
-    public Optional<Address> findMyAddresses(Transport.Type transport, String nodeId) {
-        return serviceNodesByTransport.findMyAddresses(transport, nodeId);
+    public Optional<Address> findAddress(Transport.Type transport, String nodeId) {
+        return serviceNodesByTransport.findAddress(transport, nodeId);
     }
 
-    public Optional<Address> findMyDefaultAddress(Transport.Type transport) {
-        return serviceNodesByTransport.findMyAddresses(transport, Node.DEFAULT_NODE_ID);
-    }
-
-    public Optional<NetworkId> findNetworkId(NodeIdAndPubKey nodeIdAndPubKey) {
-        return findNetworkId(nodeIdAndPubKey.nodeId(), nodeIdAndPubKey.pubKey());
+    public Optional<Address> findDefaultAddress(Transport.Type transport) {
+        return findAddress(transport, Node.DEFAULT_NODE_ID);
     }
 
     public Optional<NetworkId> findNetworkId(String nodeId, PubKey pubKey) {
@@ -391,6 +398,13 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
             } else {
                 return Optional.empty();
             }
+        }
+    }
+
+    private void persistNetworkId(String nodeId, PubKey pubKey) {
+        if (findNetworkId(nodeId, pubKey).isEmpty()) {
+            log.error("NetworkId for {} must be present", nodeId);
+            throw new IllegalStateException("NetworkId for " + nodeId + " must be present");
         }
     }
 }

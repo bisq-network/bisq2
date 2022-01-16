@@ -15,25 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.identity;
-
-import bisq.network.NetworkId;
-import bisq.network.NetworkIdWithKeyPair;
-import bisq.security.PubKey;
+package bisq.social.chat;
 
 import java.io.Serializable;
-import java.security.KeyPair;
 
-public record Identity(String domainId, NetworkId networkId, KeyPair keyPair) implements Serializable {
-    public NetworkIdWithKeyPair getNodeIdAndKeyPair() {
-        return new NetworkIdWithKeyPair(networkId, keyPair);
-    }
-
-    public String nodeId() {
-        return networkId.getNodeId();
-    }
-
-    public PubKey pubKey() {
-        return networkId.getPubKey();
-    }
+public enum ChannelType implements Serializable {
+    PUBLIC,
+    PRIVATE
 }

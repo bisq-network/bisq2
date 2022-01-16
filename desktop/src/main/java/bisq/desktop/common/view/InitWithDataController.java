@@ -15,9 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat;
+package bisq.desktop.common.view;
 
-import java.io.Serializable;
+public interface InitWithDataController<T> extends Controller {
+    default void initWithObject(Object data) {
+        try {
+            initWithData((T) data);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw t;
+        }
+    }
 
-public record ChatEntry(ChatUser author, String text, long date) implements Serializable {
+    void initWithData(T data);
 }

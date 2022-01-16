@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode
-@ToString
+@ToString(exclude = "addressByNetworkType")
 public class NetworkId implements Serializable {
     // We avoid maps in serialized data as it is used in hashes and maps do not have deterministic order.
     // The list is sorted by Transport.Type.

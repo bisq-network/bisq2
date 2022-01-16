@@ -15,9 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network;
+package bisq.identity;
+
+import lombok.Getter;
 
 import java.io.Serializable;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-public record NodeIdAndKeyId(String nodeId, String keyId) implements Serializable {
+public class IdentityModel implements Serializable {
+    @Getter
+    private final Map<String, Identity> identityByDomainId = new ConcurrentHashMap<>();
+
+    public IdentityModel() {
+    }
+
+    public static IdentityModel clone(IdentityModel identityModel) {
+        IdentityModel clone = new IdentityModel();
+        clone.getIdentityByDomainId().putAll(identityModel.getIdentityByDomainId());
+        return clone;
+    }
+
+    public void applyPersisted(IdentityModel persisted) {
+        identityByDomainId.putAll(persisted.getIdentityByDomainId());
+    }
 }

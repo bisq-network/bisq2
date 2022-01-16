@@ -18,27 +18,29 @@
 package bisq.desktop.primary.main.content.social.hangout;
 
 import bisq.application.DefaultServiceProvider;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.social.user.ChatUserController;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.NodeIdAndKeyPair;
-import bisq.network.NodeIdAndPubKey;
-import bisq.network.p2p.message.Message;
-import bisq.network.p2p.node.CloseReason;
-import bisq.network.p2p.node.Connection;
-import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
-import bisq.social.chat.Channel;
-import bisq.social.chat.ChatMessage;
+import bisq.social.chat.*;
+import bisq.social.intent.TradeIntent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
+
+import static bisq.social.chat.ChannelType.PRIVATE;
+import static bisq.social.chat.PrivateChannel.Context.TRADE_INTENT;
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
-public class HangoutController implements Controller, Node.Listener {
-    private final DefaultServiceProvider serviceProvider;
+public class HangoutController implements InitWithDataController<TradeIntent>, ChatService.Listener {
+    private final ChatService chatService;
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final HangoutModel model;
@@ -46,86 +48,124 @@ public class HangoutController implements Controller, Node.Listener {
     private final HangoutView view;
 
     public HangoutController(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
+        chatService = serviceProvider.getChatService();
 
         ChatUserController chatUserController = new ChatUserController(serviceProvider);
         model = new HangoutModel(serviceProvider);
         view = new HangoutView(model, this, chatUserController.getView());
 
+       /* chatService.getOrCreateChannel(PUBLIC, BTC_USD.name(), model.getDisplayString(BTC_USD));
+        chatService.getOrCreateChannel(PUBLIC, BTC_EUR.name(), model.getDisplayString(BTC_EUR));
+        chatService.getOrCreateChannel(PUBLIC, ANY.name(), model.getDisplayString(ANY));*/
+    }
 
-        model.addPublicChannel(Channel.ChannelType.BTC_EUR);
-        model.addPublicChannel(Channel.ChannelType.BTC_USD);
-        model.addPublicChannel(Channel.ChannelType.PUBLIC);
+    @Override
+    public void initWithData(TradeIntent tradeIntent) {
+        // todo add tradeIntent
+        String tradeIntentId = tradeIntent.id();
+        ChatPeer chatPeer = tradeIntent.maker();
+        String userName = chatService.findUserName(tradeIntentId).orElse("Taker@" + StringUtils.truncate(tradeIntentId, 8));
+        ChatIdentity chatIdentity = chatService.getOrCreateChatIdentity(userName, tradeIntentId);
+        PrivateChannel privateChannel = chatService.getOrCreatePrivateChannel(tradeIntentId, chatPeer, chatIdentity, TRADE_INTENT);
+        model.addChannel(privateChannel);
+        chatService.selectChannel(privateChannel);
     }
 
     @Override
     public void onViewAttached() {
-        networkService.addMessageListener(this);
+        chatService.addListener(this);
+
+        model.setAllChannels(chatService.getChatModel().getPrivateChannelsById().values());
+        chatService.getChatModel().getSelectedChannel().ifPresent(model::selectChannel);
     }
 
     @Override
     public void onViewDetached() {
-        networkService.removeMessageListener(this);
+        chatService.removeListener(this);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ChatService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onChatUserAdded(ChatPeer chatPeer) {
+        //  UIThread.run(() -> model.addMyChatUser(chatPeer));
     }
 
     @Override
-    public void setData(Object data) {
-        model.setData(data);
+    public void onChatUserSelected(ChatPeer chatPeer) {
+        //  UIThread.run(() -> model.selectMyChatUser(chatPeer));
     }
 
     @Override
-    public void onMessage(Message message, Connection connection, String nodeId) {
-        if (message instanceof ChatMessage chatMessage) {
-            UIThread.run(() -> model.addChatMessage(chatMessage));
-        }
+    public void onChannelAdded(Channel channel) {
+        UIThread.run(() -> model.addChannel(channel));
     }
 
     @Override
-    public void onConnection(Connection connection) {
+    public void onChannelSelected(Channel channel) {
+        UIThread.run(() -> model.selectChannel(channel));
     }
 
     @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
+    public void onChatMessageAdded(Channel channel, ChatMessage newChatMessage) {
+        UIThread.run(() -> model.addChatMessage(channel, newChatMessage));
     }
 
-    public void send(String text) {
-        model.getChannelId().ifPresent(channelId -> {
-            log.error("channelId {}", channelId);
-            NodeIdAndPubKey nodeIdAndPubKey = identityService.getNodeIdAndPubKey(channelId);
-            networkService.getInitializedNetworkIdAsync(nodeIdAndPubKey)
-                    .whenComplete((senderNetworkId, throwable) -> {
-                        if (throwable != null) {
-                            UIThread.run(() -> model.setSendMessageError(channelId, throwable));
-                            return;
-                        }
-                        ChatMessage chatMessage = model.createAndAddChatMessage(text, channelId, senderNetworkId);
-                        NetworkId receiverNetworkId = model.getSelectedChatPeer().orElseThrow().networkId();
-                        NodeIdAndKeyPair nodeIdAndKeyPair = identityService.getNodeIdAndKeyPair(channelId);
-                        networkService.confidentialSendAsync(chatMessage, receiverNetworkId, nodeIdAndKeyPair)
-                                .whenComplete((resultMap, throwable2) -> {
-                                    if (throwable2 != null) {
-                                        UIThread.run(() -> model.setSendMessageError(channelId, throwable2));
+    @Override
+    public void onChatIdentityChanged(ChatIdentity previousValue, ChatIdentity newValue) {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // UI
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onSendMessage(String text) {
+        Channel channel = model.getSelectedChannel().get();
+        ChatIdentity chatIdentity = chatService.findChatIdentity(channel.getId())
+                .orElseThrow(() -> new IllegalArgumentException("optionalChatIdentity must be present"));
+        String channelId = channel.getId();
+        ChatMessage chatMessage = new ChatMessage(channelId,
+                text,
+                chatIdentity.userName(),
+                chatIdentity.identity().networkId(),
+                new Date().getTime(),
+                PRIVATE,
+                TRADE_INTENT);
+        chatService.addChatMessage(chatMessage, channel);
+
+        checkArgument(channel instanceof PrivateChannel, "channel must be PrivateChannel");
+        PrivateChannel privateChannel = (PrivateChannel) channel;
+        NetworkId receiverNetworkId = privateChannel.getChatPeer().networkId();
+
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = chatIdentity.identity().getNodeIdAndKeyPair();
+        log.error("Send {} \nreceiverNetworkId={} \nsenderNodeIdAndKeyPair={}", chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
+        networkService.confidentialSendAsync(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair)
+                .whenComplete((resultMap, throwable2) -> {
+                    if (throwable2 != null) {
+                        UIThread.run(() -> model.setSendMessageError(channelId, throwable2));
+                        return;
+                    }
+                    resultMap.forEach((transportType, res) -> {
+                        ConfidentialMessageService.Result result = resultMap.get(transportType);
+                        result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture
+                                .whenComplete((broadcastResult, throwable3) -> {
+                                    if (throwable3 != null) {
+                                        UIThread.run(() -> model.setSendMessageError(channelId, throwable3));
                                         return;
                                     }
-                                    resultMap.forEach((transportType, res) -> {
-                                        ConfidentialMessageService.Result result = resultMap.get(transportType);
-                                        result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture
-                                                .whenComplete((broadcastResult, throwable3) -> {
-                                                    if (throwable3 != null) {
-                                                        UIThread.run(() -> model.setSendMessageError(channelId, throwable3));
-                                                        return;
-                                                    }
-                                                    UIThread.run(() -> model.setSendMessageResult(channelId, result, broadcastResult));
-                                                }));
-                                    });
-                                });
+                                    UIThread.run(() -> model.setSendMessageResult(channelId, result, broadcastResult));
+                                }));
                     });
-        });
+                });
     }
 
     public void onSelectChannel(Channel channel) {
-        model.selectChannel(channel);
+        chatService.selectChannel(channel);
     }
 }

@@ -27,7 +27,4 @@ public interface Controller {
 
     default void onViewDetached() {
     }
-
-    default void setData(Object data) {
-    }
 }

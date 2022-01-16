@@ -70,7 +70,7 @@ public class MakerBsqBondProtocol extends BsqBondProtocol {
     }
 
     public CompletableFuture<Boolean> start() {
-        networkService.addMessageListener(this);
+        networkService.addListener(this);
         setState(State.START);
         security.getCommitment(contract)
                 .thenCompose(commitment -> networkService.confidentialSendAsync(new MakerCommitmentMessage(commitment),

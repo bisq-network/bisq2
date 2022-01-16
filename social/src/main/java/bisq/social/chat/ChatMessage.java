@@ -17,6 +17,7 @@
 
 package bisq.social.chat;
 
+import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import lombok.EqualsAndHashCode;
@@ -31,16 +32,23 @@ import java.util.concurrent.TimeUnit;
 public class ChatMessage implements MailboxMessage {
     private final String channelId;
     private final String text;
-    private final String tradeIntentId;
-    private final ChatUser sender;
+    private final String senderUserName;
+    private final NetworkId senderNetworkId;
+    private final long date;
+    private final ChannelType channelType;
+    private final PrivateChannel.Context context;
     private final MetaData metaData;
 
     //just temp for dev
-    public ChatMessage(String channelId, String text, String tradeIntentId, ChatUser sender) {
+    public ChatMessage(String channelId, String text, String senderUserName, NetworkId senderNetworkId,
+                       long date, ChannelType channelType, PrivateChannel.Context context) {
         this.channelId = channelId;
         this.text = text;
-        this.tradeIntentId = tradeIntentId;
-        this.sender = sender;
+        this.senderUserName = senderUserName;
+        this.senderNetworkId = senderNetworkId;
+        this.date = date;
+        this.channelType = channelType;
+        this.context = context;
         metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
     }
 

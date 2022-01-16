@@ -80,12 +80,13 @@ public class DefaultServiceProvider extends ServiceProvider {
         keyPairService = new KeyPairService(persistenceService);
 
         userService = new UserService(persistenceService);
-       
-        identityService = new IdentityService(persistenceService, keyPairService);
+
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
                 getConfig("bisq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
+       
+        identityService = new IdentityService(persistenceService, keyPairService, networkService);
 
         chatService = new ChatService(persistenceService, identityService, networkService);
 
@@ -112,8 +113,8 @@ public class DefaultServiceProvider extends ServiceProvider {
     public CompletableFuture<Boolean> initialize() {
 
         return keyPairService.initialize()
-                .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> networkService.bootstrapToNetwork())
+                .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> marketPriceService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(offerService.initialize(),
                         openOfferService.initialize(),

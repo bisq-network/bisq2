@@ -71,7 +71,7 @@ public class TakerBsqBondProtocol extends BsqBondProtocol {
     }
 
     public CompletableFuture<Boolean> start() {
-        networkService.addMessageListener(this);
+        networkService.addListener(this);
         setState(State.START);
         return CompletableFuture.completedFuture(true);
     }

@@ -75,7 +75,7 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
     }
 
     public CompletableFuture<Boolean> start() {
-        networkService.addMessageListener(this);
+        networkService.addListener(this);
         multiSig.addListener(this);
         setState(State.START);
         multiSig.getTxInputs()

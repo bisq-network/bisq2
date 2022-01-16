@@ -234,7 +234,6 @@ public class DataService implements DataNetworkService.Listener {
         requestInventory(new DataFilter(new HashSet<>(storageService.getFilterEntries(storeName))));
     }
 
-
     public void requestInventory(DataFilter dataFilter) {
         dataNetworkServices.values().forEach(service -> requestInventory(dataFilter, service));
     }

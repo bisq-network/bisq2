@@ -24,11 +24,13 @@ import bisq.desktop.components.controls.BisqTextField;
 import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.content.social.user.ChatUserView;
 import bisq.i18n.Res;
+import bisq.social.chat.Channel;
 import com.jfoenix.controls.JFXButton;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -39,7 +41,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -47,62 +50,86 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
     private final ToggleGroup toggleGroup = new ToggleGroup();
     private final BisqButton sendButton;
     private final BisqTextField inputTextField;
-    private final VBox userList;
+    private final VBox channelList;
     private final BisqTextArea textArea;
-    private final ListChangeListener<String> channelIdsChangeListener;
+    private final ListChangeListener<Channel> channelsChangeListener;
+    private final ChangeListener<Channel> selectedChannelListener;
+    private final Map<String, ChannelButton> channelButtonByChannelId = new HashMap<>();
+    private final ChangeListener<String> textAreaListener;
 
     public HangoutView(HangoutModel model, HangoutController controller, ChatUserView chatUserView) {
         super(new HBox(), model, controller);
-        
+
         Node userViewRoot = chatUserView.getRoot();
 
         root.setSpacing(Layout.SPACING);
         root.setPadding(new Insets(20, 20, 20, 0));
-        userList = new VBox();
-        userList.setMinWidth(150);
-        userList.setSpacing(10);
+        channelList = new VBox();
+        channelList.setMinWidth(150);
+        channelList.setSpacing(10);
         VBox chatSpace = new VBox();
         chatSpace.setSpacing(Layout.SPACING);
         textArea = new BisqTextArea();
+
         HBox sendBox = new HBox();
         sendBox.setSpacing(Layout.SPACING);
         inputTextField = new BisqTextField();
         sendButton = new BisqButton(Res.common.get("send"));
         sendBox.getChildren().addAll(inputTextField, sendButton);
         chatSpace.getChildren().addAll(textArea, sendBox);
-        root.getChildren().addAll(userList, chatSpace, userViewRoot);
+        root.getChildren().addAll(channelList, chatSpace, userViewRoot);
 
-        channelIdsChangeListener = c -> updateChannelIds();
+        channelsChangeListener = c -> updateChannels();
+        selectedChannelListener = (observable, oldValue, newValue) -> {
+            sendButton.setDisable(newValue == null);
+            if (newValue != null) {
+                toggleGroup.selectToggle(channelButtonByChannelId.get(newValue.getId()));
+            }
+        };
+        textAreaListener = (observable, oldValue, newValue) -> {
+            // textArea.setText() triggers setScrollTop(0), but clear/appendText not.
+            // https://stackoverflow.com/questions/17799160/javafx-textarea-and-autoscroll
+            textArea.clear();
+            textArea.appendText(newValue);
+            textArea.setScrollTop(Double.MAX_VALUE);
+        };
     }
 
-    private void updateChannelIds() {
-        List<PeerButton> collect = model.getChannelsById().entrySet().stream()
-                .map(entry -> new PeerButton(entry.getValue().getName(), toggleGroup, () -> controller.onSelectChannel(entry.getValue())))
-                .collect(Collectors.toList());
-        userList.getChildren().setAll(collect);
+    private void updateChannels() {
+        channelList.getChildren().setAll(model.getChannels().stream()
+                .map(channel -> {
+                    ChannelButton channelButton = new ChannelButton(channel.getChannelName(), toggleGroup, () -> controller.onSelectChannel(channel));
+                    channelButtonByChannelId.put(channel.getId(), channelButton);
+                    return channelButton;
+                })
+                .collect(Collectors.toList()));
     }
-
 
     @Override
     public void onViewAttached() {
-        model.getChannelIds().addListener(channelIdsChangeListener);
-        textArea.textProperty().bind(model.chatHistory);
+        model.getChannels().addListener(channelsChangeListener);
+        model.getSelectedChannel().addListener(selectedChannelListener);
+        model.getSelectedChatMessages().addListener(textAreaListener);
+        sendButton.setOnAction(e -> controller.onSendMessage(inputTextField.getText()));
+
         inputTextField.setPromptText(Res.common.get("sendMessagePrompt"));
-        sendButton.setOnAction(e -> controller.send(inputTextField.getText()));
-        updateChannelIds();
+        updateChannels();
+        sendButton.setDisable(model.getSelectedChannel().get() == null);
     }
 
     @Override
     protected void onViewDetached() {
-        model.getChannelIds().removeListener(channelIdsChangeListener);
+        model.getChannels().removeListener(channelsChangeListener);
+        model.getSelectedChannel().removeListener(selectedChannelListener);
+        textArea.textProperty().removeListener(textAreaListener);
         sendButton.setOnAction(null);
     }
 
-    private static class PeerButton extends JFXButton implements Toggle {
+    private static class ChannelButton extends JFXButton implements Toggle {
         private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
         private final BooleanProperty selectedProperty = new SimpleBooleanProperty();
 
-        private PeerButton(String channelId, ToggleGroup toggleGroup, Runnable handler) {
+        private ChannelButton(String channelId, ToggleGroup toggleGroup, Runnable handler) {
             super(channelId);
 
             setPrefHeight(40);

@@ -22,8 +22,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.ChatUser;
+import bisq.social.chat.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,23 +49,14 @@ public class ChatUserController implements Controller, ChatService.Listener {
     }
 
     @Override
-    public void onChatUserAdded(ChatUser chatUser) {
-        UIThread.run(() -> model.addChatUser(chatUser));
-    }
-
-    @Override
-    public void onChatUserSelected(ChatUser chatUser) {
-        UIThread.run(() -> model.selectChatUser(chatUser));
-    }
-
-    @Override
     public void onViewAttached() {
         chatService.addListener(this);
-        if (chatService.getChatServiceData().getMap().isEmpty()) {
-            chatService.createNewChatUser(IdentityService.DEFAULT);
-        }
-        model.selectChatUser(chatService.getChatServiceData().getSelected());
-        model.setAllChatUsers(chatService.getChatServiceData().getMap().values());
+        //todo
+       /* if (chatService.getChatModel().getChatPeerByUserName().isEmpty()) {
+            chatService.createNewChatPeer(IdentityService.DEFAULT);
+        }*/
+        chatService.getChatModel().getSelectedChatPeer().ifPresent(model::selectChatUser);
+        model.setAllChatUsers(chatService.getChatModel().getChatPeerByUserName().values());
     }
 
     @Override
@@ -74,11 +64,48 @@ public class ChatUserController implements Controller, ChatService.Listener {
         chatService.removeListener(this);
     }
 
-    void onSelectChatUser(ChatUser chatUser) {
-        chatService.selectChatUser(chatUser);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ChatService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onChatUserAdded(ChatPeer chatPeer) {
+        UIThread.run(() -> model.addChatUser(chatPeer));
+    }
+
+    @Override
+    public void onChatUserSelected(ChatPeer chatPeer) {
+        UIThread.run(() -> model.selectChatUser(chatPeer));
+    }
+
+    @Override
+    public void onChannelAdded(Channel channel) {
+    }
+
+    @Override
+    public void onChannelSelected(Channel channel) {
+    }
+
+    @Override
+    public void onChatMessageAdded(Channel channel, ChatMessage newChatMessage) {
+    }
+
+    @Override
+    public void onChatIdentityChanged(ChatIdentity previousValue, ChatIdentity newValue) {
+    }
+    
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // UI
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    void onSelectChatUser(ChatPeer chatPeer) {
+        chatService.selectChatPeer(chatPeer);
     }
 
     void onCreateNewChatUser(String userName) {
-        chatService.createNewChatUser(userName);
+        //todo
+       // chatService.createNewChatUser(userName);
     }
 }

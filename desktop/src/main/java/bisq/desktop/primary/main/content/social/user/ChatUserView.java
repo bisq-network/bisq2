@@ -23,7 +23,7 @@ import bisq.desktop.components.controls.BisqComboBox;
 import bisq.desktop.components.controls.BisqTextField;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
-import bisq.social.chat.ChatUser;
+import bisq.social.chat.ChatPeer;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.scene.layout.VBox;
@@ -35,10 +35,10 @@ import javax.annotation.Nullable;
 @Slf4j
 public class ChatUserView extends View<VBox, ChatUserModel, ChatUserController> {
 
-    private final BisqComboBox<ChatUser> comboBox;
-    private final ListChangeListener<ChatUser> listener;
-    private final ChangeListener<ChatUser> selectionListener;
-    private final ChangeListener<ChatUser> selectedChatUserListener;
+    private final BisqComboBox<ChatPeer> comboBox;
+    private final ListChangeListener<ChatPeer> listener;
+    private final ChangeListener<ChatPeer> selectionListener;
+    private final ChangeListener<ChatPeer> selectedChatUserListener;
 
     public ChatUserView(ChatUserModel model, ChatUserController controller) {
         super(new VBox(), model, controller);
@@ -63,12 +63,12 @@ public class ChatUserView extends View<VBox, ChatUserModel, ChatUserController> 
         listener = c -> updateItems();
         comboBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(@Nullable ChatUser chatUser) {
-                return chatUser != null ? chatUser.userName() : "";
+            public String toString(@Nullable ChatPeer chatPeer) {
+                return chatPeer != null ? chatPeer.userName() : "";
             }
 
             @Override
-            public ChatUser fromString(String string) {
+            public ChatPeer fromString(String string) {
                 return null;
             }
         });
@@ -83,12 +83,12 @@ public class ChatUserView extends View<VBox, ChatUserModel, ChatUserController> 
     }
 
     private void updateItems() {
-        comboBox.setItems(model.getChatUsers());
+        comboBox.setItems(model.getChatPeers());
     }
 
     @Override
     public void onViewAttached() {
-        model.getChatUsers().addListener(listener);
+        model.getChatPeers().addListener(listener);
         comboBox.getSelectionModel().selectedItemProperty().addListener(selectionListener);
         model.getSelectedChatUser().addListener(selectedChatUserListener);
         updateItems();
@@ -97,7 +97,7 @@ public class ChatUserView extends View<VBox, ChatUserModel, ChatUserController> 
 
     @Override
     protected void onViewDetached() {
-        model.getChatUsers().removeListener(listener);
+        model.getChatPeers().removeListener(listener);
         comboBox.getSelectionModel().selectedItemProperty().removeListener(selectionListener);
         model.getSelectedChatUser().removeListener(selectedChatUserListener);
     }

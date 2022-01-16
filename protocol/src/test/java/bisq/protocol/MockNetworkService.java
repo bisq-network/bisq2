@@ -66,12 +66,12 @@ public class MockNetworkService extends NetworkService {
 
 
     @Override
-    public void addMessageListener(Node.Listener listener) {
+    public void addListener(Node.Listener listener) {
         listeners.add(listener);
     }
 
     @Override
-    public void removeMessageListener(Node.Listener listener) {
+    public void removeListener(Node.Listener listener) {
     }
 
     @Override

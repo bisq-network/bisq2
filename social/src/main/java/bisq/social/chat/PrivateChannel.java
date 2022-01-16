@@ -15,12 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network;
+package bisq.social.chat;
 
-import bisq.security.PubKey;
+import lombok.Getter;
 
-import java.io.Serializable;
-import java.security.KeyPair;
+@Getter
+public class PrivateChannel extends Channel {
+    public enum Context {
+        PUBLIC_CHAT,
+        TRADE_INTENT
+    }
 
-public record NodeIdAndKeyPair(String nodeId, PubKey pubKey, KeyPair keyPair) implements Serializable {
+    private final ChatPeer chatPeer;
+    private final ChatIdentity chatIdentity;
+    private final Context context;
+
+    public PrivateChannel(String id, ChatPeer chatPeer, ChatIdentity chatIdentity, Context context) {
+        super(id);
+        this.chatPeer = chatPeer;
+        this.chatIdentity = chatIdentity;
+        this.context = context;
+    }
+
+    public String getChannelName() {
+        return chatPeer.userName();
+    }
 }

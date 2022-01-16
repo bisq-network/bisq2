@@ -141,11 +141,11 @@ public class ServiceNodesByTransport {
     }
 
 
-    public void addMessageListener(Node.Listener listener) {
+    public void addListener(Node.Listener listener) {
         map.values().forEach(serviceNode -> serviceNode.addMessageListener(listener));
     }
 
-    public void removeMessageListener(Node.Listener listener) {
+    public void removeListener(Node.Listener listener) {
         map.values().forEach(serviceNode -> serviceNode.removeMessageListener(listener));
     }
 
@@ -163,7 +163,7 @@ public class ServiceNodesByTransport {
 
     public Map<Transport.Type, ServiceNode.State> getStateByTransportType() {
         return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getState().get()));
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getState().get()));
     }
 
     public Optional<ServiceNode> findServiceNode(Transport.Type transport) {
@@ -175,16 +175,17 @@ public class ServiceNodesByTransport {
                 .flatMap(serviceNode -> serviceNode.findNode(nodeId));
     }
 
-    public Map<Transport.Type, Map<String, Address>> findMyAddresses() {
+    public Map<Transport.Type, Map<String, Address>> getAddressesByNodeIdMapByTransportType() {
         return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getAddressesByNodeId()));
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getAddressesByNodeId()));
     }
 
-    public Optional<Map<String, Address>> findMyAddresses(Transport.Type transport) {
-        return Optional.ofNullable(findMyAddresses().get(transport));
+    public Optional<Map<String, Address>> findAddressesByNodeId(Transport.Type transport) {
+        return Optional.ofNullable(getAddressesByNodeIdMapByTransportType().get(transport));
     }
 
-    public Optional<Address> findMyAddresses(Transport.Type transport, String nodeId) {
-        return findMyAddresses(transport).flatMap(map -> Optional.ofNullable(map.get(nodeId)));
+    public Optional<Address> findAddress(Transport.Type transport, String nodeId) {
+        return findAddressesByNodeId(transport)
+                .flatMap(addressesByNodeId -> Optional.ofNullable(addressesByNodeId.get(nodeId)));
     }
 }

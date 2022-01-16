@@ -22,6 +22,7 @@ import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.social.intent.TradeIntent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

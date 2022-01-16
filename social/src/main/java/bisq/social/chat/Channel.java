@@ -20,39 +20,23 @@ package bisq.social.chat;
 import lombok.Getter;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 @Getter
-public class Channel {
-    public enum ChannelType implements Serializable {
-        BTC_EUR,
-        BTC_USD,
-        PUBLIC,
-        PRIVATE
-    }
+public abstract class Channel implements Serializable {
+    protected final String id;
+    protected final Set<ChatMessage> chatMessages = new CopyOnWriteArraySet<>();
 
-    private final ChannelType channelType;
-    private final String id;
-    private final String name;
-    private final Set<ChatUser> members = new HashSet<>();
-    private final List<ChatEntry> messages = new ArrayList<>();
-
-    public Channel(Channel.ChannelType channelType, String id, String name) {
-        this.channelType = channelType;
+    public Channel(String id) {
         this.id = id;
-        this.name = name;
     }
 
-    public void addMember(ChatUser chatUser) {
-        members.add(chatUser);
+    public void addChatMessage(ChatMessage chatMessage) {
+        chatMessages.add(chatMessage);
     }
 
-    public void addMessages(ChatEntry chatEntry) {
-        if (!messages.contains(chatEntry)) {
-            messages.add(chatEntry);
-        }
+    public String getChannelName() {
+        return "Channel-" + id;
     }
 }
