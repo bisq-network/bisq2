@@ -95,8 +95,11 @@ public class OfferService {
         NetworkId makerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"), "default");
         Leg askLeg = new Leg(Coin.asBtc(askAmount), List.of());
         Leg bidLeg = new Leg(Fiat.of(5000, "USD"), List.of(FiatSettlement.ZELLE));
-        return new SwapOffer(List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
-                makerNetworkId, bidLeg, askLeg, "USD");
+        return new SwapOffer(bidLeg, 
+                askLeg, 
+                "USD",
+                List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG), 
+                makerNetworkId);
     }
 
     public void publishOffer(SwapOffer offer) {
@@ -104,7 +107,6 @@ public class OfferService {
     }
 
     public void shutdown() {
-
     }
 
     public static class MockOfferBuilder {

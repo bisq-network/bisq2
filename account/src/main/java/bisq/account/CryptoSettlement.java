@@ -19,11 +19,13 @@ package bisq.account;
 
 public class CryptoSettlement extends Settlement<CryptoSettlement.Method> {
     public enum Method implements Settlement.Method {
-        NATIVE_CHAIN,       // If coin is transferred via native chain BTC over. E.g. Bitcoin network
-        HOST_CHAIN,          // If coin has no native chain. E.g. USDT -? Omni, ERC20,...
-        OTHER               // If it does not apply to the above cases
+        MAINNET,            // If coin is transferred via native mainnet chain. E.g. Bitcoin network
+        L2,                 // Layer 2, e.g. Lightning
+        SIDE_CHAIN,         // Side chain, e.g. Liquid, RSK
+        WRAPPED,            // Wrapped coin in a token (e.g WBTC as ERC20 on ETH)
+        MULTI_HOSTED,       // Multiple chains can be used. E.g. USDT using BTC/Omni, ETH/ERC20,...
+        OTHER               // Anything else
     }
-
 
     public CryptoSettlement(Method type) {
         super(type);

@@ -24,11 +24,13 @@ import lombok.Getter;
  */
 @Getter
 public abstract class Contract {
-    private final ProtocolType protocolType;
-    private final Role myRole;
+    protected final ProtocolType protocolType;
+    protected final Party maker;
+    protected final SettlementExecution settlementExecution;
 
-    public Contract(ProtocolType protocolType, Role myRole) {
+    public Contract(ProtocolType protocolType, Party maker, SettlementExecution settlementExecution) {
         this.protocolType = protocolType;
-        this.myRole = myRole;
+        this.maker = maker;
+        this.settlementExecution = settlementExecution;
     }
 }

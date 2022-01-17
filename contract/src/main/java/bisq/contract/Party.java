@@ -18,13 +18,6 @@
 package bisq.contract;
 
 import bisq.network.NetworkId;
-import lombok.Getter;
 
-@Getter
-public class Party {
-    private final NetworkId makerNetworkId;
-
-    public Party(NetworkId makerNetworkId) {
-        this.makerNetworkId = makerNetworkId;
-    }
+public record Party(Role role, NetworkId networkId) {
 }

@@ -45,11 +45,19 @@ public class SwapOffer extends Listing {
     private final boolean useAskLegForBaseCurrency;
     private transient final Quote quote;
 
-    public SwapOffer(List<SwapProtocolType> protocolTypes,
-                     NetworkId makerNetworkId,
-                     Leg askLeg,
+    public SwapOffer(Leg askLeg,
                      Leg bidLeg,
-                     String baseCurrencyCode) {
+                     String baseCurrencyCode,
+                     SwapProtocolType protocolType,
+                     NetworkId makerNetworkId) {
+        this(askLeg, bidLeg, baseCurrencyCode, List.of(protocolType), makerNetworkId, new HashSet<>());
+    }
+
+    public SwapOffer(Leg askLeg,
+                     Leg bidLeg,
+                     String baseCurrencyCode,
+                     List<SwapProtocolType> protocolTypes,
+                     NetworkId makerNetworkId) {
         this(askLeg, bidLeg, baseCurrencyCode, protocolTypes, makerNetworkId, new HashSet<>());
     }
 
@@ -75,8 +83,6 @@ public class SwapOffer extends Listing {
         this.useAskLegForBaseCurrency = baseCurrencyCode.equals(askLeg.code());
 
         quote = Quote.of(getBaseLeg().monetary(), getQuoteLeg().monetary());
-       
-        
     }
 
     public Leg getBaseLeg() {

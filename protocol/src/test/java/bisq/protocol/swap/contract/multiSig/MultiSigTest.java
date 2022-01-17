@@ -21,32 +21,28 @@ package bisq.protocol.swap.contract.multiSig;
 import bisq.account.FiatSettlement;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
+import bisq.common.timer.Scheduler;
 import bisq.contract.ProtocolType;
+import bisq.contract.SettlementExecution;
 import bisq.contract.SwapProtocolType;
 import bisq.contract.TwoPartyContract;
+import bisq.identity.Identity;
 import bisq.network.NetworkId;
-import bisq.network.NetworkService;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Transport;
 import bisq.offer.Leg;
 import bisq.offer.SwapOffer;
+import bisq.protocol.BaseProtocolTest;
 import bisq.protocol.ContractMaker;
-import bisq.protocol.MockNetworkService;
 import bisq.protocol.ProtocolExecutor;
 import bisq.protocol.multiSig.MultiSig;
 import bisq.protocol.multiSig.MultiSigProtocol;
 import bisq.protocol.multiSig.maker.MakerMultiSigProtocol;
 import bisq.protocol.multiSig.taker.TakerMultiSigProtocol;
-import bisq.security.PubKey;
 import bisq.wallets.Chain;
 import bisq.wallets.Wallet;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -55,14 +51,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 
 @Slf4j
-public abstract class MultiSigTest {
-    private NetworkService networkService;
+public abstract class MultiSigTest extends BaseProtocolTest {
 
     @BeforeEach
     public void setup() {
-        // We share a network mock to call MessageListeners when sending a msg (e.g. alice send a msg and
-        // bob receives the event)
-        networkService = new MockNetworkService();
+        super.setup();
     }
 
     protected abstract Chain getChain();
@@ -72,38 +65,52 @@ public abstract class MultiSigTest {
     protected abstract Wallet getMakerWallet();
 
     protected void run() {
-        NetworkService networkService = new MockNetworkService();
+        //todo works yet with Automatic but for manual its missing some steps
+        SettlementExecution settlementExecution = new SettlementExecution.Automatic();
+        
+        Identity makerIdentity = identityService.getOrCreateIdentity("maker").join();
+        NetworkId makerNetworkId = makerIdentity.networkId();
         // create offer
-        NetworkId makerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"), "default");
         Leg askLeg = new Leg(Fiat.of(5000, "USD"), List.of(FiatSettlement.ZELLE));
         Leg bidLeg = new Leg(Coin.asBtc(100000), List.of());
-        SwapOffer offer = new SwapOffer(List.of(SwapProtocolType.MULTISIG),
-                makerNetworkId, bidLeg, askLeg, "USD");
+        SwapOffer offer = new SwapOffer(bidLeg,
+                askLeg,
+                "USD",
+                SwapProtocolType.MULTISIG,
+                makerNetworkId);
 
         // taker takes offer and selects first ProtocolType
-        ProtocolType selectedProtocolType = offer.getProtocolTypes().get(0);
-        TwoPartyContract takerTrade = ContractMaker.createTakerTrade(offer, selectedProtocolType);
+        ProtocolType protocolType = offer.getProtocolTypes().get(0);
+        TwoPartyContract takerTrade = ContractMaker.takerCreatesTwoPartyContract(offer, protocolType, settlementExecution);
         MultiSig takerMultiSig = new MultiSig(getTakerWallet(), getChain());
-        TakerMultiSigProtocol takerMultiSigProtocol = new TakerMultiSigProtocol(takerTrade, networkService, takerMultiSig);
+        TakerMultiSigProtocol takerMultiSigProtocol = new TakerMultiSigProtocol(networkService,
+                makerIdentity.getNodeIdAndKeyPair(),
+                takerTrade,
+                settlementExecution,
+                takerMultiSig);
         ProtocolExecutor takerSwapTradeProtocolExecutor = new ProtocolExecutor(takerMultiSigProtocol);
 
-        // simulated take offer protocol: Taker sends to maker the selectedProtocolType
-        NetworkId takerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(2222)), new PubKey(null, "default"), "default");
-        TwoPartyContract makerTrade = ContractMaker.createMakerTrade(takerNetworkId, selectedProtocolType);
+        // simulated take offer protocol: Taker sends to maker the protocolType
+        Identity takerIdentity = identityService.getOrCreateIdentity("taker").join();
+        NetworkId takerNetworkId = takerIdentity.networkId();
+        TwoPartyContract makerTrade = ContractMaker.makerCreatesTwoPartyContract(takerNetworkId, protocolType, settlementExecution);
         MultiSig makerMultiSig = new MultiSig(getMakerWallet(), getChain());
-        MakerMultiSigProtocol makerMultiSigProtocol = new MakerMultiSigProtocol(makerTrade, networkService, makerMultiSig);
+        MakerMultiSigProtocol makerMultiSigProtocol = new MakerMultiSigProtocol(networkService,
+                takerIdentity.getNodeIdAndKeyPair(),
+                makerTrade,
+                settlementExecution,
+                makerMultiSig);
         ProtocolExecutor makerSwapTradeProtocolExecutor = new ProtocolExecutor(makerMultiSigProtocol);
 
         CountDownLatch completedLatch = new CountDownLatch(2);
         makerSwapTradeProtocolExecutor.getProtocol().addListener(state -> {
             if (state instanceof MultiSigProtocol.State) {
-                if (state == MultiSigProtocol.State.START_MANUAL_PAYMENT) {
+                if (state == MultiSigProtocol.State.DEPOSIT_TX_BROADCAST_MSG_RECEIVED) {
+                    // Simulate deposit confirmation
+                    Scheduler.run(makerMultiSigProtocol::onDepositTxConfirmed).after(100);
+                } else  if (state == MultiSigProtocol.State.START_MANUAL_PAYMENT) {
                     // Simulate user action
-                    new Timer("Simulate Bob user action").schedule(new TimerTask() {
-                        public void run() {
-                            ((MakerMultiSigProtocol) makerSwapTradeProtocolExecutor.getProtocol()).onManualPaymentStarted();
-                        }
-                    }, 40);
+                    Scheduler.run(makerMultiSigProtocol::onManualPaymentStarted).after(100);
                 } else if (state == MultiSigProtocol.State.PAYOUT_TX_VISIBLE_IN_MEM_POOL) {
                     completedLatch.countDown();
                 }
@@ -113,11 +120,7 @@ public abstract class MultiSigTest {
             if (state instanceof MultiSigProtocol.State) {
                 if (state == MultiSigProtocol.State.FUNDS_SENT_MSG_RECEIVED) {
                     // Simulate user action
-                    new Timer("Simulate Alice user action").schedule(new TimerTask() {
-                        public void run() {
-                            ((TakerMultiSigProtocol) takerSwapTradeProtocolExecutor.getProtocol()).onFundsReceived();
-                        }
-                    }, 40);
+                    Scheduler.run(takerMultiSigProtocol::onFundsReceived).after(100);
                 } else if (state == MultiSigProtocol.State.PAYOUT_TX_BROADCAST_MSG_SENT) {
                     completedLatch.countDown();
                 }
@@ -126,6 +129,7 @@ public abstract class MultiSigTest {
 
         makerSwapTradeProtocolExecutor.start();
         takerSwapTradeProtocolExecutor.start();
+        
 
         try {
             boolean completed = completedLatch.await(10, TimeUnit.SECONDS);

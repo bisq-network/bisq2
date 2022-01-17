@@ -1,7 +1,8 @@
 package bisq.protocol.lightningEscrow;
 
+import bisq.contract.MultiPartyContract;
 import bisq.contract.SettlementExecution;
-import bisq.contract.ManyPartyContract;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.protocol.ManyPartyProtocol;
 import bisq.protocol.Protocol;
@@ -17,11 +18,12 @@ public abstract class LightningEscrowProtocol extends ManyPartyProtocol {
     private final SettlementExecution transport;
     private final LightningEscrow security;
 
-    public LightningEscrowProtocol(ManyPartyContract contract, 
-                                   NetworkService networkService, 
-                                   SettlementExecution settlementExecution, 
+    public LightningEscrowProtocol(NetworkService networkService,
+                                   NetworkIdWithKeyPair networkIdWithKeyPair,
+                                   MultiPartyContract contract,
+                                   SettlementExecution settlementExecution,
                                    SecurityProvider securityProvider) {
-        super(contract, networkService);
+        super(networkService, networkIdWithKeyPair, contract);
         transport = settlementExecution;
         security = (LightningEscrow) securityProvider;
 

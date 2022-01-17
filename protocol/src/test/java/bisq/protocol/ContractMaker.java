@@ -23,35 +23,49 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.offer.Listing;
 import bisq.security.PubKey;
+import lombok.NonNull;
 
 import java.util.Map;
+import java.util.Set;
 
 public class ContractMaker {
-    public static TwoPartyContract createMakerTrade(NetworkId takerNetworkId, ProtocolType protocolType) {
-        Party counterParty = new Party(takerNetworkId);
-        return new TwoPartyContract(protocolType, Role.MAKER, counterParty);
+    public static TwoPartyContract makerCreatesTwoPartyContract(NetworkId takerNetworkId,
+                                                                ProtocolType protocolType,
+                                                                SettlementExecution settlementExecution) {
+        Party maker = new Party(Role.MAKER, myNetworkId());
+        Party taker = new Party(Role.TAKER, takerNetworkId);
+        return new TwoPartyContract(protocolType, maker, taker, settlementExecution);
     }
 
-    public static TwoPartyContract createTakerTrade(Listing offer, ProtocolType protocolType) {
-        NetworkId makerNetworkId = offer.getMakerNetworkId();
-        Party counterParty = new Party(makerNetworkId);
-        return new TwoPartyContract(protocolType, Role.TAKER, counterParty);
+    public static TwoPartyContract takerCreatesTwoPartyContract(Listing listing, ProtocolType protocolType,
+                                                                SettlementExecution settlementExecution) {
+        Party maker = new Party(Role.MAKER, listing.getMakerNetworkId());
+        Party taker = new Party(Role.TAKER, myNetworkId());
+        return new TwoPartyContract(protocolType, maker, taker, settlementExecution);
     }
 
-    public static ManyPartyContract createMakerTrade(NetworkId takerNetworkId, NetworkId escrowAgentNetworkId, ProtocolType protocolType) {
-        Party taker = new Party(takerNetworkId);
-        Party escrowAgent = new Party(escrowAgentNetworkId);
-        return new ManyPartyContract(protocolType, Role.MAKER, Map.of(Role.MAKER, self(), Role.TAKER, taker, Role.ESCROW_AGENT, escrowAgent));
+    public static MultiPartyContract makerCreatesMultiPartyContract(NetworkId takerNetworkId,
+                                                                    NetworkId escrowAgentNetworkId,
+                                                                    ProtocolType protocolType,
+                                                                    SettlementExecution settlementExecution) {
+        Party maker = new Party(Role.MAKER, myNetworkId());
+        Party taker = new Party(Role.TAKER, takerNetworkId);
+        Party escrowAgent = new Party(Role.ESCROW_AGENT, escrowAgentNetworkId);
+        return new MultiPartyContract(protocolType, maker, Set.of(taker, escrowAgent), settlementExecution);
     }
 
-    public static ManyPartyContract createTakerTrade(Listing offer, NetworkId escrowAgentNetworkId, ProtocolType protocolType) {
-        NetworkId makerNetworkId = offer.getMakerNetworkId();
-        Party maker = new Party(makerNetworkId);
-        Party escrowAgent = new Party(escrowAgentNetworkId);
-        return new ManyPartyContract(protocolType, Role.TAKER, Map.of(Role.MAKER, maker, Role.TAKER, self(), Role.ESCROW_AGENT, escrowAgent));
+    public static MultiPartyContract takerCreatesMultiPartyContract(Listing listing,
+                                                                    NetworkId escrowAgentNetworkId,
+                                                                    ProtocolType protocolType,
+                                                                    SettlementExecution settlementExecution) {
+        Party maker = new Party(Role.MAKER, listing.getMakerNetworkId());
+        Party taker = new Party(Role.TAKER, myNetworkId());
+        Party escrowAgent = new Party(Role.ESCROW_AGENT, escrowAgentNetworkId);
+        return new MultiPartyContract(protocolType, taker, Set.of(maker, escrowAgent), settlementExecution);
     }
 
-    private static Party self() {
-        return new Party(new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(1000)), new PubKey(null, "default"), "default"));
+    @NonNull
+    private static NetworkId myNetworkId() {
+        return new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(1000)), new PubKey(null, "default"), "default");
     }
 }

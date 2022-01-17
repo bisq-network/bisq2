@@ -21,10 +21,10 @@ import lombok.Getter;
 
 @Getter
 public class TwoPartyContract extends Contract {
-    protected final Party counterParty;
+    private final Party taker;
 
-    public TwoPartyContract(ProtocolType protocolType, Role myRole, Party counterParty) {
-        super(protocolType, myRole);
-        this.counterParty = counterParty;
+    public TwoPartyContract(ProtocolType protocolType, Party maker, Party taker, SettlementExecution settlementExecution) {
+        super(protocolType, maker, settlementExecution);
+        this.taker = taker;
     }
 }

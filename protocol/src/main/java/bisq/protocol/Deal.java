@@ -17,7 +17,7 @@
 
 package bisq.protocol;
 
-import bisq.account.Account;
+import bisq.account.AccountService;
 import bisq.contract.Contract;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -29,7 +29,7 @@ import bisq.wallets.Wallet;
 public class Deal {
     // expected dependencies
     IdentityService identityService;
-    Account account;
+    AccountService accountService;
     Contract contract;
     SwapOffer offer;
     NetworkService networkService;

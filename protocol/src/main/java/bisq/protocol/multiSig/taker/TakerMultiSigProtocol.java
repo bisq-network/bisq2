@@ -20,9 +20,9 @@ package bisq.protocol.multiSig.taker;
 
 import bisq.contract.SettlementExecution;
 import bisq.contract.TwoPartyContract;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
-import bisq.protocol.SecurityProvider;
 import bisq.protocol.multiSig.MultiSig;
 import bisq.protocol.multiSig.MultiSigProtocol;
 import bisq.protocol.multiSig.maker.FundsSentMessage;
@@ -33,9 +33,12 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.Listener {
-
-    public TakerMultiSigProtocol(TwoPartyContract contract, NetworkService networkService, SecurityProvider securityProvider) {
-        super(contract, networkService, new SettlementExecution.Automatic(), securityProvider);
+    public TakerMultiSigProtocol(NetworkService networkService,
+                                 NetworkIdWithKeyPair networkIdWithKeyPair,
+                                 TwoPartyContract contract,
+                                 SettlementExecution settlementExecution,
+                                 MultiSig multiSig) {
+        super(networkService, networkIdWithKeyPair, contract, settlementExecution, multiSig);
     }
 
     @Override
@@ -46,8 +49,8 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
                     .thenCompose(multiSig::broadcastDepositTx)
                     .whenComplete((depositTx, t) -> setState(State.DEPOSIT_TX_BROADCAST))
                     .thenCompose(depositTx -> networkService.confidentialSendAsync(new DepositTxBroadcastMessage(depositTx),
-                            counterParty.getMakerNetworkId(),
-                            null, null))
+                            maker.networkId(),
+                            networkIdWithKeyPair))
                     .whenComplete((connection1, t) -> setState(State.DEPOSIT_TX_BROADCAST_MSG_SENT));
         } else if (message instanceof FundsSentMessage fundsSentMessage) {
             multiSig.verifyFundsSentMessage(fundsSentMessage)
@@ -76,8 +79,8 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
         multiSig.broadcastPayoutTx()
                 .whenComplete((payoutTx, t) -> setState(State.PAYOUT_TX_BROADCAST))
                 .thenCompose(payoutTx -> networkService.confidentialSendAsync(new PayoutTxBroadcastMessage(payoutTx),
-                        counterParty.getMakerNetworkId(),
-                        null, null))
+                        maker.networkId(),
+                        networkIdWithKeyPair))
                 .whenComplete((isValid, t) -> setState(State.PAYOUT_TX_BROADCAST_MSG_SENT));
     }
 }

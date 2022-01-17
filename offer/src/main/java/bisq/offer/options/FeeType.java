@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.contract;
+package bisq.offer.options;
 
-/**
- * Provides the transfer related aspects for the protocol.
- */
-public interface Transfer {
+public enum FeeType {
+    BTC,
+    BSQ
 }

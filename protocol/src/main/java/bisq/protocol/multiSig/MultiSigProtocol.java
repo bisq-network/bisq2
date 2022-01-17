@@ -19,10 +19,10 @@ package bisq.protocol.multiSig;
 
 import bisq.contract.SettlementExecution;
 import bisq.contract.TwoPartyContract;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.protocol.Protocol;
-import bisq.protocol.SecurityProvider;
 import bisq.protocol.TwoPartyProtocol;
 
 /**
@@ -70,13 +70,15 @@ public abstract class MultiSigProtocol extends TwoPartyProtocol implements Messa
     protected final SettlementExecution settlementExecution;
     protected final MultiSig multiSig;
 
-    public MultiSigProtocol(TwoPartyContract contract, NetworkService networkService, 
-                            SettlementExecution settlementExecution, 
-                            SecurityProvider securityProvider) {
-        super(contract, networkService);
+    public MultiSigProtocol(NetworkService networkService,
+                            NetworkIdWithKeyPair networkIdWithKeyPair,
+                            TwoPartyContract contract,
+                            SettlementExecution settlementExecution,
+                            MultiSig multiSig) {
+        super(networkService, networkIdWithKeyPair, contract);
         this.settlementExecution = settlementExecution;
 
-        this.multiSig = (MultiSig) securityProvider;
+        this.multiSig = multiSig;
 
         if (settlementExecution instanceof SettlementExecution.Manual manualSettlementExecution) {
             manualSettlementExecution.addListener(this::onStartManualPayment);

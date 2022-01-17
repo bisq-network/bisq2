@@ -15,22 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.bsqBond.messages;
+package bisq.offer.options;
 
-import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import lombok.Getter;
+import bisq.network.NetworkId;
 
-import java.util.concurrent.TimeUnit;
-
-public abstract class CommitmentMessage implements MailboxMessage {
-    @Getter
-    private final String commitment;
-    @Getter
-    private final MetaData metaData;
-
-    public CommitmentMessage(String commitment) {
-        this.commitment = commitment;
-        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
+public record DisputeAgent(Type type, NetworkId networkId) {
+    public enum Type {
+        MEDIATOR,
+        ARBITRATOR
     }
 }

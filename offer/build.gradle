@@ -17,13 +17,13 @@ dependencies {
     api platform(project(':platforms:network-platform'))
 
     implementation project(':common')
+    implementation project(':persistence')
     implementation project(':security')
     implementation project(':identity')
     implementation project(':account')
     implementation project(':contract')
     implementation project(':oracle')
     implementation project(':network')
-    implementation project(':persistence')
     implementation project(':wallets')
 
     implementation 'com.google.guava:guava'

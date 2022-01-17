@@ -57,8 +57,11 @@ public class OpenOfferService {
         NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"), "default");
         Leg askLeg = new Leg(Coin.asBtc(askAmount), List.of());
         Leg bidLeg = new Leg(Fiat.of(5000, "USD"), List.of(FiatSettlement.ZELLE));
-        SwapOffer offer = new SwapOffer(List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
-                makerNetworkId, bidLeg, askLeg,"USD");
+        SwapOffer offer = new SwapOffer(bidLeg,
+                askLeg,
+                "USD",
+                List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
+                makerNetworkId);
         networkService.addData(offer);
     }
 

@@ -40,6 +40,6 @@ public class ProtocolExecutor implements Protocol.Listener {
 
     @Override
     public void onStateChange(Protocol.State state) {
-        log.info("{}: {}", protocol.getContract().getMyRole().name(), state);
+        log.info("{}: {}", protocol.getContract().getMaker().role(), state);
     }
 }
