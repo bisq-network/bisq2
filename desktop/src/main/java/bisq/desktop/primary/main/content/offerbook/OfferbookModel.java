@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.offerbook;
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
-import bisq.offer.MarketPrice;
+import bisq.oracle.marketprice.MarketPrice;
 import io.reactivex.disposables.Disposable;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -126,7 +126,8 @@ public class OfferbookModel extends NavigationModel {
                     .ifPresent(offerItems::remove);
         }, Throwable::printStackTrace);
 
-        marketPriceDisposable = serviceProvider.getMarketPriceService().getMarketPriceSubject().subscribe(marketPriceByCurrencyMapProperty::set, Throwable::printStackTrace);
+        marketPriceDisposable = serviceProvider.getMarketPriceService().getMarketPriceSubject()
+                .subscribe(marketPriceByCurrencyMapProperty::set, Throwable::printStackTrace);
         marketPriceByCurrencyMapProperty.set(serviceProvider.getMarketPriceService().getMarketPriceByCurrencyMap());
     }
 

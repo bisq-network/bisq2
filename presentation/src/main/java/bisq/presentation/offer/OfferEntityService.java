@@ -17,9 +17,10 @@
 
 package bisq.presentation.offer;
 
-import bisq.offer.MarketPriceService;
-import bisq.offer.SwapOffer;
+
 import bisq.offer.OfferService;
+import bisq.offer.SwapOffer;
+import bisq.oracle.marketprice.MarketPriceService;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
 import lombok.extern.slf4j.Slf4j;

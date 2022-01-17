@@ -25,12 +25,12 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
 import bisq.network.p2p.MockNetworkService;
-import bisq.offer.MarketPriceService;
-import bisq.offer.MarketPriceServiceConfigFactory;
 import bisq.offer.OfferService;
 import bisq.offer.OpenOfferService;
 import bisq.persistence.PersistenceService;
 import bisq.presentation.offer.OfferEntityService;
+import bisq.oracle.marketprice.MarketPriceService;
+import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
 import bisq.security.KeyPairService;
 import bisq.social.chat.ChatService;
 import bisq.user.UserService;
@@ -85,7 +85,7 @@ public class DefaultServiceProvider extends ServiceProvider {
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
                 getConfig("bisq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
-       
+
         identityService = new IdentityService(persistenceService, keyPairService, networkService);
 
         chatService = new ChatService(persistenceService, identityService, networkService);

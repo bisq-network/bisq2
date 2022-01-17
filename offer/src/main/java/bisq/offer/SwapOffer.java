@@ -43,7 +43,6 @@ public class SwapOffer extends Listing {
     private final Leg askLeg;
     private final Leg bidLeg;
     private final boolean useAskLegForBaseCurrency;
-
     private transient final Quote quote;
 
     public SwapOffer(List<SwapProtocolType> protocolTypes,
@@ -76,6 +75,8 @@ public class SwapOffer extends Listing {
         this.useAskLegForBaseCurrency = baseCurrencyCode.equals(askLeg.code());
 
         quote = Quote.of(getBaseLeg().monetary(), getQuoteLeg().monetary());
+       
+        
     }
 
     public Leg getBaseLeg() {
@@ -102,7 +103,7 @@ public class SwapOffer extends Listing {
         return bidLeg.code();
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Amounts
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,6 +119,7 @@ public class SwapOffer extends Listing {
     public Optional<Long> findMinBaseAmount() {
         return findMinAmount(getBaseLeg().amount());
     }
+
     private Optional<Long> findMinAmount(long amount) {
         return findMinAmountAsPercentage()
                 .map(percentage -> MathUtils.roundDoubleToLong(amount * percentage));
@@ -130,7 +132,7 @@ public class SwapOffer extends Listing {
     private Optional<AmountOption> findAmountOption(Set<OfferOption> offerOptions) {
         return offerOptions.stream().filter(e -> e instanceof AmountOption).map(e -> (AmountOption) e).findAny();
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Price

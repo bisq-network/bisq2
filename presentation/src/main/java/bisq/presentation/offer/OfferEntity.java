@@ -19,9 +19,9 @@ package bisq.presentation.offer;
 
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
-import bisq.offer.MarketPrice;
 import bisq.offer.SwapOffer;
 import bisq.offer.options.TransferOption;
+import bisq.oracle.marketprice.MarketPrice;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
 import io.reactivex.disposables.Disposable;

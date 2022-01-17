@@ -17,8 +17,9 @@
 
 package bisq.desktop.primary.main.content.offerbook;
 
-import bisq.offer.MarketPrice;
+
 import bisq.offer.SwapOffer;
+import bisq.oracle.marketprice.MarketPrice;
 import bisq.presentation.offer.OfferEntity;
 import io.reactivex.subjects.BehaviorSubject;
 import javafx.application.Platform;

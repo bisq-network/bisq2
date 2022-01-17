@@ -17,19 +17,12 @@ dependencies {
     api platform(project(':platforms:network-platform'))
 
     implementation project(':common')
-    implementation project(':security')
-    implementation project(':identity')
-    implementation project(':account')
-    implementation project(':contract')
-    implementation project(':oracle')
-    implementation project(':network')
     implementation project(':persistence')
-    implementation project(':wallets')
+    implementation project(':network')
 
     implementation 'com.google.guava:guava'
     implementation 'io.reactivex.rxjava2:rxjava'
     implementation 'com.google.code.gson:gson'
-    implementation 'com.github.chimp1984:jsocks'
 }
 
 test {
