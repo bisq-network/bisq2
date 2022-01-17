@@ -20,8 +20,6 @@ package bisq.network.p2p.services.data.storage.auth;
 import bisq.common.data.ByteArray;
 import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.Result;
-import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import com.google.common.annotations.VisibleForTesting;
@@ -130,7 +128,7 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
         synchronized (map) {
             AuthenticatedDataRequest requestFromMap = map.get(byteArray);
             if (requestFromMap == null) {
-                log.warn("No entry at remove. hash={}", byteArray);
+                log.debug("No entry at remove. hash={}", byteArray);
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
                 map.put(byteArray, request);
@@ -139,7 +137,7 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
             }
 
             if (requestFromMap instanceof RemoveAuthenticatedDataRequest) {
-                log.debug("Already removed. request={}", request);
+                log.debug("Already removed. request={}, map={}", request, map);
                 // We have had the entry already removed.
                 if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                     // We update the map with the new request with the fresh sequence number.
@@ -215,22 +213,10 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
                 return new Result(false).signatureInvalid();
             }
 
-            // Update request with new sequence number
-            if (addRequestFromMap instanceof AddMailboxRequest) {
-                //todo why we get AddMailboxRequest here?
-                checkArgument(dataFromMap instanceof MailboxData,
-                        "dataFromMap expected be type of MailboxData");
-                MailboxData mailboxDataFromMap = (MailboxData) dataFromMap;
-                MailboxData updatedData = MailboxData.from(mailboxDataFromMap, request.getSequenceNumber());
-                updatedRequest = new AddMailboxRequest(updatedData,
-                        addRequestFromMap.getSignature(),
-                        addRequestFromMap.getOwnerPublicKey());
-            } else {
-                AuthenticatedData updatedData = AuthenticatedData.from(dataFromMap, request.getSequenceNumber());
-                updatedRequest = new AddAuthenticatedDataRequest(updatedData,
-                        addRequestFromMap.getSignature(),
-                        addRequestFromMap.getOwnerPublicKey());
-            }
+            AuthenticatedData updatedData = AuthenticatedData.from(dataFromMap, request.getSequenceNumber());
+            updatedRequest = new AddAuthenticatedDataRequest(updatedData,
+                    addRequestFromMap.getSignature(),
+                    addRequestFromMap.getOwnerPublicKey());
 
             map.put(byteArray, updatedRequest);
         }

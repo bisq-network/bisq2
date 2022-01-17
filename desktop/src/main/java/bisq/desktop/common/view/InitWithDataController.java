@@ -15,30 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.message;
+package bisq.desktop.common.view;
 
-import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-
-import java.util.concurrent.TimeUnit;
-
-@Getter
-@ToString
-@EqualsAndHashCode
-public class TextMessage implements MailboxMessage {
-    private final String text;
-    private final MetaData metaData;
-
-    public TextMessage(String text) {
-        this.text = text;
-        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
+public interface InitWithDataController<T> extends Controller {
+    default void initWithObject(Object data) {
+        try {
+            //noinspection unchecked
+            initWithData((T) data);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw t;
+        }
     }
 
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
+    void initWithData(T data);
 }

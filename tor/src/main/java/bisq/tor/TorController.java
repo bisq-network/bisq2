@@ -148,7 +148,7 @@ public class TorController {
     }
 
     void addHiddenServiceReadyListener(String serviceId, Runnable listener) {
-        // We set it on demand once needed, but ensure its not overwritten in case we use multiple servers for the
+        // We set it on demand once needed, but ensure it's not overwritten in case we use multiple servers for the
         // same tor instance.
         synchronized (isTorEventHandlerSetLock) {
             if (torControlConnection != null && !isTorEventHandlerSet) {

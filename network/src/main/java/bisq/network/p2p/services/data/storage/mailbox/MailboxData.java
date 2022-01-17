@@ -27,27 +27,15 @@ import java.security.PublicKey;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class MailboxData extends AuthenticatedData {
-
-    public static MailboxData from(MailboxData mailboxData, int sequenceNumber) {
-        return new MailboxData(mailboxData.getMailboxPayload(),
-                sequenceNumber,
-                mailboxData.getHashOfPublicKey(),
-                mailboxData.getHashOfReceiversPublicKey(),
-                mailboxData.getReceiversPubKey(),
-                mailboxData.getCreated());
-    }
-
     private final byte[] receiversPubKeyBytes;
     private final byte[] hashOfReceiversPublicKey;
     transient final private PublicKey receiversPubKey;
 
     public MailboxData(MailboxPayload data,
-                       int sequenceNumber,
                        byte[] hashOfSenderPublicKey,
                        byte[] hashOfReceiversPublicKey,
                        PublicKey receiversPubKey) {
         this(data,
-                sequenceNumber,
                 hashOfSenderPublicKey,
                 hashOfReceiversPublicKey,
                 receiversPubKey,
@@ -55,12 +43,11 @@ public class MailboxData extends AuthenticatedData {
     }
 
     public MailboxData(MailboxPayload data,
-                       int sequenceNumber,
                        byte[] hashOfSenderPublicKey,
                        byte[] hashOfReceiversPublicKey,
                        PublicKey receiversPubKey,
                        long created) {
-        super(data, sequenceNumber, hashOfSenderPublicKey, created);
+        super(data, 1, hashOfSenderPublicKey, created); // We set sequenceNumber to 1 as there will be only one AddMailBoxRequest
 
         receiversPubKeyBytes = receiversPubKey.getEncoded();
         this.hashOfReceiversPublicKey = hashOfReceiversPublicKey;

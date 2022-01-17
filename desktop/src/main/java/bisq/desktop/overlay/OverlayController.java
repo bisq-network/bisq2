@@ -21,6 +21,7 @@ import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
+import bisq.desktop.overlay.window.PopupWindowController;
 import bisq.desktop.primary.main.content.createoffer.CreateOfferController;
 import bisq.desktop.primary.main.content.offerbook.details.OfferDetailsController;
 import javafx.scene.Scene;
@@ -33,9 +34,9 @@ import java.util.Optional;
 public class OverlayController extends NavigationController {
     private final DefaultServiceProvider serviceProvider;
     @Getter
-    private OverlayModel model;
+    private final OverlayModel model;
     @Getter
-    private OverlayView view;
+    private final OverlayView view;
 
     public OverlayController(Scene parentScene, DefaultServiceProvider serviceProvider) {
         super(NavigationTarget.OVERLAY);
@@ -53,6 +54,9 @@ public class OverlayController extends NavigationController {
     @Override
     protected Optional<Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
+            case POPUP_WINDOW -> {
+                return Optional.of(new PopupWindowController(serviceProvider));
+            }
             case CREATE_OFFER -> {
                 return Optional.of(new CreateOfferController(serviceProvider));
             }

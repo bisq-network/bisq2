@@ -64,13 +64,4 @@ public class NetworkInfoController extends TabController {
             }
         }
     }
-/*
-    @Override
-    public void onViewAttached() {
-        super.onViewAttached();
-        model.getSupportedTransportTypes().stream()
-                .min(Enum::compareTo)
-                .map(model::getNavigationTargetFromTransportType)
-                .ifPresent(Navigation::navigateTo);
-    }*/
 }

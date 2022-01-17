@@ -20,7 +20,7 @@ package bisq.protocol.multiSig;
 import bisq.contract.AssetTransfer;
 import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.protocol.Protocol;
 import bisq.protocol.SecurityProvider;
 import bisq.protocol.TwoPartyProtocol;
@@ -45,7 +45,7 @@ import bisq.protocol.TwoPartyProtocol;
  *   payout tx and broadcasts it and sends Maker a proto that the payout tx is broadcast.
  * </ol>
  */
-public abstract class MultiSigProtocol extends TwoPartyProtocol implements Node.Listener {
+public abstract class MultiSigProtocol extends TwoPartyProtocol implements MessageListener {
 
     public enum State implements Protocol.State {
         START,

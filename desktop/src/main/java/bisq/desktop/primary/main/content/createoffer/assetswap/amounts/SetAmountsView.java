@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.createoffer.assetswap.amounts;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.AutocompleteComboBox;
+import bisq.desktop.components.controls.BisqComboBox;
 import bisq.desktop.components.controls.BisqLabel;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
@@ -29,9 +29,9 @@ import javafx.scene.layout.Priority;
 
 public class SetAmountsView extends View<HBox, SetAmountsModel, SetAmountsController> {
 
-    private AutocompleteComboBox<String> askCurrencyComboBox;
+    private BisqComboBox<String> askCurrencyComboBox;
     private BisqButton flipButton;
-    private AutocompleteComboBox<String> bidCurrencyComboBox;
+    private BisqComboBox<String> bidCurrencyComboBox;
 
     public SetAmountsView(SetAmountsModel model, SetAmountsController controller) {
         super(new HBox(), model, controller);
@@ -41,14 +41,14 @@ public class SetAmountsView extends View<HBox, SetAmountsModel, SetAmountsContro
         Label askCurrencyLabel = new BisqLabel("I want (ask):");
         askCurrencyLabel.setPadding(new Insets(4, 8, 0, 0));
 
-        askCurrencyComboBox = new AutocompleteComboBox<>();
+        askCurrencyComboBox = new BisqComboBox<>();
         askCurrencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
 
         flipButton = new BisqButton("<- Flip ->");
 
         Label bidCurrencyLabel = new BisqLabel("I give (bid):");
         bidCurrencyLabel.setPadding(new Insets(4, 8, 0, 60));
-        bidCurrencyComboBox = new AutocompleteComboBox<>();
+        bidCurrencyComboBox = new BisqComboBox<>();
         bidCurrencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
 
         HBox.setMargin(flipButton, new Insets(-2, 0, 0, 60));
@@ -62,10 +62,10 @@ public class SetAmountsView extends View<HBox, SetAmountsModel, SetAmountsContro
 
     @Override
     protected void onViewAttached() {
-        askCurrencyComboBox.setAutocompleteItems(model.getCurrencies());
+        askCurrencyComboBox.setItems(model.getCurrencies());
         askCurrencyComboBox.getSelectionModel().select(model.getSelectedAskCurrency().get());
 
-        bidCurrencyComboBox.setAutocompleteItems(model.getCurrencies());
+        bidCurrencyComboBox.setItems(model.getCurrencies());
         bidCurrencyComboBox.getSelectionModel().select(model.getSelectedBidCurrency().get());
         flipButton.setOnAction(e -> {
             controller.onFlipCurrencies();

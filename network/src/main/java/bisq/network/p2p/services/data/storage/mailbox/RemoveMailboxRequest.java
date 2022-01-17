@@ -40,21 +40,19 @@ public class RemoveMailboxRequest extends RemoveAuthenticatedDataRequest impleme
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(mailboxPayload.serialize());
         byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
-        int newSequenceNumber = Integer.MAX_VALUE; // Use max value for sequence number so that no other addData call is permitted.
-        return new RemoveMailboxRequest(mailboxPayload.getMetaData(), hash, receiverKeyPair.getPublic(), newSequenceNumber, signature);
+        return new RemoveMailboxRequest(mailboxPayload.getMetaData(), hash, receiverKeyPair.getPublic(),  signature);
     }
 
     // Receiver is owner for remove request
     public RemoveMailboxRequest(MetaData metaData,
                                 byte[] hash,
                                 PublicKey receiverPublicKey,
-                                int sequenceNumber,
                                 byte[] signature) {
         super(metaData,
                 hash,
                 receiverPublicKey.getEncoded(),
                 receiverPublicKey,
-                sequenceNumber,
+                Integer.MAX_VALUE,  // Use max value for sequence number so that no other addData call is permitted.
                 signature);
     }
 

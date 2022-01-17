@@ -23,6 +23,7 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.security.SignatureUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -33,15 +34,17 @@ import java.util.Set;
  * Data which is signed by an authorized key (e.g. Filter, Alert, DisputeAgent...)
  */
 @Slf4j
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
+@ToString
 @Getter
-public abstract class AuthorizedPayload implements AuthenticatedPayload {
+public abstract class AuthorizedPayload extends AuthenticatedPayload {
     private final NetworkPayload networkPayload;
     private final byte[] signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
 
     public AuthorizedPayload(NetworkPayload networkPayload, byte[] signature, PublicKey authorizedPublicKey) {
+        super(null, null); //todo
         this.networkPayload = networkPayload;
         this.signature = signature;
         this.authorizedPublicKey = authorizedPublicKey;

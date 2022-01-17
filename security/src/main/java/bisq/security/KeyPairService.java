@@ -24,41 +24,35 @@ import lombok.Getter;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.util.HashMap;
-import java.util.Map;
+import java.security.PublicKey;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
-public class KeyPairService implements PersistenceClient<HashMap<String, KeyPair>> {
+public class KeyPairService implements PersistenceClient<KeyPairModel> {
     public static final String DEFAULT = "default";
     @Getter
-    private final Persistence<HashMap<String, KeyPair>> persistence;
+    private final Persistence<KeyPairModel> persistence;
 
-    private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
+    //   private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
+    private final KeyPairModel keyPairModel = new KeyPairModel();
 
     public KeyPairService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, "db", "keyPairs");
+        persistence = persistenceService.getOrCreatePersistence(this, "db", keyPairModel);
     }
 
     @Override
-    public void applyPersisted(HashMap<String, KeyPair> persisted) {
-        synchronized (keyPairsById) {
-            keyPairsById.putAll(persisted);
+    public void applyPersisted(KeyPairModel persisted) {
+        synchronized (keyPairModel) {
+            keyPairModel.applyPersisted(persisted);
         }
     }
 
     @Override
-    public CompletableFuture<Boolean> persist() {
-        return persistence.persistAsync(getClone());
-    }
-
-    @Override
-    public HashMap<String, KeyPair> getClone() {
-        synchronized (keyPairsById) {
-            return new HashMap<>(keyPairsById);
+    public KeyPairModel getClone() {
+        synchronized (keyPairModel) {
+            return keyPairModel.getClone();
         }
     }
 
@@ -70,8 +64,8 @@ public class KeyPairService implements PersistenceClient<HashMap<String, KeyPair
     }
 
     public Optional<KeyPair> findKeyPair(String keyId) {
-        synchronized (keyPairsById) {
-            return Optional.ofNullable(keyPairsById.get(keyId));
+        synchronized (keyPairModel) {
+            return keyPairModel.findKeyPair(keyId);
         }
     }
 
@@ -89,8 +83,8 @@ public class KeyPairService implements PersistenceClient<HashMap<String, KeyPair
                 .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
                     try {
                         KeyPair keyPair = KeyGeneration.generateKeyPair();
-                        synchronized (keyPairsById) {
-                            keyPairsById.put(keyId, keyPair);
+                        synchronized (keyPairModel) {
+                            keyPairModel.put(keyId, keyPair);
                         }
                         persist();
                         return keyPair;
@@ -99,5 +93,11 @@ public class KeyPairService implements PersistenceClient<HashMap<String, KeyPair
                         throw new CompletionException(e);
                     }
                 }));
+    }
+
+    public PubKey getDefaultPubKey() {
+        String keyId = KeyPairService.DEFAULT;
+        PublicKey publicKey = getOrCreateKeyPair(keyId).getPublic();
+        return new PubKey(publicKey, keyId);
     }
 }

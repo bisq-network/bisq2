@@ -17,21 +17,28 @@
 
 package bisq.user;
 
+import bisq.persistence.Persistable;
 import lombok.Getter;
 
-import java.io.Serializable;
-
-public class User implements Serializable {
+public class UserModel implements Persistable<UserModel> {
     @Getter
-    private Cookie cookie;
+    private final Cookie cookie;
 
-    public User() {
+    public UserModel() {
         cookie = new Cookie();
     }
 
-    public static User cloneFrom(User user) {
-        User clone = new User();
-        clone.cookie = user.cookie;
-        return clone;
+    public UserModel(Cookie cookie) {
+        this.cookie = cookie;
+    }
+
+    @Override
+    public UserModel getClone() {
+        return new UserModel(cookie);
+    }
+
+    @Override
+    public void applyPersisted(UserModel userModel) {
+        cookie.putAll(userModel.getCookie());
     }
 }

@@ -26,7 +26,7 @@ public class FiatTransfer extends Transfer<FiatTransfer.Type> {
         SEPA,
         REVOLUT,
         ZELLE,
-        OTHER;
+        OTHER
     }
 
     public FiatTransfer(FiatTransfer.Type type) {

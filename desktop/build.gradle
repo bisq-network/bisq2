@@ -51,6 +51,7 @@ dependencies {
     implementation project(':user')
     implementation project(':contract')
     implementation project(':offer')
+    implementation project(':social')
     implementation project(':presentation')
     implementation project(':application')
 

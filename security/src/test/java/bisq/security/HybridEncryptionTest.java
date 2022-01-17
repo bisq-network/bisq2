@@ -43,11 +43,11 @@ public class HybridEncryptionTest {
         assertArrayEquals(message, decrypted);
 
         // failure cases
-        byte[] encodedSenderPublicKey = confidentialData.getEncodedSenderPublicKey();
-        byte[] hmac = confidentialData.getHmac();
-        byte[] iv = confidentialData.getIv();
-        byte[] cypherText = confidentialData.getCypherText();
-        byte[] signature = confidentialData.getSignature();
+        byte[] encodedSenderPublicKey = confidentialData.encodedSenderPublicKey();
+        byte[] hmac = confidentialData.hmac();
+        byte[] iv = confidentialData.iv();
+        byte[] cypherText = confidentialData.cypherText();
+        byte[] signature = confidentialData.signature();
 
         KeyPair fakeKeyPair = KeyGeneration.generateKeyPair();
         byte[] bitStream = ByteArrayUtils.concat(hmac, cypherText);

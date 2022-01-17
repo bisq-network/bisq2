@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p;
+package bisq.network;
 
 import bisq.common.data.Pair;
 import bisq.network.p2p.node.Address;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode
-@ToString
+@ToString(exclude = "addressByNetworkType")
 public class NetworkId implements Serializable {
     // We avoid maps in serialized data as it is used in hashes and maps do not have deterministic order.
     // The list is sorted by Transport.Type.

@@ -17,13 +17,16 @@
 
 package bisq.desktop.primary.main.content.offerbook.details;
 
-import bisq.desktop.common.view.Controller;
+import bisq.common.data.Pair;
+import bisq.desktop.common.view.InitWithDataController;
+import bisq.desktop.primary.main.content.offerbook.OfferListItem;
+import javafx.geometry.Bounds;
 import lombok.Getter;
 
-public class OfferDetailsController implements Controller {
+public class OfferDetailsController implements InitWithDataController<Pair<OfferListItem, Bounds>> {
     @Getter
-    private OfferDetailsView view;
-    private OfferDetailsModel model;
+    private final OfferDetailsView view;
+    private final OfferDetailsModel model;
 
     public OfferDetailsController() {
         model = new OfferDetailsModel();
@@ -31,7 +34,7 @@ public class OfferDetailsController implements Controller {
     }
 
     @Override
-    public void setData(Object data) {
-        model.setData(data);
+    public void initWithData(Pair<OfferListItem, Bounds> pair) {
+        model.initWithData(pair);
     }
 }

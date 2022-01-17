@@ -19,12 +19,14 @@ package bisq.network.p2p;
 
 
 import bisq.common.util.CompletableFutureUtils;
+import bisq.network.NetworkId;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.UnrestrictedAuthorizationService;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.PersistenceService;
@@ -43,7 +45,6 @@ import java.util.stream.Collectors;
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ServiceNodesByTransport {
@@ -79,27 +80,43 @@ public class ServiceNodesByTransport {
         });
     }
 
+    public CompletableFuture<Void> shutdown() {
+        return CompletableFutureUtils.allOf(map.values().stream().map(ServiceNode::shutdown))
+                .orTimeout(6, TimeUnit.SECONDS)
+                .thenApply(list -> {
+                    map.clear();
+                    return null;
+                });
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Boolean> bootstrapToNetwork(int port, String nodeId) {
-        return CompletableFutureUtils.allOf(map.values().stream().map(networkNode ->
-                runAsync(() -> networkNode.maybeInitializeServer(nodeId, port), NETWORK_IO_POOL)
-                        .whenComplete((__, throwable) -> {
-                            if (throwable == null) {
-                                networkNode.maybeInitializePeerGroup();
-                            } else {
-                                log.error(throwable.toString());
-                            }
-                        }))).thenApply(list -> true);
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(Map<Transport.Type, Integer> portByTransport, String nodeId) {
+        return map.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry ->
+                        runAsync(() -> {
+                            int port = portByTransport.get(entry.getKey());
+                            entry.getValue().maybeInitializeServer(nodeId, port);
+                        }, NETWORK_IO_POOL).thenApply(__ -> true)));
     }
 
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServerAsync(int port, String nodeId) {
-        return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> supplyAsync(() -> entry.getValue().maybeInitializeServer(nodeId, port), NETWORK_IO_POOL)));
+    public CompletableFuture<Boolean> bootstrapToNetwork(Map<Transport.Type, Integer> portByTransport, String nodeId) {
+        return CompletableFutureUtils.allOf(map.entrySet().stream()
+                .map(entry -> {
+                    int port = portByTransport.get(entry.getKey());
+                    ServiceNode serviceNode = entry.getValue();
+                    return runAsync(() -> serviceNode.maybeInitializeServer(nodeId, port), NETWORK_IO_POOL)
+                            .whenComplete((__, throwable) -> {
+                                if (throwable == null) {
+                                    serviceNode.maybeInitializePeerGroup();
+                                } else {
+                                    log.error(throwable.toString());
+                                }
+                            });
+                })).thenApply(list -> true);
     }
 
     public Map<Transport.Type, ConfidentialMessageService.Result> confidentialSend(Message message,
@@ -124,6 +141,23 @@ public class ServiceNodesByTransport {
         return resultsByType;
     }
 
+
+    public void addMessageListener(MessageListener messageListener) {
+        map.values().forEach(serviceNode -> serviceNode.addMessageListener(messageListener));
+    }
+
+    public void removeMessageListener(MessageListener messageListener) {
+        map.values().forEach(serviceNode -> serviceNode.removeMessageListener(messageListener));
+    }
+
+    public void addDefaultNodeListener(Node.Listener nodeListener) {
+        map.values().forEach(serviceNode -> serviceNode.getDefaultNode().addListener(nodeListener));
+    }
+
+    public void removeDefaultNodeListener(Node.Listener nodeListener) {
+        map.values().forEach(serviceNode -> serviceNode.getDefaultNode().removeListener(nodeListener));
+    }
+
     public Optional<Socks5Proxy> getSocksProxy() {
         return findServiceNode(Transport.Type.TOR)
                 .flatMap(serviceNode -> {
@@ -136,35 +170,9 @@ public class ServiceNodesByTransport {
                 });
     }
 
-
-    public void addMessageListener(Node.Listener listener) {
-        map.values().forEach(serviceNode -> serviceNode.addMessageListener(listener));
-    }
-
-    public void removeMessageListener(Node.Listener listener) {
-        map.values().forEach(serviceNode -> serviceNode.removeMessageListener(listener));
-    }
-
-    public CompletableFuture<Void> shutdown() {
-        return CompletableFutureUtils.allOf(map.values().stream().map(ServiceNode::shutdown))
-                .orTimeout(6, TimeUnit.SECONDS)
-                .thenApply(list -> {
-                    map.clear();
-                    return null;
-                });
-    }
-
-    public Map<Transport.Type, Map<String, Address>> findMyAddresses() {
+    public Map<Transport.Type, ServiceNode.State> getStateByTransportType() {
         return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getAddressesByNodeId()));
-    }
-
-    public Optional<Map<String, Address>> findMyAddresses(Transport.Type transport) {
-        return Optional.ofNullable(findMyAddresses().get(transport));
-    }
-
-    public Optional<Address> findMyAddresses(Transport.Type transport, String nodeId) {
-        return findMyAddresses(transport).flatMap(map -> Optional.ofNullable(map.get(nodeId)));
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getState().get()));
     }
 
     public Optional<ServiceNode> findServiceNode(Transport.Type transport) {
@@ -176,8 +184,17 @@ public class ServiceNodesByTransport {
                 .flatMap(serviceNode -> serviceNode.findNode(nodeId));
     }
 
-    public Map<Transport.Type, ServiceNode.State> getStateByTransportType() {
+    public Map<Transport.Type, Map<String, Address>> getAddressesByNodeIdMapByTransportType() {
         return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getState().get()));
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getAddressesByNodeId()));
+    }
+
+    public Optional<Map<String, Address>> findAddressesByNodeId(Transport.Type transport) {
+        return Optional.ofNullable(getAddressesByNodeIdMapByTransportType().get(transport));
+    }
+
+    public Optional<Address> findAddress(Transport.Type transport, String nodeId) {
+        return findAddressesByNodeId(transport)
+                .flatMap(addressesByNodeId -> Optional.ofNullable(addressesByNodeId.get(nodeId)));
     }
 }

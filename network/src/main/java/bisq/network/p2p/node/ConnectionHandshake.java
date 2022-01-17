@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node;
 
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.Envelope;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.message.Version;
@@ -31,7 +32,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.UUID;
 
 /**
  * At initial connection we exchange capabilities and require a valid AuthorizationToken (e.g. PoW).
@@ -41,7 +41,7 @@ import java.util.UUID;
 @Slf4j
 class ConnectionHandshake {
     @Getter
-    private final String id = UUID.randomUUID().toString();
+    private final String id = StringUtils.createUid();
     private final Socket socket;
     private final BanList banList;
     private final Capability capability;

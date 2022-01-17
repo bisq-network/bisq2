@@ -19,24 +19,36 @@ package bisq.desktop.common.utils;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.stage.Screen;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.InputStream;
+import java.util.Objects;
 
 @Slf4j
 public class ImageUtil {
-    public static ImageView getImageView(String imagePath) {
-        return new ImageView(getImage(imagePath));
+    
+    // Does not resolve the @2x automatically
+    public static Image getImageByPath(String path) {
+        try (InputStream resourceAsStream = ImageView.class.getResourceAsStream(path)) {
+            return new Image(Objects.requireNonNull(resourceAsStream));
+        } catch (Exception e) {
+            log.error("Loading image failed: path={}", path);
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
-    public static Image getImage(String imagePath) {
-        try {
-            InputStream resourceAsStream = ImageView.class.getResourceAsStream(imagePath);
-            return new Image(resourceAsStream);
-        } catch (Throwable t) {
-            log.error("getImage failed: imagePath={}", imagePath);
-            t.printStackTrace();
-            throw t;
-        }
+    // Does resolve the @2x automatically
+    public static ImageView getImageViewById(String id) {
+        ImageView imageView = new ImageView();
+        imageView.setId(id);
+        return imageView;
+    }
+
+    // determine if this is a macOS retina display
+    // https://stackoverflow.com/questions/20767708/how-do-you-detect-a-retina-display-in-java#20767802
+    public static boolean isRetina() {
+        return Screen.getPrimary().getOutputScaleX() > 1.5;
     }
 }

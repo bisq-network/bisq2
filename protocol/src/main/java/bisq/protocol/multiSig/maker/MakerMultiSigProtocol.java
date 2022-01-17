@@ -21,8 +21,6 @@ import bisq.contract.AssetTransfer;
 import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
-import bisq.network.p2p.node.CloseReason;
-import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.protocol.SecurityProvider;
@@ -42,7 +40,7 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
     }
 
     @Override
-    public void onMessage(Message message, Connection connection, String nodeId) {
+    public void onMessage(Message message) {
         if (message instanceof DepositTxBroadcastMessage) {
             DepositTxBroadcastMessage depositTxBroadcastMessage = (DepositTxBroadcastMessage) message;
             multiSig.verifyDepositTxBroadcastMessage(depositTxBroadcastMessage)
@@ -57,14 +55,6 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
                     .thenCompose(multiSig::isPayoutTxInMemPool)
                     .whenComplete((isInMemPool, t) -> setState(State.PAYOUT_TX_VISIBLE_IN_MEM_POOL));
         }
-    }
-
-    @Override
-    public void onConnection(Connection connection) {
-    }
-
-    @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
     @Override

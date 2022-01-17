@@ -27,9 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -41,12 +39,10 @@ public class Broadcaster {
 
     private final Node node;
     private final PeerGroup peerGroup;
-    private final Set<Node.Listener> listeners = new CopyOnWriteArraySet<>();
 
     public Broadcaster(Node node, PeerGroup peerGroup) {
         this.node = node;
         this.peerGroup = peerGroup;
-
     }
 
     public CompletableFuture<BroadcastResult> reBroadcast(BroadcastMessage broadcastMessage) {
@@ -66,8 +62,8 @@ public class Broadcaster {
         AtomicInteger numFaults = new AtomicInteger(0);
         long numConnections = peerGroup.getAllConnections().count();
         long numBroadcasts = Math.min(numConnections, Math.round(numConnections * distributionFactor));
-        log.debug("Broadcast proto to {} out of {} peers. distributionFactor={}",
-                numBroadcasts, numConnections, distributionFactor);
+        log.debug("Broadcast {} to {} out of {} peers. distributionFactor={}",
+                broadcastMessage.getClass().getSimpleName(), numBroadcasts, numConnections, distributionFactor);
         List<Connection> allConnections = peerGroup.getAllConnections().collect(Collectors.toList());
         Collections.shuffle(allConnections);
         NetworkService.NETWORK_IO_POOL.submit(() -> {
@@ -96,6 +92,5 @@ public class Broadcaster {
     }
 
     public void shutdown() {
-        listeners.clear();
     }
 }

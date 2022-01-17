@@ -141,18 +141,4 @@ public class ConnectionListItem implements TableItem {
     public void deactivate() {
         connection.removeListener(listener);
     }
-
- /*   @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ConnectionListItem that = (ConnectionListItem) o;
-        return Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-*/
 }

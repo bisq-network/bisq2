@@ -18,7 +18,7 @@
 package bisq.protocol;
 
 import bisq.contract.*;
-import bisq.network.p2p.NetworkId;
+import bisq.network.NetworkId;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.offer.Listing;

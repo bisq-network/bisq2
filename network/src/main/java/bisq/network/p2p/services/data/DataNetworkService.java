@@ -43,10 +43,15 @@ import java.util.function.Function;
 @Slf4j
 public class DataNetworkService implements PeerGroupService.Listener, Node.Listener {
 
+    private final PeerGroup peerGroup;
+    private final PeerGroupService peerGroupService;
+
     public interface Listener {
         void onMessage(Message message, Connection connection, String nodeId);
 
         void onStateChanged(PeerGroupService.State state, DataNetworkService dataNetworkService);
+
+        void onSufficientlyConnected(int numConnections, DataNetworkService dataNetworkService);
     }
 
     private final Node node;
@@ -58,21 +63,31 @@ public class DataNetworkService implements PeerGroupService.Listener, Node.Liste
                               PeerGroupService peerGroupService,
                               Function<DataFilter, Inventory> inventoryProvider) {
         this.node = node;
-        PeerGroup peerGroup = peerGroupService.getPeerGroup();
+        peerGroup = peerGroupService.getPeerGroup();
+        this.peerGroupService = peerGroupService;
         peerGroupService.addListener(this);
         broadcaster = new Broadcaster(node, peerGroup);
         inventoryService = new InventoryService(node, peerGroup, inventoryProvider);
         node.addListener(this);
     }
 
+    public CompletableFuture<Void> shutdown() {
+        node.removeListener(this);
+        peerGroupService.removeListener(this);
+        broadcaster.shutdown();
+        return CompletableFuture.completedFuture(null);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // PeerGroupService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void onStateChanged(PeerGroupService.State state) {
         listeners.forEach(listener -> listener.onStateChanged(state, this));
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Node.Listener
@@ -85,6 +100,9 @@ public class DataNetworkService implements PeerGroupService.Listener, Node.Liste
 
     @Override
     public void onConnection(Connection connection) {
+        if (peerGroup.getNumConnections() > peerGroup.getTargetNumConnectedPeers() / 2) {
+            listeners.forEach(listener -> listener.onSufficientlyConnected(peerGroup.getNumConnections(), this));
+        }
     }
 
     @Override
@@ -99,7 +117,6 @@ public class DataNetworkService implements PeerGroupService.Listener, Node.Liste
         return broadcaster.broadcast(broadcastMessage);
     }
 
-
     CompletableFuture<BroadcastResult> reBroadcast(BroadcastMessage broadcastMessage) {
         return broadcaster.reBroadcast(broadcastMessage);
     }
@@ -108,23 +125,12 @@ public class DataNetworkService implements PeerGroupService.Listener, Node.Liste
         return inventoryService.request(dataFilter);
     }
 
-    public void addListener(DataNetworkService.Listener listener) {
+    void addListener(DataNetworkService.Listener listener) {
         listeners.add(listener);
     }
 
-    public void removeListener(DataNetworkService.Listener listener) {
+    void removeListener(DataNetworkService.Listener listener) {
         listeners.remove(listener);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public CompletableFuture<Void> shutdown() {
-        broadcaster.shutdown();
-        return CompletableFuture.completedFuture(null);
     }
 
 }

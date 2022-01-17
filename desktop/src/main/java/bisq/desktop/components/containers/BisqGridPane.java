@@ -35,8 +35,8 @@ import javafx.scene.layout.Region;
 
 public class BisqGridPane extends GridPane {
     public BisqGridPane() {
-        setVgap(5);
-        setHgap(5);
+        setVgap(10);
+        setHgap(10);
     }
 
     public BisqLabel startSection(String text) {

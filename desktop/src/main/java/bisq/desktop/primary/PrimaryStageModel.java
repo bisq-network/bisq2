@@ -41,17 +41,17 @@ public class PrimaryStageModel implements Model {
     private final Optional<Double> stageHeight;
     private final double minWidth = 800;
     private final double minHeight = 600;
-    private final double prefWidth = 1600;
-    private final double prefHeight = 1300;
+    private final double prefWidth = 1100;
+    private final double prefHeight = 1000;
     @Getter
-    protected final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
+    private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
     public PrimaryStageModel(DefaultServiceProvider serviceProvider) {
         userService = serviceProvider.getUserService();
 
         title = serviceProvider.getApplicationOptions().appName();
 
-        Cookie cookie = userService.getUser().getCookie();
+        Cookie cookie = userService.getUserModel().getCookie();
         stageX = cookie.getAsOptionalDouble(CookieKey.STAGE_X);
         stageY = cookie.getAsOptionalDouble(CookieKey.STAGE_Y);
         stageWidth = cookie.getAsOptionalDouble(CookieKey.STAGE_W);
@@ -63,22 +63,22 @@ public class PrimaryStageModel implements Model {
     }
 
     public void setStageX(double value) {
-        userService.getUser().getCookie().putAsDouble(CookieKey.STAGE_X, value);
+        userService.getUserModel().getCookie().putAsDouble(CookieKey.STAGE_X, value);
         userService.persist();
     }
 
     public void setStageY(double value) {
-        userService.getUser().getCookie().putAsDouble(CookieKey.STAGE_Y, value);
+        userService.getUserModel().getCookie().putAsDouble(CookieKey.STAGE_Y, value);
         userService.persist();
     }
 
     public void setStageWidth(double value) {
-        userService.getUser().getCookie().putAsDouble(CookieKey.STAGE_W, value);
+        userService.getUserModel().getCookie().putAsDouble(CookieKey.STAGE_W, value);
         userService.persist();
     }
 
     public void setStageHeight(double value) {
-        userService.getUser().getCookie().putAsDouble(CookieKey.STAGE_H, value);
+        userService.getUserModel().getCookie().putAsDouble(CookieKey.STAGE_H, value);
         userService.persist();
     }
 }

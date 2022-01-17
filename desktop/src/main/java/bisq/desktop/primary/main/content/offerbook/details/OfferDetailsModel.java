@@ -38,8 +38,7 @@ public class OfferDetailsModel implements Model {
     public OfferDetailsModel() {
     }
 
-    public void setData(Object data) {
-        Pair<OfferListItem, Bounds> pair = (Pair) data;
+    public void initWithData(Pair<OfferListItem, Bounds>  pair) {
         item = pair.first();
         boundsInParent = pair.second();
         titleProperty.set("Offer " + item.getOffer().getId().substring(0, 8));

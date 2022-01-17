@@ -23,13 +23,14 @@ import lombok.Getter;
 
 import java.util.concurrent.TimeUnit;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @Getter
-public class MockAuthenticatedTextPayload implements AuthenticatedPayload {
+public class MockAuthenticatedTextPayload extends AuthenticatedPayload {
     private final String text;
     final MetaData metaData;
 
     public MockAuthenticatedTextPayload(String text) {
+        super(null, null);
         this.text = text;
         // 463 is overhead of sig/pubkeys,...
         // 582 is pubkey+sig+hash

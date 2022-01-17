@@ -97,7 +97,7 @@ public class DataServiceIntegrationTest extends DataServiceNodeBase {
             public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
             }
         });
-        List<CompletableFuture<BroadcastResult>> broadcastResultFutures = dataService_0.addNetworkPayloadAsync(payload, keyPair).get();
+        List<CompletableFuture<BroadcastResult>> broadcastResultFutures = dataService_0.addNetworkPayload(payload, keyPair).get();
         broadcastResultFutures.forEach(CompletableFuture::join);
 
         assertTrue(latch.await(10, TimeUnit.SECONDS));
@@ -125,7 +125,7 @@ public class DataServiceIntegrationTest extends DataServiceNodeBase {
             }
             try {
                 Thread.sleep(5000);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException ignore) {
             }
         }
 

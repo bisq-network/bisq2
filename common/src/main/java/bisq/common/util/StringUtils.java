@@ -18,6 +18,7 @@
 package bisq.common.util;
 
 import java.text.DecimalFormat;
+import java.util.UUID;
 
 public class StringUtils {
     public static String truncate(String value) {
@@ -26,6 +27,18 @@ public class StringUtils {
 
     public static String truncate(String value, int maxLength) {
         return value.substring(0, Math.min(value.length(), maxLength)) + "...";
+    }
+
+    public static String createUid() {
+        return UUID.randomUUID().toString();
+    }
+
+    public static String createShortUid() {
+        return createUid(8);
+    }
+
+    public static String createUid(int maxLength) {
+        return UUID.randomUUID().toString().substring(0, maxLength);
     }
 
     public static String fromBytes(long size) {

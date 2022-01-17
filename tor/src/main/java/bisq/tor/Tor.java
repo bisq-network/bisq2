@@ -226,7 +226,7 @@ public class Tor {
                     new Authentication() {
                         @Override
                         public Object[] doSocksAuthentication(int i, Socket socket) throws IOException {
-                            // Must not close streams here, as otherwise we get a socket closed
+                            // Must not close the streams here, as otherwise we get a socket closed
                             // exception at SocksSocket
                             OutputStream outputStream = socket.getOutputStream();
                             outputStream.write(new byte[]{(byte) 1, (byte) hash.length});

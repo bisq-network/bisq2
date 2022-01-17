@@ -22,102 +22,70 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.primary.main.content.social.user.ChatUserView;
 import bisq.i18n.Res;
-import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeIntentView extends View<BisqGridPane, TradeIntentModel, TradeIntentController> {
+public class TradeIntentView extends View<StackPane, TradeIntentModel, TradeIntentController> {
     private final BisqTableView<TradeIntentListItem> tableView;
-    private ChangeListener<TradeIntentListItem> dataTableSelectedItemListener;
+    private final BisqGridPane gridPane;
+    private final Label addDataResultLabel;
+    private final ChangeListener<TradeIntentListItem> dataTableSelectedItemListener;
 
-    public TradeIntentView(TradeIntentModel model, TradeIntentController controller) {
-        super(new BisqGridPane(), model, controller);
+    public TradeIntentView(TradeIntentModel model, TradeIntentController controller, ChatUserView chatUserView) {
+        super(new StackPane(), model, controller);
 
-        root.setPadding(new Insets(20, 20, 20, 0));
+        gridPane = new BisqGridPane();
+        gridPane.setPadding(new Insets(20, 20, 20, 0));
 
-        root.startSection(Res.offerbook.get("tradeIntent.create.title"));
-        TextField userIdField = root.addTextField(Res.offerbook.get("tradeIntent.create.userId"), "Alice");
-        TextField askTextField = root.addTextField(Res.offerbook.get("tradeIntent.create.ask"), "I want 0.01 BTC");
-        TextField bidTextField = root.addTextField(Res.offerbook.get("tradeIntent.create.bid"), "Pay EUR via SEPA at market rate");
-        Pair<Button, Label> addDataButtonPair = root.addButton(Res.common.get("publish"));
+        //todo user UI needs more work...
+        Node userViewRoot = chatUserView.getRoot();
+        StackPane.setAlignment(userViewRoot, Pos.TOP_RIGHT);
+        root.getChildren().addAll(gridPane/*, userViewRoot*/);
+
+        gridPane.startSection(Res.offerbook.get("tradeIntent.create.title"));
+        TextField askTextField = gridPane.addTextField(Res.offerbook.get("tradeIntent.create.ask"), "I want 0.01 BTC");
+        TextField bidTextField = gridPane.addTextField(Res.offerbook.get("tradeIntent.create.bid"), "Pay EUR via SEPA at market rate");
+        Pair<Button, Label> addDataButtonPair = gridPane.addButton(Res.common.get("publish"));
         Button addDataButton = addDataButtonPair.first();
-        Label label = addDataButtonPair.second();
+        addDataResultLabel = addDataButtonPair.second();
         addDataButton.setOnAction(e -> {
-            addDataButton.setDisable(true);
-            label.textProperty().unbind();
-            label.setText("...");
-            addDataButton.setDisable(false);
-            StringProperty result = controller.addData(userIdField.getText(), askTextField.getText(), bidTextField.getText());
-            label.textProperty().bind(result);
-        });
-        root.endSection();
+            controller.onAddTradeIntent(askTextField.getText(), bidTextField.getText());
 
-        root.startSection(Res.offerbook.get("tradeIntent.table.title"));
+        });
+        gridPane.endSection();
+
+        gridPane.startSection(Res.offerbook.get("tradeIntent.table.title"));
         tableView = new BisqTableView<>(model.getSortedItems());
         tableView.setMinHeight(200);
-        root.addTableView(tableView);
+        gridPane.addTableView(tableView);
         configDataTableView();
-        root.endSection();
+        gridPane.endSection();
 
         dataTableSelectedItemListener = (observable, oldValue, newValue) -> {
         };
-        
-        /*
-        bisqGridPane.startSection(Res.network.get("tradeIntent.table.title"));
-        dataTableView = new BisqTableView<>(model.getSortedDataListItems());
-        dataTableView.setMinHeight(200);
-        bisqGridPane.addTableView(dataTableView);
-        configDataTableView();
-        bisqGridPane.endSection();
-
-        bisqGridPane.startSection(Res.network.get("sendMessages.title"));
-        messageReceiverTextField = bisqGridPane.addTextField(Res.network.get("sendMessages.to"), "localhost:8000");
-        messageReceiverTextField.setEditable(false);
-        nodeIdTextField = bisqGridPane.addTextField(Res.network.get("sendMessages.nodeId"), "");
-        nodeIdTextField.setEditable(false);
-        TextField msgTextField = bisqGridPane.addTextField(Res.network.get("sendMessages.text"), "Test proto");
-        Pair<Button, Label> sendButtonPair = bisqGridPane.addButton(Res.network.get("sendMessages.send"));
-        Button sendButton = sendButtonPair.first();
-        sendButton.setOnAction(e -> {
-            String msg = msgTextField.getText();
-            sendButton.setDisable(true);
-            sendButtonPair.second().setText("...");
-            controller.sendMessage(msg).whenComplete((result, throwable) -> {
-                UIThread.run(() -> {
-                    if (throwable == null) {
-                        sendButtonPair.second().setText(result);
-                    } else {
-                        sendButtonPair.second().setText(throwable.toString());
-                    }
-                    sendButton.setDisable(false);
-                });
-            });
-        });
-        bisqGridPane.addHSpacer();
-        receivedMessagesTextArea = bisqGridPane.addTextArea(Res.network.get("sendMessages.receivedMessage"), model.getReceivedMessages());
-        receivedMessagesTextArea.setMinHeight(100);
-        bisqGridPane.endSection();
-
-        dataTableSelectedItemListener = (observable, oldValue, newValue) -> {
-            controller.onSelectNetworkId(newValue.getNetworkId());
-        };*/
     }
 
     @Override
     public void onViewAttached() {
         tableView.getSelectionModel().selectedItemProperty().addListener(dataTableSelectedItemListener);
+        addDataResultLabel.textProperty().bind(model.getAddDataResultProperty());
     }
 
     @Override
     protected void onViewDetached() {
         tableView.getSelectionModel().selectedItemProperty().removeListener(dataTableSelectedItemListener);
+        addDataResultLabel.textProperty().unbind();
     }
 
     private void configDataTableView() {
@@ -133,14 +101,9 @@ public class TradeIntentView extends View<BisqGridPane, TradeIntentModel, TradeI
         tableView.getSortOrder().add(dateColumn);
 
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
-                .title(Res.common.get("id"))
-                .minWidth(80)
-                .valueSupplier(TradeIntentListItem::getId)
-                .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
-                .title(Res.common.get("userName"))
+                .title(Res.common.get("social.userName"))
                 .minWidth(120)
-                .valueSupplier(TradeIntentListItem::getUserId)
+                .valueSupplier(TradeIntentListItem::getUserName)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
                 .title(Res.common.get("ask"))

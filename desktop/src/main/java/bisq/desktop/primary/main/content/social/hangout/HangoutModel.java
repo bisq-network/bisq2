@@ -18,13 +18,20 @@
 package bisq.desktop.primary.main.content.social.hangout;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.common.data.Pair;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.primary.main.content.social.tradeintent.TradeIntent;
+import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.p2p.NetworkId;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.network.p2p.services.data.broadcast.BroadcastResult;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.security.KeyPairService;
+import bisq.social.chat.Channel;
+import bisq.social.chat.ChatMessage;
+import bisq.social.chat.ChatService;
+import bisq.social.chat.PrivateChannel;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -32,43 +39,100 @@ import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Getter
 public class HangoutModel implements Model {
+
+
+    public enum PublicChannelId implements Serializable {
+        BTC_EUR,
+        BTC_USD,
+        ANY
+    }
+
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final KeyPairService keyPairService;
-    private Optional<TradeIntent> tradeIntent = Optional.empty();
-    private Optional<NetworkId> networkId = Optional.empty();
-    public StringProperty chatText = new SimpleStringProperty("");
-    public ObservableList<String> chatPeers = FXCollections.observableArrayList();
-    public Optional<String> selectedChatPeer = Optional.empty();
+    private final ChatService chatService;
+
+    private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
+    private final StringProperty selectedChatMessages = new SimpleStringProperty("");
+
+    private final ObservableList<Channel> channels = FXCollections.observableArrayList();
+    public final ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
 
     public HangoutModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
         keyPairService = serviceProvider.getKeyPairService();
+        chatService = serviceProvider.getChatService();
     }
 
-    void setData(Object data) {
-        Pair<TradeIntent, NetworkId> pair = Pair.class.cast(data);
-        tradeIntent = Optional.of(pair.first());
-        networkId = Optional.of(pair.second());
+    public void setAllChannels(Collection<PrivateChannel> privateChannels) {
+        this.channels.setAll(privateChannels);
+    }
 
-        String userId = tradeIntent.get().userId();
-        setSelectedChatPeer(userId);
-        if (!chatPeers.contains(userId)) {
-            chatPeers.add(userId);
+    public void addChannel(Channel channel) {
+        if (!channels.contains(channel)) {
+            channels.add(channel);
         }
     }
 
-    public void setSelectedChatPeer(String chatPeer) {
-        selectedChatPeer = Optional.of(chatPeer);
+    void selectChannel(Channel channel) {
+        selectedChannel.set(channel);
+        setAllChatMessages(channel);
     }
 
-    public void send(String text) {
-        chatText.set(chatText.get() + ">> " + text + "\n");
+    void setAllChatMessages(Channel channel) {
+        chatMessagesByChannelId.putIfAbsent(channel.getId(), new SimpleStringProperty(""));
+        StringProperty chatMessages = chatMessagesByChannelId.get(channel.getId());
+        chatMessages.set("");
+        channel.getChatMessages().forEach(chatMessage -> addChatMessage(channel, chatMessage));
+        if (selectedChannel.get() != null && selectedChannel.get().getId().equals(channel.getId())) {
+            selectedChatMessages.set(chatMessages.get());
+        }
     }
+
+    void addChatMessage(Channel channel, ChatMessage chatMessage) {
+        chatMessagesByChannelId.putIfAbsent(channel.getId(), new SimpleStringProperty(""));
+        StringProperty chatMessages = chatMessagesByChannelId.get(channel.getId());
+        String previous = chatMessages.get();
+        if (!previous.isEmpty()) {
+            previous += "\n";
+        }
+        chatMessages.set(previous +
+                "[" + DateFormatter.formatDateTime(new Date(chatMessage.getDate())) +
+                "] [" +
+                chatMessage.getSenderUserName().substring(0,12) +
+                "] " +
+                chatMessage.getText());
+
+        if (selectedChannel.get() != null && selectedChannel.get().getId().equals(channel.getId())) {
+            selectedChatMessages.set(chatMessages.get());
+        }
+    }
+
+    String getDisplayString(PublicChannelId publicChannelId) {
+        return switch (publicChannelId) {
+            case BTC_EUR -> Res.common.get("social.hangout.btcEurMarket");
+            case BTC_USD -> Res.common.get("social.hangout.btcUsdMarket");
+            case ANY -> Res.common.get("social.hangout.anyMarket");
+        };
+    }
+
+    void setSendMessageResult(String channelId, ConfidentialMessageService.Result result, BroadcastResult broadcastResult) {
+        log.info("Send message result for channelId {}: {}",
+                channelId, result.getState() + "; " + broadcastResult.toString()); //todo
+    }
+
+    void setSendMessageError(String channelId, Throwable throwable) {
+        log.error("Send message resulted in an error: channelId={}, error={}", channelId, throwable.toString());  //todo
+    }
+
 }

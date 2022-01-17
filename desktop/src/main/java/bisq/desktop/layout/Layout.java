@@ -22,7 +22,7 @@ import javafx.scene.Node;
 import javafx.scene.layout.AnchorPane;
 
 public class Layout {
-    public static final Insets DEFAULT_PADDING = new Insets(20);
+    public static final Insets PADDING = new Insets(20);
     public static final double SPACING = 20;
 
     public static void pinToAnchorPane(Node node, int top, int right, int bottom, int left) {

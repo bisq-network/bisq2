@@ -18,10 +18,11 @@
 package bisq.desktop.primary.main.content.social.tradeintent;
 
 import bisq.desktop.components.table.TableItem;
-import bisq.network.p2p.NetworkId;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedNetworkIdPayload;
+import bisq.network.NetworkId;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.social.intent.TradeIntent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,7 +34,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public class TradeIntentListItem implements TableItem {
-    private final AuthenticatedNetworkIdPayload payload;
+    private final AuthenticatedPayload payload;
     private final TradeIntent tradeIntent;
     private final NetworkId networkId;
     private final String id;
@@ -42,15 +43,15 @@ public class TradeIntentListItem implements TableItem {
     private final String ask;
     private final String ttl;
     private final Date date;
-    private final String userId;
+    private final String userName;
 
-    TradeIntentListItem(AuthenticatedNetworkIdPayload payload) {
+    TradeIntentListItem(AuthenticatedPayload payload) {
         this.payload = payload;
         checkArgument(payload.getData() instanceof TradeIntent);
         this.tradeIntent = (TradeIntent) payload.getData();
-        networkId = payload.getNetworkId();
+        networkId = tradeIntent.maker().networkId();
         id = tradeIntent.id();
-        userId = tradeIntent.userId();
+        userName = tradeIntent.maker().userName();
         ttl = TimeFormatter.formatTime(payload.getMetaData().getTtl());
         ask = tradeIntent.ask();
         bid = tradeIntent.bid();

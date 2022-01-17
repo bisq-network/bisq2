@@ -21,8 +21,8 @@ import bisq.common.timer.Scheduler;
 import bisq.common.util.ByteUnit;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.MathUtils;
+import bisq.network.NetworkId;
 import bisq.network.NetworkService;
-import bisq.network.p2p.NetworkId;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.Address;
@@ -49,6 +49,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
 public class MultiNodesModel {
@@ -131,9 +133,15 @@ public class MultiNodesModel {
 
     public void bootstrap(Address address, Transport.Type transportType) {
         NetworkService networkService = createNetworkService(address, transportType);
-        networkService.bootstrapToNetwork(address.getPort())
-                .whenComplete((r, t) -> handler.ifPresent(handler ->
-                        handler.onStateChange(address, networkService.getStateByTransportType().get(transportType))));
+        ServiceNode serviceNode = networkService.getServiceNodesByTransport().findServiceNode(transportType).orElseThrow();
+        runAsync(() -> {
+            serviceNode.maybeInitializeServer(Node.DEFAULT_NODE_ID, address.getPort());
+            serviceNode.maybeInitializePeerGroup();
+        }, NetworkService.NETWORK_IO_POOL)
+                .whenComplete((r, t) -> {
+                    handler.ifPresent(handler ->
+                            handler.onStateChange(address, networkService.getStateByTransportType().get(transportType)));
+                });
     }
 
     public CompletableFuture<List<Void>> shutdown() {
@@ -176,12 +184,12 @@ public class MultiNodesModel {
         NetworkService senderNetworkService = senderNetworkId.addressByNetworkType().entrySet().stream()
                 .map(e -> getOrCreateNetworkService(e.getValue(), e.getKey()))
                 .findAny()
-                .get();
+                .orElseThrow();
         NetworkService receiverNetworkService = receiverNetworkId.addressByNetworkType().entrySet().stream()
                 .map(e -> getOrCreateNetworkService(e.getValue(), e.getKey()))
                 .findAny()
-                .get();
-        receiverNetworkService.findMyAddresses().forEach((type, value) -> {
+                .orElseThrow();
+        receiverNetworkService.getMyAddresses().forEach((type, value) -> {
             Address receiverAddress = value.get(receiverNetworkId.getNodeId());
             sendMsgListener = new Node.Listener() {
                 @Override
@@ -191,7 +199,7 @@ public class MultiNodesModel {
                             connection.getPeerAddress() + " --> " + receiverAddress + " " + message.toString();
                     appendToHistory(receiverAddress, newLine);
                     handler.ifPresent(handler -> handler.onMessage(receiverAddress));
-                    receiverNetworkService.removeMessageListener(sendMsgListener);
+                    receiverNetworkService.removeDefaultNodeListener(sendMsgListener);
                 }
 
                 @Override
@@ -202,7 +210,7 @@ public class MultiNodesModel {
                 public void onDisconnect(Connection connection, CloseReason closeReason) {
                 }
             };
-            receiverNetworkService.addMessageListener(sendMsgListener);
+            receiverNetworkService.addDefaultNodeListener(sendMsgListener);
         });
 
         MockMailBoxMessage mailBoxMessage = new MockMailBoxMessage(message);
@@ -211,7 +219,7 @@ public class MultiNodesModel {
                         senderKeyPair,
                         senderNetworkId.getNodeId())
                 .whenComplete((result, throwable) -> {
-                    senderNetworkService.findMyAddresses().forEach((type, value) -> {
+                    senderNetworkService.getMyAddresses().forEach((type, value) -> {
                         Address senderAddress = value.get(senderNetworkId.getNodeId());
                         String newLine = "\n" + getTimestamp() + " " +
                                 type.toString().substring(0, 3) + "  onSent       " +
@@ -255,7 +263,7 @@ public class MultiNodesModel {
         KeyPairService keyPairService = new KeyPairService(persistenceService);
         keyPairServicesByAddress.put(address, keyPairService);
         keyPairService.initialize().join();
-        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, keyPairService, persistenceService);
+        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, persistenceService, keyPairService);
         handler.ifPresent(handler -> handler.onStateChange(address, networkService.getStateByTransportType().get(transportType)));
         networkServicesByAddress.put(address, networkService);
         setupConnectionListener(networkService, transportType);
@@ -301,7 +309,7 @@ public class MultiNodesModel {
                                       Transport.Type transportType,
                                       boolean wasAdded) {
         StringBuilder sb = new StringBuilder("\n");
-        Address address = networkService.findMyDefaultAddress(transportType).get();
+        Address address = networkService.findDefaultAddress(transportType).orElseThrow();
         sb.append(getTimestamp())
                 .append(" ").append(transportType.name(), 0, 3)
                 .append(wasAdded ? " +onDataAdded " : " -onDataRemoved ")

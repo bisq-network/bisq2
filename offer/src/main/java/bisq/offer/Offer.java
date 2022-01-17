@@ -20,7 +20,7 @@ package bisq.offer;
 import bisq.common.monetary.Quote;
 import bisq.common.util.MathUtils;
 import bisq.contract.SwapProtocolType;
-import bisq.network.p2p.NetworkId;
+import bisq.network.NetworkId;
 import bisq.offer.options.AmountOption;
 import bisq.offer.options.OfferOption;
 import bisq.offer.options.PriceOption;

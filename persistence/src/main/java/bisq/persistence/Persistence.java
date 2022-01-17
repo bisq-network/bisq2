@@ -65,6 +65,7 @@ public class Persistence<T extends Serializable> {
             synchronized (lock) {
                 object = objectInputStream.readObject();
             }
+            //noinspection unchecked
             return Optional.of((T) object);
         } catch (Throwable exception) {
             log.error("Error at read for " + storagePath, exception);
@@ -103,7 +104,7 @@ public class Persistence<T extends Serializable> {
 
                     // Atomic rename
                     FileUtils.renameFile(tempFile, storageFile);
-                    log.info("Persisted {}", serializable);
+                    log.debug("Persisted {}", serializable);
                     success = true;
                 } catch (IOException exception) {
                     log.error(exception.toString(), exception);

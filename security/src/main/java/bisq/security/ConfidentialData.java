@@ -17,40 +17,11 @@
 
 package bisq.security;
 
-import bisq.common.encoding.Hex;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-
 import java.io.Serializable;
 
-@EqualsAndHashCode
-@Getter
-public class ConfidentialData implements Serializable {
-    private final byte[] encodedSenderPublicKey; // 88 bytes
-    private final byte[] hmac;// 32 bytes
-    private final byte[] iv; //16 bytes
-    private final byte[] cypherText;
-    private final byte[] signature;// 71-73 bytes
-
-    ConfidentialData(byte[] encodedSenderPublicKey,
-                     byte[] hmac,
-                     byte[] iv,
-                     byte[] cypherText,
-                     byte[] signature) {
-        this.encodedSenderPublicKey = encodedSenderPublicKey;
-        this.hmac = hmac;
-        this.iv = iv;
-        this.cypherText = cypherText;
-        this.signature = signature;
-    }
-
-    @Override
-    public String toString() {
-        return "Sealed{" +
-                "\r\n     hmac=" + Hex.encode(hmac) +
-                ",\r\n     iv=" + Hex.encode(iv) +
-                ",\r\n     cypherText=" + Hex.encode(cypherText) +
-                ",\r\n     signature=" + Hex.encode(signature) +
-                "\r\n}";
-    }
+public record ConfidentialData(byte[] encodedSenderPublicKey,
+                               byte[] hmac,
+                               byte[] iv,
+                               byte[] cypherText,
+                               byte[] signature) implements Serializable {
 }

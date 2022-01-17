@@ -23,7 +23,7 @@ import lombok.Getter;
 
 public class NavigationTargetTab extends Tab {
     @Getter
-    private NavigationTarget navigationTarget;
+    private final NavigationTarget navigationTarget;
 
     public NavigationTargetTab(String title, NavigationTarget navigationTarget) {
         super(title);

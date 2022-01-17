@@ -17,6 +17,8 @@ dependencies {
 
     implementation project(':common')
     implementation project(':persistence')
+    implementation project(':security')
+    implementation project(':network')
 
     implementation 'com.google.guava:guava'
 }

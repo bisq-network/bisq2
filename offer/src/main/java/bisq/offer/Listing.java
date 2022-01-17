@@ -17,8 +17,9 @@
 
 package bisq.offer;
 
+import bisq.common.util.StringUtils;
 import bisq.contract.ProtocolType;
-import bisq.network.p2p.NetworkId;
+import bisq.network.NetworkId;
 import bisq.offer.options.OfferOption;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,7 +27,6 @@ import lombok.Getter;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 @EqualsAndHashCode
 @Getter
@@ -41,7 +41,7 @@ public abstract class Listing implements Serializable {
      * @param id             The unique nodeId for that listing.
      * @param date           The date when the listing has been created.
      * @param protocolTypes  The list of the supported protocol types. Order in the list can be used as priority.
-     * @param makerNetworkId The networkId the maker used for that listing. It encapsulate the network addresses
+     * @param makerNetworkId The networkId the maker used for that listing. It encapsulates the network addresses
      *                       of the supported networks and the pubKey used for data protection in the storage layer.
      * @param offerOptions   A set of options covering different context specific aspects of the offer like fees,
      *                       reputation, transfers,... It depends on the chosen protocol and contract type.
@@ -61,7 +61,7 @@ public abstract class Listing implements Serializable {
     public Listing(List<? extends ProtocolType> protocolTypes,
                    NetworkId makerNetworkId,
                    Set<OfferOption> offerOptions) {
-        this(UUID.randomUUID().toString(),
+        this(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 protocolTypes,
                 makerNetworkId,

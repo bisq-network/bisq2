@@ -18,78 +18,95 @@
 package bisq.identity;
 
 
+import bisq.common.util.StringUtils;
+import bisq.network.NetworkService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.KeyPairService;
+import bisq.security.PubKey;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.security.KeyPair;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * todo
+ * add identity selection strategy. E.g. one identity per domain ID or one identity per context
+ * type (e.g. fiat trades) or one global identity...
+ * Add support for userName mapping with identity (not sure if should be done here or in social module)
+ */
 @Slf4j
-public class IdentityService implements PersistenceClient<HashMap<String, Identity>> {
+public class IdentityService implements PersistenceClient<IdentityModel> {
     public final static String DEFAULT = "default";
 
     @Getter
-    private final Persistence<HashMap<String, Identity>> persistence;
-    private final Map<String, Identity> identityById = new ConcurrentHashMap<>();
+    private final Persistence<IdentityModel> persistence;
+    private final KeyPairService keyPairService;
+    private final NetworkService networkService;
+    private final IdentityModel identityModel = new IdentityModel();
 
-    public IdentityService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, "db", "identities");
+    public IdentityService(PersistenceService persistenceService, KeyPairService keyPairService, NetworkService networkService) {
+        persistence = persistenceService.getOrCreatePersistence(this, "db", identityModel);
+        this.keyPairService = keyPairService;
+        this.networkService = networkService;
     }
 
     public CompletableFuture<Boolean> initialize() {
+        //todo create identity pool
+        // Add flag if identity is actively used and network node need to be initialized
+        identityModel.getIdentityByDomainId().values().forEach(identity ->
+                networkService.maybeInitializeServer(identity.nodeId(), identity.pubKey())
+                        .forEach((key, value) -> value.whenComplete((r, t) ->
+                                log.error("maybeInitializeServer Result at {} networkId={}, result={}",
+                                        key, identity.networkId(), r))));
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
-    public void applyPersisted(HashMap<String, Identity> persisted) {
-        synchronized (identityById) {
-            identityById.putAll(persisted);
+    public void applyPersisted(IdentityModel persisted) {
+        synchronized (identityModel) {
+            identityModel.applyPersisted(persisted);
         }
     }
 
     @Override
-    public HashMap<String, Identity> getClone() {
-        synchronized (identityById) {
-            return new HashMap<>(identityById);
+    public IdentityModel getClone() {
+        synchronized (identityModel) {
+            return identityModel.getClone();
         }
     }
 
     public void shutdown() {
     }
 
-    public Identity getOrCreateDefaultIdentity() {
-        return getOrCreateIdentity(DEFAULT);
-    }
-
-    public Identity getOrCreateIdentity(String id) {
-        synchronized (identityById) {
-            if (identityById.containsKey(id)) {
-                return identityById.get(id);
+    public CompletableFuture<Identity> getOrCreateIdentity(String domainId) {
+        synchronized (identityModel) {
+            if (identityModel.getIdentityByDomainId().containsKey(domainId)) {
+                return CompletableFuture.completedFuture(identityModel.getIdentityByDomainId().get(domainId));
             }
         }
-        Identity identity;
-        String keyId = UUID.randomUUID().toString().substring(0, 8);
-        String nodeId = UUID.randomUUID().toString().substring(0, 8);
-        identity = new Identity(id, nodeId, keyId);
-        synchronized (identityById) {
-            identityById.put(id, identity);
-        }
-        persist();
-        return identity;
+        String keyId = StringUtils.createUid();
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
+        String nodeId = StringUtils.createUid();
+        return networkService.getInitializedNetworkIdAsync(nodeId, pubKey)
+                .thenApply(networkId -> {
+                    Identity identity = new Identity(domainId, networkId, keyPair);
+                    synchronized (identityModel) {
+                        identityModel.getIdentityByDomainId().put(domainId, identity);
+                    }
+                    persist();
+                    return identity;
+                });
     }
 
-    public Optional<Identity> findIdentityByNodeId(String nodeId) {
-        synchronized (identityById) {
-            return identityById.values().stream()
-                    .filter(identity -> identity.nodeId().equals(nodeId))
-                    .findAny();
+    public Optional<Identity> findIdentity(String domainId) {
+        synchronized (identityModel) {
+            return Optional.ofNullable(identityModel.getIdentityByDomainId().get(domainId));
         }
     }
+
 }

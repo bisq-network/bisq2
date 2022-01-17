@@ -21,6 +21,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Address;
+import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
@@ -34,6 +35,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
 public class MultiNodesSetup {
@@ -100,8 +103,12 @@ public class MultiNodesSetup {
     }
 
     public void bootstrap(Address address, Transport.Type transportType) {
-        NetworkService networkService = createNetworkService(address, transportType);
-        networkService.bootstrapToNetwork(address.getPort()).join();
+        ServiceNode serviceNode = createNetworkService(address, transportType).getServiceNodesByTransport()
+                .findServiceNode(transportType).orElseThrow();
+        runAsync(() -> {
+            serviceNode.maybeInitializeServer(Node.DEFAULT_NODE_ID, address.getPort());
+            serviceNode.maybeInitializePeerGroup();
+        }, NetworkService.NETWORK_IO_POOL);
     }
 
     public CompletableFuture<List<Void>> shutdown() {
@@ -138,7 +145,7 @@ public class MultiNodesSetup {
                 networkServiceConfig.seedAddressesByTransport(),
                 Optional.empty());
         PersistenceService persistenceService = new PersistenceService(networkServiceConfig.baseDir());
-        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, keyPairService, persistenceService);
+        NetworkService networkService = new NetworkService(specificNetworkServiceConfig, persistenceService, keyPairService);
         networkServicesByAddress.put(address, networkService);
         return networkService;
     }

@@ -29,10 +29,11 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
     public TopPanelView(TopPanelModel model, TopPanelController controller) {
         super(new HBox(), model, controller);
 
-        root.setMinHeight(80);
-        root.setPadding(new Insets(10, 20, 10, 20));
+        root.setMinHeight(53);
+        root.setMaxHeight(root.getMinHeight());
+        root.setPadding(new Insets(14, 20, 5, 19));
 
-        ImageView logo = ImageUtil.getImageView("/images/logo_small.png");
+        ImageView logo = ImageUtil.getImageViewById("logo-small");
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
