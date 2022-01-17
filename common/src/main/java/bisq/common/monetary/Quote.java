@@ -22,6 +22,7 @@ import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
@@ -39,10 +40,12 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @EqualsAndHashCode
 @Getter
+@ToString
 @Slf4j
 public class Quote implements Comparable<Quote> {
     @Setter
-    private String QUOTE_SEPARATOR = "/";
+    private static String QUOTE_SEPARATOR = "/";
+    
     private final long value;
     private final Monetary baseMonetary;
     private final Monetary quoteMonetary;
@@ -116,7 +119,7 @@ public class Quote implements Comparable<Quote> {
     public static Quote fromMarketPriceOffset(Quote marketPrice, double offset) {
         checkArgument(offset >= -1 && offset <= 1, "Offset must be in range -1 to +1");
         double price = marketPrice.asDouble() * (1 + offset);
-        return Quote.fromPrice(price, marketPrice.baseMonetary.currencyCode, marketPrice.quoteMonetary.currencyCode);
+        return Quote.fromPrice(price, marketPrice.baseMonetary.code, marketPrice.quoteMonetary.code);
     }
 
     /**
@@ -146,11 +149,11 @@ public class Quote implements Comparable<Quote> {
                 .longValue();
         if (quoteMonetary instanceof Fiat) {
             return new Fiat(value,
-                    quoteMonetary.currencyCode,
+                    quoteMonetary.code,
                     quoteMonetary.smallestUnitExponent);
         } else {
             return new Coin(value,
-                    quoteMonetary.currencyCode,
+                    quoteMonetary.code,
                     quoteMonetary.smallestUnitExponent);
         }
     }
@@ -164,21 +167,11 @@ public class Quote implements Comparable<Quote> {
     }
 
     public String getQuoteCode() {
-        return baseMonetary.currencyCode + QUOTE_SEPARATOR + quoteMonetary.currencyCode;
+        return baseMonetary.code + QUOTE_SEPARATOR + quoteMonetary.code;
     }
 
     @Override
-    public int compareTo(Quote o) {
-        return Long.compare(value, o.getValue());
-    }
-
-    @Override
-    public String toString() {
-        return "Quote{" +
-                "\r\n     value=" + value +
-                ",\r\n     baseMonetary=" + baseMonetary +
-                ",\r\n     quoteMonetary=" + quoteMonetary +
-                ",\r\n     smallestUnitExponent=" + smallestUnitExponent +
-                "\r\n}";
+    public int compareTo(Quote other) {
+        return Long.compare(value, other.getValue());
     }
 }

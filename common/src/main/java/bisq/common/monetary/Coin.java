@@ -29,13 +29,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode(callSuper = true)
 public class Coin extends Monetary {
 
-    public static Coin parse(String string, String currencyCode) {
-        return parse(string, currencyCode, deriveExponent(currencyCode));
+    public static Coin parse(String string, String code) {
+        return parse(string, code, deriveExponent(code));
     }
 
-    public static Coin parse(String string, String currencyCode, int smallestUnitExponent) {
+    public static Coin parse(String string, String code, int smallestUnitExponent) {
         return Coin.of(new BigDecimal(string).movePointRight(smallestUnitExponent).longValue(),
-                currencyCode,
+                code,
                 smallestUnitExponent);
     }
 
@@ -81,44 +81,46 @@ public class Coin extends Monetary {
         return new Coin(value, "XMR", 12);
     }
 
-    public static Coin of(long value, String currencyCode) {
-        return new Coin(value, currencyCode, deriveExponent(currencyCode));
+    public static Coin of(long value, String code) {
+        return new Coin(value, code, deriveExponent(code));
     }
 
-    public static Coin of(double value, String currencyCode) {
-        int exponent = deriveExponent(currencyCode);
-        return new Coin(value, currencyCode, exponent);
+    public static Coin of(double value, String code) {
+        int exponent = deriveExponent(code);
+        return new Coin(value, code, exponent);
     }
 
 
-    public static Coin of(long value, String currencyCode, int smallestUnitExponent) {
-        return new Coin(value, currencyCode, smallestUnitExponent);
+    public static Coin of(long value, String code, int smallestUnitExponent) {
+        return new Coin(value, code, smallestUnitExponent);
     }
 
-    Coin(long value, String currencyCode, int smallestUnitExponent) {
-        super(value, currencyCode, smallestUnitExponent);
+    Coin(long value, String code, int smallestUnitExponent) {
+        // We add a `c` as prefix for crypto-currencies to avoid that we get a collusion with the code. 
+        // It happened in the past that altcoins used a fiat code.
+        super("c-" + code, value, code, smallestUnitExponent);
     }
 
-    private Coin(double value, String currencyCode, int smallestUnitExponent) {
-        super(value, currencyCode, smallestUnitExponent);
+    private Coin(double value, String code, int smallestUnitExponent) {
+        super("c-" + code, value, code, smallestUnitExponent);
     }
 
     public Coin add(Coin value) {
-        checkArgument(value.currencyCode.equals(this.currencyCode));
-        return new Coin(LongMath.checkedAdd(this.value, value.value), this.currencyCode, this.smallestUnitExponent);
+        checkArgument(value.code.equals(this.code));
+        return new Coin(LongMath.checkedAdd(this.value, value.value), this.code, this.smallestUnitExponent);
     }
 
     public Coin subtract(Coin value) {
-        checkArgument(value.currencyCode.equals(this.currencyCode));
-        return new Coin(LongMath.checkedSubtract(this.value, value.value), this.currencyCode, this.smallestUnitExponent);
+        checkArgument(value.code.equals(this.code));
+        return new Coin(LongMath.checkedSubtract(this.value, value.value), this.code, this.smallestUnitExponent);
     }
 
     public Coin multiply(long factor) {
-        return new Coin(LongMath.checkedMultiply(this.value, factor), this.currencyCode, this.smallestUnitExponent);
+        return new Coin(LongMath.checkedMultiply(this.value, factor), this.code, this.smallestUnitExponent);
     }
 
     public Coin divide(long divisor) {
-        return new Coin(this.value / divisor, this.currencyCode, this.smallestUnitExponent);
+        return new Coin(this.value / divisor, this.code, this.smallestUnitExponent);
     }
 
     @Override
@@ -126,8 +128,8 @@ public class Coin extends Monetary {
         return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(smallestUnitExponent).doubleValue(), smallestUnitExponent);
     }
 
-    private static int deriveExponent(String currencyCode) {
-        return currencyCode.equals("XMR") ? 12 : 8;
+    private static int deriveExponent(String code) {
+        return code.equals("XMR") ? 12 : 8;
     }
 
     @Override

@@ -218,7 +218,7 @@ public class OfferService {
             }
             minAmountAsPercentage.ifPresent(value -> options.add(new AmountOption(value)));
             marketBasedPrice.ifPresent(value -> options.add(new PriceOption(value)));
-            boolean isBaseCurrencyAskSide = baseCurrency.equals(askAsset.monetary().getCurrencyCode());
+            boolean isBaseCurrencyAskSide = baseCurrency.equals(askAsset.monetary().getCode());
             return new Offer(askAsset, bidAsset, isBaseCurrencyAskSide, protocolTypes, makerNetworkId, options);
         }
 

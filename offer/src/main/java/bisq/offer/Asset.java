@@ -39,7 +39,7 @@ public record Asset(Monetary monetary,
     }
 
     public String currencyCode() {
-        return monetary.getCurrencyCode();
+        return monetary.getCode();
     }
 
     public int smallestUnitExponent() {

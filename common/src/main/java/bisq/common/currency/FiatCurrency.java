@@ -18,6 +18,7 @@
 package bisq.common.currency;
 
 
+import bisq.common.locale.LocaleRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -34,8 +35,12 @@ public final class FiatCurrency extends BisqCurrency {
     @Getter
     private final Currency currency;
 
-    public FiatCurrency(String currencyCode, Locale locale) {
-        this(Currency.getInstance(currencyCode), locale);
+    public FiatCurrency(String code) {
+        this(Currency.getInstance(code), LocaleRepository.getDefaultLocale());
+    }
+
+    public FiatCurrency(String code, Locale locale) {
+        this(Currency.getInstance(code), locale);
     }
 
     public FiatCurrency(Currency currency, Locale locale) {

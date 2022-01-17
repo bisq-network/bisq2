@@ -20,48 +20,57 @@ package bisq.common.monetary;
 import bisq.common.currency.BisqCurrency;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 
 @EqualsAndHashCode
 @Getter
+@ToString
 @Slf4j
 public abstract class Monetary implements Comparable<Monetary> {
-    protected final long value;
-    protected final String currencyCode;
-    protected final int smallestUnitExponent;
-
-    public static Monetary from(Monetary monetary, long newValue) {
-        if (monetary instanceof Fiat) {
-            return Fiat.of(newValue, monetary.getCurrencyCode(), monetary.getSmallestUnitExponent());
-        } else {
-            return Coin.of(newValue, monetary.getCurrencyCode(), monetary.getSmallestUnitExponent());
-        }
-    }
-
-    public static Monetary from(long amount, String currencyCode) {
-        if (BisqCurrency.isFiat(currencyCode)) {
-            return Fiat.of(amount, currencyCode);
-        } else {
-            return Coin.of(amount, currencyCode);
-        }
-    }
-
-    protected Monetary(long value, String currencyCode, int smallestUnitExponent) {
-        this.value = value;
-        this.smallestUnitExponent = smallestUnitExponent;
-        this.currencyCode = currencyCode;
-    }
-
-    protected Monetary(double value, String currencyCode, int smallestUnitExponent) {
+    public static long doubleValueToLong(double value, int smallestUnitExponent) {
         double max = BigDecimal.valueOf(Long.MAX_VALUE).movePointLeft(smallestUnitExponent).doubleValue();
         if (value > max) {
             throw new ArithmeticException("Provided value would lead to an overflow");
         }
-        this.value = BigDecimal.valueOf(value).movePointRight(smallestUnitExponent).longValue();
+        return BigDecimal.valueOf(value).movePointRight(smallestUnitExponent).longValue();
+    }
+
+    public static Monetary from(Monetary monetary, long newValue) {
+        if (monetary instanceof Fiat) {
+            return Fiat.of(newValue, monetary.getCode(), monetary.getSmallestUnitExponent());
+        } else {
+            return Coin.of(newValue, monetary.getCode(), monetary.getSmallestUnitExponent());
+        }
+    }
+
+    public static Monetary from(long amount, String code) {
+        if (BisqCurrency.isFiat(code)) {
+            return Fiat.of(amount, code);
+        } else {
+            return Coin.of(amount, code);
+        }
+    }
+
+    /**
+     * Unique ID in case an altcoin uses a code used by a fiat currency (happened in the past)
+     */
+    protected final String id;
+    protected final long value;
+    protected final String code;
+    protected final int smallestUnitExponent;
+
+    protected Monetary(String id, long value, String code, int smallestUnitExponent) {
+        this.id = id;
+        this.value = value;
+        this.code = code;
         this.smallestUnitExponent = smallestUnitExponent;
-        this.currencyCode = currencyCode;
+    }
+
+    protected Monetary(String id, double value, String code, int smallestUnitExponent) {
+        this(id, doubleValueToLong(value, smallestUnitExponent), code, smallestUnitExponent);
     }
 
     abstract public double toDouble(long value);
@@ -71,16 +80,7 @@ public abstract class Monetary implements Comparable<Monetary> {
     }
 
     @Override
-    public int compareTo(Monetary o) {
-        return Long.compare(value, o.getValue());
-    }
-
-    @Override
-    public String toString() {
-        return "Monetary{" +
-                "\r\n     value=" + value +
-                ",\r\n     currencyCode='" + currencyCode + '\'' +
-                ",\r\n     smallestUnitExponent=" + smallestUnitExponent +
-                "\r\n}";
+    public int compareTo(Monetary other) {
+        return Long.compare(value, other.getValue());
     }
 }

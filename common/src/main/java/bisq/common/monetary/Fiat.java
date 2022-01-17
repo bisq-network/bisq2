@@ -29,15 +29,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode(callSuper = true)
 public class Fiat extends Monetary {
 
-    public static Fiat parse(String string, String currencyCode) {
+    public static Fiat parse(String string, String code) {
         return Fiat.of(new BigDecimal(string).movePointRight(4).longValue(),
-                currencyCode,
+                code,
                 4);
     }
 
-    public static Fiat parse(String string, String currencyCode, int smallestUnitExponent) {
+    public static Fiat parse(String string, String code, int smallestUnitExponent) {
         return Fiat.of(new BigDecimal(string).movePointRight(smallestUnitExponent).longValue(),
-                currencyCode,
+                code,
                 smallestUnitExponent);
     }
 
@@ -52,42 +52,42 @@ public class Fiat extends Monetary {
         throw new IllegalArgumentException("input could not be parsed. Expected: number value + space + currency code (e.g. 234.12 USD)");
     }
 
-    public static Fiat of(long value, String currencyCode) {
-        return new Fiat(value, currencyCode, 4);
+    public static Fiat of(long value, String code) {
+        return new Fiat(value, code, 4);
     }
 
-    public static Fiat of(double value, String currencyCode) {
-        return new Fiat(value, currencyCode, 4);
+    public static Fiat of(double value, String code) {
+        return new Fiat(value, code, 4);
     }
 
-    public static Fiat of(long value, String currencyCode, int smallestUnitExponent) {
-        return new Fiat(value, currencyCode, smallestUnitExponent);
+    public static Fiat of(long value, String code, int smallestUnitExponent) {
+        return new Fiat(value, code, smallestUnitExponent);
     }
 
-    Fiat(long value, String currencyCode, int smallestUnitExponent) {
-        super(value, currencyCode, smallestUnitExponent);
+    Fiat(long value, String code, int smallestUnitExponent) {
+        super(code, value, code, smallestUnitExponent);
     }
 
-    private Fiat(double value, String currencyCode, int smallestUnitExponent) {
-        super(value, currencyCode, smallestUnitExponent);
+    private Fiat(double value, String code, int smallestUnitExponent) {
+        super(code, value, code, smallestUnitExponent);
     }
 
     public Fiat add(Fiat value) {
-        checkArgument(value.currencyCode.equals(this.currencyCode));
-        return new Fiat(LongMath.checkedAdd(this.value, value.value), this.currencyCode, this.smallestUnitExponent);
+        checkArgument(value.code.equals(this.code));
+        return new Fiat(LongMath.checkedAdd(this.value, value.value), this.code, this.smallestUnitExponent);
     }
 
     public Fiat subtract(Fiat value) {
-        checkArgument(value.currencyCode.equals(this.currencyCode));
-        return new Fiat(LongMath.checkedSubtract(this.value, value.value), this.currencyCode, this.smallestUnitExponent);
+        checkArgument(value.code.equals(this.code));
+        return new Fiat(LongMath.checkedSubtract(this.value, value.value), this.code, this.smallestUnitExponent);
     }
 
     public Fiat multiply(long factor) {
-        return new Fiat(LongMath.checkedMultiply(this.value, factor), this.currencyCode, this.smallestUnitExponent);
+        return new Fiat(LongMath.checkedMultiply(this.value, factor), this.code, this.smallestUnitExponent);
     }
 
     public Fiat divide(long divisor) {
-        return new Fiat(this.value / divisor, this.currencyCode, this.smallestUnitExponent);
+        return new Fiat(this.value / divisor, this.code, this.smallestUnitExponent);
     }
 
     @Override
