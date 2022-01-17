@@ -17,7 +17,7 @@
 
 package bisq.protocol.multiSig;
 
-import bisq.contract.AssetTransfer;
+import bisq.contract.SettlementExecution;
 import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.MessageListener;
@@ -67,20 +67,22 @@ public abstract class MultiSigProtocol extends TwoPartyProtocol implements Messa
         PAYOUT_TX_VISIBLE_IN_MEM_POOL // Maker completed
     }
 
-    protected final AssetTransfer assetTransfer;
+    protected final SettlementExecution settlementExecution;
     protected final MultiSig multiSig;
 
-    public MultiSigProtocol(TwoPartyContract contract, NetworkService networkService, AssetTransfer transfer, SecurityProvider securityProvider) {
+    public MultiSigProtocol(TwoPartyContract contract, NetworkService networkService, 
+                            SettlementExecution settlementExecution, 
+                            SecurityProvider securityProvider) {
         super(contract, networkService);
-        this.assetTransfer = transfer;
+        this.settlementExecution = settlementExecution;
 
         this.multiSig = (MultiSig) securityProvider;
 
-        if (assetTransfer instanceof AssetTransfer.Manual) {
-            ((AssetTransfer.Manual) assetTransfer).addListener(this::onStartManualPayment);
+        if (settlementExecution instanceof SettlementExecution.Manual manualSettlementExecution) {
+            manualSettlementExecution.addListener(this::onStartManualPayment);
             addListener(state -> {
                 if (state == State.MANUAL_PAYMENT_STARTED) {
-                    ((AssetTransfer.Manual) assetTransfer).onManualPaymentStarted();
+                    manualSettlementExecution.onManualPaymentStarted();
                 }
             });
         }

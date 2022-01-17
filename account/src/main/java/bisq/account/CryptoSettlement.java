@@ -17,32 +17,28 @@
 
 package bisq.account;
 
-public class FiatTransfer extends Transfer<FiatTransfer.Type> {
-    public static final FiatTransfer SEPA = new FiatTransfer(Type.SEPA);
-    public static final FiatTransfer REVOLUT = new FiatTransfer(Type.REVOLUT);
-    public static final FiatTransfer ZELLE = new FiatTransfer(Type.ZELLE);
-
-    public enum Type implements Transfer.Type {
-        SEPA,
-        REVOLUT,
-        ZELLE,
-        OTHER
+public class CryptoSettlement extends Settlement<CryptoSettlement.Method> {
+    public enum Method implements Settlement.Method {
+        NATIVE_CHAIN,       // If coin is transferred via native chain BTC over. E.g. Bitcoin network
+        HOST_CHAIN,          // If coin has no native chain. E.g. USDT -? Omni, ERC20,...
+        OTHER               // If it does not apply to the above cases
     }
 
-    public FiatTransfer(FiatTransfer.Type type) {
+
+    public CryptoSettlement(Method type) {
         super(type);
     }
 
-    public FiatTransfer(FiatTransfer.Type type, String name) {
+    public CryptoSettlement(Method type, String name) {
         super(type, name);
     }
 
-    public FiatTransfer(String name) {
+    public CryptoSettlement(String name) {
         super(name);
     }
 
     @Override
-    protected Type getDefaultType() {
-        return Type.OTHER;
+    protected Method getDefaultType() {
+        return Method.OTHER;
     }
 }

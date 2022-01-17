@@ -31,11 +31,11 @@ import java.util.Set;
 @EqualsAndHashCode
 @Getter
 public abstract class Listing implements Serializable {
-    private final String id;
-    private final long date;
-    private final List<? extends ProtocolType> protocolTypes;
-    private final NetworkId makerNetworkId;
-    private final Set<OfferOption> offerOptions;
+    protected final String id;
+    protected final long date;
+    protected final List<? extends ProtocolType> protocolTypes;
+    protected final NetworkId makerNetworkId;
+    protected final Set<OfferOption> offerOptions;
 
     /**
      * @param id             The unique nodeId for that listing.

@@ -17,7 +17,7 @@
 
 package bisq.protocol.multiSig.maker;
 
-import bisq.contract.AssetTransfer;
+import bisq.contract.SettlementExecution;
 import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
@@ -36,20 +36,18 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.Listener {
     public MakerMultiSigProtocol(TwoPartyContract contract, NetworkService networkService, SecurityProvider securityProvider) {
-        super(contract, networkService, new AssetTransfer.Manual(), securityProvider);
+        super(contract, networkService, new SettlementExecution.Manual(), securityProvider);
     }
 
     @Override
     public void onMessage(Message message) {
-        if (message instanceof DepositTxBroadcastMessage) {
-            DepositTxBroadcastMessage depositTxBroadcastMessage = (DepositTxBroadcastMessage) message;
+        if (message instanceof DepositTxBroadcastMessage depositTxBroadcastMessage) {
             multiSig.verifyDepositTxBroadcastMessage(depositTxBroadcastMessage)
                     .whenComplete((depositTx, t) -> {
                         multiSig.setDepositTx(depositTx);
                         setState(State.DEPOSIT_TX_BROADCAST_MSG_RECEIVED);
                     });
-        } else if (message instanceof PayoutTxBroadcastMessage) {
-            PayoutTxBroadcastMessage payoutTxBroadcastMessage = (PayoutTxBroadcastMessage) message;
+        } else if (message instanceof PayoutTxBroadcastMessage payoutTxBroadcastMessage) {
             multiSig.verifyPayoutTxBroadcastMessage(payoutTxBroadcastMessage)
                     .whenComplete((payoutTx, t) -> setState(State.PAYOUT_TX_BROADCAST_MSG_RECEIVED))
                     .thenCompose(multiSig::isPayoutTxInMemPool)
@@ -60,7 +58,7 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
     @Override
     public void onDepositTxConfirmed() {
         setState(State.DEPOSIT_TX_CONFIRMED);
-        assetTransfer.sendFunds(contract)
+        settlementExecution.sendFunds(contract)
                 .thenCompose(isSent -> onFundsSent());
     }
 

@@ -17,7 +17,7 @@
 
 package bisq.protocol.bsqBond;
 
-import bisq.contract.AssetTransfer;
+import bisq.contract.SettlementExecution;
 import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.MessageListener;
@@ -50,12 +50,12 @@ public abstract class BsqBondProtocol extends TwoPartyProtocol implements Messag
         FUNDS_RECEIVED // Completed
     }
 
-    protected final AssetTransfer transport;
+    protected final SettlementExecution settlementExecution;
     protected final BsqBond security;
 
-    public BsqBondProtocol(TwoPartyContract contract, NetworkService networkService, AssetTransfer transfer, SecurityProvider securityProvider) {
+    public BsqBondProtocol(TwoPartyContract contract, NetworkService networkService, SettlementExecution settlementExecution, SecurityProvider securityProvider) {
         super(contract, networkService);
-        this.transport = transfer;
+        this.settlementExecution = settlementExecution;
         this.security = (BsqBond) securityProvider;
     }
 }

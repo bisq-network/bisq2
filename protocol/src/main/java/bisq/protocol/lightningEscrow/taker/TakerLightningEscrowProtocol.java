@@ -1,6 +1,6 @@
 package bisq.protocol.lightningEscrow.taker;
 
-import bisq.contract.AssetTransfer;
+import bisq.contract.SettlementExecution;
 import bisq.contract.ManyPartyContract;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class TakerLightningEscrowProtocol extends LightningEscrowProtocol {
     public TakerLightningEscrowProtocol(ManyPartyContract contract, NetworkService networkService) {
-        super(contract, networkService, new AssetTransfer.Automatic(), new LightningEscrow());
+        super(contract, networkService, new SettlementExecution.Automatic(), new LightningEscrow());
     }
 
     @Override

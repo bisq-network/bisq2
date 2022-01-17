@@ -17,24 +17,24 @@
 
 package bisq.account;
 
-public abstract class Transfer<T extends Transfer.Type> {
-    public interface Type {
+public abstract class Settlement<T extends Settlement.Method> {
+    public interface Method {
         String name();
     }
 
     protected T type;
     protected String name;
 
-    Transfer(T type) {
+    Settlement(T type) {
         this(type, type.name());
     }
 
-    Transfer(T type, String name) {
+    Settlement(T type, String name) {
         this.type = type;
         this.name = type.name();
     }
 
-    Transfer(String name) {
+    Settlement(String name) {
         this.name = name;
         this.type = getDefaultType();
     }

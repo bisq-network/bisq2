@@ -21,7 +21,7 @@ import bisq.account.Account;
 import bisq.contract.Contract;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.offer.Offer;
+import bisq.offer.SwapOffer;
 import bisq.persistence.Persistence;
 import bisq.wallets.Wallet;
 
@@ -31,7 +31,7 @@ public class Deal {
     IdentityService identityService;
     Account account;
     Contract contract;
-    Offer offer;
+    SwapOffer offer;
     NetworkService networkService;
     Persistence persistence;
     Wallet wallet;

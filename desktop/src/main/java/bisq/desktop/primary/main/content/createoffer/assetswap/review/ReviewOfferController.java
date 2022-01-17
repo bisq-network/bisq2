@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.createoffer.assetswap.review;
 
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.offer.Offer;
+import bisq.offer.SwapOffer;
 import bisq.offer.OfferService;
 import bisq.offer.OpenOfferService;
 import lombok.Getter;
@@ -44,7 +44,7 @@ public class ReviewOfferController implements Controller {
     }
 
     public void onPublish() {
-        Offer offer = offerService.createOffer(model.askAmount);
+        SwapOffer offer = offerService.createOffer(model.askAmount);
         offerService.publishOffer(offer);
         openOfferService.newOpenOffer(offer);
     }

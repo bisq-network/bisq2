@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 @Slf4j
-public abstract class AssetTransfer implements Transfer {
+public abstract class SettlementExecution {
     public abstract Type getType();
 
     public abstract CompletableFuture<Boolean> sendFunds(Contract contract);
@@ -35,7 +35,7 @@ public abstract class AssetTransfer implements Transfer {
         AUTOMATIC, MANUAL
     }
 
-    public static class Automatic extends AssetTransfer {
+    public static class Automatic extends SettlementExecution {
         @Override
         public Type getType() {
             return Type.AUTOMATIC;
@@ -47,7 +47,7 @@ public abstract class AssetTransfer implements Transfer {
         }
     }
 
-    public static class Manual extends AssetTransfer {
+    public static class Manual extends SettlementExecution {
         public interface Listener {
             void onStartManualPayment();
         }

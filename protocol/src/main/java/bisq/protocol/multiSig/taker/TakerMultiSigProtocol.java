@@ -18,7 +18,7 @@
 package bisq.protocol.multiSig.taker;
 
 
-import bisq.contract.AssetTransfer;
+import bisq.contract.SettlementExecution;
 import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
@@ -35,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
 public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.Listener {
 
     public TakerMultiSigProtocol(TwoPartyContract contract, NetworkService networkService, SecurityProvider securityProvider) {
-        super(contract, networkService, new AssetTransfer.Automatic(), securityProvider);
+        super(contract, networkService, new SettlementExecution.Automatic(), securityProvider);
     }
 
     @Override

@@ -18,7 +18,7 @@
 package bisq.protocol.bsqBond.taker;
 
 
-import bisq.contract.AssetTransfer;
+import bisq.contract.SettlementExecution;
 import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
@@ -33,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class TakerBsqBondProtocol extends BsqBondProtocol {
     public TakerBsqBondProtocol(TwoPartyContract contract, NetworkService networkService) {
-        super(contract, networkService, new AssetTransfer.Automatic(), new BsqBond());
+        super(contract, networkService, new SettlementExecution.Automatic(), new BsqBond());
     }
 
     @Override
@@ -52,7 +52,7 @@ public class TakerBsqBondProtocol extends BsqBondProtocol {
             MakerFundsSentMessage fundsSentMessage = (MakerFundsSentMessage) message;
             security.verifyFundsSentMessage(fundsSentMessage)
                     .whenComplete((success, t) -> setState(State.FUNDS_RECEIVED))
-                    .thenCompose(isValid -> transport.sendFunds(contract))
+                    .thenCompose(isValid -> settlementExecution.sendFunds(contract))
                     .thenCompose(isSent -> networkService.confidentialSendAsync(new TakerFundsSentMessage(),
                             counterParty.getMakerNetworkId(),
                             null, null))

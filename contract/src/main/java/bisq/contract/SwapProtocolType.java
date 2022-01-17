@@ -19,6 +19,7 @@ package bisq.contract;
 
 public enum SwapProtocolType implements ProtocolType {
     ATOMIC_CROSS_CHAIN_SWAP,
+    ATOMIC_SWAP, // same chain
     LN_SWAP,
     MULTISIG,
     REPUTATION

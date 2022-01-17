@@ -17,9 +17,9 @@
 
 package bisq.presentation.offer;
 
-import bisq.account.Transfer;
+import bisq.account.Settlement;
 import bisq.common.monetary.Monetary;
-import bisq.contract.AssetTransfer;
+import bisq.contract.SettlementExecution;
 import bisq.contract.ProtocolType;
 import bisq.offer.options.ReputationOption;
 import bisq.offer.options.TransferOption;
@@ -54,11 +54,11 @@ class OfferFormatter {
         return transferOption.bankName() + " / " + transferOption.countyCodeOfBank();
     }
 
-    static String formatTransferTypes(List<Transfer> transfers) {
-        return transfers.toString();
+    static String formatTransferTypes(List<Settlement> settlements) {
+        return settlements.toString();
     }
 
-    static String formatAssetTransferType(AssetTransfer.Type assetTransferType) {
+    static String formatAssetTransferType(SettlementExecution.Type assetTransferType) {
         return assetTransferType.toString();
     }
 }

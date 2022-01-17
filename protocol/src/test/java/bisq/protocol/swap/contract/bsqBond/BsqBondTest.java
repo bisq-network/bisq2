@@ -18,18 +18,17 @@
 package bisq.protocol.swap.contract.bsqBond;
 
 
-import bisq.account.FiatTransfer;
+import bisq.account.FiatSettlement;
 import bisq.common.monetary.Fiat;
-import bisq.contract.AssetTransfer;
 import bisq.contract.ProtocolType;
 import bisq.contract.SwapProtocolType;
 import bisq.contract.TwoPartyContract;
-import bisq.network.NetworkService;
 import bisq.network.NetworkId;
+import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
-import bisq.offer.Asset;
-import bisq.offer.Offer;
+import bisq.offer.Leg;
+import bisq.offer.SwapOffer;
 import bisq.protocol.ContractMaker;
 import bisq.protocol.MockNetworkService;
 import bisq.protocol.ProtocolExecutor;
@@ -66,10 +65,10 @@ public class BsqBondTest {
         // create offer
         NetworkId makerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"), "default");
 
-        Asset askAsset = new Asset(Fiat.of(100, "USD"), List.of(FiatTransfer.ZELLE), AssetTransfer.Type.MANUAL);
-        Asset bidAsset = new Asset(Fiat.of(90, "EUR"), List.of(FiatTransfer.REVOLUT, FiatTransfer.SEPA), AssetTransfer.Type.MANUAL);
-        Offer offer = new Offer(List.of(SwapProtocolType.MULTISIG, SwapProtocolType.REPUTATION),
-                makerNetworkId, bidAsset, askAsset);
+        Leg askLeg = new Leg(Fiat.of(100, "USD"), List.of(FiatSettlement.ZELLE));
+        Leg bidLeg = new Leg(Fiat.of(90, "EUR"), List.of(FiatSettlement.REVOLUT, FiatSettlement.SEPA));
+        SwapOffer offer = new SwapOffer(List.of(SwapProtocolType.MULTISIG, SwapProtocolType.REPUTATION),
+                makerNetworkId, bidLeg, askLeg,"USD");
 
         // taker takes offer and selects first ProtocolType
         ProtocolType selectedProtocolType = offer.getProtocolTypes().get(0);

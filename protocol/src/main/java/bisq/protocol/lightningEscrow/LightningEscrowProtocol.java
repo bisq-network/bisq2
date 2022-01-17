@@ -1,6 +1,6 @@
 package bisq.protocol.lightningEscrow;
 
-import bisq.contract.AssetTransfer;
+import bisq.contract.SettlementExecution;
 import bisq.contract.ManyPartyContract;
 import bisq.network.NetworkService;
 import bisq.protocol.ManyPartyProtocol;
@@ -14,19 +14,22 @@ public abstract class LightningEscrowProtocol extends ManyPartyProtocol {
         MANUAL_PAYMENT_STARTED
     }
 
-    private final AssetTransfer transport;
+    private final SettlementExecution transport;
     private final LightningEscrow security;
 
-    public LightningEscrowProtocol(ManyPartyContract contract, NetworkService networkService, AssetTransfer assetTransfer, SecurityProvider securityProvider) {
+    public LightningEscrowProtocol(ManyPartyContract contract, 
+                                   NetworkService networkService, 
+                                   SettlementExecution settlementExecution, 
+                                   SecurityProvider securityProvider) {
         super(contract, networkService);
-        transport = assetTransfer;
+        transport = settlementExecution;
         security = (LightningEscrow) securityProvider;
 
-        if (assetTransfer instanceof AssetTransfer.Manual) {
-            ((AssetTransfer.Manual) assetTransfer).addListener(this::onStartManualPayment);
+        if (settlementExecution instanceof SettlementExecution.Manual manualSettlementExecution) {
+            manualSettlementExecution.addListener(this::onStartManualPayment);
             addListener(state -> {
                 if (state == State.MANUAL_PAYMENT_STARTED) {
-                    ((AssetTransfer.Manual) assetTransfer).onManualPaymentStarted();
+                    manualSettlementExecution.onManualPaymentStarted();
                 }
             });
         }

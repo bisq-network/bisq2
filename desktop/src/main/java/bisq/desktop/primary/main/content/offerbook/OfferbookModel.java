@@ -162,7 +162,7 @@ public class OfferbookModel extends NavigationModel {
             showAllBidCurrencies.set(true);
         } else {
             selectedAskCurrencyProperty.set(currency);
-            setAskCurrencyPredicate(item -> item.getOffer().getBidAsset().currencyCode().equals(currency));
+            setAskCurrencyPredicate(item -> item.getOffer().getBidLeg().code().equals(currency));
             showAllBidCurrencies.set(false);
         }
         updateHeaders();
@@ -175,7 +175,7 @@ public class OfferbookModel extends NavigationModel {
             showAllAskCurrencies.set(true);
         } else {
             selectedBidCurrencyProperty.set(currency);
-            setBidCurrencyPredicate(item -> item.getOffer().getAskCurrencyCode().equals(currency));
+            setBidCurrencyPredicate(item -> item.getOffer().getAskCode().equals(currency));
             showAllAskCurrencies.set(false);
         }
         updateHeaders();
@@ -220,8 +220,8 @@ public class OfferbookModel extends NavigationModel {
 
     void applyBaseCurrency() {
         filteredItems.stream().findAny().ifPresent(o -> {
-            baseCurrency = o.getOffer().getBaseCurrencyCode();
-            quoteCurrency = o.getOffer().getQuoteCurrencyCode();
+            baseCurrency = o.getOffer().getBaseCode();
+            quoteCurrency = o.getOffer().getQuoteCode();
         });
     }
 

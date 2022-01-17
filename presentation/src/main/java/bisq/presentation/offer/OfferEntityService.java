@@ -18,7 +18,7 @@
 package bisq.presentation.offer;
 
 import bisq.offer.MarketPriceService;
-import bisq.offer.Offer;
+import bisq.offer.SwapOffer;
 import bisq.offer.OfferService;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
@@ -55,7 +55,7 @@ public class OfferEntityService {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         //todo
         offerEntities.addAll(offerService.getOffers().stream()
-                .map(offer -> new OfferEntity((Offer) offer, marketPriceService.getMarketPriceSubject()))
+                .map(offer -> new OfferEntity((SwapOffer) offer, marketPriceService.getMarketPriceSubject()))
                 .collect(Collectors.toList()));
         future.complete(true);
         return future;
@@ -72,8 +72,8 @@ public class OfferEntityService {
                     });
         });
         oferRemovedDisposable = offerService.getOfferRemovedSubject().subscribe(offer -> {
-            if (offer instanceof Offer) {
-                OfferEntity offerEntity = new OfferEntity((Offer) offer, marketPriceService.getMarketPriceSubject());
+            if (offer instanceof SwapOffer) {
+                OfferEntity offerEntity = new OfferEntity((SwapOffer) offer, marketPriceService.getMarketPriceSubject());
                 offerEntities.add(offerEntity);
                 offerEntityAddedSubject.onNext(offerEntity);
             }

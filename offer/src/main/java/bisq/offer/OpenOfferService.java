@@ -17,13 +17,12 @@
 
 package bisq.offer;
 
-import bisq.account.FiatTransfer;
+import bisq.account.FiatSettlement;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
-import bisq.contract.AssetTransfer;
 import bisq.contract.SwapProtocolType;
-import bisq.network.p2p.INetworkService;
 import bisq.network.NetworkId;
+import bisq.network.p2p.INetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.security.PubKey;
@@ -56,14 +55,14 @@ public class OpenOfferService {
     public void createNewOffer(long askAmount) {
         Map<Transport.Type, Address> map = Map.of(Transport.Type.CLEAR, Address.localHost(3333));
         NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"), "default");
-        Asset askAsset = new Asset(Coin.asBtc(askAmount), List.of(), AssetTransfer.Type.MANUAL);
-        Asset bidAsset = new Asset(Fiat.of(5000, "USD"), List.of(FiatTransfer.ZELLE), AssetTransfer.Type.MANUAL);
-        Offer offer = new Offer(List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
-                makerNetworkId, bidAsset, askAsset);
+        Leg askLeg = new Leg(Coin.asBtc(askAmount), List.of());
+        Leg bidLeg = new Leg(Fiat.of(5000, "USD"), List.of(FiatSettlement.ZELLE));
+        SwapOffer offer = new SwapOffer(List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
+                makerNetworkId, bidLeg, askLeg,"USD");
         networkService.addData(offer);
     }
 
-    public void newOpenOffer(Offer offer) {
+    public void newOpenOffer(SwapOffer offer) {
         OpenOffer openOffer = new OpenOffer(offer);
         openOffers.add(openOffer);
         //  Persistence.write(openOffers);
