@@ -51,7 +51,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     private Optional<Function<S, Boolean>> isVisibleFunction = Optional.empty();
     private Optional<Function<S, String>> valueSupplier = Optional.empty();
     private Optional<Function<S, StringProperty>> valuePropertySupplier = Optional.empty();
-    private Optional<Comparator<S>> comparator = Optional.empty();
+    private final Optional<Comparator<S>> comparator = Optional.empty();
     private Optional<String> value = Optional.empty();
     private Consumer<S> onActionHandler = item -> {
     };
@@ -155,12 +155,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
 
         setCellValueFactory((data) -> new ReadOnlyObjectWrapper<>(data.getValue()));
         switch (cellFactory) {
-            case TEXT -> {
-                applyTextCellFactory();
-            }
-            case BUTTON -> {
-                applyButtonCellFactory();
-            }
+            case TEXT -> applyTextCellFactory();
+            case BUTTON -> applyButtonCellFactory();
         }
     }
 

@@ -21,7 +21,7 @@ public class CryptoTransfer extends Transfer<CryptoTransfer.Type> {
     public enum Type implements Transfer.Type {
         NATIVE_CHAIN,       // If coin is transferred via native chain BTC over. E.g. Bitcoin network
         HOST_CHAIN,          // If coin has no native chain. E.g. USDT -? Omni, ERC20,...
-        OTHER;               // If it does not apply to the above cases
+        OTHER               // If it does not apply to the above cases
     }
 
 

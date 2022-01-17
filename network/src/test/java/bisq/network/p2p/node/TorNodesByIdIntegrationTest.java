@@ -34,6 +34,6 @@ public class TorNodesByIdIntegrationTest extends BaseNodesByIdTest {
 
     @Override
     protected long getTimeout() {
-        return numNodes * 30;
+        return numNodes * 30L;
     }
 }

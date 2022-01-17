@@ -15,18 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.view;
+package bisq.persistence;
 
-import bisq.desktop.NavigationTarget;
-import javafx.scene.control.Tab;
-import lombok.Getter;
+import java.io.Serializable;
 
-public class NavigationTargetTab extends Tab {
-    @Getter
-    private final NavigationTarget navigationTarget;
+/**
+ * Interface for the outside envelope object persisted to disk.
+ */
+public interface Persistable<T> extends Serializable {
+    T getClone();
 
-    public NavigationTargetTab(String title, NavigationTarget navigationTarget) {
-        super(title);
-        this.navigationTarget = navigationTarget;
-    }
+    void applyPersisted(T persisted);
 }

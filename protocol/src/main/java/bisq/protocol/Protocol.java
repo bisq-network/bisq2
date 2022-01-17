@@ -19,7 +19,7 @@ package bisq.protocol;
 
 import bisq.contract.Contract;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.confidential.MessageListener;
 import lombok.Getter;
 
 import java.util.Set;
@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Defines the protocol for executing a contract.
  */
-public abstract class Protocol implements Node.Listener {
+public abstract class Protocol implements MessageListener {
     public interface Listener {
         void onStateChange(State state);
     }

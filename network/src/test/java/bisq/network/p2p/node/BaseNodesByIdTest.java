@@ -91,7 +91,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
             String nodeId = "node_" + i;
             int receiverIndex = (i + 1) % numNodes;
             String receiverNodeId = "node_" + receiverIndex;
-            Address receiverNodeAddress = nodesById.findMyAddress(receiverNodeId).get();
+            Address receiverNodeAddress = nodesById.findMyAddress(receiverNodeId).orElseThrow();
             ClearNetNodesByIdIntegrationTest.Ping ping = new ClearNetNodesByIdIntegrationTest.Ping("Ping from " + nodesById.findMyAddress(nodeId) + " to " + receiverNodeAddress);
             log.info("Send ping " + ping);
             nodesById.send(nodeId, ping, receiverNodeAddress);

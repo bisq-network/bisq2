@@ -35,7 +35,7 @@ public class PersistenceIntegrationTest {
     record MockObject(int value) implements Serializable {
     }
 
-    private String storageDirectory = OsUtils.getUserDataDir() + File.separator + "bisq_PersistenceTest";
+    private final String storageDirectory = OsUtils.getUserDataDir() + File.separator + "bisq_PersistenceTest";
 
     @Test
     public void testPersistence() {

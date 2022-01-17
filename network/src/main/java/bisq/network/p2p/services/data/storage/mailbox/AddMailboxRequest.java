@@ -29,6 +29,8 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Getter
@@ -41,14 +43,10 @@ public class AddMailboxRequest extends AddAuthenticatedDataRequest implements Ma
             throws GeneralSecurityException {
         PublicKey senderPublicKey = senderKeyPair.getPublic();
         byte[] hash = DigestUtil.hash(payload.serialize());
-        int sequenceNumberFromMap = store.getSequenceNumber(hash);
-        if (sequenceNumberFromMap == Integer.MAX_VALUE) {
-            throw new IllegalStateException("Item was already removed in service map as sequenceNumber is marked with Integer.MAX_VALUE");
-        }
-        int newSequenceNumber = sequenceNumberFromMap + 1;
+        checkArgument(!store.contains(hash), "We expect to not have already an entry for that hash.");
         byte[] hashOfSendersPublicKey = DigestUtil.hash(senderPublicKey.getEncoded());
         byte[] hashOfReceiversPublicKey = DigestUtil.hash(receiverPublicKey.getEncoded());
-        MailboxData entry = new MailboxData(payload, newSequenceNumber, hashOfSendersPublicKey,
+        MailboxData entry = new MailboxData(payload, hashOfSendersPublicKey,
                 hashOfReceiversPublicKey, receiverPublicKey);
         byte[] serialized = entry.serialize();
         byte[] signature = SignatureUtil.sign(serialized, senderKeyPair.getPrivate());

@@ -36,7 +36,5 @@ public abstract class Channel implements Serializable {
         chatMessages.add(chatMessage);
     }
 
-    public String getChannelName() {
-        return "Channel-" + id;
-    }
+    public abstract String getChannelName();
 }

@@ -38,7 +38,7 @@ import static bisq.common.util.OsUtils.EXIT_SUCCESS;
  * Creates domain instance with options and optional dependency to other domain objects.
  * Initializes the domain instances according to the requirements of their dependencies either in sequence
  * or in parallel.
- * Provides the completely setup instances to other clients (Api)
+ * Provides the complete setup instances to other clients (Api)
  */
 @Getter
 @Slf4j

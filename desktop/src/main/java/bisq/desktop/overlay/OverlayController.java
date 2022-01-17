@@ -34,9 +34,9 @@ import java.util.Optional;
 public class OverlayController extends NavigationController {
     private final DefaultServiceProvider serviceProvider;
     @Getter
-    private OverlayModel model;
+    private final OverlayModel model;
     @Getter
-    private OverlayView view;
+    private final OverlayView view;
 
     public OverlayController(Scene parentScene, DefaultServiceProvider serviceProvider) {
         super(NavigationTarget.OVERLAY);

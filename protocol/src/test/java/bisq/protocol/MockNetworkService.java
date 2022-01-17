@@ -18,11 +18,11 @@
 package bisq.protocol;
 
 
-import bisq.network.NetworkService;
 import bisq.network.NetworkId;
+import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.Connection;
-import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.confidential.MessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class MockNetworkService extends NetworkService {
     private static final Logger log = LoggerFactory.getLogger(MockNetworkService.class);
-    private final Set<Node.Listener> listeners = ConcurrentHashMap.newKeySet();
+    private final Set<MessageListener> listeners = ConcurrentHashMap.newKeySet();
 
     public MockNetworkService() {
         super(null, null, null);
@@ -58,7 +58,7 @@ public class MockNetworkService extends NetworkService {
                 Thread.sleep(100);
             } catch (InterruptedException ignore) {
             }
-            listeners.forEach(e -> e.onMessage(message, null, "default"));
+            listeners.forEach(e -> e.onMessage(message));
         }).start();
 
         return future;
@@ -66,12 +66,12 @@ public class MockNetworkService extends NetworkService {
 
 
     @Override
-    public void addListener(Node.Listener listener) {
+    public void addMessageListener(MessageListener listener) {
         listeners.add(listener);
     }
 
     @Override
-    public void removeListener(Node.Listener listener) {
+    public void removeMessageListener(MessageListener listener) {
     }
 
     @Override

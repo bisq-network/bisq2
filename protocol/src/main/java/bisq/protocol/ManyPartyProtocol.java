@@ -4,11 +4,11 @@ import bisq.contract.ManyPartyContract;
 import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.confidential.MessageListener;
 
 import java.util.Map;
 
-public abstract class ManyPartyProtocol extends Protocol implements Node.Listener {
+public abstract class ManyPartyProtocol extends Protocol implements MessageListener {
     protected final Map<Role, Party> partyMap;
 
     public ManyPartyProtocol(ManyPartyContract contract, NetworkService networkService) {

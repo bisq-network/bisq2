@@ -31,6 +31,7 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.storage.StorageService;
@@ -144,7 +145,7 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     }
 
     public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(Map<Transport.Type, Integer> portByTransport, String nodeId, PubKey pubKey) {
-        Map<Transport.Type, CompletableFuture<Boolean>> futureMap = serviceNodesByTransport.maybeInitializeServerAsync(portByTransport, nodeId);
+        Map<Transport.Type, CompletableFuture<Boolean>> futureMap = serviceNodesByTransport.maybeInitializeServer(portByTransport, nodeId);
         // After server has been started we can be sure the networkId is available. 
         // If it was not already available before we persist it.
         futureMap.values().forEach(future -> future.whenComplete((result, throwable) -> {
@@ -239,7 +240,7 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
                 .thenCompose(list -> {
                     AuthenticatedPayload netWorkPayload = new AuthenticatedPayload(data);
-                    return dataService.get().addNetworkPayloadAsync(netWorkPayload, keyPair)
+                    return dataService.get().addNetworkPayload(netWorkPayload, keyPair)
                             .whenComplete((broadCastResultFutures, throwable) -> {
                                 broadCastResultFutures.forEach(broadCastResultFuture -> {
                                     broadCastResultFuture.whenComplete((broadcastResult, throwable2) -> {
@@ -258,7 +259,7 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> {
                     AuthenticatedPayload netWorkPayload = new AuthenticatedPayload(data);
-                    return dataService.orElseThrow().removeNetworkPayloadAsync(netWorkPayload, keyPair)
+                    return dataService.orElseThrow().removeNetworkPayload(netWorkPayload, keyPair)
                             .whenComplete((broadCastResultFutures, throwable) -> {
                                 broadCastResultFutures.forEach(broadCastResultFuture -> {
                                     broadCastResultFuture.whenComplete((broadcastResult, throwable2) -> {
@@ -296,12 +297,20 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
         dataService.orElseThrow().removeListener(listener);
     }
 
-    public void addListener(Node.Listener listener) {
-        serviceNodesByTransport.addListener(listener);
+    public void addMessageListener(MessageListener messageListener) {
+        serviceNodesByTransport.addMessageListener(messageListener);
     }
 
-    public void removeListener(Node.Listener listener) {
-        serviceNodesByTransport.removeListener(listener);
+    public void removeMessageListener(MessageListener messageListener) {
+        serviceNodesByTransport.removeMessageListener(messageListener);
+    }
+
+    public void addDefaultNodeListener(Node.Listener nodeListener) {
+        serviceNodesByTransport.addDefaultNodeListener(nodeListener);
+    }
+
+    public void removeDefaultNodeListener(Node.Listener nodeListener) {
+        serviceNodesByTransport.removeDefaultNodeListener(nodeListener);
     }
 
 
@@ -340,7 +349,7 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
 
     public Map<Transport.Type, Integer> getOrCreatePortByTransport(String nodeId, PubKey pubKey) {
         Optional<NetworkId> networkIdOptional = findNetworkId(nodeId, pubKey);
-        Map<Transport.Type, Integer> result = supportedTransportTypes.stream()
+        return supportedTransportTypes.stream()
                 .collect(Collectors.toMap(transportType -> transportType,
                         transportType -> networkIdOptional.stream()
                                 .map(NetworkId::addressByNetworkType)
@@ -348,12 +357,6 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
                                 .map(Address::getPort)
                                 .findAny()
                                 .orElse(NetworkUtils.findFreeSystemPort())));
-        return result;
-    }
-
-    public Map<Transport.Type, Integer> getFreeSystemPortByTransport() {
-        return supportedTransportTypes.stream()
-                .collect(Collectors.toMap(e -> e, transportType -> NetworkUtils.findFreeSystemPort()));
     }
 
 

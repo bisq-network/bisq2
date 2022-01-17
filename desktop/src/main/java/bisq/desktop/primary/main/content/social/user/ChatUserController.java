@@ -18,11 +18,13 @@
 package bisq.desktop.primary.main.content.social.user;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.social.chat.*;
+import bisq.social.chat.Channel;
+import bisq.social.chat.ChatMessage;
+import bisq.social.chat.ChatPeer;
+import bisq.social.chat.ChatService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,12 +53,6 @@ public class ChatUserController implements Controller, ChatService.Listener {
     @Override
     public void onViewAttached() {
         chatService.addListener(this);
-        //todo
-       /* if (chatService.getChatModel().getChatPeerByUserName().isEmpty()) {
-            chatService.createNewChatPeer(IdentityService.DEFAULT);
-        }*/
-        chatService.getChatModel().getSelectedChatPeer().ifPresent(model::selectChatUser);
-        model.setAllChatUsers(chatService.getChatModel().getChatPeerByUserName().values());
     }
 
     @Override
@@ -70,16 +66,6 @@ public class ChatUserController implements Controller, ChatService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onChatUserAdded(ChatPeer chatPeer) {
-        UIThread.run(() -> model.addChatUser(chatPeer));
-    }
-
-    @Override
-    public void onChatUserSelected(ChatPeer chatPeer) {
-        UIThread.run(() -> model.selectChatUser(chatPeer));
-    }
-
-    @Override
     public void onChannelAdded(Channel channel) {
     }
 
@@ -90,10 +76,6 @@ public class ChatUserController implements Controller, ChatService.Listener {
     @Override
     public void onChatMessageAdded(Channel channel, ChatMessage newChatMessage) {
     }
-
-    @Override
-    public void onChatIdentityChanged(ChatIdentity previousValue, ChatIdentity newValue) {
-    }
     
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +83,7 @@ public class ChatUserController implements Controller, ChatService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     void onSelectChatUser(ChatPeer chatPeer) {
-        chatService.selectChatPeer(chatPeer);
+        //chatService.selectChatPeer(chatPeer);
     }
 
     void onCreateNewChatUser(String userName) {

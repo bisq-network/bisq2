@@ -15,18 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.view;
+package bisq.network.p2p.services.confidential;
 
-import bisq.desktop.NavigationTarget;
-import javafx.scene.control.Tab;
-import lombok.Getter;
+import bisq.network.p2p.message.Message;
 
-public class NavigationTargetTab extends Tab {
-    @Getter
-    private final NavigationTarget navigationTarget;
-
-    public NavigationTargetTab(String title, NavigationTarget navigationTarget) {
-        super(title);
-        this.navigationTarget = navigationTarget;
-    }
+public interface MessageListener {
+    void onMessage(Message message);
 }

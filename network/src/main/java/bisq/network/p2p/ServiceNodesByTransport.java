@@ -26,6 +26,7 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.UnrestrictedAuthorizationService;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.PersistenceService;
@@ -93,7 +94,7 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServerAsync(Map<Transport.Type, Integer> portByTransport, String nodeId) {
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(Map<Transport.Type, Integer> portByTransport, String nodeId) {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry ->
                         runAsync(() -> {
@@ -141,12 +142,20 @@ public class ServiceNodesByTransport {
     }
 
 
-    public void addListener(Node.Listener listener) {
-        map.values().forEach(serviceNode -> serviceNode.addMessageListener(listener));
+    public void addMessageListener(MessageListener messageListener) {
+        map.values().forEach(serviceNode -> serviceNode.addMessageListener(messageListener));
     }
 
-    public void removeListener(Node.Listener listener) {
-        map.values().forEach(serviceNode -> serviceNode.removeMessageListener(listener));
+    public void removeMessageListener(MessageListener messageListener) {
+        map.values().forEach(serviceNode -> serviceNode.removeMessageListener(messageListener));
+    }
+
+    public void addDefaultNodeListener(Node.Listener nodeListener) {
+        map.values().forEach(serviceNode -> serviceNode.getDefaultNode().addListener(nodeListener));
+    }
+
+    public void removeDefaultNodeListener(Node.Listener nodeListener) {
+        map.values().forEach(serviceNode -> serviceNode.getDefaultNode().removeListener(nodeListener));
     }
 
     public Optional<Socks5Proxy> getSocksProxy() {

@@ -184,11 +184,11 @@ public class MultiNodesModel {
         NetworkService senderNetworkService = senderNetworkId.addressByNetworkType().entrySet().stream()
                 .map(e -> getOrCreateNetworkService(e.getValue(), e.getKey()))
                 .findAny()
-                .get();
+                .orElseThrow();
         NetworkService receiverNetworkService = receiverNetworkId.addressByNetworkType().entrySet().stream()
                 .map(e -> getOrCreateNetworkService(e.getValue(), e.getKey()))
                 .findAny()
-                .get();
+                .orElseThrow();
         receiverNetworkService.getMyAddresses().forEach((type, value) -> {
             Address receiverAddress = value.get(receiverNetworkId.getNodeId());
             sendMsgListener = new Node.Listener() {
@@ -199,7 +199,7 @@ public class MultiNodesModel {
                             connection.getPeerAddress() + " --> " + receiverAddress + " " + message.toString();
                     appendToHistory(receiverAddress, newLine);
                     handler.ifPresent(handler -> handler.onMessage(receiverAddress));
-                    receiverNetworkService.removeListener(sendMsgListener);
+                    receiverNetworkService.removeDefaultNodeListener(sendMsgListener);
                 }
 
                 @Override
@@ -210,7 +210,7 @@ public class MultiNodesModel {
                 public void onDisconnect(Connection connection, CloseReason closeReason) {
                 }
             };
-            receiverNetworkService.addListener(sendMsgListener);
+            receiverNetworkService.addDefaultNodeListener(sendMsgListener);
         });
 
         MockMailBoxMessage mailBoxMessage = new MockMailBoxMessage(message);
@@ -309,7 +309,7 @@ public class MultiNodesModel {
                                       Transport.Type transportType,
                                       boolean wasAdded) {
         StringBuilder sb = new StringBuilder("\n");
-        Address address = networkService.findDefaultAddress(transportType).get();
+        Address address = networkService.findDefaultAddress(transportType).orElseThrow();
         sb.append(getTimestamp())
                 .append(" ").append(transportType.name(), 0, 3)
                 .append(wasAdded ? " +onDataAdded " : " -onDataRemoved ")

@@ -22,8 +22,6 @@ import bisq.contract.AssetTransfer;
 import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
-import bisq.network.p2p.node.CloseReason;
-import bisq.network.p2p.node.Connection;
 import bisq.protocol.bsqBond.BsqBond;
 import bisq.protocol.bsqBond.BsqBondProtocol;
 import bisq.protocol.bsqBond.taker.TakerCommitmentMessage;
@@ -39,7 +37,7 @@ public class MakerBsqBondProtocol extends BsqBondProtocol {
     }
 
     @Override
-    public void onMessage(Message message, Connection connection, String nodeId) {
+    public void onMessage(Message message) {
         if (message instanceof TakerCommitmentMessage) {
             TakerCommitmentMessage bondCommitmentMessage = (TakerCommitmentMessage) message;
             security.verifyBondCommitmentMessage(bondCommitmentMessage)
@@ -61,16 +59,8 @@ public class MakerBsqBondProtocol extends BsqBondProtocol {
         }
     }
 
-    @Override
-    public void onConnection(Connection connection) {
-    }
-
-    @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
-    }
-
     public CompletableFuture<Boolean> start() {
-        networkService.addListener(this);
+        networkService.addMessageListener(this);
         setState(State.START);
         security.getCommitment(contract)
                 .thenCompose(commitment -> networkService.confidentialSendAsync(new MakerCommitmentMessage(commitment),

@@ -25,8 +25,8 @@ import lombok.Getter;
 
 public class OfferDetailsController implements InitWithDataController<Pair<OfferListItem, Bounds>> {
     @Getter
-    private OfferDetailsView view;
-    private OfferDetailsModel model;
+    private final OfferDetailsView view;
+    private final OfferDetailsModel model;
 
     public OfferDetailsController() {
         model = new OfferDetailsModel();

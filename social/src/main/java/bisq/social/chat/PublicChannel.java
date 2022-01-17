@@ -18,19 +18,32 @@
 package bisq.social.chat;
 
 import lombok.Getter;
+import lombok.Setter;
 
+import javax.annotation.Nullable;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+
+// TODO not used yet. Will require more work on the chatUser and chatIdentity management. 
 @Getter
-public class PrivateChannel extends Channel {
-    private final ChatPeer chatPeer;
-    private final ChatIdentity chatIdentity;
+public class PublicChannel extends Channel {
+    private final String channelName;
 
-    public PrivateChannel(String id, ChatPeer chatPeer, ChatIdentity chatIdentity) {
+    // user can change their chatIdentity in a PublicChannel
+    @Nullable
+    @Setter
+    private ChatIdentity chatIdentity;
+    // Can be empty
+    private final Set<ChatPeer> chatPeers = new HashSet<>();
+
+    public PublicChannel(String id, String channelName) {
         super(id);
-        this.chatPeer = chatPeer;
-        this.chatIdentity = chatIdentity;
+
+        this.channelName = channelName;
     }
 
-    public String getChannelName() {
-        return chatPeer.userName();
+    public Optional<ChatIdentity> getChatIdentity() {
+        return Optional.ofNullable(chatIdentity);
     }
 }

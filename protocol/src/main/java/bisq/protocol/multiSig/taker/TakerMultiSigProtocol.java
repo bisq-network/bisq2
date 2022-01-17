@@ -22,8 +22,6 @@ import bisq.contract.AssetTransfer;
 import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
-import bisq.network.p2p.node.CloseReason;
-import bisq.network.p2p.node.Connection;
 import bisq.protocol.SecurityProvider;
 import bisq.protocol.multiSig.MultiSig;
 import bisq.protocol.multiSig.MultiSigProtocol;
@@ -41,9 +39,8 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
     }
 
     @Override
-    public void onMessage(Message message, Connection connection, String nodeId) {
-        if (message instanceof TxInputsMessage) {
-            TxInputsMessage txInputsMessage = (TxInputsMessage) message;
+    public void onMessage(Message message) {
+        if (message instanceof TxInputsMessage txInputsMessage) {
             multiSig.verifyTxInputsMessage(txInputsMessage)
                     .whenComplete((txInput, t) -> setState(State.TX_INPUTS_RECEIVED))
                     .thenCompose(multiSig::broadcastDepositTx)
@@ -52,8 +49,7 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
                             counterParty.getMakerNetworkId(),
                             null, null))
                     .whenComplete((connection1, t) -> setState(State.DEPOSIT_TX_BROADCAST_MSG_SENT));
-        } else if (message instanceof FundsSentMessage) {
-            FundsSentMessage fundsSentMessage = (FundsSentMessage) message;
+        } else if (message instanceof FundsSentMessage fundsSentMessage) {
             multiSig.verifyFundsSentMessage(fundsSentMessage)
                     .whenComplete((signature, t) -> {
                         multiSig.setPayoutSignature(signature);
@@ -63,20 +59,12 @@ public class TakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
     }
 
     @Override
-    public void onConnection(Connection connection) {
-    }
-
-    @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
-    }
-
-    @Override
     public void onDepositTxConfirmed() {
         setState(State.DEPOSIT_TX_CONFIRMED);
     }
 
     public CompletableFuture<Boolean> start() {
-        networkService.addListener(this);
+        networkService.addMessageListener(this);
         multiSig.addListener(this);
         setState(State.START);
         return CompletableFuture.completedFuture(true);

@@ -22,9 +22,7 @@ import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
-import bisq.network.p2p.node.CloseReason;
-import bisq.network.p2p.node.Connection;
-import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -33,28 +31,24 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+/**
+ * Manages chatChannels and persistence of the chatModel.
+ * ChatUser and ChatIdentity management is not implemented yet. Not 100% clear yet if ChatIdentity management should
+ * be rather part of the identity module.
+ */
 @Slf4j
 @Getter
-public class ChatService implements PersistenceClient<ChatModel>, Node.Listener {
-
-
+public class ChatService implements PersistenceClient<ChatModel>, MessageListener {
     public interface Listener {
-        void onChatUserAdded(ChatPeer chatPeer); //todo
-
-        void onChatUserSelected(ChatPeer chatPeer);
-
         void onChannelAdded(Channel channel);
 
         void onChannelSelected(Channel channel);
 
         void onChatMessageAdded(Channel channel, ChatMessage newChatMessage);
-
-        void onChatIdentityChanged(ChatIdentity previousValue, ChatIdentity newValue);
     }
 
     private final PersistenceService persistenceService;
@@ -68,9 +62,9 @@ public class ChatService implements PersistenceClient<ChatModel>, Node.Listener 
         this.persistenceService = persistenceService;
         this.identityService = identityService;
         this.networkService = networkService;
-        persistence = persistenceService.getOrCreatePersistence(this, "db", "chatModel");
+        persistence = persistenceService.getOrCreatePersistence(this, "db", chatModel);
 
-        networkService.addListener(this);
+        networkService.addMessageListener(this);
     }
 
 
@@ -81,23 +75,23 @@ public class ChatService implements PersistenceClient<ChatModel>, Node.Listener 
     @Override
     public void applyPersisted(ChatModel persisted) {
         synchronized (chatModel) {
-            chatModel.fromPersisted(persisted);
+            chatModel.applyPersisted(persisted);
         }
     }
 
     @Override
     public ChatModel getClone() {
         synchronized (chatModel) {
-            return new ChatModel(chatModel);
+            return chatModel.getClone();
         }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Node.Listener
+    // MessageListener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message, Connection connection, String nodeId) {
+    public void onMessage(Message message) {
         if (message instanceof ChatMessage chatMessage) {
             String domainId = chatMessage.getChannelId();
             String userName = findUserName(domainId).orElse("Maker@" + StringUtils.truncate(domainId, 8));
@@ -105,18 +99,9 @@ public class ChatService implements PersistenceClient<ChatModel>, Node.Listener 
             ChatPeer chatPeer = new ChatPeer(chatMessage.getSenderUserName(), chatMessage.getSenderNetworkId());
             PrivateChannel privateChannel = getOrCreatePrivateChannel(chatMessage.getChannelId(),
                     chatPeer,
-                    chatIdentity,
-                    chatMessage.getContext());
+                    chatIdentity);
             addChatMessage(chatMessage, privateChannel);
         }
-    }
-
-    @Override
-    public void onConnection(Connection connection) {
-    }
-
-    @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
 
@@ -124,19 +109,21 @@ public class ChatService implements PersistenceClient<ChatModel>, Node.Listener 
     // Channels
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public PrivateChannel getOrCreatePrivateChannel(String id, ChatPeer chatPeer, ChatIdentity chatIdentity, PrivateChannel.Context context) {
-        PrivateChannel previousChannel;
-        PrivateChannel privateChannel = new PrivateChannel(id, chatPeer, chatIdentity, context);
+    public PrivateChannel getOrCreatePrivateChannel(String id, ChatPeer chatPeer, ChatIdentity chatIdentity) {
+        PrivateChannel privateChannel = new PrivateChannel(id, chatPeer, chatIdentity);
+        Optional<PrivateChannel> previousChannel;
         synchronized (chatModel) {
-            previousChannel = chatModel.getPrivateChannelsById().putIfAbsent(id, privateChannel);
+            previousChannel = chatModel.findPrivateChannel(id);
+            if (previousChannel.isEmpty()) {
+                chatModel.getPrivateChannels().add(privateChannel);
+            }
         }
-
-        if (previousChannel == null) {
+        if (previousChannel.isEmpty()) {
             persist();
             listeners.forEach(listener -> listener.onChannelAdded(privateChannel));
             return privateChannel;
         } else {
-            return previousChannel;
+            return previousChannel.get();
         }
     }
 
@@ -144,55 +131,6 @@ public class ChatService implements PersistenceClient<ChatModel>, Node.Listener 
         chatModel.setSelectedChannel(channel);
         persist();
         listeners.forEach(listener -> listener.onChannelSelected(channel));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // ChatPeer
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public CompletableFuture<ChatPeer> createNewChatUser(String domainId, String userName) {
-        if (chatModel.getChatPeerByUserName().containsKey(userName)) {
-            return CompletableFuture.failedFuture(new IllegalArgumentException("Username exists already"));
-        }
-
-        return identityService.getOrCreateIdentity(domainId)
-                .thenApply(identity -> {
-                    ChatPeer chatPeer = new ChatPeer(userName, identity.networkId());
-                    boolean alreadyExist;
-                    synchronized (chatModel) {
-                        alreadyExist = chatModel.getChatPeerByUserName().containsKey(userName);
-                        if (!alreadyExist) {
-                            chatModel.getChatPeerByUserName().put(chatPeer.userName(), chatPeer);
-                        }
-                    }
-                    if (!alreadyExist) {
-                        persist();
-                        listeners.forEach(listener -> listener.onChatUserAdded(chatPeer));
-                    }
-                    return chatPeer;
-                });
-
-      /*  NetworkIdWithKeyPair nodeIdAndPubKey = identityService.getNodeIdAndKeyPair(userName);
-        //todo move to identity service? 
-        return networkService.getInitializedNetworkIdAsync(nodeIdAndPubKey)
-                .thenApply(networkId -> {
-                    //todo add check if user got added in the meantime 
-                    ChatUser chatUser = new ChatUser(userName, networkId);
-                    synchronized (chatModel) {
-                        chatModel.getChatPeerByUserName().put(chatUser.userName(), chatUser);
-                    }
-                    // persist for add can be omitted as we do it in selectChatUser
-                    listeners.forEach(listener -> listener.onChatUserAdded(chatUser));
-                    selectChatPeer(chatUser);
-                    return chatUser;
-                });*/
-    }
-
-    public void selectChatPeer(ChatPeer chatPeer) {
-        chatModel.setSelectedChatPeer(chatPeer);
-        persist();
-        listeners.forEach(listener -> listener.onChatUserSelected(chatPeer));
     }
 
 

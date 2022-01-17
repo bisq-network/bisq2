@@ -81,19 +81,21 @@ public class OfferbookController extends NavigationController {
 
     @Override
     protected Optional<Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-          /*  case CREATE_OFFER -> {
+        //todo
+        return Optional.empty();
+      /*  switch (navigationTarget) {
+          *//*  case CREATE_OFFER -> {
                 return Optional.of(new CreateOfferController(serviceProvider));
-            }*/
-           /* case OFFER_DETAILS -> {
+            }*//*
+           *//* case OFFER_DETAILS -> {
                 Pair<OfferListItem, Bounds> pair = (Pair) data.get();
                 OfferListItem item = pair.first();
                 Bounds boundsInParent = pair.second();
                 return Optional.of(new OfferDetailsController(item, boundsInParent));
-            }*/
+            }*//*
             default -> {
                 return Optional.empty();
             }
-        }
+        }*/
     }
 }

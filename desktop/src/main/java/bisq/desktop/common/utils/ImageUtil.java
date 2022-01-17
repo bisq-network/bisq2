@@ -46,7 +46,7 @@ public class ImageUtil {
         return imageView;
     }
 
-    // determine if this is a MacOS retina display
+    // determine if this is a macOS retina display
     // https://stackoverflow.com/questions/20767708/how-do-you-detect-a-retina-display-in-java#20767802
     public static boolean isRetina() {
         return Screen.getPrimary().getOutputScaleX() > 1.5;

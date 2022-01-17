@@ -73,6 +73,7 @@ public class TransportTypeModel implements Model {
         this.transportType = transportType;
 
         Optional<ServiceNode> serviceNode = networkService.findServiceNode(transportType);
+        //todo throws with tor
         checkArgument(serviceNode.isPresent(), "ServiceNode must be present");
         defaultNode = serviceNode.get().getDefaultNode();
         defaultNode.findMyAddress().ifPresent(e -> myDefaultNodeAddress.set(e.getFullAddress()));

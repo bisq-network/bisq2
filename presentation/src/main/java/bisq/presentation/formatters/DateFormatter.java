@@ -29,8 +29,8 @@ public class DateFormatter {
     }
 
     public static String formatDateTime(Date date, boolean useLocaleAndLocalTimezone) {
-        DateFormat dateInstance = DateFormat.getDateInstance(DateFormat.DEFAULT, LocaleRepository.getDefaultLocale());
-        DateFormat timeInstance = DateFormat.getTimeInstance(DateFormat.DEFAULT, LocaleRepository.getDefaultLocale());
+        DateFormat dateInstance = DateFormat.getDateInstance(DateFormat.SHORT, LocaleRepository.getDefaultLocale());
+        DateFormat timeInstance = DateFormat.getTimeInstance(DateFormat.SHORT, LocaleRepository.getDefaultLocale());
         if (!useLocaleAndLocalTimezone) {
             dateInstance.setTimeZone(TimeZone.getTimeZone("UTC"));
             timeInstance.setTimeZone(TimeZone.getTimeZone("UTC"));

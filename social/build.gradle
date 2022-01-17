@@ -21,7 +21,6 @@ dependencies {
     implementation project(':security')
     implementation project(':network')
     implementation project(':identity')
-    implementation project(':social')
     implementation project(':user')
 
     implementation 'com.google.guava:guava'

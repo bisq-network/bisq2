@@ -20,6 +20,7 @@ package bisq.desktop.common.view;
 public interface InitWithDataController<T> extends Controller {
     default void initWithObject(Object data) {
         try {
+            //noinspection unchecked
             initWithData((T) data);
         } catch (Throwable t) {
             t.printStackTrace();

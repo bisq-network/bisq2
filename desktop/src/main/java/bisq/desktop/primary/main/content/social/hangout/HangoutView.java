@@ -65,11 +65,12 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
         root.setSpacing(Layout.SPACING);
         root.setPadding(new Insets(20, 20, 20, 0));
         channelList = new VBox();
-        channelList.setMinWidth(150);
+        channelList.setMinWidth(200);
         channelList.setSpacing(10);
         VBox chatSpace = new VBox();
         chatSpace.setSpacing(Layout.SPACING);
         textArea = new BisqTextArea();
+        textArea.setMinWidth(650);
 
         HBox sendBox = new HBox();
         sendBox.setSpacing(Layout.SPACING);
@@ -77,7 +78,9 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
         sendButton = new BisqButton(Res.common.get("send"));
         sendBox.getChildren().addAll(inputTextField, sendButton);
         chatSpace.getChildren().addAll(textArea, sendBox);
-        root.getChildren().addAll(channelList, chatSpace, userViewRoot);
+
+        //todo user UI needs more work...
+        root.getChildren().addAll(channelList, chatSpace/*, userViewRoot*/);
 
         channelsChangeListener = c -> updateChannels();
         selectedChannelListener = (observable, oldValue, newValue) -> {
@@ -110,7 +113,10 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
         model.getChannels().addListener(channelsChangeListener);
         model.getSelectedChannel().addListener(selectedChannelListener);
         model.getSelectedChatMessages().addListener(textAreaListener);
-        sendButton.setOnAction(e -> controller.onSendMessage(inputTextField.getText()));
+        sendButton.setOnAction(e -> {
+            controller.onSendMessage(inputTextField.getText());
+            inputTextField.clear();
+        });
 
         inputTextField.setPromptText(Res.common.get("sendMessagePrompt"));
         updateChannels();
@@ -133,7 +139,7 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
             super(channelId);
 
             setPrefHeight(40);
-            setPrefWidth(150);
+            setPrefWidth(200);
             setAlignment(Pos.CENTER_LEFT);
 
             this.setToggleGroup(toggleGroup);

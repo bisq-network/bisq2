@@ -60,23 +60,4 @@ public class OverlayView extends View<AnchorPane, OverlayModel, OverlayControlle
             }
         });
     }
-    
-  /*  protected void layout() {
-        if (owner == null)
-            owner = MainView.getRootContainer();
-        Scene rootScene = owner.getScene();
-        if (rootScene != null) {
-            Window window = rootScene.getWindow();
-            double titleBarHeight = window.getHeight() - rootScene.getHeight();
-            if (Utilities.isWindows())
-                titleBarHeight -= 9;
-            stage.setX(Math.round(window.getX() + (owner.getWidth() - stage.getWidth()) / 2));
-
-            if (type.animationType == AnimationType.SlideDownFromCenterTop)
-                stage.setY(Math.round(window.getY() + titleBarHeight));
-            else
-                stage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - stage.getHeight()) / 2));
-        }
-    }*/
-
 }

@@ -36,19 +36,16 @@ public class ChatMessage implements MailboxMessage {
     private final NetworkId senderNetworkId;
     private final long date;
     private final ChannelType channelType;
-    private final PrivateChannel.Context context;
     private final MetaData metaData;
 
-    //just temp for dev
     public ChatMessage(String channelId, String text, String senderUserName, NetworkId senderNetworkId,
-                       long date, ChannelType channelType, PrivateChannel.Context context) {
+                       long date, ChannelType channelType) {
         this.channelId = channelId;
         this.text = text;
         this.senderUserName = senderUserName;
         this.senderNetworkId = senderNetworkId;
         this.date = date;
         this.channelType = channelType;
-        this.context = context;
         metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
     }
 

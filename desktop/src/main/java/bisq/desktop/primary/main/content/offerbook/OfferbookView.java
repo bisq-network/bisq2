@@ -46,13 +46,15 @@ import java.util.function.Function;
 
 @Slf4j
 public class OfferbookView extends View<VBox, OfferbookModel, OfferbookController> {
-    private TableView<OfferListItem> tableView;
-    private RangeSliderBox baseAmountSliderBox, priceSliderBox;
-    private BisqComboBox<String> askCurrencyComboBox, bidCurrencyComboBox;
-    private BisqButton flipButton;
-    private AutoTooltipSlideToggleButton showAmountPriceFilterToggle;
-    private HBox amountPriceFilterBox;
-    private BisqButton createOfferButton;
+    private final TableView<OfferListItem> tableView;
+    private final RangeSliderBox baseAmountSliderBox;
+    private RangeSliderBox priceSliderBox;
+    private final BisqComboBox<String> askCurrencyComboBox;
+    private final BisqComboBox<String> bidCurrencyComboBox;
+    private final BisqButton flipButton;
+    private final AutoTooltipSlideToggleButton showAmountPriceFilterToggle;
+    private final HBox amountPriceFilterBox;
+    private final BisqButton createOfferButton;
 
     public OfferbookView(OfferbookModel model, OfferbookController controller) {
         super(new VBox(), model, controller);

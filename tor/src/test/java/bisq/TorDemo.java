@@ -52,7 +52,7 @@ public class TorDemo {
             tor = Tor.getTor(torDirPath);
             tor.start();
             TorServerSocket torServerSocket = startServer();
-            OnionAddress onionAddress = torServerSocket.getOnionAddress().get();
+            OnionAddress onionAddress = torServerSocket.getOnionAddress().orElseThrow();
             sendViaSocketFactory(tor, onionAddress);
             sendViaProxy(tor, onionAddress);
             sendViaSocket(tor, onionAddress);

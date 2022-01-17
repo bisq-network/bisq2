@@ -39,6 +39,8 @@ package bisq.common.util;
  * @author Fabian Barney
  */
 // Taken from https://raw.githubusercontent.com/fabian-barney/Utils/master/utils/src/com/barney4j/utils/unit/ByteUnit.java
+
+//todo would need a bit adjustment. not sure if we keep it...
 public enum ByteUnit {
 
     /**

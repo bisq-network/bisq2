@@ -27,6 +27,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataNetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.monitor.MonitorService;
@@ -154,7 +155,7 @@ public class ServiceNode {
                     setState(State.SHUTDOWN_COMPLETE);
                 }).thenApply(list -> null);
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -210,12 +211,12 @@ public class ServiceNode {
                 .orElseThrow(() -> new RuntimeException("RelayService not present at relay"));
     }
 
-    public void addMessageListener(Node.Listener listener) {
-        confidentialMessageService.ifPresent(service -> service.addMessageListener(listener));
+    public void addMessageListener(MessageListener messageListener) {
+        confidentialMessageService.ifPresent(service -> service.addMessageListener(messageListener));
     }
 
-    public void removeMessageListener(Node.Listener listener) {
-        confidentialMessageService.ifPresent(service -> service.removeMessageListener(listener));
+    public void removeMessageListener(MessageListener messageListener) {
+        confidentialMessageService.ifPresent(service -> service.removeMessageListener(messageListener));
     }
 
     public void addListener(Listener listener) {

@@ -20,9 +20,9 @@ package bisq.protocol;
 import bisq.contract.Party;
 import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.confidential.MessageListener;
 
-public abstract class TwoPartyProtocol extends Protocol implements Node.Listener {
+public abstract class TwoPartyProtocol extends Protocol implements MessageListener {
     protected final Party counterParty;
 
     public TwoPartyProtocol(TwoPartyContract contract, NetworkService networkService) {

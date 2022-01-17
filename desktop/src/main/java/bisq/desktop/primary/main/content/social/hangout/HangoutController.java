@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 
 import static bisq.social.chat.ChannelType.PRIVATE;
-import static bisq.social.chat.PrivateChannel.Context.TRADE_INTENT;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -55,10 +54,6 @@ public class HangoutController implements InitWithDataController<TradeIntent>, C
         ChatUserController chatUserController = new ChatUserController(serviceProvider);
         model = new HangoutModel(serviceProvider);
         view = new HangoutView(model, this, chatUserController.getView());
-
-       /* chatService.getOrCreateChannel(PUBLIC, BTC_USD.name(), model.getDisplayString(BTC_USD));
-        chatService.getOrCreateChannel(PUBLIC, BTC_EUR.name(), model.getDisplayString(BTC_EUR));
-        chatService.getOrCreateChannel(PUBLIC, ANY.name(), model.getDisplayString(ANY));*/
     }
 
     @Override
@@ -68,7 +63,7 @@ public class HangoutController implements InitWithDataController<TradeIntent>, C
         ChatPeer chatPeer = tradeIntent.maker();
         String userName = chatService.findUserName(tradeIntentId).orElse("Taker@" + StringUtils.truncate(tradeIntentId, 8));
         ChatIdentity chatIdentity = chatService.getOrCreateChatIdentity(userName, tradeIntentId);
-        PrivateChannel privateChannel = chatService.getOrCreatePrivateChannel(tradeIntentId, chatPeer, chatIdentity, TRADE_INTENT);
+        PrivateChannel privateChannel = chatService.getOrCreatePrivateChannel(tradeIntentId, chatPeer, chatIdentity);
         model.addChannel(privateChannel);
         chatService.selectChannel(privateChannel);
     }
@@ -77,7 +72,7 @@ public class HangoutController implements InitWithDataController<TradeIntent>, C
     public void onViewAttached() {
         chatService.addListener(this);
 
-        model.setAllChannels(chatService.getChatModel().getPrivateChannelsById().values());
+        model.setAllChannels(chatService.getChatModel().getPrivateChannels());
         chatService.getChatModel().getSelectedChannel().ifPresent(model::selectChannel);
     }
 
@@ -92,16 +87,6 @@ public class HangoutController implements InitWithDataController<TradeIntent>, C
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onChatUserAdded(ChatPeer chatPeer) {
-        //  UIThread.run(() -> model.addMyChatUser(chatPeer));
-    }
-
-    @Override
-    public void onChatUserSelected(ChatPeer chatPeer) {
-        //  UIThread.run(() -> model.selectMyChatUser(chatPeer));
-    }
-
-    @Override
     public void onChannelAdded(Channel channel) {
         UIThread.run(() -> model.addChannel(channel));
     }
@@ -114,10 +99,6 @@ public class HangoutController implements InitWithDataController<TradeIntent>, C
     @Override
     public void onChatMessageAdded(Channel channel, ChatMessage newChatMessage) {
         UIThread.run(() -> model.addChatMessage(channel, newChatMessage));
-    }
-
-    @Override
-    public void onChatIdentityChanged(ChatIdentity previousValue, ChatIdentity newValue) {
     }
 
 
@@ -135,8 +116,7 @@ public class HangoutController implements InitWithDataController<TradeIntent>, C
                 chatIdentity.userName(),
                 chatIdentity.identity().networkId(),
                 new Date().getTime(),
-                PRIVATE,
-                TRADE_INTENT);
+                PRIVATE);
         chatService.addChatMessage(chatMessage, channel);
 
         checkArgument(channel instanceof PrivateChannel, "channel must be PrivateChannel");
@@ -144,7 +124,6 @@ public class HangoutController implements InitWithDataController<TradeIntent>, C
         NetworkId receiverNetworkId = privateChannel.getChatPeer().networkId();
 
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = chatIdentity.identity().getNodeIdAndKeyPair();
-        log.error("Send {} \nreceiverNetworkId={} \nsenderNodeIdAndKeyPair={}", chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
         networkService.confidentialSendAsync(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair)
                 .whenComplete((resultMap, throwable2) -> {
                     if (throwable2 != null) {

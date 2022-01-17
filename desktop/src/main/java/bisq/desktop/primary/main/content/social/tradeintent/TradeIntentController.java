@@ -64,9 +64,6 @@ public class TradeIntentController implements Controller/*, ChatService.Listener
 
     @Override
     public void onViewAttached() {
-        //  chatService.addListener(this);
-        //chatService.getChatModel().getSelectedChatPeer().ifPresent(model::selectMyChatUser); //todo
-
         dataService.ifPresent(dataService -> {
             dataListener = Optional.of(new DataService.Listener() {
                 @Override
@@ -96,36 +93,6 @@ public class TradeIntentController implements Controller/*, ChatService.Listener
     public void onViewDetached() {
         //    chatService.removeListener(this);
     }
-
-/*
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // ChatService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onChatUserAdded(ChatPeer chatPeer) {
-    }
-
-    @Override
-    public void onChatUserSelected(ChatPeer chatPeer) {
-      //  UIThread.run(() -> model.selectMyChatUser(chatPeer));
-    }
-
-    @Override
-    public void onChannelAdded(Channel channel) {
-    }
-
-    @Override
-    public void onChannelSelected(Channel channel) {
-    }
-
-    @Override
-    public void onChatMessageAdded(Channel channel, ChatMessage newChatMessage) {
-    }
-
-    @Override
-    public void onChatIdentityChanged(ChatIdentity previousValue, ChatIdentity newValue) {
-    }*/
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -174,7 +141,7 @@ public class TradeIntentController implements Controller/*, ChatService.Listener
     }
 
     private void onRemoveTradeIntent(TradeIntentListItem item) {
-        Identity identity = identityService.findIdentityByDomainId(item.getId()).orElseThrow();
+        Identity identity = identityService.findIdentity(item.getId()).orElseThrow();
         log.error("onRemoveTradeIntent nodeIdAndKeyPair={}", identity.getNodeIdAndKeyPair());
         networkService.removeData(item.getPayload().getData(), identity.getNodeIdAndKeyPair())
                 .whenComplete((broadCastResultFutures, throwable2) -> {

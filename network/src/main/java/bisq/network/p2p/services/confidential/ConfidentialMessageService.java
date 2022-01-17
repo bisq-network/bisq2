@@ -20,10 +20,10 @@ package bisq.network.p2p.services.confidential;
 import bisq.common.ObjectSerializer;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.NetworkUtils;
-import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
@@ -45,8 +45,12 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import static bisq.network.NetworkService.DISPATCHER;
+import static java.util.concurrent.CompletableFuture.*;
+
 @Slf4j
-public class ConfidentialMessageService implements Node.Listener {
+public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
+
     public enum State {
         SENT,
         ADDED_TO_MAILBOX,
@@ -79,7 +83,7 @@ public class ConfidentialMessageService implements Node.Listener {
         }
     }
 
-    private final Set<Node.Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Set<MessageListener> listeners = new CopyOnWriteArraySet<>();
     private final NodesById nodesById;
     private final KeyPairService keyPairService;
     private final Optional<DataService> dataService;
@@ -90,6 +94,14 @@ public class ConfidentialMessageService implements Node.Listener {
         this.dataService = dataService;
 
         nodesById.addNodeListener(this);
+        dataService.ifPresent(service -> service.addListener(this));
+    }
+
+    public CompletableFuture<Void> shutdown() {
+        nodesById.removeNodeListener(this);
+        dataService.ifPresent(service -> service.removeListener(this));
+        listeners.clear();
+        return completedFuture(null);
     }
 
 
@@ -106,46 +118,59 @@ public class ConfidentialMessageService implements Node.Listener {
                 // Address targetAddress = relayMessage.getTargetAddress();
                 // send(proto, targetAddress);
             } else {
-                ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
-                keyPairService.findKeyPair(confidentialMessage.getKeyId()).ifPresent(receiversKeyPair -> {
-                    ExecutorFactory.WORKER_POOL.submit(() -> {
-                        try {
-                            byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
-                            Serializable deserialized = ObjectSerializer.deserialize(decrypted);
-                            if (deserialized instanceof Message decryptedMessage) {
-                                NetworkService.DISPATCHER.submit(() ->
-                                        listeners.forEach(listener -> listener.onMessage(decryptedMessage, connection, nodeId)));
-                            } else {
-                                log.warn("Deserialized data is not of type Message. deserialized.getClass()={}", deserialized.getClass());
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    });
-                });
+                processConfidentialMessage(confidentialMessage);
             }
         }
     }
 
     @Override
     public void onConnection(Connection connection) {
-        listeners.forEach(listener -> listener.onConnection(connection));
     }
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
-        listeners.forEach(listener -> listener.onDisconnect(connection, closeReason));
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // DataService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
+        if (networkPayload instanceof MailboxPayload mailboxPayload) {
+            if (mailboxPayload.getData() instanceof ConfidentialMessage confidentialMessage) {
+                processConfidentialMessage(confidentialMessage)
+                        .whenComplete((result, throwable) -> {
+                            if (throwable == null) {
+                                KeyPair keyPair = keyPairService.getOrCreateKeyPair(confidentialMessage.getKeyId());
+                                dataService.ifPresent(service -> service.removeMailboxPayload(mailboxPayload, keyPair));
+                            } else {
+                                throwable.printStackTrace();
+                            }
+                        });
+            }
+        }
+    }
+
+    @Override
+    public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Result send(Message message,
                        Address address,
                        PubKey receiverPubKey,
                        KeyPair senderKeyPair,
                        String senderNodeId) {
-        Connection connection;
         try {
             nodesById.maybeInitializeServer(senderNodeId, NetworkUtils.findFreeSystemPort());
-            connection = nodesById.getConnection(senderNodeId, address);
+            Connection connection = nodesById.getConnection(senderNodeId, address);
+            return send(message, connection, receiverPubKey, senderKeyPair, senderNodeId);
         } catch (Throwable throwable) {
             if (message instanceof MailboxMessage mailboxMessage) {
                 ConfidentialMessage confidentialMessage = getConfidentialMessage(message, receiverPubKey, senderKeyPair);
@@ -155,7 +180,7 @@ public class ConfidentialMessageService implements Node.Listener {
                 return new Result(State.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
             }
         }
-        return send(message, connection, receiverPubKey, senderKeyPair, senderNodeId);
+
     }
 
     public Result send(Message message,
@@ -178,44 +203,37 @@ public class ConfidentialMessageService implements Node.Listener {
         }
     }
 
-    private Result storeMailBoxMessage(MailboxMessage mailboxMessage,
-                                       ConfidentialMessage confidentialMessage,
-                                       PubKey receiverPubKey,
-                                       KeyPair senderKeyPair) {
-        if (dataService.isEmpty()) {
-            log.warn("We have not stored a mailboxMessage because the dataService is not present. mailboxMessage={}", mailboxMessage);
-            return new Result(State.FAILED).setErrorMsg("We cannot stored a mailboxMessage because the dataService is not present.");
-        }
-
-        MailboxPayload mailboxPayload = new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
-        // We do not wait for the broadcast result as that can take a while. We pack the future into our result, 
-        // so clients can react on it as they wish.
-        List<CompletableFuture<BroadcastResult>> mailboxFuture = dataService.get().addMailboxPayloadAsync(mailboxPayload,
-                        senderKeyPair,
-                        receiverPubKey.publicKey())
-                .join();
-        return new Result(State.ADDED_TO_MAILBOX).setMailboxFuture(mailboxFuture);
+    public void addMessageListener(MessageListener messageListener) {
+        listeners.add(messageListener);
     }
 
-
-    public CompletableFuture<Void> shutdown() {
-        nodesById.removeNodeListener(this);
-        listeners.clear();
-        return CompletableFuture.completedFuture(null);
-    }
-
-    public void addMessageListener(Node.Listener listener) {
-        listeners.add(listener);
-    }
-
-    public void removeMessageListener(Node.Listener listener) {
-        listeners.remove(listener);
+    public void removeMessageListener(MessageListener messageListener) {
+        listeners.remove(messageListener);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private Result storeMailBoxMessage(MailboxMessage mailboxMessage,
+                                       ConfidentialMessage confidentialMessage,
+                                       PubKey receiverPubKey,
+                                       KeyPair senderKeyPair) {
+        if (dataService.isEmpty()) {
+            log.warn("We have not stored the mailboxMessage because the dataService is not present. mailboxMessage={}", mailboxMessage);
+            return new Result(State.FAILED).setErrorMsg("We have not stored the mailboxMessage because the dataService is not present.");
+        }
+
+        MailboxPayload mailboxPayload = new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
+        // We do not wait for the broadcast result as that can take a while. We pack the future into our result, 
+        // so clients can react on it as they wish.
+        List<CompletableFuture<BroadcastResult>> mailboxFuture = dataService.get().addMailboxPayload(mailboxPayload,
+                        senderKeyPair,
+                        receiverPubKey.publicKey())
+                .join();
+        return new Result(State.ADDED_TO_MAILBOX).setMailboxFuture(mailboxFuture);
+    }
 
     private ConfidentialMessage getConfidentialMessage(Message message, PubKey receiverPubKey, KeyPair senderKeyPair) {
         try {
@@ -227,11 +245,25 @@ public class ConfidentialMessageService implements Node.Listener {
         }
     }
 
-/*
-    private Set<Connection> getConnectionsWithSupportedNetwork(NetworkType networkType) {
-        return peerGroup.getConnectedPeerByAddress().stream()
-                .filter(peer -> peer.getCapability().supportedNetworkTypes().contains(networkType))
-                .flatMap(peer -> node.findConnection(peer.getAddress()).stream())
-                .collect(Collectors.toSet());
-    }*/
+    private CompletableFuture<Boolean> processConfidentialMessage(ConfidentialMessage confidentialMessage) {
+        return keyPairService.findKeyPair(confidentialMessage.getKeyId())
+                .map(receiversKeyPair -> supplyAsync(() -> {
+                    try {
+                        ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
+                        byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
+                        Serializable deserialized = ObjectSerializer.deserialize(decrypted);
+                        if (deserialized instanceof Message decryptedMessage) {
+                            runAsync(() -> listeners.forEach(l -> l.onMessage(decryptedMessage)), DISPATCHER);
+                            return true;
+                        } else {
+                            log.warn("Deserialized data is not of type Message. deserialized.getClass()={}", deserialized.getClass());
+                            throw new IllegalArgumentException("Deserialized data is not of type Message.");
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
+                    }
+                }, ExecutorFactory.WORKER_POOL))
+                .orElse(failedFuture(new IllegalArgumentException("No key found.")));
+    }
 }

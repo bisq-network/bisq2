@@ -73,10 +73,9 @@ public class NodeInfoBox extends VBox {
         String randomColor = rgb.toString().replace("0x", "#");
         setStyle("-fx-background-color: " + randomColor);
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()))
-                .append(" onData: ").append(id).append("\n");
-        list.add(sb.toString());
+        String sb = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) +
+                " onData: " + id + "\n";
+        list.add(sb);
 
         Collections.sort(list);
         info.setText(list.toString().replace(", ", "")

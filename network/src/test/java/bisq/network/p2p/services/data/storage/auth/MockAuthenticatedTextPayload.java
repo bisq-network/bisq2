@@ -23,7 +23,7 @@ import lombok.Getter;
 
 import java.util.concurrent.TimeUnit;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @Getter
 public class MockAuthenticatedTextPayload extends AuthenticatedPayload {
     private final String text;

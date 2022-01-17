@@ -48,6 +48,7 @@ public abstract class DataStore<T extends DataRequest> extends RateLimitedPersis
     @Override
     public void applyPersisted(HashMap<ByteArray, T> persisted) {
         synchronized (map) {
+            map.clear();
             map.putAll(persisted);
         }
     }

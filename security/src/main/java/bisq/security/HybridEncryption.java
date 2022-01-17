@@ -76,11 +76,11 @@ public class HybridEncryption {
     }
 
     public static byte[] decryptAndVerify(ConfidentialData confidentialData, KeyPair receiversKeyPair) throws GeneralSecurityException {
-        byte[] encodedSenderPublicKey = confidentialData.getEncodedSenderPublicKey();
-        byte[] hmac = confidentialData.getHmac();
-        byte[] iv = confidentialData.getIv();
-        byte[] cypherText = confidentialData.getCypherText();
-        byte[] signature = confidentialData.getSignature();
+        byte[] encodedSenderPublicKey = confidentialData.encodedSenderPublicKey();
+        byte[] hmac = confidentialData.hmac();
+        byte[] iv = confidentialData.iv();
+        byte[] cypherText = confidentialData.cypherText();
+        byte[] signature = confidentialData.signature();
 
         PublicKey senderPublicKey = KeyGeneration.generatePublic(encodedSenderPublicKey);
         byte[] messageToVerify = concat(hmac, cypherText);
@@ -101,12 +101,6 @@ public class HybridEncryption {
     }
 
     private static Pair<byte[], byte[]> deriveKeyMaterial(byte[] input) {
-        // todo causes exceptions as encryption... not clear why
-      /*  KDF2BytesGenerator kdf = new KDF2BytesGenerator(new SHA512Digest());
-        kdf.init(new KDFParameters(keyInput, iv));
-        byte[] out = new byte[512];
-        kdf.generateBytes(out, 0, out.length);*/
-
         byte[] hash = DigestUtil.sha512(input);
         int length = hash.length;
         int from = 0;

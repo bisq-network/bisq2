@@ -17,28 +17,25 @@
 
 package bisq.social.chat;
 
+import bisq.persistence.Persistable;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
+public class ChatModel implements Persistable<ChatModel> {
 
-public class ChatModel implements Serializable {
     @Getter
-    private final Map<String, PrivateChannel> privateChannelsById = new HashMap<>();
+    private final Set<PrivateChannel> privateChannels = new CopyOnWriteArraySet<>();
     @Getter
-    private final Map<String, ChatPeer> chatPeerByUserName = new HashMap<>();
+    private final Set<PublicChannel> publicChannels = new CopyOnWriteArraySet<>();
     @Getter
     private final Map<String, String> userNameByDomainId = new HashMap<>();
-
-    @Nullable
-    @Setter
-    private ChatPeer selectedChatPeer;
-
     @Nullable
     @Setter
     private Channel selectedChannel;
@@ -46,39 +43,42 @@ public class ChatModel implements Serializable {
     public ChatModel() {
     }
 
-    public void fromPersisted(ChatModel chatModel) {
-        setAll(chatModel.chatPeerByUserName,
-                chatModel.selectedChatPeer,
-                chatModel.privateChannelsById,
+    private ChatModel(Set<PrivateChannel> privateChannels,
+                      Set<PublicChannel> publicChannels,
+                      Channel selectedChannel,
+                      Map<String, String> userNameByDomainId) {
+        setAll(privateChannels,
+                publicChannels,
+                selectedChannel,
+                userNameByDomainId);
+    }
+
+    @Override
+    public void applyPersisted(ChatModel chatModel) {
+        setAll(chatModel.privateChannels,
+                chatModel.publicChannels,
                 chatModel.selectedChannel,
                 chatModel.userNameByDomainId);
     }
 
-    public ChatModel(Map<String, ChatPeer> chatPeerByUserName,
-                     ChatPeer selectedChatPeer,
-                     Map<String, PrivateChannel> privateChannelsById,
-                     Channel selectedChannel,
-                     Map<String, String> userNameByDomainId) {
-        setAll(chatPeerByUserName, selectedChatPeer, privateChannelsById, selectedChannel, userNameByDomainId);
+    @Override
+    public ChatModel getClone() {
+        return new ChatModel(privateChannels,
+                publicChannels,
+                selectedChannel,
+                userNameByDomainId);
     }
 
-    public ChatModel(ChatModel chatModel) {
-        this(chatModel.chatPeerByUserName,
-                chatModel.selectedChatPeer,
-                chatModel.privateChannelsById,
-                chatModel.selectedChannel,
-                chatModel.userNameByDomainId);
-    }
-
-    public void setAll(Map<String, ChatPeer> chatUserByUserName,
-                       ChatPeer selectedChatPeer,
-                       Map<String, PrivateChannel> channelsById,
+    public void setAll(Set<PrivateChannel> privateChannels,
+                       Set<PublicChannel> publicChannels,
                        Channel selectedChannel,
                        Map<String, String> userNameByDomainId) {
-        this.chatPeerByUserName.putAll(chatUserByUserName);
-        this.selectedChatPeer = selectedChatPeer;
-        this.privateChannelsById.putAll(channelsById);
+        this.privateChannels.clear();
+        this.privateChannels.addAll(privateChannels);
+        this.publicChannels.clear();
+        this.publicChannels.addAll(publicChannels);
         this.selectedChannel = selectedChannel;
+        this.userNameByDomainId.clear();
         this.userNameByDomainId.putAll(userNameByDomainId);
     }
 
@@ -86,7 +86,11 @@ public class ChatModel implements Serializable {
         return Optional.ofNullable(selectedChannel);
     }
 
-    public Optional<ChatPeer> getSelectedChatPeer() {
-        return Optional.ofNullable(selectedChatPeer);
+    public Optional<PrivateChannel> findPrivateChannel(String id) {
+        return privateChannels.stream().filter(e -> e.getId().equals(id)).findAny();
+    }
+
+    public Optional<PublicChannel> findPublicChannel(String id) {
+        return publicChannels.stream().filter(e -> e.getId().equals(id)).findAny();
     }
 }

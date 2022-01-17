@@ -65,6 +65,7 @@ public class Persistence<T extends Serializable> {
             synchronized (lock) {
                 object = objectInputStream.readObject();
             }
+            //noinspection unchecked
             return Optional.of((T) object);
         } catch (Throwable exception) {
             log.error("Error at read for " + storagePath, exception);

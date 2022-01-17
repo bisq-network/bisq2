@@ -89,28 +89,32 @@ public class HangoutModel implements Model {
         setAllChatMessages(channel);
     }
 
-
     void setAllChatMessages(Channel channel) {
         chatMessagesByChannelId.putIfAbsent(channel.getId(), new SimpleStringProperty(""));
         StringProperty chatMessages = chatMessagesByChannelId.get(channel.getId());
         chatMessages.set("");
         channel.getChatMessages().forEach(chatMessage -> addChatMessage(channel, chatMessage));
+        if (selectedChannel.get() != null && selectedChannel.get().getId().equals(channel.getId())) {
+            selectedChatMessages.set(chatMessages.get());
+        }
     }
 
-    void addChatMessage(Channel channel, ChatMessage newChatMessage) {
+    void addChatMessage(Channel channel, ChatMessage chatMessage) {
         chatMessagesByChannelId.putIfAbsent(channel.getId(), new SimpleStringProperty(""));
-        StringProperty channelItemsText = chatMessagesByChannelId.get(channel.getId());
-        channelItemsText.set(channelItemsText.get() +
-                "\n" +
-                DateFormatter.formatDateTime(new Date(newChatMessage.getDate())) +
-                " From: " +
-                newChatMessage.getSenderUserName() +
-                ": " +
-                newChatMessage.getText() +
-                "\n");
+        StringProperty chatMessages = chatMessagesByChannelId.get(channel.getId());
+        String previous = chatMessages.get();
+        if (!previous.isEmpty()) {
+            previous += "\n";
+        }
+        chatMessages.set(previous +
+                "[" + DateFormatter.formatDateTime(new Date(chatMessage.getDate())) +
+                "] [" +
+                chatMessage.getSenderUserName().substring(0,12) +
+                "] " +
+                chatMessage.getText());
 
         if (selectedChannel.get() != null && selectedChannel.get().getId().equals(channel.getId())) {
-            selectedChatMessages.set(channelItemsText.get());
+            selectedChatMessages.set(chatMessages.get());
         }
     }
 

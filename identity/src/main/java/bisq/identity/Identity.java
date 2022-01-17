@@ -17,13 +17,15 @@
 
 package bisq.identity;
 
+import bisq.common.encoding.Hex;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
+import bisq.security.DigestUtil;
 import bisq.security.PubKey;
 
 import java.io.Serializable;
 import java.security.KeyPair;
-
+// todo maybe add userName
 public record Identity(String domainId, NetworkId networkId, KeyPair keyPair) implements Serializable {
     public NetworkIdWithKeyPair getNodeIdAndKeyPair() {
         return new NetworkIdWithKeyPair(networkId, keyPair);
@@ -35,5 +37,10 @@ public record Identity(String domainId, NetworkId networkId, KeyPair keyPair) im
 
     public PubKey pubKey() {
         return networkId.getPubKey();
+    }
+
+    // Use hash of public key as ID
+    public String id() {
+        return Hex.encode(DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded()));
     }
 }

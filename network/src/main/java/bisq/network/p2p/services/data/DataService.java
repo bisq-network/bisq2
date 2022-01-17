@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data;
 
+import bisq.common.timer.Scheduler;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -32,6 +33,7 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
+import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -79,6 +81,7 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     public CompletableFuture<Void> shutdown() {
+        dataNetworkServices.values().forEach(DataNetworkService::shutdown);
         storageService.shutdown();
         listeners.clear();
         return CompletableFuture.completedFuture(null);
@@ -101,8 +104,15 @@ public class DataService implements DataNetworkService.Listener {
     @Override
     public void onStateChanged(PeerGroupService.State state, DataNetworkService dataNetworkService) {
         if (state == PeerGroupService.State.RUNNING) {
-            requestInventory(new DataFilter(new HashSet<>(storageService.getFilterEntries(StorageService.StoreType.ALL))), dataNetworkService);
+            log.info("PeerGroupService initialized. We start the inventory request after a short delay.");
+            Scheduler.run(() -> doRequestInventory(dataNetworkService)).after(500);
         }
+    }
+
+    @Override
+    public void onSufficientlyConnected(int numConnections, DataNetworkService dataNetworkService) {
+        log.info("We are sufficiently connected to start the inventory request. numConnections={}", numConnections);
+        doRequestInventory(dataNetworkService);
     }
 
 
@@ -123,7 +133,7 @@ public class DataService implements DataNetworkService.Listener {
     // Add data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addNetworkPayloadAsync(NetworkPayload networkPayload, KeyPair keyPair) {
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
         if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
             return storageService.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
                     .thenApply(store -> {
@@ -162,9 +172,9 @@ public class DataService implements DataNetworkService.Listener {
         }
     }
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addMailboxPayloadAsync(MailboxPayload mailboxPayload,
-                                                                                              KeyPair senderKeyPair,
-                                                                                              PublicKey receiverPublicKey) {
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addMailboxPayload(MailboxPayload mailboxPayload,
+                                                                                         KeyPair senderKeyPair,
+                                                                                         PublicKey receiverPublicKey) {
         return storageService.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
                 .thenApply(store -> {
                     try {
@@ -190,8 +200,10 @@ public class DataService implements DataNetworkService.Listener {
     // Remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeNetworkPayloadAsync(NetworkPayload networkPayload, KeyPair keyPair) {
-        if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
+        if (networkPayload instanceof MailboxPayload) {
+            return CompletableFuture.failedFuture(new IllegalArgumentException("removeNetworkPayloadAsync called with MailboxPayload"));
+        } else if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
             return storageService.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
                     .thenApply(store -> {
                         try {
@@ -213,14 +225,35 @@ public class DataService implements DataNetworkService.Listener {
         } else if (networkPayload instanceof AppendOnlyPayload) {
             throw new IllegalArgumentException("AppendOnlyPayload cannot be removed");
         } else {
-            return CompletableFuture.failedFuture(new IllegalArgumentException(""));
+            return CompletableFuture.failedFuture(new IllegalArgumentException("Not supported type of networkPayload"));
         }
     }
 
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeMailboxPayload(MailboxPayload mailboxPayload, KeyPair receiverKeyPair) {
+        return storageService.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
+                .thenApply(store -> {
+                    try {
+                        RemoveMailboxRequest request = RemoveMailboxRequest.from(mailboxPayload, receiverKeyPair);
+                        Result result = store.remove(request);
+                        if (result.isSuccess()) {
+                            listeners.forEach(listener -> listener.onNetworkPayloadRemoved(mailboxPayload));
+                            return dataNetworkServices.values().stream()
+                                    .map(service -> service.broadcast(request))
+                                    .collect(Collectors.toList());
+                        } else {
+                            return new ArrayList<>();
+                        }
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                        throw new CompletionException(e);
+                    }
+                });
+    }
+
+    
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Inventory
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
 
     public void requestInventory() {
         requestInventory(StorageService.StoreType.ALL);
@@ -275,9 +308,8 @@ public class DataService implements DataNetworkService.Listener {
                 .whenComplete((optionalData, throwable) -> {
                     optionalData.ifPresent(networkData -> {
                         // We get called on dispatcher thread with onMessage, and we don't switch thread in 
-                        // async calls (todo check if in all cases true)
+                        // async calls
                         listeners.forEach(listener -> listener.onNetworkPayloadAdded(networkData));
-                        // runAsync(() -> listeners.forEach(listener -> listener.onNetworkDataAdded(networkData)), NetworkService.DISPATCHER);
                         if (allowReBroadcast) {
                             dataNetworkServices.values().forEach(e -> e.reBroadcast(addDataRequest));
                         }
@@ -297,5 +329,9 @@ public class DataService implements DataNetworkService.Listener {
                         }
                     });
                 });
+    }
+
+    private void doRequestInventory(DataNetworkService dataNetworkService) {
+        requestInventory(new DataFilter(new HashSet<>(storageService.getFilterEntries(StorageService.StoreType.ALL))), dataNetworkService);
     }
 }

@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 public class UIScheduler implements TaskScheduler {
     private Runnable task;
     private FxTimer timer;
-    private CompletableFuture<Void> future = new CompletableFuture<>();
+    private final CompletableFuture<Void> future = new CompletableFuture<>();
 
     private UIScheduler() {
     }

@@ -111,6 +111,7 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
     public Result remove(RemoveMailboxRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
         MailboxRequest requestFromMap = map.get(byteArray);
+        MailboxData dataFromMap;
         synchronized (map) {
             if (requestFromMap == null) {
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
@@ -123,7 +124,7 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
             if (requestFromMap instanceof RemoveMailboxRequest) {
                 // We have had the entry already removed.
                 if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
-                    // We update the request, so we have latest sequence number.
+                    // We update the request, so we have the latest sequence number.
                     map.put(byteArray, request);
                     persist();
                 }
@@ -133,7 +134,7 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
             // At that point we know requestFromMap is an AddProtectedDataRequest
             AddMailboxRequest addRequest = (AddMailboxRequest) requestFromMap;
             // We have an entry, lets validate if we can remove it
-            MailboxData dataFromMap = addRequest.getMailboxData();
+            dataFromMap = addRequest.getMailboxData();
             if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
                 // Sequence number has not increased
                 return new Result(false).sequenceNrInvalid();
@@ -153,7 +154,7 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
         }
 
         persist();
-        return new Result(true);
+        return new Result(true).removedPayload(dataFromMap.getMailboxPayload());
     }
 
     @Override
@@ -182,6 +183,12 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
             }
         }
         return sequenceNumber;
+    }
+
+    boolean contains(byte[] hash) {
+        synchronized (map) {
+            return map.containsKey(new ByteArray(hash));
+        }
     }
 
     boolean canAddMailboxMessage(MailboxPayload mailboxPayload) {
