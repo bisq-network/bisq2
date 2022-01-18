@@ -17,7 +17,7 @@
 
 package bisq.offer;
 
-import bisq.account.FiatSettlement;
+import bisq.account.settlement.FiatSettlement;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.network.NetworkId;

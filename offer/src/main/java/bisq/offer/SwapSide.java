@@ -17,21 +17,20 @@
 
 package bisq.offer;
 
-import bisq.account.Settlement;
-import bisq.account.SettlementMethod;
+import bisq.account.settlement.Settlement;
 import bisq.common.monetary.Monetary;
 
 import java.util.List;
 
 /**
- * A leg is one side of a swap trade (e.g. bid, ask)
+ * One side of a swap trade (e.g. bid, ask)
  *
  * @param monetary          The monetary value. Can be Fiat or Coin which carries the value, the currency
  *                          code and the smallestUnitExponent
  * @param settlementMethods The supported settlementMethods (e.g. if user supports payment in SEPA and
  *                          Revolut). The order in the list can be used as priority.
  */
-public record SwapSide(Monetary monetary, List<? extends Settlement<? extends SettlementMethod>> settlementMethods) {
+public record SwapSide(Monetary monetary, List<? extends Settlement<? extends Settlement.Method>> settlementMethods) {
     public long amount() {
         return monetary.getValue();
     }

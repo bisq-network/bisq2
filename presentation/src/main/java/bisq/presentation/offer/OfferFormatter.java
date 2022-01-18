@@ -17,7 +17,7 @@
 
 package bisq.presentation.offer;
 
-import bisq.account.Settlement;
+import bisq.account.settlement.Settlement;
 import bisq.common.monetary.Monetary;
 import bisq.offer.protocol.ProtocolType;
 import bisq.offer.options.ReputationOption;

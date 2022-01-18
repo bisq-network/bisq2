@@ -27,6 +27,7 @@ import bisq.presentation.formatters.QuoteFormatter;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.BehaviorSubject;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -35,14 +36,13 @@ import java.util.Map;
  * Enriched offer object which carries the dynamic data as well as formatted strings for presentation.
  */
 @Getter
+@ToString
 @Slf4j
 public class OfferPresentation implements Comparable<OfferPresentation> {
     protected final SwapOffer offer;
     private Quote quote;
     private Monetary quoteAmount;
     protected final String formattedBaseAmountWithMinAmount;
-
-
     protected final String formattedTransferOptions;
     protected String formattedQuote;
     protected String formattedMarketPriceOffset;
@@ -155,19 +155,5 @@ public class OfferPresentation implements Comparable<OfferPresentation> {
 
         formattedQuoteAmountWithMinAmount = AmountFormatter.formatAmountWithMinAmount(quoteAmount,
                 offer.findMinQuoteAmount(quoteAmount.getValue()));
-    }
-
-    @Override
-    public String toString() {
-        return "OfferEntity{" +
-                "\r\n     offer=" + offer +
-                ",\r\n     quote=" + quote +
-                ",\r\n     quoteAmount=" + quoteAmount +
-                ",\r\n     formattedBaseAmountWithMinAmount='" + formattedBaseAmountWithMinAmount + '\'' +
-                ",\r\n     formattedTransferOptions='" + formattedTransferOptions + '\'' +
-                ",\r\n     formattedQuote='" + formattedQuote + '\'' +
-                ",\r\n     formattedQuoteAmount='" + formattedQuoteAmount + '\'' +
-                ",\r\n     formattedQuoteAmountWithMinAmount='" + formattedQuoteAmountWithMinAmount + '\'' +
-                "\r\n}";
     }
 }

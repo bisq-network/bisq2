@@ -15,12 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account;
+package bisq.account.settlement;
 
 import lombok.Getter;
 
 @Getter
-public abstract class Settlement<T extends SettlementMethod> {
+public abstract class Settlement<T extends Settlement.Method> {
+    public interface Method {
+        String name();
+    }
+
     public enum Type {
         AUTOMATIC, MANUAL
     }

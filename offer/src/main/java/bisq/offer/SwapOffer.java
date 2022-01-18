@@ -33,9 +33,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Offer for an 2 party asset exchange (swap).
- */
 @Slf4j
 @Getter
 @EqualsAndHashCode(callSuper = true)
@@ -62,13 +59,14 @@ public class SwapOffer extends Listing {
     }
 
     /**
-     * @param askSwapSide           The ask leg (what the maker asks for)
-     * @param bidSwapSide           The bid leg (what the maker offers)
-     * @param baseCurrencyCode If the base currency code for the price quote.
-     * @param makerNetworkId   The networkId the maker used for that listing. It encapsulate the network addresses
+     * @param askSwapSide      The ask side (what the maker asks for)
+     * @param bidSwapSide      The bid side (what the maker bids)
+     * @param baseCurrencyCode The base currency code to determine if the ask side or the bid side contains the base currency.
+     * @param makerNetworkId   The networkId the maker used for that listing. It encapsulates the network addresses
      *                         of the supported networks and the pubKey used for data protection in the storage layer.
      * @param protocolTypes    The list of the supported swap protocol types. Order in the list can be used as priority.
-     * @param listingOptions     Options for different aspects of an offer like min amount, market based price, fee options... Can be specific to protocol type.
+     * @param listingOptions   Options for different aspects of an offer like min amount, market based price,
+     *                         fee options... Specific to protocol type.
      */
     public SwapOffer(SwapSide askSwapSide,
                      SwapSide bidSwapSide,
@@ -151,5 +149,4 @@ public class SwapOffer extends Listing {
     private Optional<PriceOption> findPriceOption(Set<ListingOption> listingOptions) {
         return listingOptions.stream().filter(e -> e instanceof PriceOption).map(e -> (PriceOption) e).findAny();
     }
-
 }

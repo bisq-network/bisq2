@@ -18,7 +18,7 @@
 package bisq.protocol.swap.contract.bsqBond;
 
 
-import bisq.account.FiatSettlement;
+import bisq.account.settlement.FiatSettlement;
 import bisq.common.monetary.Fiat;
 import bisq.contract.SwapContract;
 import bisq.identity.Identity;

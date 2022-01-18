@@ -17,7 +17,7 @@
 
 package bisq.protocol;
 
-import bisq.account.Settlement;
+import bisq.account.settlement.Settlement;
 import bisq.contract.Contract;
 import com.google.common.util.concurrent.Uninterruptibles;
 import lombok.extern.slf4j.Slf4j;

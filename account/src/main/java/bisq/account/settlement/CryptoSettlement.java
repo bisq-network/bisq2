@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account;
+package bisq.account.settlement;
 
 public class CryptoSettlement extends Settlement<CryptoSettlement.Method> {
     public static final CryptoSettlement MAINNET = new CryptoSettlement(Method.MAINNET);
@@ -27,7 +27,7 @@ public class CryptoSettlement extends Settlement<CryptoSettlement.Method> {
     public static final CryptoSettlement MULTI_CHAIN = new CryptoSettlement(Method.MULTI_CHAIN);
     public static final CryptoSettlement OTHER = new CryptoSettlement(Method.OTHER);
 
-    public enum Method implements SettlementMethod {
+    public enum Method implements Settlement.Method {
         MAINNET,            // If coin is transferred via native mainnet chain. E.g. Bitcoin network
         L2,                 // Layer 2, e.g. Lightning
         SIDE_CHAIN,         // Side chain, e.g. Liquid, RSK

@@ -18,8 +18,8 @@
 package bisq.protocol.swap.contract.multiSig;
 
 
-import bisq.account.CryptoSettlement;
-import bisq.account.FiatSettlement;
+import bisq.account.settlement.CryptoSettlement;
+import bisq.account.settlement.FiatSettlement;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.timer.Scheduler;

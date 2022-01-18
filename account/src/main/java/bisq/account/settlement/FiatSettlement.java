@@ -15,14 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account;
+package bisq.account.settlement;
+
+import static bisq.account.settlement.FiatSettlement.Method.*;
 
 public class FiatSettlement extends Settlement<FiatSettlement.Method> {
-    public static final FiatSettlement SEPA = new FiatSettlement(FiatSettlement.Method.SEPA);
-    public static final FiatSettlement REVOLUT = new FiatSettlement(FiatSettlement.Method.REVOLUT);
-    public static final FiatSettlement ZELLE = new FiatSettlement(FiatSettlement.Method.ZELLE);
+    public static final FiatSettlement SEPA = new FiatSettlement(Method.SEPA);
+    public static final FiatSettlement REVOLUT = new FiatSettlement(Method.REVOLUT);
+    public static final FiatSettlement ZELLE = new FiatSettlement(Method.ZELLE);
 
-    public enum Method implements SettlementMethod {
+    public enum Method implements Settlement.Method {
         SEPA,
         REVOLUT,
         ZELLE,
@@ -43,7 +45,7 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
 
     @Override
     protected Method getDefaultMethod() {
-        return FiatSettlement.Method.OTHER;
+        return OTHER;
     }
 
     @Override

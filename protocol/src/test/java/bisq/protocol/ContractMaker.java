@@ -17,8 +17,7 @@
 
 package bisq.protocol;
 
-import bisq.account.Settlement;
-import bisq.account.SettlementMethod;
+import bisq.account.settlement.Settlement;
 import bisq.contract.MultiPartyContract;
 import bisq.contract.Party;
 import bisq.contract.Role;
@@ -34,8 +33,8 @@ public class ContractMaker {
     public static SwapContract makerCreatesSwapContract(SwapOffer listing,
                                                         ProtocolType protocolType,
                                                         NetworkId takerNetworkId,
-                                                        Settlement<? extends SettlementMethod> askSideSettlement,
-                                                        Settlement<? extends SettlementMethod> bidSideSettlement) {
+                                                        Settlement<? extends Settlement.Method> askSideSettlement,
+                                                        Settlement<? extends Settlement.Method> bidSideSettlement) {
         Party taker = new Party(Role.TAKER, takerNetworkId);
         return new SwapContract(listing, protocolType, taker, askSideSettlement, bidSideSettlement);
     }
@@ -43,8 +42,8 @@ public class ContractMaker {
     public static SwapContract takerCreatesSwapContract(SwapOffer listing,
                                                         ProtocolType protocolType,
                                                         NetworkId takerNetworkId,
-                                                        Settlement<? extends SettlementMethod> askSideSettlement,
-                                                        Settlement<? extends SettlementMethod> bidSideSettlement) {
+                                                        Settlement<? extends Settlement.Method> askSideSettlement,
+                                                        Settlement<? extends Settlement.Method> bidSideSettlement) {
         Party taker = new Party(Role.TAKER, takerNetworkId);
         return new SwapContract(listing, protocolType, taker, askSideSettlement, bidSideSettlement);
     }
