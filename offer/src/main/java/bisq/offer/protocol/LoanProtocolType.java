@@ -15,31 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol;
+package bisq.offer.protocol;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * Executes the given protocol.
- */
-@Slf4j
-public class ProtocolExecutor implements Protocol.Listener {
-    @Getter
-    protected final Protocol protocol;
-
-    public ProtocolExecutor(Protocol protocol) {
-        this.protocol = protocol;
-
-        protocol.addListener(this);
-    }
-
-    public void start() {
-        protocol.start();
-    }
-
-    @Override
-    public void onStateChange(Protocol.State state) {
-        log.info("{}: {}", protocol.getContract().getMyRole().name(), state);
-    }
+public enum LoanProtocolType implements ProtocolType {
+    COLLATERALIZED,
+    REPUTATION
 }

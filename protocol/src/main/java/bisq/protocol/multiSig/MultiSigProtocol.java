@@ -17,12 +17,12 @@
 
 package bisq.protocol.multiSig;
 
-import bisq.contract.AssetTransfer;
+import bisq.protocol.SettlementExecution;
 import bisq.contract.TwoPartyContract;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.protocol.Protocol;
-import bisq.protocol.SecurityProvider;
 import bisq.protocol.TwoPartyProtocol;
 
 /**
@@ -67,20 +67,24 @@ public abstract class MultiSigProtocol extends TwoPartyProtocol implements Messa
         PAYOUT_TX_VISIBLE_IN_MEM_POOL // Maker completed
     }
 
-    protected final AssetTransfer assetTransfer;
+    protected final SettlementExecution settlementExecution;
     protected final MultiSig multiSig;
 
-    public MultiSigProtocol(TwoPartyContract contract, NetworkService networkService, AssetTransfer transfer, SecurityProvider securityProvider) {
-        super(contract, networkService);
-        this.assetTransfer = transfer;
+    public MultiSigProtocol(NetworkService networkService,
+                            NetworkIdWithKeyPair networkIdWithKeyPair,
+                            TwoPartyContract contract,
+                            SettlementExecution settlementExecution,
+                            MultiSig multiSig) {
+        super(networkService, networkIdWithKeyPair, contract);
+        this.settlementExecution = settlementExecution;
 
-        this.multiSig = (MultiSig) securityProvider;
+        this.multiSig = multiSig;
 
-        if (assetTransfer instanceof AssetTransfer.Manual) {
-            ((AssetTransfer.Manual) assetTransfer).addListener(this::onStartManualPayment);
+        if (settlementExecution instanceof SettlementExecution.Manual manualSettlementExecution) {
+            manualSettlementExecution.addListener(this::onStartManualPayment);
             addListener(state -> {
                 if (state == State.MANUAL_PAYMENT_STARTED) {
-                    ((AssetTransfer.Manual) assetTransfer).onManualPaymentStarted();
+                    manualSettlementExecution.onManualPaymentStarted();
                 }
             });
         }

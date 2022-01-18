@@ -15,29 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account;
+package bisq.offer.options;
 
-public abstract class Transfer<T extends Transfer.Type> {
-    public interface Type {
-        String name();
-    }
-
-    protected T type;
-    protected String name;
-
-    Transfer(T type) {
-        this(type, type.name());
-    }
-
-    Transfer(T type, String name) {
-        this.type = type;
-        this.name = type.name();
-    }
-
-    Transfer(String name) {
-        this.name = name;
-        this.type = getDefaultType();
-    }
-
-    protected abstract T getDefaultType();
+// For some fiat methods is useful to know the makers bank or county of bank.
+public record SettlementOption(String countyCodeOfBank, String bankName) implements ListingOption {
 }

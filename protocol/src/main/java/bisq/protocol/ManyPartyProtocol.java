@@ -1,18 +1,20 @@
 package bisq.protocol;
 
-import bisq.contract.ManyPartyContract;
+import bisq.contract.MultiPartyContract;
 import bisq.contract.Party;
-import bisq.contract.Role;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.MessageListener;
 
-import java.util.Map;
+import java.util.Set;
 
 public abstract class ManyPartyProtocol extends Protocol implements MessageListener {
-    protected final Map<Role, Party> partyMap;
+    protected final Set<Party> parties;
 
-    public ManyPartyProtocol(ManyPartyContract contract, NetworkService networkService) {
-        super(contract, networkService);
-        partyMap = contract.getPartyMap();
+    public ManyPartyProtocol(NetworkService networkService,
+                             NetworkIdWithKeyPair networkIdWithKeyPair,
+                             MultiPartyContract contract) {
+        super(networkService, networkIdWithKeyPair, contract);
+        parties = contract.getParties();
     }
 }

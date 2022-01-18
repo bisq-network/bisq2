@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.offerbook;
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
-import bisq.offer.MarketPrice;
+import bisq.oracle.marketprice.MarketPrice;
 import io.reactivex.disposables.Disposable;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -93,10 +93,10 @@ public class OfferbookModel extends NavigationModel {
 
 
     public void onViewAttached() {
-        serviceProvider.getOfferEntityService().activate();
+        serviceProvider.getOfferPresentationService().activate();
 
         offerItems.clear();
-        offerItems.addAll(serviceProvider.getOfferEntityService().getOfferEntities().stream()
+        offerItems.addAll(serviceProvider.getOfferPresentationService().getOfferEntities().stream()
                 .map(OfferListItem -> new OfferListItem(OfferListItem.getOffer(),
                         OfferListItem.getMarketPriceSubject(),
                         showAllAskCurrencies,
@@ -112,26 +112,27 @@ public class OfferbookModel extends NavigationModel {
 
         amountFilterModel.activate();
 
-        offerEntityAddedDisposable = serviceProvider.getOfferEntityService().getOfferEntityAddedSubject().subscribe(offerEntity -> {
+        offerEntityAddedDisposable = serviceProvider.getOfferPresentationService().getOfferEntityAddedSubject().subscribe(offerEntity -> {
             offerItems.add(new OfferListItem(offerEntity.getOffer(),
                     offerEntity.getMarketPriceSubject(),
                     showAllAskCurrencies,
                     showAllBidCurrencies));
         }, Throwable::printStackTrace);
 
-        offerEntityRemovedDisposable = serviceProvider.getOfferEntityService().getOfferEntityRemovedSubject().subscribe(offerEntity -> {
+        offerEntityRemovedDisposable = serviceProvider.getOfferPresentationService().getOfferEntityRemovedSubject().subscribe(offerEntity -> {
             offerItems.stream()
                     .filter(e -> e.getOffer().equals(offerEntity.getOffer()))
                     .findAny()
                     .ifPresent(offerItems::remove);
         }, Throwable::printStackTrace);
 
-        marketPriceDisposable = serviceProvider.getMarketPriceService().getMarketPriceSubject().subscribe(marketPriceByCurrencyMapProperty::set, Throwable::printStackTrace);
+        marketPriceDisposable = serviceProvider.getMarketPriceService().getMarketPriceSubject()
+                .subscribe(marketPriceByCurrencyMapProperty::set, Throwable::printStackTrace);
         marketPriceByCurrencyMapProperty.set(serviceProvider.getMarketPriceService().getMarketPriceByCurrencyMap());
     }
 
     public void onViewDetached() {
-        serviceProvider.getOfferEntityService().deactivate();
+        serviceProvider.getOfferPresentationService().deactivate();
         amountFilterModel.deactivate();
 
         if (offerEntityAddedDisposable != null) {
@@ -162,7 +163,7 @@ public class OfferbookModel extends NavigationModel {
             showAllBidCurrencies.set(true);
         } else {
             selectedAskCurrencyProperty.set(currency);
-            setAskCurrencyPredicate(item -> item.getOffer().getBidAsset().currencyCode().equals(currency));
+            setAskCurrencyPredicate(item -> item.getOffer().getBidSwapSide().code().equals(currency));
             showAllBidCurrencies.set(false);
         }
         updateHeaders();
@@ -175,7 +176,7 @@ public class OfferbookModel extends NavigationModel {
             showAllAskCurrencies.set(true);
         } else {
             selectedBidCurrencyProperty.set(currency);
-            setBidCurrencyPredicate(item -> item.getOffer().getAskCurrencyCode().equals(currency));
+            setBidCurrencyPredicate(item -> item.getOffer().getAskCode().equals(currency));
             showAllAskCurrencies.set(false);
         }
         updateHeaders();
@@ -220,8 +221,8 @@ public class OfferbookModel extends NavigationModel {
 
     void applyBaseCurrency() {
         filteredItems.stream().findAny().ifPresent(o -> {
-            baseCurrency = o.getOffer().getBaseCurrencyCode();
-            quoteCurrency = o.getOffer().getQuoteCurrencyCode();
+            baseCurrency = o.getOffer().getBaseCode();
+            quoteCurrency = o.getOffer().getQuoteCode();
         });
     }
 

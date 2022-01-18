@@ -19,14 +19,15 @@ package bisq.presentation.offer;
 
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
-import bisq.offer.MarketPrice;
-import bisq.offer.Offer;
-import bisq.offer.options.TransferOption;
+import bisq.offer.SwapOffer;
+import bisq.offer.options.SettlementOption;
+import bisq.oracle.marketprice.MarketPrice;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.BehaviorSubject;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -35,14 +36,13 @@ import java.util.Map;
  * Enriched offer object which carries the dynamic data as well as formatted strings for presentation.
  */
 @Getter
+@ToString
 @Slf4j
-public class OfferEntity implements Comparable<OfferEntity> {
-    protected final Offer offer;
+public class OfferPresentation implements Comparable<OfferPresentation> {
+    protected final SwapOffer offer;
     private Quote quote;
     private Monetary quoteAmount;
     protected final String formattedBaseAmountWithMinAmount;
-
-
     protected final String formattedTransferOptions;
     protected String formattedQuote;
     protected String formattedMarketPriceOffset;
@@ -55,17 +55,17 @@ public class OfferEntity implements Comparable<OfferEntity> {
     protected Disposable marketPriceDisposable;
     private Double marketPriceOffset;
 
-    public OfferEntity(Offer offer, BehaviorSubject<Map<String, MarketPrice>> marketPriceSubject) {
+    public OfferPresentation(SwapOffer offer, BehaviorSubject<Map<String, MarketPrice>> marketPriceSubject) {
         this.offer = offer;
         this.marketPriceSubject = marketPriceSubject;
 
-        formattedBaseAmountWithMinAmount = AmountFormatter.formatAmountWithMinAmount(offer.getBaseAsset().monetary(),
-                offer.getOptionalMinBaseAmount());
-        baseAmountCode = offer.getBaseCurrencyCode();
+        formattedBaseAmountWithMinAmount = AmountFormatter.formatAmountWithMinAmount(offer.getBaseLeg().monetary(),
+                offer.findMinBaseAmount());
+        baseAmountCode = offer.getBaseCode();
 
-        formattedTransferOptions = offer.getOfferOptions().stream()
-                .filter(offerOption -> offerOption instanceof TransferOption)
-                .map(offerOption -> (TransferOption) offerOption)
+        formattedTransferOptions = offer.getListingOptions().stream()
+                .filter(offerOption -> offerOption instanceof SettlementOption)
+                .map(offerOption -> (SettlementOption) offerOption)
                 .map(OfferFormatter::formatTransferOptions)
                 .findAny().orElse("");
 
@@ -86,41 +86,41 @@ public class OfferEntity implements Comparable<OfferEntity> {
     }
 
     public String getFormattedAskAmountWithMinAmount() {
-        return offer.isBaseCurrencyAskSide() ? formattedBaseAmountWithMinAmount : formattedQuoteAmountWithMinAmount;
+        return offer.isUseAskLegForBaseCurrency() ? formattedBaseAmountWithMinAmount : formattedQuoteAmountWithMinAmount;
     }
 
 
     public String getFormattedBidAmountWithMinAmount() {
-        return offer.isBaseCurrencyAskSide() ? formattedQuoteAmountWithMinAmount : formattedBaseAmountWithMinAmount;
+        return offer.isUseAskLegForBaseCurrency() ? formattedQuoteAmountWithMinAmount : formattedBaseAmountWithMinAmount;
     }
 
 
-    public int compareBaseAmount(OfferEntity other) {
-        return Long.compare(offer.getBaseAsset().amount(), other.getOffer().getBaseAsset().amount());
+    public int compareBaseAmount(OfferPresentation other) {
+        return Long.compare(offer.getBaseLeg().amount(), other.getOffer().getBaseLeg().amount());
     }
 
-    public int compareAskAmount(OfferEntity other) {
-        return Long.compare(offer.getAskAsset().amount(), other.getOffer().getAskAsset().amount());
+    public int compareAskAmount(OfferPresentation other) {
+        return Long.compare(offer.getAskSwapSide().amount(), other.getOffer().getAskSwapSide().amount());
     }
 
-    public int compareBidAmount(OfferEntity other) {
-        return Long.compare(offer.getBidAsset().amount(), other.getOffer().getBidAsset().amount());
+    public int compareBidAmount(OfferPresentation other) {
+        return Long.compare(offer.getBidSwapSide().amount(), other.getOffer().getBidSwapSide().amount());
     }
 
-    public int compareQuoteAmount(OfferEntity other) {
+    public int compareQuoteAmount(OfferPresentation other) {
         return quoteAmount.compareTo(other.quoteAmount);
     }
 
-    public int compareQuote(OfferEntity other) {
+    public int compareQuote(OfferPresentation other) {
         return quote.compareTo(other.quote);
     }
 
-    public int compareMarketPriceOffset(OfferEntity other) {
+    public int compareMarketPriceOffset(OfferPresentation other) {
         return marketPriceOffset.compareTo(other.marketPriceOffset);
     }
 
     @Override
-    public int compareTo(OfferEntity other) {
+    public int compareTo(OfferPresentation other) {
         return compareQuote(other);
     }
 
@@ -130,21 +130,21 @@ public class OfferEntity implements Comparable<OfferEntity> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected void updatedPriceAndAmount(Map<String, MarketPrice> marketPriceMap) {
-        MarketPrice marketPrice = marketPriceMap.get(offer.getQuoteAsset().currencyCode());
+        MarketPrice marketPrice = marketPriceMap.get(offer.getQuoteLeg().code());
         if (marketPrice == null) {
             return;
         }
 
         Quote marketQuote = marketPrice.quote();
         String type;
-        if (offer.getMarketPriceOffset().isPresent()) {
-            marketPriceOffset = offer.getMarketPriceOffset().get();
+        if (offer.findMarketPriceOffset().isPresent()) {
+            marketPriceOffset = offer.findMarketPriceOffset().get();
             quote = Quote.fromMarketPriceOffset(marketQuote, marketPriceOffset);
-            quoteAmount = Quote.toQuoteMonetary(offer.getBaseAsset().monetary(), quote);
+            quoteAmount = Quote.toQuoteMonetary(offer.getBaseLeg().monetary(), quote);
             type = "Var";
         } else {
             quote = offer.getQuote();
-            quoteAmount = offer.getQuoteAsset().monetary();
+            quoteAmount = offer.getQuoteLeg().monetary();
             marketPriceOffset = Quote.offsetOf(marketQuote, quote);
             type = "Fix";
         }
@@ -154,20 +154,6 @@ public class OfferEntity implements Comparable<OfferEntity> {
         formattedQuoteAmount = AmountFormatter.formatAmount(quoteAmount);
 
         formattedQuoteAmountWithMinAmount = AmountFormatter.formatAmountWithMinAmount(quoteAmount,
-                offer.getOptionalMinQuoteAmount(quoteAmount.getValue()));
-    }
-
-    @Override
-    public String toString() {
-        return "OfferEntity{" +
-                "\r\n     offer=" + offer +
-                ",\r\n     quote=" + quote +
-                ",\r\n     quoteAmount=" + quoteAmount +
-                ",\r\n     formattedBaseAmountWithMinAmount='" + formattedBaseAmountWithMinAmount + '\'' +
-                ",\r\n     formattedTransferOptions='" + formattedTransferOptions + '\'' +
-                ",\r\n     formattedQuote='" + formattedQuote + '\'' +
-                ",\r\n     formattedQuoteAmount='" + formattedQuoteAmount + '\'' +
-                ",\r\n     formattedQuoteAmountWithMinAmount='" + formattedQuoteAmountWithMinAmount + '\'' +
-                "\r\n}";
+                offer.findMinQuoteAmount(quoteAmount.getValue()));
     }
 }

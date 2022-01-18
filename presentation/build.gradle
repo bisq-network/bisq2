@@ -20,6 +20,7 @@ dependencies {
     implementation project(':account')
     implementation project(':contract')
     implementation project(':offer')
+    implementation project(':oracle')
 
     implementation 'com.google.guava:guava'
     implementation 'io.reactivex.rxjava2:rxjava'

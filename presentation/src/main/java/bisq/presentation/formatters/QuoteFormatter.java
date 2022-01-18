@@ -18,7 +18,6 @@
 package bisq.presentation.formatters;
 
 import bisq.common.locale.LocaleRepository;
-import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Quote;
 import bisq.common.util.DecimalFormatters;
 import bisq.common.util.MathUtils;
@@ -47,8 +46,7 @@ public class QuoteFormatter {
     }
 
     private static DecimalFormatters.Format getDecimalFormat(Quote quote, Locale locale) {
-        int precision = quote.getQuoteMonetary() instanceof Fiat ? 4 : quote.getSmallestUnitExponent();
-        return DecimalFormatters.getDecimalFormat(locale, precision);
+        return DecimalFormatters.getDecimalFormat(locale, quote.getSmallestUnitExponent());
     }
 
 

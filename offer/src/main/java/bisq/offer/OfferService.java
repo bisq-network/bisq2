@@ -17,17 +17,16 @@
 
 package bisq.offer;
 
-import bisq.account.FiatTransfer;
+import bisq.account.settlement.FiatSettlement;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
-import bisq.contract.AssetTransfer;
-import bisq.contract.SwapProtocolType;
+import bisq.network.NetworkId;
 import bisq.network.p2p.INetworkService;
 import bisq.network.p2p.MockNetworkService;
-import bisq.network.NetworkId;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.offer.options.*;
+import bisq.offer.protocol.SwapProtocolType;
 import bisq.security.PubKey;
 import io.reactivex.subjects.PublishSubject;
 import lombok.Getter;
@@ -92,20 +91,22 @@ public class OfferService {
         return offerRemovedSubject;
     }
 
-    public Offer createOffer(long askAmount) {
+    public SwapOffer createOffer(long askAmount) {
         NetworkId makerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"), "default");
-        Asset askAsset = new Asset(Coin.asBtc(askAmount), List.of(), AssetTransfer.Type.MANUAL);
-        Asset bidAsset = new Asset(Fiat.of(5000, "USD"), List.of(FiatTransfer.ZELLE), AssetTransfer.Type.MANUAL);
-        return new Offer(List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
-                makerNetworkId, bidAsset, askAsset);
+        SwapSide askSwapSide = new SwapSide(Coin.asBtc(askAmount), List.of());
+        SwapSide bidSwapSide = new SwapSide(Fiat.of(5000, "USD"), List.of(FiatSettlement.ZELLE));
+        return new SwapOffer(bidSwapSide,
+                askSwapSide,
+                "USD",
+                List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
+                makerNetworkId);
     }
 
-    public void publishOffer(Offer offer) {
+    public void publishOffer(SwapOffer offer) {
         networkService.addData(offer);
     }
 
     public void shutdown() {
-
     }
 
     public static class MockOfferBuilder {
@@ -115,7 +116,7 @@ public class OfferService {
 
         public static Map<String, Listing> makeOffers() {
             for (int i = 0; i < 10; i++) {
-                Offer offer = getRandomOffer();
+                SwapOffer offer = getRandomOffer();
                 data.put(offer.getId(), offer);
             }
     
@@ -145,9 +146,9 @@ public class OfferService {
             return data;
         }
 
-        private static Offer getRandomOffer() {
-            Asset askAsset;
-            Asset bidAsset;
+        private static SwapOffer getRandomOffer() {
+            SwapSide askSwapSide;
+            SwapSide bidSwapSide;
             Optional<Double> marketBasedPrice = Optional.empty();
             Optional<Double> minAmountAsPercentage = Optional.empty();
             String baseCurrency;
@@ -159,8 +160,8 @@ public class OfferService {
                 long btcAmount = new Random().nextInt(100000000) + 100000000; // precision 8 / 1 btc
                 usdAmount = 370000000; // precision 4 / 50k usd
                 btcAmount = 100000000; // precision 8 / 1 btc
-                askAsset = getRandomFiatAsset("USD", usdAmount);
-                bidAsset = getRandomCryptoAsset("BTC", btcAmount);
+                askSwapSide = getRandomFiatAsset("USD", usdAmount);
+                bidSwapSide = getRandomCryptoAsset("BTC", btcAmount);
                 baseCurrency = "BTC";
                 marketBasedPrice = Optional.of(new Random().nextInt(100) / 1000d - 0.05d); // +/- 5%
                 // marketBasedPrice = Optional.empty();
@@ -171,8 +172,8 @@ public class OfferService {
                 long btcAmount = new Random().nextInt(100000000) + 110000000; // precision 8 / 1 btc
                 usdAmount = 370000000; // precision 4 / 50k usd
                 btcAmount = 100000000; // precision 8 / 1 btc
-                askAsset = getRandomCryptoAsset("BTC", btcAmount);
-                bidAsset = getRandomFiatAsset("USD", usdAmount);
+                askSwapSide = getRandomCryptoAsset("BTC", btcAmount);
+                bidSwapSide = getRandomFiatAsset("USD", usdAmount);
                 baseCurrency = "BTC";
                 marketBasedPrice = Optional.of(new Random().nextInt(100) / 10000d - 0.005d); // +/- 0.5%
                 marketBasedPrice = Optional.empty();
@@ -181,16 +182,16 @@ public class OfferService {
             } else if (rand == 2) {
                 long usdAmount = new Random().nextInt(100000) + 1200000; // precision 4 / 120 usd
                 long eurAmount = new Random().nextInt(100000) + 1000000; // precision 4 / 100 eur
-                askAsset = getRandomFiatAsset("USD", usdAmount);
-                bidAsset = getRandomFiatAsset("EUR", eurAmount);
+                askSwapSide = getRandomFiatAsset("USD", usdAmount);
+                bidSwapSide = getRandomFiatAsset("EUR", eurAmount);
                 baseCurrency = "USD";
 
             } else {
                 // ignore for now as fiat/altcoins calculations not supported and only one market price
                 long btcAmount = new Random().nextInt(10000000) + 100000000; // precision 8 / 1 btc //0.007144 BTC
                 long xmrAmount = new Random().nextInt(10000000) + 13800000000L; // precision 8 / 138 xmr
-                bidAsset = getRandomCryptoAsset("BTC", btcAmount);
-                askAsset = getRandomCryptoAsset("XMR", xmrAmount);
+                bidSwapSide = getRandomCryptoAsset("BTC", btcAmount);
+                askSwapSide = getRandomCryptoAsset("XMR", xmrAmount);
                 baseCurrency = "XMR";
                 marketBasedPrice = Optional.of(-0.02);
                 minAmountAsPercentage = Optional.of(0.8);
@@ -204,38 +205,35 @@ public class OfferService {
             Map<Transport.Type, Address> map = Map.of(Transport.Type.CLEAR, Address.localHost(1000 + new Random().nextInt(1000)));
             NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"), "default");
 
-            Set<OfferOption> options = new HashSet<>();
+            Set<ListingOption> options = new HashSet<>();
             ReputationProof accountCreationDateProof = new AccountCreationDateProof("hashOfAccount", "otsProof)");
             ReputationOption reputationOptions = new ReputationOption(Set.of(accountCreationDateProof));
             options.add(reputationOptions);
 
-            TransferOption transferOptions = new Random().nextBoolean() ?
-                    new TransferOption("USA", "HSBC") :
-                    new Random().nextBoolean() ? new TransferOption("DE", "N26") :
+            SettlementOption settlementOptions = new Random().nextBoolean() ?
+                    new SettlementOption("USA", "HSBC") :
+                    new Random().nextBoolean() ? new SettlementOption("DE", "N26") :
                             null;
-            if (transferOptions != null) {
-                options.add(transferOptions);
+            if (settlementOptions != null) {
+                options.add(settlementOptions);
             }
             minAmountAsPercentage.ifPresent(value -> options.add(new AmountOption(value)));
             marketBasedPrice.ifPresent(value -> options.add(new PriceOption(value)));
-            boolean isBaseCurrencyAskSide = baseCurrency.equals(askAsset.monetary().getCurrencyCode());
-            return new Offer(askAsset, bidAsset, isBaseCurrencyAskSide, protocolTypes, makerNetworkId, options);
+            return new SwapOffer(askSwapSide, bidSwapSide, askSwapSide.code(), makerNetworkId, protocolTypes, options);
         }
 
-        private static Asset getRandomCryptoAsset(String code, long amount) {
-            AssetTransfer.Type assetTransferType = new Random().nextBoolean() ? AssetTransfer.Type.AUTOMATIC : AssetTransfer.Type.MANUAL;
-            List<FiatTransfer> transfers = new ArrayList<>(List.of(FiatTransfer.SEPA, FiatTransfer.ZELLE, FiatTransfer.REVOLUT));
+        private static SwapSide getRandomCryptoAsset(String code, long amount) {
+            List<FiatSettlement> transfers = new ArrayList<>(List.of(FiatSettlement.SEPA, FiatSettlement.ZELLE, FiatSettlement.REVOLUT));
             Collections.shuffle(transfers);
             transfers = List.of(transfers.get(0));
-            return new Asset(Coin.of(amount, code), transfers, assetTransferType);
+            return new SwapSide(Coin.of(amount, code), transfers);
         }
 
-        private static Asset getRandomFiatAsset(String code, long amount) {
-            AssetTransfer.Type assetTransferType = new Random().nextBoolean() ? AssetTransfer.Type.AUTOMATIC : AssetTransfer.Type.MANUAL;
-            List<FiatTransfer> transfers = new ArrayList<>(List.of(FiatTransfer.SEPA, FiatTransfer.ZELLE, FiatTransfer.REVOLUT));
+        private static SwapSide getRandomFiatAsset(String code, long amount) {
+            List<FiatSettlement> transfers = new ArrayList<>(List.of(FiatSettlement.SEPA, FiatSettlement.ZELLE, FiatSettlement.REVOLUT));
             Collections.shuffle(transfers);
             transfers = List.of(transfers.get(0));
-            return new Asset(Fiat.of(amount, code), transfers, assetTransferType);
+            return new SwapSide(Fiat.of(amount, code), transfers);
         }
 
         private static Listing getOfferToRemove() {

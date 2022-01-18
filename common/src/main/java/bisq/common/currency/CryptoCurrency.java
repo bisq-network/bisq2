@@ -19,7 +19,6 @@ package bisq.common.currency;
 
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
@@ -28,20 +27,9 @@ public final class CryptoCurrency extends BisqCurrency {
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "✦ ";
 
-    @Getter
-    private final boolean isAsset;
 
-    public CryptoCurrency(String currencyCode,
-                          String name) {
-        this(currencyCode, name, false);
-    }
-
-    public CryptoCurrency(String currencyCode,
-                          String name,
-                          boolean isAsset) {
-        super(currencyCode, name);
-
-        this.isAsset = isAsset;
+    public CryptoCurrency(String code, String name) {
+        super(code, name);
     }
 
     @Override

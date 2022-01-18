@@ -23,9 +23,10 @@ import bisq.wallets.Chain;
 import bisq.wallets.Wallet;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @Slf4j
-public class MultiSigWithBitcoindTest extends MultiSigTest {
+public class MultiSigWithBitcoindIntegrationTest extends MultiSigTest {
 
     private Chain chain;
 
@@ -49,9 +50,8 @@ public class MultiSigWithBitcoindTest extends MultiSigTest {
         return new MockBitcoind();
     }
 
-    // @Test
+    @Test
     public void testMultiSig() {
         super.run();
     }
-
 }

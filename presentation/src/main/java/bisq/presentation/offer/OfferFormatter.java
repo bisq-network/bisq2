@@ -17,12 +17,11 @@
 
 package bisq.presentation.offer;
 
-import bisq.account.Transfer;
+import bisq.account.settlement.Settlement;
 import bisq.common.monetary.Monetary;
-import bisq.contract.AssetTransfer;
-import bisq.contract.ProtocolType;
+import bisq.offer.protocol.ProtocolType;
 import bisq.offer.options.ReputationOption;
-import bisq.offer.options.TransferOption;
+import bisq.offer.options.SettlementOption;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import lombok.extern.slf4j.Slf4j;
@@ -50,15 +49,11 @@ class OfferFormatter {
         return reputationOptions.toString();
     }
 
-    static String formatTransferOptions(TransferOption transferOption) {
-        return transferOption.bankName() + " / " + transferOption.countyCodeOfBank();
+    static String formatTransferOptions(SettlementOption settlementOption) {
+        return settlementOption.bankName() + " / " + settlementOption.countyCodeOfBank();
     }
 
-    static String formatTransferTypes(List<Transfer> transfers) {
-        return transfers.toString();
-    }
-
-    static String formatAssetTransferType(AssetTransfer.Type assetTransferType) {
-        return assetTransferType.toString();
+    static String formatTransferTypes(List<Settlement> settlements) {
+        return settlements.toString();
     }
 }

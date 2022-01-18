@@ -16,8 +16,8 @@ dependencies {
     api platform(project(':platforms:common-platform'))
 
     implementation project(':common')
-    implementation project(':identity')
     implementation project(':persistence')
+    implementation project(':identity')
 
     implementation 'com.google.guava:guava'
 }

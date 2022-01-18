@@ -17,9 +17,10 @@
 
 package bisq.presentation.offer;
 
-import bisq.offer.MarketPriceService;
-import bisq.offer.Offer;
+
 import bisq.offer.OfferService;
+import bisq.offer.SwapOffer;
+import bisq.oracle.marketprice.MarketPriceService;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
 import lombok.extern.slf4j.Slf4j;
@@ -30,15 +31,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class OfferEntityService {
+public class OfferPresentationService {
     protected final OfferService offerService;
-    protected final List<OfferEntity> offerEntities = new CopyOnWriteArrayList<>();
-    protected final PublishSubject<OfferEntity> offerEntityAddedSubject;
-    protected final PublishSubject<OfferEntity> offerEntityRemovedSubject;
+    protected final List<OfferPresentation> offerEntities = new CopyOnWriteArrayList<>();
+    protected final PublishSubject<OfferPresentation> offerEntityAddedSubject;
+    protected final PublishSubject<OfferPresentation> offerEntityRemovedSubject;
     private final MarketPriceService marketPriceService;
     private Disposable oferAddedDisposable, oferRemovedDisposable;
 
-    public OfferEntityService(OfferService offerService, MarketPriceService marketPriceService) {
+    public OfferPresentationService(OfferService offerService, MarketPriceService marketPriceService) {
         this.offerService = offerService;
         this.marketPriceService = marketPriceService;
 
@@ -55,7 +56,7 @@ public class OfferEntityService {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         //todo
         offerEntities.addAll(offerService.getOffers().stream()
-                .map(offer -> new OfferEntity((Offer) offer, marketPriceService.getMarketPriceSubject()))
+                .map(offer -> new OfferPresentation((SwapOffer) offer, marketPriceService.getMarketPriceSubject()))
                 .collect(Collectors.toList()));
         future.complete(true);
         return future;
@@ -72,8 +73,8 @@ public class OfferEntityService {
                     });
         });
         oferRemovedDisposable = offerService.getOfferRemovedSubject().subscribe(offer -> {
-            if (offer instanceof Offer) {
-                OfferEntity offerEntity = new OfferEntity((Offer) offer, marketPriceService.getMarketPriceSubject());
+            if (offer instanceof SwapOffer) {
+                OfferPresentation offerEntity = new OfferPresentation((SwapOffer) offer, marketPriceService.getMarketPriceSubject());
                 offerEntities.add(offerEntity);
                 offerEntityAddedSubject.onNext(offerEntity);
             }
@@ -89,15 +90,15 @@ public class OfferEntityService {
         oferRemovedDisposable.dispose();
     }
 
-    public List<OfferEntity> getOfferEntities() {
+    public List<OfferPresentation> getOfferEntities() {
         return offerEntities;
     }
 
-    public PublishSubject<OfferEntity> getOfferEntityAddedSubject() {
+    public PublishSubject<OfferPresentation> getOfferEntityAddedSubject() {
         return offerEntityAddedSubject;
     }
 
-    public PublishSubject<OfferEntity> getOfferEntityRemovedSubject() {
+    public PublishSubject<OfferPresentation> getOfferEntityRemovedSubject() {
         return offerEntityRemovedSubject;
     }
 

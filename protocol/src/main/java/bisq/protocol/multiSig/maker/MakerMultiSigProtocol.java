@@ -17,13 +17,13 @@
 
 package bisq.protocol.multiSig.maker;
 
-import bisq.contract.AssetTransfer;
+import bisq.protocol.SettlementExecution;
 import bisq.contract.TwoPartyContract;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
-import bisq.protocol.SecurityProvider;
 import bisq.protocol.multiSig.MultiSig;
 import bisq.protocol.multiSig.MultiSigProtocol;
 import bisq.protocol.multiSig.taker.DepositTxBroadcastMessage;
@@ -35,21 +35,23 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.Listener {
-    public MakerMultiSigProtocol(TwoPartyContract contract, NetworkService networkService, SecurityProvider securityProvider) {
-        super(contract, networkService, new AssetTransfer.Manual(), securityProvider);
+    public MakerMultiSigProtocol(NetworkService networkService,
+                                 NetworkIdWithKeyPair networkIdWithKeyPair,
+                                 TwoPartyContract contract,
+                                 SettlementExecution settlementExecution,
+                                 MultiSig multiSig) {
+        super(networkService, networkIdWithKeyPair, contract, settlementExecution, multiSig);
     }
 
     @Override
     public void onMessage(Message message) {
-        if (message instanceof DepositTxBroadcastMessage) {
-            DepositTxBroadcastMessage depositTxBroadcastMessage = (DepositTxBroadcastMessage) message;
+        if (message instanceof DepositTxBroadcastMessage depositTxBroadcastMessage) {
             multiSig.verifyDepositTxBroadcastMessage(depositTxBroadcastMessage)
                     .whenComplete((depositTx, t) -> {
                         multiSig.setDepositTx(depositTx);
                         setState(State.DEPOSIT_TX_BROADCAST_MSG_RECEIVED);
                     });
-        } else if (message instanceof PayoutTxBroadcastMessage) {
-            PayoutTxBroadcastMessage payoutTxBroadcastMessage = (PayoutTxBroadcastMessage) message;
+        } else if (message instanceof PayoutTxBroadcastMessage payoutTxBroadcastMessage) {
             multiSig.verifyPayoutTxBroadcastMessage(payoutTxBroadcastMessage)
                     .whenComplete((payoutTx, t) -> setState(State.PAYOUT_TX_BROADCAST_MSG_RECEIVED))
                     .thenCompose(multiSig::isPayoutTxInMemPool)
@@ -60,7 +62,7 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
     @Override
     public void onDepositTxConfirmed() {
         setState(State.DEPOSIT_TX_CONFIRMED);
-        assetTransfer.sendFunds(contract)
+        settlementExecution.sendFunds(contract)
                 .thenCompose(isSent -> onFundsSent());
     }
 
@@ -70,8 +72,8 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
         setState(State.START);
         multiSig.getTxInputs()
                 .thenCompose(txInputs -> networkService.confidentialSendAsync(new TxInputsMessage(txInputs),
-                        counterParty.getMakerNetworkId(),
-                        null, null))
+                        taker.networkId(),
+                        networkIdWithKeyPair))
                 .whenComplete((success, t) -> setState(State.TX_INPUTS_SENT));
         return CompletableFuture.completedFuture(true);
     }
@@ -81,8 +83,8 @@ public class MakerMultiSigProtocol extends MultiSigProtocol implements MultiSig.
         return multiSig.createPartialPayoutTx()
                 .thenCompose(multiSig::getPayoutTxSignature)
                 .thenCompose(sig -> networkService.confidentialSendAsync(new FundsSentMessage(sig),
-                        counterParty.getMakerNetworkId(),
-                        null, null))
+                        taker.networkId(),
+                        networkIdWithKeyPair))
                 .whenComplete((resultMap, t) -> setState(State.FUNDS_SENT_MSG_SENT));
     }
 }

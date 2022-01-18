@@ -42,7 +42,7 @@ public class AmountFormatter {
     }
 
     public static String formatAmountWithCode(Monetary amount, Locale locale) {
-        return formatAmount(amount, locale) + " " + amount.getCurrencyCode();
+        return formatAmount(amount, locale) + " " + amount.getCode();
     }
 
     public static String formatAmount(Monetary amount) {

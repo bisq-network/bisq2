@@ -15,8 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.contract;
+package bisq.protocol;
 
+import bisq.account.settlement.Settlement;
+import bisq.contract.Contract;
 import com.google.common.util.concurrent.Uninterruptibles;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,39 +28,31 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 @Slf4j
-public abstract class AssetTransfer implements Transfer {
-    public abstract Type getType();
+public abstract class SettlementExecution {
+    public static SettlementExecution from(Settlement.Type type) {
+        return switch (type) {
+            case AUTOMATIC -> new Automatic();
+            case MANUAL -> new Manual();
+        };
+    }
 
     public abstract CompletableFuture<Boolean> sendFunds(Contract contract);
 
-    public enum Type {
-        AUTOMATIC, MANUAL
-    }
 
-    public static class Automatic extends AssetTransfer {
-        @Override
-        public Type getType() {
-            return Type.AUTOMATIC;
-        }
-
+    public static class Automatic extends SettlementExecution {
         @Override
         public CompletableFuture<Boolean> sendFunds(Contract contract) {
             return CompletableFuture.completedFuture(true);
         }
     }
 
-    public static class Manual extends AssetTransfer {
+    public static class Manual extends SettlementExecution {
         public interface Listener {
             void onStartManualPayment();
         }
 
         private final CountDownLatch latch = new CountDownLatch(1);
         private final Set<Listener> listeners = ConcurrentHashMap.newKeySet();
-
-        @Override
-        public Type getType() {
-            return Type.MANUAL;
-        }
 
         public void onManualPaymentStarted() {
             latch.countDown();

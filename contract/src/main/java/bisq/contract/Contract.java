@@ -17,18 +17,22 @@
 
 package bisq.contract;
 
+import bisq.offer.Listing;
+import bisq.offer.protocol.ProtocolType;
 import lombok.Getter;
 
 /**
  * Defines the terms of the financial interaction with the counterparty/parties.
  */
 @Getter
-public abstract class Contract {
-    private final ProtocolType protocolType;
-    private final Role myRole;
+public abstract class Contract<T extends Listing> {
+    protected final T listing;
+    protected final ProtocolType protocolType;
+    protected final Party maker;
 
-    public Contract(ProtocolType protocolType, Role myRole) {
+    public Contract(T listing, ProtocolType protocolType) {
         this.protocolType = protocolType;
-        this.myRole = myRole;
+        this.maker = new Party(Role.MAKER, listing.getMakerNetworkId());
+        this.listing = listing;
     }
 }

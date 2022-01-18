@@ -18,6 +18,8 @@
 package bisq.protocol;
 
 import bisq.contract.Contract;
+import bisq.contract.Party;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import lombok.Getter;
@@ -30,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Defines the protocol for executing a contract.
  */
 public abstract class Protocol implements MessageListener {
+
     public interface Listener {
         void onStateChange(State state);
     }
@@ -37,14 +40,18 @@ public abstract class Protocol implements MessageListener {
     public interface State {
     }
 
+    protected final NetworkService networkService;
+    protected final NetworkIdWithKeyPair networkIdWithKeyPair;
     @Getter
     protected final Contract contract;
-    protected final NetworkService networkService;
+    protected final Party maker;
     protected final Set<Listener> listeners = ConcurrentHashMap.newKeySet();
 
-    public Protocol(Contract contract, NetworkService networkService) {
-        this.contract = contract;
+    public Protocol(NetworkService networkService, NetworkIdWithKeyPair networkIdWithKeyPair, Contract contract) {
         this.networkService = networkService;
+        this.networkIdWithKeyPair = networkIdWithKeyPair;
+        this.contract = contract;
+        maker = contract.getMaker();
     }
 
     public abstract CompletableFuture<Boolean> start();

@@ -17,12 +17,12 @@
 
 package bisq.protocol.bsqBond;
 
-import bisq.contract.AssetTransfer;
 import bisq.contract.TwoPartyContract;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.protocol.Protocol;
-import bisq.protocol.SecurityProvider;
+import bisq.protocol.SettlementExecution;
 import bisq.protocol.TwoPartyProtocol;
 
 /**
@@ -42,6 +42,7 @@ import bisq.protocol.TwoPartyProtocol;
  */
 public abstract class BsqBondProtocol extends TwoPartyProtocol implements MessageListener {
 
+
     public enum State implements Protocol.State {
         START,
         COMMITMENT_SENT,
@@ -50,12 +51,16 @@ public abstract class BsqBondProtocol extends TwoPartyProtocol implements Messag
         FUNDS_RECEIVED // Completed
     }
 
-    protected final AssetTransfer transport;
-    protected final BsqBond security;
+    protected final SettlementExecution settlementExecution;
+    protected final BsqBond bsqBond;
 
-    public BsqBondProtocol(TwoPartyContract contract, NetworkService networkService, AssetTransfer transfer, SecurityProvider securityProvider) {
-        super(contract, networkService);
-        this.transport = transfer;
-        this.security = (BsqBond) securityProvider;
+    public BsqBondProtocol(NetworkService networkService,
+                           NetworkIdWithKeyPair networkIdWithKeyPair,
+                           TwoPartyContract contract,
+                           SettlementExecution settlementExecution,
+                           BsqBond bsqBond) {
+        super(networkService, networkIdWithKeyPair, contract);
+        this.settlementExecution = settlementExecution;
+        this.bsqBond = bsqBond;
     }
 }

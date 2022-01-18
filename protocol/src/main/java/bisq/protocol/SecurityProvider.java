@@ -27,7 +27,7 @@ public interface SecurityProvider {
 
     enum Type {
         /**
-         * For trustless protocols, such as cross-chain swaps like Farcaster, Submarine (on-chain to Lightning) swaps,
+         * For trust-less protocols, such as cross-chain swaps like Farcaster, Submarine (on-chain to Lightning) swaps,
          * same-chain BSQ-BTC swaps, BSQ-backed BTC loans repayable using SIGHASH_ANYONECANPAY, etc.
          */
         SMART_CONTRACT,

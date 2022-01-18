@@ -18,12 +18,5 @@
 package bisq.account;
 
 
-import bisq.identity.IdentityService;
-import bisq.persistence.Persistence;
-
-public class Account {
-    // expected dependencies
-    IdentityService identityService;
-    Persistence persistence;
-
+public class AccountService {
 }

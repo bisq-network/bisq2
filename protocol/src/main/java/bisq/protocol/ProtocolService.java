@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer;
+package bisq.protocol;
 
-import bisq.common.monetary.Quote;
-
-public record MarketPrice(Quote quote, long timestamp, String provider) {
+public class ProtocolService {
 }

@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.options;
+package bisq.oracle.marketprice;
 
-// For some fiat methods is useful to know the makers bank or county of bank.
-public record TransferOption(String countyCodeOfBank, String bankName) implements OfferOption {
+import bisq.common.monetary.Quote;
+
+public record MarketPrice(Quote quote, long timestamp, String provider) {
 }

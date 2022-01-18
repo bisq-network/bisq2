@@ -17,14 +17,16 @@
 
 package bisq.contract;
 
+import bisq.offer.Listing;
+import bisq.offer.protocol.ProtocolType;
 import lombok.Getter;
 
 @Getter
-public class TwoPartyContract extends Contract {
-    protected final Party counterParty;
+public class TwoPartyContract<T extends Listing> extends Contract<T> {
+    private final Party taker;
 
-    public TwoPartyContract(ProtocolType protocolType, Role myRole, Party counterParty) {
-        super(protocolType, myRole);
-        this.counterParty = counterParty;
+    public TwoPartyContract(T listing, ProtocolType protocolType, Party taker) {
+        super(listing, protocolType);
+        this.taker = taker;
     }
 }

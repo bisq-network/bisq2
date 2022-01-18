@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer;
+package bisq.oracle.marketprice;
 
 import bisq.network.p2p.node.transport.Transport;
 

@@ -15,10 +15,31 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.contract;
+package bisq.protocol;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * Provides the transfer related aspects for the protocol.
+ * Executes the given protocol.
  */
-public interface Transfer {
+@Slf4j
+public class ProtocolExecution implements Protocol.Listener {
+    @Getter
+    protected final Protocol protocol;
+
+    public ProtocolExecution(Protocol protocol) {
+        this.protocol = protocol;
+
+        protocol.addListener(this);
+    }
+
+    public void start() {
+        protocol.start();
+    }
+
+    @Override
+    public void onStateChange(Protocol.State state) {
+        log.info("{}: {}", protocol.getContract().getMaker().role(), state);
+    }
 }

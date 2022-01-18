@@ -17,5 +17,5 @@
 
 package bisq.offer.options;
 
-public record PriceOption(double marketPriceOffset) implements OfferOption {
+public record PriceOption(double marketPriceOffset) implements ListingOption {
 }

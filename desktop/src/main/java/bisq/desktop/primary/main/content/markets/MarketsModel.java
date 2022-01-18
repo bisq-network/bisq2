@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.markets;
 
 import bisq.desktop.common.view.Model;
-import bisq.offer.MarketPrice;
+import bisq.oracle.marketprice.MarketPrice;
 import bisq.presentation.formatters.QuoteFormatter;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

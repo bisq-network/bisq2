@@ -17,19 +17,8 @@
 
 package bisq.offer.options;
 
-import bisq.network.NetworkId;
-
 import java.util.Set;
 
 // Information about supported dispute resolution and chosen dispute agent
-public record SupportOption(
-        Set<DisputeAgent> disputeAgents) implements OfferOption {
-
-    public record DisputeAgent(SupportOption.DisputeAgent.Type type,
-                               NetworkId networkId) {
-        public enum Type {
-            MEDIATOR,
-            ARBITRATOR
-        }
-    }
+public record SupportOption(Set<DisputeAgent> disputeAgents) implements ListingOption {
 }

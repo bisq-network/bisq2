@@ -15,11 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.contract;
-
-public enum SwapProtocolType implements ProtocolType {
-    ATOMIC_CROSS_CHAIN_SWAP,
-    LN_SWAP,
-    MULTISIG,
-    REPUTATION
-}
+/**
+ * Module for oracle data like market price provided by a 3rd party service.
+ * This data can be security relevant in the context of a trade.
+ */
+package bisq.oracle;

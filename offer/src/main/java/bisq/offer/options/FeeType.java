@@ -15,24 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol;
+package bisq.offer.options;
 
-import bisq.account.Account;
-import bisq.contract.Contract;
-import bisq.identity.IdentityService;
-import bisq.network.NetworkService;
-import bisq.offer.Offer;
-import bisq.persistence.Persistence;
-import bisq.wallets.Wallet;
-
-
-public class Deal {
-    // expected dependencies
-    IdentityService identityService;
-    Account account;
-    Contract contract;
-    Offer offer;
-    NetworkService networkService;
-    Persistence persistence;
-    Wallet wallet;
+public enum FeeType {
+    BTC,
+    BSQ
 }

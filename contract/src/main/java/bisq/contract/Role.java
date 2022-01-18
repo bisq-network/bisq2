@@ -20,9 +20,5 @@ package bisq.contract;
 public enum Role {
     MAKER,
     TAKER,
-    ESCROW_AGENT;
-
-    public Role peer() {
-        return this == Role.MAKER ? Role.TAKER : this == Role.TAKER ? MAKER : null;
-    }
+    ESCROW_AGENT
 }

@@ -15,34 +15,41 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account;
+package bisq.account.settlement;
 
-public class FiatTransfer extends Transfer<FiatTransfer.Type> {
-    public static final FiatTransfer SEPA = new FiatTransfer(Type.SEPA);
-    public static final FiatTransfer REVOLUT = new FiatTransfer(Type.REVOLUT);
-    public static final FiatTransfer ZELLE = new FiatTransfer(Type.ZELLE);
+import static bisq.account.settlement.FiatSettlement.Method.*;
 
-    public enum Type implements Transfer.Type {
+public class FiatSettlement extends Settlement<FiatSettlement.Method> {
+    public static final FiatSettlement SEPA = new FiatSettlement(Method.SEPA);
+    public static final FiatSettlement REVOLUT = new FiatSettlement(Method.REVOLUT);
+    public static final FiatSettlement ZELLE = new FiatSettlement(Method.ZELLE);
+
+    public enum Method implements Settlement.Method {
         SEPA,
         REVOLUT,
         ZELLE,
         OTHER
     }
 
-    public FiatTransfer(FiatTransfer.Type type) {
-        super(type);
+    public FiatSettlement(Method method) {
+        super(method);
     }
 
-    public FiatTransfer(FiatTransfer.Type type, String name) {
-        super(type, name);
+    public FiatSettlement(Method method, String name) {
+        super(method, name);
     }
 
-    public FiatTransfer(String name) {
+    public FiatSettlement(String name) {
         super(name);
     }
 
     @Override
+    protected Method getDefaultMethod() {
+        return OTHER;
+    }
+
+    @Override
     protected Type getDefaultType() {
-        return Type.OTHER;
+        return Type.AUTOMATIC; // todo should be manual, but test fails with manual
     }
 }

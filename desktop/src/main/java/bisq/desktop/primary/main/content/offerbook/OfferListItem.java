@@ -17,9 +17,10 @@
 
 package bisq.desktop.primary.main.content.offerbook;
 
-import bisq.offer.MarketPrice;
-import bisq.offer.Offer;
-import bisq.presentation.offer.OfferEntity;
+
+import bisq.offer.SwapOffer;
+import bisq.oracle.marketprice.MarketPrice;
+import bisq.presentation.offer.OfferPresentation;
 import io.reactivex.subjects.BehaviorSubject;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -29,7 +30,7 @@ import lombok.Getter;
 
 import java.util.Map;
 
-public class OfferListItem extends OfferEntity {
+public class OfferListItem extends OfferPresentation {
     @Getter
     private final StringProperty quoteProperty = new SimpleStringProperty("");
     @Getter
@@ -43,7 +44,7 @@ public class OfferListItem extends OfferEntity {
     private final BooleanProperty showAllAskCurrencies;
     private final BooleanProperty showAllBidCurrencies;
 
-    public OfferListItem(Offer offer,
+    public OfferListItem(SwapOffer offer,
                          BehaviorSubject<Map<String, MarketPrice>> marketPriceSubject,
                          BooleanProperty showAllAskCurrencies,
                          BooleanProperty showAllBidCurrencies) {
@@ -89,10 +90,10 @@ public class OfferListItem extends OfferEntity {
     }
 
     private String getBidCurrencyCode() {
-        return showAllBidCurrencies.get() ? " " + offer.getBidCurrencyCode() : "";
+        return showAllBidCurrencies.get() ? " " + offer.getBidCode() : "";
     }
 
     private String getAskCurrencyCode() {
-        return showAllAskCurrencies.get() ? " " + offer.getAskCurrencyCode() : "";
+        return showAllAskCurrencies.get() ? " " + offer.getAskCode() : "";
     }
 }

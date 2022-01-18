@@ -17,41 +17,52 @@
 
 package bisq.protocol;
 
-import bisq.contract.*;
+import bisq.account.settlement.Settlement;
+import bisq.contract.MultiPartyContract;
+import bisq.contract.Party;
+import bisq.contract.Role;
+import bisq.contract.SwapContract;
 import bisq.network.NetworkId;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Transport;
 import bisq.offer.Listing;
-import bisq.security.PubKey;
+import bisq.offer.SwapOffer;
+import bisq.offer.protocol.ProtocolType;
 
-import java.util.Map;
+import java.util.Set;
 
 public class ContractMaker {
-    public static TwoPartyContract createMakerTrade(NetworkId takerNetworkId, ProtocolType protocolType) {
-        Party counterParty = new Party(takerNetworkId);
-        return new TwoPartyContract(protocolType, Role.MAKER, counterParty);
+    public static SwapContract makerCreatesSwapContract(SwapOffer listing,
+                                                        ProtocolType protocolType,
+                                                        NetworkId takerNetworkId,
+                                                        Settlement<? extends Settlement.Method> askSideSettlement,
+                                                        Settlement<? extends Settlement.Method> bidSideSettlement) {
+        Party taker = new Party(Role.TAKER, takerNetworkId);
+        return new SwapContract(listing, protocolType, taker, askSideSettlement, bidSideSettlement);
     }
 
-    public static TwoPartyContract createTakerTrade(Listing offer, ProtocolType protocolType) {
-        NetworkId makerNetworkId = offer.getMakerNetworkId();
-        Party counterParty = new Party(makerNetworkId);
-        return new TwoPartyContract(protocolType, Role.TAKER, counterParty);
+    public static SwapContract takerCreatesSwapContract(SwapOffer listing,
+                                                        ProtocolType protocolType,
+                                                        NetworkId takerNetworkId,
+                                                        Settlement<? extends Settlement.Method> askSideSettlement,
+                                                        Settlement<? extends Settlement.Method> bidSideSettlement) {
+        Party taker = new Party(Role.TAKER, takerNetworkId);
+        return new SwapContract(listing, protocolType, taker, askSideSettlement, bidSideSettlement);
     }
 
-    public static ManyPartyContract createMakerTrade(NetworkId takerNetworkId, NetworkId escrowAgentNetworkId, ProtocolType protocolType) {
-        Party taker = new Party(takerNetworkId);
-        Party escrowAgent = new Party(escrowAgentNetworkId);
-        return new ManyPartyContract(protocolType, Role.MAKER, Map.of(Role.MAKER, self(), Role.TAKER, taker, Role.ESCROW_AGENT, escrowAgent));
+    public static MultiPartyContract makerCreatesMultiPartyContract(Listing listing,
+                                                                    NetworkId takerNetworkId,
+                                                                    NetworkId escrowAgentNetworkId,
+                                                                    ProtocolType protocolType) {
+        Party taker = new Party(Role.TAKER, takerNetworkId);
+        Party escrowAgent = new Party(Role.ESCROW_AGENT, escrowAgentNetworkId);
+        return new MultiPartyContract(listing, protocolType, Set.of(taker, escrowAgent));
     }
 
-    public static ManyPartyContract createTakerTrade(Listing offer, NetworkId escrowAgentNetworkId, ProtocolType protocolType) {
-        NetworkId makerNetworkId = offer.getMakerNetworkId();
-        Party maker = new Party(makerNetworkId);
-        Party escrowAgent = new Party(escrowAgentNetworkId);
-        return new ManyPartyContract(protocolType, Role.TAKER, Map.of(Role.MAKER, maker, Role.TAKER, self(), Role.ESCROW_AGENT, escrowAgent));
-    }
-
-    private static Party self() {
-        return new Party(new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(1000)), new PubKey(null, "default"), "default"));
+    public static MultiPartyContract takerCreatesMultiPartyContract(Listing listing,
+                                                                    NetworkId takerNetworkId,
+                                                                    NetworkId escrowAgentNetworkId,
+                                                                    ProtocolType protocolType) {
+        Party taker = new Party(Role.TAKER, takerNetworkId);
+        Party escrowAgent = new Party(Role.ESCROW_AGENT, escrowAgentNetworkId);
+        return new MultiPartyContract(listing, protocolType, Set.of(taker, escrowAgent));
     }
 }

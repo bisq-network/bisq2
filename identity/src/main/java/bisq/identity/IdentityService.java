@@ -26,6 +26,7 @@ import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
 import lombok.Getter;
+import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
@@ -81,7 +82,7 @@ public class IdentityService implements PersistenceClient<IdentityModel> {
 
     public void shutdown() {
     }
-
+    @Synchronized
     public CompletableFuture<Identity> getOrCreateIdentity(String domainId) {
         synchronized (identityModel) {
             if (identityModel.getIdentityByDomainId().containsKey(domainId)) {

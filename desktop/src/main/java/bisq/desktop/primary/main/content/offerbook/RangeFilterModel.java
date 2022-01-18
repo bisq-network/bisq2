@@ -52,7 +52,7 @@ public class RangeFilterModel {
 
         lowPercentageListener = (observable, oldValue, newValue) -> {
             long value = lowBaseAmountPercentToValue((double) newValue);
-            Predicate<OfferListItem> predicate = item -> item.getOffer().getBaseAsset().amount() >= value;
+            Predicate<OfferListItem> predicate = item -> item.getOffer().getBaseLeg().amount() >= value;
             setLowBaseAmountPredicate(predicate);
             model.applyListFilterPredicates();
             model.applyBaseCurrency();

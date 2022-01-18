@@ -19,14 +19,15 @@ package bisq.protocol;
 
 import bisq.contract.Party;
 import bisq.contract.TwoPartyContract;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.MessageListener;
 
 public abstract class TwoPartyProtocol extends Protocol implements MessageListener {
-    protected final Party counterParty;
+    protected final Party taker;
 
-    public TwoPartyProtocol(TwoPartyContract contract, NetworkService networkService) {
-        super(contract, networkService);
-        counterParty = contract.getCounterParty();
+    public TwoPartyProtocol(NetworkService networkService, NetworkIdWithKeyPair networkIdWithKeyPair, TwoPartyContract contract) {
+        super(networkService, networkIdWithKeyPair, contract);
+        taker = contract.getTaker();
     }
 }

@@ -16,16 +16,18 @@ dependencies {
     api platform(project(':platforms:common-platform'))
 
     implementation project(':common')
-    implementation project(':identity')
+    implementation project(':persistence')
     implementation project(':security')
+    implementation project(':identity')
     implementation project(':account')
-    implementation project(':contract')
     implementation project(':offer')
+    implementation project(':contract')
+    implementation project(':oracle')
     implementation project(':network')
     implementation project(':wallets')
-    implementation project(':persistence')
 
     implementation 'com.google.guava:guava'
+    implementation 'com.typesafe:config'
 }
 test {
     useJUnitPlatform()

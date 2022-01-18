@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.options;
+package bisq.offer.protocol;
 
-public interface OfferOption {
+public interface ProtocolType {
 }

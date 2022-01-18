@@ -18,10 +18,11 @@
 package bisq.protocol.bsqBond.taker;
 
 
-import bisq.contract.AssetTransfer;
 import bisq.contract.TwoPartyContract;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
+import bisq.protocol.SettlementExecution;
 import bisq.protocol.bsqBond.BsqBond;
 import bisq.protocol.bsqBond.BsqBondProtocol;
 import bisq.protocol.bsqBond.maker.MakerCommitmentMessage;
@@ -32,30 +33,33 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class TakerBsqBondProtocol extends BsqBondProtocol {
-    public TakerBsqBondProtocol(TwoPartyContract contract, NetworkService networkService) {
-        super(contract, networkService, new AssetTransfer.Automatic(), new BsqBond());
+
+    public TakerBsqBondProtocol(NetworkService networkService,
+                                NetworkIdWithKeyPair networkIdWithKeyPair,
+                                TwoPartyContract contract,
+                                SettlementExecution settlementExecution,
+                                BsqBond bsqBond) {
+        super(networkService, networkIdWithKeyPair, contract, settlementExecution, bsqBond);
     }
 
     @Override
     public void onMessage(Message message) {
-        if (message instanceof MakerCommitmentMessage) {
-            MakerCommitmentMessage bondCommitmentMessage = (MakerCommitmentMessage) message;
-            security.verifyBondCommitmentMessage(bondCommitmentMessage)
+        if (message instanceof MakerCommitmentMessage makerCommitmentMessage) {
+            bsqBond.verifyBondCommitmentMessage(makerCommitmentMessage)
                     .whenComplete((success, t) -> setState(State.COMMITMENT_RECEIVED))
-                    .thenCompose(isValid -> security.getCommitment(contract))
+                    .thenCompose(isValid -> bsqBond.getCommitment(contract))
                     .thenCompose(commitment -> networkService.confidentialSendAsync(new TakerCommitmentMessage(commitment),
-                            counterParty.getMakerNetworkId(),
-                            null, null))
+                            maker.networkId(),
+                            networkIdWithKeyPair))
                     .whenComplete((success, t) -> setState(State.COMMITMENT_SENT));
         }
-        if (message instanceof MakerFundsSentMessage) {
-            MakerFundsSentMessage fundsSentMessage = (MakerFundsSentMessage) message;
-            security.verifyFundsSentMessage(fundsSentMessage)
+        if (message instanceof MakerFundsSentMessage makerFundsSentMessage) {
+            bsqBond.verifyFundsSentMessage(makerFundsSentMessage)
                     .whenComplete((success, t) -> setState(State.FUNDS_RECEIVED))
-                    .thenCompose(isValid -> transport.sendFunds(contract))
+                    .thenCompose(isValid -> settlementExecution.sendFunds(contract))
                     .thenCompose(isSent -> networkService.confidentialSendAsync(new TakerFundsSentMessage(),
-                            counterParty.getMakerNetworkId(),
-                            null, null))
+                            maker.networkId(),
+                            networkIdWithKeyPair))
                     .whenComplete((success, t) -> setState(State.FUNDS_SENT));
         }
     }
