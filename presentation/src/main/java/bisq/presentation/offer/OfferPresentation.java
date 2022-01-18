@@ -63,7 +63,7 @@ public class OfferPresentation implements Comparable<OfferPresentation> {
                 offer.findMinBaseAmount());
         baseAmountCode = offer.getBaseCode();
 
-        formattedTransferOptions = offer.getOfferOptions().stream()
+        formattedTransferOptions = offer.getListingOptions().stream()
                 .filter(offerOption -> offerOption instanceof SettlementOption)
                 .map(offerOption -> (SettlementOption) offerOption)
                 .map(OfferFormatter::formatTransferOptions)

@@ -20,5 +20,5 @@ package bisq.offer.options;
 import java.util.Set;
 
 // Information about supported dispute resolution and chosen dispute agent
-public record SupportOption(Set<DisputeAgent> disputeAgents) implements OfferOption {
+public record SupportOption(Set<DisputeAgent> disputeAgents) implements ListingOption {
 }

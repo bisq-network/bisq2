@@ -17,5 +17,5 @@
 
 package bisq.offer.options;
 
-public interface OfferOption {
+public interface ListingOption {
 }

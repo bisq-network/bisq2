@@ -21,7 +21,7 @@ import bisq.common.monetary.Quote;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkId;
 import bisq.offer.options.AmountOption;
-import bisq.offer.options.OfferOption;
+import bisq.offer.options.ListingOption;
 import bisq.offer.options.PriceOption;
 import bisq.offer.protocol.SwapProtocolType;
 import lombok.EqualsAndHashCode;
@@ -68,15 +68,15 @@ public class SwapOffer extends Listing {
      * @param makerNetworkId   The networkId the maker used for that listing. It encapsulate the network addresses
      *                         of the supported networks and the pubKey used for data protection in the storage layer.
      * @param protocolTypes    The list of the supported swap protocol types. Order in the list can be used as priority.
-     * @param offerOptions     Options for different aspects of an offer like min amount, market based price, fee options... Can be specific to protocol type.
+     * @param listingOptions     Options for different aspects of an offer like min amount, market based price, fee options... Can be specific to protocol type.
      */
     public SwapOffer(SwapSide askSwapSide,
                      SwapSide bidSwapSide,
                      String baseCurrencyCode,
                      NetworkId makerNetworkId,
                      List<SwapProtocolType> protocolTypes,
-                     Set<OfferOption> offerOptions) {
-        super(makerNetworkId, protocolTypes, offerOptions);
+                     Set<ListingOption> listingOptions) {
+        super(makerNetworkId, protocolTypes, listingOptions);
 
         this.askSwapSide = askSwapSide;
         this.bidSwapSide = bidSwapSide;
@@ -132,11 +132,11 @@ public class SwapOffer extends Listing {
     }
 
     private Optional<Double> findMinAmountAsPercentage() {
-        return findAmountOption(offerOptions).map(AmountOption::minAmountAsPercentage);
+        return findAmountOption(listingOptions).map(AmountOption::minAmountAsPercentage);
     }
 
-    private Optional<AmountOption> findAmountOption(Set<OfferOption> offerOptions) {
-        return offerOptions.stream().filter(e -> e instanceof AmountOption).map(e -> (AmountOption) e).findAny();
+    private Optional<AmountOption> findAmountOption(Set<ListingOption> listingOptions) {
+        return listingOptions.stream().filter(e -> e instanceof AmountOption).map(e -> (AmountOption) e).findAny();
     }
 
 
@@ -145,11 +145,11 @@ public class SwapOffer extends Listing {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Optional<Double> findMarketPriceOffset() {
-        return findPriceOption(offerOptions).map(PriceOption::marketPriceOffset);
+        return findPriceOption(listingOptions).map(PriceOption::marketPriceOffset);
     }
 
-    private Optional<PriceOption> findPriceOption(Set<OfferOption> offerOptions) {
-        return offerOptions.stream().filter(e -> e instanceof PriceOption).map(e -> (PriceOption) e).findAny();
+    private Optional<PriceOption> findPriceOption(Set<ListingOption> listingOptions) {
+        return listingOptions.stream().filter(e -> e instanceof PriceOption).map(e -> (PriceOption) e).findAny();
     }
 
 }

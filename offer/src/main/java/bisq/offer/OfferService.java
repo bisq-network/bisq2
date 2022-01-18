@@ -205,7 +205,7 @@ public class OfferService {
             Map<Transport.Type, Address> map = Map.of(Transport.Type.CLEAR, Address.localHost(1000 + new Random().nextInt(1000)));
             NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"), "default");
 
-            Set<OfferOption> options = new HashSet<>();
+            Set<ListingOption> options = new HashSet<>();
             ReputationProof accountCreationDateProof = new AccountCreationDateProof("hashOfAccount", "otsProof)");
             ReputationOption reputationOptions = new ReputationOption(Set.of(accountCreationDateProof));
             options.add(reputationOptions);

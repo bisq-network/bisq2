@@ -19,7 +19,7 @@ package bisq.offer;
 
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkId;
-import bisq.offer.options.OfferOption;
+import bisq.offer.options.ListingOption;
 import bisq.offer.protocol.ProtocolType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,7 +35,7 @@ public abstract class Listing implements Serializable {
     protected final long date;
     protected final NetworkId makerNetworkId;
     protected final List<? extends ProtocolType> protocolTypes;
-    protected final Set<OfferOption> offerOptions;
+    protected final Set<ListingOption> listingOptions;
 
     /**
      * @param id             The unique nodeId for that listing.
@@ -43,28 +43,28 @@ public abstract class Listing implements Serializable {
      * @param protocolTypes  The list of the supported protocol types. Order in the list can be used as priority.
      * @param makerNetworkId The networkId the maker used for that listing. It encapsulates the network addresses
      *                       of the supported networks and the pubKey used for data protection in the storage layer.
-     * @param offerOptions   A set of options covering different context specific aspects of the offer like fees,
+     * @param listingOptions   A set of options covering different context specific aspects of the offer like fees,
      *                       reputation, transfers,... It depends on the chosen protocol and contract type.
      */
     public Listing(String id,
                    long date,
                    NetworkId makerNetworkId,
                    List<? extends ProtocolType> protocolTypes,
-                   Set<OfferOption> offerOptions) {
+                   Set<ListingOption> listingOptions) {
         this.id = id;
         this.date = date;
         this.makerNetworkId = makerNetworkId;
         this.protocolTypes = protocolTypes;
-        this.offerOptions = offerOptions;
+        this.listingOptions = listingOptions;
     }
 
     public Listing(NetworkId makerNetworkId,
                    List<? extends ProtocolType> protocolTypes,
-                   Set<OfferOption> offerOptions) {
+                   Set<ListingOption> listingOptions) {
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 makerNetworkId,
                 protocolTypes,
-                offerOptions);
+                listingOptions);
     }
 }

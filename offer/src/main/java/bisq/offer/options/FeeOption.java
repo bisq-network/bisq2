@@ -18,5 +18,5 @@
 package bisq.offer.options;
 
 // Data for verifying fee payment. Open question how we deal with fees...
-public record FeeOption(FeeType feeType, int blockHeightAtFeePayment, String feeTxId) implements OfferOption {
+public record FeeOption(FeeType feeType, int blockHeightAtFeePayment, String feeTxId) implements ListingOption {
 }

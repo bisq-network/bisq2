@@ -18,5 +18,5 @@
 package bisq.offer.options;
 
 // For some fiat methods is useful to know the makers bank or county of bank.
-public record SettlementOption(String countyCodeOfBank, String bankName) implements OfferOption {
+public record SettlementOption(String countyCodeOfBank, String bankName) implements ListingOption {
 }
