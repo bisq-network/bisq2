@@ -36,7 +36,7 @@ import java.util.Map;
  */
 @Getter
 @Slf4j
-public class OfferEntity implements Comparable<OfferEntity> {
+public class OfferPresentation implements Comparable<OfferPresentation> {
     protected final SwapOffer offer;
     private Quote quote;
     private Monetary quoteAmount;
@@ -55,7 +55,7 @@ public class OfferEntity implements Comparable<OfferEntity> {
     protected Disposable marketPriceDisposable;
     private Double marketPriceOffset;
 
-    public OfferEntity(SwapOffer offer, BehaviorSubject<Map<String, MarketPrice>> marketPriceSubject) {
+    public OfferPresentation(SwapOffer offer, BehaviorSubject<Map<String, MarketPrice>> marketPriceSubject) {
         this.offer = offer;
         this.marketPriceSubject = marketPriceSubject;
 
@@ -95,32 +95,32 @@ public class OfferEntity implements Comparable<OfferEntity> {
     }
 
 
-    public int compareBaseAmount(OfferEntity other) {
+    public int compareBaseAmount(OfferPresentation other) {
         return Long.compare(offer.getBaseLeg().amount(), other.getOffer().getBaseLeg().amount());
     }
 
-    public int compareAskAmount(OfferEntity other) {
+    public int compareAskAmount(OfferPresentation other) {
         return Long.compare(offer.getAskSwapSide().amount(), other.getOffer().getAskSwapSide().amount());
     }
 
-    public int compareBidAmount(OfferEntity other) {
+    public int compareBidAmount(OfferPresentation other) {
         return Long.compare(offer.getBidSwapSide().amount(), other.getOffer().getBidSwapSide().amount());
     }
 
-    public int compareQuoteAmount(OfferEntity other) {
+    public int compareQuoteAmount(OfferPresentation other) {
         return quoteAmount.compareTo(other.quoteAmount);
     }
 
-    public int compareQuote(OfferEntity other) {
+    public int compareQuote(OfferPresentation other) {
         return quote.compareTo(other.quote);
     }
 
-    public int compareMarketPriceOffset(OfferEntity other) {
+    public int compareMarketPriceOffset(OfferPresentation other) {
         return marketPriceOffset.compareTo(other.marketPriceOffset);
     }
 
     @Override
-    public int compareTo(OfferEntity other) {
+    public int compareTo(OfferPresentation other) {
         return compareQuote(other);
     }
 

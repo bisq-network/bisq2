@@ -28,7 +28,7 @@ import bisq.network.p2p.MockNetworkService;
 import bisq.offer.OfferService;
 import bisq.offer.OpenOfferService;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.offer.OfferEntityService;
+import bisq.presentation.offer.OfferPresentationService;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
 import bisq.security.KeyPairService;
@@ -59,7 +59,7 @@ public class DefaultServiceProvider extends ServiceProvider {
     private final NetworkService networkService;
     private final OfferService offerService;
     private final OpenOfferService openOfferService;
-    private final OfferEntityService offerEntityService;
+    private final OfferPresentationService offerPresentationService;
     private final IdentityService identityService;
     private final MarketPriceService marketPriceService;
     private final ApplicationOptions applicationOptions;
@@ -98,7 +98,7 @@ public class DefaultServiceProvider extends ServiceProvider {
 
         MarketPriceService.Config marketPriceServiceConf = MarketPriceServiceConfigFactory.getConfig();
         marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, Version.VERSION);
-        offerEntityService = new OfferEntityService(offerService, marketPriceService);
+        offerPresentationService = new OfferPresentationService(offerService, marketPriceService);
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
@@ -118,7 +118,7 @@ public class DefaultServiceProvider extends ServiceProvider {
                 .thenCompose(result -> marketPriceService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(offerService.initialize(),
                         openOfferService.initialize(),
-                        offerEntityService.initialize()))
+                        offerPresentationService.initialize()))
                 .orTimeout(120, TimeUnit.SECONDS)
                 .whenComplete((list, throwable) -> {
                     if (throwable != null) {
@@ -137,7 +137,7 @@ public class DefaultServiceProvider extends ServiceProvider {
         marketPriceService.shutdown();
         offerService.shutdown();
         openOfferService.shutdown();
-        offerEntityService.shutdown();
+        offerPresentationService.shutdown();
         return networkService.shutdown()
                 .whenComplete((__, throwable) -> {
                     if (throwable != null) {

@@ -93,10 +93,10 @@ public class OfferbookModel extends NavigationModel {
 
 
     public void onViewAttached() {
-        serviceProvider.getOfferEntityService().activate();
+        serviceProvider.getOfferPresentationService().activate();
 
         offerItems.clear();
-        offerItems.addAll(serviceProvider.getOfferEntityService().getOfferEntities().stream()
+        offerItems.addAll(serviceProvider.getOfferPresentationService().getOfferEntities().stream()
                 .map(OfferListItem -> new OfferListItem(OfferListItem.getOffer(),
                         OfferListItem.getMarketPriceSubject(),
                         showAllAskCurrencies,
@@ -112,14 +112,14 @@ public class OfferbookModel extends NavigationModel {
 
         amountFilterModel.activate();
 
-        offerEntityAddedDisposable = serviceProvider.getOfferEntityService().getOfferEntityAddedSubject().subscribe(offerEntity -> {
+        offerEntityAddedDisposable = serviceProvider.getOfferPresentationService().getOfferEntityAddedSubject().subscribe(offerEntity -> {
             offerItems.add(new OfferListItem(offerEntity.getOffer(),
                     offerEntity.getMarketPriceSubject(),
                     showAllAskCurrencies,
                     showAllBidCurrencies));
         }, Throwable::printStackTrace);
 
-        offerEntityRemovedDisposable = serviceProvider.getOfferEntityService().getOfferEntityRemovedSubject().subscribe(offerEntity -> {
+        offerEntityRemovedDisposable = serviceProvider.getOfferPresentationService().getOfferEntityRemovedSubject().subscribe(offerEntity -> {
             offerItems.stream()
                     .filter(e -> e.getOffer().equals(offerEntity.getOffer()))
                     .findAny()
@@ -132,7 +132,7 @@ public class OfferbookModel extends NavigationModel {
     }
 
     public void onViewDetached() {
-        serviceProvider.getOfferEntityService().deactivate();
+        serviceProvider.getOfferPresentationService().deactivate();
         amountFilterModel.deactivate();
 
         if (offerEntityAddedDisposable != null) {
