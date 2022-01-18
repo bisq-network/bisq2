@@ -124,7 +124,7 @@ public class ServiceNodesByTransport {
                                                                                    KeyPair senderKeyPair,
                                                                                    String senderNodeId) {
         Map<Transport.Type, ConfidentialMessageService.Result> resultsByType = new HashMap<>();
-        receiverNetworkId.addressByNetworkType().forEach((transportType, address) -> {
+        receiverNetworkId.getAddressByNetworkType().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);
                 try {

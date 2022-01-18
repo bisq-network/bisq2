@@ -17,7 +17,6 @@
 
 package bisq.network;
 
-import bisq.common.data.Pair;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.security.PubKey;
@@ -25,43 +24,27 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.TreeMap;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode
-@ToString(exclude = "addressByNetworkType")
+@ToString
+@Getter
 public class NetworkId implements Serializable {
-    // We avoid maps in serialized data as it is used in hashes and maps do not have deterministic order.
-    // The list is sorted by Transport.Type.
-    private final List<Pair<Transport.Type, Address>> addresses;
-    @Getter
     private final PubKey pubKey;
-    @Getter
     private final String nodeId;
-    // Lazy init convenience field. With java serialisation its always null even if declared in field.
-    @Nullable
-    private transient Map<Transport.Type, Address> addressByNetworkType;
+    // NetworkId is used in objects which gets hashed, so we need to have a deterministic order in the map. 
+    // A treeMap guarantees that. 
+    private final TreeMap<Transport.Type, Address> addressByNetworkType = new TreeMap<>();
 
     public NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey, String nodeId) {
         this.pubKey = pubKey;
         this.nodeId = nodeId;
         checkArgument(!addressByNetworkType.isEmpty(),
                 "We require at least 1 addressByNetworkType for a valid NetworkId");
-        addresses = addressByNetworkType.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .map(e -> new Pair<>(e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
-    }
-
-    public Map<Transport.Type, Address> addressByNetworkType() {
-        if (addressByNetworkType == null) {
-            addressByNetworkType = addresses.stream().collect(Collectors.toMap(Pair::first, Pair::second));
-        }
-        return addressByNetworkType;
+        this.addressByNetworkType.putAll(addressByNetworkType);
     }
 }

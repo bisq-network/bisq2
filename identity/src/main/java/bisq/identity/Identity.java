@@ -25,7 +25,7 @@ import bisq.security.PubKey;
 
 import java.io.Serializable;
 import java.security.KeyPair;
-// todo maybe add userName
+
 public record Identity(String domainId, NetworkId networkId, KeyPair keyPair) implements Serializable {
     public NetworkIdWithKeyPair getNodeIdAndKeyPair() {
         return new NetworkIdWithKeyPair(networkId, keyPair);

@@ -181,11 +181,11 @@ public class MultiNodesModel {
     }
 
     private void send(NetworkId senderNetworkId, NetworkId receiverNetworkId, KeyPair senderKeyPair, String message) {
-        NetworkService senderNetworkService = senderNetworkId.addressByNetworkType().entrySet().stream()
+        NetworkService senderNetworkService = senderNetworkId.getAddressByNetworkType().entrySet().stream()
                 .map(e -> getOrCreateNetworkService(e.getValue(), e.getKey()))
                 .findAny()
                 .orElseThrow();
-        NetworkService receiverNetworkService = receiverNetworkId.addressByNetworkType().entrySet().stream()
+        NetworkService receiverNetworkService = receiverNetworkId.getAddressByNetworkType().entrySet().stream()
                 .map(e -> getOrCreateNetworkService(e.getValue(), e.getKey()))
                 .findAny()
                 .orElseThrow();
@@ -223,7 +223,7 @@ public class MultiNodesModel {
                         Address senderAddress = value.get(senderNetworkId.getNodeId());
                         String newLine = "\n" + getTimestamp() + " " +
                                 type.toString().substring(0, 3) + "  onSent       " +
-                                senderAddress + " --> " + receiverNetworkId.addressByNetworkType().get(type) + " " +
+                                senderAddress + " --> " + receiverNetworkId.getAddressByNetworkType().get(type) + " " +
                                 mailBoxMessage + ", Result: " + result.get(type);
                         appendToHistory(senderAddress, newLine);
                         handler.ifPresent(handler -> handler.onMessage(senderAddress));

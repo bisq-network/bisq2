@@ -37,12 +37,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class NetworkServiceConfigFactory {
     public static NetworkService.Config getConfig(String baseDir, Config typesafeConfig) {
-        Set<Transport.Type> supportedTransportTypes;
-        supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
+        Set<Transport.Type> supportedTransportTypes = new HashSet<>(typesafeConfig.getEnumList(Transport.Type.class,
+                "supportedTransportTypes"));
+
+     /*   supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
         supportedTransportTypes = Set.of(Transport.Type.I2P);
         supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
-        supportedTransportTypes = Set.of(Transport.Type.TOR);
         supportedTransportTypes = Set.of(Transport.Type.CLEAR);
+        supportedTransportTypes = Set.of(Transport.Type.TOR);*/
 
         ServiceNode.Config serviceNodeConfig = new ServiceNode.Config(Set.of(
                 ServiceNode.Service.CONFIDENTIAL,

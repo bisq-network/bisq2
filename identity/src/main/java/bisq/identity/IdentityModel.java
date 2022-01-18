@@ -20,35 +20,53 @@ package bisq.identity;
 import bisq.persistence.Persistable;
 import lombok.Getter;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class IdentityModel implements Persistable<IdentityModel> {
     @Getter
-    private final Map<String, Identity> identityByDomainId = new ConcurrentHashMap<>();
+    private final Queue<Identity> pool = new ConcurrentLinkedQueue<>();
     @Getter
-    private final Map<String, String> userNameByDomainId = new HashMap<>();
+    private final Map<String, Identity> activeIdentityByDomainId = new ConcurrentHashMap<>();
+    @Getter
+    private final Set<Identity> retired = new CopyOnWriteArraySet<>();
+    @Getter
+    private final Map<String, String> userNameByDomainId = new ConcurrentHashMap<>();
 
     public IdentityModel() {
     }
 
-    private IdentityModel(Map<String, Identity> identityByDomainId, Map<String, String> userNameByDomainId) {
-        this.identityByDomainId.putAll(identityByDomainId);
+    private IdentityModel(Map<String, Identity> activeIdentityByDomainId,
+                          Map<String, String> userNameByDomainId,
+                          Queue<Identity> pool,
+                          Set<Identity> retired) {
+        this.activeIdentityByDomainId.putAll(activeIdentityByDomainId);
         this.userNameByDomainId.putAll(userNameByDomainId);
+        this.pool.addAll(pool);
+        this.retired.addAll(retired);
     }
 
     @Override
     public IdentityModel getClone() {
-        return new IdentityModel(identityByDomainId, userNameByDomainId);
+        return new IdentityModel(activeIdentityByDomainId, userNameByDomainId, pool, retired);
     }
 
     @Override
     public void applyPersisted(IdentityModel persisted) {
-        identityByDomainId.clear();
-        identityByDomainId.putAll(persisted.getIdentityByDomainId());
+        activeIdentityByDomainId.clear();
+        activeIdentityByDomainId.putAll(persisted.getActiveIdentityByDomainId());
 
         userNameByDomainId.clear();
         userNameByDomainId.putAll(persisted.getUserNameByDomainId());
+
+        pool.clear();
+        pool.addAll(persisted.getPool());
+
+        retired.clear();
+        retired.addAll(persisted.getRetired());
     }
 }

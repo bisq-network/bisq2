@@ -352,7 +352,7 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
         return supportedTransportTypes.stream()
                 .collect(Collectors.toMap(transportType -> transportType,
                         transportType -> networkIdOptional.stream()
-                                .map(NetworkId::addressByNetworkType)
+                                .map(NetworkId::getAddressByNetworkType)
                                 .flatMap(addressByNetworkType -> Optional.ofNullable(addressByNetworkType.get(transportType)).stream())
                                 .map(Address::getPort)
                                 .findAny()

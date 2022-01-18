@@ -141,7 +141,9 @@ public class TradeIntentController implements Controller/*, ChatService.Listener
     }
 
     private void onRemoveTradeIntent(TradeIntentListItem item) {
-        Identity identity = identityService.findIdentity(item.getId()).orElseThrow();
+        Identity identity = identityService.findActiveIdentity(item.getId()).orElseThrow();
+        // We do not retire the identity as it might be still used in the chat. For a mature implementation we would
+        // need to check if there is any usage still for that identity and if not retire it.
         log.error("onRemoveTradeIntent nodeIdAndKeyPair={}", identity.getNodeIdAndKeyPair());
         networkService.removeData(item.getPayload().getData(), identity.getNodeIdAndKeyPair())
                 .whenComplete((broadCastResultFutures, throwable2) -> {
