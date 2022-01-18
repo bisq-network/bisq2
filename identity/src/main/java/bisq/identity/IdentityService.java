@@ -143,21 +143,28 @@ public class IdentityService implements PersistenceClient<IdentityModel> {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // If the pool is not empty we take an identity from the pool and clone it with the new domainId
+    // If the pool is not empty we take an identity from the pool and clone it with the new domainId.
+    // We search first for identities with initialized nodes, otherwise we take any.
     private Optional<Identity> swapPooledIdentity(String domainId) {
         synchronized (identityModelLock) {
-            //todo take initialized
-            return Optional.ofNullable(identityModel.getPool().poll())
+            return identityModel.getPool().stream()
+                    .filter(identity -> networkService.findNetworkId(identity.nodeId(), identity.pubKey()).isPresent())
+                    .findAny()
+                    .or(() -> identityModel.getPool().stream().findAny()) // If none is initialized we take any
                     .map(pooledIdentity -> {
-                        Identity identity = new Identity(domainId, pooledIdentity.networkId(), pooledIdentity.keyPair());
+                        Identity clonedIdentity;
+                        synchronized (identityModelLock) {
+                            clonedIdentity = new Identity(domainId, pooledIdentity.networkId(), pooledIdentity.keyPair());
+                            identityModel.getPool().remove(pooledIdentity);
+                            identityModel.getActiveIdentityByDomainId().put(domainId, clonedIdentity);
+                        }
+                        persist();
+
+                        // Refill pool if needed
                         if (numMissingPooledIdentities() > 0) {
                             createAndInitializeNewPooledIdentity();
                         }
-                        synchronized (identityModelLock) {
-                            identityModel.getActiveIdentityByDomainId().put(domainId, identity);
-                        }
-                        persist();
-                        return identity;
+                        return clonedIdentity;
                     });
         }
     }

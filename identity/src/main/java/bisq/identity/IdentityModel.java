@@ -21,15 +21,13 @@ import bisq.persistence.Persistable;
 import lombok.Getter;
 
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class IdentityModel implements Persistable<IdentityModel> {
     @Getter
-    private final Queue<Identity> pool = new ConcurrentLinkedQueue<>();
+    private final Set<Identity> pool = new CopyOnWriteArraySet<>();
     @Getter
     private final Map<String, Identity> activeIdentityByDomainId = new ConcurrentHashMap<>();
     @Getter
@@ -42,7 +40,7 @@ public class IdentityModel implements Persistable<IdentityModel> {
 
     private IdentityModel(Map<String, Identity> activeIdentityByDomainId,
                           Map<String, String> userNameByDomainId,
-                          Queue<Identity> pool,
+                          Set<Identity> pool,
                           Set<Identity> retired) {
         this.activeIdentityByDomainId.putAll(activeIdentityByDomainId);
         this.userNameByDomainId.putAll(userNameByDomainId);
