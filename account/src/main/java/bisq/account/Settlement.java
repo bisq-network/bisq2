@@ -17,27 +17,43 @@
 
 package bisq.account;
 
-public abstract class Settlement<T extends Settlement.Method> {
-    public interface Method {
-        String name();
+import lombok.Getter;
+
+@Getter
+public abstract class Settlement<T extends SettlementMethod> {
+    public enum Type {
+        AUTOMATIC, MANUAL
     }
 
-    protected T type;
-    protected String name;
+    protected final T method;
+    protected final String name;
+    protected final Type type;
 
-    Settlement(T type) {
-        this(type, type.name());
+    Settlement(T method) {
+        this(method, method.name());
     }
 
-    Settlement(T type, String name) {
+    Settlement(T method, String name) {
+        this.method = method;
+        this.name = name;
+        type = getDefaultType();
+    }
+
+    Settlement(T method, String name, Type type) {
+        this.method = method;
+        this.name = name;
         this.type = type;
-        this.name = type.name();
     }
 
     Settlement(String name) {
+        this.method = getDefaultMethod();
         this.name = name;
-        this.type = getDefaultType();
+        type = getDefaultType();
     }
 
-    protected abstract T getDefaultType();
+    protected abstract T getDefaultMethod();
+
+    protected Type getDefaultType() {
+        return Type.MANUAL;
+    }
 }

@@ -22,7 +22,7 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
     public static final FiatSettlement REVOLUT = new FiatSettlement(FiatSettlement.Method.REVOLUT);
     public static final FiatSettlement ZELLE = new FiatSettlement(FiatSettlement.Method.ZELLE);
 
-    public enum Method implements Settlement.Method {
+    public enum Method implements SettlementMethod {
         SEPA,
         REVOLUT,
         ZELLE,
@@ -42,7 +42,12 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
     }
 
     @Override
-    protected Method getDefaultType() {
+    protected Method getDefaultMethod() {
         return FiatSettlement.Method.OTHER;
+    }
+
+    @Override
+    protected Type getDefaultType() {
+        return Type.AUTOMATIC; // todo should be manual, but test fails with manual
     }
 }

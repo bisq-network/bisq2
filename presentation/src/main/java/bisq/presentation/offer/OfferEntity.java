@@ -20,7 +20,7 @@ package bisq.presentation.offer;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.offer.SwapOffer;
-import bisq.offer.options.TransferOption;
+import bisq.offer.options.SettlementOption;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
@@ -64,8 +64,8 @@ public class OfferEntity implements Comparable<OfferEntity> {
         baseAmountCode = offer.getBaseCode();
 
         formattedTransferOptions = offer.getOfferOptions().stream()
-                .filter(offerOption -> offerOption instanceof TransferOption)
-                .map(offerOption -> (TransferOption) offerOption)
+                .filter(offerOption -> offerOption instanceof SettlementOption)
+                .map(offerOption -> (SettlementOption) offerOption)
                 .map(OfferFormatter::formatTransferOptions)
                 .findAny().orElse("");
 
@@ -100,11 +100,11 @@ public class OfferEntity implements Comparable<OfferEntity> {
     }
 
     public int compareAskAmount(OfferEntity other) {
-        return Long.compare(offer.getAskLeg().amount(), other.getOffer().getAskLeg().amount());
+        return Long.compare(offer.getAskSwapSide().amount(), other.getOffer().getAskSwapSide().amount());
     }
 
     public int compareBidAmount(OfferEntity other) {
-        return Long.compare(offer.getBidLeg().amount(), other.getOffer().getBidLeg().amount());
+        return Long.compare(offer.getBidSwapSide().amount(), other.getOffer().getBidSwapSide().amount());
     }
 
     public int compareQuoteAmount(OfferEntity other) {

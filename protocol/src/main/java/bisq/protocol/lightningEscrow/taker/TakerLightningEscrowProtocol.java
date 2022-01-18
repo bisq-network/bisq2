@@ -1,7 +1,7 @@
 package bisq.protocol.lightningEscrow.taker;
 
 import bisq.contract.MultiPartyContract;
-import bisq.contract.SettlementExecution;
+import bisq.protocol.SettlementExecution;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;

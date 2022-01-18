@@ -22,6 +22,7 @@ import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
+import bisq.protocol.SettlementExecution;
 import bisq.protocol.bsqBond.BsqBond;
 import bisq.protocol.bsqBond.BsqBondProtocol;
 import bisq.protocol.bsqBond.maker.MakerCommitmentMessage;
@@ -36,8 +37,9 @@ public class TakerBsqBondProtocol extends BsqBondProtocol {
     public TakerBsqBondProtocol(NetworkService networkService,
                                 NetworkIdWithKeyPair networkIdWithKeyPair,
                                 TwoPartyContract contract,
+                                SettlementExecution settlementExecution,
                                 BsqBond bsqBond) {
-        super(networkService, networkIdWithKeyPair, contract, bsqBond);
+        super(networkService, networkIdWithKeyPair, contract, settlementExecution, bsqBond);
     }
 
     @Override
@@ -54,7 +56,7 @@ public class TakerBsqBondProtocol extends BsqBondProtocol {
         if (message instanceof MakerFundsSentMessage makerFundsSentMessage) {
             bsqBond.verifyFundsSentMessage(makerFundsSentMessage)
                     .whenComplete((success, t) -> setState(State.FUNDS_RECEIVED))
-                    .thenCompose(isValid -> contract.getSettlementExecution().sendFunds(contract))
+                    .thenCompose(isValid -> settlementExecution.sendFunds(contract))
                     .thenCompose(isSent -> networkService.confidentialSendAsync(new TakerFundsSentMessage(),
                             maker.networkId(),
                             networkIdWithKeyPair))

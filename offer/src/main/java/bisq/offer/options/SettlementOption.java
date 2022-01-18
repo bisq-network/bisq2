@@ -15,18 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.contract;
+package bisq.offer.options;
 
-import bisq.offer.Listing;
-import bisq.offer.protocol.ProtocolType;
-import lombok.Getter;
-
-@Getter
-public class TwoPartyContract<T extends Listing> extends Contract<T> {
-    private final Party taker;
-
-    public TwoPartyContract(T listing, ProtocolType protocolType, Party taker) {
-        super(listing, protocolType);
-        this.taker = taker;
-    }
+// For some fiat methods is useful to know the makers bank or county of bank.
+public record SettlementOption(String countyCodeOfBank, String bankName) implements OfferOption {
 }

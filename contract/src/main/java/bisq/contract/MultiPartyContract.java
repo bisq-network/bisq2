@@ -1,16 +1,17 @@
 package bisq.contract;
 
+import bisq.offer.Listing;
+import bisq.offer.protocol.ProtocolType;
 import lombok.Getter;
 
 import java.util.Set;
 
 @Getter
-public class MultiPartyContract extends Contract {
+public class MultiPartyContract<T extends Listing> extends Contract<T> {
     private final Set<Party> parties;
 
-    public MultiPartyContract(ProtocolType protocolType, Party maker, Set<Party> parties, SettlementExecution settlementExecution) {
-        super(protocolType, maker, settlementExecution);
-
-        this.parties = Set.copyOf(parties);
+    public MultiPartyContract(T listing, ProtocolType protocolType, Set<Party> parties) {
+        super(listing, protocolType);
+        this.parties = parties;
     }
 }

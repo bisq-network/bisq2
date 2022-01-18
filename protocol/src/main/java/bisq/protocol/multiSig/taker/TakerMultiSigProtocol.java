@@ -18,7 +18,7 @@
 package bisq.protocol.multiSig.taker;
 
 
-import bisq.contract.SettlementExecution;
+import bisq.protocol.SettlementExecution;
 import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;

@@ -15,8 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.options;
+package bisq.offer.protocol;
 
-// For some fiat methods is useful to know the makers bank or county of bank.
-public record TransferOption(String countyCodeOfBank, String bankName) implements OfferOption {
+public enum SwapProtocolType implements ProtocolType {
+    ATOMIC_CROSS_CHAIN_SWAP,
+    LIQUID_SWAP,                // Atomic same chain (Liquid)
+    BSQ_SWAP,                   // Atomic same chain (Bitcoin)
+    LN_SWAP,
+    MULTISIG,
+    BSQ_BOND,
+    REPUTATION
 }

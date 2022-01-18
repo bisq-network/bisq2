@@ -1,7 +1,7 @@
 package bisq.protocol.lightningEscrow.maker;
 
 import bisq.contract.MultiPartyContract;
-import bisq.contract.SettlementExecution;
+import bisq.protocol.SettlementExecution;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
@@ -14,7 +14,7 @@ public class MakerLightningEscrowProtocol extends LightningEscrowProtocol {
     public MakerLightningEscrowProtocol(NetworkService networkService,
                                         NetworkIdWithKeyPair networkIdWithKeyPair,
                                         MultiPartyContract contract) {
-        super(networkService, networkIdWithKeyPair, contract, new SettlementExecution.Automatic(), new LightningEscrow());
+        super(networkService, networkIdWithKeyPair, contract, new SettlementExecution.Manual(), new LightningEscrow());
     }
 
     @Override

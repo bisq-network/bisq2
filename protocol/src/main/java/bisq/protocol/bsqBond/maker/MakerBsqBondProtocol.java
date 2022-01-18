@@ -22,6 +22,7 @@ import bisq.contract.TwoPartyContract;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
+import bisq.protocol.SettlementExecution;
 import bisq.protocol.bsqBond.BsqBond;
 import bisq.protocol.bsqBond.BsqBondProtocol;
 import bisq.protocol.bsqBond.taker.TakerCommitmentMessage;
@@ -33,10 +34,11 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class MakerBsqBondProtocol extends BsqBondProtocol {
     public MakerBsqBondProtocol(NetworkService networkService,
-                                NetworkIdWithKeyPair networkIdWithKeyPair, 
+                                NetworkIdWithKeyPair networkIdWithKeyPair,
                                 TwoPartyContract contract,
+                                SettlementExecution settlementExecution,
                                 BsqBond bsqBond) {
-        super(networkService, networkIdWithKeyPair, contract, bsqBond);
+        super(networkService, networkIdWithKeyPair, contract, settlementExecution, bsqBond);
     }
 
     @Override
@@ -44,7 +46,7 @@ public class MakerBsqBondProtocol extends BsqBondProtocol {
         if (message instanceof TakerCommitmentMessage takerCommitmentMessage) {
             bsqBond.verifyBondCommitmentMessage(takerCommitmentMessage)
                     .whenComplete((success, t) -> setState(State.COMMITMENT_RECEIVED))
-                    .thenCompose(isValid -> contract.getSettlementExecution().sendFunds(contract))
+                    .thenCompose(isValid -> settlementExecution.sendFunds(contract))
                     .thenCompose(isSent -> networkService.confidentialSendAsync(new MakerFundsSentMessage(),
                             taker.networkId(),
                             networkIdWithKeyPair))

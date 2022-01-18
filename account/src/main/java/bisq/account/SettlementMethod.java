@@ -15,14 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.contract;
+package bisq.account;
 
-public enum SwapProtocolType implements ProtocolType {
-    ATOMIC_CROSS_CHAIN_SWAP,
-    LIQUID_SWAP,    // Atomic same chain (Liquid)
-    BSQ_SWAP,       // Atomic same chain (Bitcoin)
-    LN_SWAP,
-    MULTISIG,
-    COLLATERALIZED,
-    REPUTATION
+public interface SettlementMethod {
+    String name();
 }

@@ -17,22 +17,29 @@
 
 package bisq.protocol;
 
-import bisq.account.AccountService;
-import bisq.contract.Contract;
-import bisq.identity.IdentityService;
-import bisq.network.NetworkService;
-import bisq.offer.SwapOffer;
-import bisq.persistence.Persistence;
-import bisq.wallets.Wallet;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Executes the given protocol.
+ */
+@Slf4j
+public class ProtocolExecution implements Protocol.Listener {
+    @Getter
+    protected final Protocol protocol;
 
-public class Deal {
-    // expected dependencies
-    IdentityService identityService;
-    AccountService accountService;
-    Contract contract;
-    SwapOffer offer;
-    NetworkService networkService;
-    Persistence persistence;
-    Wallet wallet;
+    public ProtocolExecution(Protocol protocol) {
+        this.protocol = protocol;
+
+        protocol.addListener(this);
+    }
+
+    public void start() {
+        protocol.start();
+    }
+
+    @Override
+    public void onStateChange(Protocol.State state) {
+        log.info("{}: {}", protocol.getContract().getMaker().role(), state);
+    }
 }

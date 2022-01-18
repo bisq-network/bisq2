@@ -20,22 +20,23 @@ package bisq.protocol.swap.contract.bsqBond;
 
 import bisq.account.FiatSettlement;
 import bisq.common.monetary.Fiat;
-import bisq.contract.ProtocolType;
-import bisq.contract.SettlementExecution;
-import bisq.contract.SwapProtocolType;
-import bisq.contract.TwoPartyContract;
+import bisq.contract.SwapContract;
 import bisq.identity.Identity;
 import bisq.network.NetworkId;
-import bisq.offer.Leg;
 import bisq.offer.SwapOffer;
+import bisq.offer.SwapSide;
+import bisq.offer.protocol.ProtocolType;
+import bisq.offer.protocol.SwapProtocolType;
 import bisq.protocol.BaseProtocolTest;
 import bisq.protocol.ContractMaker;
-import bisq.protocol.ProtocolExecutor;
+import bisq.protocol.ProtocolExecution;
+import bisq.protocol.SettlementExecution;
 import bisq.protocol.bsqBond.BsqBond;
 import bisq.protocol.bsqBond.BsqBondProtocol;
 import bisq.protocol.bsqBond.maker.MakerBsqBondProtocol;
 import bisq.protocol.bsqBond.taker.TakerBsqBondProtocol;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -55,46 +56,60 @@ public class BsqBondIntegrationTest extends BaseProtocolTest {
 
     @Test
     public void testBsqBond() {
-        SettlementExecution settlementExecution = new SettlementExecution.Automatic();
         Identity makerIdentity = identityService.getOrCreateIdentity("maker").join();
         NetworkId makerNetworkId = makerIdentity.networkId();
+        Identity takerIdentity = identityService.getOrCreateIdentity("taker").join();
+        NetworkId takerNetworkId = takerIdentity.networkId();
 
-        Leg askLeg = new Leg(Fiat.of(100, "USD"), List.of(FiatSettlement.ZELLE));
-        Leg bidLeg = new Leg(Fiat.of(90, "EUR"), List.of(FiatSettlement.REVOLUT, FiatSettlement.SEPA));
-        SwapOffer offer = new SwapOffer(askLeg,
-                bidLeg,
+        SwapSide askSwapSide = new SwapSide(Fiat.of(100, "USD"), List.of(FiatSettlement.ZELLE));
+        SwapSide bidSwapSide = new SwapSide(Fiat.of(90, "EUR"), List.of(FiatSettlement.REVOLUT, FiatSettlement.SEPA));
+        SwapOffer offer = new SwapOffer(askSwapSide,
+                bidSwapSide,
                 "USD",
-                List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
+                SwapProtocolType.BSQ_BOND,
                 makerNetworkId);
 
         // taker takes offer and selects first ProtocolType
         ProtocolType protocolType = offer.getProtocolTypes().get(0);
-        TwoPartyContract takerContract = ContractMaker.takerCreatesTwoPartyContract(offer, protocolType, settlementExecution);
+        val askSideSettlement = offer.getAskSwapSide().settlementMethods().get(0);
+        val bidSideSettlement = offer.getBidSwapSide().settlementMethods().get(0);
+        // Not sure if SettlementExecution stays... if we need more work as it can be for both ask and bid
+        SettlementExecution settlementExecution = SettlementExecution.from(askSideSettlement.getType());
+        
+        SwapContract takerContract = ContractMaker.takerCreatesSwapContract(offer,
+                protocolType,
+                takerNetworkId,
+                askSideSettlement, 
+                bidSideSettlement);
         TakerBsqBondProtocol takerBsqBondProtocol = new TakerBsqBondProtocol(networkService,
                 makerIdentity.getNodeIdAndKeyPair(),
                 takerContract,
+                settlementExecution,
                 new BsqBond());
-        ProtocolExecutor takerProtocolExecutor = new ProtocolExecutor(takerBsqBondProtocol);
+        ProtocolExecution takerProtocolExecution = new ProtocolExecution(takerBsqBondProtocol);
 
         // simulated take offer protocol: Taker sends to maker the protocolType
-        Identity takerIdentity = identityService.getOrCreateIdentity("taker").join();
-        NetworkId takerNetworkId = takerIdentity.networkId();
-        TwoPartyContract makerContract = ContractMaker.makerCreatesTwoPartyContract(takerNetworkId, protocolType, settlementExecution);
+        SwapContract makerContract = ContractMaker.makerCreatesSwapContract(offer, 
+                protocolType, 
+                takerNetworkId,
+                askSideSettlement,
+                bidSideSettlement);
         MakerBsqBondProtocol makerBsqBondProtocol = new MakerBsqBondProtocol(networkService,
                 takerIdentity.getNodeIdAndKeyPair(),
                 makerContract,
+                settlementExecution,
                 new BsqBond());
-        ProtocolExecutor makerProtocolExecutor = new ProtocolExecutor(makerBsqBondProtocol);
+        ProtocolExecution makerProtocolExecution = new ProtocolExecution(makerBsqBondProtocol);
 
         CountDownLatch completedLatch = new CountDownLatch(2);
-        makerProtocolExecutor.getProtocol().addListener(state -> {
+        makerProtocolExecution.getProtocol().addListener(state -> {
             if (state instanceof BsqBondProtocol.State bsqBondProtocolState) {
                 if (bsqBondProtocolState == BsqBondProtocol.State.FUNDS_RECEIVED) {
                     completedLatch.countDown();
                 }
             }
         });
-        takerProtocolExecutor.getProtocol().addListener(state -> {
+        takerProtocolExecution.getProtocol().addListener(state -> {
             if (state instanceof BsqBondProtocol.State bsqBondProtocolState) {
                 if (bsqBondProtocolState == BsqBondProtocol.State.FUNDS_RECEIVED) {
                     completedLatch.countDown();
@@ -102,8 +117,8 @@ public class BsqBondIntegrationTest extends BaseProtocolTest {
             }
         });
 
-        makerProtocolExecutor.start();
-        takerProtocolExecutor.start();
+        makerProtocolExecution.start();
+        takerProtocolExecution.start();
 
         try {
             boolean completed = completedLatch.await(30, TimeUnit.SECONDS);

@@ -19,11 +19,11 @@ package bisq.offer;
 
 import bisq.common.monetary.Quote;
 import bisq.common.util.MathUtils;
-import bisq.contract.SwapProtocolType;
 import bisq.network.NetworkId;
 import bisq.offer.options.AmountOption;
 import bisq.offer.options.OfferOption;
 import bisq.offer.options.PriceOption;
+import bisq.offer.protocol.SwapProtocolType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,57 +40,57 @@ import java.util.Set;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class SwapOffer extends Listing {
-    private final Leg askLeg;
-    private final Leg bidLeg;
+    private final SwapSide askSwapSide;
+    private final SwapSide bidSwapSide;
     private final boolean useAskLegForBaseCurrency;
     private transient final Quote quote;
 
-    public SwapOffer(Leg askLeg,
-                     Leg bidLeg,
+    public SwapOffer(SwapSide askSwapSide,
+                     SwapSide bidSwapSide,
                      String baseCurrencyCode,
                      SwapProtocolType protocolType,
                      NetworkId makerNetworkId) {
-        this(askLeg, bidLeg, baseCurrencyCode, List.of(protocolType), makerNetworkId, new HashSet<>());
+        this(askSwapSide, bidSwapSide, baseCurrencyCode, makerNetworkId, List.of(protocolType), new HashSet<>());
     }
 
-    public SwapOffer(Leg askLeg,
-                     Leg bidLeg,
+    public SwapOffer(SwapSide askSwapSide,
+                     SwapSide bidSwapSide,
                      String baseCurrencyCode,
                      List<SwapProtocolType> protocolTypes,
                      NetworkId makerNetworkId) {
-        this(askLeg, bidLeg, baseCurrencyCode, protocolTypes, makerNetworkId, new HashSet<>());
+        this(askSwapSide, bidSwapSide, baseCurrencyCode, makerNetworkId, protocolTypes, new HashSet<>());
     }
 
     /**
-     * @param askLeg           The ask leg (what the maker asks for)
-     * @param bidLeg           The bid leg (what the maker offers)
+     * @param askSwapSide           The ask leg (what the maker asks for)
+     * @param bidSwapSide           The bid leg (what the maker offers)
      * @param baseCurrencyCode If the base currency code for the price quote.
-     * @param protocolTypes    The list of the supported swap protocol types. Order in the list can be used as priority.
      * @param makerNetworkId   The networkId the maker used for that listing. It encapsulate the network addresses
      *                         of the supported networks and the pubKey used for data protection in the storage layer.
+     * @param protocolTypes    The list of the supported swap protocol types. Order in the list can be used as priority.
      * @param offerOptions     Options for different aspects of an offer like min amount, market based price, fee options... Can be specific to protocol type.
      */
-    public SwapOffer(Leg askLeg,
-                     Leg bidLeg,
+    public SwapOffer(SwapSide askSwapSide,
+                     SwapSide bidSwapSide,
                      String baseCurrencyCode,
-                     List<SwapProtocolType> protocolTypes,
                      NetworkId makerNetworkId,
+                     List<SwapProtocolType> protocolTypes,
                      Set<OfferOption> offerOptions) {
-        super(protocolTypes, makerNetworkId, offerOptions);
+        super(makerNetworkId, protocolTypes, offerOptions);
 
-        this.askLeg = askLeg;
-        this.bidLeg = bidLeg;
-        this.useAskLegForBaseCurrency = baseCurrencyCode.equals(askLeg.code());
+        this.askSwapSide = askSwapSide;
+        this.bidSwapSide = bidSwapSide;
+        this.useAskLegForBaseCurrency = baseCurrencyCode.equals(askSwapSide.code());
 
         quote = Quote.of(getBaseLeg().monetary(), getQuoteLeg().monetary());
     }
 
-    public Leg getBaseLeg() {
-        return useAskLegForBaseCurrency ? askLeg : bidLeg;
+    public SwapSide getBaseLeg() {
+        return useAskLegForBaseCurrency ? askSwapSide : bidSwapSide;
     }
 
-    public Leg getQuoteLeg() {
-        return useAskLegForBaseCurrency ? bidLeg : askLeg;
+    public SwapSide getQuoteLeg() {
+        return useAskLegForBaseCurrency ? bidSwapSide : askSwapSide;
     }
 
     public String getBaseCode() {
@@ -102,11 +102,11 @@ public class SwapOffer extends Listing {
     }
 
     public String getAskCode() {
-        return askLeg.code();
+        return askSwapSide.code();
     }
 
     public String getBidCode() {
-        return bidLeg.code();
+        return bidSwapSide.code();
     }
 
 

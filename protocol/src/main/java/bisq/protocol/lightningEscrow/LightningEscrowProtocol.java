@@ -1,7 +1,7 @@
 package bisq.protocol.lightningEscrow;
 
 import bisq.contract.MultiPartyContract;
-import bisq.contract.SettlementExecution;
+import bisq.protocol.SettlementExecution;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.protocol.ManyPartyProtocol;

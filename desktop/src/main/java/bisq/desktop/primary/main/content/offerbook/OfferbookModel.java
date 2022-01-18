@@ -163,7 +163,7 @@ public class OfferbookModel extends NavigationModel {
             showAllBidCurrencies.set(true);
         } else {
             selectedAskCurrencyProperty.set(currency);
-            setAskCurrencyPredicate(item -> item.getOffer().getBidLeg().code().equals(currency));
+            setAskCurrencyPredicate(item -> item.getOffer().getBidSwapSide().code().equals(currency));
             showAllBidCurrencies.set(false);
         }
         updateHeaders();

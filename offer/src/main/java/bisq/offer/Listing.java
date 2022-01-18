@@ -18,9 +18,9 @@
 package bisq.offer;
 
 import bisq.common.util.StringUtils;
-import bisq.contract.ProtocolType;
 import bisq.network.NetworkId;
 import bisq.offer.options.OfferOption;
+import bisq.offer.protocol.ProtocolType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -33,8 +33,8 @@ import java.util.Set;
 public abstract class Listing implements Serializable {
     protected final String id;
     protected final long date;
-    protected final List<? extends ProtocolType> protocolTypes;
     protected final NetworkId makerNetworkId;
+    protected final List<? extends ProtocolType> protocolTypes;
     protected final Set<OfferOption> offerOptions;
 
     /**
@@ -48,23 +48,23 @@ public abstract class Listing implements Serializable {
      */
     public Listing(String id,
                    long date,
-                   List<? extends ProtocolType> protocolTypes,
                    NetworkId makerNetworkId,
+                   List<? extends ProtocolType> protocolTypes,
                    Set<OfferOption> offerOptions) {
         this.id = id;
         this.date = date;
-        this.protocolTypes = protocolTypes;
         this.makerNetworkId = makerNetworkId;
+        this.protocolTypes = protocolTypes;
         this.offerOptions = offerOptions;
     }
 
-    public Listing(List<? extends ProtocolType> protocolTypes,
-                   NetworkId makerNetworkId,
+    public Listing(NetworkId makerNetworkId,
+                   List<? extends ProtocolType> protocolTypes,
                    Set<OfferOption> offerOptions) {
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),
-                protocolTypes,
                 makerNetworkId,
+                protocolTypes,
                 offerOptions);
     }
 }

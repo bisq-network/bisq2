@@ -18,6 +18,7 @@
 package bisq.offer;
 
 import bisq.account.Settlement;
+import bisq.account.SettlementMethod;
 import bisq.common.monetary.Monetary;
 
 import java.util.List;
@@ -30,7 +31,7 @@ import java.util.List;
  * @param settlementMethods The supported settlementMethods (e.g. if user supports payment in SEPA and
  *                          Revolut). The order in the list can be used as priority.
  */
-public record Leg(Monetary monetary, List<? extends Settlement<? extends Settlement.Method>> settlementMethods) {
+public record SwapSide(Monetary monetary, List<? extends Settlement<? extends SettlementMethod>> settlementMethods) {
     public long amount() {
         return monetary.getValue();
     }

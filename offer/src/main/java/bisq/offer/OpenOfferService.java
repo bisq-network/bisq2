@@ -20,11 +20,11 @@ package bisq.offer;
 import bisq.account.FiatSettlement;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
-import bisq.contract.SwapProtocolType;
 import bisq.network.NetworkId;
 import bisq.network.p2p.INetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
+import bisq.offer.protocol.SwapProtocolType;
 import bisq.security.PubKey;
 import bisq.wallets.Wallet;
 
@@ -55,10 +55,10 @@ public class OpenOfferService {
     public void createNewOffer(long askAmount) {
         Map<Transport.Type, Address> map = Map.of(Transport.Type.CLEAR, Address.localHost(3333));
         NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"), "default");
-        Leg askLeg = new Leg(Coin.asBtc(askAmount), List.of());
-        Leg bidLeg = new Leg(Fiat.of(5000, "USD"), List.of(FiatSettlement.ZELLE));
-        SwapOffer offer = new SwapOffer(bidLeg,
-                askLeg,
+        SwapSide askSwapSide = new SwapSide(Coin.asBtc(askAmount), List.of());
+        SwapSide bidSwapSide = new SwapSide(Fiat.of(5000, "USD"), List.of(FiatSettlement.ZELLE));
+        SwapOffer offer = new SwapOffer(bidSwapSide,
+                askSwapSide,
                 "USD",
                 List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
                 makerNetworkId);

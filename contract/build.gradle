@@ -19,6 +19,7 @@ dependencies {
     implementation project(':persistence')
     implementation project(':identity')
     implementation project(':account')
+    implementation project(':offer')
     implementation project(':network')
 
     implementation 'com.google.guava:guava'
