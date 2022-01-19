@@ -68,7 +68,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 @Slf4j
 public class Node implements Connection.Handler {
-    public static final String DEFAULT_NODE_ID = "default";
+    public static final String DEFAULT = "default";
 
     public enum State {
         CREATED,
@@ -84,6 +84,9 @@ public class Node implements Connection.Handler {
         void onConnection(Connection connection);
 
         void onDisconnect(Connection connection, CloseReason closeReason);
+
+        default void onStateChange(State state) {
+        }
     }
 
     public static record Config(Transport.Type transportType,
@@ -527,5 +530,6 @@ public class Node implements Connection.Handler {
         checkArgument(newState.ordinal() > state.get().ordinal(),
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
+        listeners.forEach(listener -> listener.onStateChange(newState));
     }
 }

@@ -29,10 +29,9 @@ public abstract class NavigationModel implements Model {
     @Getter
     protected final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
-    @Getter
-    protected NavigationTarget navigationTarget = getLastNavigationTarget();
+    protected NavigationTarget navigationTarget;
 
-    private NavigationTarget getLastNavigationTarget() {
+    public NavigationTarget getNavigationTarget() {
         return navigationTarget == null ? getDefaultNavigationTarget() : navigationTarget;
     }
 

@@ -32,6 +32,7 @@ public class ClearNetTransport implements Transport {
         if (initializeCalled) {
             return true;
         }
+        //Uninterruptibles.sleepUninterruptibly(Duration.of(2, ChronoUnit.SECONDS));
         initializeCalled = true;
         log.debug("Initialize");
         return true;

@@ -162,12 +162,12 @@ public class ServiceNode {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean maybeInitializeServer(String nodeId, int serverPort) {
-        if (nodeId.equals(Node.DEFAULT_NODE_ID)) {
+        if (nodeId.equals(Node.DEFAULT)) {
             setState(State.INITIALIZE_DEFAULT_NODE_SERVER);
         }
         try {
             nodesById.maybeInitializeServer(nodeId, serverPort);
-            if (nodeId.equals(Node.DEFAULT_NODE_ID)) {
+            if (nodeId.equals(Node.DEFAULT)) {
                 setState(State.DEFAULT_NODE_SERVER_INITIALIZED);
             }
             return true;
@@ -244,7 +244,7 @@ public class ServiceNode {
     }
 
     public Optional<Address> findMyDefaultAddresses() {
-        return findMyAddress(Node.DEFAULT_NODE_ID);
+        return findMyAddress(Node.DEFAULT);
     }
 
     private void setState(State newState) {

@@ -39,6 +39,7 @@ public class BaseProtocolTest {
         PersistenceService persistenceService = new PersistenceService(appDir);
         KeyPairService keyPairService = new KeyPairService(persistenceService);
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
-        identityService = new IdentityService(persistenceService, keyPairService, networkService);
+        IdentityService.Config identityServiceConfig = IdentityService.Config.from(typesafeConfig.getConfig("identityServiceConfig"));
+        identityService = new IdentityService(persistenceService, keyPairService, networkService, identityServiceConfig);
     }
 }

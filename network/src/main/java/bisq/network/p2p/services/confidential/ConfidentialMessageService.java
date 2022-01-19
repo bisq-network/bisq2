@@ -264,6 +264,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         throw new RuntimeException(e);
                     }
                 }, ExecutorFactory.WORKER_POOL))
-                .orElse(failedFuture(new IllegalArgumentException("No key found.")));
+                .orElse(CompletableFuture.completedFuture(true)); // Not our message
     }
 }

@@ -22,5 +22,6 @@ public enum CookieKey {
     STAGE_X,
     STAGE_Y,
     STAGE_W,
-    STAGE_H
+    STAGE_H,
+    NAVIGATION_TARGET
 }

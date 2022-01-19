@@ -123,7 +123,7 @@ public class MultiNodesView extends Application implements MultiNodesModel.Handl
         fromTf = new TextField("localhost:9000");
         TextField toTf = new TextField("localhost:9999");
         // TextField toTf = new TextField("l2takiyfs5d7nou7wwjomx3a4jxpn4fabtxfclgobrucnokms6j6liid.onion:2000");
-        TextField nodeIdTf = new TextField(Node.DEFAULT_NODE_ID);
+        TextField nodeIdTf = new TextField(Node.DEFAULT);
         TextField msgTf = new TextField("Test proto");
         Button sendButton = new Button("Send");
         sendButton.setOnAction(e -> multiNodesModel.send(new Address(fromTf.getText()),

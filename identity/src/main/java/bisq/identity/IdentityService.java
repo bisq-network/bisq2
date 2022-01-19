@@ -19,14 +19,15 @@ package bisq.identity;
 
 
 import bisq.common.util.StringUtils;
+import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
+import com.google.common.collect.Streams;
 import lombok.Getter;
-import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
@@ -42,72 +43,252 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class IdentityService implements PersistenceClient<IdentityModel> {
     public final static String DEFAULT = "default";
+    private final int minPoolSize;
+
+    public static record Config(int minPoolSize) {
+        public static Config from(com.typesafe.config.Config typeSafeConfig) {
+            return new Config(typeSafeConfig.getInt("minPoolSize"));
+        }
+    }
 
     @Getter
     private final Persistence<IdentityModel> persistence;
     private final KeyPairService keyPairService;
     private final NetworkService networkService;
     private final IdentityModel identityModel = new IdentityModel();
+    private final Object identityModelLock = new Object();
 
-    public IdentityService(PersistenceService persistenceService, KeyPairService keyPairService, NetworkService networkService) {
+    public IdentityService(PersistenceService persistenceService,
+                           KeyPairService keyPairService,
+                           NetworkService networkService,
+                           Config config) {
         persistence = persistenceService.getOrCreatePersistence(this, "db", identityModel);
         this.keyPairService = keyPairService;
         this.networkService = networkService;
+        minPoolSize = config.minPoolSize;
     }
 
+
     public CompletableFuture<Boolean> initialize() {
-        //todo create identity pool
-        // Add flag if identity is actively used and network node need to be initialized
-        identityModel.getIdentityByDomainId().values().forEach(identity ->
-                networkService.maybeInitializeServer(identity.nodeId(), identity.pubKey())
-                        .forEach((key, value) -> value.whenComplete((r, t) ->
-                                log.error("maybeInitializeServer Result at {} networkId={}, result={}",
-                                        key, identity.networkId(), r))));
+        initializeActiveIdentities();
+        initializePooledIdentities();
+        initializeMissingPooledIdentities();
         return CompletableFuture.completedFuture(true);
     }
 
+    public void shutdown() {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // PersistenceClient
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void applyPersisted(IdentityModel persisted) {
-        synchronized (identityModel) {
+        synchronized (identityModelLock) {
             identityModel.applyPersisted(persisted);
         }
     }
 
     @Override
     public IdentityModel getClone() {
-        synchronized (identityModel) {
+        synchronized (identityModelLock) {
             return identityModel.getClone();
         }
     }
 
-    public void shutdown() {
-    }
-    @Synchronized
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * We first look up if we find an identity in the active identities map, if not we take one from the pool and
+     * clone it with the new domainId. If none present we create a fresh identity and initialize it.
+     * The active and pooled identities get initialized as start-up, so it can be expected that they are already
+     * initialized, but there is no guarantee for that.
+     * Client code has to deal with the async nature of the node initialisation which takes a few seconds usually,
+     * but user experience should in most cases not suffer from an additional delay.
+     *
+     * @param domainId The id used to map the identity to some domain aspect (e.g. offerId)
+     * @return A future which completes when the node associated with that identity is initialized.
+     */
     public CompletableFuture<Identity> getOrCreateIdentity(String domainId) {
-        synchronized (identityModel) {
-            if (identityModel.getIdentityByDomainId().containsKey(domainId)) {
-                return CompletableFuture.completedFuture(identityModel.getIdentityByDomainId().get(domainId));
+        return findActiveIdentity(domainId).map(CompletableFuture::completedFuture)
+                .orElseGet(() -> swapPooledIdentity(domainId).map(CompletableFuture::completedFuture)
+                        .orElseGet(() -> createAndInitializeNewActiveIdentity(domainId)));
+    }
+
+    public Optional<Identity> findActiveIdentity(String domainId) {
+        synchronized (identityModelLock) {
+            return Optional.ofNullable(identityModel.getActiveIdentityByDomainId().get(domainId));
+        }
+    }
+
+    public void retireIdentity(String domainId) {
+        boolean wasRemoved;
+        synchronized (identityModelLock) {
+            Identity identity = identityModel.getActiveIdentityByDomainId().remove(domainId);
+            wasRemoved = identity != null;
+            if (wasRemoved) {
+                identityModel.getRetired().add(identity);
             }
         }
+        if (wasRemoved) {
+            persist();
+        }
+    }
+
+    public Optional<Identity> findActiveIdentityByNodeId(String nodeId) {
+        synchronized (identityModelLock) {
+            return identityModel.getActiveIdentityByDomainId().values().stream()
+                    .filter(e -> e.networkId().getNodeId().equals(nodeId))
+                    .findAny();
+        }
+    }
+
+    public Optional<Identity> findPooledIdentityByNodeId(String nodeId) {
+        synchronized (identityModelLock) {
+            return identityModel.getPool().stream()
+                    .filter(e -> e.networkId().getNodeId().equals(nodeId))
+                    .findAny();
+        }
+    }
+
+    public Optional<Identity> findRetiredIdentityByNodeId(String nodeId) {
+        synchronized (identityModelLock) {
+            return identityModel.getRetired().stream()
+                    .filter(e -> e.networkId().getNodeId().equals(nodeId))
+                    .findAny();
+        }
+    }
+
+    public Optional<Identity> findAnyIdentityByNodeId(String nodeId) {
+        synchronized (identityModelLock) {
+            return Streams.concat(identityModel.getActiveIdentityByDomainId().values().stream(),
+                            Streams.concat(identityModel.getRetired().stream(),
+                                    identityModel.getPool().stream()))
+                    .filter(e -> e.networkId().getNodeId().equals(nodeId))
+                    .findAny();
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // If the pool is not empty we take an identity from the pool and clone it with the new domainId.
+    // We search first for identities with initialized nodes, otherwise we take any.
+    private Optional<Identity> swapPooledIdentity(String domainId) {
+        synchronized (identityModelLock) {
+            return identityModel.getPool().stream()
+                    .filter(identity -> networkService.findNetworkId(identity.nodeId(), identity.pubKey()).isPresent())
+                    .findAny()
+                    .or(() -> identityModel.getPool().stream().findAny()) // If none is initialized we take any
+                    .map(pooledIdentity -> {
+                        Identity clonedIdentity;
+                        synchronized (identityModelLock) {
+                            clonedIdentity = new Identity(domainId, pooledIdentity.networkId(), pooledIdentity.keyPair());
+                            identityModel.getPool().remove(pooledIdentity);
+                            identityModel.getActiveIdentityByDomainId().put(domainId, clonedIdentity);
+                        }
+                        persist();
+
+                        // Refill pool if needed
+                        if (numMissingPooledIdentities() > 0) {
+                            createAndInitializeNewPooledIdentity();
+                        }
+                        return clonedIdentity;
+                    });
+        }
+    }
+
+    private void initializeMissingPooledIdentities() {
+        for (int i = 0; i < numMissingPooledIdentities(); i++) {
+            createAndInitializeNewPooledIdentity();
+        }
+    }
+
+    private int numMissingPooledIdentities() {
+        synchronized (identityModelLock) {
+            return Math.max(0, minPoolSize - identityModel.getPool().size());
+        }
+    }
+
+    private void initializeActiveIdentities() {
+        identityModel.getActiveIdentityByDomainId().values().forEach(identity ->
+                networkService.maybeInitializeServer(identity.nodeId(), identity.pubKey()).values()
+                        .forEach(value -> value.whenComplete((result, throwable) -> {
+                                    if (throwable == null && result) {
+                                        log.info("Network node for active identity {} initialized. NetworkId={}",
+                                                identity.domainId(), identity.networkId());
+                                    } else {
+                                        log.error("Initializing network node for active identity {} failed. NetworkId={}",
+                                                identity.domainId(), identity.networkId());
+                                    }
+                                })
+                        ));
+    }
+
+    private void initializePooledIdentities() {
+        identityModel.getPool().forEach(identity ->
+                networkService.maybeInitializeServer(identity.nodeId(), identity.pubKey()).values()
+                        .forEach(value -> value.whenComplete((result, throwable) -> {
+                                    if (throwable == null && result) {
+                                        log.info("Network node for pooled identity {} initialized. NetworkId={}",
+                                                identity.domainId(), identity.networkId());
+                                    } else {
+                                        log.error("Initializing network node for pooled identity {} failed. NetworkId={}",
+                                                identity.domainId(), identity.networkId());
+                                    }
+                                })
+                        ));
+    }
+
+    private void createAndInitializeNewPooledIdentity() {
+        createAndInitializeNewIdentity(Res.common.get("na"))
+                .whenComplete((identity, throwable) -> {
+                    if (throwable == null) {
+                        log.info("Network node for pooled identity {} created and initialized. NetworkId={}",
+                                identity.domainId(), identity.networkId());
+                        synchronized (identityModelLock) {
+                            identityModel.getPool().add(identity);
+                        }
+                        persist();
+                    } else {
+                        log.error("Creation and initializing network node for pooled identity {} failed. NetworkId={}",
+                                identity.domainId(), identity.networkId());
+                    }
+                });
+    }
+
+    private CompletableFuture<Identity> createAndInitializeNewActiveIdentity(String domainId) {
+        return createAndInitializeNewIdentity(domainId)
+                .thenApply(identity -> {
+                    synchronized (identityModelLock) {
+                        identityModel.getActiveIdentityByDomainId().put(domainId, identity);
+                    }
+                    persist();
+                    return identity;
+                }).whenComplete((identity, throwable) -> {
+                    if (throwable == null) {
+                        log.info("Network node for active identity {} created and initialized. NetworkId={}",
+                                identity.domainId(), identity.networkId());
+                    } else {
+                        log.error("Creation and initializing network node for active identity {} failed. NetworkId={}",
+                                identity.domainId(), identity.networkId());
+                    }
+                });
+    }
+
+    private CompletableFuture<Identity> createAndInitializeNewIdentity(String domainId) {
         String keyId = StringUtils.createUid();
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
         return networkService.getInitializedNetworkIdAsync(nodeId, pubKey)
-                .thenApply(networkId -> {
-                    Identity identity = new Identity(domainId, networkId, keyPair);
-                    synchronized (identityModel) {
-                        identityModel.getIdentityByDomainId().put(domainId, identity);
-                    }
-                    persist();
-                    return identity;
-                });
+                .thenApply(networkId -> new Identity(domainId, networkId, keyPair));
     }
-
-    public Optional<Identity> findIdentity(String domainId) {
-        synchronized (identityModel) {
-            return Optional.ofNullable(identityModel.getIdentityByDomainId().get(domainId));
-        }
-    }
-
 }

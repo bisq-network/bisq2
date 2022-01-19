@@ -154,17 +154,20 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
             HBox clearNetBox = getTransportTypeBox("clear-net",
                     model.getClearNetNumConnections(),
                     model.getClearNetNumTargetConnections(),
-                    model.getClearNetIsVisible());
+                    model.getClearNetIsVisible(),
+                    new Insets(1, 0, 5, 3));
 
             HBox torBox = getTransportTypeBox("tor",
                     model.getTorNumConnections(),
                     model.getTorNumTargetConnections(),
-                    model.getTorIsVisible());
+                    model.getTorIsVisible(),
+                    new Insets(-6, 0, 5, 1));
 
             HBox i2pBox = getTransportTypeBox("i2p",
                     model.getI2pNumConnections(),
                     model.getI2pNumTargetConnections(),
-                    model.getI2pIsVisible());
+                    model.getI2pIsVisible(),
+                    new Insets(0, 0, 5, 0));
 
             getChildren().addAll(clearNetBox, torBox, i2pBox);
         }
@@ -172,9 +175,12 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
         private HBox getTransportTypeBox(String iconId,
                                          StringProperty numConnections,
                                          StringProperty numTargetConnections,
-                                         BooleanProperty isVisible) {
+                                         BooleanProperty isVisible,
+                                         Insets iconMargin) {
             HBox hBox = new HBox();
             hBox.setSpacing(5);
+            hBox.setMinHeight(20);
+            hBox.setMaxHeight(hBox.getMinHeight());
             hBox.managedProperty().bind(isVisible);
             hBox.visibleProperty().bind(isVisible);
 
@@ -191,7 +197,7 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
             ImageView icon = new ImageView();
             icon.setId(iconId);
 
-            HBox.setMargin(icon, new Insets(0, 0, 5, 0));
+            HBox.setMargin(icon, iconMargin);
 
             hBox.getChildren().addAll(peers, numConnectionsLabel, separator, numTargetConnectionsLabel, icon);
             return hBox;

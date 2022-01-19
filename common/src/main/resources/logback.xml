@@ -12,7 +12,7 @@
     </root>
 
     <logger name="bisq.desktop" level="DEBUG"/>
-    <logger name="bisq.network" level="DEBUG"/>
+    <logger name="bisq.network" level="WARN"/>
     <logger name="bisq.persistence" level="WARN"/>
     <logger name="bisq.tor" level="INFO"/>
     <logger name="bisq.i2p" level="INFO"/>

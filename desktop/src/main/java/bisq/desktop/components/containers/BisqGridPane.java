@@ -28,15 +28,19 @@ import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.*;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class BisqGridPane extends GridPane {
     public BisqGridPane() {
         setVgap(10);
         setHgap(10);
+
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setMinWidth(150);
+        ColumnConstraints col2 = new ColumnConstraints();
+        getColumnConstraints().addAll(col1, col2);
     }
 
     public BisqLabel startSection(String text) {
@@ -48,7 +52,7 @@ public class BisqGridPane extends GridPane {
         GridPane.setMargin(label, new Insets(0, 0, 15, 0));
         GridPane.setRowIndex(label, getRowCount());
         GridPane.setColumnIndex(label, 0);
-        GridPane.setColumnSpan(label, 2);
+        GridPane.setColumnSpan(label, getColumnCount());
         getChildren().add(label);
         return label;
     }
@@ -89,7 +93,8 @@ public class BisqGridPane extends GridPane {
         textField.setLabelFloat(true);
         textField.setPromptText(labelText);
         GridPane.setRowIndex(textField, getRowCount());
-        GridPane.setColumnIndex(textField, 1);
+        GridPane.setColumnIndex(textField, 0);
+        GridPane.setColumnSpan(textField, getColumnCount());
         GridPane.setMargin(textField, new Insets(0, 0, 15, 0));
         getChildren().addAll(textField);
         return textField;
@@ -121,7 +126,7 @@ public class BisqGridPane extends GridPane {
         hBox.setSpacing(10);
         hBox.getChildren().addAll(button, label);
         GridPane.setRowIndex(hBox, getRowCount());
-        GridPane.setColumnIndex(hBox, 1);
+        GridPane.setColumnIndex(hBox, 0);
         getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(0, 0, 15, 0));
         return new Pair<>(button, label);
@@ -135,8 +140,9 @@ public class BisqGridPane extends GridPane {
 
     public void addTableView(BisqTableView<? extends TableItem> tableView) {
         GridPane.setRowIndex(tableView, getRowCount());
-        GridPane.setColumnIndex(tableView, 1);
-        GridPane.setColumnSpan(tableView, getColumnCount());
+        GridPane.setColumnIndex(tableView, 0);
+        int columnCount = getColumnCount();
+        GridPane.setColumnSpan(tableView, columnCount);
         getChildren().add(tableView);
     }
 
