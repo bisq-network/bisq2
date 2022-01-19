@@ -19,12 +19,14 @@ package bisq.identity;
 
 
 import bisq.common.util.StringUtils;
+import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
+import com.google.common.collect.Streams;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -138,6 +140,40 @@ public class IdentityService implements PersistenceClient<IdentityModel> {
         }
     }
 
+    public Optional<Identity> findActiveIdentityByNodeId(String nodeId) {
+        synchronized (identityModelLock) {
+            return identityModel.getActiveIdentityByDomainId().values().stream()
+                    .filter(e -> e.networkId().getNodeId().equals(nodeId))
+                    .findAny();
+        }
+    }
+
+    public Optional<Identity> findPooledIdentityByNodeId(String nodeId) {
+        synchronized (identityModelLock) {
+            return identityModel.getPool().stream()
+                    .filter(e -> e.networkId().getNodeId().equals(nodeId))
+                    .findAny();
+        }
+    }
+
+    public Optional<Identity> findRetiredIdentityByNodeId(String nodeId) {
+        synchronized (identityModelLock) {
+            return identityModel.getRetired().stream()
+                    .filter(e -> e.networkId().getNodeId().equals(nodeId))
+                    .findAny();
+        }
+    }
+
+    public Optional<Identity> findAnyIdentityByNodeId(String nodeId) {
+        synchronized (identityModelLock) {
+            return Streams.concat(identityModel.getActiveIdentityByDomainId().values().stream(),
+                            Streams.concat(identityModel.getRetired().stream(),
+                                    identityModel.getPool().stream()))
+                    .filter(e -> e.networkId().getNodeId().equals(nodeId))
+                    .findAny();
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -212,7 +248,7 @@ public class IdentityService implements PersistenceClient<IdentityModel> {
     }
 
     private void createAndInitializeNewPooledIdentity() {
-        createAndInitializeNewIdentity(StringUtils.createUid())
+        createAndInitializeNewIdentity(Res.common.get("na"))
                 .whenComplete((identity, throwable) -> {
                     if (throwable == null) {
                         log.info("Network node for pooled identity {} created and initialized. NetworkId={}",

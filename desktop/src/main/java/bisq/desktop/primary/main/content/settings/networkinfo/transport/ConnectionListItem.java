@@ -29,44 +29,49 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 public class ConnectionListItem implements TableItem {
     @Getter
     private final Connection connection;
     private final Connection.Listener listener;
 
-    private final String id;
     private final Metrics metrics;
     @Getter
-    private final StringProperty date = new SimpleStringProperty();
+    private final String date;
     @Getter
-    private final StringProperty address = new SimpleStringProperty();
+    private final String address;
+
     @Getter
-    private final StringProperty nodeId = new SimpleStringProperty();
+    private final String nodeId;
     @Getter
-    private final StringProperty pubKey = new SimpleStringProperty();
-    @Getter
-    private final StringProperty direction = new SimpleStringProperty();
+    private final String direction;
     @Getter
     private final StringProperty sent = new SimpleStringProperty();
     @Getter
     private final StringProperty received = new SimpleStringProperty();
     @Getter
-    private final StringProperty rtt = new SimpleStringProperty();
+    private final StringProperty rtt = new SimpleStringProperty("-");
+    @EqualsAndHashCode.Include
+    private final String connectionId;
 
     public ConnectionListItem(Connection connection, String nodeId) {
         this.connection = connection;
-        id = connection.getId();
+        this.nodeId = nodeId;
+        connectionId = connection.getId();
         metrics = connection.getMetrics();
-        this.nodeId.set(nodeId);
 
-        date.set(DateFormatter.formatDateTime(metrics.getCreationDate()));
-        address.set(connection.getPeerAddress().getFullAddress());
+        date = DateFormatter.formatDateTime(metrics.getCreationDate());
+        address = connection.getPeerAddress().getFullAddress();
 
-        direction.set(connection.isOutboundConnection() ? Res.network.get("table.connections.value.outbound") : Res.network.get("table.connections.value.inbound"));
+        direction = connection.isOutboundConnection() ?
+                Res.network.get("table.connections.value.outbound") :
+                Res.network.get("table.connections.value.inbound");
+
         updateSent();
         updateReceived();
         updateRtt();
@@ -87,9 +92,11 @@ public class ConnectionListItem implements TableItem {
         };
     }
 
-
     private void updateRtt() {
-        rtt.set(TimeFormatter.formatTime(Math.round(metrics.getAverageRtt())));
+        long rrt = Math.round(metrics.getAverageRtt());
+        if (rrt > 0) {
+            rtt.set(TimeFormatter.formatTime(rrt));
+        }
     }
 
     private void updateSent() {
@@ -109,27 +116,27 @@ public class ConnectionListItem implements TableItem {
     }
 
     public int compareAddress(ConnectionListItem other) {
-        return metrics.getCreationDate().compareTo(other.metrics.getCreationDate());
+        return address.compareTo(other.getAddress());
     }
 
     public int compareNodeId(ConnectionListItem other) {
-        return nodeId.get().compareTo(other.getNodeId().get());
+        return nodeId.compareTo(other.getNodeId());
     }
 
     public int compareDirection(ConnectionListItem other) {
-        return direction.get().compareTo(other.connection.toString());
+        return direction.compareTo(other.direction);
     }
 
     public int compareSent(ConnectionListItem other) {
-        return 0;
+        return 0; //todo
     }
 
     public int compareReceived(ConnectionListItem other) {
-        return 0;
+        return 0;//todo
     }
 
     public int compareRtt(ConnectionListItem other) {
-        return 0;
+        return 0;//todo
     }
 
     @Override

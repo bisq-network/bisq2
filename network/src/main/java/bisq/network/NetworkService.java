@@ -144,7 +144,9 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
         return maybeInitializeServer(getOrCreatePortByTransport(nodeId, pubKey), nodeId, pubKey);
     }
 
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(Map<Transport.Type, Integer> portByTransport, String nodeId, PubKey pubKey) {
+    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(Map<Transport.Type, Integer> portByTransport,
+                                                                                 String nodeId,
+                                                                                 PubKey pubKey) {
         Map<Transport.Type, CompletableFuture<Boolean>> futureMap = serviceNodesByTransport.maybeInitializeServer(portByTransport, nodeId);
         // After server has been started we can be sure the networkId is available. 
         // If it was not already available before we persist it.
@@ -189,7 +191,7 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> bootstrapToNetwork() {
-        String nodeId = Node.DEFAULT_NODE_ID;
+        String nodeId = Node.DEFAULT;
         return serviceNodesByTransport.bootstrapToNetwork(getDefaultPortByTransport(), nodeId)
                 .whenComplete((result, throwable) -> {
                     // If networkNode has not been created we create now one with the default pubKey (default keyId)
@@ -344,7 +346,7 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     // We return the port by transport type if found from the persisted networkId, otherwise we
     // fill in a random free system port for all supported transport types. 
     public Map<Transport.Type, Integer> getDefaultPortByTransport() {
-        return getOrCreatePortByTransport(Node.DEFAULT_NODE_ID, keyPairService.getDefaultPubKey());
+        return getOrCreatePortByTransport(Node.DEFAULT, keyPairService.getDefaultPubKey());
     }
 
     public Map<Transport.Type, Integer> getOrCreatePortByTransport(String nodeId, PubKey pubKey) {
@@ -369,7 +371,7 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     }
 
     public Optional<Node> findDefaultNode(Transport.Type transport) {
-        return findNode(transport, Node.DEFAULT_NODE_ID);
+        return findNode(transport, Node.DEFAULT);
     }
 
     public Optional<Node> findNode(Transport.Type transport, String nodeId) {
@@ -385,7 +387,7 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     }
 
     public Optional<Address> findDefaultAddress(Transport.Type transport) {
-        return findAddress(transport, Node.DEFAULT_NODE_ID);
+        return findAddress(transport, Node.DEFAULT);
     }
 
     public Optional<NetworkId> findNetworkId(String nodeId, PubKey pubKey) {

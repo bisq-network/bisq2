@@ -135,7 +135,7 @@ public class MultiNodesModel {
         NetworkService networkService = createNetworkService(address, transportType);
         ServiceNode serviceNode = networkService.getServiceNodesByTransport().findServiceNode(transportType).orElseThrow();
         runAsync(() -> {
-            serviceNode.maybeInitializeServer(Node.DEFAULT_NODE_ID, address.getPort());
+            serviceNode.maybeInitializeServer(Node.DEFAULT, address.getPort());
             serviceNode.maybeInitializePeerGroup();
         }, NetworkService.NETWORK_IO_POOL)
                 .whenComplete((r, t) -> {

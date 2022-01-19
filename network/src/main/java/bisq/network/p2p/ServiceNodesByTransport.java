@@ -32,6 +32,7 @@ import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -48,6 +49,7 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
 public class ServiceNodesByTransport {
+    @Getter
     private final Map<Transport.Type, ServiceNode> map = new ConcurrentHashMap<>();
 
     public ServiceNodesByTransport(Transport.Config transportConfig,

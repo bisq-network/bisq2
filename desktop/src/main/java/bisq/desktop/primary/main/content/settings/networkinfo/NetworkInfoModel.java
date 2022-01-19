@@ -24,6 +24,7 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.security.KeyPairService;
+import bisq.user.CookieKey;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -52,7 +53,12 @@ public class NetworkInfoModel extends NavigationModel {
 
     public NetworkInfoModel(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
-
+        NavigationTarget persistedNavigationTarget = NavigationTarget.valueOf(
+                serviceProvider.getUserService().getUserModel().getCookie().get(CookieKey.NAVIGATION_TARGET));
+        if (persistedNavigationTarget.getParent().filter(parent -> parent == NavigationTarget.NETWORK_INFO).isPresent()) {
+            navigationTarget = persistedNavigationTarget;
+        }
+        
         supportedTransportTypes = networkService.getSupportedTransportTypes();
         supportedNavigationTarget = supportedTransportTypes.stream()
                 .map(this::getNavigationTargetFromTransportType)

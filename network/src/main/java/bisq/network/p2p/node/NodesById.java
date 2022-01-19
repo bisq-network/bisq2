@@ -22,8 +22,6 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.services.peergroup.BanList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Map;
@@ -40,12 +38,15 @@ import java.util.stream.Collectors;
  * Provides delegate methods to node with given nodeId
  */
 public class NodesById implements Node.Listener {
-    private static final Logger log = LoggerFactory.getLogger(NodesById.class);
+    public interface Listener {
+        void onNodeAdded(Node node);
+    }
 
     private final Map<String, Node> map = new ConcurrentHashMap<>();
     private final BanList banList;
     private final Node.Config nodeConfig;
-    private final Set<Node.Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Set<Node.Listener> nodeListeners = new CopyOnWriteArraySet<>();
 
     public NodesById(BanList banList, Node.Config nodeConfig) {
         this.banList = banList;
@@ -78,10 +79,18 @@ public class NodesById implements Node.Listener {
     }
 
     public void addNodeListener(Node.Listener listener) {
-        listeners.add(listener);
+        nodeListeners.add(listener);
     }
 
     public void removeNodeListener(Node.Listener listener) {
+        nodeListeners.remove(listener);
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
         listeners.remove(listener);
     }
 
@@ -103,7 +112,7 @@ public class NodesById implements Node.Listener {
     }
 
     public Node getDefaultNode() {
-        return getOrCreateNode(Node.DEFAULT_NODE_ID);
+        return getOrCreateNode(Node.DEFAULT);
     }
 
     public Optional<Address> findMyAddress(String nodeId) {
@@ -132,7 +141,7 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onMessage(Message message, Connection connection, String nodeId) {
-        listeners.forEach(messageListener -> messageListener.onMessage(message, connection, nodeId));
+        nodeListeners.forEach(messageListener -> messageListener.onMessage(message, connection, nodeId));
     }
 
     @Override
@@ -154,6 +163,7 @@ public class NodesById implements Node.Listener {
                     Node node = new Node(banList, nodeConfig, nodeId);
                     map.put(nodeId, node);
                     node.addListener(this);
+                    listeners.forEach(listener -> listener.onNodeAdded(node));
                     return node;
                 });
     }
