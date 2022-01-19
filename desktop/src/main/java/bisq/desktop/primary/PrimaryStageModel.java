@@ -23,7 +23,6 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
 import bisq.user.Cookie;
 import bisq.user.CookieKey;
-import bisq.user.UserService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Parent;
@@ -33,7 +32,6 @@ import java.util.Optional;
 
 @Getter
 public class PrimaryStageModel implements Model {
-    private final UserService userService;
     private final String title;
     private final Optional<Double> stageX;
     private final Optional<Double> stageY;
@@ -47,11 +45,9 @@ public class PrimaryStageModel implements Model {
     private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
     public PrimaryStageModel(DefaultServiceProvider serviceProvider) {
-        userService = serviceProvider.getUserService();
-
         title = serviceProvider.getApplicationOptions().appName();
 
-        Cookie cookie = userService.getUserModel().getCookie();
+        Cookie cookie = serviceProvider.getUserService().getUserModel().getCookie();
         stageX = cookie.getAsOptionalDouble(CookieKey.STAGE_X);
         stageY = cookie.getAsOptionalDouble(CookieKey.STAGE_Y);
         stageWidth = cookie.getAsOptionalDouble(CookieKey.STAGE_W);
@@ -60,25 +56,5 @@ public class PrimaryStageModel implements Model {
 
     public void setView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
         this.view.set(view);
-    }
-
-    public void setStageX(double value) {
-        userService.getUserModel().getCookie().putAsDouble(CookieKey.STAGE_X, value);
-        userService.persist();
-    }
-
-    public void setStageY(double value) {
-        userService.getUserModel().getCookie().putAsDouble(CookieKey.STAGE_Y, value);
-        userService.persist();
-    }
-
-    public void setStageWidth(double value) {
-        userService.getUserModel().getCookie().putAsDouble(CookieKey.STAGE_W, value);
-        userService.persist();
-    }
-
-    public void setStageHeight(double value) {
-        userService.getUserModel().getCookie().putAsDouble(CookieKey.STAGE_H, value);
-        userService.persist();
     }
 }

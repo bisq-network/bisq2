@@ -24,40 +24,54 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.nav.LeftNavController;
 import bisq.desktop.primary.main.top.TopPanelController;
+import bisq.user.CookieKey;
+import bisq.user.UserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
-public class MainController implements Controller {
-    private final DefaultServiceProvider serviceProvider;
+public class MainController implements Controller, Navigation.Listener {
     private final MainModel model = new MainModel();
-    private final ContentController contentController;
-    private final LeftNavController leftNavController;
-    private final TopPanelController topPanelController;
     @Getter
     private final MainView view;
+    private final UserService userService;
 
     public MainController(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
-
-        contentController = new ContentController(serviceProvider);
-        leftNavController = new LeftNavController(serviceProvider);
-        topPanelController = new TopPanelController();
+        userService = serviceProvider.getUserService();
+        ContentController contentController = new ContentController(serviceProvider);
+        LeftNavController leftNavController = new LeftNavController(serviceProvider);
+        TopPanelController topPanelController = new TopPanelController();
 
         view = new MainView(model,
                 this,
                 contentController.getView(),
                 leftNavController.getView(),
                 topPanelController.getView());
+
+        // By using ROOT we listen to all NavigationTargets
+        Navigation.addListener(NavigationTarget.ROOT, this);
     }
 
     public void onViewAttached() {
-        Navigation.navigateTo(NavigationTarget.TRADE_INTENT);
+        String persisted = userService.getUserModel().getCookie().get(CookieKey.NAVIGATION_TARGET);
+        if (persisted != null) {
+            Navigation.navigateTo(NavigationTarget.valueOf(persisted));
+        } else {
+            Navigation.navigateTo(NavigationTarget.TRADE_INTENT);
+        }
     }
 
     public void onViewDetached() {
     }
 
     public void onDomainInitialized() {
+    }
+
+    @Override
+    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+        userService.getUserModel().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
+        userService.persist();
     }
 }

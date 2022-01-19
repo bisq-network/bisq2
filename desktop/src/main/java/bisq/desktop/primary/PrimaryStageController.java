@@ -23,6 +23,8 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.primary.main.MainController;
+import bisq.user.CookieKey;
+import bisq.user.UserService;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,10 +37,11 @@ public class PrimaryStageController implements Controller {
     private final PrimaryStageView view;
     private final MainController mainController;
     private final OverlayController overlayController;
+    private final UserService userService;
 
     public PrimaryStageController(DefaultServiceProvider serviceProvider, JavaFXApplication.Data applicationData) {
         this.serviceProvider = serviceProvider;
-
+        userService = serviceProvider.getUserService();
         Browser.setHostServices(applicationData.hostServices());
 
         model = new PrimaryStageModel(serviceProvider);
@@ -77,18 +80,22 @@ public class PrimaryStageController implements Controller {
     }
 
     public void onStageXChanged(double value) {
-        model.setStageX(value);
+        userService.getUserModel().getCookie().putAsDouble(CookieKey.STAGE_X, value);
+        userService.persist();
     }
 
     public void onStageYChanged(double value) {
-        model.setStageY(value);
+        userService.getUserModel().getCookie().putAsDouble(CookieKey.STAGE_Y, value);
+        userService.persist();
     }
 
     public void onStageWidthChanged(double value) {
-        model.setStageWidth(value);
+        userService.getUserModel().getCookie().putAsDouble(CookieKey.STAGE_W, value);
+        userService.persist();
     }
 
     public void onStageHeightChanged(double value) {
-        model.setStageHeight(value);
+        userService.getUserModel().getCookie().putAsDouble(CookieKey.STAGE_H, value);
+        userService.persist();
     }
 }
