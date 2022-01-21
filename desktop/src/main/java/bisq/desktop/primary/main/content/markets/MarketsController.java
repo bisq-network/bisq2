@@ -18,27 +18,16 @@
 package bisq.desktop.primary.main.content.markets;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
 public class MarketsController implements Controller {
-    public static final Class<? extends Controller> controllerClass  =MarketsController.class;
-
-    private final DefaultServiceProvider serviceProvider;
     private final MarketsModel model;
     @Getter
     private final MarketsView view;
 
     public MarketsController(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
         model = new MarketsModel();
         view = new MarketsView(model, this);
-    }
-
-   
-    void onRefresh() {
-        serviceProvider.getMarketPriceService().request()
-                .whenComplete((marketPriceMap, t) -> UIThread.run(() -> model.setMarketPriceMap(marketPriceMap)));
     }
 }

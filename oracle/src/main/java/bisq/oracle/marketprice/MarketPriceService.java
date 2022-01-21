@@ -20,6 +20,7 @@ package bisq.oracle.marketprice;
 import bisq.common.currency.BisqCurrency;
 import bisq.common.data.Pair;
 import bisq.common.monetary.Quote;
+import bisq.common.monetary.QuoteCodePair;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CollectionUtil;
@@ -29,27 +30,23 @@ import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.node.transport.Transport;
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
-import io.reactivex.subjects.BehaviorSubject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 
 @Slf4j
 public class MarketPriceService {
-
+    public static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("MarketPriceService.pool", 3);
     private static final long REQUEST_INTERVAL_SEC = 180;
-    private Optional<ExecutorService> executor = Optional.empty();
-    private Optional<BaseHttpClient> httpClient = Optional.empty();
 
     public static record Config(Set<Provider> providers) {
     }
@@ -57,117 +54,150 @@ public class MarketPriceService {
     public static record Provider(String url, String operator, Transport.Type transportType) {
     }
 
+    private static class PendingRequestException extends Exception {
+        public PendingRequestException() {
+            super("We have a pending request");
+        }
+    }
+
+    public interface Listener {
+        void onMarketPriceUpdate(Map<QuoteCodePair, MarketPrice> map);
+
+        void onMarketPriceSelected(MarketPrice selected);
+    }
+
     private final List<Provider> providers;
-    private final List<Provider> candidates = new ArrayList<>();
     private final NetworkService networkService;
     private final String userAgent;
-    private Provider provider;
-
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    private final List<Provider> candidates = new ArrayList<>();
+    private Optional<BaseHttpClient> httpClient = Optional.empty();
     @Getter
-    private final Map<String, MarketPrice> marketPriceByCurrencyMap = new HashMap<>();
+    private final Map<QuoteCodePair, MarketPrice> marketPriceByCurrencyMap = new HashMap<>();
     @Getter
-    private final BehaviorSubject<Map<String, MarketPrice>> marketPriceSubject;
+    private Optional<MarketPrice> selectedMarketPrice = Optional.empty();
 
     public MarketPriceService(Config conf, NetworkService networkService, String version) {
         providers = new ArrayList<>(conf.providers);
         checkArgument(!providers.isEmpty(), "providers must not be empty");
         this.networkService = networkService;
-        userAgent = "bisq/" + version;
-
-        marketPriceSubject = BehaviorSubject.create();
+        userAgent = "bisq-v2/" + version;
     }
 
     public CompletableFuture<Boolean> initialize() {
-        executor = Optional.of(ExecutorFactory.newSingleThreadExecutor("MarketPriceRequest"));
-        selectProvider();
-        // We start a request but we do not block until response arrives.
-        request();
-        Scheduler.run(() -> request()
-                        .whenComplete((map, throwable) -> {
-                            if (map.isEmpty() || throwable != null) {
-                                selectProvider();
-                                httpClient.ifPresent(BaseHttpClient::shutdown);
-                                try {
-                                    httpClient = Optional.of(getHttpClient(provider).get());
-                                } catch (InterruptedException | ExecutionException e) {
-                                    e.printStackTrace();
+        getHttpClientAndRequest().whenComplete((r, t) -> {
+            Scheduler.run(() -> request()
+                            .whenComplete((map, throwable) -> {
+                                if (map.isEmpty() || throwable != null) {
+                                    // Get a new provider/httpClient
+                                    getHttpClientAndRequest();
                                 }
-                                request();
-                            }
-                        }))
-                .periodically(REQUEST_INTERVAL_SEC, TimeUnit.SECONDS);
+                            }))
+                    .periodically(REQUEST_INTERVAL_SEC, TimeUnit.SECONDS);
+        });
         return CompletableFuture.completedFuture(true);
     }
 
+    public void select(MarketPrice marketPrice) {
+        selectedMarketPrice = Optional.of(marketPrice);
+        listeners.forEach(listener -> listener.onMarketPriceSelected(marketPrice));
+    }
+
+
     public void shutdown() {
-        executor.ifPresent(ExecutorFactory::shutdownAndAwaitTermination);
         httpClient.ifPresent(BaseHttpClient::shutdown);
     }
 
-    public Optional<MarketPrice> getMarketPrice(String currencyCode) {
-        return Optional.ofNullable(marketPriceByCurrencyMap.get(currencyCode));
+    public Optional<MarketPrice> getMarketPrice(QuoteCodePair quoteCodePair) {
+        return Optional.ofNullable(marketPriceByCurrencyMap.get(quoteCodePair));
     }
 
-    public CompletableFuture<Map<String, MarketPrice>> request() {
-        if (executor.isEmpty()) {
-            return CompletableFuture.completedFuture(new HashMap<>());
-        }
+    public CompletableFuture<Map<QuoteCodePair, MarketPrice>> request() {
         if (httpClient.isEmpty()) {
+            log.warn("No httpClient present");
             return CompletableFuture.completedFuture(new HashMap<>());
         }
-        return request(httpClient.get(), executor.get());
+        return request(httpClient.get());
     }
 
-    private CompletableFuture<Map<String, MarketPrice>> request(BaseHttpClient httpClient, ExecutorService executor) {
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
+
+    private CompletableFuture<Map<QuoteCodePair, MarketPrice>> request(BaseHttpClient httpClient) {
+        if (httpClient.hasPendingRequest()) {
+            return CompletableFuture.failedFuture(new PendingRequestException());
+        }
+
         return CompletableFuture.supplyAsync(() -> {
             try {
-                while (httpClient.hasPendingRequest() && !Thread.interrupted()) {
-                    try {
-                        Thread.sleep(5000);
-                    } catch (InterruptedException ignore) {
-                    }
-                }
                 long ts = System.currentTimeMillis();
                 log.info("Request market price from {}", httpClient.getBaseUrl());
                 String json = httpClient.get("getAllMarketPrices", Optional.of(new Pair<>("User-Agent", userAgent)));
-                LinkedTreeMap<?, ?> map = new Gson().fromJson(json, LinkedTreeMap.class);
-                List<?> list = (ArrayList<?>) map.get("data");
-                list.forEach(obj -> {
-                    try {
-                        LinkedTreeMap<?, ?> treeMap = (LinkedTreeMap<?, ?>) obj;
-                        String currencyCode = (String) treeMap.get("currencyCode");
-                        String dataProvider = (String) treeMap.get("provider"); // Bisq-Aggregate or name of exchange of price feed
-                        double price = (Double) treeMap.get("price");
-                        // json uses double for our timestamp long value...
-                        long timestampSec = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
-
-                        // We only get BTC based prices not fiat-fiat or altcoin-altcoin
-                        boolean isFiat = BisqCurrency.isFiat(currencyCode);
-                        String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
-                        String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
-                        Quote quote = Quote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);
-                        marketPriceByCurrencyMap.put(currencyCode,
-                                new MarketPrice(quote,
-                                        timestampSec * 1000,
-                                        dataProvider));
-                    } catch (Throwable t) {
-                        // We do not fail the whole request if one entry would be invalid
-                        log.warn("Market price conversion failed: {} ", obj);
-                        t.printStackTrace();
-                    }
-                });
+                Map<QuoteCodePair, MarketPrice> map = parseResponse(json);
                 log.info("Market price request from {} resulted in {} items took {} ms",
-                        httpClient.getBaseUrl(), list.size(), System.currentTimeMillis() - ts);
-                marketPriceSubject.onNext(marketPriceByCurrencyMap);
+                        httpClient.getBaseUrl(), map.size(), System.currentTimeMillis() - ts);
+
+                marketPriceByCurrencyMap.clear();
+                marketPriceByCurrencyMap.putAll(map);
+                listeners.forEach(listener -> listener.onMarketPriceUpdate(marketPriceByCurrencyMap));
+                if (selectedMarketPrice.isEmpty()) {
+                    selectedMarketPrice = Optional.of(map.get(QuoteCodePair.getDefault()));
+                    listeners.forEach(listener -> listener.onMarketPriceSelected(selectedMarketPrice.get()));
+                }
                 return marketPriceByCurrencyMap;
             } catch (IOException e) {
                 e.printStackTrace();
-                return new HashMap<>();
+                throw new RuntimeException(e);
             }
-        }, executor);
+        }, POOL);
     }
 
-    private void selectProvider() {
+    private Map<QuoteCodePair, MarketPrice> parseResponse(String json) {
+        Map<QuoteCodePair, MarketPrice> map = new HashMap<>();
+        LinkedTreeMap<?, ?> linkedTreeMap = new Gson().fromJson(json, LinkedTreeMap.class);
+        List<?> list = (ArrayList<?>) linkedTreeMap.get("data");
+        list.forEach(obj -> {
+            try {
+                LinkedTreeMap<?, ?> treeMap = (LinkedTreeMap<?, ?>) obj;
+                String currencyCode = (String) treeMap.get("currencyCode");
+                if (!currencyCode.startsWith("NON_EXISTING_SYMBOL")) {
+                    String dataProvider = (String) treeMap.get("provider"); // Bisq-Aggregate or name of exchange of price feed
+                    double price = (Double) treeMap.get("price");
+                    // json uses double for our timestamp long value...
+                    long timestampSec = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
+
+                    // We only get BTC based prices not fiat-fiat or altcoin-altcoin
+                    boolean isFiat = BisqCurrency.isFiat(currencyCode);
+                    String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
+                    String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
+                    Quote quote = Quote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);
+                    map.put(quote.getQuoteCodePair(), new MarketPrice(quote, currencyCode, timestampSec * 1000, dataProvider));
+                }
+            } catch (Throwable t) {
+                // We do not fail the whole request if one entry would be invalid
+                log.warn("Market price conversion failed: {} ", obj);
+                t.printStackTrace();
+            }
+        });
+        return map;
+    }
+
+    private CompletableFuture<BaseHttpClient> getHttpClientAndRequest() {
+        return findProvider()
+                .map(provider -> getHttpClient(provider)
+                        .whenComplete((httpClient, throwable) -> {
+                            this.httpClient = Optional.of(httpClient);
+                            request();
+                        })
+                ).orElse(CompletableFuture.failedFuture(new IllegalStateException("No provider found")));
+    }
+
+    private Optional<Provider> findProvider() {
         if (candidates.isEmpty()) {
             // First try to use the clear net candidate if clear net is supported
             candidates.addAll(providers.stream()
@@ -180,18 +210,19 @@ public class MarketPriceService {
                         .toList());
             }
         }
-        Provider candidate = CollectionUtil.getRandomElement(candidates);
-        checkNotNull(candidate);
-        candidates.remove(candidate);
-        provider = candidate;
-        try {
-            httpClient = Optional.of(getHttpClient(provider).get());
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+        if (candidates.isEmpty()) {
+            log.warn("No provider is available for the supportedTransportTypes. providers={}, supportedTransportTypes={}",
+                    providers, networkService.getSupportedTransportTypes());
+            return Optional.empty();
         }
+
+        Provider candidate = Objects.requireNonNull(CollectionUtil.getRandomElement(candidates));
+        candidates.remove(candidate);
+        return Optional.of(candidate);
     }
 
     private CompletableFuture<BaseHttpClient> getHttpClient(Provider provider) {
+        httpClient.ifPresent(BaseHttpClient::shutdown);
         return networkService.getHttpClient(provider.url, userAgent, provider.transportType);
     }
 }

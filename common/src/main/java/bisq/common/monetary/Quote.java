@@ -36,7 +36,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * The price or quote is the amount of quote currency one gets for 1 unit of the base currency. E.g. a BTC/USD price
  * of 50 000 BTC/USD means you get 50 000 USD for 1 BTC.
  * <p>
- * For the smallestUnitExponent of the quote we use the smallestUnitExponent of the quote currency.
+ * For the precision of the quote we use the precision of the quote currency.
  */
 @EqualsAndHashCode
 @Getter
@@ -45,17 +45,22 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class Quote implements Comparable<Quote> {
     @Setter
     private static String QUOTE_SEPARATOR = "/";
-    
+
     private final long value;
     private final Monetary baseMonetary;
     private final Monetary quoteMonetary;
-    private final int smallestUnitExponent;
+    private final int precision;
+    // For Fiat market price we show precision 2 but in trade context we show the highest precision (4 for Fiat)  
+    private final int lowPrecision;
+    private final QuoteCodePair quoteCodePair;
 
     private Quote(long value, Monetary baseMonetary, Monetary quoteMonetary) {
         this.value = value;
         this.baseMonetary = baseMonetary;
         this.quoteMonetary = quoteMonetary;
-        this.smallestUnitExponent = quoteMonetary.smallestUnitExponent;
+        this.precision = quoteMonetary.precision;
+        lowPrecision = quoteMonetary.lowPrecision;
+        quoteCodePair = new QuoteCodePair(baseMonetary.getCode(), quoteMonetary.getCode());
     }
 
     /**
@@ -103,7 +108,7 @@ public class Quote implements Comparable<Quote> {
     public static Quote of(Monetary baseMonetary, Monetary quoteMonetary) {
         checkArgument(baseMonetary.value != 0, "baseMonetary.value must not be 0");
         long value = BigDecimal.valueOf(quoteMonetary.value)
-                .movePointRight(baseMonetary.smallestUnitExponent)
+                .movePointRight(baseMonetary.precision)
                 .divide(BigDecimal.valueOf(baseMonetary.value), RoundingMode.HALF_UP)
                 .longValue();
         return new Quote(value, baseMonetary, quoteMonetary);
@@ -141,35 +146,62 @@ public class Quote implements Comparable<Quote> {
      * @return The quote monetary
      */
     public static Monetary toQuoteMonetary(Monetary baseMonetary, Quote quote) {
-        checkArgument(baseMonetary.getClass() == quote.baseMonetary.getClass(),
+        return quote.toQuoteMonetary(baseMonetary);
+    }
+
+    public Monetary toQuoteMonetary(Monetary baseMonetary) {
+        checkArgument(baseMonetary.getClass() == this.baseMonetary.getClass(),
                 "baseMonetary must be the same type as the quote.baseMonetary");
-        Monetary quoteMonetary = quote.quoteMonetary;
-        long value = BigDecimal.valueOf(baseMonetary.value).multiply(BigDecimal.valueOf(quote.value))
-                .movePointLeft(baseMonetary.smallestUnitExponent)
+        long value = BigDecimal.valueOf(baseMonetary.value).multiply(BigDecimal.valueOf(this.value))
+                .movePointLeft(baseMonetary.precision)
                 .longValue();
         if (quoteMonetary instanceof Fiat) {
             return new Fiat(value,
                     quoteMonetary.code,
-                    quoteMonetary.smallestUnitExponent);
+                    quoteMonetary.precision);
         } else {
             return new Coin(value,
                     quoteMonetary.code,
-                    quoteMonetary.smallestUnitExponent);
+                    quoteMonetary.precision);
+        }
+    }
+
+    public Monetary toBaseMonetary(Monetary quoteMonetary) {
+        checkArgument(quoteMonetary.getClass() == this.quoteMonetary.getClass(),
+                "quoteMonetary must be the same type as the quote.quoteMonetary");
+        long value = BigDecimal.valueOf(quoteMonetary.value)
+                .movePointRight(baseMonetary.precision)
+                .divide(BigDecimal.valueOf(this.value), RoundingMode.HALF_UP)
+                .longValue(); // 341280000 / 100000000 = 1
+        log.error("quoteMonetary.value {}", quoteMonetary.value);
+        log.error("this.value {}", this.value);
+        log.error("quoteMonetary.value movePointRight {}", BigDecimal.valueOf(quoteMonetary.value).movePointRight(baseMonetary.precision)
+                .divide(BigDecimal.valueOf(this.value), RoundingMode.HALF_UP)
+                .longValue());
+
+        if (baseMonetary instanceof Fiat) {
+            return new Fiat(value,
+                    baseMonetary.code,
+                    baseMonetary.precision);
+        } else {
+            return new Coin(value,
+                    baseMonetary.code,
+                    baseMonetary.precision);
         }
     }
 
     public double asDouble() {
-        return asDouble(smallestUnitExponent);
+        return asDouble(precision);
     }
 
     public double asDouble(int precision) {
-        return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(smallestUnitExponent).doubleValue(), precision);
+        return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
     }
 
-    public String getQuoteCode() {
-        return baseMonetary.code + QUOTE_SEPARATOR + quoteMonetary.code;
+ /*   public String getQuoteCodePair() {
+        return quoteCodePair.toString();
     }
-
+*/
     @Override
     public int compareTo(Quote other) {
         return Long.compare(value, other.getValue());

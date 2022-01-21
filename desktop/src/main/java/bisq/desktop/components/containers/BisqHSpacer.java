@@ -18,11 +18,12 @@
 package bisq.desktop.components.containers;
 
 
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 
 public class BisqHSpacer extends Region {
-    public BisqHSpacer(int distance) {
-        setMinWidth(distance);
-        setMaxWidth(distance);
+    public BisqHSpacer( ) {
+        HBox.setHgrow(this, Priority.ALWAYS);
     }
 }

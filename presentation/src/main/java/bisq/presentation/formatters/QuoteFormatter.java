@@ -34,19 +34,28 @@ public class QuoteFormatter {
     }
 
     public static String formatWithQuoteCode(Quote quote, Locale locale) {
-        return format(quote, locale) + " " + quote.getQuoteCode();
+        return format(quote, locale) + " " + quote.getQuoteCodePair();
     }
 
     public static String format(Quote quote) {
         return format(quote, LocaleRepository.getDefaultLocale());
     }
 
-    public static String format(Quote quote, Locale locale) {
-        return getDecimalFormat(quote, locale).format(quote.asDouble());
+    public static String format(Quote quote, boolean useLowPrecision) {
+        return format(quote, LocaleRepository.getDefaultLocale(), useLowPrecision);
     }
 
-    private static DecimalFormatters.Format getDecimalFormat(Quote quote, Locale locale) {
-        return DecimalFormatters.getDecimalFormat(locale, quote.getSmallestUnitExponent());
+    public static String format(Quote quote, Locale locale) {
+        return getDecimalFormat(quote, locale, false).format(quote.asDouble());
+    }
+
+    public static String format(Quote quote, Locale locale, boolean useLowPrecision) {
+        return getDecimalFormat(quote, locale, useLowPrecision).format(quote.asDouble());
+    }
+
+    private static DecimalFormatters.Format getDecimalFormat(Quote quote, Locale locale, boolean useLowPrecision) {
+        int exponent = useLowPrecision ? quote.getLowPrecision() : quote.getPrecision();
+        return DecimalFormatters.getDecimalFormat(locale, exponent);
     }
 
 

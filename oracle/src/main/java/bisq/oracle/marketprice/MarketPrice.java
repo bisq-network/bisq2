@@ -19,5 +19,5 @@ package bisq.oracle.marketprice;
 
 import bisq.common.monetary.Quote;
 
-public record MarketPrice(Quote quote, long timestamp, String provider) {
+public record MarketPrice(Quote quote, String code, long timestamp, String provider) {
 }

@@ -26,7 +26,7 @@ import java.util.List;
  * One side of a swap trade (e.g. bid, ask)
  *
  * @param monetary          The monetary value. Can be Fiat or Coin which carries the value, the currency
- *                          code and the smallestUnitExponent
+ *                          code and the precision
  * @param settlementMethods The supported settlementMethods (e.g. if user supports payment in SEPA and
  *                          Revolut). The order in the list can be used as priority.
  */

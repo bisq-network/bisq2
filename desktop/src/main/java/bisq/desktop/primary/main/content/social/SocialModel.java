@@ -21,7 +21,7 @@ import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
 
-// Handled jfx only concerns, others which can be re-used by other frontends are in OfferbookEntity
+
 public class SocialModel extends NavigationModel {
 
     private final DefaultServiceProvider serviceProvider;

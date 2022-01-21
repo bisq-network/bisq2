@@ -33,10 +33,10 @@ public class Coin extends Monetary {
         return parse(string, code, deriveExponent(code));
     }
 
-    public static Coin parse(String string, String code, int smallestUnitExponent) {
-        return Coin.of(new BigDecimal(string).movePointRight(smallestUnitExponent).longValue(),
+    public static Coin parse(String string, String code, int precision) {
+        return Coin.of(new BigDecimal(string).movePointRight(precision).longValue(),
                 code,
-                smallestUnitExponent);
+                precision);
     }
 
     public static Coin parseBtc(String string) {
@@ -51,7 +51,7 @@ public class Coin extends Monetary {
                 12);
     }
 
-    // Unsafe method. We do not know the currency and the smallestUnitExponent, just that it is not a fiat currency.
+    // Unsafe method. We do not know the currency and the precision, just that it is not a fiat currency.
     // We exclude XMR
     public static Coin parse(String string) {
         String[] tokens = string.split(" ");
@@ -91,41 +91,41 @@ public class Coin extends Monetary {
     }
 
 
-    public static Coin of(long value, String code, int smallestUnitExponent) {
-        return new Coin(value, code, smallestUnitExponent);
+    public static Coin of(long value, String code, int precision) {
+        return new Coin(value, code, precision);
     }
 
-    Coin(long value, String code, int smallestUnitExponent) {
+    Coin(long value, String code, int precision) {
         // We add a `c` as prefix for crypto-currencies to avoid that we get a collusion with the code. 
         // It happened in the past that altcoins used a fiat code.
-        super("c-" + code, value, code, smallestUnitExponent);
+        super(code + " [crypto]", value, code, precision, precision);
     }
 
-    private Coin(double value, String code, int smallestUnitExponent) {
-        super("c-" + code, value, code, smallestUnitExponent);
+    private Coin(double value, String code, int precision) {
+        super(code + " [crypto]", value, code, precision, precision);
     }
 
     public Coin add(Coin value) {
         checkArgument(value.code.equals(this.code));
-        return new Coin(LongMath.checkedAdd(this.value, value.value), this.code, this.smallestUnitExponent);
+        return new Coin(LongMath.checkedAdd(this.value, value.value), this.code, this.precision);
     }
 
     public Coin subtract(Coin value) {
         checkArgument(value.code.equals(this.code));
-        return new Coin(LongMath.checkedSubtract(this.value, value.value), this.code, this.smallestUnitExponent);
+        return new Coin(LongMath.checkedSubtract(this.value, value.value), this.code, this.precision);
     }
 
     public Coin multiply(long factor) {
-        return new Coin(LongMath.checkedMultiply(this.value, factor), this.code, this.smallestUnitExponent);
+        return new Coin(LongMath.checkedMultiply(this.value, factor), this.code, this.precision);
     }
 
     public Coin divide(long divisor) {
-        return new Coin(this.value / divisor, this.code, this.smallestUnitExponent);
+        return new Coin(this.value / divisor, this.code, this.precision);
     }
 
     @Override
     public double toDouble(long value) {
-        return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(smallestUnitExponent).doubleValue(), smallestUnitExponent);
+        return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
     }
 
     private static int deriveExponent(String code) {
