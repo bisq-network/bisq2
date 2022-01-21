@@ -19,23 +19,14 @@ package bisq.desktop.primary.main.content.markets;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqLabel;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 
 public class MarketsView extends View<HBox, MarketsModel, MarketsController> {
-    private final Label label;
-    private final Button button;
-
     public MarketsView(MarketsModel model, MarketsController controller) {
         super(new HBox(), model, controller);
 
         root.setSpacing(20);
-        label = new BisqLabel();
-        button = new Button("Update price");
-        root.getChildren().addAll(label, button);
+        root.getChildren().addAll(new BisqLabel(this.getClass().getSimpleName()));
 
-        label.textProperty().bind(model.formattedMarketPrice);
-        button.setOnAction(e -> controller.onRefresh());
     }
 }

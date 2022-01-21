@@ -19,7 +19,6 @@ package bisq.presentation.offer;
 
 
 import bisq.offer.OfferService;
-import bisq.offer.SwapOffer;
 import bisq.oracle.marketprice.MarketPriceService;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
@@ -28,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class OfferPresentationService {
@@ -55,9 +53,9 @@ public class OfferPresentationService {
     public CompletableFuture<Boolean> initialize() {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         //todo
-        offerEntities.addAll(offerService.getOffers().stream()
+      /*  offerEntities.addAll(offerService.getOffers().stream()
                 .map(offer -> new OfferPresentation((SwapOffer) offer, marketPriceService.getMarketPriceSubject()))
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList()));*/
         future.complete(true);
         return future;
     }
@@ -72,13 +70,14 @@ public class OfferPresentationService {
                         offerEntityRemovedSubject.onNext(offerEntity);
                     });
         });
-        oferRemovedDisposable = offerService.getOfferRemovedSubject().subscribe(offer -> {
+        //todo
+     /*   oferRemovedDisposable = offerService.getOfferRemovedSubject().subscribe(offer -> {
             if (offer instanceof SwapOffer) {
                 OfferPresentation offerEntity = new OfferPresentation((SwapOffer) offer, marketPriceService.getMarketPriceSubject());
                 offerEntities.add(offerEntity);
                 offerEntityAddedSubject.onNext(offerEntity);
             }
-        });
+        });*/
 
     /*    offerEntities.addAll(offerRepository.getOffers().stream()
                 .map(offer -> new OfferEntity((Offer) offer, networkService.getMarketPriceSubject()))

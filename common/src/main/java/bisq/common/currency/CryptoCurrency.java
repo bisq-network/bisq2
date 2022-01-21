@@ -22,11 +22,10 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
-@ToString
+@ToString(callSuper = true)
 public final class CryptoCurrency extends BisqCurrency {
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "✦ ";
-
 
     public CryptoCurrency(String code, String name) {
         super(code, name);
@@ -37,4 +36,7 @@ public final class CryptoCurrency extends BisqCurrency {
         return PREFIX;
     }
 
+    public boolean isFiat() {
+        return false;
+    }
 }

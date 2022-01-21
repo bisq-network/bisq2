@@ -54,9 +54,9 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
         root.setSpacing(5);
         root.setPadding(new Insets(0, 20, 20, 20));
 
-        NavigationButton markets = createNavigationButton(Res.common.get("markets"), NavigationTarget.MARKETS);
+        NavigationButton swap = createNavigationButton(Res.common.get("swap"), NavigationTarget.SWAP);
         NavigationButton social = createNavigationButton(Res.common.get("social"), NavigationTarget.SOCIAL);
-        NavigationButton offerBook = createNavigationButton(Res.common.get("offerbook"), NavigationTarget.OFFERBOOK);
+        NavigationButton markets = createNavigationButton(Res.common.get("markets"), NavigationTarget.MARKETS);
         NavigationButton portfolio = createNavigationButton(Res.common.get("portfolio"), NavigationTarget.PORTFOLIO);
         NavigationButton wallet = createNavigationButton(Res.common.get("wallet"), NavigationTarget.WALLET);
         NavigationButton settings = createNavigationButton(Res.common.get("settings"), NavigationTarget.SETTINGS);
@@ -65,7 +65,7 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
         VBox.setVgrow(spacer, Priority.ALWAYS);
         networkInfoBox = new NetworkInfoBox(model, () -> controller.select(NavigationTarget.NETWORK_INFO));
         model.addNavigationTarget(NavigationTarget.NETWORK_INFO);
-        root.getChildren().addAll(markets, social, offerBook, portfolio, wallet, settings, spacer, networkInfoBox);
+        root.getChildren().addAll(swap, social, markets, portfolio, wallet, settings, spacer, networkInfoBox);
 
         navigationTargetChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {

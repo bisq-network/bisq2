@@ -42,7 +42,7 @@ public class MainController implements Controller, Navigation.Listener {
         userService = serviceProvider.getUserService();
         ContentController contentController = new ContentController(serviceProvider);
         LeftNavController leftNavController = new LeftNavController(serviceProvider);
-        TopPanelController topPanelController = new TopPanelController();
+        TopPanelController topPanelController = new TopPanelController(serviceProvider);
 
         view = new MainView(model,
                 this,

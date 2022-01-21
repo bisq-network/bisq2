@@ -17,4 +17,14 @@ public class BisqTextField extends JFXTextField {
     protected Skin<?> createDefaultSkin() {
         return new JFXTextFieldSkinBisqStyle<>(this, 0);
     }
+
+    public void hide() {
+        setVisible(false);
+        setManaged(false);
+    }
+
+    public void show() {
+        setVisible(true);
+        setManaged(true);
+    }
 }

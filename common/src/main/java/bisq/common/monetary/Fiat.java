@@ -35,10 +35,10 @@ public class Fiat extends Monetary {
                 4);
     }
 
-    public static Fiat parse(String string, String code, int smallestUnitExponent) {
-        return Fiat.of(new BigDecimal(string).movePointRight(smallestUnitExponent).longValue(),
+    public static Fiat parse(String string, String code, int precision) {
+        return Fiat.of(new BigDecimal(string).movePointRight(precision).longValue(),
                 code,
-                smallestUnitExponent);
+                precision);
     }
 
     public static Fiat parse(String string) {
@@ -60,39 +60,40 @@ public class Fiat extends Monetary {
         return new Fiat(value, code, 4);
     }
 
-    public static Fiat of(long value, String code, int smallestUnitExponent) {
-        return new Fiat(value, code, smallestUnitExponent);
+    public static Fiat of(long value, String code, int precision) {
+        return new Fiat(value, code, precision);
     }
 
-    Fiat(long value, String code, int smallestUnitExponent) {
-        super(code, value, code, smallestUnitExponent);
+    Fiat(long value, String code, int precision) {
+        // For Fiat market price we show precision 2 but in trade context we show the highest precision (4 for Fiat)  
+        super(code, value, code, precision, 2);
     }
 
-    private Fiat(double value, String code, int smallestUnitExponent) {
-        super(code, value, code, smallestUnitExponent);
+    private Fiat(double value, String code, int precision) {
+        super(code, value, code, precision, 2);
     }
 
     public Fiat add(Fiat value) {
         checkArgument(value.code.equals(this.code));
-        return new Fiat(LongMath.checkedAdd(this.value, value.value), this.code, this.smallestUnitExponent);
+        return new Fiat(LongMath.checkedAdd(this.value, value.value), this.code, this.precision);
     }
 
     public Fiat subtract(Fiat value) {
         checkArgument(value.code.equals(this.code));
-        return new Fiat(LongMath.checkedSubtract(this.value, value.value), this.code, this.smallestUnitExponent);
+        return new Fiat(LongMath.checkedSubtract(this.value, value.value), this.code, this.precision);
     }
 
     public Fiat multiply(long factor) {
-        return new Fiat(LongMath.checkedMultiply(this.value, factor), this.code, this.smallestUnitExponent);
+        return new Fiat(LongMath.checkedMultiply(this.value, factor), this.code, this.precision);
     }
 
     public Fiat divide(long divisor) {
-        return new Fiat(this.value / divisor, this.code, this.smallestUnitExponent);
+        return new Fiat(this.value / divisor, this.code, this.precision);
     }
 
     @Override
     public double toDouble(long value) {
-        return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(smallestUnitExponent).doubleValue(), smallestUnitExponent);
+        return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
     }
 
     @Override

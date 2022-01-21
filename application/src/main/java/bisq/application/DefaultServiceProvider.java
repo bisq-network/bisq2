@@ -31,6 +31,7 @@ import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
 import bisq.persistence.PersistenceService;
 import bisq.presentation.offer.OfferPresentationService;
+import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.social.chat.ChatService;
 import bisq.user.UserService;
@@ -66,6 +67,7 @@ public class DefaultServiceProvider extends ServiceProvider {
     private final PersistenceService persistenceService;
     private final UserService userService;
     private final ChatService chatService;
+    private final ProtocolService protocolService;
 
     public DefaultServiceProvider(ApplicationOptions applicationOptions, String[] args) {
         super("Bisq");
@@ -100,6 +102,8 @@ public class DefaultServiceProvider extends ServiceProvider {
         MarketPriceService.Config marketPriceServiceConf = MarketPriceServiceConfigFactory.getConfig();
         marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, Version.VERSION);
         offerPresentationService = new OfferPresentationService(offerService, marketPriceService);
+
+        protocolService= new ProtocolService();
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {

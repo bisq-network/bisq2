@@ -38,6 +38,11 @@ public class BisqLabel extends Label {
         return new BisqLabelSkin(this);
     }
 
+    public void setFixWidth(int value) {
+        setMinWidth(value);
+        setMaxWidth(value);
+    }
+
     private static class BisqLabelSkin extends LabelSkin {
 
         public BisqLabelSkin(Label label) {

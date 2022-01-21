@@ -64,10 +64,10 @@ public class MonetaryTest {
         Quote quote = Quote.of(btc, usd);
         assertEquals(500000000, quote.getValue());
         assertEquals(50000.0, quote.asDouble());
-        assertEquals(4, quote.getSmallestUnitExponent());
+        assertEquals(4, quote.getPrecision());
         assertEquals("USD", quote.getQuoteMonetary().code);
         assertEquals("BTC", quote.getBaseMonetary().getCode());
-        assertEquals("BTC/USD", quote.getQuoteCode());
+        assertEquals("BTC/USD", quote.getQuoteCodePair().toString());
 
         usd = Fiat.of(50000.1249d, "USD");
         quote = Quote.of(btc, usd);
@@ -90,20 +90,20 @@ public class MonetaryTest {
         quote = Quote.of(xmr, btc);
         assertEquals(666667, quote.getValue());
         assertEquals(0.00666667, quote.asDouble());
-        assertEquals(8, quote.getSmallestUnitExponent());
+        assertEquals(8, quote.getPrecision());
         assertEquals("BTC", quote.getQuoteMonetary().code);
         assertEquals("XMR", quote.getBaseMonetary().getCode());
-        assertEquals("XMR/BTC", quote.getQuoteCode());
+        assertEquals("XMR/BTC", quote.getQuoteCodePair());
 
         xmr = Coin.asXmr(1d);
         btc = Coin.asBtc(0.00666667);
         quote = Quote.of(xmr, btc);
         assertEquals(666667, quote.getValue());
         assertEquals(0.00666667, quote.asDouble());
-        assertEquals(8, quote.getSmallestUnitExponent());
+        assertEquals(8, quote.getPrecision());
         assertEquals("BTC", quote.getQuoteMonetary().code);
         assertEquals("XMR", quote.getBaseMonetary().getCode());
-        assertEquals("XMR/BTC", quote.getQuoteCode());
+        assertEquals("XMR/BTC", quote.getQuoteCodePair());
 
         // XMR/ETH
         xmr = Coin.asXmr(1d);     // 250
@@ -111,10 +111,10 @@ public class MonetaryTest {
         quote = Quote.of(xmr, eth);
         assertEquals(10000000, quote.getValue());
         assertEquals(0.1, quote.asDouble());
-        assertEquals(8, quote.getSmallestUnitExponent());
+        assertEquals(8, quote.getPrecision());
         assertEquals("ETH", quote.getQuoteMonetary().code);
         assertEquals("XMR", quote.getBaseMonetary().getCode());
-        assertEquals("XMR/ETH", quote.getQuoteCode());
+        assertEquals("XMR/ETH", quote.getQuoteCodePair());
 
         // ETH/XMR
         eth = Coin.of(1d, "ETH"); //2500
@@ -122,10 +122,10 @@ public class MonetaryTest {
         quote = Quote.of(eth, xmr);
         assertEquals(10000000000000L, quote.getValue());
         assertEquals(10, quote.asDouble());
-        assertEquals(12, quote.getSmallestUnitExponent());
+        assertEquals(12, quote.getPrecision());
         assertEquals("XMR", quote.getQuoteMonetary().code);
         assertEquals("ETH", quote.getBaseMonetary().getCode());
-        assertEquals("ETH/XMR", quote.getQuoteCode());
+        assertEquals("ETH/XMR", quote.getQuoteCodePair());
 
         // USD/EUR
         usd = Fiat.of(1d, "USD");
@@ -133,10 +133,10 @@ public class MonetaryTest {
         quote = Quote.of(usd, eur);
         assertEquals(8000, quote.getValue());
         assertEquals(0.8, quote.asDouble());
-        assertEquals(4, quote.getSmallestUnitExponent());
+        assertEquals(4, quote.getPrecision());
         assertEquals("EUR", quote.getQuoteMonetary().code);
         assertEquals("USD", quote.getBaseMonetary().getCode());
-        assertEquals("USD/EUR", quote.getQuoteCode());
+        assertEquals("USD/EUR", quote.getQuoteCodePair());
 
         // EUR/USD
         eur = Fiat.of(1d, "EUR");
@@ -144,10 +144,10 @@ public class MonetaryTest {
         quote = Quote.of(eur, usd);
         assertEquals(12000, quote.getValue());
         assertEquals(1.2, quote.asDouble());
-        assertEquals(4, quote.getSmallestUnitExponent());
+        assertEquals(4, quote.getPrecision());
         assertEquals("USD", quote.getQuoteMonetary().code);
         assertEquals("EUR", quote.getBaseMonetary().getCode());
-        assertEquals("EUR/USD", quote.getQuoteCode());
+        assertEquals("EUR/USD", quote.getQuoteCodePair());
 
         // large numbers just below overflow
         xmr = Coin.asXmr(1500000d);

@@ -19,14 +19,13 @@ package bisq.desktop.primary.main.top;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.BisqHSpacer;
 import javafx.geometry.Insets;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
 
 public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> {
-    public TopPanelView(TopPanelModel model, TopPanelController controller) {
+    public TopPanelView(TopPanelModel model, TopPanelController controller, MarketPriceBox.MarketPriceView marketPriceView) {
         super(new HBox(), model, controller);
 
         root.setMinHeight(53);
@@ -35,8 +34,6 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
 
         ImageView logo = ImageUtil.getImageViewById("logo-small");
 
-        Pane spacer = new Pane();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        root.getChildren().addAll(logo, spacer);
+        root.getChildren().addAll(logo, new BisqHSpacer(), marketPriceView.getRoot());
     }
 }

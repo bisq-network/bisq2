@@ -30,19 +30,19 @@ import java.math.BigDecimal;
 @ToString
 @Slf4j
 public abstract class Monetary implements Comparable<Monetary> {
-    public static long doubleValueToLong(double value, int smallestUnitExponent) {
-        double max = BigDecimal.valueOf(Long.MAX_VALUE).movePointLeft(smallestUnitExponent).doubleValue();
+    public static long doubleValueToLong(double value, int precision) {
+        double max = BigDecimal.valueOf(Long.MAX_VALUE).movePointLeft(precision).doubleValue();
         if (value > max) {
             throw new ArithmeticException("Provided value would lead to an overflow");
         }
-        return BigDecimal.valueOf(value).movePointRight(smallestUnitExponent).longValue();
+        return BigDecimal.valueOf(value).movePointRight(precision).longValue();
     }
 
     public static Monetary from(Monetary monetary, long newValue) {
         if (monetary instanceof Fiat) {
-            return Fiat.of(newValue, monetary.getCode(), monetary.getSmallestUnitExponent());
+            return Fiat.of(newValue, monetary.getCode(), monetary.getPrecision());
         } else {
-            return Coin.of(newValue, monetary.getCode(), monetary.getSmallestUnitExponent());
+            return Coin.of(newValue, monetary.getCode(), monetary.getPrecision());
         }
     }
 
@@ -60,17 +60,19 @@ public abstract class Monetary implements Comparable<Monetary> {
     protected final String id;
     protected final long value;
     protected final String code;
-    protected final int smallestUnitExponent;
+    protected final int precision;
+    protected final int lowPrecision;
 
-    protected Monetary(String id, long value, String code, int smallestUnitExponent) {
+    protected Monetary(String id, long value, String code, int precision, int lowPrecision) {
         this.id = id;
         this.value = value;
         this.code = code;
-        this.smallestUnitExponent = smallestUnitExponent;
+        this.precision = precision;
+        this.lowPrecision = lowPrecision;
     }
 
-    protected Monetary(String id, double value, String code, int smallestUnitExponent) {
-        this(id, doubleValueToLong(value, smallestUnitExponent), code, smallestUnitExponent);
+    protected Monetary(String id, double value, String code, int precision, int lowPrecision) {
+        this(id, doubleValueToLong(value, precision), code, precision, lowPrecision);
     }
 
     abstract public double toDouble(long value);

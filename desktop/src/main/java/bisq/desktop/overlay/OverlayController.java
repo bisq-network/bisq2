@@ -22,8 +22,6 @@ import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.overlay.window.PopupWindowController;
-import bisq.desktop.primary.main.content.createoffer.CreateOfferController;
-import bisq.desktop.primary.main.content.offerbook.details.OfferDetailsController;
 import javafx.scene.Scene;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -56,12 +54,6 @@ public class OverlayController extends NavigationController {
         switch (navigationTarget) {
             case POPUP_WINDOW -> {
                 return Optional.of(new PopupWindowController(serviceProvider));
-            }
-            case CREATE_OFFER -> {
-                return Optional.of(new CreateOfferController(serviceProvider));
-            }
-            case OFFER_DETAILS -> {
-                return Optional.of(new OfferDetailsController());
             }
             default -> {
                 return Optional.empty();

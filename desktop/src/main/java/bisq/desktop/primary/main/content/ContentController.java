@@ -22,10 +22,10 @@ import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.primary.main.content.markets.MarketsController;
-import bisq.desktop.primary.main.content.offerbook.OfferbookController;
 import bisq.desktop.primary.main.content.portfolio.PortfolioController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
 import bisq.desktop.primary.main.content.social.SocialController;
+import bisq.desktop.primary.main.content.swap.SwapController;
 import bisq.desktop.primary.main.content.wallet.WalletController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -63,8 +63,8 @@ public class ContentController extends NavigationController {
             case WALLET -> {
                 return Optional.of(new WalletController(serviceProvider));
             }
-            case OFFERBOOK -> {
-                return Optional.of(new OfferbookController(serviceProvider));
+            case SWAP -> {
+                return Optional.of(new SwapController(serviceProvider));
             }
             case MARKETS -> {
                 return Optional.of(new MarketsController(serviceProvider));

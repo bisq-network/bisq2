@@ -79,8 +79,8 @@ public class QuoteTest {
 
         Quote quote = Quote.fromMarketPriceOffset(marketQuote, 0);
         assertEquals(500000000, quote.getValue());
-        assertEquals(4, quote.getSmallestUnitExponent());
-        assertEquals("BTC/USD", quote.getQuoteCode());
+        assertEquals(4, quote.getPrecision());
+        assertEquals("BTC/USD", quote.getQuoteCodePair().toString());
 
         quote = Quote.fromMarketPriceOffset(marketQuote, 1);
         assertEquals(1000000000, quote.getValue());

@@ -18,18 +18,6 @@
 package bisq.desktop.primary.main.content.markets;
 
 import bisq.desktop.common.view.Model;
-import bisq.oracle.marketprice.MarketPrice;
-import bisq.presentation.formatters.QuoteFormatter;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-
-import java.util.Map;
 
 public class MarketsModel implements Model {
-    final StringProperty formattedMarketPrice = new SimpleStringProperty("N/A");
-    final StringProperty selectedCurrencyCode = new SimpleStringProperty("USD");
-
-    public void setMarketPriceMap(Map<String, MarketPrice> marketPriceMap) {
-        formattedMarketPrice.set(QuoteFormatter.format(marketPriceMap.get(selectedCurrencyCode.get()).quote()));
-    }
 }

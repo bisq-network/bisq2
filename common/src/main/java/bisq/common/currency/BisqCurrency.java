@@ -30,7 +30,7 @@ public abstract class BisqCurrency implements Comparable<BisqCurrency> {
     protected final String name;
 
     public static boolean isFiat(String code) {
-        return FiatCurrencyRepository.getFiatCurrencyByCode().containsKey(code);
+        return FiatCurrencyRepository.getCurrencyByCode().containsKey(code);
     }
 
     /**
@@ -62,4 +62,6 @@ public abstract class BisqCurrency implements Comparable<BisqCurrency> {
     public int compareTo(BisqCurrency other) {
         return this.name.compareTo(other.name);
     }
+
+    public abstract boolean isFiat();
 }

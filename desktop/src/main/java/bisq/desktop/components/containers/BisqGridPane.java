@@ -34,8 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BisqGridPane extends GridPane {
     public BisqGridPane() {
-        setVgap(10);
-        setHgap(10);
+        setVgap(5);
+        setHgap(5);
 
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setMinWidth(150);

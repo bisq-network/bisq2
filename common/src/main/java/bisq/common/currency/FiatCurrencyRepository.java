@@ -19,18 +19,24 @@ package bisq.common.currency;
 
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LocaleRepository;
+import lombok.Getter;
 
-import java.util.Currency;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class FiatCurrencyRepository {
-    private static Map<String, FiatCurrency> fiatCurrencyByCode;
+    private static Map<String, FiatCurrency> currencyByCode;
+    @Getter
+    private static List<FiatCurrency> allCurrencies;
+    @Getter
+    private static List<FiatCurrency> majorCurrencies;
+    @Getter
+    private static List<FiatCurrency> minorCurrencies;
+    @Getter
+    private static FiatCurrency defaultCurrency;
 
     static {
         applyLocale(LocaleRepository.getDefaultLocale());
@@ -38,13 +44,33 @@ public class FiatCurrencyRepository {
 
     // Need to be called at application setup with user locale
     public static void applyLocale(Locale locale) {
-        fiatCurrencyByCode = CountryRepository.COUNTRIES.stream()
-                .map(country -> getFiatCurrencyByCountryCode(country.code(), locale))
+        currencyByCode = CountryRepository.COUNTRIES.stream()
+                .map(country -> getCurrencyByCountryCode(country.code(), locale))
                 .distinct()
                 .collect(Collectors.toMap(FiatCurrency::getCode, Function.identity(), (x, y) -> x, HashMap::new));
+
+        defaultCurrency = getCurrencyByCountryCode(locale.getCountry(), locale);
+        majorCurrencies = initMajorCurrencies(LocaleRepository.getDefaultLocale());
+        minorCurrencies = new ArrayList<>(currencyByCode.values());
+        minorCurrencies.remove(defaultCurrency);
+        minorCurrencies.removeAll(majorCurrencies);
+        minorCurrencies.sort(Comparator.comparing(BisqCurrency::getNameAndCode));
+        allCurrencies = new ArrayList<>();
+        allCurrencies.add(defaultCurrency);
+        allCurrencies.addAll(majorCurrencies);
+        allCurrencies.addAll(minorCurrencies);
     }
 
-    public static FiatCurrency getFiatCurrencyByCountryCode(String countryCode, Locale locale) {
+    private static List<FiatCurrency> initMajorCurrencies(Locale locale) {
+        List<String> mainCodes = new ArrayList<>(List.of("USD", "EUR", "GBP", "CAD", "AUD", "RUB", "INR", "NGN"));
+        mainCodes.add(0, defaultCurrency.code);
+        return mainCodes.stream()
+                .map(code -> currencyByCode.get(code))
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    public static FiatCurrency getCurrencyByCountryCode(String countryCode, Locale locale) {
         if (countryCode.equals("XK")) {
             return new FiatCurrency("EUR", locale);
         }
@@ -53,8 +79,8 @@ public class FiatCurrencyRepository {
         return new FiatCurrency(currency.getCurrencyCode(), locale);
     }
 
-    public static Map<String, FiatCurrency> getFiatCurrencyByCode() {
-        checkNotNull(fiatCurrencyByCode, "applyLocale need to be called before accessing getFiatCurrencyByCode");
-        return fiatCurrencyByCode;
+    public static Map<String, FiatCurrency> getCurrencyByCode() {
+        checkNotNull(currencyByCode, "applyLocale need to be called before accessing getFiatCurrencyByCode");
+        return currencyByCode;
     }
 }

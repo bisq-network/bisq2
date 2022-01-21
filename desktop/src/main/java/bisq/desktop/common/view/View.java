@@ -42,7 +42,7 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
         sceneChangeListener = (ov, oldValue, newScene) -> {
             if (oldValue == null && newScene != null) {
                 if (newScene.getWindow() != null) {
-                    onViewAttached(); // activate view first as we usually set the bindings here
+                    onViewAttached();
                     controller.onViewAttached();
                     model.onViewAttached();
                     //  UIThread.run(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
@@ -50,10 +50,10 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
                     // For overlays, we need to wait until window is available
                     windowChangeListener = (observable, oldValue1, newWindow) -> {
                         checkNotNull(newWindow, "Window must not be null");
-                        onViewAttached();
+                        onViewAttached();   // We invert the order at deactivate as we want to remove listeners in view first
                         controller.onViewAttached();
                         model.onViewAttached();
-                       // UIThread.run(() -> newScene.windowProperty().removeListener(View.this.windowChangeListener));
+                        // UIThread.run(() -> newScene.windowProperty().removeListener(View.this.windowChangeListener));
                     };
                     newScene.windowProperty().addListener(windowChangeListener);
                 }
@@ -72,7 +72,6 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
 
     protected void onViewAttached() {
     }
-
     protected void onViewDetached() {
     }
 }
