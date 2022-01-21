@@ -26,6 +26,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.common.monetary.QuoteCodePair;
 import bisq.desktop.common.view.Model;
+import bisq.offer.protocol.SwapProtocolType;
 import bisq.oracle.marketprice.MarketPriceService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -40,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class CreateOfferModel implements Model {
     private final MarketPriceService marketPriceService;
+    ;
     private ObservableList<BisqCurrency> currencies = FXCollections.observableArrayList();
 
     private ObjectProperty<Monetary> ask = new SimpleObjectProperty<>();
@@ -51,7 +53,10 @@ public class CreateOfferModel implements Model {
     private final ObjectProperty<QuoteCodePair> quoteCodePair = new SimpleObjectProperty<>();
     private final StringProperty baseCurrencyCode = new SimpleStringProperty();
     private final StringProperty quoteCurrencyCode = new SimpleStringProperty();
-    
+
+    private final ObservableList<SwapProtocolType> protocols = FXCollections.observableArrayList();
+    private final ObjectProperty<SwapProtocolType> selectedProtocol = new SimpleObjectProperty<>();
+
     public CreateOfferModel(DefaultServiceProvider serviceProvider) {
         marketPriceService = serviceProvider.getMarketPriceService();
     }
@@ -62,8 +67,8 @@ public class CreateOfferModel implements Model {
         selectedAskCurrency.set(CryptoCurrencyRepository.getDefaultCurrency());
         selectedBidCurrency.set(FiatCurrencyRepository.getDefaultCurrency());
 
-      /*  selectedBidCurrency.set(CryptoCurrencyRepository.getDefaultCurrency());
-        selectedAskCurrency.set(FiatCurrencyRepository.getDefaultCurrency());*/
+        protocols.setAll(SwapProtocolType.values());
+        selectedProtocol.set(SwapProtocolType.REPUTATION);
     }
 
     public void onViewDetached() {

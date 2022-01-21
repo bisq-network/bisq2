@@ -19,12 +19,10 @@ package bisq.desktop.primary.main.content.swap.create;
 
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -37,17 +35,18 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
 
     public CreateOfferView(CreateOfferModel model,
                            CreateOfferController controller,
-                           MonetaryInput.MonetaryView amount,
-                           MonetaryInput.MonetaryView volume,
-                           PriceInput.PriceView price) {
+                           MonetaryInput.MonetaryView ask,
+                           MonetaryInput.MonetaryView bid,
+                           PriceInput.PriceView price,
+                           ProtocolSelection.ProtocolSelectionView protocolSelectionView) {
         super(new VBox(), model, controller);
 
         //root.getStyleClass().add("content-pane");
         root.setPadding(new Insets(20, 20, 20, 0));
 
-        Label headline = new BisqLabel("Select currencies, set amount and price");
-        headline.getStyleClass().add("titled-group-bg-label-active");
-
+        Label amountHeadline = new BisqLabel("Select currencies, set amount and price");
+        amountHeadline.getStyleClass().add("titled-group-bg-label-active");
+        
         Label xLabel = new Label();
         Text xIcon = Icons.getIconForLabel(MaterialDesignIcon.CLOSE, "2em", xLabel);
         xIcon.getStyleClass().add("opaque-icon");
@@ -61,36 +60,19 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         HBox firstRowHBox = new HBox();
         firstRowHBox.setSpacing(5);
         firstRowHBox.setAlignment(Pos.CENTER_LEFT);
-        firstRowHBox.getChildren().addAll(amount.getRoot(), xLabel, price.getRoot(), resultLabel, volume.getRoot());
-        VBox.setMargin(firstRowHBox, new Insets(10, 0, 10, 0));
+        firstRowHBox.getChildren().addAll(ask.getRoot(), xLabel, price.getRoot(), resultLabel, bid.getRoot());
+        VBox.setMargin(firstRowHBox, new Insets(0, 0, 30, 0));
 
 
-        Button button = new BisqButton("Continue");
+      /*  Button button = new BisqButton("Continue");
         //button.setPadding(new Insets(0, 0, 50, 0));
         button.setOnAction(e -> {
-        });
-        root.getChildren().addAll(headline, firstRowHBox, button);
+        });*/
+        Label protocolSelectionHeadline = new BisqLabel("Select trade protocol");
+        protocolSelectionHeadline.getStyleClass().add("titled-group-bg-label-active");
+        
+        VBox protocolSelectionViewRoot = protocolSelectionView.getRoot();
+        
+       root.getChildren().addAll(amountHeadline, firstRowHBox, protocolSelectionHeadline, protocolSelectionViewRoot);
     }
-
-  /*  @Override
-    public void onViewAttached() {
-        amount.onViewAttached();
-        amount.getModel().getMonetary().bindBidirectional(model.getAmount());
-        amount.getModel().getSelectedCode().bindBidirectional(model.getSelectedAmountCurrency());
-
-        volume.onViewAttached();
-        volume.getModel().getMonetary().bindBidirectional(model.getVolume());
-        volume.getModel().getSelectedCode().bindBidirectional(model.getSelectedVolumeCurrency());
-    }
-
-    @Override
-    protected void onViewDetached() {
-        amount.onViewDetached();
-        amount.getModel().getMonetary().unbindBidirectional(model.getAmount());
-        amount.getModel().getSelectedCode().unbindBidirectional(model.getSelectedAmountCurrency());
-
-        volume.onViewDetached();
-        volume.getModel().getMonetary().unbindBidirectional(model.getVolume());
-        volume.getModel().getSelectedCode().unbindBidirectional(model.getSelectedVolumeCurrency());
-    }*/
 }

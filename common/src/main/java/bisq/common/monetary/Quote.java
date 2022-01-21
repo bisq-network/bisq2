@@ -172,13 +172,7 @@ public class Quote implements Comparable<Quote> {
         long value = BigDecimal.valueOf(quoteMonetary.value)
                 .movePointRight(baseMonetary.precision)
                 .divide(BigDecimal.valueOf(this.value), RoundingMode.HALF_UP)
-                .longValue(); // 341280000 / 100000000 = 1
-        log.error("quoteMonetary.value {}", quoteMonetary.value);
-        log.error("this.value {}", this.value);
-        log.error("quoteMonetary.value movePointRight {}", BigDecimal.valueOf(quoteMonetary.value).movePointRight(baseMonetary.precision)
-                .divide(BigDecimal.valueOf(this.value), RoundingMode.HALF_UP)
-                .longValue());
-
+                .longValue();
         if (baseMonetary instanceof Fiat) {
             return new Fiat(value,
                     baseMonetary.code,
@@ -198,10 +192,6 @@ public class Quote implements Comparable<Quote> {
         return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
     }
 
- /*   public String getQuoteCodePair() {
-        return quoteCodePair.toString();
-    }
-*/
     @Override
     public int compareTo(Quote other) {
         return Long.compare(value, other.getValue());

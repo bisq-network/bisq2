@@ -25,9 +25,11 @@ import bisq.common.monetary.QuoteCodePair;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
+import bisq.offer.protocol.SwapProtocolType;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,22 +50,24 @@ public class CreateOfferController implements Controller, MarketPriceService.Lis
         marketPriceService = serviceProvider.getMarketPriceService();
         model = new CreateOfferModel(serviceProvider);
 
-        MonetaryInput.MonetaryController ask = new MonetaryInput.MonetaryController(model.getCurrencies(),
+        var ask = new MonetaryInput.MonetaryController(model.getCurrencies(),
                 model.getAsk(),
                 model.getSelectedAskCurrency(),
                 Res.offerbook.get("createOffer.ask.description"),
                 Res.offerbook.get("createOffer.ask.prompt"));
-        MonetaryInput.MonetaryController bid = new MonetaryInput.MonetaryController(model.getCurrencies(),
+        var bid = new MonetaryInput.MonetaryController(model.getCurrencies(),
                 model.getBid(),
                 model.getSelectedBidCurrency(),
                 Res.offerbook.get("createOffer.bid.description"),
                 Res.offerbook.get("createOffer.bid.prompt"));
-        PriceInput.PriceController price = new PriceInput.PriceController(serviceProvider.getMarketPriceService(),
+        var price = new PriceInput.PriceController(serviceProvider.getMarketPriceService(),
                 model.getFixPriceQuote(),
                 model.getBaseCurrencyCode(),
                 model.getQuoteCurrencyCode(),
                 Res.offerbook.get("createOffer.price.fix.description"));
-        view = new CreateOfferView(model, this, ask.getView(), bid.getView(), price.getView());
+
+        var protocolSelection = new ProtocolSelection.ProtocolSelectionController(model.getProtocols(), model.getSelectedProtocol());
+        view = new CreateOfferView(model, this, ask.getView(), bid.getView(), price.getView(), protocolSelection.getView());
 
         askListener = (observable, oldValue, newValue) -> {
             log.error("amountListener {}", newValue);
@@ -93,6 +97,13 @@ public class CreateOfferController implements Controller, MarketPriceService.Lis
             updateBaseAndQuoteCurrencyCodes(newValue.getCode(), false);
             updateAskFromBid();
         };
+
+        model.getSelectedProtocol().addListener(new ChangeListener<SwapProtocolType>() {
+            @Override
+            public void changed(ObservableValue<? extends SwapProtocolType> observable, SwapProtocolType oldValue, SwapProtocolType newValue) {
+                log.error(newValue.toString());
+            }
+        });
     }
 
     private void updateBaseAndQuoteCurrencyCodes(String code, boolean isAsk) {

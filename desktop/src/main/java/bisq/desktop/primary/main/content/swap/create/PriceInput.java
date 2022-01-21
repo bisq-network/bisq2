@@ -71,7 +71,7 @@ public class PriceInput {
                     model.baseCurrencyCode.get() != null &&
                     model.quoteCurrencyCode.get() != null &&
                     model.quoteCodes.get() != null) {
-                model.fixPriceQuote.set(PriceParser.parse(model.quoteCodes.get(), model.baseCurrencyCode.get(), model.quoteCurrencyCode.get()));
+                //model.fixPriceQuote.set(PriceParser.parse(model.fixPriceQuote.get(), model.baseCurrencyCode.get(), model.quoteCurrencyCode.get()));
                 setQuoteCodes();
             }
         }

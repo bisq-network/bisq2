@@ -65,8 +65,8 @@ public class MonetaryInput {
             view = new MonetaryView(model, this, validator, description,prompt);
         }
 
-        public void onSelectCurrency(BisqCurrency selectedItem) {
-            model.selectedCurrency.set(selectedItem);
+        public void onSelectCurrency(BisqCurrency value) {
+            model.selectedCurrency.set(value);
         }
 
         public void onMonetaryInput(String value) {
@@ -137,10 +137,6 @@ public class MonetaryInput {
             comboBox.setCellFactory(getCellFactory());
             comboBox.setVisibleRowCount(10);
             comboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
-            comboBox.setOnAction(e -> {
-                controller.onSelectCurrency(comboBox.getSelectionModel().getSelectedItem());
-                controller.onMonetaryInput(textInput.getText());
-            });
 
             HBox hBox = new HBox();
             hBox.getStyleClass().add("input-with-border");
