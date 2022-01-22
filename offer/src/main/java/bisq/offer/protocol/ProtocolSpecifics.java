@@ -19,7 +19,9 @@ package bisq.offer.protocol;
 
 import bisq.account.settlement.CryptoSettlement;
 import bisq.account.settlement.FiatSettlement;
-import bisq.common.monetary.QuoteCodePair;
+import bisq.account.settlement.Settlement;
+import bisq.common.currency.BisqCurrency;
+import bisq.common.monetary.Market;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -27,6 +29,15 @@ import java.util.List;
 
 @Slf4j
 public class ProtocolSpecifics {
+
+    public static List<? extends Settlement.Method> getSettlementMethods(SwapProtocolType protocolType, String code) {
+        if (BisqCurrency.isFiat(code)) {
+            return getFiatSettlementMethods(protocolType);
+        } else {
+            return getCryptoSettlementMethods(protocolType);
+        }
+    }
+
     public static List<FiatSettlement.Method> getFiatSettlementMethods(SwapProtocolType protocolType) {
         return switch (protocolType) {
             case BTC_XMR_SWAP -> throw new IllegalArgumentException("No fiat support for that protocolType");
@@ -52,62 +63,61 @@ public class ProtocolSpecifics {
     }
 
 
-    public static List<SwapProtocolType> getProtocols(QuoteCodePair quoteCodePair) {
+    public static List<SwapProtocolType> getProtocols(Market market) {
         List<SwapProtocolType> result = new ArrayList<>();
-        if (isBtcXmrSwapSupported(quoteCodePair)) {
+        if (isBtcXmrSwapSupported(market)) {
             result.add(SwapProtocolType.BTC_XMR_SWAP);
         }
-        if (isLiquidSwapSupported(quoteCodePair)) {
+        if (isLiquidSwapSupported(market)) {
             result.add(SwapProtocolType.LIQUID_SWAP);
         }
-        if (isBsqSwapSupported(quoteCodePair)) {
+        if (isBsqSwapSupported(market)) {
             result.add(SwapProtocolType.BSQ_SWAP);
         }
-        if (isLNSwapSupported(quoteCodePair)) {
+        if (isLNSwapSupported(market)) {
             result.add(SwapProtocolType.LN_SWAP);
         }
-        if (isMultiSigSupported(quoteCodePair)) {
+        if (isMultiSigSupported(market)) {
             result.add(SwapProtocolType.MULTISIG);
         }
-        if (isBsqBondSupported(quoteCodePair)) {
+        if (isBsqBondSupported(market)) {
             result.add(SwapProtocolType.BSQ_BOND);
         }
-        if (isReputationSupported(quoteCodePair)) {
+        if (isReputationSupported(market)) {
             result.add(SwapProtocolType.REPUTATION);
         }
-        log.error("quoteCodePair={}, result={}", quoteCodePair, result);
         return result;
     }
 
-    public static boolean isBtcXmrSwapSupported(QuoteCodePair quoteCodePair) {
-        QuoteCodePair pair1 = new QuoteCodePair("BTC", "XMR");
-        QuoteCodePair pair2 = new QuoteCodePair("XMR", "BTC");
-        return quoteCodePair.equals(pair1) || quoteCodePair.equals(pair2);
+    private static boolean isBtcXmrSwapSupported(Market market) {
+        Market pair1 = new Market("BTC", "XMR");
+        Market pair2 = new Market("XMR", "BTC");
+        return market.equals(pair1) || market.equals(pair2);
     }
 
-    public static boolean isLiquidSwapSupported(QuoteCodePair quoteCodePair) {
+    private static boolean isLiquidSwapSupported(Market market) {
         return false;//todo need some liquid asset lookup table
     }
 
-    public static boolean isBsqSwapSupported(QuoteCodePair quoteCodePair) {
-        QuoteCodePair pair1 = new QuoteCodePair("BTC", "BSQ");
-        QuoteCodePair pair2 = new QuoteCodePair("BSQ", "BTC");
-        return quoteCodePair.equals(pair1) || quoteCodePair.equals(pair2);
+    private static boolean isBsqSwapSupported(Market market) {
+        Market pair1 = new Market("BTC", "BSQ");
+        Market pair2 = new Market("BSQ", "BTC");
+        return market.equals(pair1) || market.equals(pair2);
     }
 
-    public static boolean isLNSwapSupported(QuoteCodePair quoteCodePair) {
+    private static boolean isLNSwapSupported(Market market) {
         return false;//todo need some liquid asset lookup table
     }
 
-    public static boolean isMultiSigSupported(QuoteCodePair quoteCodePair) {
-        return quoteCodePair.quoteCurrencyCode().equals("BTC") || quoteCodePair.baseCurrencyCode().equals("BTC");
+    private static boolean isMultiSigSupported(Market market) {
+        return market.quoteCurrencyCode().equals("BTC") || market.baseCurrencyCode().equals("BTC");
     }
 
-    public static boolean isBsqBondSupported(QuoteCodePair quoteCodePair) {
+    private static boolean isBsqBondSupported(Market market) {
         return true;
     }
 
-    public static boolean isReputationSupported(QuoteCodePair quoteCodePair) {
+    private static boolean isReputationSupported(Market market) {
         return true;
     }
 }

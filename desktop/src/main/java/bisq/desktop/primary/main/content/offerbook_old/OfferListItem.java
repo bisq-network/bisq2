@@ -86,7 +86,7 @@ public class OfferListItem extends OfferPresentation {
     }
 
     private String getQuoteCode() {
-        return showAllBidCurrencies.get() || showAllAskCurrencies.get() ? " " + offer.getQuote().getQuoteCodePair() : "";
+        return showAllBidCurrencies.get() || showAllAskCurrencies.get() ? " " + offer.getQuote().getMarket() : "";
     }
 
     private String getBidCurrencyCode() {

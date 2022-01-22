@@ -17,10 +17,15 @@
 
 package bisq.presentation.parser;
 
+import bisq.common.monetary.Market;
 import bisq.common.monetary.Quote;
 
 public class PriceParser {
     public static Quote parse(String priceString, String baseCurrencyCode, String quoteCurrencyCode) {
         return Quote.fromPrice(Double.parseDouble(priceString), baseCurrencyCode, quoteCurrencyCode);
+    }
+
+    public static Quote parse(String value, Market market) {
+        return parse(value, market.baseCurrencyCode(), market.quoteCurrencyCode());
     }
 }

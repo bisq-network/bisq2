@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.offerbook_old;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.common.monetary.QuoteCodePair;
+import bisq.common.monetary.Market;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.oracle.marketprice.MarketPrice;
@@ -147,7 +147,7 @@ public class OfferbookModel extends NavigationModel implements MarketPriceServic
     }
 
     @Override
-    public void onMarketPriceUpdate(Map<QuoteCodePair, MarketPrice> map) {
+    public void onMarketPriceUpdate(Map<Market, MarketPrice> map) {
         //todo
        // marketPriceByCurrencyMapProperty.set(map);
     }

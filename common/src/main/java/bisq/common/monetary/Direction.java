@@ -15,13 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle.marketprice;
+package bisq.common.monetary;
 
-import bisq.common.monetary.Market;
-import bisq.common.monetary.Quote;
-
-public record MarketPrice(Quote quote, String code, long timestamp, String provider) {
-    public Market getMarket() {
-        return quote.getMarket();
-    }
+// It is always related to the base currency. E.g. BTC-USD market -> BUY means Buy BTC
+public enum Direction {
+    BUY,
+    SELL
 }

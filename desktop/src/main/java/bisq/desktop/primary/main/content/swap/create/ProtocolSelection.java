@@ -17,26 +17,29 @@
 
 package bisq.desktop.primary.main.content.swap.create;
 
+import bisq.common.monetary.Market;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
+import bisq.offer.protocol.ProtocolSpecifics;
 import bisq.offer.protocol.SwapProtocolType;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
-import javafx.geometry.Insets;
+import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,14 +49,17 @@ public class ProtocolSelection {
         private final ProtocolModel model;
         @Getter
         private final ProtocolView view;
-        private final ListChangeListener<SwapProtocolType> protocolsChangeListener;
+        private final ChangeListener<Market> selectedMarketListener;
 
-        public ProtocolController(ObservableList<SwapProtocolType> protocols,
+        public ProtocolController(ObjectProperty<Market> selectedMarket,
                                   ObjectProperty<SwapProtocolType> selectedProtocol) {
-            this.model = new ProtocolModel(protocols, selectedProtocol);
+            this.model = new ProtocolModel(selectedMarket, selectedProtocol);
             view = new ProtocolView(model, this);
 
-            protocolsChangeListener = c -> model.fillObservableList();
+            selectedMarketListener = (observable, oldValue, newValue) -> {
+                if (newValue == null) return;
+                model.applyProtocols(ProtocolSpecifics.getProtocols(newValue));
+            };
         }
 
         public void onSelectProtocol(SwapProtocolType value) {
@@ -61,31 +67,29 @@ public class ProtocolSelection {
         }
 
         public void onViewAttached() {
-            model.protocols.addListener(protocolsChangeListener);
+            model.selectedMarket.addListener(selectedMarketListener);
         }
 
         public void onViewDetached() {
-            model.protocols.removeListener(protocolsChangeListener);
+            model.selectedMarket.removeListener(selectedMarketListener);
         }
     }
 
     @Getter
     public static class ProtocolModel implements Model {
-        private final ObservableList<SwapProtocolType> protocols;
+        private final ObjectProperty<Market> selectedMarket;
+        private final ObjectProperty<SwapProtocolType> selectedProtocolType = new SimpleObjectProperty<>();
         private final ObservableList<ProtocolItem> observableList = FXCollections.observableArrayList();
         private final SortedList<ProtocolItem> sortedList = new SortedList<>(observableList);
         private final ObjectProperty<ProtocolItem> selectedProtocolItem = new SimpleObjectProperty<>();
-        private final ObjectProperty<SwapProtocolType> selectedProtocolType = new SimpleObjectProperty<>();
-        public boolean hasFocus;
 
-        public ProtocolModel(ObservableList<SwapProtocolType> protocols,
+        public ProtocolModel(ObjectProperty<Market> selectedMarket,
                              ObjectProperty<SwapProtocolType> selectedProtocolType) {
-            this.protocols = protocols;
-            fillObservableList();
+            this.selectedMarket = selectedMarket;
             setSelectedProtocolType(selectedProtocolType.get());
         }
 
-        private void fillObservableList() {
+        private void applyProtocols(List<SwapProtocolType> protocols) {
             observableList.setAll(protocols.stream().map(ProtocolItem::new).collect(Collectors.toList()));
         }
 
@@ -126,19 +130,21 @@ public class ProtocolSelection {
                             ProtocolController controller) {
             super(new VBox(), model, controller);
 
+            Label headline = new BisqLabel(Res.offerbook.get("createOffer.selectProtocol"));
+            headline.getStyleClass().add("titled-group-bg-label-active");
+
             tableView = new BisqTableView<>(model.getSortedList());
-            tableView.setPrefHeight(120);
+            tableView.setPrefHeight(130);
             configTableView();
 
-            root.setPadding(new Insets(10, 0, 0, 0));
-            root.setSpacing(2);
-            root.getChildren().addAll(tableView);
+            // root.setPadding(new Insets(-10, 0, 0, 0));
+            // root.setSpacing(2);
+            root.getChildren().addAll(headline, tableView);
 
             // Listener on table row selection
             selectedTableItemListener = (o, old, newValue) -> {
-                if (newValue != null) {
-                    controller.onSelectProtocol(newValue.protocolType);
-                }
+                if (newValue == null) return;
+                controller.onSelectProtocol(newValue.protocolType);
             };
 
             // Listeners on model change

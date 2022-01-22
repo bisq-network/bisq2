@@ -34,7 +34,7 @@ public class QuoteFormatter {
     }
 
     public static String formatWithQuoteCode(Quote quote, Locale locale) {
-        return format(quote, locale) + " " + quote.getQuoteCodePair();
+        return format(quote, locale) + " " + quote.getMarket();
     }
 
     public static String format(Quote quote) {

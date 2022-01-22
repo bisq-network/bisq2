@@ -17,7 +17,9 @@
 
 package bisq.desktop.primary.main.content.swap.create;
 
+import bisq.common.monetary.Market;
 import bisq.common.monetary.Quote;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.PriceValidator;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
@@ -25,6 +27,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqInputTextField;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
+import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.QuoteFormatter;
 import bisq.presentation.parser.PriceParser;
@@ -40,101 +43,97 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
+
 @Slf4j
 @Getter
 public class PriceInput {
-    public static class PriceController implements Controller {
+    public static class PriceController implements Controller, MarketPriceService.Listener {
         private final PriceModel model;
         @Getter
         private final PriceView view;
         private final PriceValidator validator = new PriceValidator();
-        private final ChangeListener<String> baseCurrencyCodeListener, quoteCurrencyCodeListener;
-        private final ChangeListener<Quote> fixedPriceQuoteListener;
+        private final ChangeListener<Market> selectedMarketListener;
 
         public PriceController(MarketPriceService marketPriceService,
+                               ObjectProperty<Market> selectedMarket,
                                ObjectProperty<Quote> fixPriceQuote,
-                               StringProperty baseCurrencyCode,
-                               StringProperty quoteCurrencyCode,
                                String description) {
-            this.model = new PriceModel(marketPriceService, fixPriceQuote, baseCurrencyCode, quoteCurrencyCode);
-
+            model = new PriceModel(marketPriceService, selectedMarket, fixPriceQuote);
             view = new PriceView(model, this, validator, description);
 
-            baseCurrencyCodeListener = (o, oldValue, newValue) -> onCodeChange();
-            quoteCurrencyCodeListener = (o, oldValue, newValue) -> onCodeChange();
-            fixedPriceQuoteListener = (o, oldValue, newValue) -> onFixedPriceQuoteChange();
-        }
-
-        // domain data change events
-        private void onCodeChange() {
-            if (!model.hasFocus &&
-                    model.baseCurrencyCode.get() != null &&
-                    model.quoteCurrencyCode.get() != null &&
-                    model.quoteCodes.get() != null) {
-                //model.fixPriceQuote.set(PriceParser.parse(model.fixPriceQuote.get(), model.baseCurrencyCode.get(), model.quoteCurrencyCode.get()));
-                setQuoteCodes();
-            }
-        }
-
-        private void onFixedPriceQuoteChange() {
-            if (model.fixPriceQuote.get() != null) {
-                model.quoteCodes.set(QuoteFormatter.format(model.fixPriceQuote.get()));
-                setQuoteCodes();
-            }
+            selectedMarketListener = (observable, oldValue, newValue) -> {
+                if (newValue != null) {
+                    model.marketString.set(newValue.toString());
+                }
+                model.fixPrice.set(null);
+                setFixPriceFromMarketPrice();
+            };
         }
 
         // View events
-        public void onFixPriceInput(String value) {
-            if (!model.hasFocus &&
-                    model.baseCurrencyCode.get() != null &&
-                    model.quoteCurrencyCode.get() != null &&
-                    validator.validate(value).isValid) {
-                Quote quote = PriceParser.parse(value, model.baseCurrencyCode.get(), model.quoteCurrencyCode.get());
-                model.fixPriceQuote.set(quote);
-                setQuoteCodes();
-            }
-        }
-
         public void onFocusChange(boolean hasFocus) {
             model.hasFocus = hasFocus;
         }
 
+        public void onFixPriceInput(String value) {
+            if (model.hasFocus) return;
+            if (value.isEmpty()) {
+                model.fixPrice.set(null);
+                return;
+            }
+            if (!validator.validate(value).isValid) {
+                model.fixPrice.set(null);
+                return;
+            }
+            if (model.selectedMarket.get() == null) return;
+            model.fixPrice.set(PriceParser.parse(value, model.selectedMarket.get()));
+        }
+
         public void onViewAttached() {
-            model.baseCurrencyCode.addListener(baseCurrencyCodeListener);
-            model.quoteCurrencyCode.addListener(quoteCurrencyCodeListener);
-            model.fixPriceQuote.addListener(fixedPriceQuoteListener);
+            model.marketPriceService.addListener(this);
+            model.selectedMarket.addListener(selectedMarketListener);
         }
 
         public void onViewDetached() {
-            model.baseCurrencyCode.removeListener(baseCurrencyCodeListener);
-            model.quoteCurrencyCode.removeListener(quoteCurrencyCodeListener);
-            model.fixPriceQuote.removeListener(fixedPriceQuoteListener);
+            model.marketPriceService.removeListener(this);
+            model.selectedMarket.removeListener(selectedMarketListener);
         }
 
-        private void setQuoteCodes() {
-            if (model.fixPriceQuote.get() != null) {
-                model.quoteCodes.set(model.fixPriceQuote.get().getQuoteCodePair().toString());
-            }
+        @Override
+        public void onMarketPriceUpdate(Map<Market, MarketPrice> map) {
+            UIThread.run(() -> {
+                if (model.fixPrice.get() != null) return;
+                setFixPriceFromMarketPrice();
+            });
+        }
+
+        private void setFixPriceFromMarketPrice() {
+            if (model.selectedMarket.get() == null) return;
+            MarketPrice marketPrice = model.marketPriceService.getMarketPriceByCurrencyMap().get(model.selectedMarket.get());
+            if (marketPrice == null) return;
+            model.fixPrice.set(marketPrice.quote());
+        }
+
+        @Override
+        public void onMarketPriceSelected(MarketPrice selected) {
         }
     }
 
     @Getter
     public static class PriceModel implements Model {
         private final MarketPriceService marketPriceService;
-        private final ObjectProperty<Quote> fixPriceQuote;
-        private final StringProperty baseCurrencyCode;
-        private final StringProperty quoteCurrencyCode;
+        private final ObjectProperty<Market> selectedMarket;
+        private final ObjectProperty<Quote> fixPrice;
         public boolean hasFocus;
-        public final StringProperty quoteCodes = new SimpleStringProperty();
+        public final StringProperty marketString = new SimpleStringProperty();
 
         public PriceModel(MarketPriceService marketPriceService,
-                          ObjectProperty<Quote> fixPriceQuote,
-                          StringProperty baseCurrencyCode,
-                          StringProperty quoteCurrencyCode) {
+                          ObjectProperty<Market> selectedMarket,
+                          ObjectProperty<Quote> fixPrice) {
             this.marketPriceService = marketPriceService;
-            this.fixPriceQuote = fixPriceQuote;
-            this.baseCurrencyCode = baseCurrencyCode;
-            this.quoteCurrencyCode = quoteCurrencyCode;
+            this.selectedMarket = selectedMarket;
+            this.fixPrice = fixPrice;
         }
     }
 
@@ -143,7 +142,7 @@ public class PriceInput {
         private final ChangeListener<String> fixedPriceTextListener;
         private final ChangeListener<Boolean> fixedPriceFocusListener;
         private final ChangeListener<Quote> fixedPriceQuoteListener;
-        private final BisqLabel quoteCodes;
+        private final BisqLabel market;
 
         public PriceView(PriceModel model,
                          PriceController controller,
@@ -156,15 +155,15 @@ public class PriceInput {
             fixedPrice.setMaxWidth(Double.MAX_VALUE);
             fixedPrice.setValidator(validator);
 
-            quoteCodes = new BisqLabel();
-            quoteCodes.setMinHeight(42);
-            quoteCodes.setFixWidth(100);
-            quoteCodes.setAlignment(Pos.CENTER);
+            market = new BisqLabel();
+            market.setMinHeight(42);
+            market.setFixWidth(100);
+            market.setAlignment(Pos.CENTER);
 
             HBox hBox = new HBox();
             hBox.getStyleClass().add("input-with-border");
             HBox.setHgrow(fixedPrice, Priority.ALWAYS);
-            hBox.getChildren().addAll(fixedPrice, quoteCodes);
+            hBox.getChildren().addAll(fixedPrice, market);
 
             BisqLabel descriptionLabel = new BisqLabel(description);
             descriptionLabel.setId("input-description-label");
@@ -182,21 +181,21 @@ public class PriceInput {
             fixedPriceTextListener = (o, old, newValue) -> controller.onFixPriceInput(fixedPrice.getText());
 
             // Listeners on model change
-            fixedPriceQuoteListener = (o, old, newValue) -> fixedPrice.setText(QuoteFormatter.format(newValue));
+            fixedPriceQuoteListener = (o, old, newValue) -> fixedPrice.setText(newValue == null ? "" : QuoteFormatter.format(newValue));
         }
 
         public void onViewAttached() {
-            quoteCodes.textProperty().bind(model.quoteCodes);
+            market.textProperty().bind(model.marketString);
             fixedPrice.textProperty().addListener(fixedPriceTextListener);
             fixedPrice.focusedProperty().addListener(fixedPriceFocusListener);
-            model.fixPriceQuote.addListener(fixedPriceQuoteListener);
+            model.fixPrice.addListener(fixedPriceQuoteListener);
         }
 
         public void onViewDetached() {
-            quoteCodes.textProperty().unbind();
+            market.textProperty().unbind();
             fixedPrice.textProperty().removeListener(fixedPriceTextListener);
             fixedPrice.focusedProperty().removeListener(fixedPriceFocusListener);
-            model.fixPriceQuote.removeListener(fixedPriceQuoteListener);
+            model.fixPrice.removeListener(fixedPriceQuoteListener);
         }
     }
 }

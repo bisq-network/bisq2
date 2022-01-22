@@ -80,7 +80,7 @@ public abstract class MultiSigTest extends BaseProtocolTest {
                 makerNetworkId);
 
         // taker takes offer and selects first ProtocolType
-        ProtocolType protocolType = offer.getProtocolTypes().get(0);
+        SwapProtocolType protocolType = offer.getProtocolTypes().get(0);
         val askSideSettlement = offer.getAskSwapSide().settlementMethods().get(0);
         val bidSideSettlement = offer.getBidSwapSide().settlementMethods().get(0);
         // Not sure if SettlementExecution stays... if we need more work as it can be for both ask and bid

@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.top;
 
 import bisq.common.currency.BisqCurrency;
-import bisq.common.monetary.QuoteCodePair;
+import bisq.common.monetary.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
@@ -71,7 +71,7 @@ public class MarketPriceBox {
         }
 
         @Override
-        public void onMarketPriceUpdate(Map<QuoteCodePair, MarketPrice> map) {
+        public void onMarketPriceUpdate(Map<Market, MarketPrice> map) {
             UIThread.run(() -> model.applyMarketPriceMap(map));
         }
 
@@ -91,12 +91,12 @@ public class MarketPriceBox {
         private final ObservableList<ListItem> items = FXCollections.observableArrayList();
         private final ObjectProperty<ListItem> selected = new SimpleObjectProperty<>();
 
-        public void applyMarketPriceMap(Map<QuoteCodePair, MarketPrice> map) {
+        public void applyMarketPriceMap(Map<Market, MarketPrice> map) {
             //todo use preferred currencies + edit entry
             List<ListItem> list = map.values().stream().map(ListItem::new).collect(Collectors.toList());
             items.setAll(list);
             if (selected.get() != null) {
-                selected.set(new ListItem(map.get(selected.get().marketPrice.quote().getQuoteCodePair())));
+                selected.set(new ListItem(map.get(selected.get().marketPrice.getMarket())));
             }
         }
     }
@@ -107,14 +107,14 @@ public class MarketPriceBox {
             super(new VBox(), model, controller);
             root.setAlignment(Pos.CENTER_LEFT);
 
-            ComboBox<ListItem> priceComboBox = new BisqComboBox<>();
-            priceComboBox.setVisibleRowCount(12);
-            priceComboBox.setFocusTraversable(false);
-            priceComboBox.setId("price-feed-combo");
-            priceComboBox.setPadding(new Insets(0, -4, -4, 0));
-            priceComboBox.setItems(model.items);
-            priceComboBox.setOnAction(e -> controller.onSelect(priceComboBox.getSelectionModel().getSelectedItem()));
-            priceComboBox.setConverter(new StringConverter<>() {
+            ComboBox<ListItem> comboBox = new BisqComboBox<>();
+            comboBox.setVisibleRowCount(12);
+            comboBox.setFocusTraversable(false);
+            comboBox.setId("price-feed-combo");
+            comboBox.setPadding(new Insets(0, -4, -4, 0));
+            comboBox.setItems(model.items);
+            comboBox.setOnAction(e -> controller.onSelect(comboBox.getSelectionModel().getSelectedItem()));
+            comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(@Nullable ListItem listItem) {
                     return listItem != null ? listItem.displayStringProperty.get() : "";
@@ -131,9 +131,9 @@ public class MarketPriceBox {
             marketPriceLabel.setPadding(new Insets(-2, 0, 4, 9));
             //todo add provider info to marketPriceLabel
 
-            root.getChildren().addAll(priceComboBox, marketPriceLabel);
+            root.getChildren().addAll(comboBox, marketPriceLabel);
 
-            model.selected.addListener((o, old, newValue) -> priceComboBox.getSelectionModel().select(newValue));
+            model.selected.addListener((o, old, newValue) -> comboBox.getSelectionModel().select(newValue));
         }
     }
 

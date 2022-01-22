@@ -52,7 +52,7 @@ public class Quote implements Comparable<Quote> {
     private final int precision;
     // For Fiat market price we show precision 2 but in trade context we show the highest precision (4 for Fiat)  
     private final int lowPrecision;
-    private final QuoteCodePair quoteCodePair;
+    private final Market market;
 
     private Quote(long value, Monetary baseMonetary, Monetary quoteMonetary) {
         this.value = value;
@@ -60,7 +60,7 @@ public class Quote implements Comparable<Quote> {
         this.quoteMonetary = quoteMonetary;
         this.precision = quoteMonetary.precision;
         lowPrecision = quoteMonetary.lowPrecision;
-        quoteCodePair = new QuoteCodePair(baseMonetary.getCode(), quoteMonetary.getCode());
+        market = new Market(baseMonetary.getCode(), quoteMonetary.getCode());
     }
 
     /**

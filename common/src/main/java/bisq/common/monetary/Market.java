@@ -21,12 +21,12 @@ import bisq.common.currency.CryptoCurrencyRepository;
 import bisq.common.currency.FiatCurrencyRepository;
 import lombok.Setter;
 
-public record QuoteCodePair(String baseCurrencyCode, String quoteCurrencyCode) {
+public record Market(String baseCurrencyCode, String quoteCurrencyCode) {
     @Setter
     private static String QUOTE_SEPARATOR = "/";
 
-    public static QuoteCodePair getDefault() {
-        return new QuoteCodePair(CryptoCurrencyRepository.getDefaultCurrency().getCode(), FiatCurrencyRepository.getDefaultCurrency().getCode());
+    public static Market getDefault() {
+        return new Market(CryptoCurrencyRepository.getDefaultCurrency().getCode(), FiatCurrencyRepository.getDefaultCurrency().getCode());
     }
 
     @Override

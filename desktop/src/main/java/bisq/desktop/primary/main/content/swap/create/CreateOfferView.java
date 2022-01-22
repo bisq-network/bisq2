@@ -17,16 +17,9 @@
 
 package bisq.desktop.primary.main.content.swap.create;
 
-import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqLabel;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -35,46 +28,20 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
 
     public CreateOfferView(CreateOfferModel model,
                            CreateOfferController controller,
-                           MonetaryInput.MonetaryView ask,
-                           MonetaryInput.MonetaryView bid,
-                           PriceInput.PriceView price,
+                           MarketSelection.MarketSelectionView marketSelectionView,
+                           DirectionSelection.AmountPriceView directionView,
+                           AmountPriceGroup.AmountPriceView amountPriceView,
                            ProtocolSelection.ProtocolView protocolView,
                            SettlementSelection.SettlementView settlementView) {
         super(new VBox(), model, controller);
-
-        //root.getStyleClass().add("content-pane");
+        root.setSpacing(30);
         root.setPadding(new Insets(20, 20, 20, 0));
 
-        Label amountHeadline = new BisqLabel("Select currencies, set amount and price");
-        amountHeadline.getStyleClass().add("titled-group-bg-label-active");
-
-        Label xLabel = new Label();
-        Text xIcon = Icons.getIconForLabel(MaterialDesignIcon.CLOSE, "2em", xLabel);
-        xIcon.getStyleClass().add("opaque-icon");
-        xLabel.getStyleClass().add("opaque-icon-character");
-
-
-        Label resultLabel = new Label("=");
-        resultLabel.getStyleClass().add("opaque-icon-character");
-
-
-        HBox amountPriceBox = new HBox();
-        amountPriceBox.setSpacing(5);
-        amountPriceBox.setAlignment(Pos.CENTER_LEFT);
-        amountPriceBox.getChildren().addAll(ask.getRoot(), xLabel, price.getRoot(), resultLabel, bid.getRoot());
-        VBox.setMargin(amountPriceBox, new Insets(0, 0, 30, 0));
-
-
-      /*  Button button = new BisqButton("Continue");
-        //button.setPadding(new Insets(0, 0, 50, 0));
-        button.setOnAction(e -> {
-        });*/
-        Label protocolSelectionHeadline = new BisqLabel("Select trade protocol");
-        protocolSelectionHeadline.getStyleClass().add("titled-group-bg-label-active");
-
-        root.getChildren().addAll(amountHeadline,
-                amountPriceBox,
-                protocolSelectionHeadline,
+        amountPriceView.getRoot().setPadding(new Insets(0, 0, -5, 0));
+        root.getChildren().addAll(
+                marketSelectionView.getRoot(),
+                directionView.getRoot(),
+                amountPriceView.getRoot(),
                 protocolView.getRoot(),
                 settlementView.getRoot());
     }
