@@ -17,7 +17,7 @@
 
 package bisq.account.settlement;
 
-import static bisq.account.settlement.FiatSettlement.Method.*;
+import static bisq.account.settlement.FiatSettlement.Method.OTHER;
 
 public class FiatSettlement extends Settlement<FiatSettlement.Method> {
     public static final FiatSettlement SEPA = new FiatSettlement(Method.SEPA);
@@ -26,8 +26,9 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
 
     public enum Method implements Settlement.Method {
         SEPA,
-        REVOLUT,
         ZELLE,
+        REVOLUT,
+        BANK,
         OTHER
     }
 

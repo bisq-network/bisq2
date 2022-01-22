@@ -25,13 +25,13 @@ import bisq.contract.SwapContract;
 import bisq.network.NetworkId;
 import bisq.offer.Listing;
 import bisq.offer.SwapOffer;
-import bisq.offer.protocol.ProtocolType;
+import bisq.offer.protocol.SwapProtocolType;
 
 import java.util.Set;
 
 public class ContractMaker {
     public static SwapContract makerCreatesSwapContract(SwapOffer listing,
-                                                        ProtocolType protocolType,
+                                                        SwapProtocolType protocolType,
                                                         NetworkId takerNetworkId,
                                                         Settlement<? extends Settlement.Method> askSideSettlement,
                                                         Settlement<? extends Settlement.Method> bidSideSettlement) {
@@ -40,7 +40,7 @@ public class ContractMaker {
     }
 
     public static SwapContract takerCreatesSwapContract(SwapOffer listing,
-                                                        ProtocolType protocolType,
+                                                        SwapProtocolType protocolType,
                                                         NetworkId takerNetworkId,
                                                         Settlement<? extends Settlement.Method> askSideSettlement,
                                                         Settlement<? extends Settlement.Method> bidSideSettlement) {
@@ -51,7 +51,7 @@ public class ContractMaker {
     public static MultiPartyContract makerCreatesMultiPartyContract(Listing listing,
                                                                     NetworkId takerNetworkId,
                                                                     NetworkId escrowAgentNetworkId,
-                                                                    ProtocolType protocolType) {
+                                                                    SwapProtocolType protocolType) {
         Party taker = new Party(Role.TAKER, takerNetworkId);
         Party escrowAgent = new Party(Role.ESCROW_AGENT, escrowAgentNetworkId);
         return new MultiPartyContract(listing, protocolType, Set.of(taker, escrowAgent));
@@ -60,7 +60,7 @@ public class ContractMaker {
     public static MultiPartyContract takerCreatesMultiPartyContract(Listing listing,
                                                                     NetworkId takerNetworkId,
                                                                     NetworkId escrowAgentNetworkId,
-                                                                    ProtocolType protocolType) {
+                                                                    SwapProtocolType protocolType) {
         Party taker = new Party(Role.TAKER, takerNetworkId);
         Party escrowAgent = new Party(Role.ESCROW_AGENT, escrowAgentNetworkId);
         return new MultiPartyContract(listing, protocolType, Set.of(taker, escrowAgent));

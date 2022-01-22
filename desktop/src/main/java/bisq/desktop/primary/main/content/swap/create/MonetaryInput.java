@@ -62,7 +62,7 @@ public class MonetaryInput {
                                   String prompt) {
             this.model = new MonetaryModel(currencies, amount, selectedCurrency);
 
-            view = new MonetaryView(model, this, validator, description,prompt);
+            view = new MonetaryView(model, this, validator, description, prompt);
         }
 
         public void onSelectCurrency(BisqCurrency value) {

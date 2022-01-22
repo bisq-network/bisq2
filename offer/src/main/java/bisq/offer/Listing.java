@@ -20,7 +20,7 @@ package bisq.offer;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkId;
 import bisq.offer.options.ListingOption;
-import bisq.offer.protocol.ProtocolType;
+import bisq.offer.protocol.SwapProtocolType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -34,7 +34,7 @@ public abstract class Listing implements Serializable {
     protected final String id;
     protected final long date;
     protected final NetworkId makerNetworkId;
-    protected final List<? extends ProtocolType> protocolTypes;
+    protected final List<? extends SwapProtocolType> protocolTypes;
     protected final Set<ListingOption> listingOptions;
 
     /**
@@ -49,7 +49,7 @@ public abstract class Listing implements Serializable {
     public Listing(String id,
                    long date,
                    NetworkId makerNetworkId,
-                   List<? extends ProtocolType> protocolTypes,
+                   List<? extends SwapProtocolType> protocolTypes,
                    Set<ListingOption> listingOptions) {
         this.id = id;
         this.date = date;
@@ -59,7 +59,7 @@ public abstract class Listing implements Serializable {
     }
 
     public Listing(NetworkId makerNetworkId,
-                   List<? extends ProtocolType> protocolTypes,
+                   List<? extends SwapProtocolType> protocolTypes,
                    Set<ListingOption> listingOptions) {
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),

@@ -19,7 +19,7 @@ package bisq.contract;
 
 import bisq.account.settlement.Settlement;
 import bisq.offer.SwapOffer;
-import bisq.offer.protocol.ProtocolType;
+import bisq.offer.protocol.SwapProtocolType;
 import lombok.Getter;
 
 @Getter
@@ -28,7 +28,7 @@ public class SwapContract extends TwoPartyContract<SwapOffer> {
     private final Settlement<? extends Settlement.Method> bidSideSettlement;
 
     public SwapContract(SwapOffer swapOffer,
-                        ProtocolType protocolType,
+                        SwapProtocolType protocolType,
                         Party taker,
                         Settlement<? extends Settlement.Method> askSideSettlement,
                         Settlement<? extends Settlement.Method> bidSideSettlement) {

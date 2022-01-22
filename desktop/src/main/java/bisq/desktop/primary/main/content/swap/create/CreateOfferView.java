@@ -38,7 +38,8 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
                            MonetaryInput.MonetaryView ask,
                            MonetaryInput.MonetaryView bid,
                            PriceInput.PriceView price,
-                           ProtocolSelection.ProtocolSelectionView protocolSelectionView) {
+                           ProtocolSelection.ProtocolView protocolView,
+                           SettlementSelection.SettlementView settlementView) {
         super(new VBox(), model, controller);
 
         //root.getStyleClass().add("content-pane");
@@ -46,7 +47,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
 
         Label amountHeadline = new BisqLabel("Select currencies, set amount and price");
         amountHeadline.getStyleClass().add("titled-group-bg-label-active");
-        
+
         Label xLabel = new Label();
         Text xIcon = Icons.getIconForLabel(MaterialDesignIcon.CLOSE, "2em", xLabel);
         xIcon.getStyleClass().add("opaque-icon");
@@ -57,11 +58,11 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         resultLabel.getStyleClass().add("opaque-icon-character");
 
 
-        HBox firstRowHBox = new HBox();
-        firstRowHBox.setSpacing(5);
-        firstRowHBox.setAlignment(Pos.CENTER_LEFT);
-        firstRowHBox.getChildren().addAll(ask.getRoot(), xLabel, price.getRoot(), resultLabel, bid.getRoot());
-        VBox.setMargin(firstRowHBox, new Insets(0, 0, 30, 0));
+        HBox amountPriceBox = new HBox();
+        amountPriceBox.setSpacing(5);
+        amountPriceBox.setAlignment(Pos.CENTER_LEFT);
+        amountPriceBox.getChildren().addAll(ask.getRoot(), xLabel, price.getRoot(), resultLabel, bid.getRoot());
+        VBox.setMargin(amountPriceBox, new Insets(0, 0, 30, 0));
 
 
       /*  Button button = new BisqButton("Continue");
@@ -70,9 +71,11 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         });*/
         Label protocolSelectionHeadline = new BisqLabel("Select trade protocol");
         protocolSelectionHeadline.getStyleClass().add("titled-group-bg-label-active");
-        
-        VBox protocolSelectionViewRoot = protocolSelectionView.getRoot();
-        
-       root.getChildren().addAll(amountHeadline, firstRowHBox, protocolSelectionHeadline, protocolSelectionViewRoot);
+
+        root.getChildren().addAll(amountHeadline,
+                amountPriceBox,
+                protocolSelectionHeadline,
+                protocolView.getRoot(),
+                settlementView.getRoot());
     }
 }

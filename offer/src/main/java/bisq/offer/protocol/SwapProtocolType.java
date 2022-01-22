@@ -18,7 +18,7 @@
 package bisq.offer.protocol;
 
 public enum SwapProtocolType implements ProtocolType {
-    ATOMIC_CROSS_CHAIN_SWAP,
+    BTC_XMR_SWAP,
     LIQUID_SWAP,                // Atomic same chain (Liquid)
     BSQ_SWAP,                   // Atomic same chain (Bitcoin)
     LN_SWAP,

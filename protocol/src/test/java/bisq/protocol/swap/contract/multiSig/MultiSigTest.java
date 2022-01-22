@@ -28,7 +28,6 @@ import bisq.identity.Identity;
 import bisq.network.NetworkId;
 import bisq.offer.SwapOffer;
 import bisq.offer.SwapSide;
-import bisq.offer.protocol.ProtocolType;
 import bisq.offer.protocol.SwapProtocolType;
 import bisq.protocol.BaseProtocolTest;
 import bisq.protocol.ContractMaker;

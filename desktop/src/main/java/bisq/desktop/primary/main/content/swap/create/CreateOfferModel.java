@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.swap.create;
 
+import bisq.account.settlement.Settlement;
 import bisq.application.DefaultServiceProvider;
 import bisq.common.currency.BisqCurrency;
 import bisq.common.currency.CryptoCurrencyRepository;
@@ -41,21 +42,33 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class CreateOfferModel implements Model {
     private final MarketPriceService marketPriceService;
-    ;
+
+    // Currencies
     private ObservableList<BisqCurrency> currencies = FXCollections.observableArrayList();
-
-    private ObjectProperty<Monetary> ask = new SimpleObjectProperty<>();
-    private final ObjectProperty<BisqCurrency> selectedAskCurrency = new SimpleObjectProperty<>();
-
-    private ObjectProperty<Monetary> bid = new SimpleObjectProperty<>();
-    private final ObjectProperty<BisqCurrency> selectedBidCurrency = new SimpleObjectProperty<>();
-    private final ObjectProperty<Quote> fixPriceQuote = new SimpleObjectProperty<>();
-    private final ObjectProperty<QuoteCodePair> quoteCodePair = new SimpleObjectProperty<>();
     private final StringProperty baseCurrencyCode = new SimpleStringProperty();
     private final StringProperty quoteCurrencyCode = new SimpleStringProperty();
 
+    // Ask
+    private ObjectProperty<Monetary> ask = new SimpleObjectProperty<>();
+    private final ObjectProperty<BisqCurrency> selectedAskCurrency = new SimpleObjectProperty<>();
+
+    // Bid
+    private ObjectProperty<Monetary> bid = new SimpleObjectProperty<>();
+    private final ObjectProperty<BisqCurrency> selectedBidCurrency = new SimpleObjectProperty<>();
+
+    // Quote
+    private final ObjectProperty<Quote> fixPriceQuote = new SimpleObjectProperty<>();
+    private final ObjectProperty<QuoteCodePair> quoteCodePair = new SimpleObjectProperty<>();
+
+    // Protocol
     private final ObservableList<SwapProtocolType> protocols = FXCollections.observableArrayList();
     private final ObjectProperty<SwapProtocolType> selectedProtocol = new SimpleObjectProperty<>();
+
+    // Settlement
+    private final ObservableList<Settlement.Method> askSettlementMethods = FXCollections.observableArrayList();
+    private final ObservableList<Settlement.Method> bidSettlementMethods = FXCollections.observableArrayList();
+    private final ObjectProperty<Settlement.Method> askSelectedSettlementMethod = new SimpleObjectProperty<>();
+    private final ObjectProperty<Settlement.Method> bidSelectedSettlementMethod = new SimpleObjectProperty<>();
 
     public CreateOfferModel(DefaultServiceProvider serviceProvider) {
         marketPriceService = serviceProvider.getMarketPriceService();
@@ -67,8 +80,8 @@ public class CreateOfferModel implements Model {
         selectedAskCurrency.set(CryptoCurrencyRepository.getDefaultCurrency());
         selectedBidCurrency.set(FiatCurrencyRepository.getDefaultCurrency());
 
-        protocols.setAll(SwapProtocolType.values());
-        selectedProtocol.set(SwapProtocolType.REPUTATION);
+       // protocols.setAll(SwapProtocolType.values());
+       // selectedProtocol.set(SwapProtocolType.REPUTATION);
     }
 
     public void onViewDetached() {

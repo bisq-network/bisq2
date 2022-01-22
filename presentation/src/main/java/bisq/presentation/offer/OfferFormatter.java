@@ -19,7 +19,7 @@ package bisq.presentation.offer;
 
 import bisq.account.settlement.Settlement;
 import bisq.common.monetary.Monetary;
-import bisq.offer.protocol.ProtocolType;
+import bisq.offer.protocol.SwapProtocolType;
 import bisq.offer.options.ReputationOption;
 import bisq.offer.options.SettlementOption;
 import bisq.presentation.formatters.AmountFormatter;
@@ -41,7 +41,7 @@ class OfferFormatter {
         return DateFormatter.formatDateTime(new Date(date));
     }
 
-    static String formatProtocolTypes(List<? extends ProtocolType> protocolTypes) {
+    static String formatProtocolTypes(List<? extends SwapProtocolType> protocolTypes) {
         return protocolTypes.toString();
     }
 

@@ -25,11 +25,11 @@ import bisq.common.monetary.QuoteCodePair;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
+import bisq.offer.protocol.ProtocolSpecifics;
 import bisq.offer.protocol.SwapProtocolType;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,6 +45,7 @@ public class CreateOfferController implements Controller, MarketPriceService.Lis
     private final ChangeListener<Quote> fixPriceQuoteListener;
     private final ChangeListener<BisqCurrency> selectedAskCurrencyListener, selectedBidCurrencyListener;
     private final MarketPriceService marketPriceService;
+    private final ChangeListener<SwapProtocolType> selectedProtocolListener;
 
     public CreateOfferController(DefaultServiceProvider serviceProvider) {
         marketPriceService = serviceProvider.getMarketPriceService();
@@ -66,19 +67,26 @@ public class CreateOfferController implements Controller, MarketPriceService.Lis
                 model.getQuoteCurrencyCode(),
                 Res.offerbook.get("createOffer.price.fix.description"));
 
-        var protocolSelection = new ProtocolSelection.ProtocolSelectionController(model.getProtocols(), model.getSelectedProtocol());
-        view = new CreateOfferView(model, this, ask.getView(), bid.getView(), price.getView(), protocolSelection.getView());
+        var protocolSelection = new ProtocolSelection.ProtocolController(model.getProtocols(), model.getSelectedProtocol());
+
+        var settlementSelection = new SettlementSelection.SettlementController(model.getAskSettlementMethods(),
+                model.getBidSettlementMethods(),
+                model.getAskSelectedSettlementMethod(),
+                model.getBidSelectedSettlementMethod());
+        view = new CreateOfferView(model, this,
+                ask.getView(),
+                bid.getView(),
+                price.getView(),
+                protocolSelection.getView(),
+                settlementSelection.getView());
 
         askListener = (observable, oldValue, newValue) -> {
-            log.error("amountListener {}", newValue);
             updateBidFromAsk();
         };
         bidListener = (observable, oldValue, newValue) -> {
-            log.error("volumeListener {}", newValue);
             updateAskFromBid();
         };
         fixPriceQuoteListener = (observable, oldValue, newValue) -> {
-            log.error("fixPriceQuoteListener {}", newValue);
             if (model.getAsk().get() != null && model.getBid().get() == null) {
                 updateBidFromAsk();
             } else if (model.getBid().get() != null && model.getAsk().get() == null) {
@@ -90,24 +98,87 @@ public class CreateOfferController implements Controller, MarketPriceService.Lis
         };
 
         selectedAskCurrencyListener = (observable, oldValue, newValue) -> {
+            log.error("selectedAskCurrencyListener newValue {}", newValue);
             updateBaseAndQuoteCurrencyCodes(newValue.getCode(), true);
             updateBidFromAsk();
         };
         selectedBidCurrencyListener = (observable, oldValue, newValue) -> {
+            log.error("selectedBidCurrencyListener newValue {}", newValue);
             updateBaseAndQuoteCurrencyCodes(newValue.getCode(), false);
             updateAskFromBid();
         };
 
-        model.getSelectedProtocol().addListener(new ChangeListener<SwapProtocolType>() {
-            @Override
-            public void changed(ObservableValue<? extends SwapProtocolType> observable, SwapProtocolType oldValue, SwapProtocolType newValue) {
-                log.error(newValue.toString());
+        selectedProtocolListener = (observable, oldValue, newValue) -> {
+            log.error("selectedProtocolListener {}", newValue);
+            if (model.getSelectedAskCurrency().get() != null) {
+                if (model.getSelectedAskCurrency().get().isFiat()) {
+                    model.getAskSettlementMethods().setAll(ProtocolSpecifics.getFiatSettlementMethods(newValue));
+                } else {
+                    model.getAskSettlementMethods().setAll(ProtocolSpecifics.getCryptoSettlementMethods(newValue));
+                }
+            }
+            if (model.getSelectedBidCurrency().get() != null) {
+                if (model.getSelectedBidCurrency().get().isFiat()) {
+                    model.getBidSettlementMethods().setAll(ProtocolSpecifics.getFiatSettlementMethods(newValue));
+                } else {
+                    model.getBidSettlementMethods().setAll(ProtocolSpecifics.getCryptoSettlementMethods(newValue));
+                }
+            }
+        };
+    }
+
+    @Override
+    public void onViewAttached() {
+        marketPriceService.addListener(this);
+        model.getAsk().addListener(askListener);
+        model.getBid().addListener(bidListener);
+        model.getFixPriceQuote().addListener(fixPriceQuoteListener);
+        model.getSelectedAskCurrency().addListener(selectedAskCurrencyListener);
+        model.getSelectedBidCurrency().addListener(selectedBidCurrencyListener);
+        model.getSelectedProtocol().addListener(selectedProtocolListener);
+    }
+
+    @Override
+    public void onViewDetached() {
+        marketPriceService.removeListener(this);
+        model.getAsk().removeListener(askListener);
+        model.getBid().removeListener(bidListener);
+        model.getFixPriceQuote().removeListener(fixPriceQuoteListener);
+        model.getSelectedAskCurrency().removeListener(selectedAskCurrencyListener);
+        model.getSelectedBidCurrency().removeListener(selectedBidCurrencyListener);
+        model.getSelectedProtocol().removeListener(selectedProtocolListener);
+    }
+
+    @Override
+    public void onMarketPriceUpdate(Map<QuoteCodePair, MarketPrice> map) {
+        log.error("onMarketPriceUpdate");
+    }
+
+    @Override
+    public void onMarketPriceSelected(MarketPrice selected) {
+        log.error("onMarketPriceSelected");
+        UIThread.run(() -> {
+            if (selected != null && model.getQuoteCodePair().get() == null) {
+                model.getQuoteCodePair().set(selected.quote().getQuoteCodePair());
+                model.getFixPriceQuote().set(selected.quote());
+                updateBaseAndQuoteCurrencyCodes(selected.code(), true);
+                updateBidFromAsk();
             }
         });
     }
 
+    private void setProtocolsFromQuoteCodePair() {
+        if (model.getQuoteCodePair().get() != null) {
+            model.getProtocols().setAll(ProtocolSpecifics.getProtocols(model.getQuoteCodePair().get()));
+        }
+    }
+
     private void updateBaseAndQuoteCurrencyCodes(String code, boolean isAsk) {
-        Optional<MarketPrice> marketPriceOptional = marketPriceService.getMarketPrice(model.getQuoteCodePair().get());
+        QuoteCodePair quoteCodePair = model.getQuoteCodePair().get();
+        if (quoteCodePair == null) {
+            return;
+        }
+        Optional<MarketPrice> marketPriceOptional = marketPriceService.getMarketPrice(quoteCodePair);
         if (marketPriceOptional.isPresent()) {
             MarketPrice marketPrice = marketPriceOptional.get();
             model.getFixPriceQuote().set(marketPrice.quote());
@@ -118,13 +189,17 @@ public class CreateOfferController implements Controller, MarketPriceService.Lis
                 model.getQuoteCurrencyCode().set(code);
                 model.getBaseCurrencyCode().set(marketPrice.quote().getBaseMonetary().getCode());
             } else {
+                handleUnclearQuotePairs();
                 log.error("No market price available for that currency pair");
             }
         } else {
-            // We do not have a market price for that currency pair
-            // We try to guess what base and quote currency is from what seems to be the dominant currency
-            // todo 
+            log.error("Market price not present for that currency pair. " +
+                            "QuoteCodePair={}, " +
+                            "MarketPriceByCurrencyMap size={}", quoteCodePair,
+                    marketPriceService.getMarketPriceByCurrencyMap().size());
+            handleUnclearQuotePairs();
         }
+        setProtocolsFromQuoteCodePair();
     }
 
     private void updateBidFromAsk() {
@@ -153,41 +228,47 @@ public class CreateOfferController implements Controller, MarketPriceService.Lis
         }
     }
 
-
-    @Override
-    public void onViewAttached() {
-        marketPriceService.addListener(this);
-        model.getAsk().addListener(askListener);
-        model.getBid().addListener(bidListener);
-        model.getFixPriceQuote().addListener(fixPriceQuoteListener);
-        model.getSelectedAskCurrency().addListener(selectedAskCurrencyListener);
-        model.getSelectedBidCurrency().addListener(selectedBidCurrencyListener);
-    }
-
-    @Override
-    public void onViewDetached() {
-        marketPriceService.removeListener(this);
-        model.getAsk().removeListener(askListener);
-        model.getBid().removeListener(bidListener);
-        model.getFixPriceQuote().removeListener(fixPriceQuoteListener);
-        model.getSelectedAskCurrency().removeListener(selectedAskCurrencyListener);
-        model.getSelectedBidCurrency().removeListener(selectedBidCurrencyListener);
-    }
-
-    @Override
-    public void onMarketPriceUpdate(Map<QuoteCodePair, MarketPrice> map) {
-        log.error("");
-    }
-
-    @Override
-    public void onMarketPriceSelected(MarketPrice selected) {
-        UIThread.run(() -> {
-            if (selected != null && model.getQuoteCodePair().get() == null) {
-                model.getQuoteCodePair().set(selected.quote().getQuoteCodePair());
-                model.getFixPriceQuote().set(selected.quote());
-                updateBaseAndQuoteCurrencyCodes(selected.code(), true);
-                updateBidFromAsk();
+    private void handleUnclearQuotePairs() {
+        // just temp hack to get base/quote set in all cases... need more elegant solution and probably better 
+        // modeling of ask/bid/base/quote aspects (SwapOffer has already some convenience methods)
+        if (model.getSelectedAskCurrency().get() != null &&
+                model.getSelectedAskCurrency().get().isFiat() &&
+                model.getSelectedBidCurrency().get() != null &&
+                model.getSelectedBidCurrency().get().isFiat()) {
+            // Both are Fiat
+            // If one is USD we use that as base currency
+            if (model.getSelectedAskCurrency().get().getCode().equals("USD")) {
+                model.getBaseCurrencyCode().set("USD");
+                model.getQuoteCurrencyCode().set(model.getSelectedBidCurrency().get().getCode());
+            } else if (model.getSelectedBidCurrency().get().getCode().equals("USD")) {
+                model.getBaseCurrencyCode().set("USD");
+                model.getQuoteCurrencyCode().set(model.getSelectedAskCurrency().get().getCode());
+            } else if (model.getSelectedAskCurrency().get() != null &&
+                    model.getSelectedBidCurrency().get() != null) {
+                model.getBaseCurrencyCode().set(model.getSelectedBidCurrency().get().getCode());
+                model.getQuoteCurrencyCode().set(model.getSelectedAskCurrency().get().getCode());
             }
-        });
+        } else if (model.getSelectedAskCurrency().get() != null &&
+                !model.getSelectedAskCurrency().get().isFiat() &&
+                model.getSelectedBidCurrency().get() != null &&
+                !model.getSelectedBidCurrency().get().isFiat()) {
+            // Both are Crypto
+            // If one is BTC we use that as base currency
+            if (model.getSelectedAskCurrency().get().getCode().equals("BTC")) {
+                model.getBaseCurrencyCode().set("BTC");
+                model.getQuoteCurrencyCode().set(model.getSelectedBidCurrency().get().getCode());
+            } else if (model.getSelectedBidCurrency().get().getCode().equals("BTC")) {
+                model.getBaseCurrencyCode().set("BTC");
+                model.getQuoteCurrencyCode().set(model.getSelectedAskCurrency().get().getCode());
+            } else if (model.getSelectedAskCurrency().get() != null &&
+                    model.getSelectedBidCurrency().get() != null) {
+                model.getBaseCurrencyCode().set(model.getSelectedBidCurrency().get().getCode());
+                model.getQuoteCurrencyCode().set(model.getSelectedAskCurrency().get().getCode());
+            }
+        } else if (model.getSelectedAskCurrency().get() != null &&
+                model.getSelectedBidCurrency().get() != null) {
+            model.getBaseCurrencyCode().set(model.getSelectedBidCurrency().get().getCode());
+            model.getQuoteCurrencyCode().set(model.getSelectedAskCurrency().get().getCode());
+        }
     }
 }

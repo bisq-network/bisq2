@@ -1,7 +1,7 @@
 package bisq.contract;
 
 import bisq.offer.Listing;
-import bisq.offer.protocol.ProtocolType;
+import bisq.offer.protocol.SwapProtocolType;
 import lombok.Getter;
 
 import java.util.Set;
@@ -10,7 +10,7 @@ import java.util.Set;
 public class MultiPartyContract<T extends Listing> extends Contract<T> {
     private final Set<Party> parties;
 
-    public MultiPartyContract(T listing, ProtocolType protocolType, Set<Party> parties) {
+    public MultiPartyContract(T listing, SwapProtocolType protocolType, Set<Party> parties) {
         super(listing, protocolType);
         this.parties = parties;
     }
