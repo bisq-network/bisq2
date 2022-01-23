@@ -43,7 +43,6 @@ import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Getter
 public class AmountInput {
     public static class AmountController implements Controller {
         private final AmountModel model;
@@ -118,8 +117,7 @@ public class AmountInput {
         }
     }
 
-    @Getter
-    public static class AmountModel implements Model {
+    private static class AmountModel implements Model {
         @Delegate
         private final OfferPreparationModel offerPreparationModel;
         private final boolean isBaseCurrency;

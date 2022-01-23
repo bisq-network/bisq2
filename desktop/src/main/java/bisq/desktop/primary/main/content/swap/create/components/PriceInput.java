@@ -46,7 +46,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 
 @Slf4j
-@Getter
 public class PriceInput {
     public static class PriceController implements Controller, MarketPriceService.Listener {
         private final PriceModel model;
@@ -63,6 +62,7 @@ public class PriceInput {
             selectedMarketListener = (observable, oldValue, newValue) -> {
                 if (newValue != null) {
                     model.marketString.set(newValue.toString());
+                    model.description.set(Res.offerbook.get("createOffer.price.fix.description.buy", newValue.baseCurrencyCode()));
                 }
                 model.setFixPrice(null);
                 setFixPriceFromMarketPrice();
@@ -120,13 +120,13 @@ public class PriceInput {
         }
     }
 
-    @Getter
-    public static class PriceModel implements Model {
+    private static class PriceModel implements Model {
         @Delegate
         private final OfferPreparationModel offerPreparationModel;
         private final MarketPriceService marketPriceService;
         public boolean hasFocus;
         public final StringProperty marketString = new SimpleStringProperty();
+        public final StringProperty description = new SimpleStringProperty();
 
         public PriceModel(OfferPreparationModel offerPreparationModel, MarketPriceService marketPriceService) {
             this.offerPreparationModel = offerPreparationModel;
@@ -140,6 +140,7 @@ public class PriceInput {
         private final ChangeListener<Boolean> focusListener;
         private final ChangeListener<Quote> fixPriceListener;
         private final BisqLabel marketLabel;
+        private final BisqLabel descriptionLabel;
 
         public PriceView(PriceModel model,
                          PriceController controller,
@@ -161,7 +162,7 @@ public class PriceInput {
             HBox.setHgrow(textInput, Priority.ALWAYS);
             hBox.getChildren().addAll(textInput, marketLabel);
 
-            BisqLabel descriptionLabel = new BisqLabel(Res.offerbook.get("createOffer.price.fix.description.buy"));
+            descriptionLabel = new BisqLabel();
             descriptionLabel.setId("input-description-label");
             descriptionLabel.setPrefWidth(190);
 
@@ -182,6 +183,7 @@ public class PriceInput {
 
         public void onViewAttached() {
             marketLabel.textProperty().bind(model.marketString);
+            descriptionLabel.textProperty().bind(model.description);
             textInput.textProperty().addListener(textInputListener);
             textInput.focusedProperty().addListener(focusListener);
             model.fixPriceProperty().addListener(fixPriceListener);
@@ -189,6 +191,7 @@ public class PriceInput {
 
         public void onViewDetached() {
             marketLabel.textProperty().unbind();
+            descriptionLabel.textProperty().unbind();
             textInput.textProperty().removeListener(textInputListener);
             textInput.focusedProperty().removeListener(focusListener);
             model.fixPriceProperty().removeListener(fixPriceListener);

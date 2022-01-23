@@ -45,7 +45,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-@Getter
 public class SettlementSelection {
     public static class SettlementController implements Controller {
         private final SettlementModel model;
@@ -138,8 +137,7 @@ public class SettlementSelection {
         }
     }
 
-    @Getter
-    public static class SettlementModel implements Model {
+    private static class SettlementModel implements Model {
         @Delegate
         private final OfferPreparationModel offerPreparationModel;
         private final ObservableList<Settlement.Method> baseSettlementMethods = FXCollections.observableArrayList();

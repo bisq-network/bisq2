@@ -114,7 +114,6 @@ public class AmountPriceGroup {
         }
     }
 
-    @Getter
     private static class AmountPriceModel implements Model {
         @Delegate
         private final OfferPreparationModel offerPreparationModel;

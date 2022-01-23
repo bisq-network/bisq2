@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Getter
 public class ProtocolSelection {
     public static class ProtocolController implements Controller {
         private final ProtocolModel model;
@@ -76,8 +75,7 @@ public class ProtocolSelection {
         }
     }
 
-    @Getter
-    public static class ProtocolModel implements Model {
+    private static class ProtocolModel implements Model {
         @Delegate
         private final OfferPreparationModel offerPreparationModel;
         private final ObservableList<ProtocolItem> observableList = FXCollections.observableArrayList();
@@ -129,7 +127,7 @@ public class ProtocolSelection {
             Label headline = new BisqLabel(Res.offerbook.get("createOffer.selectProtocol"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
-            tableView = new BisqTableView<>(model.getSortedList());
+            tableView = new BisqTableView<>(model.sortedList);
             tableView.setFixHeight(130);
             configTableView();
 
