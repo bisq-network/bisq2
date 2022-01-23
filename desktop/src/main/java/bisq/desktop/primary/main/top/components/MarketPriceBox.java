@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.top;
+package bisq.desktop.primary.main.top.components;
 
 import bisq.common.currency.BisqCurrency;
 import bisq.common.monetary.Market;

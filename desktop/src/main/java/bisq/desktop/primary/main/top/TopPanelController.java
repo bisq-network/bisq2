@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.top;
 
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.primary.main.top.components.MarketPriceBox;
 import lombok.Getter;
 
 public class TopPanelController implements Controller {

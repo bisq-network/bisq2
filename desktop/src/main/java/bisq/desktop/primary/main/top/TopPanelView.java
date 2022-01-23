@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.top;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.BisqHSpacer;
+import bisq.desktop.primary.main.top.components.MarketPriceBox;
 import javafx.geometry.Insets;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
