@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-public class IdentityModel implements Persistable<IdentityModel> {
+public class IdentityStore implements Persistable<IdentityStore> {
     @Getter
     private final Set<Identity> pool = new CopyOnWriteArraySet<>();
     @Getter
@@ -35,10 +35,10 @@ public class IdentityModel implements Persistable<IdentityModel> {
     @Getter
     private final Map<String, String> userNameByDomainId = new ConcurrentHashMap<>();
 
-    public IdentityModel() {
+    public IdentityStore() {
     }
 
-    private IdentityModel(Map<String, Identity> activeIdentityByDomainId,
+    private IdentityStore(Map<String, Identity> activeIdentityByDomainId,
                           Map<String, String> userNameByDomainId,
                           Set<Identity> pool,
                           Set<Identity> retired) {
@@ -49,12 +49,12 @@ public class IdentityModel implements Persistable<IdentityModel> {
     }
 
     @Override
-    public IdentityModel getClone() {
-        return new IdentityModel(activeIdentityByDomainId, userNameByDomainId, pool, retired);
+    public IdentityStore getClone() {
+        return new IdentityStore(activeIdentityByDomainId, userNameByDomainId, pool, retired);
     }
 
     @Override
-    public void applyPersisted(IdentityModel persisted) {
+    public void applyPersisted(IdentityStore persisted) {
         activeIdentityByDomainId.clear();
         activeIdentityByDomainId.putAll(persisted.getActiveIdentityByDomainId());
 

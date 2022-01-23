@@ -29,23 +29,23 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class AccountModel implements Persistable<AccountModel> {
+public class AccountStore implements Persistable<AccountStore> {
     private final List<Account> accounts = new CopyOnWriteArrayList<>();
 
-    public AccountModel() {
+    public AccountStore() {
     }
 
-    private AccountModel(List<Account> accounts) {
+    private AccountStore(List<Account> accounts) {
         this.accounts.addAll(accounts);
     }
 
     @Override
-    public AccountModel getClone() {
-        return new AccountModel(accounts);
+    public AccountStore getClone() {
+        return new AccountStore(accounts);
     }
 
     @Override
-    public void applyPersisted(AccountModel persisted) {
+    public void applyPersisted(AccountStore persisted) {
         accounts.clear();
         accounts.addAll(persisted.accounts);
     }

@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-public class ChatModel implements Persistable<ChatModel> {
+public class ChatStore implements Persistable<ChatStore> {
 
     @Getter
     private final Set<PrivateChannel> privateChannels = new CopyOnWriteArraySet<>();
@@ -40,10 +40,10 @@ public class ChatModel implements Persistable<ChatModel> {
     @Setter
     private Channel selectedChannel;
 
-    public ChatModel() {
+    public ChatStore() {
     }
 
-    private ChatModel(Set<PrivateChannel> privateChannels,
+    private ChatStore(Set<PrivateChannel> privateChannels,
                       Set<PublicChannel> publicChannels,
                       Channel selectedChannel,
                       Map<String, String> userNameByDomainId) {
@@ -54,16 +54,16 @@ public class ChatModel implements Persistable<ChatModel> {
     }
 
     @Override
-    public void applyPersisted(ChatModel chatModel) {
-        setAll(chatModel.privateChannels,
-                chatModel.publicChannels,
-                chatModel.selectedChannel,
-                chatModel.userNameByDomainId);
+    public void applyPersisted(ChatStore chatStore) {
+        setAll(chatStore.privateChannels,
+                chatStore.publicChannels,
+                chatStore.selectedChannel,
+                chatStore.userNameByDomainId);
     }
 
     @Override
-    public ChatModel getClone() {
-        return new ChatModel(privateChannels,
+    public ChatStore getClone() {
+        return new ChatStore(privateChannels,
                 publicChannels,
                 selectedChannel,
                 userNameByDomainId);

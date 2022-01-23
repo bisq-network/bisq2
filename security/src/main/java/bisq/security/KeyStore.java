@@ -25,25 +25,25 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class KeyPairModel implements Persistable<KeyPairModel> {
+public class KeyStore implements Persistable<KeyStore> {
 
     @Getter
     private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
 
-    public KeyPairModel() {
+    public KeyStore() {
     }
 
-    private KeyPairModel(Map<String, KeyPair> map) {
+    private KeyStore(Map<String, KeyPair> map) {
         this.keyPairsById.putAll(map);
     }
 
     @Override
-    public KeyPairModel getClone() {
-        return new KeyPairModel(keyPairsById);
+    public KeyStore getClone() {
+        return new KeyStore(keyPairsById);
     }
 
     @Override
-    public void applyPersisted(KeyPairModel persisted) {
+    public void applyPersisted(KeyStore persisted) {
         keyPairsById.clear();
         keyPairsById.putAll(persisted.getKeyPairsById());
     }

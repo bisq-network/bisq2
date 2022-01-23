@@ -20,25 +20,25 @@ package bisq.user;
 import bisq.persistence.Persistable;
 import lombok.Getter;
 
-public class UserModel implements Persistable<UserModel> {
+public class UserStore implements Persistable<UserStore> {
     @Getter
     private final Cookie cookie;
 
-    public UserModel() {
+    public UserStore() {
         cookie = new Cookie();
     }
 
-    public UserModel(Cookie cookie) {
+    public UserStore(Cookie cookie) {
         this.cookie = cookie;
     }
 
     @Override
-    public UserModel getClone() {
-        return new UserModel(cookie);
+    public UserStore getClone() {
+        return new UserStore(cookie);
     }
 
     @Override
-    public void applyPersisted(UserModel userModel) {
-        cookie.putAll(userModel.getCookie());
+    public void applyPersisted(UserStore userStore) {
+        cookie.putAll(userStore.getCookie());
     }
 }

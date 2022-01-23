@@ -26,33 +26,33 @@ import lombok.Getter;
 
 import java.util.List;
 
-public class AccountService implements PersistenceClient<AccountModel> {
+public class AccountService implements PersistenceClient<AccountStore> {
 
-    private final AccountModel accountModel = new AccountModel();
+    private final AccountStore accountStore = new AccountStore();
 
     @Getter
-    private final Persistence<AccountModel> persistence;
+    private final Persistence<AccountStore> persistence;
 
     public AccountService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, "db", accountModel);
+        persistence = persistenceService.getOrCreatePersistence(this, "db", accountStore);
     }
 
     @Override
-    public void applyPersisted(AccountModel persisted) {
-        synchronized (accountModel) {
-            accountModel.applyPersisted(persisted);
+    public void applyPersisted(AccountStore persisted) {
+        synchronized (accountStore) {
+            accountStore.applyPersisted(persisted);
         }
     }
 
     @Override
-    public AccountModel getClone() {
-        synchronized (accountModel) {
-            return accountModel.getClone();
+    public AccountStore getClone() {
+        synchronized (accountStore) {
+            return accountStore.getClone();
         }
     }
 
     public void addAccount(Account account) {
-        List<Account> accounts = accountModel.getAccounts();
+        List<Account> accounts = accountStore.getAccounts();
         if(accounts.contains(account)) return;
         accounts.add(account);
         persist();

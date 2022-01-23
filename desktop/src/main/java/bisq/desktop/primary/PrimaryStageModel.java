@@ -47,7 +47,7 @@ public class PrimaryStageModel implements Model {
     public PrimaryStageModel(DefaultServiceProvider serviceProvider) {
         title = serviceProvider.getApplicationOptions().appName();
 
-        Cookie cookie = serviceProvider.getUserService().getUserModel().getCookie();
+        Cookie cookie = serviceProvider.getUserService().getUserStore().getCookie();
         stageX = cookie.getAsOptionalDouble(CookieKey.STAGE_X);
         stageY = cookie.getAsOptionalDouble(CookieKey.STAGE_Y);
         stageWidth = cookie.getAsOptionalDouble(CookieKey.STAGE_W);
