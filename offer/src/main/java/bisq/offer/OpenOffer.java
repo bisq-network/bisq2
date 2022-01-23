@@ -18,9 +18,9 @@
 package bisq.offer;
 
 public class OpenOffer {
-    private final SwapOffer offer;
+    private final Offer offer;
 
-    public OpenOffer(SwapOffer offer) {
+    public OpenOffer(Offer offer) {
         this.offer = offer;
     }
 }

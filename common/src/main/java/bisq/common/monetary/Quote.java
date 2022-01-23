@@ -25,6 +25,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -42,7 +43,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @Slf4j
-public class Quote implements Comparable<Quote> {
+public class Quote implements Comparable<Quote>, Serializable {
     @Setter
     private static String QUOTE_SEPARATOR = "/";
 
@@ -94,6 +95,21 @@ public class Quote implements Comparable<Quote> {
         Monetary quoteMonetary = BisqCurrency.isFiat(quoteCurrencyCode) ?
                 Fiat.of(price, quoteCurrencyCode) :
                 Coin.of(price, quoteCurrencyCode);
+
+        return Quote.of(baseMonetary, quoteMonetary);
+    }
+
+    public static Quote fromPrice(long value, Market market) {
+        return fromPrice(value, market.baseCurrencyCode(), market.quoteCurrencyCode());
+    }
+
+    public static Quote fromPrice(long value, String baseCurrencyCode, String quoteCurrencyCode) {
+        Monetary baseMonetary = BisqCurrency.isFiat(baseCurrencyCode) ?
+                Fiat.of(1d, baseCurrencyCode) :
+                Coin.of(1d, baseCurrencyCode);
+        Monetary quoteMonetary = BisqCurrency.isFiat(quoteCurrencyCode) ?
+                Fiat.of(value, quoteCurrencyCode) :
+                Coin.of(value, quoteCurrencyCode);
 
         return Quote.of(baseMonetary, quoteMonetary);
     }

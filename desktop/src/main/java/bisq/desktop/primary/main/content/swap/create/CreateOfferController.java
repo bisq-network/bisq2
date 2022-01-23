@@ -19,86 +19,66 @@ package bisq.desktop.primary.main.content.swap.create;
 
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.offer.protocol.SwapProtocolType;
+import bisq.desktop.primary.main.content.swap.create.components.*;
+import bisq.offer.OfferService;
 import bisq.oracle.marketprice.MarketPriceService;
-import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CreateOfferController implements Controller {
-    private final MarketPriceService marketPriceService;
     private final CreateOfferModel model;
     @Getter
     private final CreateOfferView view;
-
-    private final ChangeListener<SwapProtocolType> selectedProtocolListener;
+    private final OfferService offerService;
 
     public CreateOfferController(DefaultServiceProvider serviceProvider) {
-        marketPriceService = serviceProvider.getMarketPriceService();
-        model = new CreateOfferModel(serviceProvider);
+        offerService = serviceProvider.getOfferService();
+        MarketPriceService marketPriceService = serviceProvider.getMarketPriceService();
+        OfferPreparationModel offerPreparationModel = new OfferPreparationModel();
 
-        var marketSelection = new MarketSelection.MarketSelectionController(marketPriceService, model.getSelectedMarket());
+        var marketSelectionController = new MarketSelection.MarketSelectionController(offerPreparationModel, marketPriceService);
+        var directionController = new DirectionSelection.DirectionController(offerPreparationModel);
+        var amountPriceController = new AmountPriceGroup.AmountPriceController(offerPreparationModel, marketPriceService);
+        var protocolSelectionController = new ProtocolSelection.ProtocolController(offerPreparationModel);
+        var settlementSelectionController = new SettlementSelection.SettlementController(offerPreparationModel);
 
-        var direction = new DirectionSelection.DirectionController(model.getSelectedMarket(), model.getDirection());
-
-        var amountPriceController = new AmountPriceGroup.AmountPriceController(serviceProvider.getMarketPriceService(),
-                model.getSelectedMarket(),
-                model.getDirection(),
-                model.getBaseCurrencyAmount(),
-                model.getQuoteCurrencyAmount(),
-                model.getFixPriceQuote()
-        );
-
-        var protocolSelection = new ProtocolSelection.ProtocolController(model.getSelectedMarket(), model.getSelectedProtocol());
-
-        var settlementSelection = new SettlementSelection.SettlementController(model.getSelectedMarket(),
-                model.getSelectedProtocol(),
-                model.getAskSettlementMethods(),
-                model.getBidSettlementMethods(),
-                model.getAskSelectedSettlementMethod(),
-                model.getBidSelectedSettlementMethod());
+        model = new CreateOfferModel(offerPreparationModel);
         view = new CreateOfferView(model, this,
-                marketSelection.getView(),
-                direction.getView(),
+                marketSelectionController.getView(),
+                directionController.getView(),
                 amountPriceController.getView(),
-                protocolSelection.getView(),
-                settlementSelection.getView());
-
-
-        selectedProtocolListener = (observable, oldValue, newValue) -> {
-            log.error("selectedProtocolListener {}", newValue);
-          /*  if (model.getSelectedBaseCurrency().get() != null) {
-                if (model.getSelectedBaseCurrency().get().isFiat()) {
-                    model.getAskSettlementMethods().setAll(ProtocolSpecifics.getFiatSettlementMethods(newValue));
-                } else {
-                    model.getAskSettlementMethods().setAll(ProtocolSpecifics.getCryptoSettlementMethods(newValue));
-                }
-            }
-            if (model.getSelectedQuoteCurrency().get() != null) {
-                if (model.getSelectedQuoteCurrency().get().isFiat()) {
-                    model.getBidSettlementMethods().setAll(ProtocolSpecifics.getFiatSettlementMethods(newValue));
-                } else {
-                    model.getBidSettlementMethods().setAll(ProtocolSpecifics.getCryptoSettlementMethods(newValue));
-                }
-            }*/
-        };
+                protocolSelectionController.getView(),
+                settlementSelectionController.getView());
     }
 
     @Override
     public void onViewAttached() {
-        model.getSelectedProtocol().addListener(selectedProtocolListener);
     }
 
     @Override
     public void onViewDetached() {
-        model.getSelectedProtocol().removeListener(selectedProtocolListener);
     }
 
-  /*  private void setProtocolsFromQuoteCodePair() {
-        if (model.getSelectedMarket().get() != null) {
-            model.getProtocols().setAll(ProtocolSpecifics.getProtocols(model.getSelectedMarket().get()));
-        }
-    }*/
+    public void onCreateOffer() {
+        offerService.createOffer(model.getSelectedMarket(),
+                        model.getDirection(),
+                        model.getBaseSideAmount(),
+                        model.getQuoteSideAmount(),
+                        model.getFixPrice(),
+                        model.getSelectedProtocolTyp(),
+                        model.getSelectedBaseSideSettlementMethod(),
+                        model.getSelectedQuoteSideSettlementMethod())
+                .whenComplete((offer, throwable) -> {
+                    if (throwable == null) {
+                        model.getOffer().set(offer);
+                    } else {
+                        //todo provide error to UI
+                    }
+                });
+    }
 
+    public void onPublishOffer() {
+        offerService.publishOffer(model.getOffer().get());
+    }
 }

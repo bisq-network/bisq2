@@ -17,5 +17,7 @@
 
 package bisq.offer.options;
 
-public interface ListingOption {
+import java.io.Serializable;
+
+public interface ListingOption extends Serializable {
 }

@@ -15,9 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.options;
+package bisq.account.settlement;
 
-public record AmountOption(double minAmountAsPercentage) implements ListingOption {
+import bisq.common.util.StringUtils;
+import bisq.network.p2p.message.Proto;
+
+import java.util.Date;
+
+public record Account(String id, long creationDate, String accountName, AccountPayload payload) implements Proto {
+    public Account(String accountName, AccountPayload payload) {
+        this(StringUtils.createUid(), new Date().getTime(), accountName, payload);
+    }
 }
-// Bisq 1 
-// min Amount

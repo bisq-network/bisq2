@@ -21,7 +21,7 @@ import bisq.account.settlement.Settlement;
 import bisq.common.monetary.Monetary;
 import bisq.offer.protocol.SwapProtocolType;
 import bisq.offer.options.ReputationOption;
-import bisq.offer.options.SettlementOption;
+import bisq.offer.options.FiatSettlementOption;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +49,7 @@ class OfferFormatter {
         return reputationOptions.toString();
     }
 
-    static String formatTransferOptions(SettlementOption settlementOption) {
+    static String formatTransferOptions(FiatSettlementOption settlementOption) {
         return settlementOption.bankName() + " / " + settlementOption.countyCodeOfBank();
     }
 

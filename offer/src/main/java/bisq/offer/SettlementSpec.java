@@ -15,9 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.options;
+package bisq.offer;
 
-public record AmountOption(double minAmountAsPercentage) implements ListingOption {
+import bisq.network.p2p.message.Proto;
+
+/**
+ * @param settlementMethodName     Name of Settlement.Method enum 
+ * @param makerSettlementAccountId Local ID of maker's settlement account.
+ *                                 In case maker had multiple accounts for same settlement method they
+ *                                 can define which account to use for that offer
+ */
+public record SettlementSpec(String settlementMethodName,
+                             String makerSettlementAccountId) implements Proto {
 }
-// Bisq 1 
-// min Amount

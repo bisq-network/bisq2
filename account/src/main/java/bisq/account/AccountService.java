@@ -18,5 +18,43 @@
 package bisq.account;
 
 
-public class AccountService {
+import bisq.account.settlement.Account;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
+import bisq.persistence.PersistenceService;
+import lombok.Getter;
+
+import java.util.List;
+
+public class AccountService implements PersistenceClient<AccountModel> {
+
+    private final AccountModel accountModel = new AccountModel();
+
+    @Getter
+    private final Persistence<AccountModel> persistence;
+
+    public AccountService(PersistenceService persistenceService) {
+        persistence = persistenceService.getOrCreatePersistence(this, "db", accountModel);
+    }
+
+    @Override
+    public void applyPersisted(AccountModel persisted) {
+        synchronized (accountModel) {
+            accountModel.applyPersisted(persisted);
+        }
+    }
+
+    @Override
+    public AccountModel getClone() {
+        synchronized (accountModel) {
+            return accountModel.getClone();
+        }
+    }
+
+    public void addAccount(Account account) {
+        List<Account> accounts = accountModel.getAccounts();
+        if(accounts.contains(account)) return;
+        accounts.add(account);
+        persist();
+    }
 }

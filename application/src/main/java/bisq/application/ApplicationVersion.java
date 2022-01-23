@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.options;
+package bisq.application;
 
-public record AmountOption(double minAmountAsPercentage) implements ListingOption {
+public class ApplicationVersion {
+    public static final String VERSION = "0.0.1";
 }
-// Bisq 1 
-// min Amount

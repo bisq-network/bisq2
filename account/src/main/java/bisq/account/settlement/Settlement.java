@@ -19,13 +19,15 @@ package bisq.account.settlement;
 
 import lombok.Getter;
 
+import java.io.Serializable;
+
 @Getter
-public abstract class Settlement<T extends Settlement.Method> {
-    public interface Method {
+public abstract class Settlement<T extends Settlement.Method> implements Serializable {
+    public interface Method extends Serializable {
         String name();
     }
 
-    public enum Type {
+    public enum Type implements Serializable{
         AUTOMATIC, MANUAL
     }
 

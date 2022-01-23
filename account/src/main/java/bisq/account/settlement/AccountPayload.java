@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.options;
+package bisq.account.settlement;
 
-public record AmountOption(double minAmountAsPercentage) implements ListingOption {
+import bisq.network.p2p.message.Proto;
+
+public record AccountPayload(String settlementMethodId ,String holderName, String iban, String bic) implements Proto {
 }
-// Bisq 1 
-// min Amount

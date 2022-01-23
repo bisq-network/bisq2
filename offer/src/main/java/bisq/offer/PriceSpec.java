@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.options;
+package bisq.offer;
 
-public record AmountOption(double minAmountAsPercentage) implements ListingOption {
+import bisq.network.p2p.message.Proto;
+
+public interface PriceSpec extends Proto {
 }
-// Bisq 1 
-// min Amount

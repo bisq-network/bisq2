@@ -21,7 +21,9 @@ import bisq.common.currency.CryptoCurrencyRepository;
 import bisq.common.currency.FiatCurrencyRepository;
 import lombok.Setter;
 
-public record Market(String baseCurrencyCode, String quoteCurrencyCode) {
+import java.io.Serializable;
+
+public record Market(String baseCurrencyCode, String quoteCurrencyCode) implements Serializable {
     @Setter
     private static String QUOTE_SEPARATOR = "/";
 

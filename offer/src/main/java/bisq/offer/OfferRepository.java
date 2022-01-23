@@ -18,47 +18,45 @@
 package bisq.offer;
 
 import bisq.network.NetworkService;
+import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.NetworkPayload;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-public class OpenOfferService {
-
+@Slf4j
+public class OfferRepository implements DataService.Listener {
     private final NetworkService networkService;
-    private final Set<OpenOffer> openOffers = new CopyOnWriteArraySet<>();
+    private final Set<Offer> offers = new CopyOnWriteArraySet<>();
 
-    public OpenOfferService(NetworkService networkService) {
+    public OfferRepository(NetworkService networkService) {
         this.networkService = networkService;
     }
 
     public CompletableFuture<Boolean> initialize() {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
-        //todo
         future.complete(true);
+        networkService.addDataServiceListener(this);
         return future;
     }
 
-   /* public void createNewOffer(long askAmount) {
-        Map<Transport.Type, Address> map = Map.of(Transport.Type.CLEAR, Address.localHost(3333));
-        NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"), "default");
-        SwapSide askSwapSide = new SwapSide(Coin.asBtc(askAmount), List.of());
-        SwapSide bidSwapSide = new SwapSide(Fiat.of(5000, "USD"), List.of(FiatSettlement.ZELLE));
-        SwapOffer offer = new SwapOffer(bidSwapSide,
-                askSwapSide,
-                "USD",
-                List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
-                makerNetworkId);
-        networkService.addData(offer);
-    }*/
-
-    public void newOpenOffer(Offer offer) {
-        OpenOffer openOffer = new OpenOffer(offer);
-        openOffers.add(openOffer);
-        //  Persistence.write(openOffers);
+    public void shutdown() {
+        networkService.removeDataServiceListener(this);
     }
 
-    public void shutdown() {
+    @Override
+    public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
+        if (networkPayload instanceof Offer offer) {
+            offers.add(offer);
+        }
+    }
 
+    @Override
+    public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
+        if (networkPayload instanceof Offer offer) {
+            offers.remove(offer);
+        }
     }
 }

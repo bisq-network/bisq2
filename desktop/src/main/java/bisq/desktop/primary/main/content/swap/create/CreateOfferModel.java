@@ -17,56 +17,31 @@
 
 package bisq.desktop.primary.main.content.swap.create;
 
-import bisq.account.settlement.Settlement;
-import bisq.application.DefaultServiceProvider;
-import bisq.common.monetary.Direction;
-import bisq.common.monetary.Market;
-import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
+import bisq.offer.Direction;
 import bisq.desktop.common.view.Model;
-import bisq.offer.protocol.SwapProtocolType;
-import bisq.oracle.marketprice.MarketPriceService;
+import bisq.desktop.primary.main.content.swap.create.components.OfferPreparationModel;
+import bisq.offer.Offer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Getter
+
 public class CreateOfferModel implements Model {
-    private final MarketPriceService marketPriceService;
+    @Delegate
+    private final OfferPreparationModel offerPreparationModel;
 
-    // Markets
-    private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
+    @Getter
+    private final ObjectProperty<Offer> offer = new SimpleObjectProperty<>();
 
-    // Direction
-    private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
-
-    // Amount/Price group
-    private final ObjectProperty<Monetary> baseCurrencyAmount = new SimpleObjectProperty<>();
-    private final ObjectProperty<Monetary> quoteCurrencyAmount = new SimpleObjectProperty<>();
-    private final ObjectProperty<Quote> fixPriceQuote = new SimpleObjectProperty<>();
-
-    // Protocol
-    private final ObjectProperty<SwapProtocolType> selectedProtocol = new SimpleObjectProperty<>();
-
-    // Settlement
-    private final ObservableList<Settlement.Method> askSettlementMethods = FXCollections.observableArrayList();
-    private final ObservableList<Settlement.Method> bidSettlementMethods = FXCollections.observableArrayList();
-    private final ObjectProperty<Settlement.Method> askSelectedSettlementMethod = new SimpleObjectProperty<>();
-    private final ObjectProperty<Settlement.Method> bidSelectedSettlementMethod = new SimpleObjectProperty<>();
-
-    public CreateOfferModel(DefaultServiceProvider serviceProvider) {
-        marketPriceService = serviceProvider.getMarketPriceService();
+    public CreateOfferModel(OfferPreparationModel offerPreparationModel) {
+        this.offerPreparationModel = offerPreparationModel;
     }
 
     public void onViewAttached() {
-        direction.set(Direction.BUY);
-
-        // protocols.setAll(SwapProtocolType.values());
-        // selectedProtocol.set(SwapProtocolType.REPUTATION);
+        offerPreparationModel.setDirection(Direction.BUY);
     }
 
     public void onViewDetached() {

@@ -20,3 +20,9 @@ package bisq.offer.options;
 // Data for verifying fee payment. Open question how we deal with fees...
 public record FeeOption(FeeType feeType, int blockHeightAtFeePayment, String feeTxId) implements ListingOption {
 }
+//  Bisq 1
+//    private String offerFeePaymentTxId;
+//    private final long blockHeightAtOfferCreation;
+//    private final long txFee;
+//    private final long makerFee;
+//    private final boolean isCurrencyForMakerFeeBtc;

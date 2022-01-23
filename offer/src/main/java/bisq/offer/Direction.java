@@ -15,9 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.options;
+package bisq.offer;
 
-public record AmountOption(double minAmountAsPercentage) implements ListingOption {
+import bisq.network.p2p.message.Proto;
+
+// It is always related to the base currency. E.g. BTC-USD market -> BUY means Buy BTC
+public enum Direction implements Proto {
+    BUY,
+    SELL
 }
-// Bisq 1 
-// min Amount

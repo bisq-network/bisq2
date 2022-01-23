@@ -18,13 +18,19 @@
 package bisq.desktop.primary.main.content.swap.create;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqButton;
+import bisq.desktop.components.controls.BisqTextArea;
+import bisq.desktop.primary.main.content.swap.create.components.*;
+import bisq.i18n.Res;
+import bisq.offer.Offer;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferController> {
-
+    private final ChangeListener<Offer> offerListener;
 
     public CreateOfferView(CreateOfferModel model,
                            CreateOfferController controller,
@@ -38,11 +44,44 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         root.setPadding(new Insets(20, 20, 20, 0));
 
         amountPriceView.getRoot().setPadding(new Insets(0, 0, -5, 0));
+
+        BisqButton createOfferButton = new BisqButton(Res.offerbook.get("createOffer.button"));
+        createOfferButton.setOnAction(e -> controller.onCreateOffer());
+
+        //todo temp
+        BisqTextArea offerSummary = new BisqTextArea();
+        offerSummary.setVisible(false);
+
+        BisqButton publishButton = new BisqButton(Res.offerbook.get("publishOffer.button"));
+        publishButton.setOnAction(e -> controller.onPublishOffer());
+        publishButton.setVisible(false);
+
         root.getChildren().addAll(
                 marketSelectionView.getRoot(),
                 directionView.getRoot(),
                 amountPriceView.getRoot(),
                 protocolView.getRoot(),
-                settlementView.getRoot());
+                settlementView.getRoot(),
+                createOfferButton,
+                offerSummary,
+                publishButton);
+
+        offerListener = (observable, oldValue, newValue) -> {
+            //todo show summary
+            offerSummary.setVisible(true);
+            offerSummary.setText(newValue.toString());
+
+            publishButton.setVisible(true);
+        };
+    }
+
+    @Override
+    public void onViewAttached() {
+        model.getOffer().addListener(offerListener);
+    }
+
+    @Override
+    public void onViewDetached() {
+        model.getOffer().removeListener(offerListener);
     }
 }

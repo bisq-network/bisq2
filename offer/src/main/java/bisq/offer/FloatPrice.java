@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.options;
+package bisq.offer;
 
-public record AmountOption(double minAmountAsPercentage) implements ListingOption {
+public record FloatPrice(double value) implements PriceSpec {
 }
-// Bisq 1 
-// min Amount

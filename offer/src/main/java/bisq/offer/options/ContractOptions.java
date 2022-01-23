@@ -17,7 +17,9 @@
 
 package bisq.offer.options;
 
-public record AmountOption(double minAmountAsPercentage) implements ListingOption {
+public record ContractOptions() implements ListingOption{
 }
-// Bisq 1 
-// min Amount
+
+// Bisq 1
+//    private final long maxTradeLimit;
+//    private final long maxTradePeriod

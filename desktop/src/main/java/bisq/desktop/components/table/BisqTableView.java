@@ -31,4 +31,9 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
 
         setPlaceholder(new BisqLabel(Res.common.get("table.placeholder.noData")));
     }
+
+    public void setFixHeight(double value) {
+       setMinHeight(value);
+       setMaxHeight(value);
+    }
 }

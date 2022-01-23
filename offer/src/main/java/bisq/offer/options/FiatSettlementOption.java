@@ -17,7 +17,13 @@
 
 package bisq.offer.options;
 
-public record AmountOption(double minAmountAsPercentage) implements ListingOption {
+// For some fiat methods is useful to know the makers bank or county of bank.
+public record FiatSettlementOption(String countyCodeOfBank, String bankName) implements ListingOption {
 }
-// Bisq 1 
-// min Amount
+
+
+// Bisq 1
+//    private final String countryCode;
+//    private final List<String> acceptedCountryCodes;
+//    private final String bankId;
+//    private final List<String> acceptedBankIds;

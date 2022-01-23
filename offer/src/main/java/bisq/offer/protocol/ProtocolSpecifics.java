@@ -17,6 +17,7 @@
 
 package bisq.offer.protocol;
 
+import bisq.account.settlement.BitcoinSettlement;
 import bisq.account.settlement.CryptoSettlement;
 import bisq.account.settlement.FiatSettlement;
 import bisq.account.settlement.Settlement;
@@ -34,7 +35,11 @@ public class ProtocolSpecifics {
         if (BisqCurrency.isFiat(code)) {
             return getFiatSettlementMethods(protocolType);
         } else {
-            return getCryptoSettlementMethods(protocolType);
+            if (code.equals("BTC")) {
+                return getBtcSettlementMethods(protocolType);
+            } else {
+                return getCryptoSettlementMethods(protocolType);
+            }
         }
     }
 
@@ -52,13 +57,25 @@ public class ProtocolSpecifics {
 
     public static List<CryptoSettlement.Method> getCryptoSettlementMethods(SwapProtocolType protocolType) {
         return switch (protocolType) {
-            case BTC_XMR_SWAP -> List.of(CryptoSettlement.Method.MAINNET);
-            case LIQUID_SWAP -> List.of(CryptoSettlement.Method.MAINNET);
-            case BSQ_SWAP -> List.of(CryptoSettlement.Method.MAINNET);
-            case LN_SWAP -> List.of(CryptoSettlement.Method.LN);
-            case MULTISIG -> List.of(CryptoSettlement.Method.MAINNET);
+            case BTC_XMR_SWAP -> List.of(CryptoSettlement.Method.NATIVE_CHAIN);
+            case LIQUID_SWAP -> List.of(CryptoSettlement.Method.NATIVE_CHAIN);
+            case BSQ_SWAP -> new ArrayList<>();
+            case LN_SWAP -> new ArrayList<>();
+            case MULTISIG -> new ArrayList<>();
             case BSQ_BOND -> List.of(CryptoSettlement.Method.values());
             case REPUTATION -> List.of(CryptoSettlement.Method.values());
+        };
+    }
+
+    public static List<BitcoinSettlement.Method> getBtcSettlementMethods(SwapProtocolType protocolType) {
+        return switch (protocolType) {
+            case BTC_XMR_SWAP -> List.of(BitcoinSettlement.Method.BTC_MAINCHAIN);
+            case LIQUID_SWAP -> List.of(BitcoinSettlement.Method.LBTC);
+            case BSQ_SWAP -> List.of(BitcoinSettlement.Method.BTC_MAINCHAIN);
+            case LN_SWAP -> List.of(BitcoinSettlement.Method.LN);
+            case MULTISIG -> List.of(BitcoinSettlement.Method.BTC_MAINCHAIN);
+            case BSQ_BOND -> List.of(BitcoinSettlement.Method.values());
+            case REPUTATION -> List.of(BitcoinSettlement.Method.values());
         };
     }
 

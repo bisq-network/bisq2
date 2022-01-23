@@ -17,5 +17,7 @@
 
 package bisq.offer.protocol;
 
-public interface ProtocolType {
+import java.io.Serializable;
+
+public interface ProtocolType extends Serializable {
 }

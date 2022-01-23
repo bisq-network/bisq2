@@ -20,42 +20,37 @@ package bisq.account.settlement;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import static bisq.account.settlement.FiatSettlement.Method.OTHER;
-
 @EqualsAndHashCode(callSuper = true)
 @ToString
-public class FiatSettlement extends Settlement<FiatSettlement.Method> {
-    public static final FiatSettlement SEPA = new FiatSettlement(Method.SEPA);
-    public static final FiatSettlement REVOLUT = new FiatSettlement(Method.REVOLUT);
-    public static final FiatSettlement ZELLE = new FiatSettlement(Method.ZELLE);
+public class BitcoinSettlement extends Settlement<BitcoinSettlement.Method>  {
+    public static final BitcoinSettlement BTC_MAINCHAIN = new BitcoinSettlement(BitcoinSettlement.Method.BTC_MAINCHAIN);
 
     public enum Method implements Settlement.Method {
-        SEPA,
-        ZELLE,
-        REVOLUT,
-        BANK,
+        BTC_MAINCHAIN,
+        LN,
+        LBTC,
+        WBTC,
         OTHER
     }
 
-    public FiatSettlement(Method method) {
+    public BitcoinSettlement(Method method) {
         super(method);
     }
 
-    public FiatSettlement(Method method, String name) {
+    public BitcoinSettlement(Method method, String name) {
         super(method, name);
     }
 
-    public FiatSettlement(String name) {
+    public BitcoinSettlement(Method method, String name, Type type) {
+        super(method, name, type);
+    }
+
+    public BitcoinSettlement(String name) {
         super(name);
     }
 
     @Override
     protected Method getDefaultMethod() {
-        return OTHER;
-    }
-
-    @Override
-    protected Type getDefaultType() {
-        return Type.AUTOMATIC; // todo should be manual, but test fails with manual
+        return Method.OTHER;
     }
 }

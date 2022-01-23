@@ -17,7 +17,9 @@
 
 package bisq.offer.options;
 
-public record AmountOption(double minAmountAsPercentage) implements ListingOption {
+public record CollateralOptions() implements ListingOption{
 }
-// Bisq 1 
-// min Amount
+
+// Bisq 1
+//   private final long buyerSecurityDeposit;
+//    private final long sellerSecurityDeposit;
