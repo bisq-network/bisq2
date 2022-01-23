@@ -17,31 +17,18 @@
 
 package bisq.offer;
 
-import bisq.account.settlement.FiatSettlement;
-import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
-import bisq.network.NetworkId;
-import bisq.network.p2p.INetworkService;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Transport;
-import bisq.offer.protocol.SwapProtocolType;
-import bisq.security.PubKey;
-import bisq.wallets.Wallet;
+import bisq.network.NetworkService;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class OpenOfferService {
-    // Expected dependency for deactivating offers if not sufficient wallet balance
-    Wallet wallet;
 
-    private final INetworkService networkService;
+    private final NetworkService networkService;
     private final Set<OpenOffer> openOffers = new CopyOnWriteArraySet<>();
 
-    public OpenOfferService(INetworkService networkService) {
+    public OpenOfferService(NetworkService networkService) {
         this.networkService = networkService;
     }
 
@@ -52,7 +39,7 @@ public class OpenOfferService {
         return future;
     }
 
-    public void createNewOffer(long askAmount) {
+   /* public void createNewOffer(long askAmount) {
         Map<Transport.Type, Address> map = Map.of(Transport.Type.CLEAR, Address.localHost(3333));
         NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"), "default");
         SwapSide askSwapSide = new SwapSide(Coin.asBtc(askAmount), List.of());
@@ -63,9 +50,9 @@ public class OpenOfferService {
                 List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
                 makerNetworkId);
         networkService.addData(offer);
-    }
+    }*/
 
-    public void newOpenOffer(SwapOffer offer) {
+    public void newOpenOffer(Offer offer) {
         OpenOffer openOffer = new OpenOffer(offer);
         openOffers.add(openOffer);
         //  Persistence.write(openOffers);

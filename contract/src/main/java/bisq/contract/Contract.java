@@ -18,7 +18,7 @@
 package bisq.contract;
 
 import bisq.offer.Listing;
-import bisq.offer.protocol.ProtocolType;
+import bisq.offer.protocol.SwapProtocolType;
 import lombok.Getter;
 
 /**
@@ -27,10 +27,10 @@ import lombok.Getter;
 @Getter
 public abstract class Contract<T extends Listing> {
     protected final T listing;
-    protected final ProtocolType protocolType;
+    protected final SwapProtocolType protocolType;
     protected final Party maker;
 
-    public Contract(T listing, ProtocolType protocolType) {
+    public Contract(T listing, SwapProtocolType protocolType) {
         this.protocolType = protocolType;
         this.maker = new Party(Role.MAKER, listing.getMakerNetworkId());
         this.listing = listing;

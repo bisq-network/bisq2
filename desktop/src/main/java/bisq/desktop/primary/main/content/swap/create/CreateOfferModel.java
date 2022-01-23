@@ -17,61 +17,33 @@
 
 package bisq.desktop.primary.main.content.swap.create;
 
-import bisq.application.DefaultServiceProvider;
-import bisq.common.currency.BisqCurrency;
-import bisq.common.currency.CryptoCurrencyRepository;
-import bisq.common.currency.CurrencyRepository;
-import bisq.common.currency.FiatCurrencyRepository;
-import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
-import bisq.common.monetary.QuoteCodePair;
+import bisq.offer.Direction;
 import bisq.desktop.common.view.Model;
-import bisq.offer.protocol.SwapProtocolType;
-import bisq.oracle.marketprice.MarketPriceService;
+import bisq.desktop.primary.main.content.swap.create.components.OfferPreparationModel;
+import bisq.offer.Offer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Getter
+
 public class CreateOfferModel implements Model {
-    private final MarketPriceService marketPriceService;
-    ;
-    private ObservableList<BisqCurrency> currencies = FXCollections.observableArrayList();
+    @Delegate
+    private final OfferPreparationModel offerPreparationModel;
 
-    private ObjectProperty<Monetary> ask = new SimpleObjectProperty<>();
-    private final ObjectProperty<BisqCurrency> selectedAskCurrency = new SimpleObjectProperty<>();
+    @Getter
+    private final ObjectProperty<Offer> offer = new SimpleObjectProperty<>();
 
-    private ObjectProperty<Monetary> bid = new SimpleObjectProperty<>();
-    private final ObjectProperty<BisqCurrency> selectedBidCurrency = new SimpleObjectProperty<>();
-    private final ObjectProperty<Quote> fixPriceQuote = new SimpleObjectProperty<>();
-    private final ObjectProperty<QuoteCodePair> quoteCodePair = new SimpleObjectProperty<>();
-    private final StringProperty baseCurrencyCode = new SimpleStringProperty();
-    private final StringProperty quoteCurrencyCode = new SimpleStringProperty();
-
-    private final ObservableList<SwapProtocolType> protocols = FXCollections.observableArrayList();
-    private final ObjectProperty<SwapProtocolType> selectedProtocol = new SimpleObjectProperty<>();
-
-    public CreateOfferModel(DefaultServiceProvider serviceProvider) {
-        marketPriceService = serviceProvider.getMarketPriceService();
+    public CreateOfferModel(OfferPreparationModel offerPreparationModel) {
+        this.offerPreparationModel = offerPreparationModel;
     }
 
     public void onViewAttached() {
-        currencies.clear();
-        currencies.addAll(CurrencyRepository.getAllCurrencies());
-        selectedAskCurrency.set(CryptoCurrencyRepository.getDefaultCurrency());
-        selectedBidCurrency.set(FiatCurrencyRepository.getDefaultCurrency());
-
-        protocols.setAll(SwapProtocolType.values());
-        selectedProtocol.set(SwapProtocolType.REPUTATION);
+        offerPreparationModel.setDirection(Direction.BUY);
     }
 
     public void onViewDetached() {
-        currencies.clear();
     }
 }

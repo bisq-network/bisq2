@@ -17,8 +17,10 @@
 
 package bisq.offer.protocol;
 
+// Versioning is handled by adding new entries. That way we could support multiple versions of the same protocol 
+// if needed.
 public enum SwapProtocolType implements ProtocolType {
-    ATOMIC_CROSS_CHAIN_SWAP,
+    BTC_XMR_SWAP,
     LIQUID_SWAP,                // Atomic same chain (Liquid)
     BSQ_SWAP,                   // Atomic same chain (Bitcoin)
     LN_SWAP,

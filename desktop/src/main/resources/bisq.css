@@ -1366,7 +1366,7 @@ textfield */
 }
 
 .toggle-button-inactive {
-    -fx-background-color: -bs-color-gray-1;
+    -fx-background-color: -bs-color-gray-bbb;
 }
 
 #trade-fee-textfield {
@@ -1830,6 +1830,11 @@ textfield */
 
 #buy-button {
     -fx-background-color: -bs-buy;
+    -fx-text-fill: -bs-white;
+}
+
+#button-inactive {
+    -fx-background-color: -bs-color-gray-3;
     -fx-text-fill: -bs-white;
 }
 

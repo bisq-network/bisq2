@@ -17,228 +17,98 @@
 
 package bisq.offer;
 
+import bisq.account.settlement.BitcoinSettlement;
 import bisq.account.settlement.FiatSettlement;
-import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
+import bisq.account.settlement.Settlement;
+import bisq.common.monetary.Market;
+import bisq.common.monetary.Monetary;
+import bisq.common.monetary.Quote;
+import bisq.common.util.StringUtils;
+import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
-import bisq.network.p2p.INetworkService;
-import bisq.network.p2p.MockNetworkService;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Transport;
-import bisq.offer.options.*;
+import bisq.network.NetworkIdWithKeyPair;
+import bisq.network.NetworkService;
+import bisq.network.p2p.services.data.broadcast.BroadcastResult;
+import bisq.offer.options.ListingOption;
 import bisq.offer.protocol.SwapProtocolType;
-import bisq.security.PubKey;
-import io.reactivex.subjects.PublishSubject;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 public class OfferService {
-    private final List<Listing> offers = new CopyOnWriteArrayList<>();
-    protected final PublishSubject<Listing> offerAddedSubject;
-    protected final PublishSubject<Listing> offerRemovedSubject;
-    private final INetworkService networkService;
+    private final NetworkService networkService;
+    private final IdentityService identityService;
 
-    public OfferService(INetworkService networkService) {
+    public OfferService(NetworkService networkService, IdentityService identityService) {
         this.networkService = networkService;
-
-        offerAddedSubject = PublishSubject.create();
-        offerRemovedSubject = PublishSubject.create();
+        this.identityService = identityService;
     }
 
     public CompletableFuture<Boolean> initialize() {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
-        //todo
-
-        offers.addAll(MockOfferBuilder.makeOffers().values());
-
-        networkService.addListener(new MockNetworkService.Listener() {
-            @Override
-            public void onDataAdded(Serializable serializable) {
-                if (serializable instanceof Listing offer) {
-                    offers.add(offer);
-                    offerAddedSubject.onNext(offer);
-                }
-            }
-
-            @Override
-            public void onDataRemoved(Serializable serializable) {
-                if (serializable instanceof Listing offer) {
-                    offers.remove(offer);
-                    offerRemovedSubject.onNext(offer);
-                }
-            }
-        });
-
         future.complete(true);
         return future;
-    }
-
-    public List<Listing> getOffers() {
-        return offers;
-    }
-
-    public PublishSubject<Listing> getOfferAddedSubject() {
-        return offerAddedSubject;
-    }
-
-    public PublishSubject<Listing> getOfferRemovedSubject() {
-        return offerRemovedSubject;
-    }
-
-    public SwapOffer createOffer(long askAmount) {
-        NetworkId makerNetworkId = new NetworkId(Map.of(Transport.Type.CLEAR, Address.localHost(3333)), new PubKey(null, "default"), "default");
-        SwapSide askSwapSide = new SwapSide(Coin.asBtc(askAmount), List.of());
-        SwapSide bidSwapSide = new SwapSide(Fiat.of(5000, "USD"), List.of(FiatSettlement.ZELLE));
-        return new SwapOffer(bidSwapSide,
-                askSwapSide,
-                "USD",
-                List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
-                makerNetworkId);
-    }
-
-    public void publishOffer(SwapOffer offer) {
-        networkService.addData(offer);
     }
 
     public void shutdown() {
     }
 
-    public static class MockOfferBuilder {
+    public CompletableFuture<Offer> createOffer(Market selectedMarket,
+                                                Direction direction,
+                                                Monetary baseSideAmount,
+                                                Monetary quoteSideAmount,
+                                                Quote fixPrice,
+                                                SwapProtocolType selectedProtocolTyp,
+                                                Settlement.Method selectedBaseSideSettlementMethod,
+                                                Settlement.Method selectedQuoteSideSettlementMethod) {
+        String offerId = StringUtils.createUid();
+        return identityService.getOrCreateIdentity(offerId).thenApply(identity ->
+        {
+            log.error("identity {}", identity);
+            NetworkId makerNetworkId = identity.networkId();
+            ArrayList<SwapProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
 
-        @Getter
-        private final static Map<String, Listing> data = new HashMap<>();
+            ArrayList<Settlement<? extends Settlement.Method>> baseSettlements = new ArrayList<>(List.of(BitcoinSettlement.BTC_MAINCHAIN));
+            ArrayList<Settlement<? extends Settlement.Method>> quoteSettlements = new ArrayList<>(List.of(FiatSettlement.ZELLE));
+            HashSet<ListingOption> listingOptions = new HashSet<>();
 
-        public static Map<String, Listing> makeOffers() {
-            for (int i = 0; i < 10; i++) {
-                SwapOffer offer = getRandomOffer();
-                data.put(offer.getId(), offer);
-            }
-    
-           /* new Timer().scheduleAtFixedRate(new TimerTask() {
-                @Override
-                public void run() {
-                    int toggle = new Random().nextInt(2);
-                    if (toggle == 0) {
-                        int iter = new Random().nextInt(3);
-                        for (int i = 0; i < iter; i++) {
-                            Serializable offer = getRandomOffer();
-                            data.put(offer.getId(), offer);
-                            listeners.forEach(l -> l.onOfferAdded(offer));
-                        }
-                    } else {
-                        int iter2 = new Random().nextInt(2);
-                        for (int i = 0; i < iter2; i++) {
-                            if (!data.isEmpty()) {
-                                Serializable offerToRemove = getOfferToRemove();
-                                data.remove(offerToRemove.getId());
-                                listeners.forEach(l -> l.onOfferRemoved(offerToRemove));
-                            }
-                        }
-                    }
-                }
-            }, 0, 500);*/
-            return data;
-        }
+            //todo serialization does not work correctly.... 
+            baseSettlements = new ArrayList<>();
+            quoteSettlements = new ArrayList<>();
+            listingOptions = null;
 
-        private static SwapOffer getRandomOffer() {
-            SwapSide askSwapSide;
-            SwapSide bidSwapSide;
-            Optional<Double> marketBasedPrice = Optional.empty();
-            Optional<Double> minAmountAsPercentage = Optional.empty();
-            String baseCurrency;
-            //  int rand = new Random().nextInt(3);
-            int rand = new Random().nextInt(2);
-            //  rand = 0;
-            if (rand == 0) {
-                long usdAmount = new Random().nextInt(1000) + 500000000; // precision 4 / 50k usd
-                long btcAmount = new Random().nextInt(100000000) + 100000000; // precision 8 / 1 btc
-                usdAmount = 370000000; // precision 4 / 50k usd
-                btcAmount = 100000000; // precision 8 / 1 btc
-                askSwapSide = getRandomFiatAsset("USD", usdAmount);
-                bidSwapSide = getRandomCryptoAsset("BTC", btcAmount);
-                baseCurrency = "BTC";
-                marketBasedPrice = Optional.of(new Random().nextInt(100) / 1000d - 0.05d); // +/- 5%
-                // marketBasedPrice = Optional.empty();
-                minAmountAsPercentage = new Random().nextBoolean() ? Optional.empty() : Optional.of(0.1);
-                // minAmountAsPercentage = Optional.empty();
-            } else if (rand == 1) {
-                long usdAmount = new Random().nextInt(1000) + 600000000; // precision 4 / 50k usd
-                long btcAmount = new Random().nextInt(100000000) + 110000000; // precision 8 / 1 btc
-                usdAmount = 370000000; // precision 4 / 50k usd
-                btcAmount = 100000000; // precision 8 / 1 btc
-                askSwapSide = getRandomCryptoAsset("BTC", btcAmount);
-                bidSwapSide = getRandomFiatAsset("USD", usdAmount);
-                baseCurrency = "BTC";
-                marketBasedPrice = Optional.of(new Random().nextInt(100) / 10000d - 0.005d); // +/- 0.5%
-                marketBasedPrice = Optional.empty();
-                minAmountAsPercentage = new Random().nextBoolean() ? Optional.empty() : Optional.of(0.1);
-                // minAmountAsPercentage = Optional.empty();
-            } else if (rand == 2) {
-                long usdAmount = new Random().nextInt(100000) + 1200000; // precision 4 / 120 usd
-                long eurAmount = new Random().nextInt(100000) + 1000000; // precision 4 / 100 eur
-                askSwapSide = getRandomFiatAsset("USD", usdAmount);
-                bidSwapSide = getRandomFiatAsset("EUR", eurAmount);
-                baseCurrency = "USD";
+            FixPrice priceSpec = new FixPrice(fixPrice.getValue());
 
-            } else {
-                // ignore for now as fiat/altcoins calculations not supported and only one market price
-                long btcAmount = new Random().nextInt(10000000) + 100000000; // precision 8 / 1 btc //0.007144 BTC
-                long xmrAmount = new Random().nextInt(10000000) + 13800000000L; // precision 8 / 138 xmr
-                bidSwapSide = getRandomCryptoAsset("BTC", btcAmount);
-                askSwapSide = getRandomCryptoAsset("XMR", xmrAmount);
-                baseCurrency = "XMR";
-                marketBasedPrice = Optional.of(-0.02);
-                minAmountAsPercentage = Optional.of(0.8);
-            }
-            List<SwapProtocolType> protocolTypes = new ArrayList<>();
-            rand = new Random().nextInt(3);
-            for (int i = 0; i < rand; i++) {
-                SwapProtocolType swapProtocolType = SwapProtocolType.values()[new Random().nextInt(SwapProtocolType.values().length)];
-                protocolTypes.add(swapProtocolType);
-            }
-            Map<Transport.Type, Address> map = Map.of(Transport.Type.CLEAR, Address.localHost(1000 + new Random().nextInt(1000)));
-            NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"), "default");
+            ArrayList<SettlementSpec> baseSideSettlementSpecs = new ArrayList<>();
+            ArrayList<SettlementSpec> quoteSideSettlementSpecs = new ArrayList<>();
 
-            Set<ListingOption> options = new HashSet<>();
-            ReputationProof accountCreationDateProof = new AccountCreationDateProof("hashOfAccount", "otsProof)");
-            ReputationOption reputationOptions = new ReputationOption(Set.of(accountCreationDateProof));
-            options.add(reputationOptions);
+            
+            return new Offer(offerId,
+                    new Date().getTime(),
+                    makerNetworkId,
+                    selectedMarket,
+                    direction,
+                    baseSideAmount.getValue(),
+                    priceSpec,
+                    protocolTypes,
+                    baseSideSettlementSpecs,
+                    quoteSideSettlementSpecs,
+                    listingOptions
+            );
+        });
+    }
 
-            SettlementOption settlementOptions = new Random().nextBoolean() ?
-                    new SettlementOption("USA", "HSBC") :
-                    new Random().nextBoolean() ? new SettlementOption("DE", "N26") :
-                            null;
-            if (settlementOptions != null) {
-                options.add(settlementOptions);
-            }
-            minAmountAsPercentage.ifPresent(value -> options.add(new AmountOption(value)));
-            marketBasedPrice.ifPresent(value -> options.add(new PriceOption(value)));
-            return new SwapOffer(askSwapSide, bidSwapSide, askSwapSide.code(), makerNetworkId, protocolTypes, options);
-        }
-
-        private static SwapSide getRandomCryptoAsset(String code, long amount) {
-            List<FiatSettlement> transfers = new ArrayList<>(List.of(FiatSettlement.SEPA, FiatSettlement.ZELLE, FiatSettlement.REVOLUT));
-            Collections.shuffle(transfers);
-            transfers = List.of(transfers.get(0));
-            return new SwapSide(Coin.of(amount, code), transfers);
-        }
-
-        private static SwapSide getRandomFiatAsset(String code, long amount) {
-            List<FiatSettlement> transfers = new ArrayList<>(List.of(FiatSettlement.SEPA, FiatSettlement.ZELLE, FiatSettlement.REVOLUT));
-            Collections.shuffle(transfers);
-            transfers = List.of(transfers.get(0));
-            return new SwapSide(Fiat.of(amount, code), transfers);
-        }
-
-        private static Listing getOfferToRemove() {
-            int index = new Random().nextInt(data.size());
-            return new ArrayList<>(data.values()).get(index);
-        }
+    public CompletableFuture<CompletableFuture<List<CompletableFuture<BroadcastResult>>>> publishOffer(Offer offer) {
+        return identityService.getOrCreateIdentity(offer.getId())
+                .thenApply(identity -> {
+                    log.error("identity {}", identity);
+                    NetworkIdWithKeyPair nodeIdAndKeyPair = identity.getNodeIdAndKeyPair();
+                    return networkService.addData(offer, nodeIdAndKeyPair);
+                });
     }
 }

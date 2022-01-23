@@ -20,7 +20,7 @@ package bisq.oracle.marketprice;
 import bisq.common.currency.BisqCurrency;
 import bisq.common.data.Pair;
 import bisq.common.monetary.Quote;
-import bisq.common.monetary.QuoteCodePair;
+import bisq.common.monetary.Market;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CollectionUtil;
@@ -61,7 +61,7 @@ public class MarketPriceService {
     }
 
     public interface Listener {
-        void onMarketPriceUpdate(Map<QuoteCodePair, MarketPrice> map);
+        void onMarketPriceUpdate(Map<Market, MarketPrice> map);
 
         void onMarketPriceSelected(MarketPrice selected);
     }
@@ -73,7 +73,7 @@ public class MarketPriceService {
     private final List<Provider> candidates = new ArrayList<>();
     private Optional<BaseHttpClient> httpClient = Optional.empty();
     @Getter
-    private final Map<QuoteCodePair, MarketPrice> marketPriceByCurrencyMap = new HashMap<>();
+    private final Map<Market, MarketPrice> marketPriceByCurrencyMap = new HashMap<>();
     @Getter
     private Optional<MarketPrice> selectedMarketPrice = Optional.empty();
 
@@ -108,11 +108,11 @@ public class MarketPriceService {
         httpClient.ifPresent(BaseHttpClient::shutdown);
     }
 
-    public Optional<MarketPrice> getMarketPrice(QuoteCodePair quoteCodePair) {
-        return Optional.ofNullable(marketPriceByCurrencyMap.get(quoteCodePair));
+    public Optional<MarketPrice> getMarketPrice(Market market) {
+        return Optional.ofNullable(marketPriceByCurrencyMap.get(market));
     }
 
-    public CompletableFuture<Map<QuoteCodePair, MarketPrice>> request() {
+    public CompletableFuture<Map<Market, MarketPrice>> request() {
         if (httpClient.isEmpty()) {
             log.warn("No httpClient present");
             return CompletableFuture.completedFuture(new HashMap<>());
@@ -128,7 +128,7 @@ public class MarketPriceService {
         listeners.remove(listener);
     }
 
-    private CompletableFuture<Map<QuoteCodePair, MarketPrice>> request(BaseHttpClient httpClient) {
+    private CompletableFuture<Map<Market, MarketPrice>> request(BaseHttpClient httpClient) {
         if (httpClient.hasPendingRequest()) {
             return CompletableFuture.failedFuture(new PendingRequestException());
         }
@@ -138,7 +138,7 @@ public class MarketPriceService {
                 long ts = System.currentTimeMillis();
                 log.info("Request market price from {}", httpClient.getBaseUrl());
                 String json = httpClient.get("getAllMarketPrices", Optional.of(new Pair<>("User-Agent", userAgent)));
-                Map<QuoteCodePair, MarketPrice> map = parseResponse(json);
+                Map<Market, MarketPrice> map = parseResponse(json);
                 log.info("Market price request from {} resulted in {} items took {} ms",
                         httpClient.getBaseUrl(), map.size(), System.currentTimeMillis() - ts);
 
@@ -146,7 +146,7 @@ public class MarketPriceService {
                 marketPriceByCurrencyMap.putAll(map);
                 listeners.forEach(listener -> listener.onMarketPriceUpdate(marketPriceByCurrencyMap));
                 if (selectedMarketPrice.isEmpty()) {
-                    selectedMarketPrice = Optional.of(map.get(QuoteCodePair.getDefault()));
+                    selectedMarketPrice = Optional.of(map.get(Market.getDefault()));
                     listeners.forEach(listener -> listener.onMarketPriceSelected(selectedMarketPrice.get()));
                 }
                 return marketPriceByCurrencyMap;
@@ -157,8 +157,8 @@ public class MarketPriceService {
         }, POOL);
     }
 
-    private Map<QuoteCodePair, MarketPrice> parseResponse(String json) {
-        Map<QuoteCodePair, MarketPrice> map = new HashMap<>();
+    private Map<Market, MarketPrice> parseResponse(String json) {
+        Map<Market, MarketPrice> map = new HashMap<>();
         LinkedTreeMap<?, ?> linkedTreeMap = new Gson().fromJson(json, LinkedTreeMap.class);
         List<?> list = (ArrayList<?>) linkedTreeMap.get("data");
         list.forEach(obj -> {
@@ -176,7 +176,7 @@ public class MarketPriceService {
                     String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
                     String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
                     Quote quote = Quote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);
-                    map.put(quote.getQuoteCodePair(), new MarketPrice(quote, currencyCode, timestampSec * 1000, dataProvider));
+                    map.put(quote.getMarket(), new MarketPrice(quote, currencyCode, timestampSec * 1000, dataProvider));
                 }
             } catch (Throwable t) {
                 // We do not fail the whole request if one entry would be invalid

@@ -20,13 +20,13 @@ package bisq.offer;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkId;
 import bisq.offer.options.ListingOption;
-import bisq.offer.protocol.ProtocolType;
+import bisq.offer.protocol.SwapProtocolType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 @EqualsAndHashCode
 @Getter
@@ -34,8 +34,8 @@ public abstract class Listing implements Serializable {
     protected final String id;
     protected final long date;
     protected final NetworkId makerNetworkId;
-    protected final List<? extends ProtocolType> protocolTypes;
-    protected final Set<ListingOption> listingOptions;
+    protected final ArrayList<? extends SwapProtocolType> protocolTypes;
+    protected final HashSet<ListingOption> listingOptions;
 
     /**
      * @param id             The unique nodeId for that listing.
@@ -49,8 +49,8 @@ public abstract class Listing implements Serializable {
     public Listing(String id,
                    long date,
                    NetworkId makerNetworkId,
-                   List<? extends ProtocolType> protocolTypes,
-                   Set<ListingOption> listingOptions) {
+                   ArrayList<? extends SwapProtocolType> protocolTypes,
+                   HashSet<ListingOption> listingOptions) {
         this.id = id;
         this.date = date;
         this.makerNetworkId = makerNetworkId;
@@ -59,8 +59,8 @@ public abstract class Listing implements Serializable {
     }
 
     public Listing(NetworkId makerNetworkId,
-                   List<? extends ProtocolType> protocolTypes,
-                   Set<ListingOption> listingOptions) {
+                   ArrayList<? extends SwapProtocolType> protocolTypes,
+                   HashSet<ListingOption> listingOptions) {
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 makerNetworkId,

@@ -24,9 +24,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PriceValidator extends InputValidator {
     public ValidationResult validate(String value) {
-        ValidationResult result = super.validate(value);
+       /* ValidationResult result = super.validate(value);
         if (!result.isValid) {
             return result;
+        }*/
+        if (value.isEmpty()) {
+            return new ValidationResult(true);
         }
         try {
             Double.parseDouble(value);

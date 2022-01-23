@@ -1,7 +1,7 @@
 package bisq.web.server.handler;
 
 
-import bisq.application.Version;
+import bisq.application.ApplicationVersion;
 import bisq.web.json.JsonTransform;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
@@ -15,6 +15,6 @@ public class GetVersionHandler extends AbstractHandler implements Handler {
 
     @Override
     public void handle(Context ctx) {
-        ctx.render(toJson("version", Version.VERSION));
+        ctx.render(toJson("version", ApplicationVersion.VERSION));
     }
 }

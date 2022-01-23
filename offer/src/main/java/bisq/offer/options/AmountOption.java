@@ -19,3 +19,5 @@ package bisq.offer.options;
 
 public record AmountOption(double minAmountAsPercentage) implements ListingOption {
 }
+// Bisq 1 
+// min Amount

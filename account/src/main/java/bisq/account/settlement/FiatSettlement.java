@@ -17,8 +17,13 @@
 
 package bisq.account.settlement;
 
-import static bisq.account.settlement.FiatSettlement.Method.*;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
+import static bisq.account.settlement.FiatSettlement.Method.OTHER;
+
+@EqualsAndHashCode(callSuper = true)
+@ToString
 public class FiatSettlement extends Settlement<FiatSettlement.Method> {
     public static final FiatSettlement SEPA = new FiatSettlement(Method.SEPA);
     public static final FiatSettlement REVOLUT = new FiatSettlement(Method.REVOLUT);
@@ -26,8 +31,9 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
 
     public enum Method implements Settlement.Method {
         SEPA,
-        REVOLUT,
         ZELLE,
+        REVOLUT,
+        BANK,
         OTHER
     }
 

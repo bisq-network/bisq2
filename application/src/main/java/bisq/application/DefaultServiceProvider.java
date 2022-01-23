@@ -17,6 +17,10 @@
 
 package bisq.application;
 
+import bisq.account.AccountService;
+import bisq.account.settlement.Account;
+import bisq.account.settlement.AccountPayload;
+import bisq.account.settlement.FiatSettlement;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.util.CompletableFutureUtils;
@@ -24,13 +28,12 @@ import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
-import bisq.network.p2p.MockNetworkService;
+import bisq.offer.OfferRepository;
 import bisq.offer.OfferService;
 import bisq.offer.OpenOfferService;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.offer.OfferPresentationService;
 import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.social.chat.ChatService;
@@ -60,7 +63,6 @@ public class DefaultServiceProvider extends ServiceProvider {
     private final NetworkService networkService;
     private final OfferService offerService;
     private final OpenOfferService openOfferService;
-    private final OfferPresentationService offerPresentationService;
     private final IdentityService identityService;
     private final MarketPriceService marketPriceService;
     private final ApplicationOptions applicationOptions;
@@ -68,6 +70,8 @@ public class DefaultServiceProvider extends ServiceProvider {
     private final UserService userService;
     private final ChatService chatService;
     private final ProtocolService protocolService;
+    private final OfferRepository offerRepository;
+    private final AccountService accountService;
 
     public DefaultServiceProvider(ApplicationOptions applicationOptions, String[] args) {
         super("Bisq");
@@ -93,17 +97,27 @@ public class DefaultServiceProvider extends ServiceProvider {
 
         chatService = new ChatService(persistenceService, identityService, networkService);
 
-        // add data use case is not available yet at networkService
-        MockNetworkService mockNetworkService = new MockNetworkService();
-        offerService = new OfferService(mockNetworkService);
-        openOfferService = new OpenOfferService(mockNetworkService);
+        accountService= new AccountService(persistenceService);
 
+        // add data use case is not available yet at networkService
+        offerService = new OfferService(networkService, identityService);
+        openOfferService = new OpenOfferService(networkService);
+        offerRepository= new OfferRepository(networkService);
 
         MarketPriceService.Config marketPriceServiceConf = MarketPriceServiceConfigFactory.getConfig();
-        marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, Version.VERSION);
-        offerPresentationService = new OfferPresentationService(offerService, marketPriceService);
+        marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, ApplicationVersion.VERSION);
+       // offerPresentationService = new OfferPresentationService(offerService, marketPriceService);
 
         protocolService= new ProtocolService();
+
+
+        // add dummy accounts
+        accountService.addAccount(new Account("SEPA-account-1",
+                new AccountPayload(FiatSettlement.SEPA.getMethod().name(), "John Smith", "1234567890", "9876543")));
+        accountService.addAccount(new Account("SEPA-account-2",
+                new AccountPayload(FiatSettlement.SEPA.getMethod().name(),"Mary Smith", "00000222229999", "88888")));
+        accountService.addAccount(new Account("revolut-account",
+                new AccountPayload(FiatSettlement.REVOLUT.getMethod().name(),"Mary Smith", "00000222229999", "88888")));
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
@@ -123,7 +137,7 @@ public class DefaultServiceProvider extends ServiceProvider {
                 .thenCompose(result -> marketPriceService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(offerService.initialize(),
                         openOfferService.initialize(),
-                        offerPresentationService.initialize()))
+                        offerRepository.initialize()))
                 .orTimeout(120, TimeUnit.SECONDS)
                 .whenComplete((list, throwable) -> {
                     if (throwable != null) {
@@ -142,7 +156,7 @@ public class DefaultServiceProvider extends ServiceProvider {
         marketPriceService.shutdown();
         offerService.shutdown();
         openOfferService.shutdown();
-        offerPresentationService.shutdown();
+        offerRepository.shutdown();
         return networkService.shutdown()
                 .whenComplete((__, throwable) -> {
                     if (throwable != null) {

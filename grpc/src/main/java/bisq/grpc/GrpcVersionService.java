@@ -18,7 +18,7 @@
 package bisq.grpc;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.application.Version;
+import bisq.application.ApplicationVersion;
 import bisq.grpc.proto.GetVersionGrpc;
 import bisq.grpc.proto.GetVersionReply;
 import bisq.grpc.proto.GetVersionRequest;
@@ -41,7 +41,7 @@ public class GrpcVersionService extends GetVersionGrpc.GetVersionImplBase {
                            StreamObserver<GetVersionReply> responseObserver) {
         try {
             var reply = GetVersionReply.newBuilder()
-                    .setVersion(Version.VERSION)
+                    .setVersion(ApplicationVersion.VERSION)
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();

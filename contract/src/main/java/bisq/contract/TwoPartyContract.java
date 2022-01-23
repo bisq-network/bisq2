@@ -18,14 +18,14 @@
 package bisq.contract;
 
 import bisq.offer.Listing;
-import bisq.offer.protocol.ProtocolType;
+import bisq.offer.protocol.SwapProtocolType;
 import lombok.Getter;
 
 @Getter
 public class TwoPartyContract<T extends Listing> extends Contract<T> {
     private final Party taker;
 
-    public TwoPartyContract(T listing, ProtocolType protocolType, Party taker) {
+    public TwoPartyContract(T listing, SwapProtocolType protocolType, Party taker) {
         super(listing, protocolType);
         this.taker = taker;
     }

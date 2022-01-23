@@ -17,23 +17,23 @@
 
 package bisq.account.settlement;
 
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+@EqualsAndHashCode(callSuper = true)
+@ToString
 public class CryptoSettlement extends Settlement<CryptoSettlement.Method> {
-    public static final CryptoSettlement MAINNET = new CryptoSettlement(Method.MAINNET);
-    public static final CryptoSettlement XMR_AUTO_CONF = new CryptoSettlement(Method.MAINNET, "XMR auto-confirm", Settlement.Type.AUTOMATIC);
-    public static final CryptoSettlement XMR_MANUAL = new CryptoSettlement(Method.MAINNET, "XMR manual-confirm", Type.MANUAL);
-    public static final CryptoSettlement L2 = new CryptoSettlement(Method.L2);
-    public static final CryptoSettlement SIDE_CHAIN = new CryptoSettlement(Method.SIDE_CHAIN);
-    public static final CryptoSettlement WRAPPED = new CryptoSettlement(Method.WRAPPED);
-    public static final CryptoSettlement MULTI_CHAIN = new CryptoSettlement(Method.MULTI_CHAIN);
+    //todo maybe put Settlement.Type into SettlementOption?
+    public static final CryptoSettlement NATIVE_CHAIN = new CryptoSettlement(Method.NATIVE_CHAIN);
+    public static final CryptoSettlement XMR_AUTO_CONF = new CryptoSettlement(Method.NATIVE_CHAIN, "XMR auto-confirm", Type.AUTOMATIC);
+    public static final CryptoSettlement XMR_MANUAL = new CryptoSettlement(Method.NATIVE_CHAIN, "XMR manual-confirm", Type.MANUAL);
+    public static final CryptoSettlement ERC20 = new CryptoSettlement(Method.ERC20);
     public static final CryptoSettlement OTHER = new CryptoSettlement(Method.OTHER);
 
     public enum Method implements Settlement.Method {
-        MAINNET,            // If coin is transferred via native mainnet chain. E.g. Bitcoin network
-        L2,                 // Layer 2, e.g. Lightning
-        SIDE_CHAIN,         // Side chain, e.g. Liquid, RSK
-        WRAPPED,            // Wrapped coin in a token (e.g WBTC as ERC20 on ETH)
-        MULTI_CHAIN,        // Multiple chains can be used. E.g. USDT using BTC/Omni, ETH/ERC20,...
-        OTHER               // Anything else
+        NATIVE_CHAIN,
+        ERC20,
+        OTHER
     }
 
     public CryptoSettlement(Method method) {
