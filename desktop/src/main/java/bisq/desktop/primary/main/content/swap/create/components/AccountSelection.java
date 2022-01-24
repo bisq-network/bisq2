@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.swap.create.components;
 
-import bisq.account.accounts.Account;
 import bisq.account.AccountService;
+import bisq.account.accounts.Account;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.Settlement;
 import bisq.common.monetary.Market;
@@ -42,6 +42,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -73,10 +74,6 @@ public class AccountSelection {
         }
 
         private void resetAndApplyData() {
-            // reset all
-            // model.setSelectedBaseSideSettlementMethod(null);
-            //  model.setSelectedQuoteSideSettlementMethod(null);
-
             Direction direction = model.getDirection();
             if (direction == null) return;
 
@@ -84,12 +81,16 @@ public class AccountSelection {
 
             if (market == null) return;
 
+            model.getSelectedBaseSideAccounts().clear();
+            model.getSelectedQuoteSideAccounts().clear();
+
             SwapProtocolType selectedProtocolTyp = model.getSelectedProtocolTyp();
             if (selectedProtocolTyp == null) {
-                model.baseSideVisibility.set(false);
-                model.quoteSideVisibility.set(false);
+                model.visibility.set(false);
                 return;
             }
+            
+            model.visibility.set(true);
 
             model.baseSideObservableList.setAll(model.accountService.getMatchingAccounts(selectedProtocolTyp, market.baseCurrencyCode())
                     .stream()
@@ -99,10 +100,6 @@ public class AccountSelection {
                     .stream()
                     .map(ListItem::new)
                     .collect(Collectors.toList()));
-
-            // Only show if > 1 options
-            model.baseSideVisibility.set(model.baseSideFilteredList.size() > 0);
-            model.quoteSideVisibility.set(model.quoteSideFilteredList.size() > 0);
 
             updateStrings();
         }
@@ -141,8 +138,12 @@ public class AccountSelection {
             model.getSelectedQuoteSideAccounts().clear();
         }
 
-        public void onSelectAccount(ListItem listItem) {
-
+        public void onAccountSelectionChanged(ListItem listItem, boolean selected) {
+            if (selected) {
+                model.getSelectedQuoteSideAccounts().add(listItem.account);
+            } else {
+                model.getSelectedQuoteSideAccounts().remove(listItem.account);
+            }
         }
 
         public void onCreateBaseSideAccount() {
@@ -160,6 +161,7 @@ public class AccountSelection {
         private final AccountService accountService;
         private final StringProperty baseSideDescription = new SimpleStringProperty();
         private final StringProperty quoteSideDescription = new SimpleStringProperty();
+        private final BooleanProperty visibility = new SimpleBooleanProperty();
         private final BooleanProperty baseSideVisibility = new SimpleBooleanProperty();
         private final BooleanProperty quoteSideVisibility = new SimpleBooleanProperty();
 
@@ -197,10 +199,12 @@ public class AccountSelection {
             VBox.setMargin(baseSideTableView, new Insets(0, 0, 20, 0));
 
             baseSideButton = new BisqButton(Res.offerbook.get("createOffer.account.createNew"));
+            VBox baseSidePlaceHolderBox = createPlaceHolderBox(baseSideButton);
+            baseSideTableView.setPlaceholder(baseSidePlaceHolderBox);
 
             baseSideBox = new VBox();
             baseSideBox.setSpacing(10);
-            baseSideBox.getChildren().addAll(baseSideLabel, baseSideTableView, baseSideButton);
+            baseSideBox.getChildren().addAll(baseSideLabel, baseSideTableView);
 
             quoteSideLabel = new BisqLabel();
             quoteSideLabel.getStyleClass().add("titled-group-bg-label-active");
@@ -211,14 +215,25 @@ public class AccountSelection {
             VBox.setMargin(quoteSideTableView, new Insets(0, 0, 20, 0));
 
             quoteSideButton = new BisqButton(Res.offerbook.get("createOffer.account.createNew"));
-
+            VBox quoteSidePlaceHolderBox = createPlaceHolderBox(quoteSideButton);
+            quoteSideTableView.setPlaceholder(quoteSidePlaceHolderBox);
+            
             quoteSideBox = new VBox();
             quoteSideBox.setSpacing(10);
-            quoteSideBox.getChildren().addAll(quoteSideLabel, quoteSideTableView, quoteSideButton);
+            quoteSideBox.getChildren().addAll(quoteSideLabel, quoteSideTableView);
 
             HBox.setHgrow(baseSideBox, Priority.ALWAYS);
             HBox.setHgrow(quoteSideBox, Priority.ALWAYS);
             root.getChildren().addAll(baseSideBox, quoteSideBox);
+        }
+
+        private VBox createPlaceHolderBox(BisqButton baseSideButton) {
+            BisqLabel placeholderLabel = new BisqLabel(Res.offerbook.get("createOffer.account.placeholder.noAccounts"));
+            VBox vBox = new VBox();
+            vBox.setSpacing(10);
+            vBox.getChildren().addAll(placeholderLabel, baseSideButton);
+            vBox.setAlignment(Pos.CENTER);
+            return vBox;
         }
 
         private void configTableView(BisqTableView<ListItem> tableView) {
@@ -236,7 +251,7 @@ public class AccountSelection {
                     .title(Res.offerbook.get("createOffer.account.table.select"))
                     .minWidth(120)
                     .cellFactory(BisqTableColumn.CellFactory.CHECKBOX)
-                    .actionHandler(controller::onSelectAccount)
+                    .toggleHandler(controller::onAccountSelectionChanged)
                     .build());
         }
 
@@ -245,12 +260,10 @@ public class AccountSelection {
             quoteSideButton.setOnAction(e -> controller.onCreateQuoteSideAccount());
 
             baseSideLabel.textProperty().bind(model.baseSideDescription);
-            baseSideBox.visibleProperty().bind(model.baseSideVisibility);
-            baseSideBox.managedProperty().bind(model.baseSideVisibility);
-
             quoteSideLabel.textProperty().bind(model.quoteSideDescription);
-            quoteSideBox.visibleProperty().bind(model.quoteSideVisibility);
-            quoteSideBox.managedProperty().bind(model.quoteSideVisibility);
+
+            root.visibleProperty().bind(model.visibility);
+            root.managedProperty().bind(model.visibility);
         }
 
         public void onViewDetached() {
@@ -258,12 +271,10 @@ public class AccountSelection {
             quoteSideButton.setOnAction(null);
 
             baseSideLabel.textProperty().unbind();
-            baseSideBox.visibleProperty().unbind();
-            baseSideBox.managedProperty().unbind();
-
             quoteSideLabel.textProperty().unbind();
-            quoteSideBox.visibleProperty().unbind();
-            quoteSideBox.managedProperty().unbind();
+            
+            root.visibleProperty().unbind();
+            root.managedProperty().unbind();
         }
     }
 

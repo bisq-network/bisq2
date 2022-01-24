@@ -20,7 +20,7 @@ package bisq.application;
 import bisq.account.AccountService;
 import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.SepaAccount;
-import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.i18n.Res;
@@ -77,9 +77,9 @@ public class DefaultServiceProvider extends ServiceProvider {
         this.applicationOptions = applicationOptions;
 
         Locale locale = applicationOptions.getLocale();
-        LocaleRepository.setDefaultLocale(locale);
+        LocaleRepository.initialize(locale);
         Res.initialize(locale);
-        FiatCurrencyRepository.applyLocale(locale);
+
 
         persistenceService = new PersistenceService(applicationOptions.baseDir());
         keyPairService = new KeyPairService(persistenceService);
@@ -127,10 +127,17 @@ public class DefaultServiceProvider extends ServiceProvider {
                 .whenComplete((list, throwable) -> {
                     // add dummy accounts
                     if (accountService.getAccounts().isEmpty()) {
-                        accountService.addAccount(new SepaAccount("SEPA-account-1",
-                                "John Smith", "1234567890", "9876543"));
+                        SepaAccount john_smith = new SepaAccount("SEPA-account-1",
+                                "John Smith",
+                                "iban_1234",
+                                "bic_1234",
+                                CountryRepository.getDefaultCountry());
+                        accountService.addAccount(john_smith);
                         accountService.addAccount(new SepaAccount("SEPA-account-2",
-                                "Mary Smith", "00000222229999", "88888"));
+                                "Mary Smith",
+                                "iban_5678",
+                                "bic_5678",
+                                CountryRepository.getDefaultCountry()));
                         accountService.addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
                     }
                 })

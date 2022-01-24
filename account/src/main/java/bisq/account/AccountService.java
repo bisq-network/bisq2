@@ -65,9 +65,12 @@ public class AccountService implements PersistenceClient<AccountStore> {
         return accountStore.getAccounts();
     }
 
-    public List<Account<? extends Settlement.Method>> getMatchingAccounts(SwapProtocolType protocolTyp, String baseCurrencyCode) {
+    public List<Account<? extends Settlement.Method>> getMatchingAccounts(SwapProtocolType protocolTyp, String currencyCode) {
         Set<? extends Settlement.Method> settlementMethods = ProtocolSwapSettlementMapping.getSettlementMethods(protocolTyp,
-                baseCurrencyCode);
-       return accountStore.getAccounts().stream().filter(account -> settlementMethods.contains(account.getSettlementMethod())).collect(Collectors.toList());
+                currencyCode);
+       return accountStore.getAccounts().stream()
+               .filter(account -> settlementMethods.contains(account.getSettlementMethod()))
+               .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
+               .collect(Collectors.toList());
     }
 }

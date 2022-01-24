@@ -17,5 +17,7 @@
 
 package bisq.common.locale;
 
-public record Country(String code, String name, Region region) {
+import java.io.Serializable;
+
+public record Country(String code, String name, Region region) implements Serializable {
 }

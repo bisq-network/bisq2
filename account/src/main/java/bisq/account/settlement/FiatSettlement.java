@@ -17,18 +17,23 @@
 
 package bisq.account.settlement;
 
+import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.currency.TradeCurrency;
+import bisq.common.locale.Country;
+import bisq.common.locale.CountryRepository;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static bisq.account.settlement.FiatSettlement.Method.OTHER;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
 public class FiatSettlement extends Settlement<FiatSettlement.Method> {
-    public static final FiatSettlement SEPA = new FiatSettlement(Method.SEPA);
-    public static final FiatSettlement REVOLUT = new FiatSettlement(Method.REVOLUT);
-    public static final FiatSettlement ZELLE = new FiatSettlement(Method.ZELLE);
-
     public enum Method implements Settlement.Method {
         SEPA,
         ZELLE,
@@ -36,6 +41,62 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
         BANK,
         OTHER
     }
+
+    public static List<TradeCurrency> getTradeCurrencies(Method method) {
+        return switch (method) {
+            case SEPA -> getSepaTradeCurrencies();
+            case ZELLE -> List.of(FiatCurrencyRepository.getCurrencyByCode("USD"));
+            case REVOLUT -> getRevolutCurrencies();
+            case BANK -> new ArrayList<>(FiatCurrencyRepository.getAllCurrencies());
+            case OTHER -> new ArrayList<>(FiatCurrencyRepository.getAllCurrencies());
+        };
+    }
+
+    private static List<TradeCurrency> getRevolutCurrencies() {
+        return getRevolutCountries().stream()
+                .map(country -> FiatCurrencyRepository.getCurrencyByCountryCode(country.code()))
+                .collect(Collectors.toList());
+    }
+
+    private static List<TradeCurrency> getSepaTradeCurrencies() {
+        return getSepaEuroCountries().stream()
+                .map(country -> FiatCurrencyRepository.getCurrencyByCountryCode(country.code()))
+                .collect(Collectors.toList());
+    }
+
+
+    public static List<Country> getCountries(FiatSettlement.Method method) {
+        return switch (method) {
+            case SEPA -> getSepaEuroCountries();
+            case ZELLE -> new ArrayList<>();
+            case REVOLUT -> getRevolutCountries();
+            case BANK -> new ArrayList<>();
+            case OTHER -> new ArrayList<>();
+        };
+    }
+
+    public static List<Country> getSepaEuroCountries() {
+        List<String> codes = List.of("AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
+                "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA");
+        List<Country> list = CountryRepository.getCountriesFromCodes(codes);
+        list.sort(Comparator.comparing(Country::name));
+        return list;
+    }
+
+    public static List<Country> getRevolutCountries() {
+        List<String> codes = List.of("AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
+                "DE", "GR", "HU", "IS", "IE", "IT", "LV", "LI", "LT", "LU", "MT", "NL",
+                "NO", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "GB",
+                "AU", "CA", "SG", "CH", "US");
+        List<Country> list = CountryRepository.getCountriesFromCodes(codes);
+        list.sort(Comparator.comparing(Country::name));
+        return list;
+    }
+
+
+    public static final FiatSettlement SEPA = new FiatSettlement(Method.SEPA);
+    public static final FiatSettlement REVOLUT = new FiatSettlement(Method.REVOLUT);
+    public static final FiatSettlement ZELLE = new FiatSettlement(Method.ZELLE);
 
     public FiatSettlement(Method method) {
         super(method);

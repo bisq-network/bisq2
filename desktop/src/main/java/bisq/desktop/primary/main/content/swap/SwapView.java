@@ -31,9 +31,9 @@ public class SwapView extends TabView<JFXTabPane, SwapModel, SwapController> {
 
     @Override
     protected void createAndAddTabs() {
-        NavigationTargetTab offerbook = createTab(Res.common.get("swap.offerbook"), NavigationTarget.OFFERBOOK);
-        NavigationTargetTab createOffer = createTab(Res.common.get("swap.createOffer"), NavigationTarget.CREATE_OFFER);
-        NavigationTargetTab takeOffer = createTab(Res.common.get("swap.takeOffer"), NavigationTarget.TAKE_OFFER);
+        NavigationTargetTab offerbook = createTab(Res.common.get("trade.offerbook"), NavigationTarget.OFFERBOOK);
+        NavigationTargetTab createOffer = createTab(Res.common.get("trade.createOffer"), NavigationTarget.CREATE_OFFER);
+        NavigationTargetTab takeOffer = createTab(Res.common.get("trade.takeOffer"), NavigationTarget.TAKE_OFFER);
         root.getTabs().setAll(offerbook, createOffer, takeOffer);
     }
 }

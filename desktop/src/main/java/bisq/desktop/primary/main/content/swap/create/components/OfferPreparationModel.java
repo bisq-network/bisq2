@@ -18,18 +18,20 @@
 package bisq.desktop.primary.main.content.swap.create.components;
 
 import bisq.account.accounts.Account;
+import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.Settlement;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.offer.Direction;
-import bisq.account.protocol.SwapProtocolType;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.HashSet;
 
 /**
  * Shared model for offer preparation
@@ -44,8 +46,8 @@ public class OfferPreparationModel {
     private final ObjectProperty<Monetary> quoteSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
     private final ObjectProperty<SwapProtocolType> selectedProtocolTyp = new SimpleObjectProperty<>();
-    private final ObservableList<Account<? extends Settlement.Method>> selectedBaseSideAccounts = FXCollections.observableArrayList();
-    private final ObservableList<Account<? extends Settlement.Method>> selectedQuoteSideAccounts = FXCollections.observableArrayList();
+    private final ObservableSet<Account<? extends Settlement.Method>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Account<? extends Settlement.Method>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
 
     public OfferPreparationModel() {
     }
@@ -132,11 +134,11 @@ public class OfferPreparationModel {
         return selectedProtocolTyp;
     }
 
-    public ObservableList<Account<? extends Settlement.Method>> getSelectedBaseSideAccounts() {
+    public ObservableSet<Account<? extends Settlement.Method>> getSelectedBaseSideAccounts() {
         return selectedBaseSideAccounts;
     }
 
-    public ObservableList<Account<? extends Settlement.Method>> getSelectedQuoteSideAccounts() {
+    public ObservableSet<Account<? extends Settlement.Method>> getSelectedQuoteSideAccounts() {
         return selectedQuoteSideAccounts;
     }
 }

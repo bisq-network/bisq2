@@ -18,6 +18,7 @@
 package bisq.account.accounts;
 
 import bisq.account.settlement.Settlement;
+import bisq.common.currency.TradeCurrency;
 import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,27 +27,43 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode
 public abstract class Account<T extends Settlement.Method> implements Serializable {
-    private final String id;
-    private final long creationDate;
-    private final String accountName;
-    private final AccountPayload payload;
-    private final T settlementMethod;
+    protected final String id;
+    protected final long creationDate;
+    protected final String accountName;
+    protected final AccountPayload payload;
+    protected final T settlementMethod;
+    protected final List<TradeCurrency> tradeCurrencies;
 
-    public Account(String accountName, T settlementMethod, AccountPayload payload) {
-        this(StringUtils.createUid(), new Date().getTime(), accountName, settlementMethod, payload);
+    public Account(String accountName,
+                   T settlementMethod,
+                   AccountPayload payload,
+                   List<TradeCurrency> tradeCurrencies) {
+        this(StringUtils.createUid(), new Date().getTime(), accountName, settlementMethod, payload, tradeCurrencies);
     }
 
-    public Account(String id, long creationDate, String accountName, T settlementMethod, AccountPayload payload) {
+    public Account(String id, long creationDate,
+                   String accountName,
+                   T settlementMethod,
+                   AccountPayload payload,
+                   List<TradeCurrency> tradeCurrencies) {
         this.id = id;
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.payload = payload;
         this.settlementMethod = settlementMethod;
+        this.tradeCurrencies = tradeCurrencies;
+    }
+
+    public Set<String> getTradeCurrencyCodes() {
+        return tradeCurrencies.stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
     }
 }

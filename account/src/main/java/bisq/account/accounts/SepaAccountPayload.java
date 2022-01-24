@@ -26,13 +26,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class SepaAccountPayload extends AccountPayload {
+public final class SepaAccountPayload extends CountryBasedAccountPayload {
     private final String holderName;
     private final String iban;
     private final String bic;
 
-    public SepaAccountPayload(String settlementMethodId, String holderName, String iban, String bic) {
-        super(settlementMethodId);
+    public SepaAccountPayload(String settlementMethodId, String holderName, String iban, String bic, String countryCode) {
+        super(settlementMethodId, countryCode);
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;

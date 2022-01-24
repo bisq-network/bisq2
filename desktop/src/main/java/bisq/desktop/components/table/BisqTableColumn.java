@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -57,6 +58,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     private Optional<String> value = Optional.empty();
     private Consumer<S> onActionHandler = item -> {
     };
+    private BiConsumer<S, Boolean> onToggleHandler = (item, selected) -> {
+    };
 
     public static class Builder<S> {
         private Optional<String> title = Optional.empty();
@@ -70,6 +73,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private Optional<Comparator<S>> comparator = Optional.empty();
         private CellFactory cellFactory = CellFactory.TEXT;
         private Consumer<S> onActionHandler = item -> {
+        };
+        private BiConsumer<S, Boolean> onToggleHandler = (item, selected) -> {
         };
 
         public BisqTableColumn<S> build() {
@@ -86,6 +91,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             tableColumn.valueSupplier = valueSupplier;
             tableColumn.valuePropertySupplier = valuePropertySupplier;
             tableColumn.onActionHandler = onActionHandler;
+            tableColumn.onToggleHandler = onToggleHandler;
             comparator.ifPresent(tableColumn::applyComparator);
             return tableColumn;
         }
@@ -143,6 +149,11 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
 
         public Builder<S> actionHandler(Consumer<S> actionHandler) {
             this.onActionHandler = actionHandler;
+            return this;
+        }
+
+        public Builder<S> toggleHandler(BiConsumer<S, Boolean> onToggleHandler) {
+            this.onToggleHandler = onToggleHandler;
             return this;
         }
     }
@@ -323,7 +334,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                             public void updateItem(final S item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    checkBox.setOnAction(event -> onActionHandler.accept(item));
+                                    checkBox.setOnAction(event -> onToggleHandler.accept(item, checkBox.isSelected()));
                                     isVisibleFunction.ifPresent(function -> checkBox.setVisible(function.apply(item)));
                                     setGraphic(checkBox);
                                     if (previousItem instanceof TableItem tableItem) {
@@ -352,6 +363,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                         textProperty().unbind();
                                     }
                                     checkBox.setOnAction(null);
+                                    checkBox.setSelected(false);
                                     setGraphic(null);
                                 }
                             }

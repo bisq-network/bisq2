@@ -17,17 +17,27 @@
 
 package bisq.common.locale;
 
+import bisq.common.currency.FiatCurrencyRepository;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.Locale;
 import java.util.Set;
 
 public class LocaleRepository {
-    // To be set early at application setup
-    @Setter
     @Getter
     private static Locale defaultLocale;
+
+    public static void setDefaultLocale(Locale defaultLocale) {
+        LocaleRepository.defaultLocale = defaultLocale;
+    }
+
+    public static void initialize(Locale defaultLocale) {
+        LocaleRepository.defaultLocale = defaultLocale;
+
+        CountryRepository.initialize(defaultLocale);
+        LanguageRepository.initialize(defaultLocale);
+        FiatCurrencyRepository.initialize(defaultLocale);
+    }
 
     static {
         defaultLocale = Locale.getDefault();

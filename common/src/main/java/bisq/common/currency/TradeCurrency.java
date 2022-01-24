@@ -21,16 +21,18 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.io.Serializable;
+
 @EqualsAndHashCode
 @ToString
 @Getter
-public abstract class TradeCurrency implements Comparable<TradeCurrency> {
+public abstract class TradeCurrency implements Comparable<TradeCurrency>, Serializable {
     protected final String code;
     @EqualsAndHashCode.Exclude
     protected final String name;
 
     public static boolean isFiat(String code) {
-        return FiatCurrencyRepository.getCurrencyByCode().containsKey(code);
+        return FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(code);
     }
 
     /**

@@ -58,6 +58,8 @@ public class ProtocolSelection {
             selectedMarketListener = (observable, oldValue, newValue) -> {
                 if (newValue == null) return;
                 model.fillObservableList(ProtocolSwapSettlementMapping.getProtocols(newValue));
+                model.setSelectedProtocolType(null);
+                model.selectListItem(null);
             };
         }
 

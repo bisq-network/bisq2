@@ -17,22 +17,29 @@
 
 package bisq.account.accounts;
 
-import bisq.account.settlement.FiatSettlement;
+import bisq.account.settlement.Settlement;
+import bisq.common.currency.TradeCurrency;
+import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class RevolutAccount extends Account<FiatSettlement.Method> {
-    private static final FiatSettlement.Method METHOD = FiatSettlement.Method.REVOLUT;
+public  class CountryBasedAccount<T extends Settlement.Method> extends Account<T> {
+    protected final Country country;
 
-    public RevolutAccount(String accountName, String email) {
-        super(accountName, METHOD,
-                new RevolutAccountPayload(METHOD.name(), email),
-                FiatSettlement.getTradeCurrencies(METHOD));
+    public CountryBasedAccount(String accountName,
+                               T settlementMethod,
+                               CountryBasedAccountPayload payload,
+                               List<TradeCurrency> tradeCurrencies,
+                               Country country) {
+        super(accountName, settlementMethod, payload, tradeCurrencies);
+        this.country = country;
     }
 }
