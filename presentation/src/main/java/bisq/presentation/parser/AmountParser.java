@@ -17,14 +17,14 @@
 
 package bisq.presentation.parser;
 
-import bisq.common.currency.BisqCurrency;
+import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 
 public class AmountParser {
     public static Monetary parse(String value, String code) {
-        if (BisqCurrency.isFiat(code)) {
+        if (TradeCurrency.isFiat(code)) {
             return Fiat.parse(value, code);
         } else {
             return Coin.parse(value, code);

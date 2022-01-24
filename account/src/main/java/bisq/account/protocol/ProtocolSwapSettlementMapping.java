@@ -21,7 +21,7 @@ import bisq.account.settlement.BitcoinSettlement;
 import bisq.account.settlement.CryptoSettlement;
 import bisq.account.settlement.FiatSettlement;
 import bisq.account.settlement.Settlement;
-import bisq.common.currency.BisqCurrency;
+import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,7 +34,7 @@ import java.util.Set;
 public class ProtocolSwapSettlementMapping {
 
     public static Set<? extends Settlement.Method> getSettlementMethods(SwapProtocolType protocolType, String code) {
-        if (BisqCurrency.isFiat(code)) {
+        if (TradeCurrency.isFiat(code)) {
             return getFiatSettlementMethods(protocolType);
         } else {
             if (code.equals("BTC")) {

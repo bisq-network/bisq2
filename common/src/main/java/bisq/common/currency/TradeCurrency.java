@@ -24,7 +24,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Getter
-public abstract class BisqCurrency implements Comparable<BisqCurrency> {
+public abstract class TradeCurrency implements Comparable<TradeCurrency> {
     protected final String code;
     @EqualsAndHashCode.Exclude
     protected final String name;
@@ -41,7 +41,7 @@ public abstract class BisqCurrency implements Comparable<BisqCurrency> {
         return !isFiat(code) && code.length() >= 3;
     }
 
-    public BisqCurrency(String code, String name) {
+    public TradeCurrency(String code, String name) {
         this.code = code;
         this.name = name;
     }
@@ -59,7 +59,7 @@ public abstract class BisqCurrency implements Comparable<BisqCurrency> {
     }
 
     @Override
-    public int compareTo(BisqCurrency other) {
+    public int compareTo(TradeCurrency other) {
         return this.name.compareTo(other.name);
     }
 

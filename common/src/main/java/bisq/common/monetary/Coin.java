@@ -17,7 +17,7 @@
 
 package bisq.common.monetary;
 
-import bisq.common.currency.BisqCurrency;
+import bisq.common.currency.TradeCurrency;
 import bisq.common.util.MathUtils;
 import com.google.common.math.LongMath;
 import lombok.EqualsAndHashCode;
@@ -57,7 +57,7 @@ public class Coin extends Monetary {
         String[] tokens = string.split(" ");
         if (tokens.length == 2) {
             String code = tokens[1];
-            if (BisqCurrency.isMaybeCrypto(code)) {
+            if (TradeCurrency.isMaybeCrypto(code)) {
                 int exponent = deriveExponent(code);
                 return parse(tokens[0], code, exponent);
             }

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.top.components;
 
-import bisq.common.currency.BisqCurrency;
+import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -148,7 +148,7 @@ public class MarketPriceBox {
         public ListItem(MarketPrice marketPrice) {
             this.marketPrice = marketPrice;
             code = marketPrice.code();
-            String pair = BisqCurrency.isFiat(code) ? ("BTC/" + code) : (code + "/BTC");
+            String pair = TradeCurrency.isFiat(code) ? ("BTC/" + code) : (code + "/BTC");
             displayStringProperty.set(pair + ": " + QuoteFormatter.format(marketPrice.quote(), true));
         }
     }

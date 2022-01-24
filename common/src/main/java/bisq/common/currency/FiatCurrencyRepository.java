@@ -54,7 +54,7 @@ public class FiatCurrencyRepository {
         minorCurrencies = new ArrayList<>(currencyByCode.values());
         minorCurrencies.remove(defaultCurrency);
         minorCurrencies.removeAll(majorCurrencies);
-        minorCurrencies.sort(Comparator.comparing(BisqCurrency::getNameAndCode));
+        minorCurrencies.sort(Comparator.comparing(TradeCurrency::getNameAndCode));
         allCurrencies = new ArrayList<>();
         allCurrencies.add(defaultCurrency);
         allCurrencies.addAll(majorCurrencies);
