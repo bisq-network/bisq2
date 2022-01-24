@@ -19,18 +19,19 @@ package bisq.account;
 
 
 import bisq.account.accounts.Account;
-import bisq.account.protocol.ProtocolSwapSettlementMapping;
 import bisq.account.protocol.SwapProtocolType;
-import bisq.account.settlement.Settlement;
+import bisq.account.settlement.SettlementMethod;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class AccountService implements PersistenceClient<AccountStore> {
     private final AccountStore accountStore = new AccountStore();
     @Getter
@@ -54,23 +55,23 @@ public class AccountService implements PersistenceClient<AccountStore> {
         }
     }
 
-    public void addAccount(Account<? extends Settlement.Method> account) {
-        List<Account<? extends Settlement.Method>> accounts = accountStore.getAccounts();
+    public void addAccount(Account<? extends SettlementMethod> account) {
+        List<Account<? extends SettlementMethod>> accounts = accountStore.getAccounts();
         if (accounts.contains(account)) return;
         accounts.add(account);
         persist();
     }
 
-    public List<Account<? extends Settlement.Method>> getAccounts() {
+    public List<Account<? extends SettlementMethod>> getAccounts() {
         return accountStore.getAccounts();
     }
 
-    public List<Account<? extends Settlement.Method>> getMatchingAccounts(SwapProtocolType protocolTyp, String currencyCode) {
-        Set<? extends Settlement.Method> settlementMethods = ProtocolSwapSettlementMapping.getSettlementMethods(protocolTyp,
-                currencyCode);
-       return accountStore.getAccounts().stream()
-               .filter(account -> settlementMethods.contains(account.getSettlementMethod()))
-               .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
-               .collect(Collectors.toList());
+    public List<Account<? extends SettlementMethod>> getMatchingAccounts(SwapProtocolType protocolTyp,
+                                                                         String currencyCode) {
+        var settlementMethods = new HashSet<>(SettlementMethod.from(protocolTyp, currencyCode));
+        return accountStore.getAccounts().stream()
+                .filter(account -> settlementMethods.contains(account.getSettlementMethod()))
+                .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
+                .collect(Collectors.toList());
     }
 }

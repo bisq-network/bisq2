@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.create.components;
 
 import bisq.account.accounts.Account;
 import bisq.account.protocol.SwapProtocolType;
-import bisq.account.settlement.Settlement;
+import bisq.account.settlement.SettlementMethod;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
@@ -45,9 +45,12 @@ public class OfferPreparationModel {
     private final ObjectProperty<Monetary> baseSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> quoteSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
-    private final ObjectProperty<SwapProtocolType> selectedProtocolTyp = new SimpleObjectProperty<>();
-    private final ObservableSet<Account<? extends Settlement.Method>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<Account<? extends Settlement.Method>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
+    private final ObjectProperty<SwapProtocolType> selectedProtocolType = new SimpleObjectProperty<>();
+
+    private final ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
 
     public OfferPreparationModel() {
     }
@@ -78,7 +81,7 @@ public class OfferPreparationModel {
     }
 
     public void setSelectedProtocolType(SwapProtocolType value) {
-        selectedProtocolTyp.set(value);
+        selectedProtocolType.set(value);
     }
 
 
@@ -126,19 +129,27 @@ public class OfferPreparationModel {
         return fixPrice;
     }
 
-    public SwapProtocolType getSelectedProtocolTyp() {
-        return selectedProtocolTyp.get();
+    public SwapProtocolType getSelectedProtocolType() {
+        return selectedProtocolType.get();
     }
 
-    public ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypProperty() {
-        return selectedProtocolTyp;
+    public ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty() {
+        return selectedProtocolType;
     }
 
-    public ObservableSet<Account<? extends Settlement.Method>> getSelectedBaseSideAccounts() {
+    public ObservableSet<Account<? extends SettlementMethod>> getSelectedBaseSideAccounts() {
         return selectedBaseSideAccounts;
     }
 
-    public ObservableSet<Account<? extends Settlement.Method>> getSelectedQuoteSideAccounts() {
+    public ObservableSet<Account<? extends SettlementMethod>> getSelectedQuoteSideAccounts() {
         return selectedQuoteSideAccounts;
+    }
+
+    public ObservableSet<SettlementMethod> getSelectedBaseSideSettlementMethods() {
+        return selectedBaseSideSettlementMethods;
+    }
+
+    public ObservableSet<SettlementMethod> getSelectedQuoteSideSettlementMethods() {
+        return selectedQuoteSideSettlementMethods;
     }
 }

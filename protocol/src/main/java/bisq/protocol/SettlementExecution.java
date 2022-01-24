@@ -17,7 +17,6 @@
 
 package bisq.protocol;
 
-import bisq.account.settlement.Settlement;
 import bisq.contract.Contract;
 import com.google.common.util.concurrent.Uninterruptibles;
 import lombok.extern.slf4j.Slf4j;
@@ -29,12 +28,12 @@ import java.util.concurrent.CountDownLatch;
 
 @Slf4j
 public abstract class SettlementExecution {
-    public static SettlementExecution from(Settlement.Type type) {
+   /* public static SettlementExecution from(SettlementMethod.Type type) {
         return switch (type) {
             case AUTOMATIC -> new Automatic();
             case MANUAL -> new Manual();
         };
-    }
+    }*/
 
     public abstract CompletableFuture<Boolean> sendFunds(Contract contract);
 

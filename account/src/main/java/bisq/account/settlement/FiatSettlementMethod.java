@@ -17,33 +17,38 @@
 
 package bisq.account.settlement;
 
+import bisq.account.protocol.SwapProtocolType;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static bisq.account.settlement.FiatSettlement.Method.OTHER;
-
-@EqualsAndHashCode(callSuper = true)
-@ToString
-public class FiatSettlement extends Settlement<FiatSettlement.Method> {
-    public enum Method implements Settlement.Method {
-        SEPA,
-        ZELLE,
-        REVOLUT,
-        BANK,
-        OTHER
+public enum FiatSettlementMethod implements SettlementMethod {
+    SEPA,
+    ZELLE,
+    REVOLUT,
+    BANK,
+    OTHER;
+    
+    public static List<FiatSettlementMethod> getSettlementMethods(SwapProtocolType protocolType) {
+        return switch (protocolType) {
+            case BTC_XMR_SWAP -> throw new IllegalArgumentException("No fiat support for that protocolType");
+            case LIQUID_SWAP -> throw new IllegalArgumentException("No fiat support for that protocolType");
+            case BSQ_SWAP -> throw new IllegalArgumentException("No fiat support for that protocolType");
+            case LN_SWAP -> throw new IllegalArgumentException("No fiat support for that protocolType");
+            case MULTISIG -> List.of(FiatSettlementMethod.values());
+            case BSQ_BOND -> List.of(FiatSettlementMethod.values());
+            case REPUTATION -> List.of(FiatSettlementMethod.values());
+        };
     }
 
-    public static List<TradeCurrency> getTradeCurrencies(Method method) {
-        return switch (method) {
+    public static List<TradeCurrency> getTradeCurrencies(FiatSettlementMethod settlement) {
+        return switch (settlement) {
             case SEPA -> getSepaTradeCurrencies();
             case ZELLE -> List.of(FiatCurrencyRepository.getCurrencyByCode("USD"));
             case REVOLUT -> getRevolutCurrencies();
@@ -65,8 +70,8 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
     }
 
 
-    public static List<Country> getCountries(FiatSettlement.Method method) {
-        return switch (method) {
+    public static List<Country> getCountries(FiatSettlementMethod settlement) {
+        return switch (settlement) {
             case SEPA -> getSepaEuroCountries();
             case ZELLE -> new ArrayList<>();
             case REVOLUT -> getRevolutCountries();
@@ -91,32 +96,5 @@ public class FiatSettlement extends Settlement<FiatSettlement.Method> {
         List<Country> list = CountryRepository.getCountriesFromCodes(codes);
         list.sort(Comparator.comparing(Country::name));
         return list;
-    }
-
-
-    public static final FiatSettlement SEPA = new FiatSettlement(Method.SEPA);
-    public static final FiatSettlement REVOLUT = new FiatSettlement(Method.REVOLUT);
-    public static final FiatSettlement ZELLE = new FiatSettlement(Method.ZELLE);
-
-    public FiatSettlement(Method method) {
-        super(method);
-    }
-
-    public FiatSettlement(Method method, String name) {
-        super(method, name);
-    }
-
-    public FiatSettlement(String name) {
-        super(name);
-    }
-
-    @Override
-    protected Method getDefaultMethod() {
-        return OTHER;
-    }
-
-    @Override
-    protected Type getDefaultType() {
-        return Type.AUTOMATIC; // todo should be manual, but test fails with manual
     }
 }

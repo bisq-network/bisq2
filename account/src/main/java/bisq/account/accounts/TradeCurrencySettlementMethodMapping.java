@@ -17,15 +17,6 @@
 
 package bisq.account.accounts;
 
-import bisq.account.settlement.FiatSettlement;
-import bisq.common.currency.TradeCurrency;
-import bisq.common.locale.Country;
-import bisq.common.locale.CountryRepository;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-
 public class TradeCurrencySettlementMethodMapping {
    
 

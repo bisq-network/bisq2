@@ -49,11 +49,11 @@ public class CreateOfferModel implements Model {
     }
 
     public void onViewAttached() {
-        offerPreparationModel.selectedProtocolTypProperty().addListener(selectedProtocolTypListener);
-        createOfferButtonVisible.set(offerPreparationModel.getSelectedProtocolTyp() != null);
+        offerPreparationModel.selectedProtocolTypeProperty().addListener(selectedProtocolTypListener);
+        createOfferButtonVisible.set(offerPreparationModel.getSelectedProtocolType() != null);
     }
 
     public void onViewDetached() {
-        offerPreparationModel.selectedProtocolTypProperty().removeListener(selectedProtocolTypListener);
+        offerPreparationModel.selectedProtocolTypeProperty().removeListener(selectedProtocolTypListener);
     }
 }

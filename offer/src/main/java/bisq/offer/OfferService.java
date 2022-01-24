@@ -17,9 +17,9 @@
 
 package bisq.offer;
 
-import bisq.account.settlement.BitcoinSettlement;
-import bisq.account.settlement.FiatSettlement;
-import bisq.account.settlement.Settlement;
+import bisq.account.settlement.BitcoinSettlementMethod;
+import bisq.account.settlement.FiatSettlementMethod;
+import bisq.account.settlement.SettlementMethod;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
@@ -64,8 +64,8 @@ public class OfferService {
                                                 Monetary quoteSideAmount,
                                                 Quote fixPrice,
                                                 SwapProtocolType selectedProtocolTyp,
-                                                Settlement.Method selectedBaseSideSettlementMethod,
-                                                Settlement.Method selectedQuoteSideSettlementMethod) {
+                                                SettlementMethod selectedBaseSideSettlementMethod,
+                                                SettlementMethod selectedQuoteSideSettlementMethod) {
         String offerId = StringUtils.createUid();
         return identityService.getOrCreateIdentity(offerId).thenApply(identity ->
         {
@@ -73,13 +73,13 @@ public class OfferService {
             NetworkId makerNetworkId = identity.networkId();
             ArrayList<SwapProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
 
-            ArrayList<Settlement<? extends Settlement.Method>> baseSettlements = new ArrayList<>(List.of(BitcoinSettlement.BTC_MAINCHAIN));
-            ArrayList<Settlement<? extends Settlement.Method>> quoteSettlements = new ArrayList<>(List.of(FiatSettlement.ZELLE));
+            ArrayList<SettlementMethod> baseSettlementMethods = new ArrayList<>(List.of(BitcoinSettlementMethod.MAINCHAIN));
+            ArrayList<SettlementMethod> quoteSettlementMethods = new ArrayList<>(List.of(FiatSettlementMethod.ZELLE));
             HashSet<ListingOption> listingOptions = new HashSet<>();
 
             //todo serialization does not work correctly.... 
-            baseSettlements = new ArrayList<>();
-            quoteSettlements = new ArrayList<>();
+            baseSettlementMethods = new ArrayList<>();
+            quoteSettlementMethods = new ArrayList<>();
             listingOptions = null;
 
             FixPrice priceSpec = new FixPrice(fixPrice.getValue());

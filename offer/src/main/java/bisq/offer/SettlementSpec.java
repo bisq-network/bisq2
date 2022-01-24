@@ -20,7 +20,7 @@ package bisq.offer;
 import bisq.network.p2p.message.Proto;
 
 /**
- * @param settlementMethodName     Name of Settlement.Method enum 
+ * @param settlementMethodName     Name of SettlementMethod enum 
  * @param makerSettlementAccountId Local ID of maker's settlement account.
  *                                 In case maker had multiple accounts for same settlement method they
  *                                 can define which account to use for that offer

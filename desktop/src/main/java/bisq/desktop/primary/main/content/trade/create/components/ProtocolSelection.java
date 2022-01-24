@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.create.components;
 
-import bisq.account.protocol.ProtocolSwapSettlementMapping;
+import bisq.account.protocol.ProtocolType;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.common.monetary.Market;
 import bisq.desktop.common.view.Controller;
@@ -57,7 +57,7 @@ public class ProtocolSelection {
 
             selectedMarketListener = (observable, oldValue, newValue) -> {
                 if (newValue == null) return;
-                model.fillObservableList(ProtocolSwapSettlementMapping.getProtocols(newValue));
+                model.fillObservableList(ProtocolType.getProtocols(newValue));
                 model.setSelectedProtocolType(null);
                 model.selectListItem(null);
             };
@@ -71,7 +71,7 @@ public class ProtocolSelection {
         public void onViewAttached() {
             model.selectedMarketProperty().addListener(selectedMarketListener);
             if (model.getSelectedMarket() != null) {
-                model.fillObservableList(ProtocolSwapSettlementMapping.getProtocols(model.getSelectedMarket()));
+                model.fillObservableList(ProtocolType.getProtocols(model.getSelectedMarket()));
             }
         }
 

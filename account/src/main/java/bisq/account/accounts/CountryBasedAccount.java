@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.settlement.Settlement;
+import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
@@ -31,7 +31,7 @@ import java.util.List;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public  class CountryBasedAccount<T extends Settlement.Method> extends Account<T> {
+public  class CountryBasedAccount<T extends SettlementMethod> extends Account<T> {
     protected final Country country;
 
     public CountryBasedAccount(String accountName,

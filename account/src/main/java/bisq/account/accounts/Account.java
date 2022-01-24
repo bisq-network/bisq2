@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.settlement.Settlement;
+import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class Account<T extends Settlement.Method> implements Serializable {
+public abstract class Account<T extends SettlementMethod> implements Serializable {
     protected final String id;
     protected final long creationDate;
     protected final String accountName;

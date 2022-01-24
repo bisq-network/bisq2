@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.account.settlement.FiatSettlement;
+import bisq.account.settlement.FiatSettlementMethod;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,12 +27,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class RevolutAccount extends Account<FiatSettlement.Method> {
-    private static final FiatSettlement.Method METHOD = FiatSettlement.Method.REVOLUT;
+public final class RevolutAccount extends Account<FiatSettlementMethod> {
+    private static final FiatSettlementMethod METHOD = FiatSettlementMethod.REVOLUT;
 
     public RevolutAccount(String accountName, String email) {
         super(accountName, METHOD,
                 new RevolutAccountPayload(METHOD.name(), email),
-                FiatSettlement.getTradeCurrencies(METHOD));
+                FiatSettlementMethod.getTradeCurrencies(METHOD));
     }
 }

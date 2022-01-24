@@ -43,7 +43,7 @@ public class CreateOfferController implements Controller {
         var amountPriceController = new AmountPriceGroup.AmountPriceController(offerPreparationModel, marketPriceService);
         var protocolSelectionController = new ProtocolSelection.ProtocolController(offerPreparationModel);
         var accountSelectionController = new AccountSelection.AccountController(offerPreparationModel, serviceProvider.getAccountService());
-
+        
         model = new CreateOfferModel(offerPreparationModel);
         view = new CreateOfferView(model, this,
                 marketSelectionController.getView(),
@@ -68,7 +68,7 @@ public class CreateOfferController implements Controller {
                         model.getBaseSideAmount(),
                         model.getQuoteSideAmount(),
                         model.getFixPrice(),
-                        model.getSelectedProtocolTyp(),
+                        model.getSelectedProtocolType(),
                         null, //todo
                         null)
                 .whenComplete((offer, throwable) -> {
