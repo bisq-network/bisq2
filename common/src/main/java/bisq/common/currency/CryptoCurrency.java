@@ -23,7 +23,7 @@ import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public final class CryptoCurrency extends BisqCurrency {
+public final class CryptoCurrency extends TradeCurrency {
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "✦ ";
 

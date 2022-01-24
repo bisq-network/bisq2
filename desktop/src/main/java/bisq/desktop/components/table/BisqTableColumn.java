@@ -26,6 +26,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.StringProperty;
 import javafx.scene.Node;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -35,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -42,7 +44,8 @@ import java.util.function.Function;
 public class BisqTableColumn<S> extends TableColumn<S, S> {
     public enum CellFactory {
         TEXT,
-        BUTTON
+        BUTTON,
+        CHECKBOX
     }
 
     private Label helpIcon;
@@ -54,6 +57,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     private final Optional<Comparator<S>> comparator = Optional.empty();
     private Optional<String> value = Optional.empty();
     private Consumer<S> onActionHandler = item -> {
+    };
+    private BiConsumer<S, Boolean> onToggleHandler = (item, selected) -> {
     };
 
     public static class Builder<S> {
@@ -68,6 +73,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private Optional<Comparator<S>> comparator = Optional.empty();
         private CellFactory cellFactory = CellFactory.TEXT;
         private Consumer<S> onActionHandler = item -> {
+        };
+        private BiConsumer<S, Boolean> onToggleHandler = (item, selected) -> {
         };
 
         public BisqTableColumn<S> build() {
@@ -84,6 +91,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             tableColumn.valueSupplier = valueSupplier;
             tableColumn.valuePropertySupplier = valuePropertySupplier;
             tableColumn.onActionHandler = onActionHandler;
+            tableColumn.onToggleHandler = onToggleHandler;
             comparator.ifPresent(tableColumn::applyComparator);
             return tableColumn;
         }
@@ -143,6 +151,11 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             this.onActionHandler = actionHandler;
             return this;
         }
+
+        public Builder<S> toggleHandler(BiConsumer<S, Boolean> onToggleHandler) {
+            this.onToggleHandler = onToggleHandler;
+            return this;
+        }
     }
 
     public void applyComparator(Comparator<S> comparator) {
@@ -157,6 +170,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         switch (cellFactory) {
             case TEXT -> applyTextCellFactory();
             case BUTTON -> applyButtonCellFactory();
+            case CHECKBOX -> applyCheckBoxCellFactory();
         }
     }
 
@@ -303,4 +317,59 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                     }
                 });
     }
+
+    public void applyCheckBoxCellFactory() {
+        setCellFactory(
+                new Callback<>() {
+
+
+                    @Override
+                    public TableCell<S, S> call(TableColumn<S,
+                            S> column) {
+                        return new TableCell<>() {
+                            S previousItem;
+                            private final CheckBox checkBox = new CheckBox();
+
+                            @Override
+                            public void updateItem(final S item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    checkBox.setOnAction(event -> onToggleHandler.accept(item, checkBox.isSelected()));
+                                    isVisibleFunction.ifPresent(function -> checkBox.setVisible(function.apply(item)));
+                                    setGraphic(checkBox);
+                                    if (previousItem instanceof TableItem tableItem) {
+                                        tableItem.deactivate();
+                                    }
+                                    previousItem = item;
+
+                                    if (item instanceof TableItem tableItem) {
+                                        tableItem.activate();
+                                    }
+                                    if (value.isPresent()) {
+                                        checkBox.setText(value.get());
+                                    } else if (valueSupplier.isPresent()) {
+                                        checkBox.setText(valueSupplier.get().apply(item));
+                                    } else
+                                        valuePropertySupplier.ifPresent(supplier ->
+                                                checkBox.textProperty().bind(supplier.apply(item)));
+                                } else {
+                                    if (previousItem != null) {
+                                        if (previousItem instanceof TableItem tableItem) {
+                                            tableItem.deactivate();
+                                        }
+                                        previousItem = null;
+                                    }
+                                    if (valuePropertySupplier.isPresent()) {
+                                        textProperty().unbind();
+                                    }
+                                    checkBox.setOnAction(null);
+                                    checkBox.setSelected(false);
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
 }

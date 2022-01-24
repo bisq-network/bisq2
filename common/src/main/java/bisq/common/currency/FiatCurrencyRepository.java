@@ -25,8 +25,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public class FiatCurrencyRepository {
     private static Map<String, FiatCurrency> currencyByCode;
     @Getter
@@ -39,12 +37,12 @@ public class FiatCurrencyRepository {
     private static FiatCurrency defaultCurrency;
 
     static {
-        applyLocale(LocaleRepository.getDefaultLocale());
+        initialize(LocaleRepository.getDefaultLocale());
     }
 
     // Need to be called at application setup with user locale
-    public static void applyLocale(Locale locale) {
-        currencyByCode = CountryRepository.COUNTRIES.stream()
+    public static void initialize(Locale locale) {
+        currencyByCode = CountryRepository.getCountries().stream()
                 .map(country -> getCurrencyByCountryCode(country.code(), locale))
                 .distinct()
                 .collect(Collectors.toMap(FiatCurrency::getCode, Function.identity(), (x, y) -> x, HashMap::new));
@@ -54,7 +52,7 @@ public class FiatCurrencyRepository {
         minorCurrencies = new ArrayList<>(currencyByCode.values());
         minorCurrencies.remove(defaultCurrency);
         minorCurrencies.removeAll(majorCurrencies);
-        minorCurrencies.sort(Comparator.comparing(BisqCurrency::getNameAndCode));
+        minorCurrencies.sort(Comparator.comparing(TradeCurrency::getNameAndCode));
         allCurrencies = new ArrayList<>();
         allCurrencies.add(defaultCurrency);
         allCurrencies.addAll(majorCurrencies);
@@ -70,6 +68,10 @@ public class FiatCurrencyRepository {
                 .collect(Collectors.toList());
     }
 
+    public static FiatCurrency getCurrencyByCountryCode(String countryCode) {
+        return getCurrencyByCountryCode(countryCode, LocaleRepository.getDefaultLocale());
+    }
+
     public static FiatCurrency getCurrencyByCountryCode(String countryCode, Locale locale) {
         if (countryCode.equals("XK")) {
             return new FiatCurrency("EUR", locale);
@@ -79,8 +81,11 @@ public class FiatCurrencyRepository {
         return new FiatCurrency(currency.getCurrencyCode(), locale);
     }
 
-    public static Map<String, FiatCurrency> getCurrencyByCode() {
-        checkNotNull(currencyByCode, "applyLocale need to be called before accessing getFiatCurrencyByCode");
+    public static Map<String, FiatCurrency> getCurrencyByCodeMap() {
         return currencyByCode;
+    }
+
+    public static FiatCurrency getCurrencyByCode(String code) {
+        return currencyByCode.get(code);
     }
 }

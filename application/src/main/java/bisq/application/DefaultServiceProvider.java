@@ -18,10 +18,9 @@
 package bisq.application;
 
 import bisq.account.AccountService;
-import bisq.account.settlement.Account;
-import bisq.account.settlement.AccountPayload;
-import bisq.account.settlement.FiatSettlement;
-import bisq.common.currency.FiatCurrencyRepository;
+import bisq.account.accounts.RevolutAccount;
+import bisq.account.accounts.SepaAccount;
+import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.i18n.Res;
@@ -78,9 +77,9 @@ public class DefaultServiceProvider extends ServiceProvider {
         this.applicationOptions = applicationOptions;
 
         Locale locale = applicationOptions.getLocale();
-        LocaleRepository.setDefaultLocale(locale);
+        LocaleRepository.initialize(locale);
         Res.initialize(locale);
-        FiatCurrencyRepository.applyLocale(locale);
+
 
         persistenceService = new PersistenceService(applicationOptions.baseDir());
         keyPairService = new KeyPairService(persistenceService);
@@ -97,27 +96,18 @@ public class DefaultServiceProvider extends ServiceProvider {
 
         chatService = new ChatService(persistenceService, identityService, networkService);
 
-        accountService= new AccountService(persistenceService);
+        accountService = new AccountService(persistenceService);
 
         // add data use case is not available yet at networkService
         offerService = new OfferService(networkService, identityService);
         openOfferService = new OpenOfferService(networkService);
-        offerRepository= new OfferRepository(networkService);
+        offerRepository = new OfferRepository(networkService);
 
         MarketPriceService.Config marketPriceServiceConf = MarketPriceServiceConfigFactory.getConfig();
         marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, ApplicationVersion.VERSION);
-       // offerPresentationService = new OfferPresentationService(offerService, marketPriceService);
+        // offerPresentationService = new OfferPresentationService(offerService, marketPriceService);
 
-        protocolService= new ProtocolService();
-
-
-        // add dummy accounts
-        accountService.addAccount(new Account("SEPA-account-1",
-                new AccountPayload(FiatSettlement.SEPA.getMethod().name(), "John Smith", "1234567890", "9876543")));
-        accountService.addAccount(new Account("SEPA-account-2",
-                new AccountPayload(FiatSettlement.SEPA.getMethod().name(),"Mary Smith", "00000222229999", "88888")));
-        accountService.addAccount(new Account("revolut-account",
-                new AccountPayload(FiatSettlement.REVOLUT.getMethod().name(),"Mary Smith", "00000222229999", "88888")));
+        protocolService = new ProtocolService();
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
@@ -130,11 +120,27 @@ public class DefaultServiceProvider extends ServiceProvider {
      */
     @Override
     public CompletableFuture<Boolean> initialize() {
-
         return keyPairService.initialize()
                 .thenCompose(result -> networkService.bootstrapToNetwork())
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> marketPriceService.initialize())
+                .whenComplete((list, throwable) -> {
+                    // add dummy accounts
+                    if (accountService.getAccounts().isEmpty()) {
+                        SepaAccount john_smith = new SepaAccount("SEPA-account-1",
+                                "John Smith",
+                                "iban_1234",
+                                "bic_1234",
+                                CountryRepository.getDefaultCountry());
+                        accountService.addAccount(john_smith);
+                        accountService.addAccount(new SepaAccount("SEPA-account-2",
+                                "Mary Smith",
+                                "iban_5678",
+                                "bic_5678",
+                                CountryRepository.getDefaultCountry()));
+                        accountService.addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
+                    }
+                })
                 .thenCompose(result -> CompletableFutureUtils.allOf(offerService.initialize(),
                         openOfferService.initialize(),
                         offerRepository.initialize()))

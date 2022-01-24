@@ -30,29 +30,29 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
-public class KeyPairService implements PersistenceClient<KeyPairModel> {
+public class KeyPairService implements PersistenceClient<KeyStore> {
     public static final String DEFAULT = "default";
     @Getter
-    private final Persistence<KeyPairModel> persistence;
+    private final Persistence<KeyStore> persistence;
 
     //   private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
-    private final KeyPairModel keyPairModel = new KeyPairModel();
+    private final KeyStore keyStore = new KeyStore();
 
     public KeyPairService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, "db", keyPairModel);
+        persistence = persistenceService.getOrCreatePersistence(this, "db", keyStore);
     }
 
     @Override
-    public void applyPersisted(KeyPairModel persisted) {
-        synchronized (keyPairModel) {
-            keyPairModel.applyPersisted(persisted);
+    public void applyPersisted(KeyStore persisted) {
+        synchronized (keyStore) {
+            keyStore.applyPersisted(persisted);
         }
     }
 
     @Override
-    public KeyPairModel getClone() {
-        synchronized (keyPairModel) {
-            return keyPairModel.getClone();
+    public KeyStore getClone() {
+        synchronized (keyStore) {
+            return keyStore.getClone();
         }
     }
 
@@ -64,8 +64,8 @@ public class KeyPairService implements PersistenceClient<KeyPairModel> {
     }
 
     public Optional<KeyPair> findKeyPair(String keyId) {
-        synchronized (keyPairModel) {
-            return keyPairModel.findKeyPair(keyId);
+        synchronized (keyStore) {
+            return keyStore.findKeyPair(keyId);
         }
     }
 
@@ -83,8 +83,8 @@ public class KeyPairService implements PersistenceClient<KeyPairModel> {
                 .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
                     try {
                         KeyPair keyPair = KeyGeneration.generateKeyPair();
-                        synchronized (keyPairModel) {
-                            keyPairModel.put(keyId, keyPair);
+                        synchronized (keyStore) {
+                            keyStore.put(keyId, keyPair);
                         }
                         persist();
                         return keyPair;

@@ -17,7 +17,7 @@
 
 package bisq.common.monetary;
 
-import bisq.common.currency.BisqCurrency;
+import bisq.common.currency.TradeCurrency;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -48,7 +48,7 @@ public abstract class Monetary implements Comparable<Monetary>, Serializable {
     }
 
     public static Monetary from(long amount, String code) {
-        if (BisqCurrency.isFiat(code)) {
+        if (TradeCurrency.isFiat(code)) {
             return Fiat.of(amount, code);
         } else {
             return Coin.of(amount, code);

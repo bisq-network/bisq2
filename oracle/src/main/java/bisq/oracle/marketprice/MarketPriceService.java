@@ -17,7 +17,7 @@
 
 package bisq.oracle.marketprice;
 
-import bisq.common.currency.BisqCurrency;
+import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Pair;
 import bisq.common.monetary.Quote;
 import bisq.common.monetary.Market;
@@ -172,7 +172,7 @@ public class MarketPriceService {
                     long timestampSec = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
 
                     // We only get BTC based prices not fiat-fiat or altcoin-altcoin
-                    boolean isFiat = BisqCurrency.isFiat(currencyCode);
+                    boolean isFiat = TradeCurrency.isFiat(currencyCode);
                     String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
                     String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
                     Quote quote = Quote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);

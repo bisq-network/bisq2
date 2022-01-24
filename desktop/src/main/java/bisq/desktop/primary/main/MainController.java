@@ -55,7 +55,7 @@ public class MainController implements Controller, Navigation.Listener {
     }
 
     public void onViewAttached() {
-        String persisted = userService.getUserModel().getCookie().get(CookieKey.NAVIGATION_TARGET);
+        String persisted = userService.getUserStore().getCookie().get(CookieKey.NAVIGATION_TARGET);
         if (persisted != null) {
             Navigation.navigateTo(NavigationTarget.valueOf(persisted));
         } else {
@@ -71,7 +71,7 @@ public class MainController implements Controller, Navigation.Listener {
 
     @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        userService.getUserModel().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
+        userService.getUserStore().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
         userService.persist();
     }
 }

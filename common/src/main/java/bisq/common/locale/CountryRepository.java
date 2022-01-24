@@ -17,19 +17,61 @@
 
 package bisq.common.locale;
 
-import java.util.Comparator;
-import java.util.List;
+import lombok.Getter;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CountryRepository {
-    public static final List<Country> COUNTRIES;
+    @Getter
+    private static Country defaultCountry;
+
+    public static void setDefaultCountry(Country defaultCountry) {
+        CountryRepository.defaultCountry = defaultCountry;
+    }
+
+    public static void initialize(Locale defaultLocale) {
+        CountryRepository.defaultCountry = findCountry(defaultLocale).orElse(findCountry(Locale.US).orElseThrow());
+    }
+
+    public static Optional<Country> findCountry(Locale locale) {
+        return countries.stream().filter(c -> c.code().equals(locale.getCountry())).findAny();
+    }
+
+    public static List<Country> getCountries() {
+        return countries;
+    }
+
+    private static final List<Country> countries;
+
+    public static String getNameByCode(String countryCode) {
+        if (countryCode.equals("XK"))
+            return "Republic of Kosovo";
+        else
+            return new Locale(LanguageRepository.getDefaultLanguage(), countryCode).getDisplayCountry();
+    }
+
+    public static List<Country> getCountriesFromCodes(List<String> codes) {
+        List<Country> list = new ArrayList<>();
+        for (String code : codes) {
+            Locale locale = new Locale(LanguageRepository.getDefaultLanguage(), code, "");
+            String countryCode = locale.getCountry();
+            String regionCode = RegionRepository.getRegionCode(countryCode);
+            Region region = new Region(regionCode, RegionRepository.getRegionName(regionCode));
+            Country country = new Country(countryCode, locale.getDisplayCountry(), region);
+            if (countryCode.equals("XK")) {
+                country = new Country(countryCode, CountryRepository.getNameByCode(countryCode), region);
+            }
+            list.add(country);
+        }
+        return list;
+    }
 
     static {
-        COUNTRIES = LocaleRepository.LOCALES.stream()
+        countries = LocaleRepository.LOCALES.stream()
                 .map(locale -> {
                     String countryCode = locale.getCountry();
-                    String regionCode = Region.getRegionCode(countryCode);
-                    Region region = new Region(regionCode, Region.getRegionName(regionCode));
+                    Region region = RegionRepository.getRegion(locale);
                     Country country = new Country(countryCode, locale.getDisplayCountry(), region);
                     if (locale.getCountry().equals("XK")) {
                         country = new Country(locale.getCountry(), "Republic of Kosovo", region);
@@ -37,9 +79,11 @@ public class CountryRepository {
                     return country;
                 })
                 .collect(Collectors.toList());
-        COUNTRIES.add(new Country("GE", "Georgia", new Region("AS", Region.getRegionName("AS"))));
-        COUNTRIES.add(new Country("BW", "Botswana", new Region("AF", Region.getRegionName("AF"))));
-        COUNTRIES.add(new Country("IR", "Iran", new Region("AS", Region.getRegionName("AS"))));
-        COUNTRIES.sort(Comparator.comparing(Country::name));
+        countries.add(new Country("GE", "Georgia", new Region("AS", RegionRepository.getRegionName("AS"))));
+        countries.add(new Country("BW", "Botswana", new Region("AF", RegionRepository.getRegionName("AF"))));
+        countries.add(new Country("IR", "Iran", new Region("AS", RegionRepository.getRegionName("AS"))));
+        countries.sort(Comparator.comparing(Country::name));
     }
+
+
 }

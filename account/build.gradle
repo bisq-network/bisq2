@@ -16,6 +16,7 @@ dependencies {
     api platform(project(':platforms:common-platform'))
 
     implementation project(':common')
+    implementation project(':i18n')
     implementation project(':persistence')
     implementation project(':identity')
     implementation project(':network')

@@ -17,7 +17,7 @@
 
 package bisq.common.monetary;
 
-import bisq.common.currency.BisqCurrency;
+import bisq.common.currency.TradeCurrency;
 import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -89,10 +89,10 @@ public class Quote implements Comparable<Quote>, Serializable {
      * @return A quote object using 1 unit of the base asset.
      */
     public static Quote fromPrice(double price, String baseCurrencyCode, String quoteCurrencyCode) {
-        Monetary baseMonetary = BisqCurrency.isFiat(baseCurrencyCode) ?
+        Monetary baseMonetary = TradeCurrency.isFiat(baseCurrencyCode) ?
                 Fiat.of(1d, baseCurrencyCode) :
                 Coin.of(1d, baseCurrencyCode);
-        Monetary quoteMonetary = BisqCurrency.isFiat(quoteCurrencyCode) ?
+        Monetary quoteMonetary = TradeCurrency.isFiat(quoteCurrencyCode) ?
                 Fiat.of(price, quoteCurrencyCode) :
                 Coin.of(price, quoteCurrencyCode);
 
@@ -104,10 +104,10 @@ public class Quote implements Comparable<Quote>, Serializable {
     }
 
     public static Quote fromPrice(long value, String baseCurrencyCode, String quoteCurrencyCode) {
-        Monetary baseMonetary = BisqCurrency.isFiat(baseCurrencyCode) ?
+        Monetary baseMonetary = TradeCurrency.isFiat(baseCurrencyCode) ?
                 Fiat.of(1d, baseCurrencyCode) :
                 Coin.of(1d, baseCurrencyCode);
-        Monetary quoteMonetary = BisqCurrency.isFiat(quoteCurrencyCode) ?
+        Monetary quoteMonetary = TradeCurrency.isFiat(quoteCurrencyCode) ?
                 Fiat.of(value, quoteCurrencyCode) :
                 Coin.of(value, quoteCurrencyCode);
 

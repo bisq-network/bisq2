@@ -17,19 +17,18 @@
 
 package bisq.offer;
 
+import bisq.account.protocol.SwapProtocolType;
 import bisq.common.monetary.Market;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.offer.options.ListingOption;
-import bisq.offer.protocol.SwapProtocolType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -41,10 +40,10 @@ public class Offer implements NetworkPayload {
     private final long date;
     private final NetworkId makerNetworkId;
     private final PriceSpec priceSpec;
-    private final ArrayList<? extends SwapProtocolType> protocolTypes;
-    private final ArrayList<SettlementSpec> baseSideSettlementSpecs;
-    private final ArrayList<SettlementSpec> quoteSideSettlementSpecs;
-    private final HashSet<ListingOption> listingOptions;
+    private final List<SwapProtocolType> protocolTypes;
+    private final List<SettlementSpec> baseSideSettlementSpecs;
+    private final List<SettlementSpec> quoteSideSettlementSpecs;
+    private final List<ListingOption> listingOptions;
     private final Market market;
     private final Direction direction;
     private final MetaData metaData;
@@ -73,10 +72,10 @@ public class Offer implements NetworkPayload {
                  Direction direction,
                  long baseAmount,
                  PriceSpec priceSpec,
-                 ArrayList<SwapProtocolType> protocolTypes,
-                 ArrayList<SettlementSpec> baseSideSettlementSpecs,
-                 ArrayList<SettlementSpec> quoteSideSettlementSpecs,
-                 HashSet<ListingOption> listingOptions) {
+                 List<SwapProtocolType> protocolTypes,
+                 List<SettlementSpec> baseSideSettlementSpecs,
+                 List<SettlementSpec> quoteSideSettlementSpecs,
+                 List<ListingOption> listingOptions) {
         this.id = id;
         this.date = date;
         this.makerNetworkId = makerNetworkId;

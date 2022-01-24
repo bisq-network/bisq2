@@ -19,12 +19,14 @@ package bisq.offer;
 
 import bisq.network.p2p.message.Proto;
 
+import javax.annotation.Nullable;
+
 /**
- * @param settlementMethodName     Name of Settlement.Method enum 
- * @param makerSettlementAccountId Local ID of maker's settlement account.
- *                                 In case maker had multiple accounts for same settlement method they
- *                                 can define which account to use for that offer
+ * @param settlementMethodName Name of SettlementMethod enum
+ * @param makerAccountId       Local ID of maker's settlement account.
+ *                             In case maker had multiple accounts for same settlement method they
+ *                             can define which account to use for that offer
  */
 public record SettlementSpec(String settlementMethodName,
-                             String makerSettlementAccountId) implements Proto {
+                            @Nullable String makerAccountId) implements Proto {
 }

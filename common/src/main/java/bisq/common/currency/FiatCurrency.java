@@ -28,7 +28,7 @@ import java.util.Locale;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public final class FiatCurrency extends BisqCurrency {
+public final class FiatCurrency extends TradeCurrency {
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "★ ";
 

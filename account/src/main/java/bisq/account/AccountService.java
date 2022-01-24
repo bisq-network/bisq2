@@ -18,43 +18,60 @@
 package bisq.account;
 
 
-import bisq.account.settlement.Account;
+import bisq.account.accounts.Account;
+import bisq.account.protocol.SwapProtocolType;
+import bisq.account.settlement.SettlementMethod;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class AccountService implements PersistenceClient<AccountModel> {
-
-    private final AccountModel accountModel = new AccountModel();
-
+@Slf4j
+public class AccountService implements PersistenceClient<AccountStore> {
+    private final AccountStore accountStore = new AccountStore();
     @Getter
-    private final Persistence<AccountModel> persistence;
+    private final Persistence<AccountStore> persistence;
 
     public AccountService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, "db", accountModel);
+        persistence = persistenceService.getOrCreatePersistence(this, "db", accountStore);
     }
 
     @Override
-    public void applyPersisted(AccountModel persisted) {
-        synchronized (accountModel) {
-            accountModel.applyPersisted(persisted);
+    public void applyPersisted(AccountStore persisted) {
+        synchronized (accountStore) {
+            accountStore.applyPersisted(persisted);
         }
     }
 
     @Override
-    public AccountModel getClone() {
-        synchronized (accountModel) {
-            return accountModel.getClone();
+    public AccountStore getClone() {
+        synchronized (accountStore) {
+            return accountStore.getClone();
         }
     }
 
-    public void addAccount(Account account) {
-        List<Account> accounts = accountModel.getAccounts();
-        if(accounts.contains(account)) return;
+    public void addAccount(Account<? extends SettlementMethod> account) {
+        List<Account<? extends SettlementMethod>> accounts = accountStore.getAccounts();
+        if (accounts.contains(account)) return;
         accounts.add(account);
         persist();
+    }
+
+    public List<Account<? extends SettlementMethod>> getAccounts() {
+        return accountStore.getAccounts();
+    }
+
+    public List<Account<? extends SettlementMethod>> getMatchingAccounts(SwapProtocolType protocolTyp,
+                                                                         String currencyCode) {
+        var settlementMethods = new HashSet<>(SettlementMethod.from(protocolTyp, currencyCode));
+        return accountStore.getAccounts().stream()
+                .filter(account -> settlementMethods.contains(account.getSettlementMethod()))
+                .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
+                .collect(Collectors.toList());
     }
 }

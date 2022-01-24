@@ -22,23 +22,23 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 
-public class UserService implements PersistenceClient<UserModel> {
+public class UserService implements PersistenceClient<UserStore> {
     @Getter
-    private final Persistence<UserModel> persistence;
+    private final Persistence<UserStore> persistence;
     @Getter
-    private final UserModel userModel = new UserModel();
+    private final UserStore userStore = new UserStore();
 
     public UserService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, "db", userModel);
+        persistence = persistenceService.getOrCreatePersistence(this, "db", userStore);
     }
 
     @Override
-    public void applyPersisted(UserModel persisted) {
-        userModel.applyPersisted(persisted);
+    public void applyPersisted(UserStore persisted) {
+        userStore.applyPersisted(persisted);
     }
 
     @Override
-    public UserModel getClone() {
-        return userModel.getClone();
+    public UserStore getClone() {
+        return userStore.getClone();
     }
 }
