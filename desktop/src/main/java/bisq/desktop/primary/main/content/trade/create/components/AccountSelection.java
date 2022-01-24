@@ -179,13 +179,18 @@ public class AccountSelection {
         }
 
         public void onAccountSelectionChanged(AccountListItem listItem, boolean selected, boolean isBaseSide) {
-            var observableSet = isBaseSide ?
+            var observableAccountsSet = isBaseSide ?
                     model.getSelectedBaseSideAccounts() :
                     model.getSelectedQuoteSideAccounts();
+            var observableSettlementMethodsSet = isBaseSide ?
+                    model.getSelectedBaseSideSettlementMethods() :
+                    model.getSelectedQuoteSideSettlementMethods();
             if (selected) {
-                observableSet.add(listItem.account);
+                observableAccountsSet.add(listItem.account);
+                observableSettlementMethodsSet.add(listItem.settlementMethod);
             } else {
-                observableSet.remove(listItem.account);
+                observableAccountsSet.remove(listItem.account);
+                observableSettlementMethodsSet.remove(listItem.settlementMethod);
             }
         }
 

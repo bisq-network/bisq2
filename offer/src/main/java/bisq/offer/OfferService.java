@@ -17,8 +17,8 @@
 
 package bisq.offer;
 
-import bisq.account.settlement.BitcoinSettlementMethod;
-import bisq.account.settlement.FiatSettlementMethod;
+import bisq.account.accounts.Account;
+import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
@@ -30,14 +30,11 @@ import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.offer.options.ListingOption;
-import bisq.account.protocol.SwapProtocolType;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class OfferService {
@@ -61,33 +58,43 @@ public class OfferService {
     public CompletableFuture<Offer> createOffer(Market selectedMarket,
                                                 Direction direction,
                                                 Monetary baseSideAmount,
-                                                Monetary quoteSideAmount,
                                                 Quote fixPrice,
                                                 SwapProtocolType selectedProtocolTyp,
-                                                SettlementMethod selectedBaseSideSettlementMethod,
-                                                SettlementMethod selectedQuoteSideSettlementMethod) {
+                                                List<Account> selectedBaseSideAccounts,
+                                                List<Account> selectedQuoteSideAccounts,
+                                                List<SettlementMethod> selectedBaseSideSettlementMethods,
+                                                List<SettlementMethod> selectedQuoteSideSettlementMethods) {
         String offerId = StringUtils.createUid();
         return identityService.getOrCreateIdentity(offerId).thenApply(identity ->
         {
-            log.error("identity {}", identity);
             NetworkId makerNetworkId = identity.networkId();
-            ArrayList<SwapProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
-
-            ArrayList<SettlementMethod> baseSettlementMethods = new ArrayList<>(List.of(BitcoinSettlementMethod.MAINCHAIN));
-            ArrayList<SettlementMethod> quoteSettlementMethods = new ArrayList<>(List.of(FiatSettlementMethod.ZELLE));
-            HashSet<ListingOption> listingOptions = new HashSet<>();
-
-            //todo serialization does not work correctly.... 
-            baseSettlementMethods = new ArrayList<>();
-            quoteSettlementMethods = new ArrayList<>();
-            listingOptions = null;
+            List<SwapProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
 
             FixPrice priceSpec = new FixPrice(fixPrice.getValue());
 
-            ArrayList<SettlementSpec> baseSideSettlementSpecs = new ArrayList<>();
-            ArrayList<SettlementSpec> quoteSideSettlementSpecs = new ArrayList<>();
+            List<SettlementSpec> baseSideSettlementSpecs;
+            if (!selectedBaseSideAccounts.isEmpty()) {
+                baseSideSettlementSpecs = selectedBaseSideAccounts.stream()
+                        .map(e -> new SettlementSpec(e.getSettlementMethod().name(), e.getId()))
+                        .collect(Collectors.toList());
+            } else {
+                baseSideSettlementSpecs = selectedBaseSideSettlementMethods.stream()
+                        .map(e -> new SettlementSpec(e.name(), null))
+                        .collect(Collectors.toList());
+            }
+            List<SettlementSpec> quoteSideSettlementSpecs;
+            if (!selectedBaseSideAccounts.isEmpty()) {
+                quoteSideSettlementSpecs = selectedQuoteSideAccounts.stream()
+                        .map(e -> new SettlementSpec(e.getSettlementMethod().name(), e.getId()))
+                        .collect(Collectors.toList());
+            } else {
+                quoteSideSettlementSpecs = selectedQuoteSideSettlementMethods.stream()
+                        .map(e -> new SettlementSpec(e.name(), null))
+                        .collect(Collectors.toList());
+            }
 
-            
+            List<ListingOption> listingOptions = new ArrayList<>();
+
             return new Offer(offerId,
                     new Date().getTime(),
                     makerNetworkId,
@@ -106,7 +113,6 @@ public class OfferService {
     public CompletableFuture<CompletableFuture<List<CompletableFuture<BroadcastResult>>>> publishOffer(Offer offer) {
         return identityService.getOrCreateIdentity(offer.getId())
                 .thenApply(identity -> {
-                    log.error("identity {}", identity);
                     NetworkIdWithKeyPair nodeIdAndKeyPair = identity.getNodeIdAndKeyPair();
                     return networkService.addData(offer, nodeIdAndKeyPair);
                 });

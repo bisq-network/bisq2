@@ -26,6 +26,8 @@ import bisq.oracle.marketprice.MarketPriceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+
 @Slf4j
 public class CreateOfferController implements Controller {
     private final CreateOfferModel model;
@@ -43,7 +45,7 @@ public class CreateOfferController implements Controller {
         var amountPriceController = new AmountPriceGroup.AmountPriceController(offerPreparationModel, marketPriceService);
         var protocolSelectionController = new ProtocolSelection.ProtocolController(offerPreparationModel);
         var accountSelectionController = new AccountSelection.AccountController(offerPreparationModel, serviceProvider.getAccountService());
-        
+
         model = new CreateOfferModel(offerPreparationModel);
         view = new CreateOfferView(model, this,
                 marketSelectionController.getView(),
@@ -59,18 +61,19 @@ public class CreateOfferController implements Controller {
     }
 
     @Override
-    public void onViewDetached() {  
+    public void onViewDetached() {
     }
 
     public void onCreateOffer() {
         offerService.createOffer(model.getSelectedMarket(),
                         model.getDirection(),
                         model.getBaseSideAmount(),
-                        model.getQuoteSideAmount(),
                         model.getFixPrice(),
                         model.getSelectedProtocolType(),
-                        null, //todo
-                        null)
+                        new ArrayList<>(model.getSelectedBaseSideAccounts()),
+                        new ArrayList<>(model.getSelectedQuoteSideAccounts()),
+                        new ArrayList<>(model.getSelectedBaseSideSettlementMethods()),
+                        new ArrayList<>(model.getSelectedQuoteSideSettlementMethods()))
                 .whenComplete((offer, throwable) -> {
                     if (throwable == null) {
                         model.getOffer().set(offer);
