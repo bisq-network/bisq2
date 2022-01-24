@@ -15,34 +15,34 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.swap;
+package bisq.desktop.primary.main.content.trade;
 
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.swap.create.CreateOfferController;
-import bisq.desktop.primary.main.content.swap.listings.OfferbookController;
-import bisq.desktop.primary.main.content.swap.take.TakeOfferController;
+import bisq.desktop.primary.main.content.trade.create.CreateOfferController;
+import bisq.desktop.primary.main.content.trade.listings.OfferbookController;
+import bisq.desktop.primary.main.content.trade.take.TakeOfferController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public class SwapController extends TabController {
+public class TradeController extends TabController {
     private final DefaultServiceProvider serviceProvider;
     @Getter
-    private final SwapModel model;
+    private final TradeModel model;
     @Getter
-    private final SwapView view;
+    private final TradeView view;
 
-    public SwapController(DefaultServiceProvider serviceProvider) {
+    public TradeController(DefaultServiceProvider serviceProvider) {
         super(NavigationTarget.SWAP);
 
         this.serviceProvider = serviceProvider;
-        model = new SwapModel(serviceProvider);
-        view = new SwapView(model, this);
+        model = new TradeModel(serviceProvider);
+        view = new TradeView(model, this);
     }
 
     @Override

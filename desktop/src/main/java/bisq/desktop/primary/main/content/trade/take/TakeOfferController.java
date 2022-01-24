@@ -15,21 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.swap.take;
+package bisq.desktop.primary.main.content.trade.take;
 
-import bisq.desktop.common.view.View;
-import javafx.geometry.Insets;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
-import lombok.extern.slf4j.Slf4j;
+import bisq.application.DefaultServiceProvider;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
 
-@Slf4j
-public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferController> {
+public class TakeOfferController implements Controller {
+    private final TakeOfferModel model;
+    @Getter
+    private final TakeOfferView view;
+    private final DefaultServiceProvider serviceProvider;
 
-    public TakeOfferView(TakeOfferModel model, TakeOfferController controller) {
-        super(new VBox(), model, controller);
-        root.setPadding(new Insets(20,20,20,0));
-        root.getChildren().add(new Label(getClass().getSimpleName()));
+    public TakeOfferController(DefaultServiceProvider serviceProvider) {
+        this.serviceProvider = serviceProvider;
+        model = new TakeOfferModel(serviceProvider);
+        view = new TakeOfferView(model, this);
     }
 
     @Override
@@ -37,7 +38,6 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
     }
 
     @Override
-    protected void onViewDetached() {
+    public void onViewDetached() {
     }
-
 }

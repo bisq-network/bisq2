@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.swap.create;
+package bisq.desktop.primary.main.content.trade.create;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqTextArea;
-import bisq.desktop.primary.main.content.swap.create.components.*;
+import bisq.desktop.primary.main.content.trade.create.components.*;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
 import javafx.beans.value.ChangeListener;

@@ -15,23 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.swap.take;
+package bisq.desktop.primary.main.content.trade;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.desktop.common.view.Model;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationModel;
 
-@Slf4j
-@Getter
-public class TakeOfferModel implements Model {
+public class TradeModel extends NavigationModel {
 
-    public TakeOfferModel(DefaultServiceProvider serviceProvider) {
+    private final DefaultServiceProvider serviceProvider;
+
+    public TradeModel(DefaultServiceProvider serviceProvider) {
+        this.serviceProvider = serviceProvider;
     }
 
-    public void onViewAttached() {
-    }
-
-    public void onViewDetached() {
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.CREATE_OFFER;
     }
 }

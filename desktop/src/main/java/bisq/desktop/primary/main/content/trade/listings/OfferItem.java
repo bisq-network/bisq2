@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.swap.listings;
+package bisq.desktop.primary.main.content.trade.listings;
 
 import bisq.desktop.components.table.TableItem;
 import bisq.network.NetworkId;

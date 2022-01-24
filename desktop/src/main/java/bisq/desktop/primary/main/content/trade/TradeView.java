@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.swap;
+package bisq.desktop.primary.main.content.trade;
 
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.NavigationTargetTab;
@@ -23,9 +23,9 @@ import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
 import com.jfoenix.controls.JFXTabPane;
 
-public class SwapView extends TabView<JFXTabPane, SwapModel, SwapController> {
+public class TradeView extends TabView<JFXTabPane, TradeModel, TradeController> {
 
-    public SwapView(SwapModel model, SwapController controller) {
+    public TradeView(TradeModel model, TradeController controller) {
         super(new JFXTabPane(), model, controller);
     }
 

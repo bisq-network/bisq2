@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.swap.create;
+package bisq.desktop.primary.main.content.trade.create;
 
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.swap.create.components.*;
+import bisq.desktop.primary.main.content.trade.create.components.*;
 import bisq.offer.Direction;
 import bisq.offer.OfferService;
 import bisq.oracle.marketprice.MarketPriceService;

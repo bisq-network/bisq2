@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.swap.create;
+package bisq.desktop.primary.main.content.trade.create;
 
 import bisq.desktop.common.view.Model;
-import bisq.desktop.primary.main.content.swap.create.components.OfferPreparationModel;
+import bisq.desktop.primary.main.content.trade.create.components.OfferPreparationModel;
 import bisq.offer.Offer;
 import bisq.account.protocol.SwapProtocolType;
 import javafx.beans.property.BooleanProperty;

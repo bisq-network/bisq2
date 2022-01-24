@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.swap.listings;
+package bisq.desktop.primary.main.content.trade.listings;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.view.View;

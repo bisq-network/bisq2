@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.swap.create.components;
+package bisq.desktop.primary.main.content.trade.create.components;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
