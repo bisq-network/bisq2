@@ -17,12 +17,15 @@
 
 package bisq.desktop.primary.main.content.swap.create;
 
-import bisq.offer.Direction;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.primary.main.content.swap.create.components.OfferPreparationModel;
 import bisq.offer.Offer;
+import bisq.account.protocol.SwapProtocolType;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
@@ -35,15 +38,22 @@ public class CreateOfferModel implements Model {
 
     @Getter
     private final ObjectProperty<Offer> offer = new SimpleObjectProperty<>();
+    @Getter
+    private final BooleanProperty createOfferButtonVisible = new SimpleBooleanProperty(true);
+    private final ChangeListener<SwapProtocolType> selectedProtocolTypListener;
 
     public CreateOfferModel(OfferPreparationModel offerPreparationModel) {
         this.offerPreparationModel = offerPreparationModel;
+
+        selectedProtocolTypListener = (observable, oldValue, newValue) -> createOfferButtonVisible.set(newValue != null);
     }
 
     public void onViewAttached() {
-        offerPreparationModel.setDirection(Direction.BUY);
+        offerPreparationModel.selectedProtocolTypProperty().addListener(selectedProtocolTypListener);
+        createOfferButtonVisible.set(offerPreparationModel.getSelectedProtocolTyp() != null);
     }
 
     public void onViewDetached() {
+        offerPreparationModel.selectedProtocolTypProperty().removeListener(selectedProtocolTypListener);
     }
 }

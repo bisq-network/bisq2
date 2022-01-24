@@ -19,7 +19,7 @@ package bisq.presentation.offer;
 
 import bisq.account.settlement.Settlement;
 import bisq.common.monetary.Monetary;
-import bisq.offer.protocol.SwapProtocolType;
+import bisq.account.protocol.SwapProtocolType;
 import bisq.offer.options.ReputationOption;
 import bisq.offer.options.FiatSettlementOption;
 import bisq.presentation.formatters.AmountFormatter;

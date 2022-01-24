@@ -26,6 +26,7 @@ import java.io.*;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -38,7 +39,7 @@ public class Persistence<T extends Serializable> {
     @Getter
     private final String storagePath;
     private final Object lock = new Object();
-
+    private final AtomicReference<T> candidateToPersist = new AtomicReference<>();
 
     public Persistence(String directory, String fileName) {
         this.directory = directory;
@@ -64,6 +65,7 @@ public class Persistence<T extends Serializable> {
             Object object;
             synchronized (lock) {
                 object = objectInputStream.readObject();
+                log.debug("read {}", object);
             }
             //noinspection unchecked
             return Optional.of((T) object);
@@ -78,10 +80,14 @@ public class Persistence<T extends Serializable> {
         }
     }
 
+
     public CompletableFuture<Boolean> persistAsync(T serializable) {
+        synchronized (lock) {
+            candidateToPersist.set(serializable);
+        }
         return CompletableFuture.supplyAsync(() -> {
             Thread.currentThread().setName("Persistence.persist-" + fileName);
-            return persist(serializable);
+            return persist(candidateToPersist.get());
         }, PERSISTENCE_IO_POOL);
     }
 
@@ -104,7 +110,7 @@ public class Persistence<T extends Serializable> {
 
                     // Atomic rename
                     FileUtils.renameFile(tempFile, storageFile);
-                    log.debug("Persisted {}", serializable);
+                    //log.debug("Persisted {}", serializable);
                     success = true;
                 } catch (IOException exception) {
                     log.error(exception.toString(), exception);

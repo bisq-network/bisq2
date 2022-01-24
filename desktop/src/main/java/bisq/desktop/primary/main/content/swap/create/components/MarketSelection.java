@@ -53,6 +53,31 @@ public class MarketSelection {
             view = new MarketSelectionView(model, this);
         }
 
+        @Override
+        public void onMarketPriceUpdate(Map<Market, MarketPrice> map) {
+            UIThread.run(this::applyMarketPriceDate);
+        }
+
+        @Override
+        public void onMarketPriceSelected(MarketPrice selected) {
+            UIThread.run(this::applyMarketPriceDate);
+        }
+
+        public void onViewAttached() {
+            model.marketPriceService.addListener(this);
+            applyMarketPriceDate();
+        }
+
+        public void onViewDetached() {
+            model.marketPriceService.removeListener(this);
+        }
+
+        private void onSelectMarket(Market selected) {
+            if (selected != null) {
+                model.setSelectedMarket(selected);
+            }
+        }
+
         private void applyMarketPriceDate() {
             if (model.markets.isEmpty()) {
                 model.markets.setAll(model.marketPriceService.getMarketPriceByCurrencyMap().values().stream()
@@ -68,30 +93,6 @@ public class MarketSelection {
             if (!model.markets.isEmpty() && selectedMarket != null) {
                 model.marketPriceService.removeListener(this);
             }
-        }
-
-        private void onSelect(Market selected) {
-            if (selected != null) {
-                model.setSelectedMarket(selected);
-            }
-        }
-
-        @Override
-        public void onMarketPriceUpdate(Map<Market, MarketPrice> map) {
-            UIThread.run(this::applyMarketPriceDate);
-        }
-
-        @Override
-        public void onMarketPriceSelected(MarketPrice selected) {
-            UIThread.run(this::applyMarketPriceDate);
-        }
-
-        public void onViewAttached() {
-            model.marketPriceService.addListener(this);
-        }
-
-        public void onViewDetached() {
-            model.marketPriceService.removeListener(this);
         }
     }
 
@@ -141,7 +142,7 @@ public class MarketSelection {
         }
 
         public void onViewAttached() {
-            comboBox.setOnAction(e -> controller.onSelect(comboBox.getSelectionModel().getSelectedItem()));
+            comboBox.setOnAction(e -> controller.onSelectMarket(comboBox.getSelectionModel().getSelectedItem()));
             model.selectedMarketProperty().addListener(selectedMarketListener);
         }
 

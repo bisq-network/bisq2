@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.swap.create.components;
 
-import bisq.offer.Direction;
 import bisq.common.monetary.Market;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
@@ -25,6 +24,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
@@ -57,6 +57,9 @@ public class DirectionSelection {
 
         public void onViewAttached() {
             model.selectedMarketProperty().addListener(selectedMarketListener);
+            if (model.getSelectedMarket() != null) {
+                model.baseCode.set(model.getSelectedMarket().baseCurrencyCode());
+            }
         }
 
         public void onViewDetached() {

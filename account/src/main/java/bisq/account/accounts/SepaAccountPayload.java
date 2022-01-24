@@ -15,9 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.settlement;
+package bisq.account.accounts;
 
-import bisq.network.p2p.message.Proto;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-public record AccountPayload(String settlementMethodId ,String holderName, String iban, String bic) implements Proto {
+@Getter
+@Slf4j
+@ToString
+@EqualsAndHashCode(callSuper = true)
+public final class SepaAccountPayload extends AccountPayload {
+    private final String holderName;
+    private final String iban;
+    private final String bic;
+
+    public SepaAccountPayload(String settlementMethodId, String holderName, String iban, String bic) {
+        super(settlementMethodId);
+        this.holderName = holderName;
+        this.iban = iban;
+        this.bic = bic;
+    }
 }

@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.swap.create;
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.swap.create.components.*;
+import bisq.offer.Direction;
 import bisq.offer.OfferService;
 import bisq.oracle.marketprice.MarketPriceService;
 import lombok.Getter;
@@ -41,7 +42,7 @@ public class CreateOfferController implements Controller {
         var directionController = new DirectionSelection.DirectionController(offerPreparationModel);
         var amountPriceController = new AmountPriceGroup.AmountPriceController(offerPreparationModel, marketPriceService);
         var protocolSelectionController = new ProtocolSelection.ProtocolController(offerPreparationModel);
-        var settlementSelectionController = new SettlementSelection.SettlementController(offerPreparationModel);
+        var accountSelectionController = new AccountSelection.AccountController(offerPreparationModel, serviceProvider.getAccountService());
 
         model = new CreateOfferModel(offerPreparationModel);
         view = new CreateOfferView(model, this,
@@ -49,15 +50,16 @@ public class CreateOfferController implements Controller {
                 directionController.getView(),
                 amountPriceController.getView(),
                 protocolSelectionController.getView(),
-                settlementSelectionController.getView());
+                accountSelectionController.getView());
     }
 
     @Override
     public void onViewAttached() {
+        model.setDirection(Direction.BUY);
     }
 
     @Override
-    public void onViewDetached() {
+    public void onViewDetached() {  
     }
 
     public void onCreateOffer() {
@@ -67,8 +69,8 @@ public class CreateOfferController implements Controller {
                         model.getQuoteSideAmount(),
                         model.getFixPrice(),
                         model.getSelectedProtocolTyp(),
-                        model.getSelectedBaseSideSettlementMethod(),
-                        model.getSelectedQuoteSideSettlementMethod())
+                        null, //todo
+                        null)
                 .whenComplete((offer, throwable) -> {
                     if (throwable == null) {
                         model.getOffer().set(offer);

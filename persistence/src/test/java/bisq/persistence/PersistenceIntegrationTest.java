@@ -25,8 +25,11 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -37,7 +40,7 @@ public class PersistenceIntegrationTest {
 
     private final String storageDirectory = OsUtils.getUserDataDir() + File.separator + "bisq_PersistenceTest";
 
-    @Test
+    //  @Test
     public void testPersistence() {
         String fileName = "MockObject1";
         MockObject mockObject = new MockObject(1);
@@ -60,6 +63,23 @@ public class PersistenceIntegrationTest {
     }
 
     @Test
+    public void testSerialPersistAsync() throws InterruptedException {
+        String fileName = "MockObject1";
+        ArrayList<Integer> list = new ArrayList<>();
+        FileUtils.deleteDirectory(new File(storageDirectory));
+        Persistence<ArrayList<Integer>> persistence = new Persistence<>(storageDirectory, fileName);
+
+        int iterations = 10;
+        CountDownLatch latch = new CountDownLatch(iterations);
+        for (int i = 0; i < iterations; i++) {
+            list.add(i);
+            persistence.persistAsync(new ArrayList<>(list)).whenComplete((r, t) -> latch.countDown());
+        }
+        latch.await(10, TimeUnit.SECONDS);
+        assertEquals(list, persistence.read().orElseThrow());
+    }
+
+    // @Test
     public void testRateLimitedPersistenceClient() {
         FileUtils.deleteDirectory(new File(storageDirectory));
         int maxWriteRateInMs = 100;

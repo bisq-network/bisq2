@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferController> {
     private final ChangeListener<Offer> offerListener;
+    private final BisqButton createOfferButton;
 
     public CreateOfferView(CreateOfferModel model,
                            CreateOfferController controller,
@@ -38,14 +39,14 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
                            DirectionSelection.AmountPriceView directionView,
                            AmountPriceGroup.AmountPriceView amountPriceView,
                            ProtocolSelection.ProtocolView protocolView,
-                           SettlementSelection.SettlementView settlementView) {
+                           AccountSelection.AccountView accountView) {
         super(new VBox(), model, controller);
         root.setSpacing(30);
         root.setPadding(new Insets(20, 20, 20, 0));
 
         amountPriceView.getRoot().setPadding(new Insets(0, 0, -5, 0));
 
-        BisqButton createOfferButton = new BisqButton(Res.offerbook.get("createOffer.button"));
+        createOfferButton = new BisqButton(Res.offerbook.get("createOffer.button"));
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
 
         //todo temp
@@ -61,7 +62,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
                 directionView.getRoot(),
                 amountPriceView.getRoot(),
                 protocolView.getRoot(),
-                settlementView.getRoot(),
+                accountView.getRoot(),
                 createOfferButton,
                 offerSummary,
                 publishButton);
@@ -78,10 +79,14 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
     @Override
     public void onViewAttached() {
         model.getOffer().addListener(offerListener);
+        createOfferButton.visibleProperty().bind(model.getCreateOfferButtonVisible());
+        createOfferButton.managedProperty().bind(model.getCreateOfferButtonVisible());
     }
 
     @Override
     public void onViewDetached() {
         model.getOffer().removeListener(offerListener);
+        createOfferButton.visibleProperty().unbind();
+        createOfferButton.managedProperty().unbind();
     }
 }

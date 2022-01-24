@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.protocol;
+package bisq.account.protocol;
 
 public enum LoanProtocolType implements ProtocolType {
     COLLATERALIZED,

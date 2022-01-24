@@ -22,7 +22,7 @@ import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.offer.options.ListingOption;
-import bisq.offer.protocol.SwapProtocolType;
+import bisq.account.protocol.SwapProtocolType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

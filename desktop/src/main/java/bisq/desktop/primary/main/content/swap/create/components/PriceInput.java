@@ -92,6 +92,8 @@ public class PriceInput {
         public void onViewAttached() {
             model.marketPriceService.addListener(this);
             model.selectedMarketProperty().addListener(selectedMarketListener);
+            if (model.getFixPrice() != null) return;
+            setFixPriceFromMarketPrice();
         }
 
         public void onViewDetached() {

@@ -15,9 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.protocol;
+package bisq.account.accounts;
 
-import java.io.Serializable;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-public interface ProtocolType extends Serializable {
+@Getter
+@Slf4j
+@ToString
+@EqualsAndHashCode(callSuper = true)
+public final class RevolutAccountPayload extends AccountPayload {
+    private final String email;
+
+    public RevolutAccountPayload(String settlementMethodId, String email) {
+        super(settlementMethodId);
+        this.email = email;
+    }
 }

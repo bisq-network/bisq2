@@ -1,7 +1,7 @@
 package bisq.contract;
 
 import bisq.offer.Listing;
-import bisq.offer.protocol.SwapProtocolType;
+import bisq.account.protocol.SwapProtocolType;
 import lombok.Getter;
 
 import java.util.Set;

@@ -17,6 +17,8 @@
 
 package bisq.desktop.primary.main.content.swap.create.components;
 
+import bisq.account.protocol.ProtocolSwapSettlementMapping;
+import bisq.account.protocol.SwapProtocolType;
 import bisq.common.monetary.Market;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
@@ -26,8 +28,6 @@ import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
-import bisq.offer.protocol.ProtocolSpecifics;
-import bisq.offer.protocol.SwapProtocolType;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -57,7 +57,7 @@ public class ProtocolSelection {
 
             selectedMarketListener = (observable, oldValue, newValue) -> {
                 if (newValue == null) return;
-                model.fillObservableList(ProtocolSpecifics.getProtocols(newValue));
+                model.fillObservableList(ProtocolSwapSettlementMapping.getProtocols(newValue));
             };
         }
 
@@ -68,6 +68,9 @@ public class ProtocolSelection {
 
         public void onViewAttached() {
             model.selectedMarketProperty().addListener(selectedMarketListener);
+            if (model.getSelectedMarket() != null) {
+                model.fillObservableList(ProtocolSwapSettlementMapping.getProtocols(model.getSelectedMarket()));
+            }
         }
 
         public void onViewDetached() {
@@ -78,16 +81,16 @@ public class ProtocolSelection {
     private static class ProtocolModel implements Model {
         @Delegate
         private final OfferPreparationModel offerPreparationModel;
-        private final ObservableList<ProtocolItem> observableList = FXCollections.observableArrayList();
-        private final SortedList<ProtocolItem> sortedList = new SortedList<>(observableList);
-        private final ObjectProperty<ProtocolItem> selectedProtocolItem = new SimpleObjectProperty<>();
+        private final ObservableList<ListItem> observableList = FXCollections.observableArrayList();
+        private final SortedList<ListItem> sortedList = new SortedList<>(observableList);
+        private final ObjectProperty<ListItem> selectedProtocolItem = new SimpleObjectProperty<>();
 
         public ProtocolModel(OfferPreparationModel offerPreparationModel) {
             this.offerPreparationModel = offerPreparationModel;
         }
 
         private void fillObservableList(List<SwapProtocolType> protocols) {
-            observableList.setAll(protocols.stream().map(ProtocolItem::new).collect(Collectors.toList()));
+            observableList.setAll(protocols.stream().map(ListItem::new).collect(Collectors.toList()));
         }
 
         public void selectListItem(SwapProtocolType value) {
@@ -97,11 +100,11 @@ public class ProtocolSelection {
     }
 
     @Getter
-    private static class ProtocolItem implements TableItem {
+    private static class ListItem implements TableItem {
         private final SwapProtocolType protocolType;
         private final String protocolName;
 
-        public ProtocolItem(SwapProtocolType protocolType) {
+        public ListItem(SwapProtocolType protocolType) {
             this.protocolType = protocolType;
             protocolName = Res.offerbook.get(protocolType.name());
         }
@@ -116,9 +119,9 @@ public class ProtocolSelection {
     }
 
     public static class ProtocolView extends View<VBox, ProtocolModel, ProtocolController> {
-        private final BisqTableView<ProtocolItem> tableView;
-        private final ChangeListener<ProtocolItem> selectedProtocolItemListener;
-        private final ChangeListener<ProtocolItem> selectedTableItemListener;
+        private final BisqTableView<ListItem> tableView;
+        private final ChangeListener<ListItem> selectedProtocolItemListener;
+        private final ChangeListener<ListItem> selectedTableItemListener;
 
         public ProtocolView(ProtocolModel model,
                             ProtocolController controller) {
@@ -150,14 +153,14 @@ public class ProtocolSelection {
 
         public void onViewDetached() {
             tableView.getSelectionModel().selectedItemProperty().removeListener(selectedTableItemListener);
-            model.selectedProtocolItem.removeListener(selectedProtocolItemListener);
+            model.selectedProtocolItem.removeListener(selectedProtocolItemListener); model.setSelectedProtocolType(null);
         }
 
         private void configTableView() {
-            tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolItem>()
+            tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .title(Res.offerbook.get("createOffer.protocol.names"))
                     .minWidth(120)
-                    .valueSupplier(ProtocolItem::getProtocolName)
+                    .valueSupplier(ListItem::getProtocolName)
                     .build());
             //todo there will be more info about the protocols
         }

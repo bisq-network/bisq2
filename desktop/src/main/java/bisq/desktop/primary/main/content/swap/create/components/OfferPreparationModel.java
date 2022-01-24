@@ -17,20 +17,23 @@
 
 package bisq.desktop.primary.main.content.swap.create.components;
 
+import bisq.account.accounts.Account;
 import bisq.account.settlement.Settlement;
-import bisq.offer.Direction;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
-import bisq.offer.protocol.SwapProtocolType;
+import bisq.offer.Direction;
+import bisq.account.protocol.SwapProtocolType;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Shared model for offer preparation
- * Used via Lombok Delegates in components 
+ * Used via Lombok Delegates in components
  * IDE does not recognize that and shows getters incorrectly as unused
  */
 @Slf4j
@@ -41,8 +44,8 @@ public class OfferPreparationModel {
     private final ObjectProperty<Monetary> quoteSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
     private final ObjectProperty<SwapProtocolType> selectedProtocolTyp = new SimpleObjectProperty<>();
-    private final ObjectProperty<Settlement.Method> selectedBaseSideSettlementMethod = new SimpleObjectProperty<>();
-    private final ObjectProperty<Settlement.Method> selectedQuoteSideSettlementMethod = new SimpleObjectProperty<>();
+    private final ObservableList<Account<? extends Settlement.Method>> selectedBaseSideAccounts = FXCollections.observableArrayList();
+    private final ObservableList<Account<? extends Settlement.Method>> selectedQuoteSideAccounts = FXCollections.observableArrayList();
 
     public OfferPreparationModel() {
     }
@@ -74,14 +77,6 @@ public class OfferPreparationModel {
 
     public void setSelectedProtocolType(SwapProtocolType value) {
         selectedProtocolTyp.set(value);
-    }
-
-    public void setSelectedBaseSideSettlementMethod(Settlement.Method value) {
-        selectedBaseSideSettlementMethod.set(value);
-    }
-
-    public void setSelectedQuoteSideSettlementMethod(Settlement.Method value) {
-        selectedQuoteSideSettlementMethod.set(value);
     }
 
 
@@ -137,19 +132,11 @@ public class OfferPreparationModel {
         return selectedProtocolTyp;
     }
 
-    public Settlement.Method getSelectedBaseSideSettlementMethod() {
-        return selectedBaseSideSettlementMethod.get();
+    public ObservableList<Account<? extends Settlement.Method>> getSelectedBaseSideAccounts() {
+        return selectedBaseSideAccounts;
     }
 
-    public ReadOnlyObjectProperty<Settlement.Method> selectedBaseSideSettlementMethodProperty() {
-        return selectedBaseSideSettlementMethod;
-    }
-
-    public Settlement.Method getSelectedQuoteSideSettlementMethod() {
-        return selectedQuoteSideSettlementMethod.get();
-    }
-
-    public ReadOnlyObjectProperty<Settlement.Method> selectedQuoteSideSettlementMethodProperty() {
-        return selectedQuoteSideSettlementMethod;
+    public ObservableList<Account<? extends Settlement.Method>> getSelectedQuoteSideAccounts() {
+        return selectedQuoteSideAccounts;
     }
 }

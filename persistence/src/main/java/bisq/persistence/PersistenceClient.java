@@ -34,7 +34,8 @@ public interface PersistenceClient<T extends Serializable> {
     void applyPersisted(T persisted);
 
     default CompletableFuture<Boolean> persist() {
-        return getPersistence().persistAsync(getClone());
+        CompletableFuture<Boolean> future = getPersistence().persistAsync(getClone());
+        return future;
     }
 
     T getClone();

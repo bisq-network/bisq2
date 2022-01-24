@@ -30,7 +30,7 @@ import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.offer.options.ListingOption;
-import bisq.offer.protocol.SwapProtocolType;
+import bisq.account.protocol.SwapProtocolType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;

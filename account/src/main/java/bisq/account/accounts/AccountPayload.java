@@ -15,24 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.contract;
+package bisq.account.accounts;
 
-import bisq.offer.Listing;
-import bisq.account.protocol.SwapProtocolType;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-/**
- * Defines the terms of the financial interaction with the counterparty/parties.
- */
+import java.io.Serializable;
+
 @Getter
-public abstract class Contract<T extends Listing> {
-    protected final T listing;
-    protected final SwapProtocolType protocolType;
-    protected final Party maker;
+@Slf4j
+@ToString
+@EqualsAndHashCode
+public abstract class AccountPayload implements Serializable {
+    private final String settlementMethodId;
 
-    public Contract(T listing, SwapProtocolType protocolType) {
-        this.protocolType = protocolType;
-        this.maker = new Party(Role.MAKER, listing.getMakerNetworkId());
-        this.listing = listing;
+    public AccountPayload(String settlementMethodId) {
+        this.settlementMethodId = settlementMethodId;
     }
 }

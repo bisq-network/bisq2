@@ -15,24 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.contract;
+package bisq.account.accounts;
 
-import bisq.offer.Listing;
-import bisq.account.protocol.SwapProtocolType;
+import bisq.account.settlement.FiatSettlement;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-/**
- * Defines the terms of the financial interaction with the counterparty/parties.
- */
 @Getter
-public abstract class Contract<T extends Listing> {
-    protected final T listing;
-    protected final SwapProtocolType protocolType;
-    protected final Party maker;
+@Slf4j
+@ToString
+@EqualsAndHashCode(callSuper = true)
+public final class SepaAccount extends Account<FiatSettlement.Method> {
+    private static final FiatSettlement.Method METHOD = FiatSettlement.Method.SEPA;
 
-    public Contract(T listing, SwapProtocolType protocolType) {
-        this.protocolType = protocolType;
-        this.maker = new Party(Role.MAKER, listing.getMakerNetworkId());
-        this.listing = listing;
+    public SepaAccount(String accountName, String holderName, String iban, String bic) {
+        super(accountName, METHOD, new SepaAccountPayload(METHOD.name(), holderName, iban, bic));
     }
 }

@@ -20,7 +20,7 @@ package bisq.offer;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkId;
 import bisq.offer.options.ListingOption;
-import bisq.offer.protocol.SwapProtocolType;
+import bisq.account.protocol.SwapProtocolType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
