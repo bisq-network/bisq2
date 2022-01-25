@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.create.components;
+package bisq.desktop.primary.main.content.trade.components;
 
+import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
@@ -26,15 +27,17 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import bisq.oracle.marketprice.MarketPriceService;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.Getter;
-import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -46,12 +49,17 @@ public class AmountPriceGroup {
         private final ChangeListener<Monetary> baseCurrencyAmountListener, quoteCurrencyAmountListener;
         private final ChangeListener<Quote> fixPriceQuoteListener;
 
-        public AmountPriceController(OfferPreparationModel offerPreparationModel, MarketPriceService marketPriceService) {
-            model = new AmountPriceModel(offerPreparationModel, marketPriceService);
+        public AmountPriceController(ObjectProperty<Monetary> baseSideAmount,
+                                     ObjectProperty<Monetary> quoteSideAmount,
+                                     ObjectProperty<Quote> fixPrice,
+                                     ReadOnlyObjectProperty<Market> selectedMarket,
+                                     ReadOnlyObjectProperty<Direction> direction,
+                                     MarketPriceService marketPriceService) {
+            model = new AmountPriceModel(baseSideAmount, quoteSideAmount, fixPrice);
 
-            var baseAmountController = new AmountInput.AmountController(offerPreparationModel, true);
-            var quoteAmountController = new AmountInput.AmountController(offerPreparationModel, false);
-            var priceController = new PriceInput.PriceController(offerPreparationModel, marketPriceService);
+            var baseAmountController = new AmountInput.AmountController(baseSideAmount, selectedMarket, direction, true);
+            var quoteAmountController = new AmountInput.AmountController(quoteSideAmount, selectedMarket, direction, false);
+            var priceController = new PriceInput.PriceController(fixPrice, selectedMarket, marketPriceService);
 
             view = new AmountPriceGroup.AmountPriceView(model,
                     this,
@@ -75,38 +83,38 @@ public class AmountPriceGroup {
 
         @Override
         public void onViewAttached() {
-            model.baseSideAmountProperty().addListener(baseCurrencyAmountListener);
-            model.quoteSideAmountProperty().addListener(quoteCurrencyAmountListener);
-            model.fixPriceProperty().addListener(fixPriceQuoteListener);
+            model.baseSideAmount.addListener(baseCurrencyAmountListener);
+            model.quoteSideAmount.addListener(quoteCurrencyAmountListener);
+            model.fixPrice.addListener(fixPriceQuoteListener);
         }
 
         @Override
         public void onViewDetached() {
-            model.baseSideAmountProperty().removeListener(baseCurrencyAmountListener);
-            model.quoteSideAmountProperty().removeListener(quoteCurrencyAmountListener);
-            model.fixPriceProperty().removeListener(fixPriceQuoteListener);
+            model.baseSideAmount.removeListener(baseCurrencyAmountListener);
+            model.quoteSideAmount.removeListener(quoteCurrencyAmountListener);
+            model.fixPrice.removeListener(fixPriceQuoteListener);
         }
 
         private void setQuoteFromBase() {
-            Quote fixPrice = model.getFixPrice();
+            Quote fixPrice = model.fixPrice.get();
             if (fixPrice == null) return;
-            Monetary baseCurrencyAmount = model.getBaseSideAmount();
+            Monetary baseCurrencyAmount = model.baseSideAmount.get();
             if (baseCurrencyAmount == null) return;
             if (fixPrice.getBaseMonetary().getClass() != baseCurrencyAmount.getClass()) return;
-            model.setQuoteSideAmount(fixPrice.toQuoteMonetary(baseCurrencyAmount));
+            model.quoteSideAmount.set(fixPrice.toQuoteMonetary(baseCurrencyAmount));
         }
 
         private void setBaseFromQuote() {
-            Quote fixPrice = model.getFixPrice();
+            Quote fixPrice = model.fixPrice.get();
             if (fixPrice == null) return;
-            Monetary quoteCurrencyAmount = model.getQuoteSideAmount();
+            Monetary quoteCurrencyAmount = model.quoteSideAmount.get();
             if (quoteCurrencyAmount == null) return;
             if (fixPrice.getQuoteMonetary().getClass() != quoteCurrencyAmount.getClass()) return;
-            model.setBaseSideAmount(fixPrice.toBaseMonetary(quoteCurrencyAmount));
+            model.baseSideAmount.set(fixPrice.toBaseMonetary(quoteCurrencyAmount));
         }
 
         private void applyFixPrice() {
-            if (model.getBaseSideAmount() == null) {
+            if (model.baseSideAmount == null) {
                 setBaseFromQuote();
             } else {
                 setQuoteFromBase();
@@ -115,14 +123,18 @@ public class AmountPriceGroup {
     }
 
     private static class AmountPriceModel implements Model {
-        @Delegate
-        private final OfferPreparationModel offerPreparationModel;
-        private final MarketPriceService marketPriceService;
+        private final ObjectProperty<Monetary> baseSideAmount;
+        private final ObjectProperty<Monetary> quoteSideAmount;
+        private final ObjectProperty<Quote> fixPrice;
 
-        public AmountPriceModel(OfferPreparationModel offerPreparationModel, MarketPriceService marketPriceService) {
-            this.offerPreparationModel = offerPreparationModel;
-            this.marketPriceService = marketPriceService;
+        public AmountPriceModel(ObjectProperty<Monetary> baseSideAmount,
+                                ObjectProperty<Monetary> quoteSideAmount,
+                                ObjectProperty<Quote> fixPrice) {
+            this.baseSideAmount = baseSideAmount;
+            this.quoteSideAmount = quoteSideAmount;
+            this.fixPrice = fixPrice;
         }
+
     }
 
     @Slf4j

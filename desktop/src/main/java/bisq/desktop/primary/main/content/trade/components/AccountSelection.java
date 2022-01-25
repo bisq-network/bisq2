@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.create.components;
+package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
@@ -33,13 +33,11 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -47,7 +45,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
-import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -63,8 +60,23 @@ public class AccountSelection {
         private final ChangeListener<Direction> directionListener;
         private final ChangeListener<Market> selectedMarketListener;
 
-        public AccountController(OfferPreparationModel offerPreparationModel, AccountService accountService) {
-            model = new AccountModel(offerPreparationModel, accountService);
+        public AccountController(
+                ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts,
+                ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts,
+                ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods,
+                ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods,
+                ReadOnlyObjectProperty<Market> selectedMarket,
+                ReadOnlyObjectProperty<Direction> direction,
+                ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
+                AccountService accountService) {
+            model = new AccountModel(selectedBaseSideAccounts,
+                    selectedQuoteSideAccounts,
+                    selectedBaseSideSettlementMethods,
+                    selectedQuoteSideSettlementMethods,
+                    selectedMarket,
+                    direction,
+                    selectedProtocolType,
+                    accountService);
             view = new AccountView(model, this);
 
             selectedProtocolListener = (observable, oldValue, newValue) -> resetAndApplyData();
@@ -73,19 +85,19 @@ public class AccountSelection {
         }
 
         private void resetAndApplyData() {
-            Direction direction = model.getDirection();
+            Direction direction = model.direction.get();
             if (direction == null) return;
 
-            Market market = model.getSelectedMarket();
+            Market market = model.selectedMarket.get();
 
             if (market == null) return;
 
-            model.getSelectedBaseSideAccounts().clear();
-            model.getSelectedQuoteSideAccounts().clear();
-            model.getSelectedBaseSideSettlementMethods().clear();
-            model.getSelectedQuoteSideSettlementMethods().clear();
+            model.selectedBaseSideAccounts.clear();
+            model.selectedQuoteSideAccounts.clear();
+            model.selectedBaseSideSettlementMethods.clear();
+            model.selectedQuoteSideSettlementMethods.clear();
 
-            SwapProtocolType selectedProtocolTyp = model.getSelectedProtocolType();
+            SwapProtocolType selectedProtocolTyp = model.selectedProtocolType.get();
             if (selectedProtocolTyp == null) {
                 model.visibility.set(false);
                 return;
@@ -134,10 +146,10 @@ public class AccountSelection {
         }
 
         private void updateStrings() {
-            Direction direction = model.getDirection();
+            Direction direction = model.direction.get();
             if (direction == null) return;
 
-            Market market = model.getSelectedMarket();
+            Market market = model.selectedMarket.get();
             if (market == null) return;
 
             String baseSideVerb = direction == Direction.SELL ?
@@ -165,26 +177,26 @@ public class AccountSelection {
 
         public void onViewAttached() {
             resetAndApplyData();
-            model.selectedProtocolTypeProperty().addListener(selectedProtocolListener);
-            model.selectedMarketProperty().addListener(selectedMarketListener);
-            model.directionProperty().addListener(directionListener);
+            model.selectedProtocolType.addListener(selectedProtocolListener);
+            model.selectedMarket.addListener(selectedMarketListener);
+            model.direction.addListener(directionListener);
         }
 
         public void onViewDetached() {
-            model.selectedProtocolTypeProperty().removeListener(selectedProtocolListener);
-            model.selectedMarketProperty().removeListener(selectedMarketListener);
-            model.directionProperty().removeListener(directionListener);
-            model.getSelectedBaseSideAccounts().clear();
-            model.getSelectedQuoteSideAccounts().clear();
+            model.selectedProtocolType.removeListener(selectedProtocolListener);
+            model.selectedMarket.removeListener(selectedMarketListener);
+            model.direction.removeListener(directionListener);
+            model.selectedBaseSideAccounts.clear();
+            model.selectedQuoteSideAccounts.clear();
         }
 
         public void onAccountSelectionChanged(AccountListItem listItem, boolean selected, boolean isBaseSide) {
             var observableAccountsSet = isBaseSide ?
-                    model.getSelectedBaseSideAccounts() :
-                    model.getSelectedQuoteSideAccounts();
+                    model.selectedBaseSideAccounts :
+                    model.selectedQuoteSideAccounts;
             var observableSettlementMethodsSet = isBaseSide ?
-                    model.getSelectedBaseSideSettlementMethods() :
-                    model.getSelectedQuoteSideSettlementMethods();
+                    model.selectedBaseSideSettlementMethods :
+                    model.selectedQuoteSideSettlementMethods;
             if (selected) {
                 observableAccountsSet.add(listItem.account);
                 observableSettlementMethodsSet.add(listItem.settlementMethod);
@@ -196,8 +208,8 @@ public class AccountSelection {
 
         public void onSettlementSelectionChanged(SettlementListItem listItem, boolean selected, boolean isBaseSide) {
             var observableSet = isBaseSide ?
-                    model.getSelectedBaseSideSettlementMethods() :
-                    model.getSelectedQuoteSideSettlementMethods();
+                    model.selectedBaseSideSettlementMethods :
+                    model.selectedQuoteSideSettlementMethods;
             if (selected) {
                 observableSet.add(listItem.settlementMethod);
             } else {
@@ -217,8 +229,14 @@ public class AccountSelection {
     }
 
     private static class AccountModel implements Model {
-        @Delegate
-        private final OfferPreparationModel offerPreparationModel;
+        private final ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts;
+        private final ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts;
+        private final ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods;
+        private final ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods;
+        private final ReadOnlyObjectProperty<Market> selectedMarket;
+        private final ReadOnlyObjectProperty<Direction> direction;
+
+        private final ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType;
         private final AccountService accountService;
         private final StringProperty baseSideDescription = new SimpleStringProperty();
         private final StringProperty quoteSideDescription = new SimpleStringProperty();
@@ -227,7 +245,6 @@ public class AccountSelection {
         private final BooleanProperty quoteSideSettlementVisibility = new SimpleBooleanProperty();
         private final BooleanProperty baseSideAccountsVisibility = new SimpleBooleanProperty();
         private final BooleanProperty quoteSideAccountsVisibility = new SimpleBooleanProperty();
-
 
         private final ObservableList<AccountListItem> baseSideAccountObservableList = FXCollections.observableArrayList();
         private final SortedList<AccountListItem> baseSideAccountSortedList = new SortedList<>(baseSideAccountObservableList);
@@ -240,8 +257,21 @@ public class AccountSelection {
         private final SortedList<SettlementListItem> quoteSideSettlementSortedList = new SortedList<>(quoteSideSettlementObservableList);
 
 
-        public AccountModel(OfferPreparationModel offerPreparationModel, AccountService accountService) {
-            this.offerPreparationModel = offerPreparationModel;
+        public AccountModel(ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts,
+                            ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts,
+                            ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods,
+                            ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods,
+                            ReadOnlyObjectProperty<Market> selectedMarket,
+                            ReadOnlyObjectProperty<Direction> direction,
+                            ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
+                            AccountService accountService) {
+            this.selectedBaseSideAccounts = selectedBaseSideAccounts;
+            this.selectedQuoteSideAccounts = selectedQuoteSideAccounts;
+            this.selectedBaseSideSettlementMethods = selectedBaseSideSettlementMethods;
+            this.selectedQuoteSideSettlementMethods = selectedQuoteSideSettlementMethods;
+            this.selectedMarket = selectedMarket;
+            this.direction = direction;
+            this.selectedProtocolType = selectedProtocolType;
             this.accountService = accountService;
         }
     }

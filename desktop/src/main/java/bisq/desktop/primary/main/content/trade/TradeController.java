@@ -22,7 +22,7 @@ import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.trade.create.CreateOfferController;
-import bisq.desktop.primary.main.content.trade.listings.OfferbookController;
+import bisq.desktop.primary.main.content.trade.offerbook.OfferbookController;
 import bisq.desktop.primary.main.content.trade.take.TakeOfferController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

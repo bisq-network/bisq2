@@ -15,28 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.listings;
+package bisq.desktop.primary.main.content.trade.offerbook;
 
 import bisq.application.DefaultServiceProvider;
-import bisq.common.util.StringUtils;
+import bisq.common.monetary.Market;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.social.user.ChatUserController;
+import bisq.desktop.primary.main.content.trade.components.MarketSelection;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
-import bisq.social.chat.ChatPeer;
+import bisq.offer.Offer;
+import bisq.oracle.marketprice.MarketPriceService;
 import bisq.social.chat.ChatService;
-import bisq.social.intent.TradeIntent;
+import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -49,6 +49,7 @@ public class OfferbookController implements Controller {
     private final OfferbookModel model;
     @Getter
     private final OfferbookView view;
+    private final ChangeListener<Market> selectedMarketListener;
     private Optional<DataService.Listener> dataListener = Optional.empty();
 
     public OfferbookController(DefaultServiceProvider serviceProvider) {
@@ -56,114 +57,89 @@ public class OfferbookController implements Controller {
         identityService = serviceProvider.getIdentityService();
         chatService = serviceProvider.getChatService();
         dataService = networkService.getDataService();
+        MarketPriceService marketPriceService = serviceProvider.getMarketPriceService();
 
-        ChatUserController chatUserController = new ChatUserController(serviceProvider);
         model = new OfferbookModel(serviceProvider);
-        view = new OfferbookView(model, this, chatUserController.getView());
+
+        var marketSelectionController = new MarketSelection.MarketSelectionController(model.getSelectedMarket(), marketPriceService);
+        view = new OfferbookView(model, this, marketSelectionController.getView());
+
+        selectedMarketListener = (observable, oldValue, newValue) -> model.applyMarketChange(newValue);
     }
 
     @Override
     public void onViewAttached() {
+        model.getSelectedMarket().addListener(selectedMarketListener);
         dataService.ifPresent(dataService -> {
             dataListener = Optional.of(new DataService.Listener() {
                 @Override
                 public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
                     if (networkPayload instanceof AuthenticatedPayload payload &&
-                            payload.getData() instanceof TradeIntent) {
-                        UIThread.run(() -> model.addPayload(payload));
+                            payload.getData() instanceof Offer offer) {
+                        UIThread.run(() -> model.addOffer(offer));
                     }
                 }
 
                 @Override
                 public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
-                    if (networkPayload instanceof AuthenticatedPayload payload && payload.getData() instanceof TradeIntent) {
-                        UIThread.run(() -> model.removePayload(payload));
+                    if (networkPayload instanceof AuthenticatedPayload payload && payload.getData() instanceof Offer offer) {
+                        UIThread.run(() -> model.removeOffer(offer));
                     }
                 }
             });
             dataService.addListener(dataListener.get());
-
-            model.fillTradeIntentListItem(dataService.getAuthenticatedPayloadByStoreName("TradeIntent")
-                    .map(OfferItem::new)
+            model.fillOfferListItems(dataService.getAuthenticatedPayloadByStoreName("Offer")
+                    .filter(payload -> payload.getData() instanceof Offer)
+                    .map(e -> (Offer) e.getData())
+                    .map(OfferListItem::new)
                     .collect(Collectors.toList()));
         });
     }
 
     @Override
     public void onViewDetached() {
-        //    chatService.removeListener(this);
+        model.getSelectedMarket().removeListener(selectedMarketListener);
+        dataService.ifPresent(dataService -> dataListener.ifPresent(dataService::removeListener));
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // UI
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void onAddTradeIntent(String ask, String bid) {
-        //todo select user
-        String tradeIntentId = StringUtils.createUid();
-        identityService.getOrCreateIdentity(tradeIntentId)
-                .whenComplete((identity, throwable1) -> {
-                    if (throwable1 != null) {
-                        UIThread.run(() -> model.setAddTradeIntentError(throwable1));
-                        return;
-                    }
-                    String userName = chatService.findUserName(tradeIntentId).orElse("Maker@" + StringUtils.truncate(tradeIntentId));
-                    ChatPeer maker = new ChatPeer(userName, identity.networkId());
-                    TradeIntent tradeIntent = new TradeIntent(tradeIntentId, maker, ask, bid, new Date().getTime());
-                    model.getAddDataResultProperty().set("...");
-                    log.error("onAddTradeIntent nodeIdAndKeyPair={}", identity.getNodeIdAndKeyPair());
-                    networkService.addData(tradeIntent, identity.getNodeIdAndKeyPair())
-                            .whenComplete((broadCastResultFutures, throwable2) -> {
-                                if (throwable2 != null) {
-                                    UIThread.run(() -> model.setAddTradeIntentError(tradeIntent, throwable2));
-                                    return;
-                                }
-                                broadCastResultFutures.forEach(broadCastResultFuture -> {
-                                    broadCastResultFuture.whenComplete((broadcastResult, throwable3) -> {
-                                        if (throwable3 != null) {
-                                            UIThread.run(() -> model.setAddTradeIntentError(tradeIntent, throwable3));
-                                            return;
-                                        }
-                                        UIThread.run(() -> model.setAddTradeIntentResult(tradeIntent, broadcastResult));
-                                    });
-                                });
-                            });
-                });
-    }
-
-    public void onActionButtonClicked(OfferItem item) {
-        if (model.isMyTradeIntent(item)) {
-            onRemoveTradeIntent(item);
+    public void onActionButtonClicked(OfferListItem item) {
+        if (model.isMyOffer(item)) {
+            onRemoveOffer(item);
         } else {
-            onContactPeer(item);
+            onTakeOffer(item);
         }
     }
 
-    private void onRemoveTradeIntent(OfferItem item) {
-        Identity identity = identityService.findActiveIdentity(item.getId()).orElseThrow();
+    private void onRemoveOffer(OfferListItem item) {
+        Offer offer = item.getOffer();
+        Identity identity = identityService.findActiveIdentity(offer.getId()).orElseThrow();
         // We do not retire the identity as it might be still used in the chat. For a mature implementation we would
         // need to check if there is any usage still for that identity and if not retire it.
         log.error("onRemoveTradeIntent nodeIdAndKeyPair={}", identity.getNodeIdAndKeyPair());
-        networkService.removeData(item.getPayload().getData(), identity.getNodeIdAndKeyPair())
+        networkService.removeData(offer, identity.getNodeIdAndKeyPair())
                 .whenComplete((broadCastResultFutures, throwable2) -> {
                     if (throwable2 != null) {
-                        UIThread.run(() -> model.setRemoveTradeIntentError(item.getTradeIntent(), throwable2));
+                        UIThread.run(() -> model.setRemoveOfferError(offer, throwable2));
                         return;
                     }
                     broadCastResultFutures.forEach(broadCastResultFuture -> {
                         broadCastResultFuture.whenComplete((broadcastResult, throwable3) -> {
                             if (throwable3 != null) {
-                                UIThread.run(() -> model.setRemoveTradeIntentError(item.getTradeIntent(), throwable3));
+                                UIThread.run(() -> model.setRemoveOfferError(offer, throwable3));
                                 return;
                             }
-                            UIThread.run(() -> model.setRemoveTradeIntentResult(item.getTradeIntent(), broadcastResult));
+                            UIThread.run(() -> model.setRemoveOfferResult(offer, broadcastResult));
                         });
                     });
                 });
     }
 
-    private void onContactPeer(OfferItem item) {
-        Navigation.navigateTo(NavigationTarget.HANGOUT, item.getTradeIntent());
+    private void onTakeOffer(OfferListItem item) {
+        Navigation.navigateTo(NavigationTarget.TAKE_OFFER, item.getOffer());
     }
+
 }

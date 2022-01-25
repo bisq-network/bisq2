@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.create.components;
+package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.common.monetary.Market;
 import bisq.desktop.common.view.Controller;
@@ -25,6 +25,8 @@ import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
@@ -33,7 +35,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
-import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -44,8 +45,8 @@ public class DirectionSelection {
         private final AmountPriceView view;
         private final ChangeListener<Market> selectedMarketListener;
 
-        public DirectionController(OfferPreparationModel offerPreparationModel) {
-            model = new DirectionModel(offerPreparationModel);
+        public DirectionController(ObjectProperty<Direction> direction, ReadOnlyObjectProperty<Market> selectedMarket) {
+            model = new DirectionModel(direction, selectedMarket);
             view = new AmountPriceView(model, this);
 
             selectedMarketListener = (observable, oldValue, newValue) -> {
@@ -56,32 +57,33 @@ public class DirectionSelection {
         }
 
         public void onViewAttached() {
-            model.selectedMarketProperty().addListener(selectedMarketListener);
-            if (model.getSelectedMarket() != null) {
-                model.baseCode.set(model.getSelectedMarket().baseCurrencyCode());
+            model.selectedMarket.addListener(selectedMarketListener);
+            if (model.selectedMarket.get() != null) {
+                model.baseCode.set(model.selectedMarket.get().baseCurrencyCode());
             }
         }
 
         public void onViewDetached() {
-            model.selectedMarketProperty().removeListener(selectedMarketListener);
+            model.selectedMarket.removeListener(selectedMarketListener);
         }
 
         public void onBuySelected() {
-            model.setDirection(Direction.BUY);
+            model.direction.set(Direction.BUY);
         }
 
         public void onSellSelected() {
-            model.setDirection(Direction.SELL);
+            model.direction.set(Direction.SELL);
         }
     }
 
     private static class DirectionModel implements Model {
+        private final ObjectProperty<Direction> direction;
+        private final ReadOnlyObjectProperty<Market> selectedMarket;
         public final StringProperty baseCode = new SimpleStringProperty();
-        @Delegate
-        private final OfferPreparationModel offerPreparationModel;
 
-        public DirectionModel(OfferPreparationModel offerPreparationModel) {
-            this.offerPreparationModel = offerPreparationModel;
+        public DirectionModel(ObjectProperty<Direction> direction, ReadOnlyObjectProperty<Market> selectedMarket) {
+            this.direction = direction;
+            this.selectedMarket = selectedMarket;
         }
     }
 
@@ -134,14 +136,14 @@ public class DirectionSelection {
             buy.setOnAction(e -> controller.onBuySelected());
             sell.setOnAction(e -> controller.onSellSelected());
             model.baseCode.addListener(baseCodeListener);
-            model.directionProperty().addListener(directionListener);
+            model.direction.addListener(directionListener);
         }
 
         public void onViewDetached() {
             buy.setOnAction(null);
             sell.setOnAction(null);
             model.baseCode.removeListener(baseCodeListener);
-            model.directionProperty().removeListener(directionListener);
+            model.direction.removeListener(directionListener);
         }
     }
 }

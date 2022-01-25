@@ -17,12 +17,14 @@
 
 package bisq.desktop.primary.main.content.trade.create;
 
+import bisq.account.protocol.SwapProtocolType;
 import bisq.application.DefaultServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.trade.create.components.*;
+import bisq.desktop.primary.main.content.trade.components.*;
 import bisq.offer.Direction;
 import bisq.offer.OfferService;
 import bisq.oracle.marketprice.MarketPriceService;
+import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,34 +36,56 @@ public class CreateOfferController implements Controller {
     @Getter
     private final CreateOfferView view;
     private final OfferService offerService;
+    private final ChangeListener<SwapProtocolType> selectedProtocolTypListener;
 
     public CreateOfferController(DefaultServiceProvider serviceProvider) {
         offerService = serviceProvider.getOfferService();
         MarketPriceService marketPriceService = serviceProvider.getMarketPriceService();
-        OfferPreparationModel offerPreparationModel = new OfferPreparationModel();
+        model = new CreateOfferModel();
 
-        var marketSelectionController = new MarketSelection.MarketSelectionController(offerPreparationModel, marketPriceService);
-        var directionController = new DirectionSelection.DirectionController(offerPreparationModel);
-        var amountPriceController = new AmountPriceGroup.AmountPriceController(offerPreparationModel, marketPriceService);
-        var protocolSelectionController = new ProtocolSelection.ProtocolController(offerPreparationModel);
-        var accountSelectionController = new AccountSelection.AccountController(offerPreparationModel, serviceProvider.getAccountService());
+        var marketSelectionController = new MarketSelection.MarketSelectionController(model.getSelectedMarketProperty(),
+                marketPriceService);
+        var directionController = new DirectionSelection.DirectionController(model.getDirectionProperty(),
+                model.selectedMarketProperty());
+        var amountPriceController = new AmountPriceGroup.AmountPriceController(model.getBaseSideAmountProperty(),
+                model.getQuoteSideAmountProperty(),
+                model.getFixPriceProperty(),
+                model.selectedMarketProperty(),
+                model.directionProperty(),
+                marketPriceService);
+        var protocolSelectionController = new ProtocolSelection.ProtocolController(model.getSelectedProtocolTypeProperty(),
+                model.selectedMarketProperty());
+        var accountSelectionController = new AccountSelection.AccountController(
+                model.getSelectedBaseSideAccounts(),
+                model.getSelectedQuoteSideAccounts(),
+                model.getSelectedBaseSideSettlementMethods(),
+                model.getSelectedQuoteSideSettlementMethods(),
+                model.selectedMarketProperty(),
+                model.directionProperty(),
+                model.selectedProtocolTypeProperty(),
+                serviceProvider.getAccountService());
 
-        model = new CreateOfferModel(offerPreparationModel);
+
         view = new CreateOfferView(model, this,
                 marketSelectionController.getView(),
                 directionController.getView(),
                 amountPriceController.getView(),
                 protocolSelectionController.getView(),
                 accountSelectionController.getView());
+
+        selectedProtocolTypListener = (observable, oldValue, newValue) -> model.getCreateOfferButtonVisibleProperty().set(newValue != null);
     }
 
     @Override
     public void onViewAttached() {
-        model.setDirection(Direction.BUY);
+        model.selectedProtocolTypeProperty().addListener(selectedProtocolTypListener);
+        model.getDirectionProperty().set(Direction.BUY);
+        model.getCreateOfferButtonVisibleProperty().set(model.getSelectedProtocolType() != null);
     }
 
     @Override
     public void onViewDetached() {
+        model.selectedProtocolTypeProperty().removeListener(selectedProtocolTypListener);
     }
 
     public void onCreateOffer() {
@@ -76,7 +100,7 @@ public class CreateOfferController implements Controller {
                         new ArrayList<>(model.getSelectedQuoteSideSettlementMethods()))
                 .whenComplete((offer, throwable) -> {
                     if (throwable == null) {
-                        model.getOffer().set(offer);
+                        model.getOfferProperty().set(offer);
                     } else {
                         //todo provide error to UI
                     }
@@ -84,6 +108,6 @@ public class CreateOfferController implements Controller {
     }
 
     public void onPublishOffer() {
-        offerService.publishOffer(model.getOffer().get());
+        offerService.publishOffer(model.getOffer());
     }
 }

@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.create.components;
+package bisq.desktop.primary.main.content.trade.components;
 
-import bisq.offer.Direction;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
@@ -27,8 +26,10 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqInputTextField;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -39,7 +40,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
-import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -52,25 +52,28 @@ public class AmountInput {
         private final ChangeListener<Market> selectedMarketListener;
         private final ChangeListener<Direction> directionListener;
 
-        public AmountController(OfferPreparationModel offerPreparationModel, boolean isBaseCurrency) {
-            model = new AmountModel(offerPreparationModel, isBaseCurrency);
+        public AmountController(ObjectProperty<Monetary> amount, 
+                                ReadOnlyObjectProperty<Market> selectedMarket,
+                                ReadOnlyObjectProperty<Direction> direction,
+                                boolean isBaseCurrency) {
+            model = new AmountModel(amount, selectedMarket, direction, isBaseCurrency);
             view = new MonetaryView(model, this, validator);
 
             selectedMarketListener = (observable, oldValue, newValue) -> {
-                model.setAmount(null);
+                model.amount.set(null);
                 updateModel();
             };
             directionListener = (observable, oldValue, newValue) -> updateModel();
         }
 
         public void onViewAttached() {
-            model.selectedMarketProperty().addListener(selectedMarketListener);
-            model.directionProperty().addListener(directionListener);
+            model.selectedMarket.addListener(selectedMarketListener);
+            model.direction.addListener(directionListener);
         }
 
         public void onViewDetached() {
-            model.selectedMarketProperty().removeListener(selectedMarketListener);
-            model.directionProperty().removeListener(directionListener);
+            model.selectedMarket.removeListener(selectedMarketListener);
+            model.direction.removeListener(directionListener);
         }
 
         // View events
@@ -82,20 +85,20 @@ public class AmountInput {
             if (value == null) return;
             if (model.hasFocus) return;
             if (value.isEmpty()) {
-                model.setAmount(null);
+                model.amount.set(null);
                 return;
             }
             if (!validator.validate(value).isValid) {
-                model.setAmount(null);
+                model.amount.set(null);
                 return;
             }
             if (model.code.get() == null) return;
-            model.setAmount(AmountParser.parse(value, model.code.get()));
+            model.amount.set(AmountParser.parse(value, model.code.get()));
 
         }
 
         private void updateModel() {
-            Market market = model.getSelectedMarket();
+            Market market = model.selectedMarket.get();
             if (market == null) {
                 model.code.set("");
                 model.prompt.set("");
@@ -107,7 +110,7 @@ public class AmountInput {
             String code = model.code.get();
             model.prompt.set(Res.offerbook.get("createOffer.amount.prompt", code));
             String dir;
-            Direction direction = model.getDirection();
+            Direction direction = model.direction.get();
             if (model.isBaseCurrency) {
                 dir = direction == Direction.BUY ? Res.offerbook.get("buy") : Res.offerbook.get("sell");
             } else {
@@ -118,30 +121,37 @@ public class AmountInput {
     }
 
     private static class AmountModel implements Model {
-        @Delegate
-        private final OfferPreparationModel offerPreparationModel;
+        private final ObjectProperty<Monetary> amount;
+        private final ReadOnlyObjectProperty<Market> selectedMarket;
+        private final ReadOnlyObjectProperty<Direction> direction;
         private final boolean isBaseCurrency;
         private final StringProperty description = new SimpleStringProperty();
         private final StringProperty prompt = new SimpleStringProperty();
         private final StringProperty code = new SimpleStringProperty();
         public boolean hasFocus;
 
-        public AmountModel(OfferPreparationModel offerPreparationModel, boolean isBaseCurrency) {
-            this.offerPreparationModel = offerPreparationModel;
+        public AmountModel(ObjectProperty<Monetary> amount, 
+                           ReadOnlyObjectProperty<Market> selectedMarket, 
+                           ReadOnlyObjectProperty<Direction> direction,
+                           boolean isBaseCurrency) {
+            this.amount = amount;
+            this.selectedMarket = selectedMarket;
+            this.direction = direction;
             this.isBaseCurrency = isBaseCurrency;
         }
 
-        private ReadOnlyObjectProperty<Monetary> amountProperty() {
+      /*  private ReadOnlyObjectProperty<Monetary> amountProperty() {
             return isBaseCurrency ? baseSideAmountProperty() : quoteSideAmountProperty();
-        }
-
+        }*/
+/*
         private void setAmount(Monetary amount) {
-            if (isBaseCurrency) {
+            this.amount.set(amount);
+           *//* if (isBaseCurrency) {
                 setBaseSideAmount(amount);
             } else {
                 setQuoteSideAmount(amount);
-            }
-        }
+            }*//*
+        }*/
     }
 
     public static class MonetaryView extends View<VBox, AmountModel, AmountController> {
@@ -196,7 +206,7 @@ public class AmountInput {
             textInput.textProperty().addListener(textInputListener);
             textInput.focusedProperty().addListener(focusListener);
             code.textProperty().bind(model.code);
-            model.amountProperty().addListener(amountListener);
+            model.amount.addListener(amountListener);
         }
 
         public void onViewDetached() {
@@ -205,7 +215,7 @@ public class AmountInput {
             textInput.textProperty().removeListener(textInputListener);
             textInput.focusedProperty().removeListener(focusListener);
             code.textProperty().unbind();
-            model.amountProperty().removeListener(amountListener);
+            model.amount.removeListener(amountListener);
         }
     }
 }
