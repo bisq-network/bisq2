@@ -50,6 +50,7 @@ public class OfferbookController implements Controller {
     @Getter
     private final OfferbookView view;
     private final ChangeListener<Market> selectedMarketListener;
+    private final MarketSelection marketSelection;
     private Optional<DataService.Listener> dataListener = Optional.empty();
 
     public OfferbookController(DefaultServiceProvider serviceProvider) {
@@ -61,8 +62,8 @@ public class OfferbookController implements Controller {
 
         model = new OfferbookModel(serviceProvider);
 
-        var marketSelectionController = new MarketSelection.MarketSelectionController(model.getSelectedMarket(), marketPriceService);
-        view = new OfferbookView(model, this, marketSelectionController.getView());
+        marketSelection = new MarketSelection(marketPriceService);
+        view = new OfferbookView(model, this, marketSelection.getView());
 
         selectedMarketListener = (observable, oldValue, newValue) -> model.applyMarketChange(newValue);
     }

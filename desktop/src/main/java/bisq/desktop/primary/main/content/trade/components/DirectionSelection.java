@@ -25,10 +25,7 @@ import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -39,15 +36,34 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DirectionSelection {
-    public static class DirectionController implements Controller {
+    private final DirectionController controller;
+
+    public DirectionSelection(ReadOnlyObjectProperty<Market> selectedMarket) {
+        controller = new DirectionController(selectedMarket);
+    }
+
+    public DirectionView getView() {
+        return controller.view;
+    }
+
+    public ReadOnlyObjectProperty<Direction> directionProperty() {
+        return controller.model.direction;
+    }
+
+    public void setDirection(Direction direction) {
+        controller.model.direction.set(direction);
+    }
+
+    private static class DirectionController implements Controller {
+
         private final DirectionModel model;
         @Getter
-        private final AmountPriceView view;
+        private final DirectionView view;
         private final ChangeListener<Market> selectedMarketListener;
 
-        public DirectionController(ObjectProperty<Direction> direction, ReadOnlyObjectProperty<Market> selectedMarket) {
-            model = new DirectionModel(direction, selectedMarket);
-            view = new AmountPriceView(model, this);
+        private DirectionController(ReadOnlyObjectProperty<Market> selectedMarket) {
+            model = new DirectionModel(selectedMarket);
+            view = new DirectionView(model, this);
 
             selectedMarketListener = (observable, oldValue, newValue) -> {
                 if (newValue != null) {
@@ -56,6 +72,7 @@ public class DirectionSelection {
             };
         }
 
+        @Override
         public void onViewAttached() {
             model.selectedMarket.addListener(selectedMarketListener);
             if (model.selectedMarket.get() != null) {
@@ -63,37 +80,37 @@ public class DirectionSelection {
             }
         }
 
+        @Override
         public void onViewDetached() {
             model.selectedMarket.removeListener(selectedMarketListener);
         }
 
-        public void onBuySelected() {
+        private void onBuySelected() {
             model.direction.set(Direction.BUY);
         }
 
-        public void onSellSelected() {
+        private void onSellSelected() {
             model.direction.set(Direction.SELL);
         }
     }
 
     private static class DirectionModel implements Model {
-        private final ObjectProperty<Direction> direction;
+        private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
         private final ReadOnlyObjectProperty<Market> selectedMarket;
         public final StringProperty baseCode = new SimpleStringProperty();
 
-        public DirectionModel(ObjectProperty<Direction> direction, ReadOnlyObjectProperty<Market> selectedMarket) {
-            this.direction = direction;
+        public DirectionModel(ReadOnlyObjectProperty<Market> selectedMarket) {
             this.selectedMarket = selectedMarket;
         }
     }
 
     @Slf4j
-    public static class AmountPriceView extends View<VBox, DirectionModel, DirectionController> {
+    public static class DirectionView extends View<VBox, DirectionModel, DirectionController> {
         private final BisqButton buy, sell;
         private final ChangeListener<String> baseCodeListener;
         private final ChangeListener<Direction> directionListener;
 
-        public AmountPriceView(DirectionModel model, DirectionController controller) {
+        private DirectionView(DirectionModel model, DirectionController controller) {
             super(new VBox(), model, controller);
 
             root.setSpacing(10);
@@ -132,6 +149,7 @@ public class DirectionSelection {
             };
         }
 
+        @Override
         public void onViewAttached() {
             buy.setOnAction(e -> controller.onBuySelected());
             sell.setOnAction(e -> controller.onSellSelected());
@@ -139,6 +157,7 @@ public class DirectionSelection {
             model.direction.addListener(directionListener);
         }
 
+        @Override
         public void onViewDetached() {
             buy.setOnAction(null);
             sell.setOnAction(null);

@@ -45,14 +45,28 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class ProtocolSelection {
-    public static class ProtocolController implements Controller {
+    private final ProtocolController controller;
+
+    public ProtocolSelection(ReadOnlyObjectProperty<Market> selectedMarket) {
+        controller = new ProtocolController(selectedMarket);
+    }
+
+    public ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType() {
+        return controller.model.selectedProtocolType;
+    }
+
+    public ProtocolSelection.ProtocolView getView() {
+        return controller.view;
+    }
+
+    private static class ProtocolController implements Controller {
         private final ProtocolModel model;
         @Getter
         private final ProtocolView view;
         private final ChangeListener<Market> selectedMarketListener;
 
-        public ProtocolController(ObjectProperty<SwapProtocolType> selectedProtocolType, ReadOnlyObjectProperty<Market> selectedMarket) {
-            model = new ProtocolModel(selectedProtocolType, selectedMarket);
+        private ProtocolController(ReadOnlyObjectProperty<Market> selectedMarket) {
+            model = new ProtocolModel(selectedMarket);
             view = new ProtocolView(model, this);
 
             selectedMarketListener = (observable, oldValue, newValue) -> {
@@ -63,11 +77,12 @@ public class ProtocolSelection {
             };
         }
 
-        public void onSelectProtocol(SwapProtocolType value) {
+        private void onSelectProtocol(SwapProtocolType value) {
             model.selectedProtocolType.set(value);
             model.selectListItem(value);
         }
 
+        @Override
         public void onViewAttached() {
             model.selectedMarket.addListener(selectedMarketListener);
             if (model.selectedMarket.get() != null) {
@@ -75,20 +90,20 @@ public class ProtocolSelection {
             }
         }
 
+        @Override
         public void onViewDetached() {
             model.selectedMarket.removeListener(selectedMarketListener);
         }
     }
 
     private static class ProtocolModel implements Model {
+        private final ObjectProperty<SwapProtocolType> selectedProtocolType = new SimpleObjectProperty<>();
         private final ReadOnlyObjectProperty<Market> selectedMarket;
-        private final ObjectProperty<SwapProtocolType> selectedProtocolType;
         private final ObservableList<ListItem> observableList = FXCollections.observableArrayList();
         private final SortedList<ListItem> sortedList = new SortedList<>(observableList);
         private final ObjectProperty<ListItem> selectedProtocolItem = new SimpleObjectProperty<>();
 
-        public ProtocolModel(ObjectProperty<SwapProtocolType> selectedProtocolType, ReadOnlyObjectProperty<Market> selectedMarket) {
-            this.selectedProtocolType = selectedProtocolType;
+        private ProtocolModel(ReadOnlyObjectProperty<Market> selectedMarket) {
             this.selectedMarket = selectedMarket;
         }
 
@@ -96,7 +111,7 @@ public class ProtocolSelection {
             observableList.setAll(protocols.stream().map(ListItem::new).collect(Collectors.toList()));
         }
 
-        public void selectListItem(SwapProtocolType value) {
+        private void selectListItem(SwapProtocolType value) {
             observableList.stream().filter(item -> item.protocolType.equals(value)).findAny()
                     .ifPresent(selectedProtocolItem::set);
         }
@@ -107,7 +122,7 @@ public class ProtocolSelection {
         private final SwapProtocolType protocolType;
         private final String protocolName;
 
-        public ListItem(SwapProtocolType protocolType) {
+        private ListItem(SwapProtocolType protocolType) {
             this.protocolType = protocolType;
             protocolName = Res.offerbook.get(protocolType.name());
         }
@@ -126,8 +141,8 @@ public class ProtocolSelection {
         private final ChangeListener<ListItem> selectedProtocolItemListener;
         private final ChangeListener<ListItem> selectedTableItemListener;
 
-        public ProtocolView(ProtocolModel model,
-                            ProtocolController controller) {
+        private ProtocolView(ProtocolModel model,
+                             ProtocolController controller) {
             super(new VBox(), model, controller);
 
             Label headline = new BisqLabel(Res.offerbook.get("createOffer.selectProtocol"));
@@ -149,11 +164,13 @@ public class ProtocolSelection {
             selectedProtocolItemListener = (o, old, newValue) -> tableView.getSelectionModel().select(newValue);
         }
 
+        @Override
         public void onViewAttached() {
             tableView.getSelectionModel().selectedItemProperty().addListener(selectedTableItemListener);
             model.selectedProtocolItem.addListener(selectedProtocolItemListener);
         }
 
+        @Override
         public void onViewDetached() {
             tableView.getSelectionModel().selectedItemProperty().removeListener(selectedTableItemListener);
             model.selectedProtocolItem.removeListener(selectedProtocolItemListener);

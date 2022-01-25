@@ -36,7 +36,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
     public CreateOfferView(CreateOfferModel model,
                            CreateOfferController controller,
                            MarketSelection.MarketSelectionView marketSelectionView,
-                           DirectionSelection.AmountPriceView directionView,
+                           DirectionSelection.DirectionView directionView,
                            AmountPriceGroup.AmountPriceView amountPriceView,
                            ProtocolSelection.ProtocolView protocolView,
                            AccountSelection.AccountView accountView) {

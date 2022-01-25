@@ -47,12 +47,43 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class AccountSelection {
-    public static class AccountController implements Controller {
+    private final AccountController controller;
+
+    public AccountSelection(ReadOnlyObjectProperty<Market> selectedMarket,
+                            ReadOnlyObjectProperty<Direction> direction,
+                            ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
+                            AccountService accountService) {
+        controller = new AccountController(selectedMarket, direction, selectedProtocolType, accountService);
+    }
+
+
+    public AccountView getView() {
+        return controller.view;
+    }
+
+    public ObservableSet<Account<? extends SettlementMethod>> getSelectedBaseSideAccounts() {
+        return controller.model.selectedBaseSideAccounts;
+    }
+
+    public ObservableSet<Account<? extends SettlementMethod>> getSelectedQuoteSideAccounts() {
+        return controller.model.selectedQuoteSideAccounts;
+    }
+
+    public ObservableSet<SettlementMethod> getSelectedBaseSideSettlementMethods() {
+        return controller.model.selectedBaseSideSettlementMethods;
+    }
+
+    public ObservableSet<SettlementMethod> getSelectedQuoteSideSettlementMethods() {
+        return controller.model.selectedQuoteSideSettlementMethods;
+    }
+
+    private static class AccountController implements Controller {
         private final AccountModel model;
         @Getter
         private final AccountView view;
@@ -60,20 +91,11 @@ public class AccountSelection {
         private final ChangeListener<Direction> directionListener;
         private final ChangeListener<Market> selectedMarketListener;
 
-        public AccountController(
-                ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts,
-                ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts,
-                ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods,
-                ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods,
-                ReadOnlyObjectProperty<Market> selectedMarket,
-                ReadOnlyObjectProperty<Direction> direction,
-                ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
-                AccountService accountService) {
-            model = new AccountModel(selectedBaseSideAccounts,
-                    selectedQuoteSideAccounts,
-                    selectedBaseSideSettlementMethods,
-                    selectedQuoteSideSettlementMethods,
-                    selectedMarket,
+        private AccountController(ReadOnlyObjectProperty<Market> selectedMarket,
+                                 ReadOnlyObjectProperty<Direction> direction,
+                                 ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
+                                 AccountService accountService) {
+            model = new AccountModel(selectedMarket,
                     direction,
                     selectedProtocolType,
                     accountService);
@@ -174,14 +196,14 @@ public class AccountSelection {
                         quoteSideVerb, market.quoteCurrencyCode()));
             }
         }
-
+        @Override
         public void onViewAttached() {
             resetAndApplyData();
             model.selectedProtocolType.addListener(selectedProtocolListener);
             model.selectedMarket.addListener(selectedMarketListener);
             model.direction.addListener(directionListener);
         }
-
+        @Override
         public void onViewDetached() {
             model.selectedProtocolType.removeListener(selectedProtocolListener);
             model.selectedMarket.removeListener(selectedMarketListener);
@@ -190,7 +212,7 @@ public class AccountSelection {
             model.selectedQuoteSideAccounts.clear();
         }
 
-        public void onAccountSelectionChanged(AccountListItem listItem, boolean selected, boolean isBaseSide) {
+        private void onAccountSelectionChanged(AccountListItem listItem, boolean selected, boolean isBaseSide) {
             var observableAccountsSet = isBaseSide ?
                     model.selectedBaseSideAccounts :
                     model.selectedQuoteSideAccounts;
@@ -206,7 +228,7 @@ public class AccountSelection {
             }
         }
 
-        public void onSettlementSelectionChanged(SettlementListItem listItem, boolean selected, boolean isBaseSide) {
+        private void onSettlementSelectionChanged(SettlementListItem listItem, boolean selected, boolean isBaseSide) {
             var observableSet = isBaseSide ?
                     model.selectedBaseSideSettlementMethods :
                     model.selectedQuoteSideSettlementMethods;
@@ -217,11 +239,11 @@ public class AccountSelection {
             }
         }
 
-        public void onCreateBaseSideAccount() {
+        private void onCreateBaseSideAccount() {
 
         }
 
-        public void onCreateQuoteSideAccount() {
+        private void onCreateQuoteSideAccount() {
 
         }
 
@@ -229,10 +251,10 @@ public class AccountSelection {
     }
 
     private static class AccountModel implements Model {
-        private final ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts;
-        private final ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts;
-        private final ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods;
-        private final ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods;
+        private final ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
+        private final ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
+        private final ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
+        private final ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
         private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final ReadOnlyObjectProperty<Direction> direction;
 
@@ -257,18 +279,10 @@ public class AccountSelection {
         private final SortedList<SettlementListItem> quoteSideSettlementSortedList = new SortedList<>(quoteSideSettlementObservableList);
 
 
-        public AccountModel(ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts,
-                            ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts,
-                            ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods,
-                            ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods,
-                            ReadOnlyObjectProperty<Market> selectedMarket,
+        private AccountModel(ReadOnlyObjectProperty<Market> selectedMarket,
                             ReadOnlyObjectProperty<Direction> direction,
                             ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
                             AccountService accountService) {
-            this.selectedBaseSideAccounts = selectedBaseSideAccounts;
-            this.selectedQuoteSideAccounts = selectedQuoteSideAccounts;
-            this.selectedBaseSideSettlementMethods = selectedBaseSideSettlementMethods;
-            this.selectedQuoteSideSettlementMethods = selectedQuoteSideSettlementMethods;
             this.selectedMarket = selectedMarket;
             this.direction = direction;
             this.selectedProtocolType = selectedProtocolType;
@@ -283,7 +297,7 @@ public class AccountSelection {
         private final BisqButton baseSideButton, quoteSideButton;
         private final VBox baseSideBox, quoteSideBox;
 
-        public AccountView(AccountModel model,
+        private AccountView(AccountModel model,
                            AccountController controller) {
             super(new HBox(), model, controller);
             root.setSpacing(10);
@@ -333,7 +347,7 @@ public class AccountSelection {
             HBox.setHgrow(quoteSideBox, Priority.ALWAYS);
             root.getChildren().addAll(baseSideBox, quoteSideBox);
         }
-
+        @Override
         public void onViewAttached() {
             baseSideButton.setOnAction(e -> controller.onCreateBaseSideAccount());
             quoteSideButton.setOnAction(e -> controller.onCreateQuoteSideAccount());
@@ -354,7 +368,7 @@ public class AccountSelection {
             quoteSideSettlementTableView.visibleProperty().bind(model.quoteSideSettlementVisibility);
             quoteSideSettlementTableView.managedProperty().bind(model.quoteSideSettlementVisibility);
         }
-
+        @Override
         public void onViewDetached() {
             baseSideButton.setOnAction(null);
             quoteSideButton.setOnAction(null);
@@ -426,7 +440,7 @@ public class AccountSelection {
         private final SettlementMethod settlementMethod;
         private final String settlementMethodName;
 
-        public AccountListItem(Account<? extends SettlementMethod> account) {
+        private AccountListItem(Account<? extends SettlementMethod> account) {
             this.account = account;
             accountName = account.getAccountName();
             settlementMethod = account.getSettlementMethod();
@@ -447,7 +461,7 @@ public class AccountSelection {
         private final SettlementMethod settlementMethod;
         private final String name;
 
-        public SettlementListItem(SettlementMethod settlementMethod, String currencyCode) {
+        private SettlementListItem(SettlementMethod settlementMethod, String currencyCode) {
             this.settlementMethod = settlementMethod;
             name = settlementMethod.getDisplayName(currencyCode);
         }

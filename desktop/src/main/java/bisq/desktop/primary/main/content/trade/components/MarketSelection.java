@@ -28,6 +28,8 @@ import bisq.i18n.Res;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -43,13 +45,27 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class MarketSelection {
-    public static class MarketSelectionController implements Controller, MarketPriceService.Listener {
+    private final MarketSelectionController controller;
+
+    public MarketSelection(MarketPriceService marketPriceService) {
+        controller = new MarketSelectionController(marketPriceService);
+    }
+
+    public ReadOnlyObjectProperty<Market> selectedMarketProperty() {
+        return controller.model.selectedMarket;
+    }
+
+    public MarketSelectionView getView() {
+        return controller.view;
+    }
+
+    private static class MarketSelectionController implements Controller, MarketPriceService.Listener {
         private final MarketSelectionModel model;
         @Getter
         private final MarketSelectionView view;
 
-        public MarketSelectionController(ObjectProperty<Market> selectedMarket, MarketPriceService marketPriceService) {
-            model = new MarketSelectionModel(selectedMarket, marketPriceService);
+        private MarketSelectionController(MarketPriceService marketPriceService) {
+            model = new MarketSelectionModel(marketPriceService);
             view = new MarketSelectionView(model, this);
         }
 
@@ -63,11 +79,13 @@ public class MarketSelection {
             UIThread.run(this::applyMarketPriceDate);
         }
 
+        @Override
         public void onViewAttached() {
             model.marketPriceService.addListener(this);
             applyMarketPriceDate();
         }
 
+        @Override
         public void onViewDetached() {
             model.marketPriceService.removeListener(this);
         }
@@ -97,12 +115,11 @@ public class MarketSelection {
     }
 
     private static class MarketSelectionModel implements Model {
+        private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
         private final ObservableList<Market> markets = FXCollections.observableArrayList();
-        private final ObjectProperty<Market> selectedMarket;
         private final MarketPriceService marketPriceService;
 
-        public MarketSelectionModel(ObjectProperty<Market> selectedMarket, MarketPriceService marketPriceService) {
-            this.selectedMarket = selectedMarket;
+        public MarketSelectionModel(MarketPriceService marketPriceService) {
             this.marketPriceService = marketPriceService;
         }
     }
@@ -112,7 +129,7 @@ public class MarketSelection {
         private final BisqComboBox<Market> comboBox;
         private final ChangeListener<Market> selectedMarketListener;
 
-        public MarketSelectionView(MarketSelectionModel model, MarketSelectionController controller) {
+        private MarketSelectionView(MarketSelectionModel model, MarketSelectionController controller) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
@@ -140,11 +157,13 @@ public class MarketSelection {
             selectedMarketListener = (o, old, newValue) -> comboBox.getSelectionModel().select(newValue);
         }
 
+        @Override
         public void onViewAttached() {
             comboBox.setOnAction(e -> controller.onSelectMarket(comboBox.getSelectionModel().getSelectedItem()));
             model.selectedMarket.addListener(selectedMarketListener);
         }
 
+        @Override
         public void onViewDetached() {
             comboBox.setOnAction(null);
             model.selectedMarket.addListener(selectedMarketListener);

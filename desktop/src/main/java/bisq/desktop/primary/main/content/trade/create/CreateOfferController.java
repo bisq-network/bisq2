@@ -37,41 +37,48 @@ public class CreateOfferController implements Controller {
     private final CreateOfferView view;
     private final OfferService offerService;
     private final ChangeListener<SwapProtocolType> selectedProtocolTypListener;
+    private final MarketSelection marketSelection;
+    private final DirectionSelection directionSelection;
+    private final AmountPriceGroup amountPriceGroup;
+    private final ProtocolSelection protocolSelection;
+    private final AccountSelection accountSelection;
 
     public CreateOfferController(DefaultServiceProvider serviceProvider) {
         offerService = serviceProvider.getOfferService();
         MarketPriceService marketPriceService = serviceProvider.getMarketPriceService();
         model = new CreateOfferModel();
 
-        var marketSelectionController = new MarketSelection.MarketSelectionController(model.getSelectedMarketProperty(),
-                marketPriceService);
-        var directionController = new DirectionSelection.DirectionController(model.getDirectionProperty(),
-                model.selectedMarketProperty());
-        var amountPriceController = new AmountPriceGroup.AmountPriceController(model.getBaseSideAmountProperty(),
-                model.getQuoteSideAmountProperty(),
-                model.getFixPriceProperty(),
-                model.selectedMarketProperty(),
+        marketSelection = new MarketSelection(marketPriceService);
+        model.setSelectedMarketProperty(marketSelection.selectedMarketProperty());
+
+        directionSelection = new DirectionSelection(model.selectedMarketProperty());
+        model.setDirectionProperty(directionSelection.directionProperty());
+
+        amountPriceGroup = new AmountPriceGroup(model.selectedMarketProperty(),
                 model.directionProperty(),
                 marketPriceService);
-        var protocolSelectionController = new ProtocolSelection.ProtocolController(model.getSelectedProtocolTypeProperty(),
-                model.selectedMarketProperty());
-        var accountSelectionController = new AccountSelection.AccountController(
-                model.getSelectedBaseSideAccounts(),
-                model.getSelectedQuoteSideAccounts(),
-                model.getSelectedBaseSideSettlementMethods(),
-                model.getSelectedQuoteSideSettlementMethods(),
-                model.selectedMarketProperty(),
+        model.setBaseSideAmountProperty(amountPriceGroup.baseSideAmountProperty());
+        model.setQuoteSideAmountProperty(amountPriceGroup.quoteSideAmountAmountProperty());
+        model.setFixPriceProperty(amountPriceGroup.fixPriceProperty());
+
+        protocolSelection = new ProtocolSelection(model.selectedMarketProperty());
+        model.setSelectedProtocolTypeProperty(protocolSelection.selectedProtocolType());
+
+        accountSelection = new AccountSelection(model.selectedMarketProperty(),
                 model.directionProperty(),
                 model.selectedProtocolTypeProperty(),
                 serviceProvider.getAccountService());
-
+        model.setSelectedBaseSideAccounts(accountSelection.getSelectedBaseSideAccounts());
+        model.setSelectedQuoteSideAccounts(accountSelection.getSelectedQuoteSideAccounts());
+        model.setSelectedBaseSideSettlementMethods(accountSelection.getSelectedBaseSideSettlementMethods());
+        model.setSelectedQuoteSideSettlementMethods(accountSelection.getSelectedQuoteSideSettlementMethods());
 
         view = new CreateOfferView(model, this,
-                marketSelectionController.getView(),
-                directionController.getView(),
-                amountPriceController.getView(),
-                protocolSelectionController.getView(),
-                accountSelectionController.getView());
+                marketSelection.getView(),
+                directionSelection.getView(),
+                amountPriceGroup.getView(),
+                protocolSelection.getView(),
+                accountSelection.getView());
 
         selectedProtocolTypListener = (observable, oldValue, newValue) -> model.getCreateOfferButtonVisibleProperty().set(newValue != null);
     }
@@ -79,8 +86,8 @@ public class CreateOfferController implements Controller {
     @Override
     public void onViewAttached() {
         model.selectedProtocolTypeProperty().addListener(selectedProtocolTypListener);
-        model.getDirectionProperty().set(Direction.BUY);
         model.getCreateOfferButtonVisibleProperty().set(model.getSelectedProtocolType() != null);
+        directionSelection.setDirection(Direction.BUY);
     }
 
     @Override

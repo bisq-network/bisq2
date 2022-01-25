@@ -27,26 +27,26 @@ import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import javafx.beans.property.*;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.HashSet;
 
 @Slf4j
 @Getter
+@Setter
 public class CreateOfferModel implements Model {
-    private final ObjectProperty<Market> selectedMarketProperty = new SimpleObjectProperty<>();
-    private final ObjectProperty<Direction> directionProperty = new SimpleObjectProperty<>();
-    private final ObjectProperty<Monetary> baseSideAmountProperty = new SimpleObjectProperty<>();
-    private final ObjectProperty<Monetary> quoteSideAmountProperty = new SimpleObjectProperty<>();
-    private final ObjectProperty<Quote> fixPriceProperty = new SimpleObjectProperty<>();
-    private final ObjectProperty<SwapProtocolType> selectedProtocolTypeProperty = new SimpleObjectProperty<>();
-    private final ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
+    // References to data in component models
+    private ReadOnlyObjectProperty<Market> selectedMarketProperty = new SimpleObjectProperty<>();
+    private ReadOnlyObjectProperty<Direction> directionProperty = new SimpleObjectProperty<>();
+    private ReadOnlyObjectProperty<Monetary> baseSideAmountProperty = new SimpleObjectProperty<>();
+    private ReadOnlyObjectProperty<Monetary> quoteSideAmountProperty = new SimpleObjectProperty<>();
+    private ReadOnlyObjectProperty<Quote> fixPriceProperty = new SimpleObjectProperty<>();
+    private ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty = new SimpleObjectProperty<>();
+    private ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts ;
+    private ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts ;
+    private ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods ;
+    private ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods ;
 
     private final ObjectProperty<Offer> offerProperty = new SimpleObjectProperty<>();
     private final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
