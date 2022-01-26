@@ -40,7 +40,7 @@ import java.util.HashSet;
 @Setter
 public class TakeOfferModel implements Model {
     public ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty = new SimpleObjectProperty<>(); //todo
-    
+
     ObjectProperty<Market> selectedMarketProperty = new SimpleObjectProperty<>();
     ReadOnlyObjectProperty<Direction> directionProperty;
     SwapProtocolType selectedProtocol;
@@ -55,7 +55,7 @@ public class TakeOfferModel implements Model {
     final ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
 
     final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
-    BooleanProperty showTakeOfferTab = new SimpleBooleanProperty();
+    BooleanProperty showTakeOfferTab;
 
     public TakeOfferModel() {
     }

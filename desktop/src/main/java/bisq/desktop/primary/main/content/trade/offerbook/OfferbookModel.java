@@ -60,9 +60,8 @@ public class OfferbookModel implements Model {
     final MarketPriceService marketPriceService;
     final StringProperty createOfferButtonText = new SimpleStringProperty(Res.offerbook.get("offerbook.table.header.quoteAmount"));
 
-    BooleanProperty showCreateOfferTab = new SimpleBooleanProperty();
-     BooleanProperty showTakeOfferTab = new SimpleBooleanProperty();
-
+    final BooleanProperty showCreateOfferTab = new SimpleBooleanProperty();
+    final BooleanProperty showTakeOfferTab = new SimpleBooleanProperty();
 
     public OfferbookModel(DefaultApplicationService applicationService,
                           ReadOnlyObjectProperty<Market> selectedMarketProperty,
@@ -105,7 +104,7 @@ public class OfferbookModel implements Model {
         }
     }
 
-    String getCreateOfferButtonTitle( ) {
+    String getCreateOfferButtonTitle() {
         String currencyCode = selectedMarketProperty.get().baseCurrencyCode();
         String dir = directionProperty.get().isBuy() ?
                 Res.offerbook.get("direction.label.sell", currencyCode) :

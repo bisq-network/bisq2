@@ -37,7 +37,7 @@ public class TradeController extends TabController {
     private final TradeModel model;
     @Getter
     private final TradeView view;
-    private Optional<OfferbookController> offerbookController = Optional.empty();
+    private final OfferbookController offerbookController;
 
     public TradeController(DefaultApplicationService applicationService) {
         super(NavigationTarget.TRADE);
@@ -45,15 +45,17 @@ public class TradeController extends TabController {
         this.applicationService = applicationService;
         model = new TradeModel(applicationService);
         view = new TradeView(model, this);
+
+        offerbookController = new OfferbookController(applicationService);
     }
 
 
     @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
         model.createOfferTabVisible.set(navigationTarget == NavigationTarget.CREATE_OFFER ||
-                offerbookController.map(OfferbookController::showCreateOfferTab).orElse(false));
+                offerbookController.showCreateOfferTab().get());
         model.takeOfferTabVisible.set(navigationTarget == NavigationTarget.TAKE_OFFER ||
-                offerbookController.map(OfferbookController::showTakeOfferTab).orElse(false));
+                offerbookController.getShowTakeOfferTab().get());
 
         super.onNavigate(navigationTarget, data);
     }
@@ -62,8 +64,7 @@ public class TradeController extends TabController {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case OFFERBOOK -> {
-                offerbookController = Optional.of(new OfferbookController(applicationService));
-                return offerbookController;
+                return Optional.of(offerbookController);
             }
             case CREATE_OFFER -> {
                 return Optional.of(new CreateOfferController(applicationService));

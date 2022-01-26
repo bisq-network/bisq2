@@ -20,21 +20,17 @@ package bisq.desktop.primary.main.content.trade.take;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
-import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.content.trade.components.AccountSelection;
 import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.i18n.Res;
-import bisq.offer.Offer;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferController> {
-    private final ChangeListener<Offer> offerListener;
     private final BisqButton takeOfferButton;
     private final BisqLabel protocolLabel;
 
@@ -58,30 +54,12 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
         BisqButton cancelButton = new BisqButton(Res.common.get("cancel"));
         cancelButton.setOnAction(e -> controller.onCancel());
 
-        //todo temp
-        BisqTextArea offerSummary = new BisqTextArea();
-        offerSummary.setVisible(false);
-
-        BisqButton publishButton = new BisqButton(Res.offerbook.get("publishOffer.button"));
-        publishButton.setOnAction(e -> controller.onReview());
-        publishButton.setVisible(false);
-
         root.getChildren().addAll(
                 directionView.getRoot(),
                 protocolLabel,
                 amountPriceView.getRoot(),
                 accountView.getRoot(),
-                Layout.hBoxWith(takeOfferButton, cancelButton),
-                offerSummary,
-                publishButton);
-
-        offerListener = (observable, oldValue, newValue) -> {
-            //todo show summary
-            offerSummary.setVisible(true);
-            offerSummary.setText(newValue.toString());
-
-            publishButton.setVisible(true);
-        };
+                Layout.hBoxWith(takeOfferButton, cancelButton));
     }
 
     @Override
@@ -92,5 +70,4 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
     @Override
     public void onViewDetached() {
     }
-
 }

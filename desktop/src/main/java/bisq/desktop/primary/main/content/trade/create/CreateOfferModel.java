@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Setter
 public class CreateOfferModel implements Model {
+
     // References to data in component models
     private ReadOnlyObjectProperty<Market> selectedMarketProperty;
     private ReadOnlyObjectProperty<Direction> directionProperty;
@@ -50,8 +51,8 @@ public class CreateOfferModel implements Model {
 
     private final ObjectProperty<Offer> offerProperty = new SimpleObjectProperty<>();
     private final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
-    BooleanProperty showCreateOfferTab = new SimpleBooleanProperty();
-    
+    BooleanProperty showCreateOfferTab;
+
     public CreateOfferModel() {
     }
 

@@ -24,7 +24,6 @@ import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.trade.components.*;
-import bisq.desktop.primary.main.content.trade.offerbook.OfferbookController;
 import bisq.offer.Direction;
 import bisq.offer.OfferService;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -34,13 +33,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 @Slf4j
 public class CreateOfferController implements InitWithDataController<CreateOfferController.InitData> {
-    public static record InitData(Market market, 
-                                  Direction direction, 
-                                  BooleanProperty showCreateOfferTab) {
+    public static record InitData(Market market, Direction direction, BooleanProperty showCreateOfferTab) {
     }
 
     private final CreateOfferModel model;
@@ -134,11 +130,11 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
     public void onPublishOffer() {
         offerService.publishOffer(model.getOffer());
         model.showCreateOfferTab.set(false);
-        Navigation.navigateTo(NavigationTarget.OFFERBOOK, new OfferbookController.InitData(Optional.of(model.showCreateOfferTab), Optional.empty()));
+        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
     }
 
     public void onCancel() {
         model.showCreateOfferTab.set(false);
-        Navigation.navigateTo(NavigationTarget.OFFERBOOK, new OfferbookController.InitData(Optional.of(model.showCreateOfferTab), Optional.empty()));
+        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
     }
 }

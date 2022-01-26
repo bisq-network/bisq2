@@ -24,15 +24,11 @@ import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.trade.components.AccountSelection;
 import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
-import bisq.desktop.primary.main.content.trade.offerbook.OfferbookController;
 import bisq.offer.Offer;
-import bisq.offer.OfferService;
 import bisq.oracle.marketprice.MarketPriceService;
 import javafx.beans.property.BooleanProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
 
 @Slf4j
 public class TakeOfferController implements InitWithDataController<TakeOfferController.InitData> {
@@ -43,7 +39,6 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
     @Getter
     private final TakeOfferView view;
 
-    private final OfferService offerService;
     private final AmountPriceGroup amountPriceGroup;
     private final AccountSelection accountSelection;
     private final MarketPriceService marketPriceService;
@@ -51,7 +46,6 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
 
 
     public TakeOfferController(DefaultApplicationService applicationService) {
-        offerService = applicationService.getOfferService();
         marketPriceService = applicationService.getMarketPriceService();
         model = new TakeOfferModel();
 
@@ -78,7 +72,6 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
                 directionSelection.getView(),
                 amountPriceGroup.getView(),
                 accountSelection.getView());
-
     }
 
     @Override
@@ -97,9 +90,8 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
         amountPriceGroup.setQuoteSideAmount(model.quoteSideAmount);
         amountPriceGroup.setFixPrice(model.fixPrice);
 
-        model.showTakeOfferTab = initData.showTakeOfferTab();
+        model.showTakeOfferTab = initData.showTakeOfferTab;
     }
-
 
     @Override
     public void onViewAttached() {
@@ -109,16 +101,14 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
     public void onViewDetached() {
     }
 
-    public void onReview() {
-    }
 
     public void onTakeOffer() {
         model.showTakeOfferTab.set(false);
-        Navigation.navigateTo(NavigationTarget.OFFERBOOK, new OfferbookController.InitData(Optional.empty(), Optional.of(model.showTakeOfferTab)));
+        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
     }
 
     public void onCancel() {
         model.showTakeOfferTab.set(false);
-        Navigation.navigateTo(NavigationTarget.OFFERBOOK, new OfferbookController.InitData(Optional.empty(), Optional.of(model.showTakeOfferTab)));
+        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
     }
 }
