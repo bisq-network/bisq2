@@ -34,6 +34,7 @@ import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -60,6 +61,9 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     };
     private BiConsumer<S, Boolean> onToggleHandler = (item, selected) -> {
     };
+    private Optional<Class<? extends BisqButton>> buttonClass = Optional.empty();
+    private BiConsumer<S, BisqButton> updateItemWithButtonHandler = (item, button) -> {
+    };
 
     public static class Builder<S> {
         private Optional<String> title = Optional.empty();
@@ -75,6 +79,9 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private Consumer<S> onActionHandler = item -> {
         };
         private BiConsumer<S, Boolean> onToggleHandler = (item, selected) -> {
+        };
+        private Optional<Class<? extends BisqButton>> buttonClass = Optional.empty();
+        private BiConsumer<S, BisqButton> updateItemWithButtonHandler = (item, button) -> {
         };
 
         public BisqTableColumn<S> build() {
@@ -92,6 +99,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             tableColumn.valuePropertySupplier = valuePropertySupplier;
             tableColumn.onActionHandler = onActionHandler;
             tableColumn.onToggleHandler = onToggleHandler;
+            tableColumn.buttonClass = buttonClass;
+            tableColumn.updateItemWithButtonHandler = updateItemWithButtonHandler;
             comparator.ifPresent(tableColumn::applyComparator);
             return tableColumn;
         }
@@ -149,6 +158,16 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
 
         public Builder<S> actionHandler(Consumer<S> actionHandler) {
             this.onActionHandler = actionHandler;
+            return this;
+        }
+
+        public Builder<S> updateItemWithButtonHandler(BiConsumer<S, BisqButton> handler) {
+            this.updateItemWithButtonHandler = handler;
+            return this;
+        }
+
+        public Builder<S> buttonClass(Class<? extends BisqButton> buttonClass) {
+            this.buttonClass = Optional.of(buttonClass);
             return this;
         }
 
@@ -268,22 +287,31 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     public void applyButtonCellFactory() {
         setCellFactory(
                 new Callback<>() {
-
-
                     @Override
                     public TableCell<S, S> call(TableColumn<S,
                             S> column) {
                         return new TableCell<>() {
                             S previousItem;
-                            private final BisqButton button = new BisqButton();
+
+                            private BisqButton button;
+
+                            {
+                                try {
+                                    button = buttonClass.orElse(BisqButton.class).getDeclaredConstructor().newInstance();
+                                } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                                    e.printStackTrace();
+                                }
+                            }
 
                             @Override
                             public void updateItem(final S item, boolean empty) {
                                 super.updateItem(item, empty);
+                                updateItemWithButtonHandler.accept(item, button);
                                 if (item != null && !empty) {
                                     button.setOnAction(event -> onActionHandler.accept(item));
                                     isVisibleFunction.ifPresent(function -> button.setVisible(function.apply(item)));
                                     setGraphic(button);
+
                                     if (previousItem instanceof TableItem tableItem) {
                                         tableItem.deactivate();
                                     }
@@ -321,8 +349,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     public void applyCheckBoxCellFactory() {
         setCellFactory(
                 new Callback<>() {
-
-
                     @Override
                     public TableCell<S, S> call(TableColumn<S,
                             S> column) {
@@ -371,5 +397,4 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                     }
                 });
     }
-
 }

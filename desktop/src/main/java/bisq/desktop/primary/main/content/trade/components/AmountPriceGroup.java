@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.create.components;
+package bisq.desktop.primary.main.content.trade.components;
 
+import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
@@ -26,38 +27,69 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import bisq.oracle.marketprice.MarketPriceService;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.Getter;
-import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AmountPriceGroup {
+    private final AmountPriceController controller;
+
+    public AmountPriceGroup(ReadOnlyObjectProperty<Market> selectedMarket,
+                            ReadOnlyObjectProperty<Direction> direction,
+                            MarketPriceService marketPriceService) {
+        controller = new AmountPriceController(selectedMarket, direction, marketPriceService);
+    }
+
+    public ReadOnlyObjectProperty<Monetary> baseSideAmountProperty() {
+        return controller.model.baseSideAmount;
+    }
+
+    public ReadOnlyObjectProperty<Monetary> quoteSideAmountAmountProperty() {
+        return controller.model.quoteSideAmount;
+    }
+
+    public ReadOnlyObjectProperty<Quote> fixPriceProperty() {
+        return controller.model.fixPrice;
+    }
+
+    public AmountPriceView getView() {
+        return controller.view;
+    }
+
     public static class AmountPriceController implements Controller {
         private final AmountPriceModel model;
         @Getter
         private final AmountPriceGroup.AmountPriceView view;
         private final ChangeListener<Monetary> baseCurrencyAmountListener, quoteCurrencyAmountListener;
         private final ChangeListener<Quote> fixPriceQuoteListener;
+        private final AmountInput baseAmount;
+        private final AmountInput quoteAmount;
+        private final PriceInput price;
 
-        public AmountPriceController(OfferPreparationModel offerPreparationModel, MarketPriceService marketPriceService) {
-            model = new AmountPriceModel(offerPreparationModel, marketPriceService);
+        public AmountPriceController(ReadOnlyObjectProperty<Market> selectedMarket,
+                                     ReadOnlyObjectProperty<Direction> direction,
+                                     MarketPriceService marketPriceService) {
 
-            var baseAmountController = new AmountInput.AmountController(offerPreparationModel, true);
-            var quoteAmountController = new AmountInput.AmountController(offerPreparationModel, false);
-            var priceController = new PriceInput.PriceController(offerPreparationModel, marketPriceService);
+            baseAmount = new AmountInput(selectedMarket, direction, true);
+            quoteAmount = new AmountInput(selectedMarket, direction, false);
+            price = new PriceInput(selectedMarket, marketPriceService);
 
-            view = new AmountPriceGroup.AmountPriceView(model,
+            model = new AmountPriceModel(baseAmount.amountProperty(), quoteAmount.amountProperty(), price.fixPriceProperty());
+
+            view = new AmountPriceView(model,
                     this,
-                    baseAmountController.getView(),
-                    priceController.getView(),
-                    quoteAmountController.getView());
+                    baseAmount.getView(),
+                    price.getView(),
+                    quoteAmount.getView());
 
             // We delay with runLater to avoid that we get triggered at market change from the component's data changes and
             // apply the conversion before the other component has processed the market change event.
@@ -75,38 +107,38 @@ public class AmountPriceGroup {
 
         @Override
         public void onViewAttached() {
-            model.baseSideAmountProperty().addListener(baseCurrencyAmountListener);
-            model.quoteSideAmountProperty().addListener(quoteCurrencyAmountListener);
-            model.fixPriceProperty().addListener(fixPriceQuoteListener);
+            model.baseSideAmount.addListener(baseCurrencyAmountListener);
+            model.quoteSideAmount.addListener(quoteCurrencyAmountListener);
+            model.fixPrice.addListener(fixPriceQuoteListener);
         }
 
         @Override
         public void onViewDetached() {
-            model.baseSideAmountProperty().removeListener(baseCurrencyAmountListener);
-            model.quoteSideAmountProperty().removeListener(quoteCurrencyAmountListener);
-            model.fixPriceProperty().removeListener(fixPriceQuoteListener);
+            model.baseSideAmount.removeListener(baseCurrencyAmountListener);
+            model.quoteSideAmount.removeListener(quoteCurrencyAmountListener);
+            model.fixPrice.removeListener(fixPriceQuoteListener);
         }
 
         private void setQuoteFromBase() {
-            Quote fixPrice = model.getFixPrice();
+            Quote fixPrice = model.fixPrice.get();
             if (fixPrice == null) return;
-            Monetary baseCurrencyAmount = model.getBaseSideAmount();
+            Monetary baseCurrencyAmount = model.baseSideAmount.get();
             if (baseCurrencyAmount == null) return;
             if (fixPrice.getBaseMonetary().getClass() != baseCurrencyAmount.getClass()) return;
-            model.setQuoteSideAmount(fixPrice.toQuoteMonetary(baseCurrencyAmount));
+            quoteAmount.setAmount(fixPrice.toQuoteMonetary(baseCurrencyAmount));
         }
 
         private void setBaseFromQuote() {
-            Quote fixPrice = model.getFixPrice();
+            Quote fixPrice = model.fixPrice.get();
             if (fixPrice == null) return;
-            Monetary quoteCurrencyAmount = model.getQuoteSideAmount();
+            Monetary quoteCurrencyAmount = model.quoteSideAmount.get();
             if (quoteCurrencyAmount == null) return;
             if (fixPrice.getQuoteMonetary().getClass() != quoteCurrencyAmount.getClass()) return;
-            model.setBaseSideAmount(fixPrice.toBaseMonetary(quoteCurrencyAmount));
+            baseAmount.setAmount(fixPrice.toBaseMonetary(quoteCurrencyAmount));
         }
 
         private void applyFixPrice() {
-            if (model.getBaseSideAmount() == null) {
+            if (model.baseSideAmount == null) {
                 setBaseFromQuote();
             } else {
                 setQuoteFromBase();
@@ -115,13 +147,16 @@ public class AmountPriceGroup {
     }
 
     private static class AmountPriceModel implements Model {
-        @Delegate
-        private final OfferPreparationModel offerPreparationModel;
-        private final MarketPriceService marketPriceService;
+        private final ReadOnlyObjectProperty<Monetary> baseSideAmount;
+        private final ReadOnlyObjectProperty<Monetary> quoteSideAmount;
+        private final ReadOnlyObjectProperty<Quote> fixPrice;
 
-        public AmountPriceModel(OfferPreparationModel offerPreparationModel, MarketPriceService marketPriceService) {
-            this.offerPreparationModel = offerPreparationModel;
-            this.marketPriceService = marketPriceService;
+        public AmountPriceModel(ReadOnlyObjectProperty<Monetary> baseSideAmount,
+                                ReadOnlyObjectProperty<Monetary> quoteSideAmount,
+                                ReadOnlyObjectProperty<Quote> fixPrice) {
+            this.baseSideAmount = baseSideAmount;
+            this.quoteSideAmount = quoteSideAmount;
+            this.fixPrice = fixPrice;
         }
     }
 
@@ -129,9 +164,9 @@ public class AmountPriceGroup {
     public static class AmountPriceView extends View<VBox, AmountPriceModel, AmountPriceGroup.AmountPriceController> {
         public AmountPriceView(AmountPriceModel model,
                                AmountPriceController controller,
-                               AmountInput.MonetaryView baseView,
+                               AmountInput.AmountView baseView,
                                PriceInput.PriceView priceView,
-                               AmountInput.MonetaryView quoteView) {
+                               AmountInput.AmountView quoteView) {
             super(new VBox(), model, controller);
 
             root.setSpacing(0);

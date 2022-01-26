@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.create.components;
+package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.common.monetary.Market;
 import bisq.desktop.common.view.Controller;
@@ -25,28 +25,45 @@ import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
-import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DirectionSelection {
-    public static class DirectionController implements Controller {
+    private final DirectionController controller;
+
+    public DirectionSelection(ReadOnlyObjectProperty<Market> selectedMarket) {
+        controller = new DirectionController(selectedMarket);
+    }
+
+    public DirectionView getView() {
+        return controller.view;
+    }
+
+    public ReadOnlyObjectProperty<Direction> directionProperty() {
+        return controller.model.direction;
+    }
+
+    public void setDirection(Direction direction) {
+        controller.model.direction.set(direction);
+    }
+
+    private static class DirectionController implements Controller {
+
         private final DirectionModel model;
         @Getter
-        private final AmountPriceView view;
+        private final DirectionView view;
         private final ChangeListener<Market> selectedMarketListener;
 
-        public DirectionController(OfferPreparationModel offerPreparationModel) {
-            model = new DirectionModel(offerPreparationModel);
-            view = new AmountPriceView(model, this);
+        private DirectionController(ReadOnlyObjectProperty<Market> selectedMarket) {
+            model = new DirectionModel(selectedMarket);
+            view = new DirectionView(model, this);
 
             selectedMarketListener = (observable, oldValue, newValue) -> {
                 if (newValue != null) {
@@ -55,43 +72,49 @@ public class DirectionSelection {
             };
         }
 
+        @Override
         public void onViewAttached() {
-            model.selectedMarketProperty().addListener(selectedMarketListener);
-            if (model.getSelectedMarket() != null) {
-                model.baseCode.set(model.getSelectedMarket().baseCurrencyCode());
+            model.selectedMarket.addListener(selectedMarketListener);
+            if (model.selectedMarket.get() != null) {
+                model.baseCode.set(model.selectedMarket.get().baseCurrencyCode());
+            }
+            if (model.direction.get() == null) {
+                log.error("init with BUY");
+                model.direction.set(Direction.BUY);
             }
         }
 
+        @Override
         public void onViewDetached() {
-            model.selectedMarketProperty().removeListener(selectedMarketListener);
+            model.selectedMarket.removeListener(selectedMarketListener);
         }
 
-        public void onBuySelected() {
-            model.setDirection(Direction.BUY);
+        private void onBuySelected() {
+            model.direction.set(Direction.BUY);
         }
 
-        public void onSellSelected() {
-            model.setDirection(Direction.SELL);
+        private void onSellSelected() {
+            model.direction.set(Direction.SELL);
         }
     }
 
     private static class DirectionModel implements Model {
+        private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
+        private final ReadOnlyObjectProperty<Market> selectedMarket;
         public final StringProperty baseCode = new SimpleStringProperty();
-        @Delegate
-        private final OfferPreparationModel offerPreparationModel;
 
-        public DirectionModel(OfferPreparationModel offerPreparationModel) {
-            this.offerPreparationModel = offerPreparationModel;
+        public DirectionModel(ReadOnlyObjectProperty<Market> selectedMarket) {
+            this.selectedMarket = selectedMarket;
         }
     }
 
     @Slf4j
-    public static class AmountPriceView extends View<VBox, DirectionModel, DirectionController> {
+    public static class DirectionView extends View<VBox, DirectionModel, DirectionController> {
         private final BisqButton buy, sell;
         private final ChangeListener<String> baseCodeListener;
         private final ChangeListener<Direction> directionListener;
 
-        public AmountPriceView(DirectionModel model, DirectionController controller) {
+        private DirectionView(DirectionModel model, DirectionController controller) {
             super(new VBox(), model, controller);
 
             root.setSpacing(10);
@@ -113,35 +136,46 @@ public class DirectionSelection {
 
             root.getChildren().addAll(headline, hBox);
 
-            baseCodeListener = (observable, oldValue, newValue) -> {
-                if (newValue == null) return;
-                buy.setText(Res.offerbook.get("direction.label.buy", newValue));
-                sell.setText(Res.offerbook.get("direction.label.sell", newValue));
-            };
-            directionListener = (observable, oldValue, newValue) -> {
-                if (newValue == null) return;
-                if (newValue == Direction.BUY) {
-                    buy.setId("buy-button");
-                    sell.setId("button-inactive");
-                } else {
-                    buy.setId("button-inactive");
-                    sell.setId("sell-button");
-                }
-            };
+            baseCodeListener = (observable, oldValue, newValue) -> applyBaseCodeChange();
+            directionListener = (observable, oldValue, newValue) -> applyDirectionChange();
         }
 
+
+        @Override
         public void onViewAttached() {
             buy.setOnAction(e -> controller.onBuySelected());
             sell.setOnAction(e -> controller.onSellSelected());
             model.baseCode.addListener(baseCodeListener);
-            model.directionProperty().addListener(directionListener);
+            model.direction.addListener(directionListener);
+            applyBaseCodeChange();
+            applyDirectionChange();
         }
 
+        @Override
         public void onViewDetached() {
             buy.setOnAction(null);
             sell.setOnAction(null);
             model.baseCode.removeListener(baseCodeListener);
-            model.directionProperty().removeListener(directionListener);
+            model.direction.removeListener(directionListener);
+        }
+
+        private void applyBaseCodeChange() {
+            String baseCode = model.baseCode.get();
+            if (baseCode == null) return;
+            buy.setText(Res.offerbook.get("direction.label.buy", baseCode));
+            sell.setText(Res.offerbook.get("direction.label.sell", baseCode));
+        }
+
+        private void applyDirectionChange() {
+            Direction direction = model.direction.get();
+            if (direction == null) return;
+            if (direction.isBuy()) {
+                buy.setId("buy-button");
+                sell.setId("button-inactive");
+            } else {
+                buy.setId("button-inactive");
+                sell.setId("sell-button");
+            }
         }
     }
 }

@@ -17,43 +17,133 @@
 
 package bisq.desktop.primary.main.content.trade.create;
 
-import bisq.desktop.common.view.Model;
-import bisq.desktop.primary.main.content.trade.create.components.OfferPreparationModel;
-import bisq.offer.Offer;
+import bisq.account.accounts.Account;
 import bisq.account.protocol.SwapProtocolType;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
+import bisq.account.settlement.SettlementMethod;
+import bisq.common.monetary.Market;
+import bisq.common.monetary.Monetary;
+import bisq.common.monetary.Quote;
+import bisq.desktop.common.view.Model;
+import bisq.offer.Direction;
+import bisq.offer.Offer;
+import javafx.beans.property.*;
+import javafx.collections.ObservableSet;
 import lombok.Getter;
-import lombok.experimental.Delegate;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-
+@Getter
+@Setter
 public class CreateOfferModel implements Model {
-    @Delegate
-    private final OfferPreparationModel offerPreparationModel;
+    // References to data in component models
+    private ReadOnlyObjectProperty<Market> selectedMarketProperty = new SimpleObjectProperty<>();
+    private ReadOnlyObjectProperty<Direction> directionProperty = new SimpleObjectProperty<>();
+    private ReadOnlyObjectProperty<Monetary> baseSideAmountProperty = new SimpleObjectProperty<>();
+    private ReadOnlyObjectProperty<Monetary> quoteSideAmountProperty = new SimpleObjectProperty<>();
+    private ReadOnlyObjectProperty<Quote> fixPriceProperty = new SimpleObjectProperty<>();
+    private ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty = new SimpleObjectProperty<>();
+    private ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts;
+    private ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts;
+    private ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods;
+    private ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods;
 
-    @Getter
-    private final ObjectProperty<Offer> offer = new SimpleObjectProperty<>();
-    @Getter
-    private final BooleanProperty createOfferButtonVisible = new SimpleBooleanProperty(true);
-    private final ChangeListener<SwapProtocolType> selectedProtocolTypListener;
+    private final ObjectProperty<Offer> offerProperty = new SimpleObjectProperty<>();
+    private final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
 
-    public CreateOfferModel(OfferPreparationModel offerPreparationModel) {
-        this.offerPreparationModel = offerPreparationModel;
-
-        selectedProtocolTypListener = (observable, oldValue, newValue) -> createOfferButtonVisible.set(newValue != null);
+    public CreateOfferModel() {
     }
 
-    public void onViewAttached() {
-        offerPreparationModel.selectedProtocolTypeProperty().addListener(selectedProtocolTypListener);
-        createOfferButtonVisible.set(offerPreparationModel.getSelectedProtocolType() != null);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Market getSelectedMarket() {
+        return selectedMarketProperty.get();
     }
 
-    public void onViewDetached() {
-        offerPreparationModel.selectedProtocolTypeProperty().removeListener(selectedProtocolTypListener);
+    public Direction getDirection() {
+        return directionProperty.get();
     }
+
+    public Monetary getBaseSideAmount() {
+        return baseSideAmountProperty.get();
+    }
+
+    public Monetary getQuoteSideAmount() {
+        return quoteSideAmountProperty.get();
+    }
+
+    public Quote getFixPrice() {
+        return fixPriceProperty.get();
+    }
+
+    public SwapProtocolType getSelectedProtocolType() {
+        return selectedProtocolTypeProperty.get();
+    }
+
+    public ObservableSet<Account<? extends SettlementMethod>> getSelectedBaseSideAccounts() {
+        return selectedBaseSideAccounts;
+    }
+
+    public ObservableSet<Account<? extends SettlementMethod>> getSelectedQuoteSideAccounts() {
+        return selectedQuoteSideAccounts;
+    }
+
+    public ObservableSet<SettlementMethod> getSelectedBaseSideSettlementMethods() {
+        return selectedBaseSideSettlementMethods;
+    }
+
+    public ObservableSet<SettlementMethod> getSelectedQuoteSideSettlementMethods() {
+        return selectedQuoteSideSettlementMethods;
+    }
+
+    public boolean isCreateOfferButtonVisible() {
+        return createOfferButtonVisibleProperty.get();
+    }
+
+    public Offer getOffer() {
+        return offerProperty.get();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ReadOnlyObjectProperty
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public ReadOnlyObjectProperty<Market> selectedMarketProperty() {
+        return selectedMarketProperty;
+    }
+
+    public ReadOnlyObjectProperty<Direction> directionProperty() {
+        return directionProperty;
+    }
+
+    public ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty() {
+        return selectedProtocolTypeProperty;
+    }
+
+    public ReadOnlyObjectProperty<Monetary> baseSideAmountProperty() {
+        return baseSideAmountProperty;
+    }
+
+    public ReadOnlyObjectProperty<Monetary> quoteSideAmountProperty() {
+        return quoteSideAmountProperty;
+    }
+
+    public ReadOnlyObjectProperty<Quote> fixPriceProperty() {
+        return fixPriceProperty;
+    }
+
+
+    public ReadOnlyBooleanProperty createOfferButtonVisibleProperty() {
+        return createOfferButtonVisibleProperty;
+    }
+
+    public ReadOnlyObjectProperty<Offer> offerProperty() {
+        return offerProperty;
+    }
+
+
 }

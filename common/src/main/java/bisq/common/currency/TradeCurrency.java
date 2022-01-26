@@ -35,6 +35,10 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Serial
         return FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(code);
     }
 
+    public static boolean isBtc(String code) {
+        return "BTC".equals(code);
+    }
+
     /**
      * We only can check if the currency is not fiat and if the code matches the format, but we do not maintain a list
      * of crypto-currencies to be flexible with any newly added one.

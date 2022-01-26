@@ -22,5 +22,17 @@ import bisq.network.p2p.message.Proto;
 // It is always related to the base currency. E.g. BTC-USD market -> BUY means Buy BTC
 public enum Direction implements Proto {
     BUY,
-    SELL
+    SELL;
+
+    public boolean isBuy() {
+        return this == BUY;
+    }
+
+    public boolean isSell() {
+        return this == SELL;
+    }
+
+    public Direction mirror() {
+        return isBuy() ? SELL : BUY;
+    }
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.create.components;
+package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Quote;
@@ -31,8 +31,7 @@ import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.QuoteFormatter;
 import bisq.presentation.parser.PriceParser;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -40,72 +39,68 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
-import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 
 @Slf4j
 public class PriceInput {
-    public static class PriceController implements Controller, MarketPriceService.Listener {
+    private final PriceController controller;
+
+    public PriceInput(ReadOnlyObjectProperty<Market> selectedMarket, MarketPriceService marketPriceService) {
+        controller = new PriceController(selectedMarket, marketPriceService);
+    }
+
+    public ReadOnlyObjectProperty<Quote> fixPriceProperty() {
+        return controller.model.fixPrice;
+    }
+
+    public PriceView getView() {
+        return controller.view;
+    }
+
+    private static class PriceController implements Controller, MarketPriceService.Listener {
         private final PriceModel model;
         @Getter
         private final PriceView view;
         private final PriceValidator validator = new PriceValidator();
         private final ChangeListener<Market> selectedMarketListener;
 
-        public PriceController(OfferPreparationModel offerPreparationModel,
-                               MarketPriceService marketPriceService) {
-            model = new PriceModel(offerPreparationModel, marketPriceService);
+        private PriceController(ReadOnlyObjectProperty<Market> selectedMarket,
+                                MarketPriceService marketPriceService) {
+            model = new PriceModel(selectedMarket, marketPriceService);
             view = new PriceView(model, this, validator);
 
-            selectedMarketListener = (observable, oldValue, newValue) -> {
-                if (newValue != null) {
-                    model.marketString.set(newValue.toString());
-                    model.description.set(Res.offerbook.get("createOffer.price.fix.description.buy", newValue.baseCurrencyCode()));
-                }
-                model.setFixPrice(null);
-                setFixPriceFromMarketPrice();
-            };
+            selectedMarketListener = (observable, oldValue, newValue) -> updateFromMarketPrice(newValue);
         }
 
-        // View events
-        public void onFocusChange(boolean hasFocus) {
-            model.hasFocus = hasFocus;
-        }
-
-        public void onFixPriceInput(String value) {
-            if (value == null) return;
-            if (model.hasFocus) return;
-            if (value.isEmpty()) {
-                model.setFixPrice(null);
-                return;
+        private void updateFromMarketPrice(Market newValue) {
+            if (newValue != null) {
+                model.marketString.set(newValue.toString());
+                model.description.set(Res.offerbook.get("createOffer.price.fix.description.buy", newValue.baseCurrencyCode()));
             }
-            if (!validator.validate(value).isValid) {
-                model.setFixPrice(null);
-                return;
-            }
-            if (model.getSelectedMarket() == null) return;
-            model.setFixPrice(PriceParser.parse(value, model.getSelectedMarket()));
-        }
-
-        public void onViewAttached() {
-            model.marketPriceService.addListener(this);
-            model.selectedMarketProperty().addListener(selectedMarketListener);
-            if (model.getFixPrice() != null) return;
+            model.fixPrice.set(null);
             setFixPriceFromMarketPrice();
         }
 
+        @Override
+        public void onViewAttached() {
+            model.marketPriceService.addListener(this);
+            model.selectedMarket.addListener(selectedMarketListener);
+            updateFromMarketPrice(model.selectedMarket.get());
+        }
+
+        @Override
         public void onViewDetached() {
             model.marketPriceService.removeListener(this);
-            model.selectedMarketProperty().removeListener(selectedMarketListener);
+            model.selectedMarket.removeListener(selectedMarketListener);
         }
 
         @Override
         public void onMarketPriceUpdate(Map<Market, MarketPrice> map) {
             UIThread.run(() -> {
                 // We only set it initially
-                if (model.getFixPrice() != null) return;
+                if (model.fixPrice.get() != null) return;
                 setFixPriceFromMarketPrice();
             });
         }
@@ -114,24 +109,45 @@ public class PriceInput {
         public void onMarketPriceSelected(MarketPrice selected) {
         }
 
+        // View events
+        private void onFocusChange(boolean hasFocus) {
+            model.hasFocus = hasFocus;
+        }
+
+        private void onFixPriceInput(String value) {
+            if (value == null) return;
+            if (model.hasFocus) return;
+            if (value.isEmpty()) {
+                model.fixPrice.set(null);
+                return;
+            }
+            if (!validator.validate(value).isValid) {
+                model.fixPrice.set(null);
+                return;
+            }
+            if (model.selectedMarket.get() == null) return;
+            model.fixPrice.set(PriceParser.parse(value, model.selectedMarket.get()));
+        }
+
         private void setFixPriceFromMarketPrice() {
-            if (model.getSelectedMarket() == null) return;
-            MarketPrice marketPrice = model.marketPriceService.getMarketPriceByCurrencyMap().get(model.getSelectedMarket());
+            if (model.selectedMarket.get() == null) return;
+            MarketPrice marketPrice = model.marketPriceService.getMarketPriceByCurrencyMap().get(model.selectedMarket.get());
             if (marketPrice == null) return;
-            model.setFixPrice(marketPrice.quote());
+            model.fixPrice.set(marketPrice.quote());
         }
     }
 
     private static class PriceModel implements Model {
-        @Delegate
-        private final OfferPreparationModel offerPreparationModel;
+        private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
+        private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final MarketPriceService marketPriceService;
-        public boolean hasFocus;
-        public final StringProperty marketString = new SimpleStringProperty();
-        public final StringProperty description = new SimpleStringProperty();
+        private boolean hasFocus;
+        private final StringProperty marketString = new SimpleStringProperty();
+        private final StringProperty description = new SimpleStringProperty();
 
-        public PriceModel(OfferPreparationModel offerPreparationModel, MarketPriceService marketPriceService) {
-            this.offerPreparationModel = offerPreparationModel;
+        private PriceModel(ReadOnlyObjectProperty<Market> selectedMarket,
+                          MarketPriceService marketPriceService) {
+            this.selectedMarket = selectedMarket;
             this.marketPriceService = marketPriceService;
         }
     }
@@ -144,7 +160,7 @@ public class PriceInput {
         private final BisqLabel marketLabel;
         private final BisqLabel descriptionLabel;
 
-        public PriceView(PriceModel model,
+        private PriceView(PriceModel model,
                          PriceController controller,
                          PriceValidator validator) {
             super(new VBox(), model, controller);
@@ -183,20 +199,22 @@ public class PriceInput {
             fixPriceListener = (o, old, newValue) -> textInput.setText(newValue == null ? "" : QuoteFormatter.format(newValue));
         }
 
+        @Override
         public void onViewAttached() {
             marketLabel.textProperty().bind(model.marketString);
             descriptionLabel.textProperty().bind(model.description);
             textInput.textProperty().addListener(textInputListener);
             textInput.focusedProperty().addListener(focusListener);
-            model.fixPriceProperty().addListener(fixPriceListener);
+            model.fixPrice.addListener(fixPriceListener);
         }
 
+        @Override
         public void onViewDetached() {
             marketLabel.textProperty().unbind();
             descriptionLabel.textProperty().unbind();
             textInput.textProperty().removeListener(textInputListener);
             textInput.focusedProperty().removeListener(focusListener);
-            model.fixPriceProperty().removeListener(fixPriceListener);
+            model.fixPrice.removeListener(fixPriceListener);
         }
     }
 }

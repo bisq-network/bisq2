@@ -17,51 +17,93 @@
 
 package bisq.desktop.primary.main.content.trade.create;
 
+import bisq.account.protocol.SwapProtocolType;
 import bisq.application.DefaultServiceProvider;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.trade.create.components.*;
+import bisq.common.monetary.Market;
+import bisq.desktop.common.view.InitWithDataController;
+import bisq.desktop.primary.main.content.trade.components.*;
 import bisq.offer.Direction;
 import bisq.offer.OfferService;
 import bisq.oracle.marketprice.MarketPriceService;
+import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 
 @Slf4j
-public class CreateOfferController implements Controller {
+public class CreateOfferController implements InitWithDataController<CreateOfferController.InitData> {
+
+    public static record InitData(Market market, Direction direction) {
+    }
+
     private final CreateOfferModel model;
     @Getter
     private final CreateOfferView view;
     private final OfferService offerService;
+    private final ChangeListener<SwapProtocolType> selectedProtocolTypListener;
+    private final MarketSelection marketSelection;
+    private final DirectionSelection directionSelection;
+    private final AmountPriceGroup amountPriceGroup;
+    private final ProtocolSelection protocolSelection;
+    private final AccountSelection accountSelection;
 
     public CreateOfferController(DefaultServiceProvider serviceProvider) {
         offerService = serviceProvider.getOfferService();
         MarketPriceService marketPriceService = serviceProvider.getMarketPriceService();
-        OfferPreparationModel offerPreparationModel = new OfferPreparationModel();
+        model = new CreateOfferModel();
 
-        var marketSelectionController = new MarketSelection.MarketSelectionController(offerPreparationModel, marketPriceService);
-        var directionController = new DirectionSelection.DirectionController(offerPreparationModel);
-        var amountPriceController = new AmountPriceGroup.AmountPriceController(offerPreparationModel, marketPriceService);
-        var protocolSelectionController = new ProtocolSelection.ProtocolController(offerPreparationModel);
-        var accountSelectionController = new AccountSelection.AccountController(offerPreparationModel, serviceProvider.getAccountService());
+        marketSelection = new MarketSelection(marketPriceService);
+        model.setSelectedMarketProperty(marketSelection.selectedMarketProperty());
 
-        model = new CreateOfferModel(offerPreparationModel);
+        directionSelection = new DirectionSelection(model.selectedMarketProperty());
+        model.setDirectionProperty(directionSelection.directionProperty());
+
+        amountPriceGroup = new AmountPriceGroup(model.selectedMarketProperty(),
+                model.directionProperty(),
+                marketPriceService);
+        model.setBaseSideAmountProperty(amountPriceGroup.baseSideAmountProperty());
+        model.setQuoteSideAmountProperty(amountPriceGroup.quoteSideAmountAmountProperty());
+        model.setFixPriceProperty(amountPriceGroup.fixPriceProperty());
+
+        protocolSelection = new ProtocolSelection(model.selectedMarketProperty());
+        model.setSelectedProtocolTypeProperty(protocolSelection.selectedProtocolType());
+
+        accountSelection = new AccountSelection(model.selectedMarketProperty(),
+                model.directionProperty(),
+                model.selectedProtocolTypeProperty(),
+                serviceProvider.getAccountService());
+        model.setSelectedBaseSideAccounts(accountSelection.getSelectedBaseSideAccounts());
+        model.setSelectedQuoteSideAccounts(accountSelection.getSelectedQuoteSideAccounts());
+        model.setSelectedBaseSideSettlementMethods(accountSelection.getSelectedBaseSideSettlementMethods());
+        model.setSelectedQuoteSideSettlementMethods(accountSelection.getSelectedQuoteSideSettlementMethods());
+
         view = new CreateOfferView(model, this,
-                marketSelectionController.getView(),
-                directionController.getView(),
-                amountPriceController.getView(),
-                protocolSelectionController.getView(),
-                accountSelectionController.getView());
+                marketSelection.getView(),
+                directionSelection.getView(),
+                amountPriceGroup.getView(),
+                protocolSelection.getView(),
+                accountSelection.getView());
+
+        selectedProtocolTypListener = (observable, oldValue, newValue) -> model.getCreateOfferButtonVisibleProperty().set(newValue != null);
+    }
+
+    @Override
+    public void initWithData(InitData data) {
+        log.error("initWithData with {}", data);
+        marketSelection.setSelectedMarket(data.market());
+        directionSelection.setDirection(data.direction());
     }
 
     @Override
     public void onViewAttached() {
-        model.setDirection(Direction.BUY);
+        model.selectedProtocolTypeProperty().addListener(selectedProtocolTypListener);
+        model.getCreateOfferButtonVisibleProperty().set(model.getSelectedProtocolType() != null);
     }
 
     @Override
     public void onViewDetached() {
+        model.selectedProtocolTypeProperty().removeListener(selectedProtocolTypListener);
     }
 
     public void onCreateOffer() {
@@ -76,7 +118,7 @@ public class CreateOfferController implements Controller {
                         new ArrayList<>(model.getSelectedQuoteSideSettlementMethods()))
                 .whenComplete((offer, throwable) -> {
                     if (throwable == null) {
-                        model.getOffer().set(offer);
+                        model.getOfferProperty().set(offer);
                     } else {
                         //todo provide error to UI
                     }
@@ -84,6 +126,6 @@ public class CreateOfferController implements Controller {
     }
 
     public void onPublishOffer() {
-        offerService.publishOffer(model.getOffer().get());
+        offerService.publishOffer(model.getOffer());
     }
 }

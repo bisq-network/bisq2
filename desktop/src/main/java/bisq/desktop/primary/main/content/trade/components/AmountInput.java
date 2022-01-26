@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.create.components;
+package bisq.desktop.primary.main.content.trade.components;
 
-import bisq.offer.Direction;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
@@ -27,11 +26,10 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqInputTextField;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -39,63 +37,88 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
-import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AmountInput {
+    private final AmountInput.AmountController controller;
+
+    public AmountInput(ReadOnlyObjectProperty<Market> selectedMarket,
+                       ReadOnlyObjectProperty<Direction> direction,
+                       boolean isBaseCurrency) {
+        controller = new AmountInput.AmountController(selectedMarket, direction, isBaseCurrency);
+    }
+
+    public ReadOnlyObjectProperty<Monetary> amountProperty() {
+        return controller.model.amount;
+    }
+
+    public void setAmount(Monetary value) {
+        controller.model.amount.set(value);
+    }
+
+    public AmountView getView() {
+        return controller.view;
+    }
+
     public static class AmountController implements Controller {
         private final AmountModel model;
         @Getter
-        private final MonetaryView view;
+        private final AmountView view;
         private final MonetaryValidator validator = new MonetaryValidator();
         private final ChangeListener<Market> selectedMarketListener;
         private final ChangeListener<Direction> directionListener;
 
-        public AmountController(OfferPreparationModel offerPreparationModel, boolean isBaseCurrency) {
-            model = new AmountModel(offerPreparationModel, isBaseCurrency);
-            view = new MonetaryView(model, this, validator);
+        private AmountController(ReadOnlyObjectProperty<Market> selectedMarket,
+                                 ReadOnlyObjectProperty<Direction> direction,
+                                 boolean isBaseCurrency) {
+            model = new AmountModel(selectedMarket, direction, isBaseCurrency);
+            view = new AmountView(model, this, validator);
 
             selectedMarketListener = (observable, oldValue, newValue) -> {
-                model.setAmount(null);
+                model.amount.set(null);
                 updateModel();
             };
             directionListener = (observable, oldValue, newValue) -> updateModel();
         }
 
+        @Override
         public void onViewAttached() {
-            model.selectedMarketProperty().addListener(selectedMarketListener);
-            model.directionProperty().addListener(directionListener);
+            model.selectedMarket.addListener(selectedMarketListener);
+            model.direction.addListener(directionListener);
+            model.amount.set(null);
+            updateModel();
         }
 
+        @Override
         public void onViewDetached() {
-            model.selectedMarketProperty().removeListener(selectedMarketListener);
-            model.directionProperty().removeListener(directionListener);
+            model.selectedMarket.removeListener(selectedMarketListener);
+            model.direction.removeListener(directionListener);
         }
 
         // View events
-        public void onFocusChange(boolean hasFocus) {
+        private void onFocusChange(boolean hasFocus) {
             model.hasFocus = hasFocus;
         }
 
-        public void onAmount(String value) {
+        private void onAmount(String value) {
             if (value == null) return;
             if (model.hasFocus) return;
             if (value.isEmpty()) {
-                model.setAmount(null);
+                model.amount.set(null);
                 return;
             }
             if (!validator.validate(value).isValid) {
-                model.setAmount(null);
+                model.amount.set(null);
                 return;
             }
             if (model.code.get() == null) return;
-            model.setAmount(AmountParser.parse(value, model.code.get()));
+            model.amount.set(AmountParser.parse(value, model.code.get()));
 
         }
 
         private void updateModel() {
-            Market market = model.getSelectedMarket();
+            Market market = model.selectedMarket.get();
             if (market == null) {
                 model.code.set("");
                 model.prompt.set("");
@@ -107,7 +130,7 @@ public class AmountInput {
             String code = model.code.get();
             model.prompt.set(Res.offerbook.get("createOffer.amount.prompt", code));
             String dir;
-            Direction direction = model.getDirection();
+            Direction direction = model.direction.get();
             if (model.isBaseCurrency) {
                 dir = direction == Direction.BUY ? Res.offerbook.get("buy") : Res.offerbook.get("sell");
             } else {
@@ -118,33 +141,25 @@ public class AmountInput {
     }
 
     private static class AmountModel implements Model {
-        @Delegate
-        private final OfferPreparationModel offerPreparationModel;
+        private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
+        private final ReadOnlyObjectProperty<Market> selectedMarket;
+        private final ReadOnlyObjectProperty<Direction> direction;
         private final boolean isBaseCurrency;
         private final StringProperty description = new SimpleStringProperty();
         private final StringProperty prompt = new SimpleStringProperty();
         private final StringProperty code = new SimpleStringProperty();
         public boolean hasFocus;
 
-        public AmountModel(OfferPreparationModel offerPreparationModel, boolean isBaseCurrency) {
-            this.offerPreparationModel = offerPreparationModel;
+        private AmountModel(ReadOnlyObjectProperty<Market> selectedMarket,
+                            ReadOnlyObjectProperty<Direction> direction,
+                            boolean isBaseCurrency) {
+            this.selectedMarket = selectedMarket;
+            this.direction = direction;
             this.isBaseCurrency = isBaseCurrency;
-        }
-
-        private ReadOnlyObjectProperty<Monetary> amountProperty() {
-            return isBaseCurrency ? baseSideAmountProperty() : quoteSideAmountProperty();
-        }
-
-        private void setAmount(Monetary amount) {
-            if (isBaseCurrency) {
-                setBaseSideAmount(amount);
-            } else {
-                setQuoteSideAmount(amount);
-            }
         }
     }
 
-    public static class MonetaryView extends View<VBox, AmountModel, AmountController> {
+    public static class AmountView extends View<VBox, AmountModel, AmountController> {
         private final BisqInputTextField textInput;
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
@@ -152,9 +167,9 @@ public class AmountInput {
         private final BisqLabel code;
         private final BisqLabel descriptionLabel;
 
-        public MonetaryView(AmountModel model,
-                            AmountController controller,
-                            MonetaryValidator validator) {
+        private AmountView(AmountModel model,
+                           AmountController controller,
+                           MonetaryValidator validator) {
             super(new VBox(), model, controller);
 
             textInput = new BisqInputTextField(60);
@@ -190,22 +205,24 @@ public class AmountInput {
             amountListener = (o, old, newValue) -> textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue));
         }
 
+        @Override
         public void onViewAttached() {
             descriptionLabel.textProperty().bind(model.description);
             textInput.promptTextProperty().bind(model.prompt);
             textInput.textProperty().addListener(textInputListener);
             textInput.focusedProperty().addListener(focusListener);
             code.textProperty().bind(model.code);
-            model.amountProperty().addListener(amountListener);
+            model.amount.addListener(amountListener);
         }
 
+        @Override
         public void onViewDetached() {
             descriptionLabel.textProperty().unbind();
             textInput.promptTextProperty().unbind();
             textInput.textProperty().removeListener(textInputListener);
             textInput.focusedProperty().removeListener(focusListener);
             code.textProperty().unbind();
-            model.amountProperty().removeListener(amountListener);
+            model.amount.removeListener(amountListener);
         }
     }
 }

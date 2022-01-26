@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.trade.create;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqTextArea;
-import bisq.desktop.primary.main.content.trade.create.components.*;
+import bisq.desktop.primary.main.content.trade.components.*;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
 import javafx.beans.value.ChangeListener;
@@ -36,7 +36,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
     public CreateOfferView(CreateOfferModel model,
                            CreateOfferController controller,
                            MarketSelection.MarketSelectionView marketSelectionView,
-                           DirectionSelection.AmountPriceView directionView,
+                           DirectionSelection.DirectionView directionView,
                            AmountPriceGroup.AmountPriceView amountPriceView,
                            ProtocolSelection.ProtocolView protocolView,
                            AccountSelection.AccountView accountView) {
@@ -78,14 +78,14 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
 
     @Override
     public void onViewAttached() {
-        model.getOffer().addListener(offerListener);
-        createOfferButton.visibleProperty().bind(model.getCreateOfferButtonVisible());
-        createOfferButton.managedProperty().bind(model.getCreateOfferButtonVisible());
+        model.getOfferProperty().addListener(offerListener);
+        createOfferButton.visibleProperty().bind(model.createOfferButtonVisibleProperty());
+        createOfferButton.managedProperty().bind(model.createOfferButtonVisibleProperty());
     }
 
     @Override
     public void onViewDetached() {
-        model.getOffer().removeListener(offerListener);
+        model.getOfferProperty().removeListener(offerListener);
         createOfferButton.visibleProperty().unbind();
         createOfferButton.managedProperty().unbind();
     }

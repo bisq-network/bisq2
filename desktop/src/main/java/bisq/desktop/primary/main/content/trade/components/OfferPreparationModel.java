@@ -15,23 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.create.components;
+package bisq.desktop.primary.main.content.trade.components;
 
-import bisq.account.accounts.Account;
-import bisq.account.protocol.SwapProtocolType;
-import bisq.account.settlement.SettlementMethod;
-import bisq.common.monetary.Market;
-import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
-import bisq.offer.Direction;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableSet;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.HashSet;
 
 /**
  * Shared model for offer preparation
@@ -40,29 +26,18 @@ import java.util.HashSet;
  */
 @Slf4j
 public class OfferPreparationModel {
-    private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
-    private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
-    private final ObjectProperty<Monetary> baseSideAmount = new SimpleObjectProperty<>();
-    private final ObjectProperty<Monetary> quoteSideAmount = new SimpleObjectProperty<>();
-    private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
-    private final ObjectProperty<SwapProtocolType> selectedProtocolType = new SimpleObjectProperty<>();
-
-    private final ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
+  //  private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
+   
+   
 
     public OfferPreparationModel() {
     }
 
-
+/*
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setSelectedMarket(Market value) {
-        selectedMarket.set(value);
-    }
 
     public void setDirection(Direction value) {
         direction.set(value);
@@ -80,22 +55,12 @@ public class OfferPreparationModel {
         quoteSideAmount.set(value);
     }
 
-    public void setSelectedProtocolType(SwapProtocolType value) {
-        selectedProtocolType.set(value);
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Market getSelectedMarket() {
-        return selectedMarket.get();
-    }
-
-    public ReadOnlyObjectProperty<Market> selectedMarketProperty() {
-        return selectedMarket;
-    }
 
     public Direction getDirection() {
         return direction.get();
@@ -129,13 +94,7 @@ public class OfferPreparationModel {
         return fixPrice;
     }
 
-    public SwapProtocolType getSelectedProtocolType() {
-        return selectedProtocolType.get();
-    }
 
-    public ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty() {
-        return selectedProtocolType;
-    }
 
     public ObservableSet<Account<? extends SettlementMethod>> getSelectedBaseSideAccounts() {
         return selectedBaseSideAccounts;
@@ -151,5 +110,5 @@ public class OfferPreparationModel {
 
     public ObservableSet<SettlementMethod> getSelectedQuoteSideSettlementMethods() {
         return selectedQuoteSideSettlementMethods;
-    }
+    }*/
 }
