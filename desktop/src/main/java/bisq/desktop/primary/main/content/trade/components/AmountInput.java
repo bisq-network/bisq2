@@ -86,6 +86,8 @@ public class AmountInput {
         public void onViewAttached() {
             model.selectedMarket.addListener(selectedMarketListener);
             model.direction.addListener(directionListener);
+            model.amount.set(null);
+            updateModel();
         }
 
         @Override

@@ -23,12 +23,10 @@ import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
+import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.security.KeyPairService;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -43,19 +41,29 @@ import java.util.List;
 public class OfferbookModel implements Model {
     private final NetworkService networkService;
     private final KeyPairService keyPairService;
-    private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
-    private final ObservableList<OfferListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<OfferListItem> filteredItems = new FilteredList<>(listItems);
-    private final SortedList<OfferListItem> sortedItems = new SortedList<>(filteredItems);
-    private final StringProperty addDataResultProperty = new SimpleStringProperty("");
-    private final StringProperty removeDataResultProperty = new SimpleStringProperty("");
-    private final StringProperty priceHeaderTitle = new SimpleStringProperty(Res.offerbook.get("offerbook.table.header.price"));
-    private final StringProperty baseAmountHeaderTitle = new SimpleStringProperty(Res.offerbook.get("offerbook.table.header.baseAmount"));
-    private final StringProperty quoteAmountHeaderTitle = new SimpleStringProperty(Res.offerbook.get("offerbook.table.header.quoteAmount"));
 
-    public OfferbookModel(DefaultServiceProvider serviceProvider) {
+    // References to data in component models
+    final ReadOnlyObjectProperty<Market> selectedMarketProperty;
+    final ReadOnlyObjectProperty<Direction> directionProperty;
+
+    final ObservableList<OfferListItem> listItems = FXCollections.observableArrayList();
+    final FilteredList<OfferListItem> filteredItems = new FilteredList<>(listItems);
+    final SortedList<OfferListItem> sortedItems = new SortedList<>(filteredItems);
+    final StringProperty addDataResultProperty = new SimpleStringProperty("");
+    final StringProperty removeDataResultProperty = new SimpleStringProperty("");
+    final StringProperty priceHeaderTitle = new SimpleStringProperty(Res.offerbook.get("offerbook.table.header.price"));
+    final StringProperty baseAmountHeaderTitle = new SimpleStringProperty(Res.offerbook.get("offerbook.table.header.baseAmount"));
+    final StringProperty quoteAmountHeaderTitle = new SimpleStringProperty(Res.offerbook.get("offerbook.table.header.quoteAmount"));
+    final BooleanProperty showAllMarkets = new SimpleBooleanProperty();
+    final BooleanProperty marketSelectionDisabled = new SimpleBooleanProperty();
+
+    public OfferbookModel(DefaultServiceProvider serviceProvider,
+                          ReadOnlyObjectProperty<Market> selectedMarketProperty,
+                          ReadOnlyObjectProperty<Direction> directionProperty) {
         networkService = serviceProvider.getNetworkService();
         keyPairService = serviceProvider.getKeyPairService();
+        this.selectedMarketProperty = selectedMarketProperty;
+        this.directionProperty = directionProperty;
     }
 
     void addOffer(Offer offer) {
@@ -78,7 +86,15 @@ public class OfferbookModel implements Model {
     }
 
     String getActionButtonTitle(OfferListItem item) {
-        return isMyOffer(item) ? Res.common.get("remove") : Res.common.get("contact");
+        if (isMyOffer(item)) {
+            return Res.common.get("remove");
+        } else {
+            String currencyCode = item.getOffer().getMarket().baseCurrencyCode();
+            String dir = item.getOffer().getDirection().isBuy() ?
+                    Res.offerbook.get("direction.label.sell", currencyCode) :
+                    Res.offerbook.get("direction.label.buy", currencyCode);
+            return Res.offerbook.get("offerbook.table.action.takeOffer", dir);
+        }
     }
 
     void setAddOfferError(Offer offer, Throwable throwable) {
@@ -105,11 +121,18 @@ public class OfferbookModel implements Model {
         removeDataResultProperty.set(broadcastResult.toString());
     }
 
-    public void applyMarketChange( Market market ) {
-        if (market != null) {
-            priceHeaderTitle.set(Res.offerbook.get("offerbook.table.header.price", market.quoteCurrencyCode(), market.baseCurrencyCode()));
-            baseAmountHeaderTitle.set(Res.offerbook.get("offerbook.table.header.baseAmount", market.baseCurrencyCode()));
-            quoteAmountHeaderTitle.set(Res.offerbook.get("offerbook.table.header.quoteAmount", market.quoteCurrencyCode()));
-        }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ReadOnlyObjectProperty
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public ReadOnlyObjectProperty<Market> selectedMarketProperty() {
+        return selectedMarketProperty;
     }
+
+
+    public ReadOnlyObjectProperty<Direction> directionProperty() {
+        return directionProperty;
+    }
+
 }

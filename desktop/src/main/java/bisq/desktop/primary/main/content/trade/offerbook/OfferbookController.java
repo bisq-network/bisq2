@@ -23,16 +23,21 @@ import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.controls.BisqButton;
+import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.components.MarketSelection;
+import bisq.desktop.primary.main.content.trade.create.CreateOfferController;
+import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.oracle.marketprice.MarketPriceService;
-import bisq.social.chat.ChatService;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,33 +49,69 @@ import java.util.stream.Collectors;
 public class OfferbookController implements Controller {
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final ChatService chatService;
     private final Optional<DataService> dataService;
     private final OfferbookModel model;
     @Getter
     private final OfferbookView view;
     private final ChangeListener<Market> selectedMarketListener;
+    private final ChangeListener<Direction> directionListener;
     private final MarketSelection marketSelection;
+    private final DirectionSelection directionSelection;
     private Optional<DataService.Listener> dataListener = Optional.empty();
 
     public OfferbookController(DefaultServiceProvider serviceProvider) {
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
-        chatService = serviceProvider.getChatService();
         dataService = networkService.getDataService();
         MarketPriceService marketPriceService = serviceProvider.getMarketPriceService();
 
-        model = new OfferbookModel(serviceProvider);
-
         marketSelection = new MarketSelection(marketPriceService);
-        view = new OfferbookView(model, this, marketSelection.getView());
+        directionSelection = new DirectionSelection(marketSelection.selectedMarketProperty());
 
-        selectedMarketListener = (observable, oldValue, newValue) -> model.applyMarketChange(newValue);
+        model = new OfferbookModel(serviceProvider,
+                marketSelection.selectedMarketProperty(),
+                directionSelection.directionProperty());
+
+        view = new OfferbookView(model, this, marketSelection.getView(), directionSelection.getView());
+
+        selectedMarketListener = (observable, oldValue, newValue) -> applyMarketChange(newValue);
+        directionListener = (observable, oldValue, newValue) -> applyDirectionChange(newValue);
+    }
+
+    private void applyMarketChange(Market market) {
+        if (market != null) {
+            model.priceHeaderTitle.set(Res.offerbook.get("offerbook.table.header.price", market.quoteCurrencyCode(), market.baseCurrencyCode()));
+            model.baseAmountHeaderTitle.set(Res.offerbook.get("offerbook.table.header.baseAmount", market.baseCurrencyCode()));
+            model.quoteAmountHeaderTitle.set(Res.offerbook.get("offerbook.table.header.quoteAmount", market.quoteCurrencyCode()));
+        }
+        updateFilterPredicate();
+    }
+
+    private void applyDirectionChange(Direction takersDirection) {
+        updateFilterPredicate();
+    }
+
+    private void updateFilterPredicate() {
+        model.filteredItems.setPredicate(item -> {
+            if (!model.showAllMarkets.get() && !item.getOffer().getMarket().equals(model.selectedMarketProperty().get())) {
+                return false;
+            }
+            if (item.getOffer().getDirection() == model.directionProperty().get()) {
+                return false;
+            }
+
+            return true;
+        });
     }
 
     @Override
     public void onViewAttached() {
-        model.getSelectedMarket().addListener(selectedMarketListener);
+        model.showAllMarkets.set(false);
+        directionSelection.setDirection(Direction.BUY);
+
+        model.getSelectedMarketProperty().addListener(selectedMarketListener);
+        model.getDirectionProperty().addListener(directionListener);
+
         dataService.ifPresent(dataService -> {
             dataListener = Optional.of(new DataService.Listener() {
                 @Override
@@ -95,11 +136,13 @@ public class OfferbookController implements Controller {
                     .map(OfferListItem::new)
                     .collect(Collectors.toList()));
         });
+
+        updateFilterPredicate();
     }
 
     @Override
     public void onViewDetached() {
-        model.getSelectedMarket().removeListener(selectedMarketListener);
+        model.getSelectedMarketProperty().removeListener(selectedMarketListener);
         dataService.ifPresent(dataService -> dataListener.ifPresent(dataService::removeListener));
     }
 
@@ -107,11 +150,42 @@ public class OfferbookController implements Controller {
     // UI
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onActionButtonClicked(OfferListItem item) {
+    void onShowAllMarketsChanged(boolean selected) {
+        model.showAllMarkets.set(selected);
+        model.marketSelectionDisabled.set(selected);
+        updateFilterPredicate();
+    }
+
+    void onCreateOffer() {
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER,
+                new CreateOfferController.InitData(model.selectedMarketProperty().get(), model.directionProperty().get()));
+    }
+
+    void onActionButtonClicked(OfferListItem item) {
         if (model.isMyOffer(item)) {
             onRemoveOffer(item);
         } else {
             onTakeOffer(item);
+        }
+    }
+
+    void onUpdateItemWithButton(OfferListItem item, BisqButton button) {
+        if (item != null && button instanceof BisqIconButton bisqIconButton) {
+            boolean isMyOffer = model.isMyOffer(item);
+            if (isMyOffer) {
+                bisqIconButton.getIcon().setId("image-remove");
+                bisqIconButton.setId("button-inactive");
+            } else {
+                if (item.getOffer().getDirection().mirror().isBuy()) {
+                    bisqIconButton.getIcon().setId("image-buy-white");
+                    bisqIconButton.setId("buy-button");
+                   // bisqIconButton.setText(Res.offerbook.get("direction.label.buy", item.getOffer().getMarket().baseCurrencyCode()));
+                } else {
+                    bisqIconButton.getIcon().setId("image-sell-white");
+                    bisqIconButton.setId("sell-button");
+                  //  bisqIconButton.setText(Res.offerbook.get("direction.label.sell", item.getOffer().getMarket().baseCurrencyCode()));
+                }
+            }
         }
     }
 
@@ -120,7 +194,7 @@ public class OfferbookController implements Controller {
         Identity identity = identityService.findActiveIdentity(offer.getId()).orElseThrow();
         // We do not retire the identity as it might be still used in the chat. For a mature implementation we would
         // need to check if there is any usage still for that identity and if not retire it.
-        log.error("onRemoveTradeIntent nodeIdAndKeyPair={}", identity.getNodeIdAndKeyPair());
+        log.error("onRemoveOffer nodeIdAndKeyPair={}", identity.getNodeIdAndKeyPair());
         networkService.removeData(offer, identity.getNodeIdAndKeyPair())
                 .whenComplete((broadCastResultFutures, throwable2) -> {
                     if (throwable2 != null) {
@@ -142,5 +216,4 @@ public class OfferbookController implements Controller {
     private void onTakeOffer(OfferListItem item) {
         Navigation.navigateTo(NavigationTarget.TAKE_OFFER, item.getOffer());
     }
-
 }

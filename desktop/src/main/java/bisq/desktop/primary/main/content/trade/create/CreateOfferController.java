@@ -19,7 +19,8 @@ package bisq.desktop.primary.main.content.trade.create;
 
 import bisq.account.protocol.SwapProtocolType;
 import bisq.application.DefaultServiceProvider;
-import bisq.desktop.common.view.Controller;
+import bisq.common.monetary.Market;
+import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.trade.components.*;
 import bisq.offer.Direction;
 import bisq.offer.OfferService;
@@ -31,7 +32,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 
 @Slf4j
-public class CreateOfferController implements Controller {
+public class CreateOfferController implements InitWithDataController<CreateOfferController.InitData> {
+
+    public static record InitData(Market market, Direction direction) {
+    }
+
     private final CreateOfferModel model;
     @Getter
     private final CreateOfferView view;
@@ -84,10 +89,16 @@ public class CreateOfferController implements Controller {
     }
 
     @Override
+    public void initWithData(InitData data) {
+        log.error("initWithData with {}", data);
+        marketSelection.setSelectedMarket(data.market());
+        directionSelection.setDirection(data.direction());
+    }
+
+    @Override
     public void onViewAttached() {
         model.selectedProtocolTypeProperty().addListener(selectedProtocolTypListener);
         model.getCreateOfferButtonVisibleProperty().set(model.getSelectedProtocolType() != null);
-        directionSelection.setDirection(Direction.BUY);
     }
 
     @Override

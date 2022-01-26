@@ -43,10 +43,10 @@ public class CreateOfferModel implements Model {
     private ReadOnlyObjectProperty<Monetary> quoteSideAmountProperty = new SimpleObjectProperty<>();
     private ReadOnlyObjectProperty<Quote> fixPriceProperty = new SimpleObjectProperty<>();
     private ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty = new SimpleObjectProperty<>();
-    private ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts ;
-    private ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts ;
-    private ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods ;
-    private ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods ;
+    private ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts;
+    private ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts;
+    private ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods;
+    private ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods;
 
     private final ObjectProperty<Offer> offerProperty = new SimpleObjectProperty<>();
     private final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
@@ -116,12 +116,12 @@ public class CreateOfferModel implements Model {
         return selectedMarketProperty;
     }
 
-    public ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty() {
-        return selectedProtocolTypeProperty;
-    }
-
     public ReadOnlyObjectProperty<Direction> directionProperty() {
         return directionProperty;
+    }
+
+    public ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty() {
+        return selectedProtocolTypeProperty;
     }
 
     public ReadOnlyObjectProperty<Monetary> baseSideAmountProperty() {

@@ -20,6 +20,7 @@ package bisq.desktop.layout;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 
 public class Layout {
     public static final Insets PADDING = new Insets(20);
@@ -30,5 +31,12 @@ public class Layout {
         AnchorPane.setRightAnchor(node, (double) right);
         AnchorPane.setBottomAnchor(node, (double) bottom);
         AnchorPane.setLeftAnchor(node, (double) left);
+    }
+
+    public static HBox hBoxWith(Node... nodes) {
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        hBox.getChildren().addAll(nodes);
+        return hBox;
     }
 }

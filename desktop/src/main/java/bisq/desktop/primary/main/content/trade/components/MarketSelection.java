@@ -59,6 +59,10 @@ public class MarketSelection {
         return controller.view;
     }
 
+    public void setSelectedMarket(Market market) {
+        controller.model.selectedMarket.set(market);
+    }
+
     private static class MarketSelectionController implements Controller, MarketPriceService.Listener {
         private final MarketSelectionModel model;
         @Getter
@@ -161,6 +165,7 @@ public class MarketSelection {
         public void onViewAttached() {
             comboBox.setOnAction(e -> controller.onSelectMarket(comboBox.getSelectionModel().getSelectedItem()));
             model.selectedMarket.addListener(selectedMarketListener);
+            comboBox.getSelectionModel().select(model.selectedMarket.get());
         }
 
         @Override

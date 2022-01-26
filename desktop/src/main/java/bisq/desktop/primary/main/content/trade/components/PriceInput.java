@@ -71,22 +71,23 @@ public class PriceInput {
             model = new PriceModel(selectedMarket, marketPriceService);
             view = new PriceView(model, this, validator);
 
-            selectedMarketListener = (observable, oldValue, newValue) -> {
-                if (newValue != null) {
-                    model.marketString.set(newValue.toString());
-                    model.description.set(Res.offerbook.get("createOffer.price.fix.description.buy", newValue.baseCurrencyCode()));
-                }
-                model.fixPrice.set(null);
-                setFixPriceFromMarketPrice();
-            };
+            selectedMarketListener = (observable, oldValue, newValue) -> updateFromMarketPrice(newValue);
+        }
+
+        private void updateFromMarketPrice(Market newValue) {
+            if (newValue != null) {
+                model.marketString.set(newValue.toString());
+                model.description.set(Res.offerbook.get("createOffer.price.fix.description.buy", newValue.baseCurrencyCode()));
+            }
+            model.fixPrice.set(null);
+            setFixPriceFromMarketPrice();
         }
 
         @Override
         public void onViewAttached() {
             model.marketPriceService.addListener(this);
             model.selectedMarket.addListener(selectedMarketListener);
-            if (model.fixPrice.get() != null) return;
-            setFixPriceFromMarketPrice();
+            updateFromMarketPrice(model.selectedMarket.get());
         }
 
         @Override

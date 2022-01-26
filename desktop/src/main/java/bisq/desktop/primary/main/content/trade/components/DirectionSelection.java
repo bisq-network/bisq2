@@ -78,6 +78,10 @@ public class DirectionSelection {
             if (model.selectedMarket.get() != null) {
                 model.baseCode.set(model.selectedMarket.get().baseCurrencyCode());
             }
+            if (model.direction.get() == null) {
+                log.error("init with BUY");
+                model.direction.set(Direction.BUY);
+            }
         }
 
         @Override
@@ -132,22 +136,10 @@ public class DirectionSelection {
 
             root.getChildren().addAll(headline, hBox);
 
-            baseCodeListener = (observable, oldValue, newValue) -> {
-                if (newValue == null) return;
-                buy.setText(Res.offerbook.get("direction.label.buy", newValue));
-                sell.setText(Res.offerbook.get("direction.label.sell", newValue));
-            };
-            directionListener = (observable, oldValue, newValue) -> {
-                if (newValue == null) return;
-                if (newValue == Direction.BUY) {
-                    buy.setId("buy-button");
-                    sell.setId("button-inactive");
-                } else {
-                    buy.setId("button-inactive");
-                    sell.setId("sell-button");
-                }
-            };
+            baseCodeListener = (observable, oldValue, newValue) -> applyBaseCodeChange();
+            directionListener = (observable, oldValue, newValue) -> applyDirectionChange();
         }
+
 
         @Override
         public void onViewAttached() {
@@ -155,6 +147,8 @@ public class DirectionSelection {
             sell.setOnAction(e -> controller.onSellSelected());
             model.baseCode.addListener(baseCodeListener);
             model.direction.addListener(directionListener);
+            applyBaseCodeChange();
+            applyDirectionChange();
         }
 
         @Override
@@ -163,6 +157,25 @@ public class DirectionSelection {
             sell.setOnAction(null);
             model.baseCode.removeListener(baseCodeListener);
             model.direction.removeListener(directionListener);
+        }
+
+        private void applyBaseCodeChange() {
+            String baseCode = model.baseCode.get();
+            if (baseCode == null) return;
+            buy.setText(Res.offerbook.get("direction.label.buy", baseCode));
+            sell.setText(Res.offerbook.get("direction.label.sell", baseCode));
+        }
+
+        private void applyDirectionChange() {
+            Direction direction = model.direction.get();
+            if (direction == null) return;
+            if (direction.isBuy()) {
+                buy.setId("buy-button");
+                sell.setId("button-inactive");
+            } else {
+                buy.setId("button-inactive");
+                sell.setId("sell-button");
+            }
         }
     }
 }

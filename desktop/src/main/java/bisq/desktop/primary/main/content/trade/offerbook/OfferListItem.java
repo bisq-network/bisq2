@@ -98,7 +98,6 @@ public class OfferListItem implements TableItem {
         options = ""; //todo
     }
 
-
     @Override
     public void activate() {
     }

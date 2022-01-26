@@ -15,22 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade;
+package bisq.desktop.components.controls;
 
-import bisq.application.DefaultServiceProvider;
-import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.NavigationModel;
+import javafx.scene.image.ImageView;
+import lombok.Getter;
 
-public class TradeModel extends NavigationModel {
+public class BisqIconButton extends BisqButton {
+    @Getter
+    private final ImageView icon;
 
-    private final DefaultServiceProvider serviceProvider;
+    public BisqIconButton() {
+        super();
 
-    public TradeModel(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.OFFERBOOK;
+        icon = new ImageView();
+        setGraphic(icon);
     }
 }

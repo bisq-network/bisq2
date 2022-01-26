@@ -18,9 +18,15 @@
 package bisq.desktop.primary.main.content.trade.offerbook;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.BisqHSpacer;
+import bisq.desktop.components.controls.BisqButton;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqLabel;
+import bisq.desktop.components.controls.BisqToggleButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.layout.Layout;
+import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.components.MarketSelection;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -31,46 +37,59 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OfferbookView extends View<VBox, OfferbookModel, OfferbookController> {
     private final BisqTableView<OfferListItem> tableView;
+    private final BisqToggleButton showAllMarkets;
+    private final VBox marketSelection;
+    private final BisqButton createOfferButton;
 
-    public OfferbookView(OfferbookModel model, OfferbookController controller, MarketSelection.MarketSelectionView marketSelectionView) {
+    public OfferbookView(OfferbookModel model, OfferbookController controller,
+                         MarketSelection.MarketSelectionView marketSelectionView,
+                         DirectionSelection.DirectionView directionView) {
         super(new VBox(), model, controller);
 
         root.setSpacing(30);
         root.setPadding(new Insets(20, 20, 20, 0));
 
+        showAllMarkets = new BisqToggleButton();
+        showAllMarkets.setText(Res.offerbook.get("offerbook.showAllMarkets"));
+        showAllMarkets.setPadding(new Insets(23, 0, -10, 0));
+
+        createOfferButton = new BisqButton(Res.offerbook.get("createOffer.createOffer.button"));
+        createOfferButton.getStyleClass().add("action-button");
+
         Label headline = new BisqLabel(Res.offerbook.get("offerbook.headline"));
         headline.getStyleClass().add("titled-group-bg-label-active");
-
+       
         tableView = new BisqTableView<>(model.getSortedItems());
         tableView.setMinHeight(200);
+        tableView.setPadding(new Insets(-20, 0, 0, 0));
         configDataTableView();
 
-        root.getChildren().addAll(marketSelectionView.getRoot(), headline, tableView);
+        marketSelection = marketSelectionView.getRoot();
+        this.root.getChildren().addAll(Layout.hBoxWith(marketSelection, showAllMarkets, new BisqHSpacer(), createOfferButton),
+                directionView.getRoot(),
+                headline,
+                tableView);
+
     }
 
     @Override
     public void onViewAttached() {
+        showAllMarkets.setOnAction(e -> controller.onShowAllMarketsChanged(showAllMarkets.isSelected()));
+        createOfferButton.setOnAction(e -> controller.onCreateOffer());
+        marketSelection.disableProperty().bind(model.marketSelectionDisabled);
     }
 
     @Override
     protected void onViewDetached() {
+        showAllMarkets.setOnAction(null);
+        createOfferButton.setOnAction(null);
+        marketSelection.disableProperty().unbind();
     }
 
     private void configDataTableView() {
-       /* var dateColumn = new BisqTableColumn.Builder<OfferListItem>()
-                .title(Res.common.get("date"))
-                .minWidth(180)
-                .maxWidth(180)
-                .valueSupplier(OfferListItem::getDateString)
-                .comparator(OfferListItem::compareDate)
-                .build();
-        tableView.getColumns().add(dateColumn);
-        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
-        tableView.getSortOrder().add(dateColumn);*/
-
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
                 .title(Res.offerbook.get("offerbook.table.header.market"))
-                .minWidth(120)
+                .minWidth(80)
                 .valueSupplier(OfferListItem::getMarket)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
@@ -78,41 +97,33 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
                 .minWidth(120)
                 .valueSupplier(OfferListItem::getPrice)
                 .build());
-        
-        /*
-        offerbook.table.header.price=Price in {0} for 1 {1}
-offerbook.table.header.baseAmount={0} (min-max)
-offerbook.table.header.quoteAmount={0} (min-max)
-offerbook.table.header.settlement=Settlement method
-offerbook.table.header.options=Options
-offerbook.table.header.action=Actions
-offerbook.table.header.maker=Maker
-         */
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
                 .titleProperty(model.getBaseAmountHeaderTitle())
-                .minWidth(150)
+                .minWidth(80)
                 .valueSupplier(OfferListItem::getBaseAmount)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
-                .minWidth(150)
+                .minWidth(80)
                 .titleProperty(model.getQuoteAmountHeaderTitle())
                 .valueSupplier(OfferListItem::getQuoteAmount)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
-                .minWidth(150)
+                .minWidth(100)
                 .title(Res.offerbook.get("offerbook.table.header.settlement"))
                 .valueSupplier(OfferListItem::getSettlement)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
+      /*  tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
                 .minWidth(150)
                 .title(Res.offerbook.get("offerbook.table.header.options"))
                 .valueSupplier(OfferListItem::getOptions)
-                .build());
+                .build());*/
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
-                .minWidth(80)
+                .minWidth(180)
                 .title(Res.offerbook.get("offerbook.table.header.action"))
                 .valueSupplier(model::getActionButtonTitle)
                 .cellFactory(BisqTableColumn.CellFactory.BUTTON)
+                .buttonClass(BisqIconButton.class)
+                .updateItemWithButtonHandler(controller::onUpdateItemWithButton)
                 .actionHandler(controller::onActionButtonClicked)
                 .build());
     }
