@@ -4,24 +4,24 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class Executable<T extends ServiceProvider> {
-    protected final T serviceProvider;
+    protected final T applicationService;
 
     public Executable(String[] args) {
         setDefaultUncaughtExceptionHandler();
         ApplicationOptions applicationOptions = ApplicationOptionsParser.parse(args);
-        serviceProvider = createServiceProvider(applicationOptions, args);
-        serviceProvider.readAllPersisted().join();
+        applicationService = createApplicationService(applicationOptions, args);
+        applicationService.readAllPersisted().join();
         launchApplication(args);
     }
 
-    abstract protected T createServiceProvider(ApplicationOptions applicationOptions, String[] args);
+    abstract protected T createApplicationService(ApplicationOptions applicationOptions, String[] args);
 
     protected void launchApplication(String[] args) {
         onApplicationLaunched();
     }
 
     protected void onApplicationLaunched() {
-        serviceProvider.initialize()
+        applicationService.initialize()
                 .whenComplete((success, throwable) -> {
                     if (success) {
                         onDomainInitialized();
@@ -38,7 +38,7 @@ public abstract class Executable<T extends ServiceProvider> {
     abstract protected void onDomainInitialized();
 
     public void shutdown() {
-        serviceProvider.shutdown();
+        applicationService.shutdown();
     }
 
     protected void setDefaultUncaughtExceptionHandler() {

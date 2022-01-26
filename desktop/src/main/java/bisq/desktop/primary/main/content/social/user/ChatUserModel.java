@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.social.user;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -41,10 +41,10 @@ public class ChatUserModel implements Model {
     private final ObjectProperty<ChatPeer> selectedChatUser = new SimpleObjectProperty<>(null);
     private final ChatService chatService;
 
-    public ChatUserModel(DefaultServiceProvider serviceProvider) {
-        networkService = serviceProvider.getNetworkService();
-        identityService = serviceProvider.getIdentityService();
-        chatService = serviceProvider.getChatService();
+    public ChatUserModel(DefaultApplicationService applicationService) {
+        networkService = applicationService.getNetworkService();
+        identityService = applicationService.getIdentityService();
+        chatService = applicationService.getChatService();
     }
 
     void setAllChatUsers(Collection<ChatPeer> chatPeer) {

@@ -1,6 +1,6 @@
 package bisq.web.server;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.web.server.handler.GetOffersHandler;
 import bisq.web.server.handler.GetVersionHandler;
 import io.reactivex.Observable;
@@ -17,10 +17,10 @@ public class WebServer {
 
     private RatpackServer ratpackServer;
 
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
 
-    public WebServer(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    public WebServer(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
     }
 
     public void start() {
@@ -31,7 +31,7 @@ public class WebServer {
                     .port(5050)
                     .findBaseDir()
             );
-            Registry registrySpec = new BisqRegistrySpec(serviceProvider).build();
+            Registry registrySpec = new BisqRegistrySpec(applicationService).build();
             ratpackServer = RatpackServer.start(server -> server
                     .serverConfig(serverConfig)
                     .registry(registrySpec)

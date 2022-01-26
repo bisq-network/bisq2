@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.offerbook;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
@@ -57,11 +57,11 @@ public class OfferbookModel implements Model {
     final BooleanProperty showAllMarkets = new SimpleBooleanProperty();
     final BooleanProperty marketSelectionDisabled = new SimpleBooleanProperty();
 
-    public OfferbookModel(DefaultServiceProvider serviceProvider,
+    public OfferbookModel(DefaultApplicationService applicationService,
                           ReadOnlyObjectProperty<Market> selectedMarketProperty,
                           ReadOnlyObjectProperty<Direction> directionProperty) {
-        networkService = serviceProvider.getNetworkService();
-        keyPairService = serviceProvider.getKeyPairService();
+        networkService = applicationService.getNetworkService();
+        keyPairService = applicationService.getKeyPairService();
         this.selectedMarketProperty = selectedMarketProperty;
         this.directionProperty = directionProperty;
     }

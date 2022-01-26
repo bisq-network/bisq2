@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.offerbook;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
@@ -59,16 +59,16 @@ public class OfferbookController implements Controller {
     private final DirectionSelection directionSelection;
     private Optional<DataService.Listener> dataListener = Optional.empty();
 
-    public OfferbookController(DefaultServiceProvider serviceProvider) {
-        networkService = serviceProvider.getNetworkService();
-        identityService = serviceProvider.getIdentityService();
+    public OfferbookController(DefaultApplicationService applicationService) {
+        networkService = applicationService.getNetworkService();
+        identityService = applicationService.getIdentityService();
         dataService = networkService.getDataService();
-        MarketPriceService marketPriceService = serviceProvider.getMarketPriceService();
+        MarketPriceService marketPriceService = applicationService.getMarketPriceService();
 
         marketSelection = new MarketSelection(marketPriceService);
         directionSelection = new DirectionSelection(marketSelection.selectedMarketProperty());
 
-        model = new OfferbookModel(serviceProvider,
+        model = new OfferbookModel(applicationService,
                 marketSelection.selectedMarketProperty(),
                 directionSelection.directionProperty());
 

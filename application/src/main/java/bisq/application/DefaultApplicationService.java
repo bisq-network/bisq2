@@ -57,7 +57,7 @@ import static java.util.concurrent.CompletableFuture.runAsync;
  */
 @Getter
 @Slf4j
-public class DefaultServiceProvider extends ServiceProvider {
+public class DefaultApplicationService extends ServiceProvider {
     private final KeyPairService keyPairService;
     private final NetworkService networkService;
     private final OfferService offerService;
@@ -72,7 +72,7 @@ public class DefaultServiceProvider extends ServiceProvider {
     private final OfferRepository offerRepository;
     private final AccountService accountService;
 
-    public DefaultServiceProvider(ApplicationOptions applicationOptions, String[] args) {
+    public DefaultApplicationService(ApplicationOptions applicationOptions, String[] args) {
         super("Bisq");
         this.applicationOptions = applicationOptions;
 

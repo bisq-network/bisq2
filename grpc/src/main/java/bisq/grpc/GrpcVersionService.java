@@ -17,7 +17,7 @@
 
 package bisq.grpc;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.application.ApplicationVersion;
 import bisq.grpc.proto.GetVersionGrpc;
 import bisq.grpc.proto.GetVersionReply;
@@ -30,10 +30,10 @@ import org.slf4j.LoggerFactory;
 public class GrpcVersionService extends GetVersionGrpc.GetVersionImplBase {
     private static final Logger log = LoggerFactory.getLogger(GrpcVersionService.class);
 
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
 
-    public GrpcVersionService(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    public GrpcVersionService(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
     }
 
     @Override

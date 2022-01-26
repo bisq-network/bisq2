@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.wallet;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,11 +25,11 @@ public class WalletController implements Controller {
     private final WalletModel model;
     @Getter
     private final WalletView view;
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
 
-    public WalletController(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
-        model = new WalletModel(serviceProvider);
+    public WalletController(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
+        model = new WalletModel(applicationService);
         view = new WalletView(model, this);
     }
 

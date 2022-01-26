@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.social.hangout;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.InitWithDataController;
@@ -46,13 +46,13 @@ public class HangoutController implements InitWithDataController<TradeIntent>, C
     @Getter
     private final HangoutView view;
 
-    public HangoutController(DefaultServiceProvider serviceProvider) {
-        networkService = serviceProvider.getNetworkService();
-        identityService = serviceProvider.getIdentityService();
-        chatService = serviceProvider.getChatService();
+    public HangoutController(DefaultApplicationService applicationService) {
+        networkService = applicationService.getNetworkService();
+        identityService = applicationService.getIdentityService();
+        chatService = applicationService.getChatService();
 
-        ChatUserController chatUserController = new ChatUserController(serviceProvider);
-        model = new HangoutModel(serviceProvider);
+        ChatUserController chatUserController = new ChatUserController(applicationService);
+        model = new HangoutModel(applicationService);
         view = new HangoutView(model, this, chatUserController.getView());
     }
 

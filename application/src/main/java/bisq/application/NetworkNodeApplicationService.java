@@ -42,13 +42,13 @@ import static bisq.common.util.OsUtils.EXIT_SUCCESS;
  */
 @Getter
 @Slf4j
-public class NetworkNodeServiceProvider extends ServiceProvider {
+public class NetworkNodeApplicationService extends ServiceProvider {
     private final KeyPairService keyPairService;
     private final NetworkService networkService;
     private final ApplicationOptions applicationOptions;
     private final PersistenceService persistenceService;
 
-    public NetworkNodeServiceProvider(ApplicationOptions applicationOptions) {
+    public NetworkNodeApplicationService(ApplicationOptions applicationOptions) {
         super("Seed");
         this.applicationOptions = applicationOptions;
 

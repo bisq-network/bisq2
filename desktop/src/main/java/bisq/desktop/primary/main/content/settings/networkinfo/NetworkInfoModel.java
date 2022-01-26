@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.networkinfo;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.i18n.Res;
@@ -51,10 +51,10 @@ public class NetworkInfoModel extends NavigationModel {
     private final KeyPairService keyPairService;
     private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.common.get("na"));
 
-    public NetworkInfoModel(DefaultServiceProvider serviceProvider) {
-        networkService = serviceProvider.getNetworkService();
+    public NetworkInfoModel(DefaultApplicationService applicationService) {
+        networkService = applicationService.getNetworkService();
         NavigationTarget persistedNavigationTarget = NavigationTarget.valueOf(
-                serviceProvider.getUserService().getUserStore().getCookie().get(CookieKey.NAVIGATION_TARGET));
+                applicationService.getUserService().getUserStore().getCookie().get(CookieKey.NAVIGATION_TARGET));
         if (persistedNavigationTarget.getParent().filter(parent -> parent == NavigationTarget.NETWORK_INFO).isPresent()) {
             navigationTarget = persistedNavigationTarget;
         }
@@ -68,7 +68,7 @@ public class NetworkInfoModel extends NavigationModel {
         torDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.TOR));
         i2pDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.I2P));
 
-        keyPairService = serviceProvider.getKeyPairService();
+        keyPairService = applicationService.getKeyPairService();
     }
 
     @Override

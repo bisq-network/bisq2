@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.portfolio;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,11 +25,11 @@ public class PortfolioController implements Controller {
     private final PortfolioModel model;
     @Getter
     private final PortfolioView view;
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
 
-    public PortfolioController(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
-        model = new PortfolioModel(serviceProvider);
+    public PortfolioController(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
+        model = new PortfolioModel(applicationService);
         view = new PortfolioView(model, this);
     }
 

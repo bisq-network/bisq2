@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.create;
 
 import bisq.account.protocol.SwapProtocolType;
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.trade.components.*;
@@ -48,9 +48,9 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
     private final ProtocolSelection protocolSelection;
     private final AccountSelection accountSelection;
 
-    public CreateOfferController(DefaultServiceProvider serviceProvider) {
-        offerService = serviceProvider.getOfferService();
-        MarketPriceService marketPriceService = serviceProvider.getMarketPriceService();
+    public CreateOfferController(DefaultApplicationService applicationService) {
+        offerService = applicationService.getOfferService();
+        MarketPriceService marketPriceService = applicationService.getMarketPriceService();
         model = new CreateOfferModel();
 
         marketSelection = new MarketSelection(marketPriceService);
@@ -72,7 +72,7 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
         accountSelection = new AccountSelection(model.selectedMarketProperty(),
                 model.directionProperty(),
                 model.selectedProtocolTypeProperty(),
-                serviceProvider.getAccountService());
+                applicationService.getAccountService());
         model.setSelectedBaseSideAccounts(accountSelection.getSelectedBaseSideAccounts());
         model.setSelectedQuoteSideAccounts(accountSelection.getSelectedQuoteSideAccounts());
         model.setSelectedBaseSideSettlementMethods(accountSelection.getSelectedBaseSideSettlementMethods());

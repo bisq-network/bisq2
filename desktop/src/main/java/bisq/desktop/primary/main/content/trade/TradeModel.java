@@ -17,16 +17,16 @@
 
 package bisq.desktop.primary.main.content.trade;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
 
 public class TradeModel extends NavigationModel {
 
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
 
-    public TradeModel(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    public TradeModel(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
     }
 
     @Override

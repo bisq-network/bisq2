@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.take;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -25,11 +25,11 @@ public class TakeOfferController implements Controller {
     private final TakeOfferModel model;
     @Getter
     private final TakeOfferView view;
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
 
-    public TakeOfferController(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
-        model = new TakeOfferModel(serviceProvider);
+    public TakeOfferController(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
+        model = new TakeOfferModel(applicationService);
         view = new TakeOfferView(model, this);
     }
 

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
@@ -38,11 +38,11 @@ public class MainController implements Controller, Navigation.Listener {
     private final MainView view;
     private final UserService userService;
 
-    public MainController(DefaultServiceProvider serviceProvider) {
-        userService = serviceProvider.getUserService();
-        ContentController contentController = new ContentController(serviceProvider);
-        LeftNavController leftNavController = new LeftNavController(serviceProvider);
-        TopPanelController topPanelController = new TopPanelController(serviceProvider);
+    public MainController(DefaultApplicationService applicationService) {
+        userService = applicationService.getUserService();
+        ContentController contentController = new ContentController(applicationService);
+        LeftNavController leftNavController = new LeftNavController(applicationService);
+        TopPanelController topPanelController = new TopPanelController(applicationService);
 
         view = new MainView(model,
                 this,

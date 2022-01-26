@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.networkinfo.about;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -27,8 +27,8 @@ public class AboutController implements Controller {
     @Getter
     private final AboutView view;
 
-    public AboutController(DefaultServiceProvider serviceProvider) {
-        model = new AboutModel(serviceProvider);
+    public AboutController(DefaultApplicationService applicationService) {
+        model = new AboutModel(applicationService);
         view = new AboutView(model, this);
     }
 

@@ -1,7 +1,7 @@
 package bisq.web.server.handler;
 
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.web.json.JsonTransform;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
@@ -15,8 +15,8 @@ public class GetOffersHandler extends AbstractHandler implements Handler {
 
     @Override
     public void handle(Context ctx) {
-        DefaultServiceProvider serviceProvider = ctx.get(DefaultServiceProvider.class);
-       // List<OfferPresentation> offers = serviceProvider.getOfferPresentationService().getOfferEntities();
+        DefaultApplicationService applicationService = ctx.get(DefaultApplicationService.class);
+       // List<OfferPresentation> offers = applicationService.getOfferPresentationService().getOfferEntities();
       //  ctx.render(toJson("offers", offers));
     }
 }

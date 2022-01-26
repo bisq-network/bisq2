@@ -1,6 +1,6 @@
 package bisq.web.server;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.web.json.JsonTransform;
 import bisq.web.server.handler.GetOffersHandler;
 import bisq.web.server.handler.GetVersionHandler;
@@ -14,13 +14,13 @@ class BisqRegistrySpec extends DefaultRegistryBuilder implements RegistrySpec {
 
     private final JsonTransform jsonTransform;
 
-    BisqRegistrySpec(DefaultServiceProvider coreApi) {
+    BisqRegistrySpec(DefaultApplicationService coreApi) {
         this.jsonTransform = new JsonTransform();
         init(coreApi);
     }
 
-    void init(DefaultServiceProvider serviceProvider) {
-        add(DefaultServiceProvider.class, serviceProvider);
+    void init(DefaultApplicationService applicationService) {
+        add(DefaultApplicationService.class, applicationService);
         add(GetVersionHandler.class, new GetVersionHandler(jsonTransform));
         add(GetOffersHandler.class, new GetOffersHandler(jsonTransform));
     }

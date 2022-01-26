@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.JavaFXApplication;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PrimaryStageController implements Controller {
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
     private final PrimaryStageModel model;
     @Getter
     private final PrimaryStageView view;
@@ -39,15 +39,15 @@ public class PrimaryStageController implements Controller {
     private final OverlayController overlayController;
     private final UserService userService;
 
-    public PrimaryStageController(DefaultServiceProvider serviceProvider, JavaFXApplication.Data applicationData) {
-        this.serviceProvider = serviceProvider;
-        userService = serviceProvider.getUserService();
+    public PrimaryStageController(DefaultApplicationService applicationService, JavaFXApplication.Data applicationData) {
+        this.applicationService = applicationService;
+        userService = applicationService.getUserService();
         Browser.setHostServices(applicationData.hostServices());
 
-        model = new PrimaryStageModel(serviceProvider);
+        model = new PrimaryStageModel(applicationService);
         view = new PrimaryStageView(model, this, applicationData.stage());
-        overlayController = new OverlayController(view.getScene(), serviceProvider);
-        mainController = new MainController(serviceProvider);
+        overlayController = new OverlayController(view.getScene(), applicationService);
+        mainController = new MainController(applicationService);
         model.setView(mainController.getView());
     }
 
@@ -75,7 +75,7 @@ public class PrimaryStageController implements Controller {
     }
 
     public void shutdown() {
-        serviceProvider.shutdown()
+        applicationService.shutdown()
                 .whenComplete((__, throwable) -> Platform.exit());
     }
 

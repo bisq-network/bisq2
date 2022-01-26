@@ -1,7 +1,7 @@
 package bisq.grpc;
 
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionService;
@@ -42,10 +42,10 @@ public class GrpcServer {
 
     private final Server server;
 
-    public GrpcServer(DefaultServiceProvider serviceProvider) {
+    public GrpcServer(DefaultApplicationService applicationService) {
         this.server = ServerBuilder.forPort(7777)
-                .addService(new GrpcHelpService(serviceProvider))
-                .addService(new GrpcVersionService(serviceProvider))
+                .addService(new GrpcHelpService(applicationService))
+                .addService(new GrpcVersionService(applicationService))
                 // .intercept(new PasswordAuthInterceptor())
                 .addService(ProtoReflectionService.newInstance())
                 .build();

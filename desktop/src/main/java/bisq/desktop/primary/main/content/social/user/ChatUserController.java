@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.social.user;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -39,14 +39,14 @@ public class ChatUserController implements Controller, ChatService.Listener {
     private final ChatUserModel model;
     @Getter
     private final ChatUserView view;
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
 
-    public ChatUserController(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
-        networkService = serviceProvider.getNetworkService();
-        identityService = serviceProvider.getIdentityService();
-        chatService = serviceProvider.getChatService();
-        model = new ChatUserModel(serviceProvider);
+    public ChatUserController(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
+        networkService = applicationService.getNetworkService();
+        identityService = applicationService.getIdentityService();
+        chatService = applicationService.getChatService();
+        model = new ChatUserModel(applicationService);
         view = new ChatUserView(model, this);
     }
 
