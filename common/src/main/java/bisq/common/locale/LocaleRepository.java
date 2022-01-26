@@ -42,7 +42,15 @@ public class LocaleRepository {
     static {
         defaultLocale = Locale.getDefault();
         // On some systems there is no country defined, in that case we use en_US
-        if (defaultLocale.getCountry() == null || defaultLocale.getCountry().isEmpty()) {
+        if (defaultLocale == null ||
+                defaultLocale.getCountry() == null ||
+                defaultLocale.getCountry().isEmpty() ||
+                defaultLocale.getDisplayCountry() == null ||
+                defaultLocale.getDisplayCountry().isEmpty() ||
+                defaultLocale.getLanguage() == null ||
+                defaultLocale.getLanguage().isEmpty() ||
+                defaultLocale.getDisplayCountry() == null ||
+                defaultLocale.getDisplayCountry().isEmpty()) {
             defaultLocale = Locale.US;
         }
     }
