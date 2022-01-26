@@ -18,16 +18,14 @@
 package bisq.desktop.primary.main.content.trade.offerbook;
 
 import bisq.common.currency.TradeCurrency;
-import bisq.common.monetary.Monetary;
-import bisq.common.monetary.Quote;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
-import bisq.offer.FixPrice;
-import bisq.offer.FloatPrice;
 import bisq.offer.Offer;
 import bisq.offer.SettlementSpec;
+import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,39 +33,28 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class OfferListItem implements TableItem {
+    @EqualsAndHashCode.Include
+    private final String id;
+    private final Offer offer;
     private final String market;
+    private final MarketPriceService marketPriceService;
     private final String price;
     private final String baseAmount;
     private final String quoteAmount;
     private final String settlement;
     private final String options;
-    private final Offer offer;
 
-    OfferListItem(Offer offer) {
+    OfferListItem(Offer offer, MarketPriceService marketPriceService) {
         this.offer = offer;
+        this.marketPriceService = marketPriceService;
 
+        id = offer.getId();
         market = offer.getMarket().toString();
-        String baseCurrencyCode = offer.getMarket().baseCurrencyCode();
-        String quoteCurrencyCode = offer.getMarket().quoteCurrencyCode();
-
-        long baseAmountValue = offer.getBaseAmount();
-        baseAmount = AmountFormatter.formatAmount(Monetary.from(baseAmountValue, baseCurrencyCode));
-
-        if (offer.getPriceSpec() instanceof FixPrice fixPriceSpec) {
-            Monetary base = Monetary.from(baseAmountValue, baseCurrencyCode);
-            Quote quote = Quote.fromPrice(fixPriceSpec.value(), offer.getMarket());
-            price = QuoteFormatter.format(quote);
-            long quoteAmountValue = Quote.toQuoteMonetary(base, quote).getValue();
-            quoteAmount = AmountFormatter.formatAmount(Monetary.from(quoteAmountValue, quoteCurrencyCode));
-        } else if (offer.getPriceSpec() instanceof FloatPrice floatPrice) {
-            quoteAmount = "TODO";
-            price = "TODO";
-        } else {
-            log.warn("PriceSpec not supported");
-            quoteAmount = Res.common.get("na");
-            price = Res.common.get("na");
-        }
+        baseAmount = AmountFormatter.formatAmount(offer.getBaseAmountAsMonetary());
+        quoteAmount = AmountFormatter.formatAmount(offer.getQuoteAmountAsMonetary(marketPriceService));
+        price = QuoteFormatter.format(offer.getQuote(marketPriceService));
 
         String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
                 .map(SettlementSpec::settlementMethodName)
@@ -77,6 +64,10 @@ public class OfferListItem implements TableItem {
                 .map(SettlementSpec::settlementMethodName)
                 .map(settlementMethodName -> Res.offerbook.get(settlementMethodName))
                 .collect(Collectors.joining("\n"));
+       
+        String baseCurrencyCode = offer.getMarket().baseCurrencyCode();
+        String quoteCurrencyCode = offer.getMarket().quoteCurrencyCode();
+       
         boolean isBaseCurrencyFiat = TradeCurrency.isFiat(baseCurrencyCode);
         boolean isQuoteCurrencyFiat = TradeCurrency.isFiat(quoteCurrencyCode);
 

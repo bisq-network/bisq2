@@ -27,7 +27,6 @@ import bisq.i18n.Res;
 import bisq.offer.Direction;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
-import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -52,6 +51,10 @@ public class DirectionSelection {
 
     public void setDirection(Direction direction) {
         controller.model.direction.set(direction);
+    }
+
+    public void setIsTakeOffer() {
+        controller.model.isCreateOffer = false;
     }
 
     private static class DirectionController implements Controller {
@@ -79,7 +82,6 @@ public class DirectionSelection {
                 model.baseCode.set(model.selectedMarket.get().baseCurrencyCode());
             }
             if (model.direction.get() == null) {
-                log.error("init with BUY");
                 model.direction.set(Direction.BUY);
             }
         }
@@ -101,9 +103,10 @@ public class DirectionSelection {
     private static class DirectionModel implements Model {
         private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
         private final ReadOnlyObjectProperty<Market> selectedMarket;
-        public final StringProperty baseCode = new SimpleStringProperty();
+        private final StringProperty baseCode = new SimpleStringProperty();
+        private boolean isCreateOffer = true;
 
-        public DirectionModel(ReadOnlyObjectProperty<Market> selectedMarket) {
+        private DirectionModel(ReadOnlyObjectProperty<Market> selectedMarket) {
             this.selectedMarket = selectedMarket;
         }
     }
@@ -113,12 +116,13 @@ public class DirectionSelection {
         private final BisqButton buy, sell;
         private final ChangeListener<String> baseCodeListener;
         private final ChangeListener<Direction> directionListener;
+        private final BisqLabel headline;
 
         private DirectionView(DirectionModel model, DirectionController controller) {
             super(new VBox(), model, controller);
 
             root.setSpacing(10);
-            Label headline = new BisqLabel(Res.offerbook.get("createOffer.selectOfferType"));
+            headline = new BisqLabel(Res.offerbook.get("createOffer.selectOfferType"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
             buy = new BisqButton();
@@ -143,20 +147,32 @@ public class DirectionSelection {
 
         @Override
         public void onViewAttached() {
-            buy.setOnAction(e -> controller.onBuySelected());
-            sell.setOnAction(e -> controller.onSellSelected());
+            if (model.isCreateOffer) {
+                buy.setOnAction(e -> controller.onBuySelected());
+                sell.setOnAction(e -> controller.onSellSelected());
+            } else {
+                // disable changes style
+                // will be used anyway diff design later. current solution is just for prototype dev
+                buy.setMouseTransparent(true);
+                sell.setMouseTransparent(true);
+                headline.setText(Res.offerbook.get("takeOffer.offerType"));
+            }
             model.baseCode.addListener(baseCodeListener);
             model.direction.addListener(directionListener);
             applyBaseCodeChange();
             applyDirectionChange();
+
         }
 
         @Override
         public void onViewDetached() {
-            buy.setOnAction(null);
-            sell.setOnAction(null);
+            if (model.isCreateOffer) {
+                buy.setOnAction(null);
+                sell.setOnAction(null);
+            }
             model.baseCode.removeListener(baseCodeListener);
             model.direction.removeListener(directionListener);
+
         }
 
         private void applyBaseCodeChange() {

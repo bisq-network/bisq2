@@ -124,6 +124,11 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             this.minWidth = Optional.of(minWidth);
             return this;
         }
+        public Builder<S> fixWidth(int fixWidth) {
+            this.minWidth = Optional.of(fixWidth);
+            this.maxWidth = Optional.of(fixWidth);
+            return this;
+        }
 
         public Builder<S> maxWidth(int maxWidth) {
             this.maxWidth = Optional.of(maxWidth);

@@ -22,12 +22,13 @@ import bisq.common.monetary.Market;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.components.MarketSelection;
 import bisq.desktop.primary.main.content.trade.create.CreateOfferController;
+import bisq.desktop.primary.main.content.trade.take.TakeOfferController;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
@@ -38,6 +39,7 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.oracle.marketprice.MarketPriceService;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +48,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class OfferbookController implements Controller {
+public class OfferbookController implements InitWithDataController<OfferbookController.InitData> {
+    public static record InitData(Optional<BooleanProperty> showCreateOfferTab,
+                                  Optional<BooleanProperty> showTakeOfferTab) {
+    }
+
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final Optional<DataService> dataService;
@@ -76,6 +82,20 @@ public class OfferbookController implements Controller {
 
         selectedMarketListener = (observable, oldValue, newValue) -> applyMarketChange(newValue);
         directionListener = (observable, oldValue, newValue) -> applyDirectionChange(newValue);
+    }
+
+    @Override
+    public void initWithData(OfferbookController.InitData data) {
+        data.showCreateOfferTab.ifPresent(e -> model.showCreateOfferTab = e);
+        data.showTakeOfferTab.ifPresent(e -> model.showTakeOfferTab = e);
+    }
+
+    public boolean showCreateOfferTab() {
+        return model.showCreateOfferTab.get();
+    }
+
+    public boolean showTakeOfferTab() {
+        return model.showTakeOfferTab.get();
     }
 
     private void applyMarketChange(Market market) {
@@ -132,8 +152,8 @@ public class OfferbookController implements Controller {
             dataService.addListener(dataListener.get());
             model.fillOfferListItems(dataService.getAuthenticatedPayloadByStoreName("Offer")
                     .filter(payload -> payload.getData() instanceof Offer)
-                    .map(e -> (Offer) e.getData())
-                    .map(OfferListItem::new)
+                    .map(payload -> (Offer) payload.getData())
+                    .map(offer -> new OfferListItem(offer, model.marketPriceService))
                     .collect(Collectors.toList()));
         });
 
@@ -157,8 +177,11 @@ public class OfferbookController implements Controller {
     }
 
     void onCreateOffer() {
+        model.showCreateOfferTab.set(true);
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER,
-                new CreateOfferController.InitData(model.selectedMarketProperty().get(), model.directionProperty().get()));
+                new CreateOfferController.InitData(model.selectedMarketProperty().get(),
+                        model.directionProperty().get(),
+                        model.showCreateOfferTab));
     }
 
     void onActionButtonClicked(OfferListItem item) {
@@ -172,6 +195,7 @@ public class OfferbookController implements Controller {
     void onUpdateItemWithButton(OfferListItem item, BisqButton button) {
         if (item != null && button instanceof BisqIconButton bisqIconButton) {
             boolean isMyOffer = model.isMyOffer(item);
+            bisqIconButton.setFixWidth(200);
             if (isMyOffer) {
                 bisqIconButton.getIcon().setId("image-remove");
                 bisqIconButton.setId("button-inactive");
@@ -179,11 +203,11 @@ public class OfferbookController implements Controller {
                 if (item.getOffer().getDirection().mirror().isBuy()) {
                     bisqIconButton.getIcon().setId("image-buy-white");
                     bisqIconButton.setId("buy-button");
-                   // bisqIconButton.setText(Res.offerbook.get("direction.label.buy", item.getOffer().getMarket().baseCurrencyCode()));
+                    // bisqIconButton.setText(Res.offerbook.get("direction.label.buy", item.getOffer().getMarket().baseCurrencyCode()));
                 } else {
                     bisqIconButton.getIcon().setId("image-sell-white");
                     bisqIconButton.setId("sell-button");
-                  //  bisqIconButton.setText(Res.offerbook.get("direction.label.sell", item.getOffer().getMarket().baseCurrencyCode()));
+                    //  bisqIconButton.setText(Res.offerbook.get("direction.label.sell", item.getOffer().getMarket().baseCurrencyCode()));
                 }
             }
         }
@@ -214,6 +238,8 @@ public class OfferbookController implements Controller {
     }
 
     private void onTakeOffer(OfferListItem item) {
-        Navigation.navigateTo(NavigationTarget.TAKE_OFFER, item.getOffer());
+        model.showTakeOfferTab.set(true);
+        Navigation.navigateTo(NavigationTarget.TAKE_OFFER,
+                new TakeOfferController.InitData(item.getOffer(), model.showTakeOfferTab));
     }
 }

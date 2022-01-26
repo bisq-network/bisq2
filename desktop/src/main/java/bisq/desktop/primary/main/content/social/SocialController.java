@@ -45,7 +45,7 @@ public class SocialController extends TabController {
     }
 
     @Override
-    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case TRADE_INTENT -> {
                 return Optional.of(new TradeIntentController(applicationService));

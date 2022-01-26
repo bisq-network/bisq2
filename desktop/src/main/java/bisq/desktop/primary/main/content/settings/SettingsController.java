@@ -45,7 +45,7 @@ public class SettingsController extends TabController {
         view = new SettingsView(model, this);
     }
 
-    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case PREFERENCES -> {
                 return Optional.of(new PreferencesController(applicationService));

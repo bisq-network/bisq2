@@ -50,7 +50,7 @@ public class OverlayController extends NavigationController {
 
     // Not sure if we want to do that here as domains should stay more contained
     @Override
-    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case POPUP_WINDOW -> {
                 return Optional.of(new PopupWindowController(applicationService));

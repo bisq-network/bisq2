@@ -18,26 +18,79 @@
 package bisq.desktop.primary.main.content.trade.take;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqButton;
+import bisq.desktop.components.controls.BisqLabel;
+import bisq.desktop.components.controls.BisqTextArea;
+import bisq.desktop.layout.Layout;
+import bisq.desktop.primary.main.content.trade.components.AccountSelection;
+import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
+import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
+import bisq.i18n.Res;
+import bisq.offer.Offer;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
-import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferController> {
+    private final ChangeListener<Offer> offerListener;
+    private final BisqButton takeOfferButton;
+    private final BisqLabel protocolLabel;
 
-    public TakeOfferView(TakeOfferModel model, TakeOfferController controller) {
+    public TakeOfferView(TakeOfferModel model,
+                         TakeOfferController controller,
+                         DirectionSelection.DirectionView directionView,
+                         AmountPriceGroup.AmountPriceView amountPriceView,
+                         AccountSelection.AccountView accountView) {
         super(new VBox(), model, controller);
-        root.setPadding(new Insets(20,20,20,0));
-        root.getChildren().add(new Label(getClass().getSimpleName()));
+        root.setSpacing(30);
+        root.setPadding(new Insets(20, 20, 20, 0));
+
+        protocolLabel = new BisqLabel();
+        protocolLabel.getStyleClass().add("titled-group-bg-label-active");
+
+        amountPriceView.getRoot().setPadding(new Insets(0, 0, -5, 0));
+
+        takeOfferButton = new BisqButton(Res.offerbook.get("takeOffer.button"));
+        takeOfferButton.setOnAction(e -> controller.onTakeOffer());
+
+        BisqButton cancelButton = new BisqButton(Res.common.get("cancel"));
+        cancelButton.setOnAction(e -> controller.onCancel());
+
+        //todo temp
+        BisqTextArea offerSummary = new BisqTextArea();
+        offerSummary.setVisible(false);
+
+        BisqButton publishButton = new BisqButton(Res.offerbook.get("publishOffer.button"));
+        publishButton.setOnAction(e -> controller.onReview());
+        publishButton.setVisible(false);
+
+        root.getChildren().addAll(
+                directionView.getRoot(),
+                protocolLabel,
+                amountPriceView.getRoot(),
+                accountView.getRoot(),
+                Layout.hBoxWith(takeOfferButton, cancelButton),
+                offerSummary,
+                publishButton);
+
+        offerListener = (observable, oldValue, newValue) -> {
+            //todo show summary
+            offerSummary.setVisible(true);
+            offerSummary.setText(newValue.toString());
+
+            publishButton.setVisible(true);
+        };
     }
 
     @Override
     public void onViewAttached() {
+        protocolLabel.setText(Res.offerbook.get("takeOffer.protocol", Res.offerbook.get(model.selectedProtocol.name())));
     }
 
     @Override
-    protected void onViewDetached() {
+    public void onViewDetached() {
     }
 
 }

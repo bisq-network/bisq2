@@ -48,7 +48,7 @@ public class NetworkInfoController extends TabController {
     }
 
     @Override
-    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case CLEAR_NET -> {
                 return Optional.of(new TransportTypeController(applicationService, Transport.Type.CLEAR));

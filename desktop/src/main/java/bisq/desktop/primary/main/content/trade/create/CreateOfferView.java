@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.trade.create;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqTextArea;
+import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.content.trade.components.*;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
@@ -48,6 +49,8 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
 
         createOfferButton = new BisqButton(Res.offerbook.get("createOffer.button"));
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
+        BisqButton cancelButton = new BisqButton(Res.common.get("cancel"));
+        cancelButton.setOnAction(e -> controller.onCancel());
 
         //todo temp
         BisqTextArea offerSummary = new BisqTextArea();
@@ -63,7 +66,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
                 amountPriceView.getRoot(),
                 protocolView.getRoot(),
                 accountView.getRoot(),
-                createOfferButton,
+                Layout.hBoxWith(createOfferButton, cancelButton),
                 offerSummary,
                 publishButton);
 

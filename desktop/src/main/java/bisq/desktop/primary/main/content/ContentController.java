@@ -49,7 +49,7 @@ public class ContentController extends NavigationController {
     }
 
     @Override
-    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case SOCIAL -> {
                 return Optional.of(new SocialController(applicationService));
@@ -63,7 +63,7 @@ public class ContentController extends NavigationController {
             case WALLET -> {
                 return Optional.of(new WalletController(applicationService));
             }
-            case SWAP -> {
+            case TRADE -> {
                 return Optional.of(new TradeController(applicationService));
             }
             case MARKETS -> {

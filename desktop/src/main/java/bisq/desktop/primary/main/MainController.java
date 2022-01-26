@@ -71,7 +71,9 @@ public class MainController implements Controller, Navigation.Listener {
 
     @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        userService.getUserStore().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
-        userService.persist();
+        if (navigationTarget.isAllowPersistence()) {
+            userService.getUserStore().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
+            userService.persist();
+        }
     }
 }

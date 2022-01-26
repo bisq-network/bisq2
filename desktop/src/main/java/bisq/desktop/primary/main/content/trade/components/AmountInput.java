@@ -57,6 +57,10 @@ public class AmountInput {
         controller.model.amount.set(value);
     }
 
+    public void setIsTakeOffer() {
+        controller.model.isCreateOffer = false;
+    }
+
     public AmountView getView() {
         return controller.view;
     }
@@ -86,7 +90,9 @@ public class AmountInput {
         public void onViewAttached() {
             model.selectedMarket.addListener(selectedMarketListener);
             model.direction.addListener(directionListener);
-            model.amount.set(null);
+            if (model.isCreateOffer) {
+                model.amount.set(null);
+            }
             updateModel();
         }
 
@@ -141,7 +147,7 @@ public class AmountInput {
     }
 
     private static class AmountModel implements Model {
-        private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
+        private ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final ReadOnlyObjectProperty<Direction> direction;
         private final boolean isBaseCurrency;
@@ -149,6 +155,7 @@ public class AmountInput {
         private final StringProperty prompt = new SimpleStringProperty();
         private final StringProperty code = new SimpleStringProperty();
         public boolean hasFocus;
+        private boolean isCreateOffer = true;
 
         private AmountModel(ReadOnlyObjectProperty<Market> selectedMarket,
                             ReadOnlyObjectProperty<Direction> direction,
@@ -202,25 +209,37 @@ public class AmountInput {
             textInputListener = (o, old, newValue) -> controller.onAmount(textInput.getText());
 
             // Listeners on model change
-            amountListener = (o, old, newValue) -> textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue));
+            amountListener = (o, old, newValue) -> applyAmount(newValue);
+        }
+
+        private void applyAmount(Monetary newValue) {
+            textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue));
         }
 
         @Override
         public void onViewAttached() {
-            descriptionLabel.textProperty().bind(model.description);
+            if (model.isCreateOffer) {
+                textInput.textProperty().addListener(textInputListener);
+                textInput.focusedProperty().addListener(focusListener);
+            } else {
+                // editable/disable changes style. setMouseTransparent is just for prototyping now
+                textInput.setMouseTransparent(true);
+            }
             textInput.promptTextProperty().bind(model.prompt);
-            textInput.textProperty().addListener(textInputListener);
-            textInput.focusedProperty().addListener(focusListener);
+            descriptionLabel.textProperty().bind(model.description);
             code.textProperty().bind(model.code);
             model.amount.addListener(amountListener);
+            applyAmount(model.amount.get());
         }
 
         @Override
         public void onViewDetached() {
-            descriptionLabel.textProperty().unbind();
+            if (model.isCreateOffer) {
+                textInput.textProperty().removeListener(textInputListener);
+                textInput.focusedProperty().removeListener(focusListener);
+            }
             textInput.promptTextProperty().unbind();
-            textInput.textProperty().removeListener(textInputListener);
-            textInput.focusedProperty().removeListener(focusListener);
+            descriptionLabel.textProperty().unbind();
             code.textProperty().unbind();
             model.amount.removeListener(amountListener);
         }

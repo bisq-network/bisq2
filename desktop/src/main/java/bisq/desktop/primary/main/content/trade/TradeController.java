@@ -31,25 +31,39 @@ import java.util.Optional;
 
 @Slf4j
 public class TradeController extends TabController {
+
     private final DefaultApplicationService applicationService;
     @Getter
     private final TradeModel model;
     @Getter
     private final TradeView view;
+    private Optional<OfferbookController> offerbookController = Optional.empty();
 
     public TradeController(DefaultApplicationService applicationService) {
-        super(NavigationTarget.SWAP);
+        super(NavigationTarget.TRADE);
 
         this.applicationService = applicationService;
         model = new TradeModel(applicationService);
         view = new TradeView(model, this);
     }
 
+
     @Override
-    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+        model.createOfferTabVisible.set(navigationTarget == NavigationTarget.CREATE_OFFER ||
+                offerbookController.map(OfferbookController::showCreateOfferTab).orElse(false));
+        model.takeOfferTabVisible.set(navigationTarget == NavigationTarget.TAKE_OFFER ||
+                offerbookController.map(OfferbookController::showTakeOfferTab).orElse(false));
+
+        super.onNavigate(navigationTarget, data);
+    }
+
+    @Override
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case OFFERBOOK -> {
-                return Optional.of(new OfferbookController(applicationService));
+                offerbookController = Optional.of(new OfferbookController(applicationService));
+                return offerbookController;
             }
             case CREATE_OFFER -> {
                 return Optional.of(new CreateOfferController(applicationService));
