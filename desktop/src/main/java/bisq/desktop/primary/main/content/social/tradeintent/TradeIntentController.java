@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.social.tradeintent;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.common.util.StringUtils;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
@@ -51,14 +51,14 @@ public class TradeIntentController implements Controller/*, ChatService.Listener
     private final TradeIntentView view;
     private Optional<DataService.Listener> dataListener = Optional.empty();
 
-    public TradeIntentController(DefaultServiceProvider serviceProvider) {
-        networkService = serviceProvider.getNetworkService();
-        identityService = serviceProvider.getIdentityService();
-        chatService = serviceProvider.getChatService();
+    public TradeIntentController(DefaultApplicationService applicationService) {
+        networkService = applicationService.getNetworkService();
+        identityService = applicationService.getIdentityService();
+        chatService = applicationService.getChatService();
         dataService = networkService.getDataService();
 
-        ChatUserController chatUserController = new ChatUserController(serviceProvider);
-        model = new TradeIntentModel(serviceProvider);
+        ChatUserController chatUserController = new ChatUserController(applicationService);
+        model = new TradeIntentModel(applicationService);
         view = new TradeIntentView(model, this, chatUserController.getView());
     }
 

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.top;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.top.components.MarketPriceBox;
 import lombok.Getter;
@@ -26,10 +26,10 @@ public class TopPanelController implements Controller {
     @Getter
     private final TopPanelView view;
 
-    public TopPanelController(DefaultServiceProvider serviceProvider) {
+    public TopPanelController(DefaultApplicationService applicationService) {
         TopPanelModel model = new TopPanelModel();
 
-        var marketPriceComponent = new MarketPriceBox.MarketPriceController(serviceProvider.getMarketPriceService());
+        var marketPriceComponent = new MarketPriceBox.MarketPriceController(applicationService.getMarketPriceService());
         view = new TopPanelView(model, this, marketPriceComponent.getView());
     }
 }

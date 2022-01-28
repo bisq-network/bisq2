@@ -17,7 +17,7 @@
 
 package bisq.grpc;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.grpc.proto.GetMethodHelpReply;
 import bisq.grpc.proto.GetMethodHelpRequest;
 import bisq.grpc.proto.HelpGrpc;
@@ -29,10 +29,10 @@ import org.slf4j.LoggerFactory;
 public class GrpcHelpService extends HelpGrpc.HelpImplBase {
     private static final Logger log = LoggerFactory.getLogger(GrpcHelpService.class);
 
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
 
-    public GrpcHelpService(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    public GrpcHelpService(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
     }
 
     @Override

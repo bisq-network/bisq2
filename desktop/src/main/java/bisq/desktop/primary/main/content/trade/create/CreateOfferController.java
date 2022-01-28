@@ -18,13 +18,16 @@
 package bisq.desktop.primary.main.content.trade.create;
 
 import bisq.account.protocol.SwapProtocolType;
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
+import bisq.desktop.Navigation;
+import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.trade.components.*;
 import bisq.offer.Direction;
 import bisq.offer.OfferService;
 import bisq.oracle.marketprice.MarketPriceService;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,8 +36,7 @@ import java.util.ArrayList;
 
 @Slf4j
 public class CreateOfferController implements InitWithDataController<CreateOfferController.InitData> {
-
-    public static record InitData(Market market, Direction direction) {
+    public static record InitData(Market market, Direction direction, BooleanProperty showCreateOfferTab) {
     }
 
     private final CreateOfferModel model;
@@ -46,11 +48,11 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
     private final DirectionSelection directionSelection;
     private final AmountPriceGroup amountPriceGroup;
     private final ProtocolSelection protocolSelection;
-    private final AccountSelection accountSelection;
+    private final SettlementSelection settlementSelection;
 
-    public CreateOfferController(DefaultServiceProvider serviceProvider) {
-        offerService = serviceProvider.getOfferService();
-        MarketPriceService marketPriceService = serviceProvider.getMarketPriceService();
+    public CreateOfferController(DefaultApplicationService applicationService) {
+        offerService = applicationService.getOfferService();
+        MarketPriceService marketPriceService = applicationService.getMarketPriceService();
         model = new CreateOfferModel();
 
         marketSelection = new MarketSelection(marketPriceService);
@@ -63,36 +65,36 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
                 model.directionProperty(),
                 marketPriceService);
         model.setBaseSideAmountProperty(amountPriceGroup.baseSideAmountProperty());
-        model.setQuoteSideAmountProperty(amountPriceGroup.quoteSideAmountAmountProperty());
+        model.setQuoteSideAmountProperty(amountPriceGroup.quoteSideAmountProperty());
         model.setFixPriceProperty(amountPriceGroup.fixPriceProperty());
 
         protocolSelection = new ProtocolSelection(model.selectedMarketProperty());
         model.setSelectedProtocolTypeProperty(protocolSelection.selectedProtocolType());
 
-        accountSelection = new AccountSelection(model.selectedMarketProperty(),
+        settlementSelection = new SettlementSelection(model.selectedMarketProperty(),
                 model.directionProperty(),
                 model.selectedProtocolTypeProperty(),
-                serviceProvider.getAccountService());
-        model.setSelectedBaseSideAccounts(accountSelection.getSelectedBaseSideAccounts());
-        model.setSelectedQuoteSideAccounts(accountSelection.getSelectedQuoteSideAccounts());
-        model.setSelectedBaseSideSettlementMethods(accountSelection.getSelectedBaseSideSettlementMethods());
-        model.setSelectedQuoteSideSettlementMethods(accountSelection.getSelectedQuoteSideSettlementMethods());
+                applicationService.getAccountService());
+        model.setSelectedBaseSideAccounts(settlementSelection.getSelectedBaseSideAccounts());
+        model.setSelectedQuoteSideAccounts(settlementSelection.getSelectedQuoteSideAccounts());
+        model.setSelectedBaseSideSettlementMethods(settlementSelection.getSelectedBaseSideSettlementMethods());
+        model.setSelectedQuoteSideSettlementMethods(settlementSelection.getSelectedQuoteSideSettlementMethods());
 
         view = new CreateOfferView(model, this,
                 marketSelection.getView(),
                 directionSelection.getView(),
                 amountPriceGroup.getView(),
                 protocolSelection.getView(),
-                accountSelection.getView());
+                settlementSelection.getView());
 
         selectedProtocolTypListener = (observable, oldValue, newValue) -> model.getCreateOfferButtonVisibleProperty().set(newValue != null);
     }
 
     @Override
     public void initWithData(InitData data) {
-        log.error("initWithData with {}", data);
         marketSelection.setSelectedMarket(data.market());
         directionSelection.setDirection(data.direction());
+        model.showCreateOfferTab = data.showCreateOfferTab();
     }
 
     @Override
@@ -127,5 +129,12 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
 
     public void onPublishOffer() {
         offerService.publishOffer(model.getOffer());
+        model.showCreateOfferTab.set(false);
+        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
+    }
+
+    public void onCancel() {
+        model.showCreateOfferTab.set(false);
+        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
     }
 }

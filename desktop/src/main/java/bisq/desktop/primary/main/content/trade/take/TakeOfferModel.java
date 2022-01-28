@@ -17,21 +17,44 @@
 
 package bisq.desktop.primary.main.content.trade.take;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.account.accounts.Account;
+import bisq.account.protocol.SwapProtocolType;
+import bisq.account.settlement.SettlementMethod;
+import bisq.common.monetary.Market;
+import bisq.common.monetary.Monetary;
+import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Model;
+import bisq.offer.Direction;
+import bisq.offer.Offer;
+import javafx.beans.property.*;
+import javafx.collections.ObservableSet;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
+@Setter
 public class TakeOfferModel implements Model {
+    public ObjectProperty<SwapProtocolType> selectedProtocolTypeProperty = new SimpleObjectProperty<>(); //todo
 
-    public TakeOfferModel(DefaultServiceProvider serviceProvider) {
-    }
+    ObjectProperty<Market> selectedMarketProperty = new SimpleObjectProperty<>();
+    ReadOnlyObjectProperty<Direction> directionProperty;
+   // SwapProtocolType selectedProtocol;
 
-    public void onViewAttached() {
-    }
+    Offer offer;
+    Monetary baseSideAmount;
+    Monetary quoteSideAmount;
+    Quote fixPrice;
 
-    public void onViewDetached() {
+    private ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts;
+    private ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts;
+    private ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods;
+    private ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods;
+    
+    final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
+    BooleanProperty showTakeOfferTab;
+
+    public TakeOfferModel() {
     }
 }

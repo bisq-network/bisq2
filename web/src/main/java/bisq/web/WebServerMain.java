@@ -2,20 +2,20 @@ package bisq.web;
 
 
 import bisq.application.ApplicationOptions;
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.application.Executable;
 import bisq.web.server.WebServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WebServerMain extends Executable<DefaultServiceProvider> {
+public class WebServerMain extends Executable<DefaultApplicationService> {
     private static final Logger log = LoggerFactory.getLogger(WebServerMain.class);
 
     public static void main(String[] args) {
         new WebServerMain(args);
     }
 
-    protected DefaultServiceProvider serviceProvider;
+    protected DefaultApplicationService applicationService;
     private WebServer webServer;
 
     public WebServerMain(String[] args) {
@@ -23,13 +23,13 @@ public class WebServerMain extends Executable<DefaultServiceProvider> {
     }
 
     @Override
-    protected DefaultServiceProvider createServiceProvider(ApplicationOptions applicationOptions, String[] args) {
-        return new DefaultServiceProvider(applicationOptions, args);
+    protected DefaultApplicationService createApplicationService(ApplicationOptions applicationOptions, String[] args) {
+        return new DefaultApplicationService(applicationOptions, args);
     }
 
     @Override
     protected void onDomainInitialized() {
-        webServer = new WebServer(serviceProvider);
+        webServer = new WebServer(applicationService);
         webServer.start();
     }
 

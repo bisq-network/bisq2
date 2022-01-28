@@ -18,7 +18,7 @@
 package bisq.desktop;
 
 import bisq.application.ApplicationOptions;
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.application.Executable;
 import bisq.common.annotations.LateInit;
 import bisq.desktop.common.threading.UIThread;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
-public class JavaFxExecutable extends Executable<DefaultServiceProvider> {
+public class JavaFxExecutable extends Executable<DefaultApplicationService> {
     @LateInit
     private PrimaryStageController primaryStageController;
 
@@ -39,8 +39,8 @@ public class JavaFxExecutable extends Executable<DefaultServiceProvider> {
     }
 
     @Override
-    protected DefaultServiceProvider createServiceProvider(ApplicationOptions applicationOptions, String[] args) {
-        return new DefaultServiceProvider(applicationOptions, args);
+    protected DefaultApplicationService createApplicationService(ApplicationOptions applicationOptions, String[] args) {
+        return new DefaultApplicationService(applicationOptions, args);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class JavaFxExecutable extends Executable<DefaultServiceProvider> {
                 .whenComplete((applicationData, throwable) -> {
                     if (throwable == null) {
                         try {
-                            primaryStageController = new PrimaryStageController(serviceProvider, applicationData);
+                            primaryStageController = new PrimaryStageController(applicationService, applicationData);
                             log.info("Java FX Application launched");
                             onApplicationLaunched();
                         } catch (Throwable t) {

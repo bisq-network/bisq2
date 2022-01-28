@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.markets;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -26,7 +26,7 @@ public class MarketsController implements Controller {
     @Getter
     private final MarketsView view;
 
-    public MarketsController(DefaultServiceProvider serviceProvider) {
+    public MarketsController(DefaultApplicationService applicationService) {
         model = new MarketsModel();
         view = new MarketsView(model, this);
     }

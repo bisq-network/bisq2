@@ -36,13 +36,14 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Setter
 public class CreateOfferModel implements Model {
+
     // References to data in component models
-    private ReadOnlyObjectProperty<Market> selectedMarketProperty = new SimpleObjectProperty<>();
-    private ReadOnlyObjectProperty<Direction> directionProperty = new SimpleObjectProperty<>();
-    private ReadOnlyObjectProperty<Monetary> baseSideAmountProperty = new SimpleObjectProperty<>();
-    private ReadOnlyObjectProperty<Monetary> quoteSideAmountProperty = new SimpleObjectProperty<>();
-    private ReadOnlyObjectProperty<Quote> fixPriceProperty = new SimpleObjectProperty<>();
-    private ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty = new SimpleObjectProperty<>();
+    private ReadOnlyObjectProperty<Market> selectedMarketProperty;
+    private ReadOnlyObjectProperty<Direction> directionProperty;
+    private ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty;
+    private ReadOnlyObjectProperty<Monetary> baseSideAmountProperty;
+    private ReadOnlyObjectProperty<Monetary> quoteSideAmountProperty;
+    private ReadOnlyObjectProperty<Quote> fixPriceProperty;
     private ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts;
     private ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts;
     private ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods;
@@ -50,6 +51,7 @@ public class CreateOfferModel implements Model {
 
     private final ObjectProperty<Offer> offerProperty = new SimpleObjectProperty<>();
     private final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
+    BooleanProperty showCreateOfferTab;
 
     public CreateOfferModel() {
     }

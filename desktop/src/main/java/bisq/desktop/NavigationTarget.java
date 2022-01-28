@@ -37,14 +37,14 @@ public enum NavigationTarget {
     MAIN(PRIMARY_STAGE),
     CONTENT(MAIN),
 
-    SWAP(CONTENT),
-    OFFERBOOK(SWAP),
-    CREATE_OFFER(SWAP),
-    TAKE_OFFER(SWAP),
+    TRADE(CONTENT),
+    OFFERBOOK(TRADE),
+    CREATE_OFFER(TRADE),
+    TAKE_OFFER(TRADE, false),
 
     SETTINGS(CONTENT),
     PREFERENCES(SETTINGS),
-    
+
     NETWORK_INFO(SETTINGS),
     CLEAR_NET(NETWORK_INFO),
     TOR(NETWORK_INFO),
@@ -66,13 +66,20 @@ public enum NavigationTarget {
     private final Optional<NavigationTarget> parent;
     @Getter
     private final List<NavigationTarget> path;
+    @Getter
+    private final boolean allowPersistence;
 
     NavigationTarget() {
         parent = Optional.empty();
         path = new ArrayList<>();
+        this.allowPersistence = false;
     }
 
     NavigationTarget(NavigationTarget parent) {
+        this(parent, true);
+    }
+
+    NavigationTarget(NavigationTarget parent, boolean allowPersistence) {
         this.parent = Optional.of(parent);
         List<NavigationTarget> temp = new ArrayList<>();
         Optional<NavigationTarget> candidate = Optional.of(parent);
@@ -81,5 +88,6 @@ public enum NavigationTarget {
             candidate = candidate.get().getParent();
         }
         this.path = temp;
+        this.allowPersistence = allowPersistence;
     }
 }

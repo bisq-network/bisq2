@@ -17,16 +17,20 @@
 
 package bisq.desktop.primary.main.content.trade;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 
 public class TradeModel extends NavigationModel {
 
-    private final DefaultServiceProvider serviceProvider;
-
-    public TradeModel(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    private final DefaultApplicationService applicationService;
+    public BooleanProperty createOfferTabVisible= new SimpleBooleanProperty();
+    public BooleanProperty takeOfferTabVisible = new SimpleBooleanProperty();
+    
+    public TradeModel(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
     }
 
     @Override

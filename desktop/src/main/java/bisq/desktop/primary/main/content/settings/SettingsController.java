@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
@@ -31,30 +31,30 @@ import java.util.Optional;
 
 @Slf4j
 public class SettingsController extends TabController {
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
     @Getter
     private final SettingsModel model;
     @Getter
     private final SettingsView view;
 
-    public SettingsController(DefaultServiceProvider serviceProvider) {
+    public SettingsController(DefaultApplicationService applicationService) {
         super(NavigationTarget.SETTINGS);
 
-        this.serviceProvider = serviceProvider;
-        model = new SettingsModel(serviceProvider);
+        this.applicationService = applicationService;
+        model = new SettingsModel(applicationService);
         view = new SettingsView(model, this);
     }
 
-    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case PREFERENCES -> {
-                return Optional.of(new PreferencesController(serviceProvider));
+                return Optional.of(new PreferencesController(applicationService));
             }
             case NETWORK_INFO -> {
-                return Optional.of(new NetworkInfoController(serviceProvider));
+                return Optional.of(new NetworkInfoController(applicationService));
             }
             case ABOUT -> {
-                return Optional.of(new AboutController(serviceProvider));
+                return Optional.of(new AboutController(applicationService));
             }
             default -> {
                 return Optional.empty();

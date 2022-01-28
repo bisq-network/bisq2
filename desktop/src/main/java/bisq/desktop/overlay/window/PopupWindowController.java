@@ -17,7 +17,7 @@
 
 package bisq.desktop.overlay.window;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.InitWithDataController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -27,11 +27,11 @@ public class PopupWindowController implements InitWithDataController<Object> {
     private final PopupWindowModel model;
     @Getter
     private final PopupWindowView view;
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
 
-    public PopupWindowController(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
-        model = new PopupWindowModel(serviceProvider);
+    public PopupWindowController(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
+        model = new PopupWindowModel(applicationService);
         view = new PopupWindowView(model, this);
     }
 

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.networkinfo.preferences;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
@@ -27,8 +27,8 @@ public class PreferencesController implements Controller {
     @Getter
     private final PreferencesView view;
 
-    public PreferencesController(DefaultServiceProvider serviceProvider) {
-        model = new PreferencesModel(serviceProvider);
+    public PreferencesController(DefaultApplicationService applicationService) {
+        model = new PreferencesModel(applicationService);
         view = new PreferencesView(model, this);
     }
 }

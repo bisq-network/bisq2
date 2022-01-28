@@ -53,12 +53,32 @@ public class AmountPriceGroup {
         return controller.model.baseSideAmount;
     }
 
-    public ReadOnlyObjectProperty<Monetary> quoteSideAmountAmountProperty() {
+    public ReadOnlyObjectProperty<Monetary> quoteSideAmountProperty() {
         return controller.model.quoteSideAmount;
     }
 
     public ReadOnlyObjectProperty<Quote> fixPriceProperty() {
         return controller.model.fixPrice;
+    }
+
+
+    public void setIsTakeOffer() {
+        controller.baseAmount.setIsTakeOffer();
+        controller.quoteAmount.setIsTakeOffer();
+        controller.price.setIsTakeOffer();
+        controller.model.isCreateOffer = false;
+    }
+
+    public void setBaseSideAmount(Monetary amount) {
+        controller.baseAmount.setAmount(amount);
+    }
+
+    public void setQuoteSideAmount(Monetary amount) {
+        controller.quoteAmount.setAmount(amount);
+    }
+
+    public void setFixPrice(Quote price) {
+        controller.price.setPrice(price);
     }
 
     public AmountPriceView getView() {
@@ -107,16 +127,20 @@ public class AmountPriceGroup {
 
         @Override
         public void onViewAttached() {
-            model.baseSideAmount.addListener(baseCurrencyAmountListener);
-            model.quoteSideAmount.addListener(quoteCurrencyAmountListener);
-            model.fixPrice.addListener(fixPriceQuoteListener);
+            if (model.isCreateOffer) {
+                model.baseSideAmount.addListener(baseCurrencyAmountListener);
+                model.quoteSideAmount.addListener(quoteCurrencyAmountListener);
+                model.fixPrice.addListener(fixPriceQuoteListener);
+            }
         }
 
         @Override
         public void onViewDetached() {
-            model.baseSideAmount.removeListener(baseCurrencyAmountListener);
-            model.quoteSideAmount.removeListener(quoteCurrencyAmountListener);
-            model.fixPrice.removeListener(fixPriceQuoteListener);
+            if (model.isCreateOffer) {
+                model.baseSideAmount.removeListener(baseCurrencyAmountListener);
+                model.quoteSideAmount.removeListener(quoteCurrencyAmountListener);
+                model.fixPrice.removeListener(fixPriceQuoteListener);
+            }
         }
 
         private void setQuoteFromBase() {
@@ -150,6 +174,7 @@ public class AmountPriceGroup {
         private final ReadOnlyObjectProperty<Monetary> baseSideAmount;
         private final ReadOnlyObjectProperty<Monetary> quoteSideAmount;
         private final ReadOnlyObjectProperty<Quote> fixPrice;
+        public boolean isCreateOffer = true;
 
         public AmountPriceModel(ReadOnlyObjectProperty<Monetary> baseSideAmount,
                                 ReadOnlyObjectProperty<Monetary> quoteSideAmount,
@@ -162,6 +187,8 @@ public class AmountPriceGroup {
 
     @Slf4j
     public static class AmountPriceView extends View<VBox, AmountPriceModel, AmountPriceGroup.AmountPriceController> {
+        private final BisqLabel headline;
+
         public AmountPriceView(AmountPriceModel model,
                                AmountPriceController controller,
                                AmountInput.AmountView baseView,
@@ -171,7 +198,7 @@ public class AmountPriceGroup {
 
             root.setSpacing(0);
 
-            Label headline = new BisqLabel(Res.offerbook.get("createOffer.setAmountAndPrice"));
+            headline = new BisqLabel(Res.offerbook.get("createOffer.setAmountAndPrice"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
             Label xLabel = new Label();
@@ -189,6 +216,9 @@ public class AmountPriceGroup {
         }
 
         public void onViewAttached() {
+            if (!model.isCreateOffer) {
+                headline.setText(Res.offerbook.get("takeOffer.amountAndPrice"));
+            }
         }
 
         public void onViewDetached() {

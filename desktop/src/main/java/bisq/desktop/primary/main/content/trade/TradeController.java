@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
@@ -31,31 +31,46 @@ import java.util.Optional;
 
 @Slf4j
 public class TradeController extends TabController {
-    private final DefaultServiceProvider serviceProvider;
+
+    private final DefaultApplicationService applicationService;
     @Getter
     private final TradeModel model;
     @Getter
     private final TradeView view;
+    private final OfferbookController offerbookController;
 
-    public TradeController(DefaultServiceProvider serviceProvider) {
-        super(NavigationTarget.SWAP);
+    public TradeController(DefaultApplicationService applicationService) {
+        super(NavigationTarget.TRADE);
 
-        this.serviceProvider = serviceProvider;
-        model = new TradeModel(serviceProvider);
+        this.applicationService = applicationService;
+        model = new TradeModel(applicationService);
         view = new TradeView(model, this);
+
+        offerbookController = new OfferbookController(applicationService);
+    }
+
+
+    @Override
+    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+        model.createOfferTabVisible.set(navigationTarget == NavigationTarget.CREATE_OFFER ||
+                offerbookController.showCreateOfferTab().get());
+        model.takeOfferTabVisible.set(navigationTarget == NavigationTarget.TAKE_OFFER ||
+                offerbookController.getShowTakeOfferTab().get());
+
+        super.onNavigate(navigationTarget, data);
     }
 
     @Override
-    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case OFFERBOOK -> {
-                return Optional.of(new OfferbookController(serviceProvider));
+                return Optional.of(offerbookController);
             }
             case CREATE_OFFER -> {
-                return Optional.of(new CreateOfferController(serviceProvider));
+                return Optional.of(new CreateOfferController(applicationService));
             }
             case TAKE_OFFER -> {
-                return Optional.of(new TakeOfferController(serviceProvider));
+                return Optional.of(new TakeOfferController(applicationService));
             }
             default -> {
                 return Optional.empty();

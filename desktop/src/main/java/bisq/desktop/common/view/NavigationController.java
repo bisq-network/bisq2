@@ -80,7 +80,7 @@ public abstract class NavigationController implements Controller, Navigation.Lis
         Navigation.removeListener(host, this);
     }
 
-    protected abstract Optional<Controller> createController(NavigationTarget navigationTarget);
+    protected abstract Optional<? extends Controller> createController(NavigationTarget navigationTarget);
 
     protected abstract NavigationModel getModel();
 }

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
@@ -34,40 +34,40 @@ import java.util.Optional;
 
 @Slf4j
 public class ContentController extends NavigationController {
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
     @Getter
     private final ContentModel model;
     @Getter
     private final ContentView view;
 
-    public ContentController(DefaultServiceProvider serviceProvider) {
+    public ContentController(DefaultApplicationService applicationService) {
         super(NavigationTarget.CONTENT);
         
-        this.serviceProvider = serviceProvider;
+        this.applicationService = applicationService;
         model = new ContentModel();
         view = new ContentView(model, this);
     }
 
     @Override
-    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case SOCIAL -> {
-                return Optional.of(new SocialController(serviceProvider));
+                return Optional.of(new SocialController(applicationService));
             }
             case SETTINGS -> {
-                return Optional.of(new SettingsController(serviceProvider));
+                return Optional.of(new SettingsController(applicationService));
             }
             case PORTFOLIO -> {
-                return Optional.of(new PortfolioController(serviceProvider));
+                return Optional.of(new PortfolioController(applicationService));
             }
             case WALLET -> {
-                return Optional.of(new WalletController(serviceProvider));
+                return Optional.of(new WalletController(applicationService));
             }
-            case SWAP -> {
-                return Optional.of(new TradeController(serviceProvider));
+            case TRADE -> {
+                return Optional.of(new TradeController(applicationService));
             }
             case MARKETS -> {
-                return Optional.of(new MarketsController(serviceProvider));
+                return Optional.of(new MarketsController(applicationService));
             }
             default -> {
                 return Optional.empty();

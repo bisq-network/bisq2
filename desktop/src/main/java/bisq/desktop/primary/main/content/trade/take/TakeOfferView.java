@@ -18,26 +18,58 @@
 package bisq.desktop.primary.main.content.trade.take;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqButton;
+import bisq.desktop.components.controls.BisqLabel;
+import bisq.desktop.layout.Layout;
+import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
+import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
+import bisq.desktop.primary.main.content.trade.take.components.TakersSettlementSelection;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferController> {
+    private final BisqButton takeOfferButton;
+    private final BisqLabel protocolLabel;
 
-    public TakeOfferView(TakeOfferModel model, TakeOfferController controller) {
+    public TakeOfferView(TakeOfferModel model,
+                         TakeOfferController controller,
+                         DirectionSelection.DirectionView directionView,
+                         AmountPriceGroup.AmountPriceView amountPriceView,
+                         TakersSettlementSelection.SettlementView settlementView) {
         super(new VBox(), model, controller);
-        root.setPadding(new Insets(20,20,20,0));
-        root.getChildren().add(new Label(getClass().getSimpleName()));
+        root.setSpacing(30);
+        root.setPadding(new Insets(20, 20, 20, 0));
+
+        protocolLabel = new BisqLabel();
+        protocolLabel.getStyleClass().add("titled-group-bg-label-active");
+
+        amountPriceView.getRoot().setPadding(new Insets(0, 0, -5, 0));
+
+        takeOfferButton = new BisqButton(Res.offerbook.get("takeOffer.button"));
+        takeOfferButton.getStyleClass().add("action-button");
+
+        BisqButton cancelButton = new BisqButton(Res.common.get("cancel"));
+        cancelButton.setOnAction(e -> controller.onCancel());
+
+        root.getChildren().addAll(
+                directionView.getRoot(),
+                protocolLabel,
+                amountPriceView.getRoot(),
+                settlementView.getRoot(),
+                Layout.hBoxWith(takeOfferButton, cancelButton));
     }
 
     @Override
     public void onViewAttached() {
+        protocolLabel.setText(Res.offerbook.get("takeOffer.protocol", Res.offerbook.get(model.selectedProtocolTypeProperty.get().name())));
+        takeOfferButton.setOnAction(e -> controller.onTakeOffer());
     }
 
     @Override
-    protected void onViewDetached() {
+    public void onViewDetached() {
+        takeOfferButton.setOnAction(null);
     }
-
 }

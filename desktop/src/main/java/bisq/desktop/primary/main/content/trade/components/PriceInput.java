@@ -55,9 +55,18 @@ public class PriceInput {
         return controller.model.fixPrice;
     }
 
+    public void setPrice(Quote price) {
+        controller.model.fixPrice.set(price);
+    }
+
+    public void setIsTakeOffer() {
+        controller.model.isCreateOffer = false;
+    }
+
     public PriceView getView() {
         return controller.view;
     }
+
 
     private static class PriceController implements Controller, MarketPriceService.Listener {
         private final PriceModel model;
@@ -85,14 +94,18 @@ public class PriceInput {
 
         @Override
         public void onViewAttached() {
-            model.marketPriceService.addListener(this);
+            if (model.isCreateOffer) {
+                model.marketPriceService.addListener(this);
+            }
             model.selectedMarket.addListener(selectedMarketListener);
             updateFromMarketPrice(model.selectedMarket.get());
         }
 
         @Override
         public void onViewDetached() {
-            model.marketPriceService.removeListener(this);
+            if (model.isCreateOffer) {
+                model.marketPriceService.removeListener(this);
+            }
             model.selectedMarket.removeListener(selectedMarketListener);
         }
 
@@ -138,15 +151,16 @@ public class PriceInput {
     }
 
     private static class PriceModel implements Model {
-        private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
+        private ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
         private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final MarketPriceService marketPriceService;
         private boolean hasFocus;
         private final StringProperty marketString = new SimpleStringProperty();
         private final StringProperty description = new SimpleStringProperty();
+        private boolean isCreateOffer = true;
 
         private PriceModel(ReadOnlyObjectProperty<Market> selectedMarket,
-                          MarketPriceService marketPriceService) {
+                           MarketPriceService marketPriceService) {
             this.selectedMarket = selectedMarket;
             this.marketPriceService = marketPriceService;
         }
@@ -161,8 +175,8 @@ public class PriceInput {
         private final BisqLabel descriptionLabel;
 
         private PriceView(PriceModel model,
-                         PriceController controller,
-                         PriceValidator validator) {
+                          PriceController controller,
+                          PriceValidator validator) {
             super(new VBox(), model, controller);
 
             textInput = new BisqInputTextField(60);
@@ -201,19 +215,26 @@ public class PriceInput {
 
         @Override
         public void onViewAttached() {
+            if (model.isCreateOffer) {
+                textInput.textProperty().addListener(textInputListener);
+                textInput.focusedProperty().addListener(focusListener);
+            } else {
+                // editable/disable changes style. setMouseTransparent is just for prototyping now
+                textInput.setMouseTransparent(true);
+            }
             marketLabel.textProperty().bind(model.marketString);
             descriptionLabel.textProperty().bind(model.description);
-            textInput.textProperty().addListener(textInputListener);
-            textInput.focusedProperty().addListener(focusListener);
             model.fixPrice.addListener(fixPriceListener);
         }
 
         @Override
         public void onViewDetached() {
+            if (model.isCreateOffer) {
+                textInput.textProperty().removeListener(textInputListener);
+                textInput.focusedProperty().removeListener(focusListener);
+            }
             marketLabel.textProperty().unbind();
             descriptionLabel.textProperty().unbind();
-            textInput.textProperty().removeListener(textInputListener);
-            textInput.focusedProperty().removeListener(focusListener);
             model.fixPrice.removeListener(fixPriceListener);
         }
     }

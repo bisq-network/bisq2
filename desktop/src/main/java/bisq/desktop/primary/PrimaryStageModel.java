@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
@@ -44,10 +44,10 @@ public class PrimaryStageModel implements Model {
     @Getter
     private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
-    public PrimaryStageModel(DefaultServiceProvider serviceProvider) {
-        title = serviceProvider.getApplicationOptions().appName();
+    public PrimaryStageModel(DefaultApplicationService applicationService) {
+        title = applicationService.getApplicationOptions().appName();
 
-        Cookie cookie = serviceProvider.getUserService().getUserStore().getCookie();
+        Cookie cookie = applicationService.getUserService().getUserStore().getCookie();
         stageX = cookie.getAsOptionalDouble(CookieKey.STAGE_X);
         stageY = cookie.getAsOptionalDouble(CookieKey.STAGE_Y);
         stageWidth = cookie.getAsOptionalDouble(CookieKey.STAGE_W);

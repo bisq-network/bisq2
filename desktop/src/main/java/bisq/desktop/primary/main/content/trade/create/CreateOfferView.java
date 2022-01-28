@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.trade.create;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqTextArea;
+import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.content.trade.components.*;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
@@ -39,7 +40,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
                            DirectionSelection.DirectionView directionView,
                            AmountPriceGroup.AmountPriceView amountPriceView,
                            ProtocolSelection.ProtocolView protocolView,
-                           AccountSelection.AccountView accountView) {
+                           SettlementSelection.SettlementView settlementView) {
         super(new VBox(), model, controller);
         root.setSpacing(30);
         root.setPadding(new Insets(20, 20, 20, 0));
@@ -47,7 +48,9 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         amountPriceView.getRoot().setPadding(new Insets(0, 0, -5, 0));
 
         createOfferButton = new BisqButton(Res.offerbook.get("createOffer.button"));
-        createOfferButton.setOnAction(e -> controller.onCreateOffer());
+        createOfferButton.getStyleClass().add("action-button");
+        BisqButton cancelButton = new BisqButton(Res.common.get("cancel"));
+        cancelButton.setOnAction(e -> controller.onCancel());
 
         //todo temp
         BisqTextArea offerSummary = new BisqTextArea();
@@ -62,8 +65,8 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
                 directionView.getRoot(),
                 amountPriceView.getRoot(),
                 protocolView.getRoot(),
-                accountView.getRoot(),
-                createOfferButton,
+                settlementView.getRoot(),
+                Layout.hBoxWith(createOfferButton, cancelButton),
                 offerSummary,
                 publishButton);
 
@@ -79,6 +82,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
     @Override
     public void onViewAttached() {
         model.getOfferProperty().addListener(offerListener);
+        createOfferButton.setOnAction(e -> controller.onCreateOffer());
         createOfferButton.visibleProperty().bind(model.createOfferButtonVisibleProperty());
         createOfferButton.managedProperty().bind(model.createOfferButtonVisibleProperty());
     }
@@ -86,6 +90,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
     @Override
     public void onViewDetached() {
         model.getOfferProperty().removeListener(offerListener);
+        createOfferButton.setOnAction(null);
         createOfferButton.visibleProperty().unbind();
         createOfferButton.managedProperty().unbind();
     }

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.nav;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
@@ -32,8 +32,8 @@ public class LeftNavController implements Controller, Navigation.Listener {
     @Getter
     private final LeftNavView view;
 
-    public LeftNavController(DefaultServiceProvider serviceProvider) {
-        model = new LeftNavModel(serviceProvider);
+    public LeftNavController(DefaultApplicationService applicationService) {
+        model = new LeftNavModel(applicationService);
         view = new LeftNavView(model, this);
 
         // By using ROOT we listen to all NavigationTargets

@@ -17,17 +17,17 @@
 
 package bisq.desktop.primary.main.content.social;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
 
 
 public class SocialModel extends NavigationModel {
 
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
 
-    public SocialModel(DefaultServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    public SocialModel(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
     }
 
     @Override

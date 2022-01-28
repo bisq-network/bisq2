@@ -2,20 +2,20 @@ package bisq.grpc;
 
 
 import bisq.application.ApplicationOptions;
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.application.Executable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class GrpcServerMain extends Executable<DefaultServiceProvider> {
+public class GrpcServerMain extends Executable<DefaultApplicationService> {
     private static final Logger log = LoggerFactory.getLogger(GrpcServerMain.class);
 
     public static void main(String[] args) {
         new GrpcServerMain(args);
     }
 
-    protected DefaultServiceProvider serviceProvider;
+    protected DefaultApplicationService applicationService;
     private GrpcServer grpcServer;
 
     public GrpcServerMain(String[] args) {
@@ -23,13 +23,13 @@ public class GrpcServerMain extends Executable<DefaultServiceProvider> {
     }
 
     @Override
-    protected DefaultServiceProvider createServiceProvider(ApplicationOptions applicationOptions, String[] args) {
-        return new DefaultServiceProvider(applicationOptions, args);
+    protected DefaultApplicationService createApplicationService(ApplicationOptions applicationOptions, String[] args) {
+        return new DefaultApplicationService(applicationOptions, args);
     }
 
     @Override
     protected void onDomainInitialized() {
-        grpcServer = new GrpcServer(serviceProvider);
+        grpcServer = new GrpcServer(applicationService);
         grpcServer.start();
     }
 

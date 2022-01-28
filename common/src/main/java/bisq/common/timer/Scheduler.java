@@ -94,7 +94,7 @@ public class Scheduler implements TaskScheduler {
                 try {
                     task.run();
                 } finally {
-                    stopped = true;
+                    stop();
                 }
             }, delay, timeUnit);
         } else {

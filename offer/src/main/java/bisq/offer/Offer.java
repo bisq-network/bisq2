@@ -19,16 +19,21 @@ package bisq.offer;
 
 import bisq.account.protocol.SwapProtocolType;
 import bisq.common.monetary.Market;
+import bisq.common.monetary.Monetary;
+import bisq.common.monetary.Quote;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.offer.options.ListingOption;
+import bisq.oracle.marketprice.MarketPrice;
+import bisq.oracle.marketprice.MarketPriceService;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -49,7 +54,7 @@ public class Offer implements NetworkPayload {
     private final MetaData metaData;
     private final long baseAmount;
 
-    
+
     public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
     public static final String REFERRAL_ID = "referralId";
     // Only used in payment method F2F
@@ -104,5 +109,46 @@ public class Offer implements NetworkPayload {
     @Override
     public boolean isDataInvalid() {
         return false;
+    }
+
+    public Optional<SwapProtocolType> findProtocolType() {
+        if (protocolTypes.isEmpty()) {
+            return Optional.empty();
+        } else if (protocolTypes.size() == 1) {
+            return Optional.of(protocolTypes.get(0));
+        } else {
+            throw new IllegalStateException("Multiple protocolTypes are not supported yet. protocolTypes=" + protocolTypes);
+        }
+    }
+
+    public Monetary getBaseAmountAsMonetary() {
+        return Monetary.from(baseAmount, market.baseCurrencyCode());
+    }
+
+    public Monetary getQuoteAmountAsMonetary(MarketPriceService marketPriceService) {
+        if (priceSpec instanceof FixPrice fixPriceSpec) {
+            Monetary base = getBaseAmountAsMonetary();
+            Quote quote = Quote.fromPrice(fixPriceSpec.value(), market);
+            long quoteAmountValue = Quote.toQuoteMonetary(base, quote).getValue();
+            return Monetary.from(quoteAmountValue, market.quoteCurrencyCode());
+        } else if (priceSpec instanceof FloatPrice floatPrice) {
+            Optional<MarketPrice> marketPrice = marketPriceService.getMarketPrice(market);
+            //todo
+            throw new RuntimeException("floatPrice not impl yet");
+        } else {
+            throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
+        }
+    }
+
+    public Quote getQuote(MarketPriceService marketPriceService) {
+        if (priceSpec instanceof FixPrice fixPriceSpec) {
+            return Quote.fromPrice(fixPriceSpec.value(), market);
+        } else if (priceSpec instanceof FloatPrice floatPrice) {
+            Optional<MarketPrice> marketPrice = marketPriceService.getMarketPrice(market);
+            //todo
+            throw new RuntimeException("floatPrice not impl yet");
+        } else {
+            throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
+        }
     }
 }

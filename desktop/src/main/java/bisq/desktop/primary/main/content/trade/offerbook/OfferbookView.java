@@ -31,6 +31,7 @@ import bisq.desktop.primary.main.content.trade.components.MarketSelection;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,21 +56,23 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
 
         createOfferButton = new BisqButton(Res.offerbook.get("createOffer.createOffer.button"));
         createOfferButton.getStyleClass().add("action-button");
+        createOfferButton.setFixWidth(200);
+        HBox.setMargin(createOfferButton, new Insets(30, 19, 0, 0));
 
         Label headline = new BisqLabel(Res.offerbook.get("offerbook.headline"));
         headline.getStyleClass().add("titled-group-bg-label-active");
-       
+
         tableView = new BisqTableView<>(model.getSortedItems());
         tableView.setMinHeight(200);
         tableView.setPadding(new Insets(-20, 0, 0, 0));
         configDataTableView();
 
+
         marketSelection = marketSelectionView.getRoot();
-        this.root.getChildren().addAll(Layout.hBoxWith(marketSelection, showAllMarkets, new BisqHSpacer(), createOfferButton),
-                directionView.getRoot(),
+        this.root.getChildren().addAll(Layout.hBoxWith(marketSelection, showAllMarkets),
+                Layout.hBoxWith(directionView.getRoot(), new BisqHSpacer(), createOfferButton),
                 headline,
                 tableView);
-
     }
 
     @Override
@@ -118,7 +121,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
                 .valueSupplier(OfferListItem::getOptions)
                 .build());*/
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
-                .minWidth(180)
+                .fixWidth(220)
                 .title(Res.offerbook.get("offerbook.table.header.action"))
                 .valueSupplier(model::getActionButtonTitle)
                 .cellFactory(BisqTableColumn.CellFactory.BUTTON)

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.networkinfo;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
@@ -28,17 +28,17 @@ import lombok.Getter;
 import java.util.Optional;
 
 public class NetworkInfoController extends TabController {
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
     @Getter
     private final NetworkInfoModel model;
     @Getter
     private final NetworkInfoView view;
 
-    public NetworkInfoController(DefaultServiceProvider serviceProvider) {
+    public NetworkInfoController(DefaultApplicationService applicationService) {
         super(NavigationTarget.NETWORK_INFO);
 
-        this.serviceProvider = serviceProvider;
-        model = new NetworkInfoModel(serviceProvider);
+        this.applicationService = applicationService;
+        model = new NetworkInfoModel(applicationService);
         view = new NetworkInfoView(model, this);
     }
 
@@ -48,16 +48,16 @@ public class NetworkInfoController extends TabController {
     }
 
     @Override
-    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case CLEAR_NET -> {
-                return Optional.of(new TransportTypeController(serviceProvider, Transport.Type.CLEAR));
+                return Optional.of(new TransportTypeController(applicationService, Transport.Type.CLEAR));
             }
             case TOR -> {
-                return Optional.of(new TransportTypeController(serviceProvider, Transport.Type.TOR));
+                return Optional.of(new TransportTypeController(applicationService, Transport.Type.TOR));
             }
             case I2P -> {
-                return Optional.of(new TransportTypeController(serviceProvider, Transport.Type.I2P));
+                return Optional.of(new TransportTypeController(applicationService, Transport.Type.I2P));
             }
             default -> {
                 return Optional.empty();

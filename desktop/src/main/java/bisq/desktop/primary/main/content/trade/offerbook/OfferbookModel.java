@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.offerbook;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
@@ -25,6 +25,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
+import bisq.oracle.marketprice.MarketPriceService;
 import bisq.security.KeyPairService;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -56,25 +57,31 @@ public class OfferbookModel implements Model {
     final StringProperty quoteAmountHeaderTitle = new SimpleStringProperty(Res.offerbook.get("offerbook.table.header.quoteAmount"));
     final BooleanProperty showAllMarkets = new SimpleBooleanProperty();
     final BooleanProperty marketSelectionDisabled = new SimpleBooleanProperty();
+    final MarketPriceService marketPriceService;
+    final StringProperty createOfferButtonText = new SimpleStringProperty(Res.offerbook.get("offerbook.table.header.quoteAmount"));
 
-    public OfferbookModel(DefaultServiceProvider serviceProvider,
+    final BooleanProperty showCreateOfferTab = new SimpleBooleanProperty();
+    final BooleanProperty showTakeOfferTab = new SimpleBooleanProperty();
+
+    public OfferbookModel(DefaultApplicationService applicationService,
                           ReadOnlyObjectProperty<Market> selectedMarketProperty,
                           ReadOnlyObjectProperty<Direction> directionProperty) {
-        networkService = serviceProvider.getNetworkService();
-        keyPairService = serviceProvider.getKeyPairService();
+        networkService = applicationService.getNetworkService();
+        keyPairService = applicationService.getKeyPairService();
+        marketPriceService = applicationService.getMarketPriceService();
         this.selectedMarketProperty = selectedMarketProperty;
         this.directionProperty = directionProperty;
     }
 
     void addOffer(Offer offer) {
-        OfferListItem item = new OfferListItem(offer);
+        OfferListItem item = new OfferListItem(offer, marketPriceService);
         if (!listItems.contains(item)) {
             listItems.add(item);
         }
     }
 
     void removeOffer(Offer offer) {
-        listItems.remove(new OfferListItem(offer));
+        listItems.remove(new OfferListItem(offer, marketPriceService));
     }
 
     void fillOfferListItems(List<OfferListItem> list) {
@@ -95,6 +102,14 @@ public class OfferbookModel implements Model {
                     Res.offerbook.get("direction.label.buy", currencyCode);
             return Res.offerbook.get("offerbook.table.action.takeOffer", dir);
         }
+    }
+
+    String getCreateOfferButtonTitle() {
+        String currencyCode = selectedMarketProperty.get().baseCurrencyCode();
+        String dir = directionProperty.get().isBuy() ?
+                Res.offerbook.get("direction.label.sell", currencyCode) :
+                Res.offerbook.get("direction.label.buy", currencyCode);
+        return Res.offerbook.get("offerbook.createOffer.button", dir);
     }
 
     void setAddOfferError(Offer offer, Throwable throwable) {

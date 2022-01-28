@@ -54,7 +54,7 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
         root.setSpacing(5);
         root.setPadding(new Insets(0, 20, 20, 20));
 
-        NavigationButton swap = createNavigationButton(Res.common.get("trade"), NavigationTarget.SWAP);
+        NavigationButton swap = createNavigationButton(Res.common.get("trade"), NavigationTarget.TRADE);
         NavigationButton social = createNavigationButton(Res.common.get("social"), NavigationTarget.SOCIAL);
         NavigationButton markets = createNavigationButton(Res.common.get("markets"), NavigationTarget.MARKETS);
         NavigationButton portfolio = createNavigationButton(Res.common.get("portfolio"), NavigationTarget.PORTFOLIO);

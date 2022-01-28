@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.social.tradeintent;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -47,9 +47,9 @@ public class TradeIntentModel implements Model {
     private final StringProperty addDataResultProperty = new SimpleStringProperty("");
     private final StringProperty removeDataResultProperty = new SimpleStringProperty("");
 
-    public TradeIntentModel(DefaultServiceProvider serviceProvider) {
-        networkService = serviceProvider.getNetworkService();
-        keyPairService = serviceProvider.getKeyPairService();
+    public TradeIntentModel(DefaultApplicationService applicationService) {
+        networkService = applicationService.getNetworkService();
+        keyPairService = applicationService.getKeyPairService();
     }
 
     void addPayload(AuthenticatedPayload payload) {

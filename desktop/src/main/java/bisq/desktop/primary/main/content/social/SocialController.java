@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.social;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
@@ -30,28 +30,28 @@ import java.util.Optional;
 
 @Slf4j
 public class SocialController extends TabController {
-    private final DefaultServiceProvider serviceProvider;
+    private final DefaultApplicationService applicationService;
     @Getter
     private final SocialModel model;
     @Getter
     private final SocialView view;
 
-    public SocialController(DefaultServiceProvider serviceProvider) {
+    public SocialController(DefaultApplicationService applicationService) {
         super(NavigationTarget.SOCIAL);
 
-        this.serviceProvider = serviceProvider;
-        model = new SocialModel(serviceProvider);
+        this.applicationService = applicationService;
+        model = new SocialModel(applicationService);
         view = new SocialView(model, this);
     }
 
     @Override
-    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case TRADE_INTENT -> {
-                return Optional.of(new TradeIntentController(serviceProvider));
+                return Optional.of(new TradeIntentController(applicationService));
             }
             case HANGOUT -> {
-                return Optional.of(new HangoutController(serviceProvider));
+                return Optional.of(new HangoutController(applicationService));
             }
             default -> {
                 return Optional.empty();

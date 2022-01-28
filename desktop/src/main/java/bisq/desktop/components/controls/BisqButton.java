@@ -48,6 +48,11 @@ public class BisqButton extends JFXButton {
         return new AutoTooltipButtonSkin(this);
     }
 
+    public void setFixWidth(double value) {
+        setMinWidth(value);
+        setMaxWidth(value);
+    }
+
     private static class AutoTooltipButtonSkin extends JFXButtonSkin {
         public AutoTooltipButtonSkin(JFXButton button) {
             super(button);

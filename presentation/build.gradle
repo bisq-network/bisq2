@@ -23,7 +23,6 @@ dependencies {
     implementation project(':oracle')
 
     implementation 'com.google.guava:guava'
-    implementation 'io.reactivex.rxjava2:rxjava'
 }
 
 test {

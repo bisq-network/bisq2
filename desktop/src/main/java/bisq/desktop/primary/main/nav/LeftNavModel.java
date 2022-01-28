@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.nav;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
@@ -51,8 +51,8 @@ public class LeftNavModel implements Model {
     private final BooleanProperty i2pIsVisible = new SimpleBooleanProperty(false);
     private final Set<NavigationTarget> navigationTargets = new HashSet<>();
 
-    public LeftNavModel(DefaultServiceProvider serviceProvider) {
-        networkService = serviceProvider.getNetworkService();
+    public LeftNavModel(DefaultApplicationService applicationService) {
+        networkService = applicationService.getNetworkService();
 
         clearNetIsVisible.set(networkService.isTransportTypeSupported(Transport.Type.CLEAR));
         torIsVisible.set(networkService.isTransportTypeSupported(Transport.Type.TOR));

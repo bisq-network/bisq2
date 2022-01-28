@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.social.hangout;
 
-import bisq.application.DefaultServiceProvider;
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
@@ -67,11 +67,11 @@ public class HangoutModel implements Model {
     private final ObservableList<Channel> channels = FXCollections.observableArrayList();
     public final ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
 
-    public HangoutModel(DefaultServiceProvider serviceProvider) {
-        networkService = serviceProvider.getNetworkService();
-        identityService = serviceProvider.getIdentityService();
-        keyPairService = serviceProvider.getKeyPairService();
-        chatService = serviceProvider.getChatService();
+    public HangoutModel(DefaultApplicationService applicationService) {
+        networkService = applicationService.getNetworkService();
+        identityService = applicationService.getIdentityService();
+        keyPairService = applicationService.getKeyPairService();
+        chatService = applicationService.getChatService();
     }
 
     public void setAllChannels(Collection<PrivateChannel> privateChannels) {
