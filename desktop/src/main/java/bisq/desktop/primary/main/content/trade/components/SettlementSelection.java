@@ -52,18 +52,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class AccountSelection {
-    private final AccountController controller;
+public class SettlementSelection {
+    private final SettlementController controller;
 
-    public AccountSelection(ReadOnlyObjectProperty<Market> selectedMarket,
-                            ReadOnlyObjectProperty<Direction> direction,
-                            ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
-                            AccountService accountService) {
-        controller = new AccountController(selectedMarket, direction, selectedProtocolType, accountService);
+    public SettlementSelection(ReadOnlyObjectProperty<Market> selectedMarket,
+                               ReadOnlyObjectProperty<Direction> direction,
+                               ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
+                               AccountService accountService) {
+        controller = new SettlementController(selectedMarket, direction, selectedProtocolType, accountService);
     }
 
 
-    public AccountView getView() {
+    public SettlementView getView() {
         return controller.view;
     }
 
@@ -83,23 +83,23 @@ public class AccountSelection {
         return controller.model.selectedQuoteSideSettlementMethods;
     }
 
-    private static class AccountController implements Controller {
-        private final AccountModel model;
+    private static class SettlementController implements Controller {
+        private final SettlementModel model;
         @Getter
-        private final AccountView view;
+        private final SettlementView view;
         private final ChangeListener<SwapProtocolType> selectedProtocolListener;
         private final ChangeListener<Direction> directionListener;
         private final ChangeListener<Market> selectedMarketListener;
 
-        private AccountController(ReadOnlyObjectProperty<Market> selectedMarket,
-                                 ReadOnlyObjectProperty<Direction> direction,
-                                 ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
-                                 AccountService accountService) {
-            model = new AccountModel(selectedMarket,
+        private SettlementController(ReadOnlyObjectProperty<Market> selectedMarket,
+                                     ReadOnlyObjectProperty<Direction> direction,
+                                     ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
+                                     AccountService accountService) {
+            model = new SettlementModel(selectedMarket,
                     direction,
                     selectedProtocolType,
                     accountService);
-            view = new AccountView(model, this);
+            view = new SettlementView(model, this);
 
             selectedProtocolListener = (observable, oldValue, newValue) -> resetAndApplyData();
             directionListener = (observable, oldValue, newValue) -> updateStrings();
@@ -250,7 +250,7 @@ public class AccountSelection {
 
     }
 
-    private static class AccountModel implements Model {
+    private static class SettlementModel implements Model {
         private final ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
         private final ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
         private final ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
@@ -279,10 +279,10 @@ public class AccountSelection {
         private final SortedList<SettlementListItem> quoteSideSettlementSortedList = new SortedList<>(quoteSideSettlementObservableList);
 
 
-        private AccountModel(ReadOnlyObjectProperty<Market> selectedMarket,
-                            ReadOnlyObjectProperty<Direction> direction,
-                            ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
-                            AccountService accountService) {
+        private SettlementModel(ReadOnlyObjectProperty<Market> selectedMarket,
+                                ReadOnlyObjectProperty<Direction> direction,
+                                ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
+                                AccountService accountService) {
             this.selectedMarket = selectedMarket;
             this.direction = direction;
             this.selectedProtocolType = selectedProtocolType;
@@ -290,15 +290,15 @@ public class AccountSelection {
         }
     }
 
-    public static class AccountView extends View<HBox, AccountModel, AccountController> {
+    public static class SettlementView extends View<HBox, SettlementModel, SettlementController> {
         private final BisqLabel baseSideLabel, quoteSideLabel;
         private final BisqTableView<AccountListItem> baseSideAccountsTableView, quoteSideAccountsTableView;
         private final BisqTableView<SettlementListItem> baseSideSettlementTableView, quoteSideSettlementTableView;
         private final BisqButton baseSideButton, quoteSideButton;
         private final VBox baseSideBox, quoteSideBox;
 
-        private AccountView(AccountModel model,
-                           AccountController controller) {
+        private SettlementView(SettlementModel model,
+                               SettlementController controller) {
             super(new HBox(), model, controller);
             root.setSpacing(10);
 

@@ -21,9 +21,9 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.InitWithDataController;
-import bisq.desktop.primary.main.content.trade.components.AccountSelection;
 import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
+import bisq.desktop.primary.main.content.trade.take.components.TakersSettlementSelection;
 import bisq.offer.Offer;
 import bisq.oracle.marketprice.MarketPriceService;
 import javafx.beans.property.BooleanProperty;
@@ -40,7 +40,7 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
     private final TakeOfferView view;
 
     private final AmountPriceGroup amountPriceGroup;
-    private final AccountSelection accountSelection;
+    private final TakersSettlementSelection settlementSelection;
     private final MarketPriceService marketPriceService;
     private final DirectionSelection directionSelection;
 
@@ -59,19 +59,21 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
                 marketPriceService);
         amountPriceGroup.setIsTakeOffer();
 
-        accountSelection = new AccountSelection(model.selectedMarketProperty,
+        settlementSelection = new TakersSettlementSelection(model.selectedMarketProperty,
                 model.directionProperty,
                 model.selectedProtocolTypeProperty,
                 applicationService.getAccountService());
-      /*  model.setSelectedBaseSideAccounts(accountSelection.getSelectedBaseSideAccounts());
-        model.setSelectedQuoteSideAccounts(accountSelection.getSelectedQuoteSideAccounts());
-        model.setSelectedBaseSideSettlementMethods(accountSelection.getSelectedBaseSideSettlementMethods());
-        model.setSelectedQuoteSideSettlementMethods(accountSelection.getSelectedQuoteSideSettlementMethods());*/
+
+        model.setSelectedBaseSideAccounts(settlementSelection.getSelectedBaseSideAccounts());
+        model.setSelectedQuoteSideAccounts(settlementSelection.getSelectedQuoteSideAccounts());
+        model.setSelectedBaseSideSettlementMethods(settlementSelection.getSelectedBaseSideSettlementMethods());
+        model.setSelectedQuoteSideSettlementMethods(settlementSelection.getSelectedQuoteSideSettlementMethods());
+
 
         view = new TakeOfferView(model, this,
                 directionSelection.getView(),
                 amountPriceGroup.getView(),
-                accountSelection.getView());
+                settlementSelection.getView());
     }
 
     @Override
@@ -80,7 +82,7 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
         model.offer = offer;
         model.selectedMarketProperty.set(offer.getMarket());
         directionSelection.setDirection(offer.getDirection().mirror());
-        model.selectedProtocol = offer.findProtocolType().orElseThrow();
+        model.selectedProtocolTypeProperty.set(offer.findProtocolType().orElseThrow());
 
         model.baseSideAmount = offer.getBaseAmountAsMonetary();
         model.quoteSideAmount = offer.getQuoteAmountAsMonetary(marketPriceService);
@@ -89,6 +91,8 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
         amountPriceGroup.setBaseSideAmount(model.baseSideAmount);
         amountPriceGroup.setQuoteSideAmount(model.quoteSideAmount);
         amountPriceGroup.setFixPrice(model.fixPrice);
+
+        settlementSelection.setOffer(offer);
 
         model.showTakeOfferTab = initData.showTakeOfferTab;
     }

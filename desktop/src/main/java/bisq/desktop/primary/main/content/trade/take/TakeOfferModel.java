@@ -27,33 +27,31 @@ import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import javafx.beans.property.*;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-
 @Slf4j
 @Getter
 @Setter
 public class TakeOfferModel implements Model {
-    public ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty = new SimpleObjectProperty<>(); //todo
+    public ObjectProperty<SwapProtocolType> selectedProtocolTypeProperty = new SimpleObjectProperty<>(); //todo
 
     ObjectProperty<Market> selectedMarketProperty = new SimpleObjectProperty<>();
     ReadOnlyObjectProperty<Direction> directionProperty;
-    SwapProtocolType selectedProtocol;
+   // SwapProtocolType selectedProtocol;
 
     Offer offer;
     Monetary baseSideAmount;
     Monetary quoteSideAmount;
     Quote fixPrice;
-    final ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
-    final ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
-    final ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
-    final ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
 
+    private ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts;
+    private ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts;
+    private ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods;
+    private ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods;
+    
     final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
     BooleanProperty showTakeOfferTab;
 

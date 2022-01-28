@@ -79,6 +79,7 @@ public abstract class Connection {
 
     @Getter
     private volatile boolean isStopped;
+    private final Object writeLock = new Object();
 
     protected Connection(Socket socket,
                          Capability peersCapability,
@@ -99,7 +100,7 @@ public abstract class Connection {
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectInputStream = new ObjectInputStream(socket.getInputStream());
         } catch (IOException exception) {
-            log.error("Could not create objectOutputStream/objectInputStream", exception);
+            log.error("Could not create objectOutputStream/objectInputStream for socket " + socket, exception);
             errorHandler.accept(this, exception);
             close(CloseReason.EXCEPTION.exception(exception));
             return;
@@ -144,8 +145,10 @@ public abstract class Connection {
         }
         try {
             Envelope envelope = new Envelope(message, Version.VERSION);
-            objectOutputStream.writeObject(envelope);
-            objectOutputStream.flush();
+            synchronized (writeLock) {
+                objectOutputStream.writeObject(envelope);
+                objectOutputStream.flush();
+            }
             metrics.sent(message);
             log.debug("Sent {} from {}",
                     StringUtils.truncate(message.toString(), 300), this);

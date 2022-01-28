@@ -48,7 +48,7 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
     private final DirectionSelection directionSelection;
     private final AmountPriceGroup amountPriceGroup;
     private final ProtocolSelection protocolSelection;
-    private final AccountSelection accountSelection;
+    private final SettlementSelection settlementSelection;
 
     public CreateOfferController(DefaultApplicationService applicationService) {
         offerService = applicationService.getOfferService();
@@ -71,21 +71,21 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
         protocolSelection = new ProtocolSelection(model.selectedMarketProperty());
         model.setSelectedProtocolTypeProperty(protocolSelection.selectedProtocolType());
 
-        accountSelection = new AccountSelection(model.selectedMarketProperty(),
+        settlementSelection = new SettlementSelection(model.selectedMarketProperty(),
                 model.directionProperty(),
                 model.selectedProtocolTypeProperty(),
                 applicationService.getAccountService());
-        model.setSelectedBaseSideAccounts(accountSelection.getSelectedBaseSideAccounts());
-        model.setSelectedQuoteSideAccounts(accountSelection.getSelectedQuoteSideAccounts());
-        model.setSelectedBaseSideSettlementMethods(accountSelection.getSelectedBaseSideSettlementMethods());
-        model.setSelectedQuoteSideSettlementMethods(accountSelection.getSelectedQuoteSideSettlementMethods());
+        model.setSelectedBaseSideAccounts(settlementSelection.getSelectedBaseSideAccounts());
+        model.setSelectedQuoteSideAccounts(settlementSelection.getSelectedQuoteSideAccounts());
+        model.setSelectedBaseSideSettlementMethods(settlementSelection.getSelectedBaseSideSettlementMethods());
+        model.setSelectedQuoteSideSettlementMethods(settlementSelection.getSelectedQuoteSideSettlementMethods());
 
         view = new CreateOfferView(model, this,
                 marketSelection.getView(),
                 directionSelection.getView(),
                 amountPriceGroup.getView(),
                 protocolSelection.getView(),
-                accountSelection.getView());
+                settlementSelection.getView());
 
         selectedProtocolTypListener = (observable, oldValue, newValue) -> model.getCreateOfferButtonVisibleProperty().set(newValue != null);
     }

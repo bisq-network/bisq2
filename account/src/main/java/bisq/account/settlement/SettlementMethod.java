@@ -43,4 +43,15 @@ public interface SettlementMethod extends Serializable {
         }
     }
 
+    static SettlementMethod from(String settlementMethodName, String code) {
+        if (TradeCurrency.isFiat(code)) {
+            return FiatSettlementMethod.valueOf(settlementMethodName);
+        } else {
+            if (code.equals("BTC")) {
+                return BitcoinSettlementMethod.valueOf(settlementMethodName);
+            } else {
+                return CryptoSettlementMethod.valueOf(settlementMethodName);
+            }
+        }
+    }
 }
