@@ -144,11 +144,27 @@ If you want to use more seed nodes repeat it and fill in more but 1-2 is usually
 
 Here are three IntelliJ IDEA run configurations for simulating a clearnet setup locally:
 
-| Run Config                  | MultiNodesMain                              | Bisq-clear-Alice       | Bisq-clear-Bob       |
-|:----------------------------|:--------------------------------------------|:-----------------------|:---------------------|
-| Classpath of module (Alt+O) | `bisq.tools.main`                           | `bisq.desktop.main`    | (same as Alice)      |
-| Main Class (Alt+C)          | `bisq.tools.network.monitor.MultiNodesMain` | `bisq.desktop.Main`    | (same as Alice)      |
-| Program Arguments (Alt+R)   | `--bootstrapAll=true --transports=CLEAR`    | `--appName=bisq_Alice` | `--appName=bisq_Bob` |
+| Run Config                  | MultiNodesMain                              |
+|:----------------------------|:--------------------------------------------|
+| Classpath of module (Alt+O) | `bisq.tools.main`                           |
+| Main Class (Alt+C)          | `bisq.tools.network.monitor.MultiNodesMain` |
+| Program Arguments (Alt+R)   | `--bootstrapAll=true --transports=CLEAR`    |
+
+
+| Run Config                  | Bisq-clear-Alice                                                                                                  |
+|:----------------------------|:------------------------------------------------------------------------------------------------------------------|
+| Classpath of module (Alt+O) | `bisq.desktop.main`                                                                                               |
+| Main Class (Alt+C)          | `bisq.desktop.Main`                                                                                               |
+| Program Arguments (Alt+R)   | `--appName=bisq_Alice`                                                                                            |
+| VM Arguments (Alt+V)        | `--add-opens java.base/java.lang.reflect=ALL-UNNAMED -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR` |
+
+
+| Run Config                  | Bisq-clear-Bob       |
+|:----------------------------|:---------------------|
+| Classpath of module (Alt+O) | (same as Alice)      |
+| Main Class (Alt+C)          | (same as Alice)      |
+| Program Arguments (Alt+R)   | `--appName=bisq_Bob` |
+| VM Arguments (Alt+V)        | (same as Alice)      |
 
 
 
