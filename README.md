@@ -140,6 +140,18 @@ Copy those addresses and add it to the JVM args as following:
 
 If you want to use more seed nodes repeat it and fill in more but 1-2 is usually sufficient for dev testing.
 
+### Example Run Configurations
+
+Here are three IntelliJ IDEA run configurations for simulating a clearnet setup locally:
+
+| Run Config                  | MultiNodesMain                              | Bisq-clear-Alice       | Bisq-clear-Bob       |
+|:----------------------------|:--------------------------------------------|:-----------------------|:---------------------|
+| Classpath of module (Alt+O) | `bisq.tools.main`                           | `bisq.desktop.main`    | (same as Alice)      |
+| Main Class (Alt+C)          | `bisq.tools.network.monitor.MultiNodesMain` | `bisq.desktop.Main`    | (same as Alice)      |
+| Program Arguments (Alt+R)   | `--bootstrapAll=true --transports=CLEAR`    | `--appName=bisq_Alice` | `--appName=bisq_Bob` |
+
+
+
 ## Contributing
 
 Please get in touch on our [Matrix room](https://matrix.to/#/#bisq.v2.dev:bitcoin.kyoto). We can use help across many areas of development, UI/UX, etc!
