@@ -7,10 +7,12 @@ public class BisqTextField extends JFXTextField {
 
     public BisqTextField(String value) {
         super(value);
+        setLabelFloat(true);
     }
 
     public BisqTextField() {
         super();
+        setLabelFloat(true);
     }
 
     @Override
