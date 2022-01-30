@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.storage.append;
 
 import bisq.common.data.ByteArray;
-import bisq.network.p2p.services.data.storage.DataStore;
+import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -32,7 +32,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * If key already exists we return. If map size exceeds MAX_MAP_SIZE we ignore new data.
  */
 @Slf4j
-public class AppendOnlyDataStore extends DataStore<AddAppendOnlyDataRequest> {
+public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOnlyDataRequest> {
     private static final int MAX_MAP_SIZE = 10_000_000; // in bytes
 
     public interface Listener {
@@ -41,7 +41,7 @@ public class AppendOnlyDataStore extends DataStore<AddAppendOnlyDataRequest> {
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public AppendOnlyDataStore(PersistenceService persistenceService, String storeName, String fileName) {
+    public AppendOnlyDataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
         super(persistenceService, storeName, fileName);
     }
 
@@ -74,11 +74,11 @@ public class AppendOnlyDataStore extends DataStore<AddAppendOnlyDataRequest> {
     public void shutdown() {
     }
 
-    public void addListener(AppendOnlyDataStore.Listener listener) {
+    public void addListener(AppendOnlyDataStorageService.Listener listener) {
         listeners.add(listener);
     }
 
-    public void removeListener(AppendOnlyDataStore.Listener listener) {
+    public void removeListener(AppendOnlyDataStorageService.Listener listener) {
         listeners.remove(listener);
     }
 }

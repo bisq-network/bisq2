@@ -39,7 +39,7 @@ import java.util.Optional;
 @Slf4j
 public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, AddDataRequest {
 
-    public static AddAuthenticatedDataRequest from(AuthenticatedDataStore store, AuthenticatedPayload payload, KeyPair keyPair)
+    public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedPayload payload, KeyPair keyPair)
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(payload.serialize());
         byte[] hashOfPublicKey = DigestUtil.hash(keyPair.getPublic().getEncoded());

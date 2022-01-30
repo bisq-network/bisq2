@@ -15,34 +15,33 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.storage;
+package bisq.network;
 
-import bisq.common.data.ByteArray;
 import bisq.persistence.PersistableStore;
 import lombok.Getter;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DataStore<T> implements PersistableStore<DataStore<T>> {
+public class NetworkIdStore implements PersistableStore<NetworkIdStore> {
     @Getter
-    private final ConcurrentHashMap<ByteArray, T> map = new ConcurrentHashMap<>();
+    private final Map<String, NetworkId> networkIdByNodeId = new ConcurrentHashMap<>();
 
-    public DataStore() {
+    public NetworkIdStore() {
     }
 
-    public DataStore(Map<ByteArray, T> map) {
-        this.map.putAll(map);
-    }
-
-    @Override
-    public void applyPersisted(DataStore<T> persisted) {
-        map.clear();
-        map.putAll(persisted.getMap());
+    public NetworkIdStore(Map<String, NetworkId> networkIdByNodeId) {
+        this.networkIdByNodeId.putAll(networkIdByNodeId);
     }
 
     @Override
-    public DataStore<T> getClone() {
-        return new DataStore<>(map);
+    public void applyPersisted(NetworkIdStore persisted) {
+        networkIdByNodeId.clear();
+        networkIdByNodeId.putAll(persisted.getNetworkIdByNodeId());
+    }
+
+    @Override
+    public NetworkIdStore getClone() {
+        return new NetworkIdStore(networkIdByNodeId);
     }
 }

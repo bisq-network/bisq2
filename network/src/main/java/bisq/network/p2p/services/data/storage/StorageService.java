@@ -29,14 +29,14 @@ import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.filter.FilterEntry;
 import bisq.network.p2p.services.data.inventory.Inventory;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
-import bisq.network.p2p.services.data.storage.append.AppendOnlyDataStore;
+import bisq.network.p2p.services.data.storage.append.AppendOnlyDataStorageService;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyPayload;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStore;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStore;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStorageService;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.PersistenceService;
@@ -68,9 +68,9 @@ public class StorageService {
         }
     }
 
-    final Map<String, AuthenticatedDataStore> authenticatedDataStores = new ConcurrentHashMap<>();
-    final Map<String, MailboxDataStore> mailboxStores = new ConcurrentHashMap<>();
-    final Map<String, AppendOnlyDataStore> appendOnlyDataStores = new ConcurrentHashMap<>();
+    final Map<String, AuthenticatedDataStorageService> authenticatedDataStores = new ConcurrentHashMap<>();
+    final Map<String, MailboxDataStorageService> mailboxStores = new ConcurrentHashMap<>();
+    final Map<String, AppendOnlyDataStorageService> appendOnlyDataStores = new ConcurrentHashMap<>();
     private final PersistenceService persistenceService;
 
     public StorageService(PersistenceService persistenceService) {
@@ -78,14 +78,14 @@ public class StorageService {
 
         // We create all stores for those files we have already persisted.
         // Persisted data is read at the very early stages of the application start.
-        String subPath = persistenceService.getBaseDir() + File.separator + DataStore.SUB_PATH;
+        String subPath = persistenceService.getBaseDir() + File.separator + DataStorageService.SUB_PATH;
         try {
             String authStoreName = AUTHENTICATED_DATA_STORE.getStoreName();
             String directory = subPath + File.separator + authStoreName;
             if (new File(directory).exists()) {
                 FileUtils.listFilesInDirectory(directory, 1)
                         .forEach(fileName -> {
-                            AuthenticatedDataStore dataStore = new AuthenticatedDataStore(persistenceService, authStoreName, fileName);
+                            AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, authStoreName, fileName);
                             authenticatedDataStores.put(fileName, dataStore);
                         });
             }
@@ -94,7 +94,7 @@ public class StorageService {
             if (new File(directory).exists()) {
                 FileUtils.listFilesInDirectory(directory, 1)
                         .forEach(fileName -> {
-                            MailboxDataStore dataStore = new MailboxDataStore(persistenceService, mailboxStoreName, fileName);
+                            MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, mailboxStoreName, fileName);
                             mailboxStores.put(fileName, dataStore);
                         });
             }
@@ -104,7 +104,7 @@ public class StorageService {
             if (new File(directory).exists()) {
                 FileUtils.listFilesInDirectory(directory, 1)
                         .forEach(fileName -> {
-                            AppendOnlyDataStore dataStore = new AppendOnlyDataStore(persistenceService, appendStoreName, fileName);
+                            AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService, appendStoreName, fileName);
                             appendOnlyDataStores.put(fileName, dataStore);
                         });
             }
@@ -114,9 +114,9 @@ public class StorageService {
     }
 
     public void shutdown() {
-        authenticatedDataStores.values().forEach(DataStore::shutdown);
-        mailboxStores.values().forEach(DataStore::shutdown);
-        appendOnlyDataStores.values().forEach(DataStore::shutdown);
+        authenticatedDataStores.values().forEach(DataStorageService::shutdown);
+        mailboxStores.values().forEach(DataStorageService::shutdown);
+        appendOnlyDataStores.values().forEach(DataStorageService::shutdown);
     }
 
 
@@ -132,12 +132,12 @@ public class StorageService {
         return getAuthenticatedPayloadStream(getStoreByStoreName(storeName));
     }
 
-    public Stream<AuthenticatedPayload> getAuthenticatedPayloadStream(Stream<DataStore<? extends DataRequest>> stores) {
+    public Stream<AuthenticatedPayload> getAuthenticatedPayloadStream(Stream<DataStorageService<? extends DataRequest>> stores) {
         return stores.flatMap(this::getAuthenticatedPayloadStream);
     }
 
-    private Stream<AuthenticatedPayload> getAuthenticatedPayloadStream(DataStore<? extends DataRequest> store) {
-        return store.getClone().values().stream()
+    private Stream<AuthenticatedPayload> getAuthenticatedPayloadStream(DataStorageService<? extends DataRequest> store) {
+        return store.getPersistableStore().getClone().getMap().values().stream()
                 .filter(e -> e instanceof AddAuthenticatedDataRequest)
                 .map(e -> (AddAuthenticatedDataRequest) e)
                 .map(e -> e.getAuthenticatedData().getPayload());
@@ -264,11 +264,11 @@ public class StorageService {
 
     public Inventory getInventoryOfAllStores(DataFilter dataFilter) {
         return getInventory(dataFilter, getAllStores()
-                .flatMap(store -> store.getClone().entrySet().stream()).collect(Collectors.toSet()));
+                .flatMap(store -> store.getPersistableStore().getClone().getMap().entrySet().stream()).collect(Collectors.toSet()));
     }
 
-    public Inventory getInventoryFromStore(DataFilter dataFilter, DataStore<? extends DataRequest> store) {
-        return getInventory(dataFilter, store.getClone().entrySet());
+    public Inventory getInventoryFromStore(DataFilter dataFilter, DataStorageService<? extends DataRequest> store) {
+        return getInventory(dataFilter, store.getPersistableStore().getClone().getMap().entrySet());
     }
 
     private Inventory getInventory(DataFilter dataFilter,
@@ -293,8 +293,8 @@ public class StorageService {
         return getFilterEntries(getStoreByStoreName(storeName));
     }
 
-    private Set<FilterEntry> getFilterEntries(Stream<DataStore<? extends DataRequest>> stores) {
-        return stores.flatMap(store -> store.getClone().entrySet().stream())
+    private Set<FilterEntry> getFilterEntries(Stream<DataStorageService<? extends DataRequest>> stores) {
+        return stores.flatMap(store -> store.getPersistableStore().getClone().getMap().entrySet().stream())
                 .map(this::getFilterEntry)
                 .collect(Collectors.toSet());
     }
@@ -321,10 +321,10 @@ public class StorageService {
     // Get or create stores
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<AuthenticatedDataStore> getOrCreateAuthenticatedDataStore(MetaData metaData) {
+    public CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(MetaData metaData) {
         String key = getStoreKey(metaData);
         if (!authenticatedDataStores.containsKey(key)) {
-            AuthenticatedDataStore dataStore = new AuthenticatedDataStore(persistenceService,
+            AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService,
                     AUTHENTICATED_DATA_STORE.getStoreName(),
                     metaData.getFileName());
             authenticatedDataStores.put(key, dataStore);
@@ -334,10 +334,10 @@ public class StorageService {
         }
     }
 
-    public CompletableFuture<MailboxDataStore> getOrCreateMailboxDataStore(MetaData metaData) {
+    public CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(MetaData metaData) {
         String key = getStoreKey(metaData);
         if (!mailboxStores.containsKey(key)) {
-            MailboxDataStore dataStore = new MailboxDataStore(persistenceService,
+            MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService,
                     MAILBOX_DATA_STORE.getStoreName(),
                     metaData.getFileName());
             mailboxStores.put(key, dataStore);
@@ -347,10 +347,10 @@ public class StorageService {
         }
     }
 
-    public CompletableFuture<AppendOnlyDataStore> getOrCreateAppendOnlyDataStore(MetaData metaData) {
+    public CompletableFuture<AppendOnlyDataStorageService> getOrCreateAppendOnlyDataStore(MetaData metaData) {
         String key = getStoreKey(metaData);
         if (!appendOnlyDataStores.containsKey(key)) {
-            AppendOnlyDataStore dataStore = new AppendOnlyDataStore(persistenceService,
+            AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService,
                     APPEND_ONLY_DATA_STORE.getStoreName(),
                     metaData.getFileName());
             appendOnlyDataStores.put(key, dataStore);
@@ -369,24 +369,24 @@ public class StorageService {
     // Get stores
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private Stream<DataStore<? extends DataRequest>> getAllStores() {
+    private Stream<DataStorageService<? extends DataRequest>> getAllStores() {
         return Stream.concat(Stream.concat(authenticatedDataStores.values().stream(),
                         mailboxStores.values().stream()),
                 appendOnlyDataStores.values().stream());
     }
 
-    private Stream<DataStore<? extends DataRequest>> getStoresByStoreType(StoreType storeType) {
-        List<DataStore<? extends DataRequest>> dataStoreStream =
+    private Stream<DataStorageService<? extends DataRequest>> getStoresByStoreType(StoreType storeType) {
+        List<DataStorageService<? extends DataRequest>> dataStorageServiceStream =
                 switch (storeType) {
                     case ALL -> getAllStores().collect(Collectors.toList());
                     case AUTHENTICATED_DATA_STORE -> new ArrayList<>(authenticatedDataStores.values());
                     case MAILBOX_DATA_STORE -> new ArrayList<>(mailboxStores.values());
                     case APPEND_ONLY_DATA_STORE -> new ArrayList<>(appendOnlyDataStores.values());
                 };
-        return dataStoreStream.stream();
+        return dataStorageServiceStream.stream();
     }
 
-    private Stream<DataStore<? extends DataRequest>> getStoreByStoreName(String storeName) {
+    private Stream<DataStorageService<? extends DataRequest>> getStoreByStoreName(String storeName) {
         return getAllStores()
                 .filter(store -> storeName.equals(store.getFileName()));
     }

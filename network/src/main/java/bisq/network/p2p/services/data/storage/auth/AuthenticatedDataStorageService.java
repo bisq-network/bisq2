@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.data.ByteArray;
+import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.persistence.PersistenceService;
@@ -25,7 +26,6 @@ import bisq.security.DigestUtil;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> {
+public class AuthenticatedDataStorageService extends DataStorageService<AuthenticatedDataRequest> {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(10);
     private static final int MAX_MAP_SIZE = 10000;
  /*
@@ -56,13 +56,14 @@ public class AuthenticatedDataStore extends DataStore<AuthenticatedDataRequest> 
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public AuthenticatedDataStore(PersistenceService persistenceService, String storeName, String fileName) {
+    public AuthenticatedDataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
         super(persistenceService, storeName, fileName);
     }
 
+
     @Override
-    public void applyPersisted(HashMap<ByteArray, AuthenticatedDataRequest> persisted) {
-        maybePruneMap(persisted);
+    public void onPersistedApplied(DataStore<AuthenticatedDataRequest> persisted) {
+        maybePruneMap(persisted.getMap());
     }
 
     @Override

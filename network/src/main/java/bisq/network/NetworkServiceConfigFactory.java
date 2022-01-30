@@ -79,12 +79,26 @@ public class NetworkServiceConfigFactory {
                 Transport.Type.CLEAR, clearNetConf
         );
 
+        Map<Transport.Type, Integer> defaultNodePortByTransportType = new HashMap<>();
+        if (typesafeConfig.hasPath("defaultNodePortByTransportType")) {
+            Config portConfig = typesafeConfig.getConfig("defaultNodePortByTransportType");
+            if (portConfig.hasPath("tor")) {
+                defaultNodePortByTransportType.put(Transport.Type.TOR, portConfig.getInt("tor"));
+            }
+            if (portConfig.hasPath("i2p")) {
+                defaultNodePortByTransportType.put(Transport.Type.I2P, portConfig.getInt("i2p"));
+            }
+            if (portConfig.hasPath("clear")) {
+                defaultNodePortByTransportType.put(Transport.Type.CLEAR, portConfig.getInt("clear"));
+            }
+        }
         Transport.Config transportConfig = new Transport.Config(baseDir);
         return new NetworkService.Config(baseDir,
                 transportConfig,
                 supportedTransportTypes,
                 serviceNodeConfig,
                 peerGroupServiceConfigByTransport,
+                defaultNodePortByTransportType,
                 seedAddressesByTransport,
                 Optional.empty());
     }

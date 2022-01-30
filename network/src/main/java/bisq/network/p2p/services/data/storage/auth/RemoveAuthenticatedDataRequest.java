@@ -38,7 +38,7 @@ import java.util.Arrays;
 @Slf4j
 public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest, RemoveDataRequest {
 
-    public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStore store, AuthenticatedPayload payload, KeyPair keyPair)
+    public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedPayload payload, KeyPair keyPair)
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(payload.serialize());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());

@@ -37,7 +37,7 @@ import java.util.Arrays;
 @Slf4j
 public class RefreshRequest implements BroadcastMessage {
 
-    public static RefreshRequest from(AuthenticatedDataStore store, NetworkPayload networkPayload, KeyPair keyPair)
+    public static RefreshRequest from(AuthenticatedDataStorageService store, NetworkPayload networkPayload, KeyPair keyPair)
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(networkPayload.serialize());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());

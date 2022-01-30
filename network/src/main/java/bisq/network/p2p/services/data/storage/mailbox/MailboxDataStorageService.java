@@ -18,13 +18,13 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.data.ByteArray;
+import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class MailboxDataStore extends DataStore<MailboxRequest> {
+public class MailboxDataStorageService extends DataStorageService<MailboxRequest> {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(10);
     private static final int MAX_MAP_SIZE = 10000;
 
@@ -44,13 +44,13 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public MailboxDataStore(PersistenceService persistenceService, String storeName, String fileName) {
+    public MailboxDataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
         super(persistenceService, storeName, fileName);
     }
 
     @Override
-    public void applyPersisted(HashMap<ByteArray, MailboxRequest> persisted) {
-        maybePruneMap(persisted);
+    public void onPersistedApplied(DataStore<MailboxRequest> persisted) {
+        maybePruneMap(persisted.getMap());
     }
 
     @Override
@@ -196,7 +196,7 @@ public class MailboxDataStore extends DataStore<MailboxRequest> {
         return getSequenceNumber(hash) < Integer.MAX_VALUE;
     }
 
-    private void maybePruneMap(HashMap<ByteArray, MailboxRequest> persisted) {
+    private void maybePruneMap(Map<ByteArray, MailboxRequest> persisted) {
         long now = System.currentTimeMillis();
         // Remove entries older than MAX_AGE
         // Remove expired ProtectedEntry in case value is of type AddProtectedDataRequest

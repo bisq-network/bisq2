@@ -49,10 +49,10 @@ import java.io.File;
 import java.security.KeyPair;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
+import static bisq.network.p2p.node.transport.Transport.Type.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -63,21 +63,25 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  * clearNet enabled clearNet is used for https.
  */
 @Slf4j
-public class NetworkService implements PersistenceClient<HashMap<String, NetworkId>> {
+public class NetworkService implements PersistenceClient<NetworkIdStore> {
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
-    @Getter
-    private final Persistence<HashMap<String, NetworkId>> persistence;
+    private final Map<Transport.Type, Integer> defaultNodePortByTransportType;
 
     public static record Config(String baseDir,
                                 Transport.Config transportConfig,
                                 Set<Transport.Type> supportedTransportTypes,
                                 ServiceNode.Config serviceNodeConfig,
                                 Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
+                                Map<Transport.Type, Integer> defaultNodePortByTransportType,
                                 Map<Transport.Type, List<Address>> seedAddressesByTransport,
                                 Optional<String> socks5ProxyAddress) {
     }
 
+    @Getter
+    private final NetworkIdStore persistableStore = new NetworkIdStore();
+    @Getter
+    private final Persistence<NetworkIdStore> persistence;
     private final KeyPairService keyPairService;
     @Getter
     private final HttpService httpService;
@@ -89,7 +93,6 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     private final ServiceNodesByTransport serviceNodesByTransport;
     @Getter
     private final Optional<DataService> dataService;
-    private final Map<String, NetworkId> networkIdByNodeId = new ConcurrentHashMap<>();
 
     public NetworkService(Config config,
                           PersistenceService persistenceService,
@@ -111,28 +114,14 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
                 keyPairService,
                 persistenceService);
 
-        persistence = persistenceService.getOrCreatePersistence(this, "db" + File.separator + "network", "networkIdByNodeId");
+        defaultNodePortByTransportType = config.defaultNodePortByTransportType();
+
+        persistence = persistenceService.getOrCreatePersistence(this, "db" + File.separator + "network", persistableStore);
     }
 
     public CompletableFuture<Void> shutdown() {
         return CompletableFutureUtils.allOf(serviceNodesByTransport.shutdown(), httpService.shutdown())
                 .thenCompose(list -> dataService.map(DataService::shutdown).orElse(completedFuture(null)));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // PersistenceClient
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void applyPersisted(HashMap<String, NetworkId> persisted) {
-        networkIdByNodeId.clear();
-        networkIdByNodeId.putAll(persisted);
-    }
-
-    @Override
-    public HashMap<String, NetworkId> getClone() {
-        return new HashMap<>(networkIdByNodeId);
     }
 
 
@@ -345,13 +334,14 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
 
     // We return the port by transport type if found from the persisted networkId, otherwise we
     // fill in a random free system port for all supported transport types. 
-    public Map<Transport.Type, Integer> getDefaultPortByTransport() {
+    private Map<Transport.Type, Integer> getDefaultPortByTransport() {
         return getOrCreatePortByTransport(Node.DEFAULT, keyPairService.getDefaultPubKey());
     }
 
-    public Map<Transport.Type, Integer> getOrCreatePortByTransport(String nodeId, PubKey pubKey) {
+    private Map<Transport.Type, Integer> getOrCreatePortByTransport(String nodeId, PubKey pubKey) {
         Optional<NetworkId> networkIdOptional = findNetworkId(nodeId, pubKey);
-        return supportedTransportTypes.stream()
+        // If we have a persisted networkId and take that port otherwise we take random system port.  
+        Map<Transport.Type, Integer> persistedOrRandomPortByTransport = supportedTransportTypes.stream()
                 .collect(Collectors.toMap(transportType -> transportType,
                         transportType -> networkIdOptional.stream()
                                 .map(NetworkId::getAddressByNetworkType)
@@ -359,6 +349,29 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
                                 .map(Address::getPort)
                                 .findAny()
                                 .orElse(NetworkUtils.findFreeSystemPort())));
+
+        // In case of the default node and if we have defined ports in the config we take those.
+        Map<Transport.Type, Integer> portByTransport = new HashMap<>();
+        if (nodeId.equals(Node.DEFAULT)) {
+            if (defaultNodePortByTransportType.containsKey(CLEAR)) {
+                portByTransport.put(CLEAR, defaultNodePortByTransportType.get(CLEAR));
+            } else {
+                portByTransport.put(CLEAR, persistedOrRandomPortByTransport.get(CLEAR));
+            }
+            if (defaultNodePortByTransportType.containsKey(TOR)) {
+                portByTransport.put(TOR, defaultNodePortByTransportType.get(TOR));
+            } else {
+                portByTransport.put(TOR, persistedOrRandomPortByTransport.get(TOR));
+            }
+            if (defaultNodePortByTransportType.containsKey(I2P)) {
+                portByTransport.put(I2P, defaultNodePortByTransportType.get(I2P));
+            } else {
+                portByTransport.put(I2P, persistedOrRandomPortByTransport.get(I2P));
+            }
+        } else {
+            portByTransport = persistedOrRandomPortByTransport;
+        }
+        return portByTransport;
     }
 
 
@@ -391,6 +404,7 @@ public class NetworkService implements PersistenceClient<HashMap<String, Network
     }
 
     public Optional<NetworkId> findNetworkId(String nodeId, PubKey pubKey) {
+        Map<String, NetworkId> networkIdByNodeId = persistableStore.getNetworkIdByNodeId();
         if (networkIdByNodeId.containsKey(nodeId)) {
             return Optional.of(networkIdByNodeId.get(nodeId));
         } else {
