@@ -19,7 +19,7 @@ package bisq.account;
 
 import bisq.account.accounts.Account;
 import bisq.account.settlement.SettlementMethod;
-import bisq.persistence.Persistable;
+import bisq.persistence.PersistableStore;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,7 +30,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class AccountStore implements Persistable<AccountStore> {
+public class AccountStore implements PersistableStore<AccountStore> {
     private final List<Account<? extends SettlementMethod>> accounts = new CopyOnWriteArrayList<>();
 
     public AccountStore() {

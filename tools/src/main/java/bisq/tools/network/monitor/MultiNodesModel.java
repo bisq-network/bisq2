@@ -77,8 +77,8 @@ public class MultiNodesModel {
     private final Set<Transport.Type> supportedTransportTypes;
     private final boolean bootstrapAll;
     private Optional<List<Address>> addressesToBootstrap = Optional.empty();
-    private final int numSeeds = 2;
-    private final int numNodes = 2;
+    private final int numSeeds = 1;
+    private final int numNodes = 1;
     @Getter
     private final Map<Address, NetworkService> networkServicesByAddress = new ConcurrentHashMap<>();
     private final Map<Address, KeyPairService> keyPairServicesByAddress = new ConcurrentHashMap<>();
@@ -256,6 +256,7 @@ public class MultiNodesModel {
                 networkServiceConfig.supportedTransportTypes(),
                 networkServiceConfig.serviceNodeConfig(),
                 networkServiceConfig.peerGroupServiceConfigByTransport(),
+                new HashMap<>(),
                 networkServiceConfig.seedAddressesByTransport(),
                 Optional.empty());
 
@@ -391,12 +392,15 @@ public class MultiNodesModel {
 
         Map<Transport.Type, List<Address>> seeds = networkServiceConfig.seedAddressesByTransport().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> e.getValue().stream().limit(numSeeds).collect(Collectors.toList())));
+                        e -> e.getValue().stream()
+                                .skip(1)
+                                .limit(numSeeds).collect(Collectors.toList())));
         return new NetworkService.Config(networkServiceConfig.baseDir(),
                 networkServiceConfig.transportConfig(),
                 supportedTransportTypes,
                 networkServiceConfig.serviceNodeConfig(),
                 networkServiceConfig.peerGroupServiceConfigByTransport(),
+                new HashMap<>(),
                 seeds,
                 networkServiceConfig.socks5ProxyAddress());
     }
@@ -452,6 +456,7 @@ public class MultiNodesModel {
                                 new Address("lb8n1E9HedPMmXTiDUSJ9rje47uFQoX0nnlXSY4BsICLJVPqZsosLsv81ZAPWiZbHLCB8Cb4WrogCaI3TYs2SuMIO2AjxLfSfulPHWiPkQznPNdParhX~BjQRIqRajMeNsz9Ynzp2f8JNqEA5sRLzuAWlcVu3~NV38ftRo~2v4YIZZRrxHx-Gtkv6Im6eG5nzO-s74LVPpDl3bu-5bBcc18z5W69N79YmPSzWk7nn8BuEdGewJim5rYd9frmj1lM6aZe~Jvs6iJ7WP5BgCKbRlYPIN7e2ch9NMbZ~pAmLC2Im7WfgyOt5aJMASTBDriGf7IdNC8c45k1yXOSU9W1wGanvj4V8Jov1O0IqNklNU0GmPF5K4fm79pG46otMjPtBTciOhsPTcRy0p84t2cZnclU7Ut60-4krdEj2YzERE2X0RXk8D-kv3ZYQTekVIkqwIO8K5ZzjZHl7AvwNp9OTEGUqoJLfZnfsvMEifmPFj~nybIIGmaYPgvHwxDr4n9tBQAEAAcAAA==", 6018),
                                 new Address("HU4rnXiXnLoFQKU0hSLrpIyv81Wo--IpDAKzTQiDsONQHG8jad4EYXxNMKOMrtZSfm4ap5GGbaPAA~Gyx2Tp~kHVI4kmxNIh8UKc3a8ZJ7rSvqJwky1x~jR8f7A5KTXPGxUkZf6qYLrOcXRM0lDxa9GYAlHeYvaSQRebN-3VGCq3PDvnUGQyPiD1UHpBEYQ4zN~39qG3s3nRzJjSdm5hYSMnQaWCd6UM5GzYOLwfm~xC3KsmK373ENX8-hXphrLL1TDcze3vJmyno8rEGscsFjwqoTEbgMTbcr5iWYAMyZKOQv94~T-~8D2xr1HE1lsqNSgOkLPIG644djVxPCPoSUL5QED9eSu-EkYLTBjYpA51Lz14WsIaqDFzmBkbbnSaPy0XnY-0qKBkoSmxs5Uoxi1gb-umzgAzoptR92n8ZU98B2~eTHZiz8LrnBHqkOoj2RRkNonluFYx1G3bM97amImPMdk1Vsq36Cp2VxjP3WHoPswW8werthAggKdkcap8BQAEAAcAAA==", 6019)
                         )
+                        .skip(1)
                         .limit(numNodes)
                         .collect(Collectors.toList());
             }

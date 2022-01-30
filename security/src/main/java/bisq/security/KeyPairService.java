@@ -30,30 +30,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
-public class KeyPairService implements PersistenceClient<KeyStore> {
+public class KeyPairService implements PersistenceClient<KeyPairStore> {
     public static final String DEFAULT = "default";
     @Getter
-    private final Persistence<KeyStore> persistence;
+    private final KeyPairStore persistableStore = new KeyPairStore();
+    @Getter
+    private final Persistence<KeyPairStore> persistence;
 
-    //   private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
-    private final KeyStore keyStore = new KeyStore();
 
     public KeyPairService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, "db", keyStore);
-    }
-
-    @Override
-    public void applyPersisted(KeyStore persisted) {
-        synchronized (keyStore) {
-            keyStore.applyPersisted(persisted);
-        }
-    }
-
-    @Override
-    public KeyStore getClone() {
-        synchronized (keyStore) {
-            return keyStore.getClone();
-        }
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -64,8 +50,8 @@ public class KeyPairService implements PersistenceClient<KeyStore> {
     }
 
     public Optional<KeyPair> findKeyPair(String keyId) {
-        synchronized (keyStore) {
-            return keyStore.findKeyPair(keyId);
+        synchronized (persistableStore) {
+            return persistableStore.findKeyPair(keyId);
         }
     }
 
@@ -83,8 +69,8 @@ public class KeyPairService implements PersistenceClient<KeyStore> {
                 .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
                     try {
                         KeyPair keyPair = KeyGeneration.generateKeyPair();
-                        synchronized (keyStore) {
-                            keyStore.put(keyId, keyPair);
+                        synchronized (persistableStore) {
+                            persistableStore.put(keyId, keyPair);
                         }
                         persist();
                         return keyPair;

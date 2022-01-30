@@ -40,6 +40,11 @@ public class PersistenceService {
     }
 
     public <T extends Serializable> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
+                                                                          Serializable serializable) {
+        return getOrCreatePersistence(client, "db", serializable.getClass().getSimpleName());
+    }
+
+    public <T extends Serializable> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
                                                                           String subDir,
                                                                           Serializable serializable) {
         return getOrCreatePersistence(client, subDir, serializable.getClass().getSimpleName());

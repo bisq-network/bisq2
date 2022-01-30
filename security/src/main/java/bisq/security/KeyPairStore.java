@@ -17,7 +17,7 @@
 
 package bisq.security;
 
-import bisq.persistence.Persistable;
+import bisq.persistence.PersistableStore;
 import lombok.Getter;
 
 import java.security.KeyPair;
@@ -25,25 +25,25 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class KeyStore implements Persistable<KeyStore> {
+public class KeyPairStore implements PersistableStore<KeyPairStore> {
 
     @Getter
     private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
 
-    public KeyStore() {
+    public KeyPairStore() {
     }
 
-    private KeyStore(Map<String, KeyPair> map) {
+    private KeyPairStore(Map<String, KeyPair> map) {
         this.keyPairsById.putAll(map);
     }
 
     @Override
-    public KeyStore getClone() {
-        return new KeyStore(keyPairsById);
+    public KeyPairStore getClone() {
+        return new KeyPairStore(keyPairsById);
     }
 
     @Override
-    public void applyPersisted(KeyStore persisted) {
+    public void applyPersisted(KeyPairStore persisted) {
         keyPairsById.clear();
         keyPairsById.putAll(persisted.getKeyPairsById());
     }

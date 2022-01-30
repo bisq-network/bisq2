@@ -52,17 +52,18 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     }
 
     @Getter
+    private final IdentityStore persistableStore = new IdentityStore();
+    @Getter
     private final Persistence<IdentityStore> persistence;
     private final KeyPairService keyPairService;
     private final NetworkService networkService;
-    private final IdentityStore identityStore = new IdentityStore();
     private final Object identityModelLock = new Object();
 
     public IdentityService(PersistenceService persistenceService,
                            KeyPairService keyPairService,
                            NetworkService networkService,
                            Config config) {
-        persistence = persistenceService.getOrCreatePersistence(this, "db", identityStore);
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.keyPairService = keyPairService;
         this.networkService = networkService;
         minPoolSize = config.minPoolSize;
@@ -77,25 +78,6 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     }
 
     public void shutdown() {
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // PersistenceClient
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void applyPersisted(IdentityStore persisted) {
-        synchronized (identityModelLock) {
-            identityStore.applyPersisted(persisted);
-        }
-    }
-
-    @Override
-    public IdentityStore getClone() {
-        synchronized (identityModelLock) {
-            return identityStore.getClone();
-        }
     }
 
 
@@ -122,17 +104,17 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     public Optional<Identity> findActiveIdentity(String domainId) {
         synchronized (identityModelLock) {
-            return Optional.ofNullable(identityStore.getActiveIdentityByDomainId().get(domainId));
+            return Optional.ofNullable(persistableStore.getActiveIdentityByDomainId().get(domainId));
         }
     }
 
     public void retireIdentity(String domainId) {
         boolean wasRemoved;
         synchronized (identityModelLock) {
-            Identity identity = identityStore.getActiveIdentityByDomainId().remove(domainId);
+            Identity identity = persistableStore.getActiveIdentityByDomainId().remove(domainId);
             wasRemoved = identity != null;
             if (wasRemoved) {
-                identityStore.getRetired().add(identity);
+                persistableStore.getRetired().add(identity);
             }
         }
         if (wasRemoved) {
@@ -142,7 +124,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     public Optional<Identity> findActiveIdentityByNodeId(String nodeId) {
         synchronized (identityModelLock) {
-            return identityStore.getActiveIdentityByDomainId().values().stream()
+            return persistableStore.getActiveIdentityByDomainId().values().stream()
                     .filter(e -> e.networkId().getNodeId().equals(nodeId))
                     .findAny();
         }
@@ -150,7 +132,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     public Optional<Identity> findPooledIdentityByNodeId(String nodeId) {
         synchronized (identityModelLock) {
-            return identityStore.getPool().stream()
+            return persistableStore.getPool().stream()
                     .filter(e -> e.networkId().getNodeId().equals(nodeId))
                     .findAny();
         }
@@ -158,7 +140,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     public Optional<Identity> findRetiredIdentityByNodeId(String nodeId) {
         synchronized (identityModelLock) {
-            return identityStore.getRetired().stream()
+            return persistableStore.getRetired().stream()
                     .filter(e -> e.networkId().getNodeId().equals(nodeId))
                     .findAny();
         }
@@ -166,9 +148,9 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     public Optional<Identity> findAnyIdentityByNodeId(String nodeId) {
         synchronized (identityModelLock) {
-            return Streams.concat(identityStore.getActiveIdentityByDomainId().values().stream(),
-                            Streams.concat(identityStore.getRetired().stream(),
-                                    identityStore.getPool().stream()))
+            return Streams.concat(persistableStore.getActiveIdentityByDomainId().values().stream(),
+                            Streams.concat(persistableStore.getRetired().stream(),
+                                    persistableStore.getPool().stream()))
                     .filter(e -> e.networkId().getNodeId().equals(nodeId))
                     .findAny();
         }
@@ -183,16 +165,16 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     // We search first for identities with initialized nodes, otherwise we take any.
     private Optional<Identity> swapPooledIdentity(String domainId) {
         synchronized (identityModelLock) {
-            return identityStore.getPool().stream()
+            return persistableStore.getPool().stream()
                     .filter(identity -> networkService.findNetworkId(identity.nodeId(), identity.pubKey()).isPresent())
                     .findAny()
-                    .or(() -> identityStore.getPool().stream().findAny()) // If none is initialized we take any
+                    .or(() -> persistableStore.getPool().stream().findAny()) // If none is initialized we take any
                     .map(pooledIdentity -> {
                         Identity clonedIdentity;
                         synchronized (identityModelLock) {
                             clonedIdentity = new Identity(domainId, pooledIdentity.networkId(), pooledIdentity.keyPair());
-                            identityStore.getPool().remove(pooledIdentity);
-                            identityStore.getActiveIdentityByDomainId().put(domainId, clonedIdentity);
+                            persistableStore.getPool().remove(pooledIdentity);
+                            persistableStore.getActiveIdentityByDomainId().put(domainId, clonedIdentity);
                         }
                         persist();
 
@@ -213,12 +195,12 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     private int numMissingPooledIdentities() {
         synchronized (identityModelLock) {
-            return Math.max(0, minPoolSize - identityStore.getPool().size());
+            return Math.max(0, minPoolSize - persistableStore.getPool().size());
         }
     }
 
     private void initializeActiveIdentities() {
-        identityStore.getActiveIdentityByDomainId().values().forEach(identity ->
+        persistableStore.getActiveIdentityByDomainId().values().forEach(identity ->
                 networkService.maybeInitializeServer(identity.nodeId(), identity.pubKey()).values()
                         .forEach(value -> value.whenComplete((result, throwable) -> {
                                     if (throwable == null && result) {
@@ -233,7 +215,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     }
 
     private void initializePooledIdentities() {
-        identityStore.getPool().forEach(identity ->
+        persistableStore.getPool().forEach(identity ->
                 networkService.maybeInitializeServer(identity.nodeId(), identity.pubKey()).values()
                         .forEach(value -> value.whenComplete((result, throwable) -> {
                                     if (throwable == null && result) {
@@ -254,7 +236,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
                         log.info("Network node for pooled identity {} created and initialized. NetworkId={}",
                                 identity.domainId(), identity.networkId());
                         synchronized (identityModelLock) {
-                            identityStore.getPool().add(identity);
+                            persistableStore.getPool().add(identity);
                         }
                         persist();
                     } else {
@@ -268,7 +250,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         return createAndInitializeNewIdentity(domainId)
                 .thenApply(identity -> {
                     synchronized (identityModelLock) {
-                        identityStore.getActiveIdentityByDomainId().put(domainId, identity);
+                        persistableStore.getActiveIdentityByDomainId().put(domainId, identity);
                     }
                     persist();
                     return identity;

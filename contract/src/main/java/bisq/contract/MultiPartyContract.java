@@ -7,7 +7,7 @@ import lombok.Getter;
 import java.util.Set;
 
 @Getter
-public class MultiPartyContract<T extends Listing> extends Contract<T> {
+public class MultiPartyContract<T extends Listing> extends AContract<T> {
     private final Set<Party> parties;
 
     public MultiPartyContract(T listing, SwapProtocolType protocolType, Set<Party> parties) {

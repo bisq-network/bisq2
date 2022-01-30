@@ -15,23 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.application;
+package bisq.seed;
 
+import lombok.extern.slf4j.Slf4j;
 
-import bisq.common.util.OsUtils;
+@Slf4j
+public class SeedMain {
+    public static void main(String[] args) {
+        new Seed(args);
+        keepRunning();
+    }
 
-import java.io.File;
-
-public class ApplicationOptionsParser {
-    public static ApplicationOptions parse(String[] args) {
-        String appName = "Bisq2";
-        for (String arg : args) {
-            if (arg.startsWith("--appName")) {
-                appName = arg.split("=")[1];
+    private static void keepRunning() {
+        while (true) {
+            try {
+                Thread.sleep(Long.MAX_VALUE);
+            } catch (InterruptedException ignore) {
             }
         }
-
-        String appDir = OsUtils.getUserDataDir() + File.separator + appName;
-        return new ApplicationOptions(appDir, appName);
     }
 }

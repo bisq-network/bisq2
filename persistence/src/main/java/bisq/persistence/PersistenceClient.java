@@ -26,17 +26,23 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface PersistenceClient<T extends Serializable> {
     default CompletableFuture<Optional<T>> readPersisted() {
-        return getPersistence().readAsync(this::applyPersisted);
+        return getPersistence().readAsync(persisted -> {
+            getPersistableStore().applyPersisted(persisted);
+            onPersistedApplied(persisted);
+        });
     }
+
+    default void onPersistedApplied(T persisted) {
+    }
+
 
     Persistence<T> getPersistence();
 
-    void applyPersisted(T persisted);
+    PersistableStore<T> getPersistableStore();
 
     default CompletableFuture<Boolean> persist() {
-        CompletableFuture<Boolean> future = getPersistence().persistAsync(getClone());
-        return future;
+        return getPersistence().persistAsync(getPersistableStore().getClone());
     }
 
-    T getClone();
+
 }

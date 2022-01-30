@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -43,6 +44,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Object mapAccessLock = new Object();
 
     public MailboxDataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
         super(persistenceService, storeName, fileName);
@@ -64,7 +66,8 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         byte[] hash = DigestUtil.hash(payload.serialize());
         ByteArray byteArray = new ByteArray(hash);
         MailboxRequest requestFromMap;
-        synchronized (map) {
+        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        synchronized (mapAccessLock) {
             if (map.size() > MAX_MAP_SIZE) {
                 return new Result(false).maxMapSizeReached();
             }
@@ -110,9 +113,10 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     public Result remove(RemoveMailboxRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
+        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
         MailboxRequest requestFromMap = map.get(byteArray);
         MailboxData dataFromMap;
-        synchronized (map) {
+        synchronized (mapAccessLock) {
             if (requestFromMap == null) {
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
@@ -177,7 +181,8 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     int getSequenceNumber(byte[] hash) {
         ByteArray byteArray = new ByteArray(hash);
         int sequenceNumber = 0;
-        synchronized (map) {
+        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        synchronized (mapAccessLock) {
             if (map.containsKey(byteArray)) {
                 sequenceNumber = map.get(byteArray).getSequenceNumber();
             }
@@ -186,7 +191,8 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
     boolean contains(byte[] hash) {
-        synchronized (map) {
+        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        synchronized (mapAccessLock) {
             return map.containsKey(new ByteArray(hash));
         }
     }
@@ -209,7 +215,8 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        synchronized (map) {
+        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        synchronized (mapAccessLock) {
             map.clear();
             map.putAll(pruned);
         }

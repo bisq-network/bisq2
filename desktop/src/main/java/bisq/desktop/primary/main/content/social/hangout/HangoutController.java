@@ -72,8 +72,8 @@ public class HangoutController implements InitWithDataController<TradeIntent>, C
     public void onViewAttached() {
         chatService.addListener(this);
 
-        model.setAllChannels(chatService.getChatStore().getPrivateChannels());
-        chatService.getChatStore().getSelectedChannel().ifPresent(model::selectChannel);
+        model.setAllChannels(chatService.getPersistableStore().getPrivateChannels());
+        chatService.getPersistableStore().getSelectedChannel().ifPresent(model::selectChannel);
     }
 
     @Override

@@ -17,7 +17,7 @@
 
 package bisq.social.chat;
 
-import bisq.persistence.Persistable;
+import bisq.persistence.PersistableStore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-public class ChatStore implements Persistable<ChatStore> {
+public class ChatStore implements PersistableStore<ChatStore> {
 
     @Getter
     private final Set<PrivateChannel> privateChannels = new CopyOnWriteArraySet<>();

@@ -22,7 +22,7 @@ import bisq.common.options.PropertiesReader;
 import java.util.Locale;
 import java.util.Properties;
 
-public record ApplicationOptions(String baseDir, String appName) {
+public record ApplicationConfig(String baseDir, String appName) {
     // To ensure the locale is set initially we should write it to property file instead of persisting it in 
     // preferences which might be read out to a later moment.
     public Locale getLocale() {
@@ -32,7 +32,7 @@ public record ApplicationOptions(String baseDir, String appName) {
         }
         String language = properties.getProperty("language");
         String country = properties.getProperty("country");
-        if (language == null || country == null) {
+        if (language == null || country == null || language.isEmpty() || country.isEmpty()) {
             return Locale.getDefault();
         }
 

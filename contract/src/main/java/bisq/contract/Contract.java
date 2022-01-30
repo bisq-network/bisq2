@@ -17,22 +17,38 @@
 
 package bisq.contract;
 
-import bisq.offer.Listing;
 import bisq.account.protocol.SwapProtocolType;
+import bisq.common.monetary.Monetary;
+import bisq.network.NetworkId;
+import bisq.offer.Offer;
 import lombok.Getter;
 
-/**
- * Defines the terms of the financial interaction with the counterparty/parties.
- */
-@Getter
-public abstract class Contract<T extends Listing> {
-    protected final T listing;
-    protected final SwapProtocolType protocolType;
-    protected final Party maker;
+import java.io.Serializable;
 
-    public Contract(T listing, SwapProtocolType protocolType) {
+@Getter
+public class Contract implements Serializable {
+    private final NetworkId takerNetworkId;
+    private final SwapProtocolType protocolType;
+    private final Offer offer;
+    private final Monetary baseSideAmount;
+    private final Monetary quoteSideAmount;
+    private final String takersBaseSideSettlementMethod;
+    private final String takersQuoteSideSettlementMethod;
+
+    public Contract(NetworkId takerNetworkId,
+                    SwapProtocolType protocolType,
+                    Offer offer,
+                    Monetary baseSideAmount,
+                    Monetary quoteSideAmount,
+                    String takersBaseSideSettlementMethod,
+                    String takersQuoteSideSettlementMethod) {
+
+        this.takerNetworkId = takerNetworkId;
         this.protocolType = protocolType;
-        this.maker = new Party(Role.MAKER, listing.getMakerNetworkId());
-        this.listing = listing;
+        this.offer = offer;
+        this.baseSideAmount = baseSideAmount;
+        this.quoteSideAmount = quoteSideAmount;
+        this.takersBaseSideSettlementMethod = takersBaseSideSettlementMethod;
+        this.takersQuoteSideSettlementMethod = takersQuoteSideSettlementMethod;
     }
 }

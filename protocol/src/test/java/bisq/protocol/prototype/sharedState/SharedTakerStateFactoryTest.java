@@ -10,7 +10,7 @@ import static bisq.protocol.prototype.SecurityProvider.Unit.UNIT;
 import static bisq.protocol.prototype.sharedState.SharedStateFactory.fireEvent;
 import static bisq.protocol.prototype.sharedState.SharedStateFactory.when;
 
-public class SharedStateFactoryTest {
+public class SharedTakerStateFactoryTest {
     @Test
     public void testNew() {
 //        var factory = new SharedStateFactory<>(LightningEscrow.SharedState.class);

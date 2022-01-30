@@ -1,6 +1,7 @@
 package bisq.protocol.prototype.lightningEscrow;
 
 import bisq.protocol.prototype.SecurityProvider;
+import bisq.protocol.prototype.sharedState.*;
 
 import static bisq.protocol.prototype.sharedState.SharedStateFactory.oneOf;
 

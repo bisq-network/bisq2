@@ -19,21 +19,28 @@ package bisq.common.locale;
 
 import bisq.common.currency.FiatCurrencyRepository;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Locale;
 import java.util.Set;
 
+@Slf4j
 public class LocaleRepository {
     @Getter
     private static Locale defaultLocale;
 
     public static void setDefaultLocale(Locale defaultLocale) {
+        if (isLocaleInvalid(defaultLocale)) {
+            defaultLocale = Locale.US;
+        }
         LocaleRepository.defaultLocale = defaultLocale;
     }
 
     public static void initialize(Locale defaultLocale) {
+        if (isLocaleInvalid(defaultLocale)) {
+            defaultLocale = Locale.US;
+        }
         LocaleRepository.defaultLocale = defaultLocale;
-
         CountryRepository.initialize(defaultLocale);
         LanguageRepository.initialize(defaultLocale);
         FiatCurrencyRepository.initialize(defaultLocale);
@@ -41,18 +48,27 @@ public class LocaleRepository {
 
     static {
         defaultLocale = Locale.getDefault();
-        // On some systems there is no country defined, in that case we use en_US
-        if (defaultLocale == null ||
-                defaultLocale.getCountry() == null ||
-                defaultLocale.getCountry().isEmpty() ||
-                defaultLocale.getDisplayCountry() == null ||
-                defaultLocale.getDisplayCountry().isEmpty() ||
-                defaultLocale.getLanguage() == null ||
-                defaultLocale.getLanguage().isEmpty() ||
-                defaultLocale.getDisplayCountry() == null ||
-                defaultLocale.getDisplayCountry().isEmpty()) {
+        if (isLocaleInvalid(defaultLocale)) {
             defaultLocale = Locale.US;
         }
+    }
+
+    private static boolean isLocaleInvalid(Locale locale) {
+        // On some systems there is no country defined, in that case we use en_US
+        boolean isInvalid = locale == null ||
+                locale.getCountry() == null ||
+                locale.getCountry().isEmpty() ||
+                locale.getDisplayCountry() == null ||
+                locale.getDisplayCountry().isEmpty() ||
+                locale.getLanguage() == null ||
+                locale.getLanguage().isEmpty() ||
+                locale.getDisplayCountry() == null ||
+                locale.getDisplayCountry().isEmpty();
+        if (isInvalid) {
+            log.warn("Provided locale is invalid. We use Locale.US instead. Provided locale={}", locale);
+
+        }
+        return isInvalid;
     }
 
     // Data from https://restcountries.eu/rest/v2/all?fields=name;region;subregion;alpha2Code;languages

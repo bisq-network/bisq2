@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.services.data.storage;
 
-import bisq.common.data.ByteArray;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -25,7 +24,6 @@ import bisq.persistence.RateLimitedPersistenceClient;
 import lombok.Getter;
 
 import java.io.File;
-import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class DataStorageService<T extends DataRequest> extends RateLimitedPersistenceClient<DataStore<T>> {
     public static final String SUB_PATH = "db" + File.separator + "network";
@@ -33,7 +31,6 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     protected final Persistence<DataStore<T>> persistence;
     @Getter
     public final DataStore<T> persistableStore = new DataStore<>();
-    protected final ConcurrentHashMap<ByteArray, T> map = new ConcurrentHashMap<>();
     @Getter
     private final String fileName;
     @Getter

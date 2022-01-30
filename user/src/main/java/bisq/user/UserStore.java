@@ -17,10 +17,10 @@
 
 package bisq.user;
 
-import bisq.persistence.Persistable;
+import bisq.persistence.PersistableStore;
 import lombok.Getter;
 
-public class UserStore implements Persistable<UserStore> {
+public class UserStore implements PersistableStore<UserStore> {
     @Getter
     private final Cookie cookie;
 

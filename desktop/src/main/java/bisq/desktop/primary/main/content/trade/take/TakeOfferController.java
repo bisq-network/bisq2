@@ -26,14 +26,19 @@ import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.take.components.TakersSettlementSelection;
 import bisq.offer.Offer;
 import bisq.oracle.marketprice.MarketPriceService;
+import bisq.protocol.ProtocolService;
 import javafx.beans.property.BooleanProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TakeOfferController implements InitWithDataController<TakeOfferController.InitData> {
+
     public static record InitData(Offer offer, BooleanProperty showTakeOfferTab) {
     }
+
+    private final MarketPriceService marketPriceService;
+    private final ProtocolService protocolService;
 
     private final TakeOfferModel model;
     @Getter
@@ -41,12 +46,13 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
 
     private final AmountPriceGroup amountPriceGroup;
     private final TakersSettlementSelection settlementSelection;
-    private final MarketPriceService marketPriceService;
+
     private final DirectionSelection directionSelection;
 
 
     public TakeOfferController(DefaultApplicationService applicationService) {
         marketPriceService = applicationService.getMarketPriceService();
+        protocolService = applicationService.getProtocolService();
         model = new TakeOfferModel();
 
         // will prob use custom design/component not reuse DirectionSelection
@@ -64,11 +70,10 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
                 model.selectedProtocolTypeProperty,
                 applicationService.getAccountService());
 
-        model.setSelectedBaseSideAccounts(settlementSelection.getSelectedBaseSideAccounts());
-        model.setSelectedQuoteSideAccounts(settlementSelection.getSelectedQuoteSideAccounts());
-        model.setSelectedBaseSideSettlementMethods(settlementSelection.getSelectedBaseSideSettlementMethods());
-        model.setSelectedQuoteSideSettlementMethods(settlementSelection.getSelectedQuoteSideSettlementMethods());
-
+        model.setSelectedBaseSideAccount(settlementSelection.getSelectedBaseSideAccount());
+        model.setSelectedQuoteSideAccount(settlementSelection.getSelectedQuoteSideAccount());
+        model.setSelectedBaseSideSettlementMethod(settlementSelection.getSelectedBaseSideSettlementMethod());
+        model.setSelectedQuoteSideSettlementMethod(settlementSelection.getSelectedQuoteSideSettlementMethod());
 
         view = new TakeOfferView(model, this,
                 directionSelection.getView(),
@@ -107,8 +112,18 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
 
 
     public void onTakeOffer() {
-        model.showTakeOfferTab.set(false);
-        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
+       String baseSideSettlementMethod = model.getSelectedBaseSideSettlementMethod().get().name();
+       String quoteSideSettlementMethod = model.getSelectedQuoteSideSettlementMethod().get().name();
+        protocolService.takeOffer(model.selectedProtocolTypeProperty.get(),
+                        model.offer,
+                        model.baseSideAmount,
+                        model.quoteSideAmount,
+                        baseSideSettlementMethod,
+                        quoteSideSettlementMethod)
+                .whenComplete((identity, throwable) -> {
+                    model.showTakeOfferTab.set(false);
+                    Navigation.navigateTo(NavigationTarget.OFFERBOOK);
+                });
     }
 
     public void onCancel() {

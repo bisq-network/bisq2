@@ -15,15 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.persistence;
+package bisq.protocol.fsm_demo;
 
-import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- * Interface for the outside envelope object persisted to disk.
- */
-public interface Persistable<T> extends Serializable {
-    T getClone();
-
-    void applyPersisted(T persisted);
+public class Contract {
+    public List<Term> terms = new ArrayList<>(); 
 }

@@ -42,20 +42,20 @@ import static bisq.common.util.OsUtils.EXIT_SUCCESS;
  */
 @Getter
 @Slf4j
-public class NetworkNodeApplicationService extends ServiceProvider {
+public class NetworkApplicationService extends ServiceProvider {
     private final KeyPairService keyPairService;
     private final NetworkService networkService;
-    private final ApplicationOptions applicationOptions;
+    private final ApplicationConfig applicationConfig;
     private final PersistenceService persistenceService;
 
-    public NetworkNodeApplicationService(ApplicationOptions applicationOptions) {
+    public NetworkApplicationService(String[] args) {
         super("Seed");
-        this.applicationOptions = applicationOptions;
+        this.applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
 
-        persistenceService = new PersistenceService(applicationOptions.baseDir());
+        persistenceService = new PersistenceService(applicationConfig.baseDir());
         keyPairService = new KeyPairService(persistenceService);
 
-        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
+        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationConfig.baseDir(),
                 getConfig("bisq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
     }

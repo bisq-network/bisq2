@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -55,6 +56,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     }
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Object mapAccessLock = new Object();
 
     public AuthenticatedDataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
         super(persistenceService, storeName, fileName);
@@ -77,7 +79,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         byte[] hash = DigestUtil.hash(payload.serialize());
         ByteArray byteArray = new ByteArray(hash);
         AuthenticatedDataRequest requestFromMap;
-        synchronized (map) {
+        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
+        synchronized (mapAccessLock) {
             if (map.size() > MAX_MAP_SIZE) {
                 return new Result(false).maxMapSizeReached();
             }
@@ -126,7 +129,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public Result remove(RemoveAuthenticatedDataRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
         AuthenticatedPayload payloadFromMap;
-        synchronized (map) {
+        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
+        synchronized (mapAccessLock) {
             AuthenticatedDataRequest requestFromMap = map.get(byteArray);
             if (requestFromMap == null) {
                 log.debug("No entry at remove. hash={}", byteArray);
@@ -180,7 +184,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public Result refresh(RefreshRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
         AddAuthenticatedDataRequest updatedRequest;
-        synchronized (map) {
+        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
+        synchronized (mapAccessLock) {
             AuthenticatedDataRequest requestFromMap = map.get(byteArray);
 
             if (requestFromMap == null) {
@@ -242,7 +247,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public int getSequenceNumber(byte[] hash) {
         ByteArray byteArray = new ByteArray(hash);
         int sequenceNumber = 0;
-        synchronized (map) {
+        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
+        synchronized (mapAccessLock) {
             if (map.containsKey(byteArray)) {
                 sequenceNumber = map.get(byteArray).getSequenceNumber();
             }
@@ -268,7 +274,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        synchronized (map) {
+        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
+        synchronized (mapAccessLock) {
             map.clear();
             map.putAll(pruned);
         }

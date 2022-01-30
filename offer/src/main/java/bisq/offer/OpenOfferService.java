@@ -17,19 +17,41 @@
 
 package bisq.offer;
 
+import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkService;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
+import bisq.persistence.PersistenceService;
+import lombok.Getter;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
 
-public class OpenOfferService {
+import static java.util.concurrent.CompletableFuture.runAsync;
 
+public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
+    public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
+
+
+    public interface Listener {
+        void onOpenOfferAdded(OpenOffer openOffer);
+
+        void onOpenOfferRemoved(OpenOffer openOffer);
+    }
+    @Getter
+    private final OpenOfferStore persistableStore = new OpenOfferStore();
     private final NetworkService networkService;
-    private final Set<OpenOffer> openOffers = new CopyOnWriteArraySet<>();
+    @Getter
+    private final Persistence<OpenOfferStore> persistence;
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public OpenOfferService(NetworkService networkService) {
+    public OpenOfferService(NetworkService networkService, PersistenceService persistenceService) {
         this.networkService = networkService;
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -39,26 +61,38 @@ public class OpenOfferService {
         return future;
     }
 
-   /* public void createNewOffer(long askAmount) {
-        Map<Transport.Type, Address> map = Map.of(Transport.Type.CLEAR, Address.localHost(3333));
-        NetworkId makerNetworkId = new NetworkId(map, new PubKey(null, "default"), "default");
-        SwapSide askSwapSide = new SwapSide(Coin.asBtc(askAmount), List.of());
-        SwapSide bidSwapSide = new SwapSide(Fiat.of(5000, "USD"), List.of(FiatSettlement.ZELLE));
-        SwapOffer offer = new SwapOffer(bidSwapSide,
-                askSwapSide,
-                "USD",
-                List.of(SwapProtocolType.REPUTATION, SwapProtocolType.MULTISIG),
-                makerNetworkId);
-        networkService.addData(offer);
-    }*/
-
-    public void newOpenOffer(Offer offer) {
-        OpenOffer openOffer = new OpenOffer(offer);
-        openOffers.add(openOffer);
-        //  Persistence.write(openOffers);
+    public void shutdown() {
     }
 
-    public void shutdown() {
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
 
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
+
+    public List<OpenOffer> getOpenOffers() {
+        return persistableStore.getOpenOffers();
+    }
+
+    public void add(Offer offer) {
+        OpenOffer openOffer = new OpenOffer(offer);
+        persistableStore.add(openOffer);
+        runAsync(() -> listeners.forEach(l -> l.onOpenOfferAdded(openOffer)), DISPATCHER);
+        persist();
+    }
+
+    public void remove(Offer offer) {
+        OpenOffer openOffer = new OpenOffer(offer);
+        persistableStore.remove(openOffer);
+        runAsync(() -> listeners.forEach(l -> l.onOpenOfferRemoved(openOffer)), DISPATCHER);
+        persist();
+    }
+
+    public Optional<OpenOffer> findOpenOffer(String offerId) {
+        return persistableStore.getOpenOffers().stream()
+                .filter(openOffer -> openOffer.getOffer().getId().equals(offerId))
+                .findAny();
     }
 }

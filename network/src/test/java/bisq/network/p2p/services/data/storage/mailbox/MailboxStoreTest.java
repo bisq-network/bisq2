@@ -49,7 +49,7 @@ public class MailboxStoreTest {
     public void testAddAndRemoveMailboxMsg() throws GeneralSecurityException, IOException, InterruptedException {
         MockMailboxMessage message = new MockMailboxMessage("test" + UUID.randomUUID());
         PersistenceService persistenceService = new PersistenceService(appDirPath);
-        MailboxDataStore store = new MailboxDataStore(persistenceService,
+        MailboxDataStorageService store = new MailboxDataStorageService(persistenceService,
                 MAILBOX_DATA_STORE.getStoreName(),
                 message.getMetaData().getFileName());
         store.readPersisted().join();
@@ -57,14 +57,14 @@ public class MailboxStoreTest {
         KeyPair receiverKeyPair = KeyGeneration.generateKeyPair();
 
         MailboxPayload payload = MailboxPayload.createMailboxPayload(message, senderKeyPair, receiverKeyPair.getPublic());
-        Map<ByteArray, MailboxRequest> map = store.getClone();
+        Map<ByteArray, MailboxRequest> map = store.getPersistableStore().getClone().getMap();
         int initialMapSize = map.size();
         byte[] hash = DigestUtil.hash(payload.serialize());
         int initialSeqNum = store.getSequenceNumber(hash);
 
         CountDownLatch addLatch = new CountDownLatch(1);
         CountDownLatch removeLatch = new CountDownLatch(1);
-        store.addListener(new MailboxDataStore.Listener() {
+        store.addListener(new MailboxDataStorageService.Listener() {
             @Override
             public void onAdded(MailboxPayload mailboxPayload) {
                 assertEquals(payload, mailboxPayload);

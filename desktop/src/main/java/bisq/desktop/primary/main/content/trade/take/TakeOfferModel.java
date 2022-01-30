@@ -27,7 +27,6 @@ import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import javafx.beans.property.*;
-import javafx.collections.ObservableSet;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -47,10 +46,10 @@ public class TakeOfferModel implements Model {
     Monetary quoteSideAmount;
     Quote fixPrice;
 
-    private ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts;
-    private ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts;
-    private ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods;
-    private ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods;
+    private ReadOnlyObjectProperty<Account<? extends SettlementMethod>> selectedBaseSideAccount;
+    private ReadOnlyObjectProperty<Account<? extends SettlementMethod>> selectedQuoteSideAccount;
+    private ReadOnlyObjectProperty<SettlementMethod> selectedBaseSideSettlementMethod;
+    private ReadOnlyObjectProperty<SettlementMethod> selectedQuoteSideSettlementMethod;
     
     final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
     BooleanProperty showTakeOfferTab;

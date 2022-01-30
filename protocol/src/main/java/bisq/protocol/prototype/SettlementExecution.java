@@ -17,7 +17,7 @@
 
 package bisq.protocol.prototype;
 
-import bisq.contract.Contract;
+import bisq.contract.AContract;
 import com.google.common.util.concurrent.Uninterruptibles;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,12 +35,12 @@ public abstract class SettlementExecution {
         };
     }*/
 
-    public abstract CompletableFuture<Boolean> sendFunds(Contract contract);
+    public abstract CompletableFuture<Boolean> sendFunds(AContract contract);
 
 
     public static class Automatic extends SettlementExecution {
         @Override
-        public CompletableFuture<Boolean> sendFunds(Contract contract) {
+        public CompletableFuture<Boolean> sendFunds(AContract contract) {
             return CompletableFuture.completedFuture(true);
         }
     }
@@ -62,7 +62,7 @@ public abstract class SettlementExecution {
         }
 
         @Override
-        public CompletableFuture<Boolean> sendFunds(Contract contract) {
+        public CompletableFuture<Boolean> sendFunds(AContract contract) {
             listeners.forEach(Listener::onStartManualPayment);
             return CompletableFuture.supplyAsync(() -> {
                 Uninterruptibles.awaitUninterruptibly(latch);

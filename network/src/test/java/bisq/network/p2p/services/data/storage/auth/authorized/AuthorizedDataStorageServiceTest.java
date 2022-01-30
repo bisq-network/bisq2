@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @Slf4j
-public class AuthorizedDataStoreTest {
+public class AuthorizedDataStorageServiceTest {
     private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "bisq_StorageTest";
 
     @Test
@@ -63,7 +63,7 @@ public class AuthorizedDataStoreTest {
 
         KeyPair keyPair = KeyGeneration.generateKeyPair();
         PersistenceService persistenceService = new PersistenceService(appDirPath);
-        AuthenticatedDataStore store = new AuthenticatedDataStore(persistenceService, 
+        AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(persistenceService, 
                 AUTHENTICATED_DATA_STORE.getStoreName(),
                 authorizedPayload.getMetaData().getFileName());
         store.readPersisted().join();
@@ -74,7 +74,7 @@ public class AuthorizedDataStoreTest {
         assertTrue(result.isSuccess());
 
         ByteArray byteArray = new ByteArray(hash);
-        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getClone().get(byteArray);
+        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);
         AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
@@ -86,7 +86,7 @@ public class AuthorizedDataStoreTest {
         Result refreshResult = store.refresh(refreshRequest);
         assertTrue(refreshResult.isSuccess());
 
-        addRequestFromMap = (AddAuthenticatedDataRequest) store.getClone().get(byteArray);
+        addRequestFromMap = (AddAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);
         dataFromMap = addRequestFromMap.getAuthenticatedData();
         assertEquals(initialSeqNum + 2, dataFromMap.getSequenceNumber());
 
@@ -95,7 +95,7 @@ public class AuthorizedDataStoreTest {
         Result removeDataResult = store.remove(removeAuthenticatedDataRequest);
         assertTrue(removeDataResult.isSuccess());
 
-        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequestFromMap = (RemoveAuthenticatedDataRequest) store.getClone().get(byteArray);
+        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequestFromMap = (RemoveAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);
         assertEquals(initialSeqNum + 3, removeAuthenticatedDataRequestFromMap.getSequenceNumber());
     }
 }

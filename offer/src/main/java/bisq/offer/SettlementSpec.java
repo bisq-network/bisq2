@@ -27,6 +27,9 @@ import javax.annotation.Nullable;
  *                             In case maker had multiple accounts for same settlement method they
  *                             can define which account to use for that offer
  */
+//todo use salt for makerAccountId to avoid leaking privacy, otherwise observers can derive which offer is the same 
+// maker if same account is used in multiple offer. 
+    //todo move makerAccountId to openOffer
 public record SettlementSpec(String settlementMethodName,
                             @Nullable String makerAccountId) implements Proto {
 }

@@ -51,40 +51,23 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         void onChatMessageAdded(Channel channel, ChatMessage newChatMessage);
     }
 
+    private final ChatStore persistableStore = new ChatStore();
+    private final Persistence<ChatStore> persistence;
     private final PersistenceService persistenceService;
     private final IdentityService identityService;
     private final NetworkService networkService;
-    private final ChatStore chatStore = new ChatStore();
-    private final Persistence<ChatStore> persistence;
+
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public ChatService(PersistenceService persistenceService, IdentityService identityService, NetworkService networkService) {
         this.persistenceService = persistenceService;
         this.identityService = identityService;
         this.networkService = networkService;
-        persistence = persistenceService.getOrCreatePersistence(this, "db", chatStore);
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
 
         networkService.addMessageListener(this);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // PersistenceClient
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void applyPersisted(ChatStore persisted) {
-        synchronized (chatStore) {
-            chatStore.applyPersisted(persisted);
-        }
-    }
-
-    @Override
-    public ChatStore getClone() {
-        synchronized (chatStore) {
-            return chatStore.getClone();
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener
@@ -112,10 +95,10 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public PrivateChannel getOrCreatePrivateChannel(String id, ChatPeer chatPeer, ChatIdentity chatIdentity) {
         PrivateChannel privateChannel = new PrivateChannel(id, chatPeer, chatIdentity);
         Optional<PrivateChannel> previousChannel;
-        synchronized (chatStore) {
-            previousChannel = chatStore.findPrivateChannel(id);
+        synchronized (persistableStore) {
+            previousChannel = persistableStore.findPrivateChannel(id);
             if (previousChannel.isEmpty()) {
-                chatStore.getPrivateChannels().add(privateChannel);
+                persistableStore.getPrivateChannels().add(privateChannel);
             }
         }
         if (previousChannel.isEmpty()) {
@@ -128,7 +111,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public void selectChannel(Channel channel) {
-        chatStore.setSelectedChannel(channel);
+        persistableStore.setSelectedChannel(channel);
         persist();
         listeners.forEach(listener -> listener.onChannelSelected(channel));
     }
@@ -139,7 +122,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void addChatMessage(ChatMessage chatMessage, Channel privateChannel) {
-        synchronized (chatStore) {
+        synchronized (persistableStore) {
             privateChannel.addChatMessage(chatMessage);
         }
         persist();
@@ -151,8 +134,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Optional<ChatIdentity> findChatIdentity(String domainId) {
-        if (chatStore.getUserNameByDomainId().containsKey(domainId)) {
-            String userName = chatStore.getUserNameByDomainId().get(domainId);
+        if (persistableStore.getUserNameByDomainId().containsKey(domainId)) {
+            String userName = persistableStore.getUserNameByDomainId().get(domainId);
             Identity identity = identityService.getOrCreateIdentity(domainId).join();
             return Optional.of(new ChatIdentity(userName, identity));
         } else {
@@ -162,15 +145,15 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public Optional<String> findUserName(String domainId) {
         //todo add mapping strategy
-        return Optional.ofNullable(chatStore.getUserNameByDomainId().get(domainId));
+        return Optional.ofNullable(persistableStore.getUserNameByDomainId().get(domainId));
     }
 
     public ChatIdentity getOrCreateChatIdentity(String userName, String domainId) {
-        synchronized (chatStore) {
-            if (chatStore.getUserNameByDomainId().containsKey(domainId)) {
-                checkArgument(chatStore.getUserNameByDomainId().get(domainId).equals(userName));
+        synchronized (persistableStore) {
+            if (persistableStore.getUserNameByDomainId().containsKey(domainId)) {
+                checkArgument(persistableStore.getUserNameByDomainId().get(domainId).equals(userName));
             } else {
-                chatStore.getUserNameByDomainId().put(domainId, userName);
+                persistableStore.getUserNameByDomainId().put(domainId, userName);
             }
         }
         persist();

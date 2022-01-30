@@ -33,43 +33,30 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class AccountService implements PersistenceClient<AccountStore> {
-    private final AccountStore accountStore = new AccountStore();
+    @Getter
+    private final AccountStore persistableStore = new AccountStore();
     @Getter
     private final Persistence<AccountStore> persistence;
 
     public AccountService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, "db", accountStore);
-    }
-
-    @Override
-    public void applyPersisted(AccountStore persisted) {
-        synchronized (accountStore) {
-            accountStore.applyPersisted(persisted);
-        }
-    }
-
-    @Override
-    public AccountStore getClone() {
-        synchronized (accountStore) {
-            return accountStore.getClone();
-        }
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     public void addAccount(Account<? extends SettlementMethod> account) {
-        List<Account<? extends SettlementMethod>> accounts = accountStore.getAccounts();
+        List<Account<? extends SettlementMethod>> accounts = persistableStore.getAccounts();
         if (accounts.contains(account)) return;
         accounts.add(account);
         persist();
     }
 
     public List<Account<? extends SettlementMethod>> getAccounts() {
-        return accountStore.getAccounts();
+        return persistableStore.getAccounts();
     }
 
     public List<Account<? extends SettlementMethod>> getMatchingAccounts(SwapProtocolType protocolTyp,
                                                                          String currencyCode) {
         var settlementMethods = new HashSet<>(SettlementMethod.from(protocolTyp, currencyCode));
-        return accountStore.getAccounts().stream()
+        return persistableStore.getAccounts().stream()
                 .filter(account -> settlementMethods.contains(account.getSettlementMethod()))
                 .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
                 .collect(Collectors.toList());

@@ -18,7 +18,7 @@
 package bisq.protocol.prototype.bsqBond;
 
 
-import bisq.contract.Contract;
+import bisq.contract.AContract;
 import bisq.protocol.prototype.SecurityProvider;
 import bisq.protocol.prototype.bsqBond.messages.CommitmentMessage;
 import bisq.protocol.prototype.bsqBond.messages.FundsSentMessage;
@@ -36,7 +36,7 @@ public class BsqBond implements SecurityProvider {
         return Type.BOND;
     }
 
-    public CompletableFuture<String> getCommitment(Contract contract) {
+    public CompletableFuture<String> getCommitment(AContract contract) {
         return CompletableFuture.completedFuture("commitment");
     }
 

@@ -25,6 +25,7 @@ import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
@@ -40,6 +41,7 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
     }
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Object mapAccessLock = new Object();
 
     public AppendOnlyDataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
         super(persistenceService, storeName, fileName);
@@ -52,7 +54,8 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
 
     public Result add(AddAppendOnlyDataRequest addAppendOnlyDataRequest) {
         AppendOnlyPayload appendOnlyPayload = addAppendOnlyDataRequest.payload();
-        synchronized (map) {
+        ConcurrentHashMap<ByteArray, AddAppendOnlyDataRequest> map = persistableStore.getMap();
+        synchronized (mapAccessLock) {
             if (map.size() > MAX_MAP_SIZE) {
                 return new Result(false).maxMapSizeReached();
             }

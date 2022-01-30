@@ -17,7 +17,7 @@
 
 package bisq.protocol.prototype;
 
-import bisq.contract.Contract;
+import bisq.contract.AContract;
 import bisq.contract.Party;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
@@ -43,11 +43,11 @@ public abstract class Protocol implements MessageListener {
     protected final NetworkService networkService;
     protected final NetworkIdWithKeyPair networkIdWithKeyPair;
     @Getter
-    protected final Contract contract;
+    protected final AContract contract;
     protected final Party maker;
     protected final Set<Listener> listeners = ConcurrentHashMap.newKeySet();
 
-    public Protocol(NetworkService networkService, NetworkIdWithKeyPair networkIdWithKeyPair, Contract contract) {
+    public Protocol(NetworkService networkService, NetworkIdWithKeyPair networkIdWithKeyPair, AContract contract) {
         this.networkService = networkService;
         this.networkIdWithKeyPair = networkIdWithKeyPair;
         this.contract = contract;

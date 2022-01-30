@@ -64,7 +64,7 @@ public class DefaultApplicationService extends ServiceProvider {
     private final OpenOfferService openOfferService;
     private final IdentityService identityService;
     private final MarketPriceService marketPriceService;
-    private final ApplicationOptions applicationOptions;
+    private final ApplicationConfig applicationConfig;
     private final PersistenceService persistenceService;
     private final UserService userService;
     private final ChatService chatService;
@@ -72,22 +72,21 @@ public class DefaultApplicationService extends ServiceProvider {
     private final OfferRepository offerRepository;
     private final AccountService accountService;
 
-    public DefaultApplicationService(ApplicationOptions applicationOptions, String[] args) {
+    public DefaultApplicationService(String[] args) {
         super("Bisq");
-        this.applicationOptions = applicationOptions;
+        this.applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
 
-        Locale locale = applicationOptions.getLocale();
+        Locale locale = applicationConfig.getLocale();
         LocaleRepository.initialize(locale);
         Res.initialize(locale);
 
-
-        persistenceService = new PersistenceService(applicationOptions.baseDir());
+        persistenceService = new PersistenceService(applicationConfig.baseDir());
         keyPairService = new KeyPairService(persistenceService);
 
         userService = new UserService(persistenceService);
 
 
-        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationOptions.baseDir(),
+        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationConfig.baseDir(),
                 getConfig("bisq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
 
@@ -99,15 +98,15 @@ public class DefaultApplicationService extends ServiceProvider {
         accountService = new AccountService(persistenceService);
 
         // add data use case is not available yet at networkService
-        offerService = new OfferService(networkService, identityService);
-        openOfferService = new OpenOfferService(networkService);
+        openOfferService = new OpenOfferService(networkService, persistenceService);
+        offerService = new OfferService(networkService, identityService, openOfferService);
         offerRepository = new OfferRepository(networkService);
 
         MarketPriceService.Config marketPriceServiceConf = MarketPriceServiceConfigFactory.getConfig();
         marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, ApplicationVersion.VERSION);
         // offerPresentationService = new OfferPresentationService(offerService, marketPriceService);
 
-        protocolService = new ProtocolService();
+        protocolService = new ProtocolService(networkService, identityService, persistenceService, openOfferService);
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {

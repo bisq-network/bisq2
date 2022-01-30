@@ -40,7 +40,7 @@ import static bisq.network.p2p.services.data.storage.StorageService.StoreType.AU
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
-public class AuthenticatedDataStoreTest {
+public class AuthenticatedDataStorageServiceTest {
     private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "bisq_StorageTest";
 
     @Getter
@@ -114,14 +114,14 @@ public class AuthenticatedDataStoreTest {
     public void testAddAndRemove() throws GeneralSecurityException, IOException {
         MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test" + UUID.randomUUID());
         PersistenceService persistenceService = new PersistenceService(appDirPath);
-        AuthenticatedDataStore store = new AuthenticatedDataStore(persistenceService,
+        AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(persistenceService,
                 AUTHENTICATED_DATA_STORE.getStoreName(),
                 data.getMetaData().getFileName());
         store.readPersisted().join();
         KeyPair keyPair = KeyGeneration.generateKeyPair();
 
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, data, keyPair);
-        int initialMapSize = store.getClone().size();
+        int initialMapSize = store.getPersistableStore().getClone().getMap().size();
         byte[] hash = DigestUtil.hash(data.serialize());
         int initialSeqNum = store.getSequenceNumber(hash);
         Result addRequestResult = store.add(addRequest);
@@ -129,11 +129,11 @@ public class AuthenticatedDataStoreTest {
 
         ByteArray byteArray = new ByteArray(hash);
 
-        store.getClone().keySet().stream().filter(e -> e.equals(byteArray)).forEach(e -> log.error("FOUND {}", e));
-        if (!store.getClone().containsKey(byteArray)) {
+        store.getPersistableStore().getClone().getMap().keySet().stream().filter(e -> e.equals(byteArray)).forEach(e -> log.error("FOUND {}", e));
+        if (!store.getPersistableStore().getClone().getMap().containsKey(byteArray)) {
             return;
         }
-        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getClone().get(byteArray);
+        AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);
         AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
@@ -160,7 +160,7 @@ public class AuthenticatedDataStoreTest {
         Result refreshResult = store.refresh(refreshRequest);
         assertTrue(refreshResult.isSuccess());
 
-        addRequestFromMap = (AddAuthenticatedDataRequest) store.getClone().get(byteArray);
+        addRequestFromMap = (AddAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);
         dataFromMap = addRequestFromMap.getAuthenticatedData();
         assertEquals(initialSeqNum + 2, dataFromMap.getSequenceNumber());
 
@@ -169,7 +169,7 @@ public class AuthenticatedDataStoreTest {
         Result removeRequestResult = store.remove(removeAuthenticatedDataRequest);
         assertTrue(removeRequestResult.isSuccess());
 
-        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequestFromMap = (RemoveAuthenticatedDataRequest) store.getClone().get(byteArray);
+        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequestFromMap = (RemoveAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);
         assertEquals(initialSeqNum + 3, removeAuthenticatedDataRequestFromMap.getSequenceNumber());
 
         // refresh on removed fails
@@ -196,7 +196,7 @@ public class AuthenticatedDataStoreTest {
     public void testGetInv() throws GeneralSecurityException, IOException {
         MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test");
         PersistenceService persistenceService = new PersistenceService(appDirPath);
-        AuthenticatedDataStore store = new AuthenticatedDataStore(persistenceService,
+        AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(persistenceService,
                 AUTHENTICATED_DATA_STORE.getStoreName(),
                 data.getMetaData().getFileName());
         store.readPersisted().join();

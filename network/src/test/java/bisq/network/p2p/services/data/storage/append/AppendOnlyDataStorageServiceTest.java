@@ -29,23 +29,23 @@ import static bisq.network.p2p.services.data.storage.StorageService.StoreType.AP
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class AppendOnlyDataStoreTest {
+public class AppendOnlyDataStorageServiceTest {
     private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "bisq_StorageTest";
 
     @Test
     public void testAppend() throws IOException {
         MockAppendOnlyPayload data = new MockAppendOnlyPayload("test" + UUID.randomUUID());
         PersistenceService persistenceService = new PersistenceService(appDirPath);
-        AppendOnlyDataStore store = new AppendOnlyDataStore(persistenceService, APPEND_ONLY_DATA_STORE.getStoreName(),
+        AppendOnlyDataStorageService store = new AppendOnlyDataStorageService(persistenceService, APPEND_ONLY_DATA_STORE.getStoreName(),
                 data.getMetaData().getFileName());
         store.readPersisted().join();
-        int previous = store.getClone().size();
+        int previous = store.getPersistableStore().getClone().getMap().size();
         int iterations = 10;
         for (int i = 0; i < iterations; i++) {
             data = new MockAppendOnlyPayload("test" + UUID.randomUUID());
             boolean result = store.add(new AddAppendOnlyDataRequest(data)).isSuccess();
             assertTrue(result);
         }
-        assertEquals(iterations + previous, store.getClone().size());
+        assertEquals(iterations + previous, store.getPersistableStore().getClone().getMap().size());
     }
 }
