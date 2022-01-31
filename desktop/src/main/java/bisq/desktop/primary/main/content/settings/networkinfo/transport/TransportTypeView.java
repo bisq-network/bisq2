@@ -67,7 +67,7 @@ public class TransportTypeView extends View<BisqGridPane, TransportTypeModel, Tr
 
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.common.get("address"))
-                .minWidth(220)
+                .minWidth(250)
                 .valueSupplier(ConnectionListItem::getAddress)
                 .comparator(ConnectionListItem::compareAddress)
                 .build());
@@ -79,21 +79,25 @@ public class TransportTypeView extends View<BisqGridPane, TransportTypeModel, Tr
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.network.get("table.connections.header.connectionDirection"))
+                .minWidth(100)
                 .valueSupplier(ConnectionListItem::getDirection)
                 .comparator(ConnectionListItem::compareDirection)
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.network.get("table.connections.header.sentHeader"))
+                .minWidth(120)
                 .valuePropertySupplier(ConnectionListItem::getSent)
                 .comparator(ConnectionListItem::compareSent)
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.network.get("table.connections.header.receivedHeader"))
+                .minWidth(120)
                 .valuePropertySupplier(ConnectionListItem::getReceived)
                 .comparator(ConnectionListItem::compareReceived)
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.network.get("table.connections.header.rtt"))
+                .minWidth(100)
                 .valuePropertySupplier(ConnectionListItem::getRtt)
                 .comparator(ConnectionListItem::compareRtt)
                 .build());

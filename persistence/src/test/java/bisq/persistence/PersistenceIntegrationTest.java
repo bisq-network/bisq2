@@ -143,12 +143,8 @@ public class PersistenceIntegrationTest {
         }
 
         @Override
-        public void applyPersisted(MockObject persisted) {
-        }
-
-        @Override
-        public MockObject getClone() {
-            return new MockObject(mockObject.value);
+        public PersistableStore<MockObject> getPersistableStore() {
+            return null;
         }
     }
 }

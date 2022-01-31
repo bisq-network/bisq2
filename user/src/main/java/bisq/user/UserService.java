@@ -24,21 +24,11 @@ import lombok.Getter;
 
 public class UserService implements PersistenceClient<UserStore> {
     @Getter
-    private final Persistence<UserStore> persistence;
+    private final UserStore persistableStore = new UserStore();
     @Getter
-    private final UserStore userStore = new UserStore();
+    private final Persistence<UserStore> persistence;
 
     public UserService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, "db", userStore);
-    }
-
-    @Override
-    public void applyPersisted(UserStore persisted) {
-        userStore.applyPersisted(persisted);
-    }
-
-    @Override
-    public UserStore getClone() {
-        return userStore.getClone();
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 }

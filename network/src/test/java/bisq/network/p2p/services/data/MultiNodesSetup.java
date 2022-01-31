@@ -142,6 +142,7 @@ public class MultiNodesSetup {
                 networkServiceConfig.supportedTransportTypes(),
                 networkServiceConfig.serviceNodeConfig(),
                 networkServiceConfig.peerGroupServiceConfigByTransport(),
+                new HashMap<>(),
                 networkServiceConfig.seedAddressesByTransport(),
                 Optional.empty());
         PersistenceService persistenceService = new PersistenceService(networkServiceConfig.baseDir());
@@ -170,6 +171,7 @@ public class MultiNodesSetup {
                 supportedTransportTypes,
                 networkServiceConfig.serviceNodeConfig(),
                 networkServiceConfig.peerGroupServiceConfigByTransport(),
+                new HashMap<>(),
                 seeds,
                 networkServiceConfig.socks5ProxyAddress());
     }

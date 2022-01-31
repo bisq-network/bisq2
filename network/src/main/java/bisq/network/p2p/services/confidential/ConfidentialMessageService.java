@@ -24,7 +24,6 @@ import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
-import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import bisq.network.p2p.services.relay.RelayMessage;
@@ -38,8 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -60,14 +57,14 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     @Getter
     public static class Result {
         private final State state;
-        private List<CompletableFuture<BroadcastResult>> mailboxFuture = new ArrayList<>();
+        private DataService.BroadCastDataResult mailboxFuture = new DataService.BroadCastDataResult();
         private Optional<String> errorMsg = Optional.empty();
 
         public Result(State state) {
             this.state = state;
         }
 
-        public Result setMailboxFuture(List<CompletableFuture<BroadcastResult>> mailboxFuture) {
+        public Result setMailboxFuture(DataService.BroadCastDataResult mailboxFuture) {
             this.mailboxFuture = mailboxFuture;
             return this;
         }
@@ -228,7 +225,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         MailboxPayload mailboxPayload = new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
         // We do not wait for the broadcast result as that can take a while. We pack the future into our result, 
         // so clients can react on it as they wish.
-        List<CompletableFuture<BroadcastResult>> mailboxFuture = dataService.get().addMailboxPayload(mailboxPayload,
+        DataService.BroadCastDataResult mailboxFuture = dataService.get().addMailboxPayload(mailboxPayload,
                         senderKeyPair,
                         receiverPubKey.publicKey())
                 .join();

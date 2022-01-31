@@ -72,8 +72,8 @@ public class HangoutController implements InitWithDataController<TradeIntent>, C
     public void onViewAttached() {
         chatService.addListener(this);
 
-        model.setAllChannels(chatService.getChatStore().getPrivateChannels());
-        chatService.getChatStore().getSelectedChannel().ifPresent(model::selectChannel);
+        model.setAllChannels(chatService.getPersistableStore().getPrivateChannels());
+        chatService.getPersistableStore().getSelectedChannel().ifPresent(model::selectChannel);
     }
 
     @Override
@@ -124,7 +124,7 @@ public class HangoutController implements InitWithDataController<TradeIntent>, C
         NetworkId receiverNetworkId = privateChannel.getChatPeer().networkId();
 
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = chatIdentity.identity().getNodeIdAndKeyPair();
-        networkService.confidentialSendAsync(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair)
+        networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair)
                 .whenComplete((resultMap, throwable2) -> {
                     if (throwable2 != null) {
                         UIThread.run(() -> model.setSendMessageError(channelId, throwable2));
@@ -132,7 +132,7 @@ public class HangoutController implements InitWithDataController<TradeIntent>, C
                     }
                     resultMap.forEach((transportType, res) -> {
                         ConfidentialMessageService.Result result = resultMap.get(transportType);
-                        result.getMailboxFuture().forEach(broadcastFuture -> broadcastFuture
+                        result.getMailboxFuture().values().forEach(broadcastFuture -> broadcastFuture
                                 .whenComplete((broadcastResult, throwable3) -> {
                                     if (throwable3 != null) {
                                         UIThread.run(() -> model.setSendMessageError(channelId, throwable3));

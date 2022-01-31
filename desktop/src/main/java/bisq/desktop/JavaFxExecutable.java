@@ -17,7 +17,6 @@
 
 package bisq.desktop;
 
-import bisq.application.ApplicationOptions;
 import bisq.application.DefaultApplicationService;
 import bisq.application.Executable;
 import bisq.common.annotations.LateInit;
@@ -39,8 +38,8 @@ public class JavaFxExecutable extends Executable<DefaultApplicationService> {
     }
 
     @Override
-    protected DefaultApplicationService createApplicationService(ApplicationOptions applicationOptions, String[] args) {
-        return new DefaultApplicationService(applicationOptions, args);
+    protected DefaultApplicationService createApplicationService(String[] args) {
+        return new DefaultApplicationService(args);
     }
 
     @Override

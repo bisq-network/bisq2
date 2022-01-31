@@ -8,13 +8,12 @@ public abstract class Executable<T extends ServiceProvider> {
 
     public Executable(String[] args) {
         setDefaultUncaughtExceptionHandler();
-        ApplicationOptions applicationOptions = ApplicationOptionsParser.parse(args);
-        applicationService = createApplicationService(applicationOptions, args);
+        applicationService = createApplicationService(args);
         applicationService.readAllPersisted().join();
         launchApplication(args);
     }
 
-    abstract protected T createApplicationService(ApplicationOptions applicationOptions, String[] args);
+    abstract protected T createApplicationService(String[] args);
 
     protected void launchApplication(String[] args) {
         onApplicationLaunched();

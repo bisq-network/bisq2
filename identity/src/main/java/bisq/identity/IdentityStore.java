@@ -17,7 +17,7 @@
 
 package bisq.identity;
 
-import bisq.persistence.Persistable;
+import bisq.persistence.PersistableStore;
 import lombok.Getter;
 
 import java.util.Map;
@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-public class IdentityStore implements Persistable<IdentityStore> {
+public class IdentityStore implements PersistableStore<IdentityStore> {
     @Getter
     private final Set<Identity> pool = new CopyOnWriteArraySet<>();
     @Getter

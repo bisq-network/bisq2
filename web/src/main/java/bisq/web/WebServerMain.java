@@ -1,7 +1,6 @@
 package bisq.web;
 
 
-import bisq.application.ApplicationOptions;
 import bisq.application.DefaultApplicationService;
 import bisq.application.Executable;
 import bisq.web.server.WebServer;
@@ -23,8 +22,8 @@ public class WebServerMain extends Executable<DefaultApplicationService> {
     }
 
     @Override
-    protected DefaultApplicationService createApplicationService(ApplicationOptions applicationOptions, String[] args) {
-        return new DefaultApplicationService(applicationOptions, args);
+    protected DefaultApplicationService createApplicationService(String[] args) {
+        return new DefaultApplicationService(args);
     }
 
     @Override

@@ -21,7 +21,6 @@ import bisq.common.util.OsUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
-import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.storage.auth.MockAuthenticatedPayload;
 import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.security.KeyGeneration;
@@ -97,8 +96,8 @@ public class DataServiceIntegrationTest extends DataServiceNodeBase {
             public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
             }
         });
-        List<CompletableFuture<BroadcastResult>> broadcastResultFutures = dataService_0.addNetworkPayload(payload, keyPair).get();
-        broadcastResultFutures.forEach(CompletableFuture::join);
+        DataService.BroadCastDataResult broadcastResultFutures = dataService_0.addNetworkPayload(payload, keyPair).get();
+        broadcastResultFutures.values().forEach(CompletableFuture::join);
 
         assertTrue(latch.await(10, TimeUnit.SECONDS));
     }

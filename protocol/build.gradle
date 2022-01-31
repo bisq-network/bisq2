@@ -28,6 +28,8 @@ dependencies {
 
     implementation 'com.google.guava:guava'
     implementation 'com.typesafe:config'
+
+    implementation("org.jeasy:easy-states:2.0.0")
 }
 test {
     useJUnitPlatform()

@@ -36,7 +36,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 public class AddMailboxRequest extends AddAuthenticatedDataRequest implements MailboxRequest, AddDataRequest {
 
-    public static AddMailboxRequest from(MailboxDataStore store,
+    public static AddMailboxRequest from(MailboxDataStorageService store,
                                          MailboxPayload payload,
                                          KeyPair senderKeyPair,
                                          PublicKey receiverPublicKey)

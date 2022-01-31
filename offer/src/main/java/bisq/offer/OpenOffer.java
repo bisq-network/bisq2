@@ -17,7 +17,12 @@
 
 package bisq.offer;
 
-public class OpenOffer {
+import lombok.Getter;
+
+import java.io.Serializable;
+
+@Getter
+public class OpenOffer implements Serializable {
     private final Offer offer;
 
     public OpenOffer(Offer offer) {

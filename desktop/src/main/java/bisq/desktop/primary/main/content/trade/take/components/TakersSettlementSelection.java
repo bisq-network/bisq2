@@ -27,9 +27,8 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
+import bisq.desktop.components.controls.BisqComboBox;
 import bisq.desktop.components.controls.BisqLabel;
-import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -39,17 +38,16 @@ import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableSet;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -71,20 +69,20 @@ public class TakersSettlementSelection {
         return controller.view;
     }
 
-    public ObservableSet<Account<? extends SettlementMethod>> getSelectedBaseSideAccounts() {
-        return controller.model.selectedBaseSideAccounts;
+    public ReadOnlyObjectProperty<Account<? extends SettlementMethod>> getSelectedBaseSideAccount() {
+        return controller.model.selectedBaseSideAccount;
     }
 
-    public ObservableSet<Account<? extends SettlementMethod>> getSelectedQuoteSideAccounts() {
-        return controller.model.selectedQuoteSideAccounts;
+    public ReadOnlyObjectProperty<Account<? extends SettlementMethod>> getSelectedQuoteSideAccount() {
+        return controller.model.selectedQuoteSideAccount;
     }
 
-    public ObservableSet<SettlementMethod> getSelectedBaseSideSettlementMethods() {
-        return controller.model.selectedBaseSideSettlementMethods;
+    public ReadOnlyObjectProperty<SettlementMethod> getSelectedBaseSideSettlementMethod() {
+        return controller.model.selectedBaseSideSettlementMethod;
     }
 
-    public ObservableSet<SettlementMethod> getSelectedQuoteSideSettlementMethods() {
-        return controller.model.selectedQuoteSideSettlementMethods;
+    public ReadOnlyObjectProperty<SettlementMethod> getSelectedQuoteSideSettlementMethod() {
+        return controller.model.selectedQuoteSideSettlementMethod;
     }
 
     public void setOffer(Offer offer) {
@@ -130,10 +128,10 @@ public class TakersSettlementSelection {
 
             if (market == null) return;
 
-            model.selectedBaseSideAccounts.clear();
-            model.selectedQuoteSideAccounts.clear();
-            model.selectedBaseSideSettlementMethods.clear();
-            model.selectedQuoteSideSettlementMethods.clear();
+            model.selectedBaseSideAccount.set(null);
+            model.selectedQuoteSideAccount.set(null);
+            model.selectedBaseSideSettlementMethod.set(null);
+            model.selectedQuoteSideSettlementMethod.set(null);
 
             SwapProtocolType selectedProtocolTyp = model.selectedProtocolType.get();
             if (selectedProtocolTyp == null) {
@@ -216,17 +214,17 @@ public class TakersSettlementSelection {
                     Res.offerbook.get("receiving");
 
             if (model.baseSideAccountsVisibility.get()) {
-                model.baseSideDescription.set(Res.offerbook.get("createOffer.account.description",
+                model.baseSideDescription.set(Res.offerbook.get("takeOffer.account.description",
                         baseSideVerb, market.baseCurrencyCode()));
             } else {
-                model.baseSideDescription.set(Res.offerbook.get("createOffer.settlement.description",
+                model.baseSideDescription.set(Res.offerbook.get("takeOffer.settlement.description",
                         baseSideVerb, market.baseCurrencyCode()));
             }
             if (model.quoteSideAccountsVisibility.get()) {
-                model.quoteSideDescription.set(Res.offerbook.get("createOffer.account.description",
+                model.quoteSideDescription.set(Res.offerbook.get("takeOffer.account.description",
                         quoteSideVerb, market.quoteCurrencyCode()));
             } else {
-                model.quoteSideDescription.set(Res.offerbook.get("createOffer.settlement.description",
+                model.quoteSideDescription.set(Res.offerbook.get("takeOffer.settlement.description",
                         quoteSideVerb, market.quoteCurrencyCode()));
             }
         }
@@ -244,35 +242,27 @@ public class TakersSettlementSelection {
             model.selectedProtocolType.removeListener(selectedProtocolListener);
             model.selectedMarket.removeListener(selectedMarketListener);
             model.direction.removeListener(directionListener);
-            model.selectedBaseSideAccounts.clear();
-            model.selectedQuoteSideAccounts.clear();
+            model.selectedBaseSideAccount.set(null);
+            model.selectedQuoteSideAccount.set(null);
         }
 
-        private void onAccountSelectionChanged(AccountListItem listItem, boolean selected, boolean isBaseSide) {
-            var observableAccountsSet = isBaseSide ?
-                    model.selectedBaseSideAccounts :
-                    model.selectedQuoteSideAccounts;
-            var observableSettlementMethodsSet = isBaseSide ?
-                    model.selectedBaseSideSettlementMethods :
-                    model.selectedQuoteSideSettlementMethods;
-            if (selected) {
-                observableAccountsSet.add(listItem.account);
-                observableSettlementMethodsSet.add(listItem.settlementMethod);
-            } else {
-                observableAccountsSet.remove(listItem.account);
-                observableSettlementMethodsSet.remove(listItem.settlementMethod);
-            }
+        private void onAccountSelectionChanged(AccountListItem listItem, boolean isBaseSide) {
+            var selectedAccount = isBaseSide ?
+                    model.selectedBaseSideAccount :
+                    model.selectedQuoteSideAccount;
+            var selectedSettlementMethod = isBaseSide ?
+                    model.selectedBaseSideSettlementMethod :
+                    model.selectedQuoteSideSettlementMethod;
+            
+            selectedAccount.set(listItem.account);
+            selectedSettlementMethod.set(listItem.settlementMethod);
         }
 
-        private void onSettlementSelectionChanged(SettlementListItem listItem, boolean selected, boolean isBaseSide) {
-            var observableSet = isBaseSide ?
-                    model.selectedBaseSideSettlementMethods :
-                    model.selectedQuoteSideSettlementMethods;
-            if (selected) {
-                observableSet.add(listItem.settlementMethod);
-            } else {
-                observableSet.remove(listItem.settlementMethod);
-            }
+        private void onSettlementSelectionChanged(SettlementListItem listItem, boolean isBaseSide) {
+            var selectedSettlementMethod = isBaseSide ?
+                    model.selectedBaseSideSettlementMethod :
+                    model.selectedQuoteSideSettlementMethod;
+                selectedSettlementMethod.set(listItem.settlementMethod);
         }
 
         private void onCreateBaseSideAccount() {
@@ -287,10 +277,10 @@ public class TakersSettlementSelection {
     }
 
     private static class SettlementModel implements Model {
-        private final ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
-        private final ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
-        private final ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
-        private final ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
+        private final ObjectProperty<Account<? extends SettlementMethod>> selectedBaseSideAccount = new SimpleObjectProperty<>();
+        private final ObjectProperty<Account<? extends SettlementMethod>> selectedQuoteSideAccount =new SimpleObjectProperty<>();
+        private final ObjectProperty<SettlementMethod> selectedBaseSideSettlementMethod = new SimpleObjectProperty<>();
+        private final ObjectProperty<SettlementMethod> selectedQuoteSideSettlementMethod = new SimpleObjectProperty<>();
         private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final ReadOnlyObjectProperty<Direction> direction;
 
@@ -329,8 +319,8 @@ public class TakersSettlementSelection {
 
     public static class SettlementView extends View<HBox, SettlementModel, SettlementController> {
         private final BisqLabel baseSideLabel, quoteSideLabel;
-        private final BisqTableView<AccountListItem> baseSideAccountsTableView, quoteSideAccountsTableView;
-        private final BisqTableView<SettlementListItem> baseSideSettlementTableView, quoteSideSettlementTableView;
+        private final BisqComboBox<AccountListItem> baseSideAccountsComboBox, quoteSideAccountsComboBox;
+        private final BisqComboBox<SettlementListItem> baseSideSettlementComboBox, quoteSideSettlementComboBox;
         private final BisqButton baseSideButton, quoteSideButton;
         private final VBox baseSideBox, quoteSideBox;
 
@@ -342,43 +332,38 @@ public class TakersSettlementSelection {
             baseSideLabel = new BisqLabel();
             baseSideLabel.getStyleClass().add("titled-group-bg-label-active");
 
-            baseSideAccountsTableView = new BisqTableView<>(model.baseSideAccountSortedList);
-            int tableHeight = 210;
-            baseSideAccountsTableView.setFixHeight(tableHeight);
-            configAccountTableView(baseSideAccountsTableView, true);
-            VBox.setMargin(baseSideAccountsTableView, new Insets(0, 0, 20, 0));
+            baseSideAccountsComboBox = new BisqComboBox<>(model.baseSideAccountSortedList);
+            setupAccountStringConverter(baseSideAccountsComboBox);
+            VBox.setMargin(baseSideAccountsComboBox, new Insets(0, 0, 20, 0));
             baseSideButton = new BisqButton(Res.offerbook.get("createOffer.account.createNew"));
             VBox baseSidePlaceHolderBox = createPlaceHolderBox(baseSideButton);
-            baseSideAccountsTableView.setPlaceholder(baseSidePlaceHolderBox);
+            baseSideAccountsComboBox.setPlaceholder(baseSidePlaceHolderBox);
 
-            baseSideSettlementTableView = new BisqTableView<>(model.baseSideSettlementSortedList);
-            baseSideSettlementTableView.setFixHeight(tableHeight);
-            configSettlementTableView(baseSideSettlementTableView, true);
-            VBox.setMargin(baseSideSettlementTableView, new Insets(0, 0, 20, 0));
+            baseSideSettlementComboBox = new BisqComboBox<>(model.baseSideSettlementSortedList);
+            setupSettlementStringConverter(baseSideSettlementComboBox);
+            VBox.setMargin(baseSideSettlementComboBox, new Insets(0, 0, 20, 0));
 
             baseSideBox = new VBox();
             baseSideBox.setSpacing(10);
-            baseSideBox.getChildren().addAll(baseSideLabel, baseSideAccountsTableView, baseSideSettlementTableView);
+            baseSideBox.getChildren().addAll(baseSideLabel, baseSideAccountsComboBox, baseSideSettlementComboBox);
 
             quoteSideLabel = new BisqLabel();
             quoteSideLabel.getStyleClass().add("titled-group-bg-label-active");
 
-            quoteSideAccountsTableView = new BisqTableView<>(model.quoteSideAccountSortedList);
-            quoteSideAccountsTableView.setFixHeight(tableHeight);
-            configAccountTableView(quoteSideAccountsTableView, false);
-            VBox.setMargin(quoteSideAccountsTableView, new Insets(0, 0, 20, 0));
+            quoteSideAccountsComboBox = new BisqComboBox<>(model.quoteSideAccountSortedList);
+            setupAccountStringConverter(quoteSideAccountsComboBox);
+            VBox.setMargin(quoteSideAccountsComboBox, new Insets(0, 0, 20, 0));
             quoteSideButton = new BisqButton(Res.offerbook.get("createOffer.account.createNew"));
             VBox quoteSidePlaceHolderBox = createPlaceHolderBox(quoteSideButton);
-            quoteSideAccountsTableView.setPlaceholder(quoteSidePlaceHolderBox);
+            quoteSideAccountsComboBox.setPlaceholder(quoteSidePlaceHolderBox);
 
-            quoteSideSettlementTableView = new BisqTableView<>(model.quoteSideSettlementSortedList);
-            quoteSideSettlementTableView.setFixHeight(tableHeight);
-            configSettlementTableView(quoteSideSettlementTableView, false);
-            VBox.setMargin(quoteSideSettlementTableView, new Insets(0, 0, 20, 0));
+            quoteSideSettlementComboBox = new BisqComboBox<>(model.quoteSideSettlementSortedList);
+            setupSettlementStringConverter(quoteSideSettlementComboBox);
+            VBox.setMargin(quoteSideSettlementComboBox, new Insets(0, 0, 20, 0));
 
             quoteSideBox = new VBox();
             quoteSideBox.setSpacing(10);
-            quoteSideBox.getChildren().addAll(quoteSideLabel, quoteSideAccountsTableView, quoteSideSettlementTableView);
+            quoteSideBox.getChildren().addAll(quoteSideLabel, quoteSideAccountsComboBox, quoteSideSettlementComboBox);
 
             HBox.setHgrow(baseSideBox, Priority.ALWAYS);
             HBox.setHgrow(quoteSideBox, Priority.ALWAYS);
@@ -390,21 +375,30 @@ public class TakersSettlementSelection {
             baseSideButton.setOnAction(e -> controller.onCreateBaseSideAccount());
             quoteSideButton.setOnAction(e -> controller.onCreateQuoteSideAccount());
 
+            baseSideAccountsComboBox.setOnAction(e -> controller.onAccountSelectionChanged(
+                    baseSideAccountsComboBox.getSelectionModel().getSelectedItem(), true));
+            quoteSideAccountsComboBox.setOnAction(e -> controller.onAccountSelectionChanged(
+                    quoteSideAccountsComboBox.getSelectionModel().getSelectedItem(), false));
+            baseSideSettlementComboBox.setOnAction(e -> controller.onSettlementSelectionChanged(
+                    baseSideSettlementComboBox.getSelectionModel().getSelectedItem(), true));
+            quoteSideSettlementComboBox.setOnAction(e -> controller.onSettlementSelectionChanged(
+                    quoteSideSettlementComboBox.getSelectionModel().getSelectedItem(), false));
+            
             baseSideLabel.textProperty().bind(model.baseSideDescription);
             quoteSideLabel.textProperty().bind(model.quoteSideDescription);
 
             root.visibleProperty().bind(model.visibility);
             root.managedProperty().bind(model.visibility);
 
-            baseSideAccountsTableView.visibleProperty().bind(model.baseSideAccountsVisibility);
-            baseSideAccountsTableView.managedProperty().bind(model.baseSideAccountsVisibility);
-            quoteSideAccountsTableView.visibleProperty().bind(model.quoteSideAccountsVisibility);
-            quoteSideAccountsTableView.managedProperty().bind(model.quoteSideAccountsVisibility);
+            baseSideAccountsComboBox.visibleProperty().bind(model.baseSideAccountsVisibility);
+            baseSideAccountsComboBox.managedProperty().bind(model.baseSideAccountsVisibility);
+            quoteSideAccountsComboBox.visibleProperty().bind(model.quoteSideAccountsVisibility);
+            quoteSideAccountsComboBox.managedProperty().bind(model.quoteSideAccountsVisibility);
 
-            baseSideSettlementTableView.visibleProperty().bind(model.baseSideSettlementVisibility);
-            baseSideSettlementTableView.managedProperty().bind(model.baseSideSettlementVisibility);
-            quoteSideSettlementTableView.visibleProperty().bind(model.quoteSideSettlementVisibility);
-            quoteSideSettlementTableView.managedProperty().bind(model.quoteSideSettlementVisibility);
+            baseSideSettlementComboBox.visibleProperty().bind(model.baseSideSettlementVisibility);
+            baseSideSettlementComboBox.managedProperty().bind(model.baseSideSettlementVisibility);
+            quoteSideSettlementComboBox.visibleProperty().bind(model.quoteSideSettlementVisibility);
+            quoteSideSettlementComboBox.managedProperty().bind(model.quoteSideSettlementVisibility);
         }
 
         @Override
@@ -412,21 +406,26 @@ public class TakersSettlementSelection {
             baseSideButton.setOnAction(null);
             quoteSideButton.setOnAction(null);
 
+            baseSideAccountsComboBox.setOnAction(null);
+            quoteSideAccountsComboBox.setOnAction(null);
+            baseSideSettlementComboBox.setOnAction(null);
+            quoteSideSettlementComboBox.setOnAction(null);
+
             baseSideLabel.textProperty().unbind();
             quoteSideLabel.textProperty().unbind();
 
-            //  root.visibleProperty().unbind();
-            //  root.managedProperty().unbind();
-/*
-            baseSideAccountsTableView.visibleProperty().unbind();
-            baseSideAccountsTableView.managedProperty().unbind();
-            quoteSideAccountsTableView.visibleProperty().unbind();
-            quoteSideAccountsTableView.managedProperty().unbind();
+            root.visibleProperty().unbind();
+            root.managedProperty().unbind();
 
-            baseSideSettlementTableView.visibleProperty().unbind();
-            baseSideSettlementTableView.managedProperty().unbind();
-            quoteSideSettlementTableView.visibleProperty().unbind();
-            quoteSideSettlementTableView.managedProperty().unbind();*/
+            baseSideAccountsComboBox.visibleProperty().unbind();
+            baseSideAccountsComboBox.managedProperty().unbind();
+            quoteSideAccountsComboBox.visibleProperty().unbind();
+            quoteSideAccountsComboBox.managedProperty().unbind();
+
+            baseSideSettlementComboBox.visibleProperty().unbind();
+            baseSideSettlementComboBox.managedProperty().unbind();
+            quoteSideSettlementComboBox.visibleProperty().unbind();
+            quoteSideSettlementComboBox.managedProperty().unbind();
         }
 
         private VBox createPlaceHolderBox(BisqButton baseSideButton) {
@@ -438,37 +437,32 @@ public class TakersSettlementSelection {
             return vBox;
         }
 
-        private void configAccountTableView(BisqTableView<AccountListItem> tableView, boolean isBaseSide) {
-            tableView.getColumns().add(new BisqTableColumn.Builder<AccountListItem>()
-                    .title(Res.offerbook.get("createOffer.account.table.accountName"))
-                    .minWidth(120)
-                    .valueSupplier(AccountListItem::getAccountName)
-                    .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<AccountListItem>()
-                    .title(Res.offerbook.get("createOffer.account.table.method"))
-                    .minWidth(120)
-                    .valueSupplier(AccountListItem::getSettlementMethodName)
-                    .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<AccountListItem>()
-                    .title(Res.offerbook.get("createOffer.account.table.select"))
-                    .minWidth(40)
-                    .cellFactory(BisqTableColumn.CellFactory.CHECKBOX)
-                    .toggleHandler((item, selected) -> controller.onAccountSelectionChanged(item, selected, isBaseSide))
-                    .build());
+        private void setupAccountStringConverter(BisqComboBox<AccountListItem> comboBox) {
+            comboBox.setConverter(new StringConverter<>() {
+                @Override
+                public String toString(AccountListItem item) {
+                    return item != null ? item.getAccountName() + " / " + item.getSettlementMethodName() : "";
+                }
+
+                @Override
+                public AccountListItem fromString(String string) {
+                    return null;
+                }
+            });
         }
 
-        private void configSettlementTableView(BisqTableView<SettlementListItem> tableView, boolean isBaseSide) {
-            tableView.getColumns().add(new BisqTableColumn.Builder<SettlementListItem>()
-                    .title(Res.offerbook.get("createOffer.account.table.method"))
-                    .minWidth(150)
-                    .valueSupplier(SettlementListItem::getName)
-                    .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<SettlementListItem>()
-                    .title(Res.offerbook.get("createOffer.account.table.select"))
-                    .minWidth(40)
-                    .cellFactory(BisqTableColumn.CellFactory.CHECKBOX)
-                    .toggleHandler((item, selected) -> controller.onSettlementSelectionChanged(item, selected, isBaseSide))
-                    .build());
+        private void setupSettlementStringConverter(BisqComboBox<SettlementListItem> comboBox) {
+            comboBox.setConverter(new StringConverter<>() {
+                @Override
+                public String toString(SettlementListItem item) {
+                    return item != null ? item.getName() : "";
+                }
+
+                @Override
+                public SettlementListItem fromString(String string) {
+                    return null;
+                }
+            });
         }
     }
 

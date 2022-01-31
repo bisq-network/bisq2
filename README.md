@@ -57,17 +57,13 @@ A reputation-based protocol can also be implemented without a full wallet integr
 The social module manages chat use-cases. User management is not implemented yet. Public chat channels are also not implemented yet. 
 
 
-## Running the Prototype
+## Running the Desktop prototype
+
+Bisq 2 requires Java 16 and Gradle 7.3.3.
 
 Currently, you need to start the Desktop app from the IntelliJ IDE and not via gradle as there are some open issues with the JFoenix library we are currently using (might get replaced with Gluon).
 
 You can right-click the `bisq.desktop.Main` class in the desktop module to create a run config or create a `run config` in `Run/Edi Configurations`. You need to add the JVM argument: `--add-opens java.base/java.lang.reflect=ALL-UNNAMED` (due the JFoenix issue with Java 16).
-
-If you want to use the network, you can start the `bisq.tools.network.monitor.MultiNodesMain` application, which starts up several seed nodes and normal nodes to build up a P2P network. 
-To start with a minimal set of 2 seeds and 2 normal nodes in clearnet (localhost) use the program argument:
-`--bootstrapAll=true`
-If you want to run it with clearnet, Tor, and I2P use:
-`--bootstrapAll=true --transports=CLEAR,TOR,I2P`.
 
 The desktop app also requires JVM args (the typesafe config lib we use does not support overriding program args, so you have to use JVM args).
 - For clearnet use
@@ -76,7 +72,73 @@ The desktop app also requires JVM args (the typesafe config lib we use does not 
 - For clearnet, Tor, and I2P use
 `--add-opens java.base/java.lang.reflect=ALL-UNNAMED -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR -Dbisq.networkServiceConfig.supportedTransportTypes.1=TOR -Dbisq.networkServiceConfig.supportedTransportTypes.2=I2P`
 
+## Running the Prototype with a local network
+If you want to use the network, you have to start at least one seed node with the appropriate JVM arguments (see instructions below) as there are no public seed nodes available at that stage. You can run clear net, Tor and I2P or any combination of those.
+You specify the network by:
+`-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR`
+Where you need to use a different index for adding more. Values are: CLEAR, TOR, I2P.
+
 When you use I2P, you need to install I2P and start the router application. The web console opens automatically. There you  need to navigate to [Clients](http://127.0.0.1:7657/configclients) and start the `SAM application bridge`. It will take about 2 minutes to be ready.
+Please note that the I2P integration is not very stable yet. 
+
+### Set up your local seed nodes:
+
+To start 2 seed nodes on ports 8000 and 8001 connecting to each other use those JVM arguments.
+```
+-Dbisq.application.appName=bisq2_seed1 
+-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 
+-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR 
+-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 
+-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001 
+
+-Dbisq.application.appName=bisq2_seed2 
+-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8001 
+-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR 
+-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 
+-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001 
+```
+Data directory is defined by `bisq.application.appName` in the example here `bisq2_seed1`.
+
+Using other network types or multiple network types use one or multiple of those:
+```
+-Dbisq.networkServiceConfig.supportedTransportTypes.0=TOR 
+-Dbisq.networkServiceConfig.supportedTransportTypes.1=I2P 
+-Dbisq.networkServiceConfig.supportedTransportTypes.2=CLEAR 
+```
+
+You have to provide then the seed addresses for the supported network types
+To add multiple seeds add more lines of the same network type with other index (`.1`).
+```
+-Dbisq.networkServiceConfig.seedAddressByTransportType.tor.0=TOR_SEED_ADDRESS:8000 
+-Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.0=I2P_SEED_ADDRESS:5000 
+-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 
+```
+
+To set up your local tor hidden service addresses and I2P addresses for the seed nodes you need to start once to get them created and then take them from the data directories.
+Start the 'SeedMain' with Tor and I2P enabled (I2P need to be started manually and SAM enabled). 
+Let the nodes start up for about 2 minutes so the hidden service is deployed. Then stop it (no seeds are found at that point).
+Pick the onion and I2P addresses from the generated files and put them into the seed node config.
+
+Go to:
+[PATH to OS data dir]/[SEED_NODE_DATA_DIR]/tor/hiddenservice/default/hostname
+[PATH to OS data dir]/[SEED_NODE_DATA_DIR]/tor/hiddenservice/default/hostname
+[PATH to OS data dir]/[SEED_NODE_DATA_DIR]/i2p/default5000.destination
+[PATH to OS data dir]/[SEED_NODE_DATA_DIR]/i2p/default5001.destination
+
+
+PATH to OS data dir is on OSX:
+/Users/[USER]/Library/Application\ Support
+On Linux:
+[USER]/.local/share
+
+Copy those addresses and add it to the JVM args as following:
+
+-Dbisq.networkServiceConfig.seedAddressByTransportType.tor.0=[onion address for node 1000]:1000
+-Dbisq.networkServiceConfig.seedAddressByTransportType.tor.1=[onion address for node 1001]:1001
+-Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.0=[I2P address for node 5000]:5000
+-Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.1=[I2P address for node 5001]:5001
+
+If you want to use more seed nodes repeat it and fill in more but 1-2 is usually sufficient for dev testing.
 
 ## Contributing
 

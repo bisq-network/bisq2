@@ -80,22 +80,22 @@ public class PrimaryStageController implements Controller {
     }
 
     public void onStageXChanged(double value) {
-        userService.getUserStore().getCookie().putAsDouble(CookieKey.STAGE_X, value);
+        userService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_X, value);
         userService.persist();
     }
 
     public void onStageYChanged(double value) {
-        userService.getUserStore().getCookie().putAsDouble(CookieKey.STAGE_Y, value);
+        userService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_Y, value);
         userService.persist();
     }
 
     public void onStageWidthChanged(double value) {
-        userService.getUserStore().getCookie().putAsDouble(CookieKey.STAGE_W, value);
+        userService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_W, value);
         userService.persist();
     }
 
     public void onStageHeightChanged(double value) {
-        userService.getUserStore().getCookie().putAsDouble(CookieKey.STAGE_H, value);
+        userService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_H, value);
         userService.persist();
     }
 }

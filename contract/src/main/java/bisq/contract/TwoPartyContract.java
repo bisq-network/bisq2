@@ -22,7 +22,7 @@ import bisq.account.protocol.SwapProtocolType;
 import lombok.Getter;
 
 @Getter
-public class TwoPartyContract<T extends Listing> extends Contract<T> {
+public class TwoPartyContract<T extends Listing> extends AContract<T> {
     private final Party taker;
 
     public TwoPartyContract(T listing, SwapProtocolType protocolType, Party taker) {

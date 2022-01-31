@@ -119,8 +119,8 @@ public class TradeIntentController implements Controller/*, ChatService.Listener
                                     UIThread.run(() -> model.setAddTradeIntentError(tradeIntent, throwable2));
                                     return;
                                 }
-                                broadCastResultFutures.forEach(broadCastResultFuture -> {
-                                    broadCastResultFuture.whenComplete((broadcastResult, throwable3) -> {
+                                broadCastResultFutures.entrySet().forEach(broadCastResultFuture -> {
+                                    broadCastResultFuture.getValue().whenComplete((broadcastResult, throwable3) -> {
                                         if (throwable3 != null) {
                                             UIThread.run(() -> model.setAddTradeIntentError(tradeIntent, throwable3));
                                             return;
@@ -146,20 +146,18 @@ public class TradeIntentController implements Controller/*, ChatService.Listener
         // need to check if there is any usage still for that identity and if not retire it.
         log.error("onRemoveTradeIntent nodeIdAndKeyPair={}", identity.getNodeIdAndKeyPair());
         networkService.removeData(item.getPayload().getData(), identity.getNodeIdAndKeyPair())
-                .whenComplete((broadCastResultFutures, throwable2) -> {
+                .whenComplete((broadCastResultFutureMap, throwable2) -> {
                     if (throwable2 != null) {
                         UIThread.run(() -> model.setRemoveTradeIntentError(item.getTradeIntent(), throwable2));
                         return;
                     }
-                    broadCastResultFutures.forEach(broadCastResultFuture -> {
-                        broadCastResultFuture.whenComplete((broadcastResult, throwable3) -> {
-                            if (throwable3 != null) {
-                                UIThread.run(() -> model.setRemoveTradeIntentError(item.getTradeIntent(), throwable3));
-                                return;
-                            }
-                            UIThread.run(() -> model.setRemoveTradeIntentResult(item.getTradeIntent(), broadcastResult));
-                        });
-                    });
+                    broadCastResultFutureMap.forEach((key, value) -> value.whenComplete((broadcastResult, throwable3) -> {
+                        if (throwable3 != null) {
+                            UIThread.run(() -> model.setRemoveTradeIntentError(item.getTradeIntent(), throwable3));
+                            return;
+                        }
+                        UIThread.run(() -> model.setRemoveTradeIntentResult(item.getTradeIntent(), broadcastResult));
+                    }));
                 });
     }
 

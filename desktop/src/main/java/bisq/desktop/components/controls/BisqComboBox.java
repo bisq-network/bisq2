@@ -18,11 +18,17 @@
 package bisq.desktop.components.controls;
 
 import com.jfoenix.controls.JFXComboBox;
+import javafx.collections.ObservableList;
 
 public class BisqComboBox<T> extends JFXComboBox<T> {
     public BisqComboBox(String title) {
         this();
         setPromptText(title);
+    }
+
+    public BisqComboBox(ObservableList<T> value) {
+        this();
+        setItems(value);
     }
 
     public BisqComboBox() {

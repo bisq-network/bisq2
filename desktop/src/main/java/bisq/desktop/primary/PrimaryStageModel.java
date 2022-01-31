@@ -40,14 +40,14 @@ public class PrimaryStageModel implements Model {
     private final double minWidth = 800;
     private final double minHeight = 600;
     private final double prefWidth = 1100;
-    private final double prefHeight = 1000;
+    private final double prefHeight = 1100;
     @Getter
     private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
     public PrimaryStageModel(DefaultApplicationService applicationService) {
-        title = applicationService.getApplicationOptions().appName();
+        title = applicationService.getApplicationConfig().appName();
 
-        Cookie cookie = applicationService.getUserService().getUserStore().getCookie();
+        Cookie cookie = applicationService.getUserService().getPersistableStore().getCookie();
         stageX = cookie.getAsOptionalDouble(CookieKey.STAGE_X);
         stageY = cookie.getAsOptionalDouble(CookieKey.STAGE_Y);
         stageWidth = cookie.getAsOptionalDouble(CookieKey.STAGE_W);

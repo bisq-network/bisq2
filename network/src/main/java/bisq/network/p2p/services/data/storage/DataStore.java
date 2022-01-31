@@ -18,56 +18,31 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
-import bisq.network.p2p.services.data.DataRequest;
-import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceService;
-import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.persistence.PersistableStore;
 import lombok.Getter;
 
-import java.io.File;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class DataStore<T extends DataRequest> extends RateLimitedPersistenceClient<HashMap<ByteArray, T>> {
-    public static final String SUB_PATH = "db" + File.separator + "network";
+public class DataStore<T> implements PersistableStore<DataStore<T>> {
     @Getter
-    protected final Persistence<HashMap<ByteArray, T>> persistence;
-    protected final ConcurrentHashMap<ByteArray, T> map = new ConcurrentHashMap<>();
-    @Getter
-    private final String fileName;
-    @Getter
-    private final String subDirectory;
+    private final ConcurrentHashMap<ByteArray, T> map = new ConcurrentHashMap<>();
 
-    public DataStore(PersistenceService persistenceService, String storeName, String fileName) {
-        super();
-        this.fileName = fileName;
-        subDirectory = SUB_PATH + File.separator + storeName;
-        persistence = persistenceService.getOrCreatePersistence(this, subDirectory, fileName);
+    public DataStore() {
+    }
+
+    public DataStore(Map<ByteArray, T> map) {
+        this.map.putAll(map);
     }
 
     @Override
-    public void applyPersisted(HashMap<ByteArray, T> persisted) {
-        synchronized (map) {
-            map.clear();
-            map.putAll(persisted);
-        }
+    public void applyPersisted(DataStore<T> persisted) {
+        map.clear();
+        map.putAll(persisted.getMap());
     }
 
     @Override
-    public HashMap<ByteArray, T> getClone() {
-        synchronized (map) {
-            return new HashMap<>(map);
-        }
+    public DataStore<T> getClone() {
+        return new DataStore<>(map);
     }
-
-  /*  public Inventory getInventory(DataFilter dataFilter) {
-        Map<ByteArray, T> mapClone = getClone();
-        List<T> result = mapClone.entrySet().stream()
-                .filter(e -> dataFilter.doInclude(e.getKey()))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
-        return new Inventory(result, mapClone.size() - result.size());
-    }*/
-
-    abstract public void shutdown();
 }

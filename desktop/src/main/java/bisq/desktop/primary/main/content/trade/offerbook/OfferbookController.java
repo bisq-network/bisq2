@@ -30,7 +30,6 @@ import bisq.desktop.primary.main.content.trade.components.MarketSelection;
 import bisq.desktop.primary.main.content.trade.create.CreateOfferController;
 import bisq.desktop.primary.main.content.trade.take.TakeOfferController;
 import bisq.i18n.Res;
-import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
@@ -38,6 +37,7 @@ import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
+import bisq.offer.OfferService;
 import bisq.oracle.marketprice.MarketPriceService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.value.ChangeListener;
@@ -59,11 +59,13 @@ public class OfferbookController implements Controller {
     private final ChangeListener<Direction> directionListener;
     private final MarketSelection marketSelection;
     private final DirectionSelection directionSelection;
+    private final OfferService offerService;
     private Optional<DataService.Listener> dataListener = Optional.empty();
 
     public OfferbookController(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
         identityService = applicationService.getIdentityService();
+        offerService = applicationService.getOfferService();
         dataService = networkService.getDataService();
         MarketPriceService marketPriceService = applicationService.getMarketPriceService();
 
@@ -206,18 +208,14 @@ public class OfferbookController implements Controller {
 
     private void onRemoveOffer(OfferListItem item) {
         Offer offer = item.getOffer();
-        Identity identity = identityService.findActiveIdentity(offer.getId()).orElseThrow();
-        // We do not retire the identity as it might be still used in the chat. For a mature implementation we would
-        // need to check if there is any usage still for that identity and if not retire it.
-        log.error("onRemoveOffer nodeIdAndKeyPair={}", identity.getNodeIdAndKeyPair());
-        networkService.removeData(offer, identity.getNodeIdAndKeyPair())
+        offerService.removeMyOffer(item.getOffer())
                 .whenComplete((broadCastResultFutures, throwable2) -> {
                     if (throwable2 != null) {
                         UIThread.run(() -> model.setRemoveOfferError(offer, throwable2));
                         return;
                     }
-                    broadCastResultFutures.forEach(broadCastResultFuture -> {
-                        broadCastResultFuture.whenComplete((broadcastResult, throwable3) -> {
+                    broadCastResultFutures.entrySet().forEach(broadCastResultFuture -> {
+                        broadCastResultFuture.getValue().whenComplete((broadcastResult, throwable3) -> {
                             if (throwable3 != null) {
                                 UIThread.run(() -> model.setRemoveOfferError(offer, throwable3));
                                 return;
