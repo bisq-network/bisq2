@@ -27,7 +27,7 @@ import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
-import bisq.offer.OfferRepository;
+import bisq.offer.OfferBookService;
 import bisq.offer.OfferService;
 import bisq.offer.OpenOfferService;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -36,7 +36,7 @@ import bisq.persistence.PersistenceService;
 import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.social.chat.ChatService;
-import bisq.user.UserService;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,10 +66,10 @@ public class DefaultApplicationService extends ServiceProvider {
     private final MarketPriceService marketPriceService;
     private final ApplicationConfig applicationConfig;
     private final PersistenceService persistenceService;
-    private final UserService userService;
+    private final SettingsService settingsService;
     private final ChatService chatService;
     private final ProtocolService protocolService;
-    private final OfferRepository offerRepository;
+    private final OfferBookService offerBookService;
     private final AccountService accountService;
 
     public DefaultApplicationService(String[] args) {
@@ -83,7 +83,7 @@ public class DefaultApplicationService extends ServiceProvider {
         persistenceService = new PersistenceService(applicationConfig.baseDir());
         keyPairService = new KeyPairService(persistenceService);
 
-        userService = new UserService(persistenceService);
+        settingsService = new SettingsService(persistenceService);
 
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationConfig.baseDir(),
@@ -100,7 +100,7 @@ public class DefaultApplicationService extends ServiceProvider {
         // add data use case is not available yet at networkService
         openOfferService = new OpenOfferService(networkService, persistenceService);
         offerService = new OfferService(networkService, identityService, openOfferService);
-        offerRepository = new OfferRepository(networkService);
+        offerBookService = new OfferBookService(networkService);
 
         MarketPriceService.Config marketPriceServiceConf = MarketPriceServiceConfigFactory.getConfig();
         marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, ApplicationVersion.VERSION);
@@ -142,7 +142,7 @@ public class DefaultApplicationService extends ServiceProvider {
                 })
                 .thenCompose(result -> CompletableFutureUtils.allOf(offerService.initialize(),
                         openOfferService.initialize(),
-                        offerRepository.initialize()))
+                        offerBookService.initialize()))
                 .orTimeout(120, TimeUnit.SECONDS)
                 .whenComplete((list, throwable) -> {
                     if (throwable != null) {
@@ -162,7 +162,7 @@ public class DefaultApplicationService extends ServiceProvider {
             marketPriceService.shutdown();
             offerService.shutdown();
             openOfferService.shutdown();
-            offerRepository.shutdown();
+            offerBookService.shutdown();
             return networkService.shutdown()
                     .whenComplete((__, throwable) -> {
                         if (throwable != null) {

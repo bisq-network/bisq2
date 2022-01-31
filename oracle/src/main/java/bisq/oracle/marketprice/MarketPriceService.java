@@ -19,6 +19,7 @@ package bisq.oracle.marketprice;
 
 import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Pair;
+import bisq.common.monetary.MarketRepository;
 import bisq.common.monetary.Quote;
 import bisq.common.monetary.Market;
 import bisq.common.threading.ExecutorFactory;
@@ -146,7 +147,7 @@ public class MarketPriceService {
                 marketPriceByCurrencyMap.putAll(map);
                 listeners.forEach(listener -> listener.onMarketPriceUpdate(marketPriceByCurrencyMap));
                 if (selectedMarketPrice.isEmpty()) {
-                    selectedMarketPrice = Optional.of(map.get(Market.getDefault()));
+                    selectedMarketPrice = Optional.of(map.get(MarketRepository.getDefault()));
                     listeners.forEach(listener -> listener.onMarketPriceSelected(selectedMarketPrice.get()));
                 }
                 return marketPriceByCurrencyMap;

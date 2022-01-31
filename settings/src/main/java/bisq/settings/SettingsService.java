@@ -15,20 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user;
+package bisq.settings;
 
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 
-public class UserService implements PersistenceClient<UserStore> {
+public class SettingsService implements PersistenceClient<SettingsStore> {
+    @Delegate
     @Getter
-    private final UserStore persistableStore = new UserStore();
+    private final SettingsStore persistableStore = new SettingsStore();
     @Getter
-    private final Persistence<UserStore> persistence;
+    private final Persistence<SettingsStore> persistence;
 
-    public UserService(PersistenceService persistenceService) {
+    public SettingsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 }

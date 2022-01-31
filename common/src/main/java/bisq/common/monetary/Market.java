@@ -27,14 +27,10 @@ public record Market(String baseCurrencyCode, String quoteCurrencyCode) implemen
     @Setter
     private static String QUOTE_SEPARATOR = "/";
 
-    public static Market getDefault() {
-        return new Market(CryptoCurrencyRepository.getDefaultCurrency().getCode(), FiatCurrencyRepository.getDefaultCurrency().getCode());
-    }
+ 
 
     @Override
     public String toString() {
         return baseCurrencyCode + QUOTE_SEPARATOR + quoteCurrencyCode;
     }
-
-
 }

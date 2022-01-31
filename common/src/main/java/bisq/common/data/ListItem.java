@@ -15,30 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user;
+package bisq.common.data;
 
-import bisq.persistence.PersistableStore;
-import lombok.Getter;
-
-public class UserStore implements PersistableStore<UserStore> {
-    @Getter
-    private final Cookie cookie;
-
-    public UserStore() {
-        cookie = new Cookie();
-    }
-
-    public UserStore(Cookie cookie) {
-        this.cookie = cookie;
-    }
-
-    @Override
-    public UserStore getClone() {
-        return new UserStore(cookie);
-    }
-
-    @Override
-    public void applyPersisted(UserStore userStore) {
-        cookie.putAll(userStore.getCookie());
-    }
+public interface ListItem {
 }

@@ -26,7 +26,6 @@ import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.trade.components.*;
 import bisq.offer.Direction;
 import bisq.offer.OfferService;
-import bisq.oracle.marketprice.MarketPriceService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;
@@ -52,10 +51,9 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
 
     public CreateOfferController(DefaultApplicationService applicationService) {
         offerService = applicationService.getOfferService();
-        MarketPriceService marketPriceService = applicationService.getMarketPriceService();
         model = new CreateOfferModel();
 
-        marketSelection = new MarketSelection(marketPriceService);
+        marketSelection = new MarketSelection(applicationService.getSettingsService());
         model.setSelectedMarketProperty(marketSelection.selectedMarketProperty());
 
         directionSelection = new DirectionSelection(model.selectedMarketProperty());
@@ -63,7 +61,7 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
 
         amountPriceGroup = new AmountPriceGroup(model.selectedMarketProperty(),
                 model.directionProperty(),
-                marketPriceService);
+                applicationService.getMarketPriceService());
         model.setBaseSideAmountProperty(amountPriceGroup.baseSideAmountProperty());
         model.setQuoteSideAmountProperty(amountPriceGroup.quoteSideAmountProperty());
         model.setFixPriceProperty(amountPriceGroup.fixPriceProperty());
