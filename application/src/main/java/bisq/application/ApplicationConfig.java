@@ -31,12 +31,11 @@ public record ApplicationConfig(String baseDir, String appName) {
         if (properties == null) {
             return LocaleRepository.getDefaultLocale();
         }
-        String language = properties.getProperty("language");
-        String country = properties.getProperty("country");
-        if (language == null || country == null || language.isEmpty() || country.isEmpty()) {
-            return LocaleRepository.getDefaultLocale();
+        Locale locale = new Locale(properties.getProperty("language"), properties.getProperty("country"));
+        if (LocaleRepository.isLocaleInvalid(locale)) {
+            return Locale.US;
+        } else {
+            return locale;
         }
-
-        return new Locale(language, country);
     }
 }

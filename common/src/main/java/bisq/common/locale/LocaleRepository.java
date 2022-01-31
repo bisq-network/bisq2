@@ -53,7 +53,7 @@ public class LocaleRepository {
         }
     }
 
-    private static boolean isLocaleInvalid(Locale locale) {
+    public static boolean isLocaleInvalid(Locale locale) {
         // On some systems there is no country defined, in that case we use en_US
         boolean isInvalid = locale == null ||
                 locale.getCountry() == null ||
@@ -62,8 +62,8 @@ public class LocaleRepository {
                 locale.getDisplayCountry().isEmpty() ||
                 locale.getLanguage() == null ||
                 locale.getLanguage().isEmpty() ||
-                locale.getDisplayCountry() == null ||
-                locale.getDisplayCountry().isEmpty();
+                locale.getDisplayLanguage() == null ||
+                locale.getDisplayLanguage().isEmpty();
         if (isInvalid) {
             log.warn("Provided locale is invalid. We use Locale.US instead. Provided locale={}", locale);
 
