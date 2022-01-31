@@ -23,13 +23,14 @@ import bisq.account.settlement.SettlementMethod;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
+import bisq.common.timer.Scheduler;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
-import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.broadcast.BroadcastResult;
+import bisq.network.p2p.services.data.DataService.BroadCastDataResult;
 import bisq.offer.options.ListingOption;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,12 +56,13 @@ public class OfferService {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         future.complete(true);
 
-        openOfferService.getOpenOffers().forEach(openOffer -> publishOffer(openOffer.getOffer()));
+        //todo
+        Scheduler.run(()->openOfferService.getOpenOffers().forEach(openOffer -> publishOffer(openOffer.getOffer()))).after(1000);
+        
         return future;
     }
 
     public void shutdown() {
-        openOfferService.getOpenOffers().forEach(openOffer -> unPublish(openOffer.getOffer()));
     }
 
     public CompletableFuture<Offer> createOffer(Market selectedMarket,
@@ -117,24 +119,32 @@ public class OfferService {
         });
     }
 
-    public CompletableFuture<CompletableFuture<List<CompletableFuture<BroadcastResult>>>> publishOffer(Offer offer) {
+    public CompletableFuture<BroadCastDataResult> publishOffer(Offer offer) {
         openOfferService.add(offer);
         return identityService.getOrCreateIdentity(offer.getId())
-                .thenApply(identity -> {
+                .thenCompose(identity -> {
                     NetworkIdWithKeyPair nodeIdAndKeyPair = identity.getNodeIdAndKeyPair();
                     return networkService.addData(offer, nodeIdAndKeyPair);
                 });
     }
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeMyOffer(Offer offer) {
+    public CompletableFuture<BroadCastDataResult> removeMyOffer(Offer offer) {
         openOfferService.remove(offer);
-        return unPublish(offer);
+        return removeMyOfferFromNetwork(offer);
     }
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> unPublish(Offer offer) {
+    public CompletableFuture<BroadCastDataResult> removeMyOfferFromNetwork(Offer offer) {
         // We do not retire the identity as it might be still used in the chat. For a mature implementation we would
         // need to check if there is any usage still for that identity and if not retire it.
-        Identity identity = identityService.findActiveIdentity(offer.getId()).orElseThrow();
-        return networkService.removeData(offer, identity.getNodeIdAndKeyPair());
+        return identityService.findActiveIdentity(offer.getId())
+                .map(identity -> networkService.removeData(offer, identity.getNodeIdAndKeyPair()))
+                .orElse(CompletableFuture.completedFuture(new BroadCastDataResult()));
+        // return networkService.removeData(offer, identity.getNodeIdAndKeyPair());
+    }
+
+    public CompletableFuture<List<BroadCastDataResult>> removeMyOffersFromNetwork() {
+        return CompletableFutureUtils.allOf(openOfferService.getOpenOffers().stream()
+                .map(openOffer -> removeMyOfferFromNetwork(openOffer.getOffer()))
+                .collect(Collectors.toList()));
     }
 }

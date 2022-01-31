@@ -48,7 +48,7 @@ public class TakerBsqBondProtocol extends BsqBondProtocol {
             bsqBond.verifyBondCommitmentMessage(makerCommitmentMessage)
                     .whenComplete((success, t) -> setState(State.COMMITMENT_RECEIVED))
                     .thenCompose(isValid -> bsqBond.getCommitment(contract))
-                    .thenCompose(commitment -> networkService.confidentialSendAsync(new TakerCommitmentMessage(commitment),
+                    .thenCompose(commitment -> networkService.sendMessage(new TakerCommitmentMessage(commitment),
                             maker.networkId(),
                             networkIdWithKeyPair))
                     .whenComplete((success, t) -> setState(State.COMMITMENT_SENT));
@@ -57,7 +57,7 @@ public class TakerBsqBondProtocol extends BsqBondProtocol {
             bsqBond.verifyFundsSentMessage(makerFundsSentMessage)
                     .whenComplete((success, t) -> setState(State.FUNDS_RECEIVED))
                     .thenCompose(isValid -> settlementExecution.sendFunds(contract))
-                    .thenCompose(isSent -> networkService.confidentialSendAsync(new TakerFundsSentMessage(),
+                    .thenCompose(isSent -> networkService.sendMessage(new TakerFundsSentMessage(),
                             maker.networkId(),
                             networkIdWithKeyPair))
                     .whenComplete((success, t) -> setState(State.FUNDS_SENT));

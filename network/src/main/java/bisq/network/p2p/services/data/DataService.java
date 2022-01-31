@@ -55,7 +55,15 @@ import java.util.stream.Stream;
  */
 @Slf4j
 public class DataService implements DataNetworkService.Listener {
+    public static class BroadCastDataResult extends HashMap<Transport.Type, CompletableFuture<BroadcastResult>> {
+        public BroadCastDataResult(Map<Transport.Type, CompletableFuture<BroadcastResult>> map) {
+            super(map);
+        }
 
+        public BroadCastDataResult() {
+            super();
+        }
+    }
 
     public interface Listener {
         void onNetworkPayloadAdded(NetworkPayload networkPayload);
@@ -66,7 +74,7 @@ public class DataService implements DataNetworkService.Listener {
     @Getter
     private final StorageService storageService;
     private final Set<DataService.Listener> listeners = new CopyOnWriteArraySet<>();
-    private final Map<Transport.Type, DataNetworkService> dataNetworkServices = new ConcurrentHashMap<>();
+    private final Map<Transport.Type, DataNetworkService> dataNetworkServiceByTransportType = new ConcurrentHashMap<>();
 
     public DataService(StorageService storageService) {
         this.storageService = storageService;
@@ -75,13 +83,13 @@ public class DataService implements DataNetworkService.Listener {
     // todo a bit of a hack that way...
     public DataNetworkService getDataServicePerTransport(Transport.Type transportType, Node defaultNode, PeerGroupService peerGroupService) {
         DataNetworkService dataNetworkService = new DataNetworkService(defaultNode, peerGroupService, storageService::getInventoryOfAllStores);
-        dataNetworkServices.put(transportType, dataNetworkService);
+        dataNetworkServiceByTransportType.put(transportType, dataNetworkService);
         dataNetworkService.addListener(this);
         return dataNetworkService;
     }
 
     public CompletableFuture<Void> shutdown() {
-        dataNetworkServices.values().forEach(DataNetworkService::shutdown);
+        dataNetworkServiceByTransportType.values().forEach(DataNetworkService::shutdown);
         storageService.shutdown();
         listeners.clear();
         return CompletableFuture.completedFuture(null);
@@ -133,20 +141,24 @@ public class DataService implements DataNetworkService.Listener {
     // Add data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
+
+    public CompletableFuture<BroadCastDataResult> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
         if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
             return storageService.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
                     .thenApply(store -> {
                         try {
-                            AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
-                            Result result = store.add(addRequest);
+                            AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
+                            Result result = store.add(request);
                             if (result.isSuccess()) {
                                 listeners.forEach(listener -> listener.onNetworkPayloadAdded(networkPayload));
-                                return dataNetworkServices.values().stream()
-                                        .map(service -> service.broadcast(addRequest))
-                                        .collect(Collectors.toList());
+                                return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
+                                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
+                                
+                              /*  return dataNetworkServiceByTransportType.values().stream()
+                                        .map(service -> service.broadcast(request))
+                                        .collect(Collectors.toList());*/
                             } else {
-                                return new ArrayList<>();
+                                return new BroadCastDataResult();
                             }
                         } catch (GeneralSecurityException e) {
                             e.printStackTrace();
@@ -156,15 +168,14 @@ public class DataService implements DataNetworkService.Listener {
         } else if (networkPayload instanceof AppendOnlyPayload appendOnlyPayload) {
             return storageService.getOrCreateAppendOnlyDataStore(appendOnlyPayload.getMetaData())
                     .thenApply(store -> {
-                        AddAppendOnlyDataRequest addAppendOnlyDataRequest = new AddAppendOnlyDataRequest(appendOnlyPayload);
-                        Result result = store.add(addAppendOnlyDataRequest);
+                        AddAppendOnlyDataRequest request = new AddAppendOnlyDataRequest(appendOnlyPayload);
+                        Result result = store.add(request);
                         if (result.isSuccess()) {
                             listeners.forEach(listener -> listener.onNetworkPayloadAdded(networkPayload));
-                            return dataNetworkServices.values().stream()
-                                    .map(service -> service.broadcast(new AddAppendOnlyDataRequest(appendOnlyPayload)))
-                                    .collect(Collectors.toList());
+                            return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
+                                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
                         } else {
-                            return new ArrayList<>();
+                            return new BroadCastDataResult();
                         }
                     });
         } else {
@@ -172,20 +183,19 @@ public class DataService implements DataNetworkService.Listener {
         }
     }
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addMailboxPayload(MailboxPayload mailboxPayload,
-                                                                                         KeyPair senderKeyPair,
-                                                                                         PublicKey receiverPublicKey) {
+    public CompletableFuture<BroadCastDataResult> addMailboxPayload(MailboxPayload mailboxPayload,
+                                                                    KeyPair senderKeyPair,
+                                                                    PublicKey receiverPublicKey) {
         return storageService.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
                 .thenApply(store -> {
                     try {
-                        AddMailboxRequest addRequest = AddMailboxRequest.from(store, mailboxPayload, senderKeyPair, receiverPublicKey);
-                        Result result = store.add(addRequest);
+                        AddMailboxRequest request = AddMailboxRequest.from(store, mailboxPayload, senderKeyPair, receiverPublicKey);
+                        Result result = store.add(request);
                         if (result.isSuccess()) {
-                            return dataNetworkServices.values().stream()
-                                    .map(service -> service.broadcast(addRequest))
-                                    .collect(Collectors.toList());
+                            return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
+                                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
                         } else {
-                            return new ArrayList<>();
+                            return new BroadCastDataResult();
                         }
 
                     } catch (GeneralSecurityException e) {
@@ -200,7 +210,7 @@ public class DataService implements DataNetworkService.Listener {
     // Remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
+    public CompletableFuture<BroadCastDataResult> removeNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
         if (networkPayload instanceof MailboxPayload) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("removeNetworkPayloadAsync called with MailboxPayload"));
         } else if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
@@ -211,7 +221,35 @@ public class DataService implements DataNetworkService.Listener {
                             Result result = store.remove(request);
                             if (result.isSuccess()) {
                                 listeners.forEach(listener -> listener.onNetworkPayloadRemoved(networkPayload));
-                                return dataNetworkServices.values().stream()
+                                return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
+                                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
+                            } else {
+                                return new BroadCastDataResult();
+                            }
+                        } catch (GeneralSecurityException e) {
+                            e.printStackTrace();
+                            throw new CompletionException(e);
+                        }
+                    });
+        } else if (networkPayload instanceof AppendOnlyPayload) {
+            throw new IllegalArgumentException("AppendOnlyPayload cannot be removed");
+        } else {
+            return CompletableFuture.failedFuture(new IllegalArgumentException("Not supported type of networkPayload"));
+        }
+    }
+
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeNetworkPayload1(NetworkPayload networkPayload, KeyPair keyPair) {
+        if (networkPayload instanceof MailboxPayload) {
+            return CompletableFuture.failedFuture(new IllegalArgumentException("removeNetworkPayloadAsync called with MailboxPayload"));
+        } else if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
+            return storageService.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
+                    .thenApply(store -> {
+                        try {
+                            RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
+                            Result result = store.remove(request);
+                            if (result.isSuccess()) {
+                                listeners.forEach(listener -> listener.onNetworkPayloadRemoved(networkPayload));
+                                return dataNetworkServiceByTransportType.values().stream()
                                         .map(service -> service.broadcast(request))
                                         .collect(Collectors.toList());
                             } else {
@@ -229,6 +267,7 @@ public class DataService implements DataNetworkService.Listener {
         }
     }
 
+
     public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeMailboxPayload(MailboxPayload mailboxPayload, KeyPair receiverKeyPair) {
         return storageService.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
                 .thenApply(store -> {
@@ -237,7 +276,7 @@ public class DataService implements DataNetworkService.Listener {
                         Result result = store.remove(request);
                         if (result.isSuccess()) {
                             listeners.forEach(listener -> listener.onNetworkPayloadRemoved(mailboxPayload));
-                            return dataNetworkServices.values().stream()
+                            return dataNetworkServiceByTransportType.values().stream()
                                     .map(service -> service.broadcast(request))
                                     .collect(Collectors.toList());
                         } else {
@@ -250,7 +289,7 @@ public class DataService implements DataNetworkService.Listener {
                 });
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Inventory
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -268,7 +307,7 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     public void requestInventory(DataFilter dataFilter) {
-        dataNetworkServices.values().forEach(service -> requestInventory(dataFilter, service));
+        dataNetworkServiceByTransportType.values().forEach(service -> requestInventory(dataFilter, service));
     }
 
     public void requestInventory(DataFilter dataFilter, DataNetworkService dataNetworkService) {
@@ -311,7 +350,7 @@ public class DataService implements DataNetworkService.Listener {
                         // async calls
                         listeners.forEach(listener -> listener.onNetworkPayloadAdded(networkData));
                         if (allowReBroadcast) {
-                            dataNetworkServices.values().forEach(e -> e.reBroadcast(addDataRequest));
+                            dataNetworkServiceByTransportType.values().forEach(e -> e.reBroadcast(addDataRequest));
                         }
                     });
                 });
@@ -325,7 +364,7 @@ public class DataService implements DataNetworkService.Listener {
                         // async calls
                         listeners.forEach(listener -> listener.onNetworkPayloadRemoved(networkData));
                         if (allowReBroadcast) {
-                            dataNetworkServices.values().forEach(e -> e.reBroadcast(removeDataRequest));
+                            dataNetworkServiceByTransportType.values().forEach(e -> e.reBroadcast(removeDataRequest));
                         }
                     });
                 });

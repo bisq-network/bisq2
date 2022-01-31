@@ -156,22 +156,24 @@ public class DefaultApplicationService extends ServiceProvider {
     @Override
     public CompletableFuture<Void> shutdown() {
         //todo maybe chain async shutdown calls
-        keyPairService.shutdown();
-        identityService.shutdown();
-        marketPriceService.shutdown();
-        offerService.shutdown();
-        openOfferService.shutdown();
-        offerRepository.shutdown();
-        return networkService.shutdown()
-                .whenComplete((__, throwable) -> {
-                    if (throwable != null) {
-                        log.error("Error at shutdown", throwable);
-                        System.exit(EXIT_FAILURE);
-                    } else {
-                        // In case the application is a JavaFXApplication give it chance to trigger the exit
-                        // via Platform.exit()
-                        runAsync(() -> System.exit(EXIT_SUCCESS));
-                    }
-                });
+        return offerService.removeMyOffersFromNetwork().thenCompose(list -> {
+            keyPairService.shutdown();
+            identityService.shutdown();
+            marketPriceService.shutdown();
+            offerService.shutdown();
+            openOfferService.shutdown();
+            offerRepository.shutdown();
+            return networkService.shutdown()
+                    .whenComplete((__, throwable) -> {
+                        if (throwable != null) {
+                            log.error("Error at shutdown", throwable);
+                            System.exit(EXIT_FAILURE);
+                        } else {
+                            // In case the application is a JavaFXApplication give it chance to trigger the exit
+                            // via Platform.exit()
+                            runAsync(() -> System.exit(EXIT_SUCCESS));
+                        }
+                    });
+        });
     }
 }

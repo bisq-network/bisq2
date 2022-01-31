@@ -61,7 +61,7 @@ public class RP_TakerProtocol extends Protocol {
     public void takeOffer() {
         RP_TakeOfferRequest takeOfferRequest = new RP_TakeOfferRequest(contract);
         setState(TakerState.SEND_TAKE_OFFER_REQUEST);
-        networkService.confidentialSendAsync(takeOfferRequest, contract.getOffer().getMakerNetworkId(), myNodeIdAndKeyPair)
+        networkService.sendMessage(takeOfferRequest, contract.getOffer().getMakerNetworkId(), myNodeIdAndKeyPair)
                 .whenComplete((resultMap, throwable) -> {
                     if (throwable == null) {
                         setState(TakerState.TAKE_OFFER_REQUEST_ARRIVED);

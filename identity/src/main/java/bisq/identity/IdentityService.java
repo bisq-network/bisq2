@@ -270,7 +270,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
-        return networkService.getInitializedNetworkIdAsync(nodeId, pubKey)
+        return networkService.getInitializedNetworkId(nodeId, pubKey)
                 .thenApply(networkId -> new Identity(domainId, networkId, keyPair));
     }
 }

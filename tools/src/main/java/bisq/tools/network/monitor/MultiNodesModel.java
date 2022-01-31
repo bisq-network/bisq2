@@ -214,7 +214,7 @@ public class MultiNodesModel {
         });
 
         MockMailBoxMessage mailBoxMessage = new MockMailBoxMessage(message);
-        senderNetworkService.confidentialSendAsync(mailBoxMessage,
+        senderNetworkService.sendMessage(mailBoxMessage,
                         receiverNetworkId,
                         senderKeyPair,
                         senderNetworkId.getNodeId())

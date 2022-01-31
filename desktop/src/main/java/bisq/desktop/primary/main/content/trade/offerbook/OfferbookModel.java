@@ -29,6 +29,7 @@ import bisq.oracle.marketprice.MarketPriceService;
 import bisq.security.KeyPairService;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
@@ -76,7 +77,12 @@ public class OfferbookModel implements Model {
     void addOffer(Offer offer) {
         OfferListItem item = new OfferListItem(offer, marketPriceService);
         if (!listItems.contains(item)) {
-            listItems.add(item);
+            listItems.add(item);listItems.addListener(new ListChangeListener<OfferListItem>() {
+                @Override
+                public void onChanged(Change<? extends OfferListItem> c) {
+                    
+                }
+            });
         }
     }
 

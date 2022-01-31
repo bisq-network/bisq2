@@ -33,7 +33,6 @@ import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
@@ -53,6 +52,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import static bisq.network.p2p.node.transport.Transport.Type.*;
+import static bisq.network.p2p.services.data.DataService.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -67,6 +67,22 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
     private final Map<Transport.Type, Integer> defaultNodePortByTransportType;
+
+    public static class InitializeServerResult extends HashMap<Transport.Type, CompletableFuture<Boolean>> {
+        public InitializeServerResult(Map<Transport.Type, CompletableFuture<Boolean>> map) {
+            super(map);
+        }
+    }
+
+    public static class SendMessageResult extends HashMap<Transport.Type, ConfidentialMessageService.Result> {
+        public SendMessageResult(Map<Transport.Type, ConfidentialMessageService.Result> map) {
+            super(map);
+        }
+
+        public SendMessageResult() {
+            super();
+        }
+    }
 
     public static record Config(String baseDir,
                                 Transport.Config transportConfig,
@@ -129,23 +145,22 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     // Initialize server
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(String nodeId, PubKey pubKey) {
+    public InitializeServerResult maybeInitializeServer(String nodeId, PubKey pubKey) {
         return maybeInitializeServer(getOrCreatePortByTransport(nodeId, pubKey), nodeId, pubKey);
     }
 
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(Map<Transport.Type, Integer> portByTransport,
-                                                                                 String nodeId,
-                                                                                 PubKey pubKey) {
-        Map<Transport.Type, CompletableFuture<Boolean>> futureMap = serviceNodesByTransport.maybeInitializeServer(portByTransport, nodeId);
+    public InitializeServerResult maybeInitializeServer(Map<Transport.Type, Integer> portByTransport,
+                                                        String nodeId,
+                                                        PubKey pubKey) {
+        InitializeServerResult initializeServerResult = serviceNodesByTransport.maybeInitializeServer(portByTransport, nodeId);
         // After server has been started we can be sure the networkId is available. 
         // If it was not already available before we persist it.
-        futureMap.values().forEach(future -> future.whenComplete((result, throwable) -> {
-            if (throwable != null) {
-                log.error(throwable.toString()); //todo
+        initializeServerResult.values().forEach(future -> future.whenComplete((result, throwable) -> {
+            if (throwable == null) {
+                persistNetworkId(nodeId, pubKey);
             }
-            persistNetworkId(nodeId, pubKey);
         }));
-        return futureMap;
+        return initializeServerResult;
     }
 
 
@@ -153,7 +168,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     // Get networkId and initialize server
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<NetworkId> getInitializedNetworkIdAsync(String nodeId, PubKey pubKey) {
+    public CompletableFuture<NetworkId> getInitializedNetworkId(String nodeId, PubKey pubKey) {
         CompletableFuture<NetworkId> future = new CompletableFuture<>();
         maybeInitializeServer(nodeId, pubKey).forEach((transportType, resultFuture) -> {
             resultFuture.whenComplete((initializeServerResult, throwable) -> {
@@ -166,7 +181,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                     if (optionalNetworkId.isPresent()) {
                         future.complete(optionalNetworkId.get());
                     } else {
-                        future.completeExceptionally(new IllegalStateException("NetworkId must be present at getInitializedNetworkIdAsync"));
+                        future.completeExceptionally(new IllegalStateException("NetworkId must be present at getInitializedNetworkId"));
                     }
                 }
             });
@@ -185,7 +200,9 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                 .whenComplete((result, throwable) -> {
                     // If networkNode has not been created we create now one with the default pubKey (default keyId)
                     // and persist it.
-                    persistNetworkId(nodeId, keyPairService.getDefaultPubKey());
+                    if (throwable == null) {
+                        persistNetworkId(nodeId, keyPairService.getDefaultPubKey());
+                    }
                 });
     }
 
@@ -194,28 +211,21 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     // Send confidential message
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Map<Transport.Type, ConfidentialMessageService.Result>> confidentialSendAsync(Message message,
-                                                                                                           NetworkId receiverNetworkId,
-                                                                                                           KeyPair senderKeyPair,
-                                                                                                           String senderNodeId) {
-        return supplyAsync(() -> confidentialSend(message, receiverNetworkId, senderKeyPair, senderNodeId), NETWORK_IO_POOL);
+    public CompletableFuture<SendMessageResult> sendMessage(Message message,
+                                                            NetworkId receiverNetworkId,
+                                                            KeyPair senderKeyPair,
+                                                            String senderNodeId) {
+        return supplyAsync(() -> serviceNodesByTransport.confidentialSend(message, receiverNetworkId, senderKeyPair, senderNodeId), NETWORK_IO_POOL);
     }
 
-    public CompletableFuture<Map<Transport.Type, ConfidentialMessageService.Result>> confidentialSendAsync(Message message,
-                                                                                                           NetworkId receiverNetworkId,
-                                                                                                           NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
-        return supplyAsync(() -> confidentialSend(message,
+    public CompletableFuture<SendMessageResult> sendMessage(Message message,
+                                                            NetworkId receiverNetworkId,
+                                                            NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
+        return supplyAsync(() -> serviceNodesByTransport.confidentialSend(message,
                         receiverNetworkId,
                         senderNetworkIdWithKeyPair.keyPair(),
                         senderNetworkIdWithKeyPair.nodeId()),
                 NETWORK_IO_POOL);
-    }
-
-    public Map<Transport.Type, ConfidentialMessageService.Result> confidentialSend(Message message,
-                                                                                   NetworkId receiverNetworkId,
-                                                                                   KeyPair senderKeyPair,
-                                                                                   String senderNodeId) {
-        return serviceNodesByTransport.confidentialSend(message, receiverNetworkId, senderKeyPair, senderNodeId);
     }
 
 
@@ -223,8 +233,8 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     // Add/remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> addData(Proto data, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
-        checkArgument(dataService.isPresent(), "DataService must be supported when this method is called.");
+    public CompletableFuture<BroadCastDataResult> addData(Proto data, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+        checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         String nodeId = ownerNetworkIdWithKeyPair.nodeId();
         PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
@@ -233,46 +243,28 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                     AuthenticatedPayload netWorkPayload = new AuthenticatedPayload(data);
                     return dataService.get().addNetworkPayload(netWorkPayload, keyPair)
                             .whenComplete((broadCastResultFutures, throwable) -> {
-                                broadCastResultFutures.forEach(broadCastResultFuture -> {
-                                    broadCastResultFuture.whenComplete((broadcastResult, throwable2) -> {
-                                        //todo apply state
-                                    });
-                                });
+                                broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
+                                    //todo apply state
+                                }));
                             });
-
                 });
     }
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeData(Proto data, NetworkIdWithKeyPair getNetworkIdWithKeyPair) {
-        String nodeId = getNetworkIdWithKeyPair.nodeId();
-        PubKey pubKey = getNetworkIdWithKeyPair.pubKey();
-        KeyPair keyPair = getNetworkIdWithKeyPair.keyPair();
+    public CompletableFuture<BroadCastDataResult> removeData(Proto data, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+        checkArgument(dataService.isPresent(), "DataService must be supported when removeData is called.");
+        String nodeId = ownerNetworkIdWithKeyPair.nodeId();
+        PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
+        KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> {
                     AuthenticatedPayload netWorkPayload = new AuthenticatedPayload(data);
-                    return dataService.orElseThrow().removeNetworkPayload(netWorkPayload, keyPair)
-                            .whenComplete((broadCastResultFutures, throwable) -> {
-                                broadCastResultFutures.forEach(broadCastResultFuture -> {
-                                    broadCastResultFuture.whenComplete((broadcastResult, throwable2) -> {
-                                        //todo apply state
-                                    });
-                                });
+                    return dataService.get().removeNetworkPayload(netWorkPayload, keyPair)
+                            .whenComplete((broadCastDataResult, throwable) -> {
+                                broadCastDataResult.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
+                                    //todo apply state
+                                }));
                             });
-
                 });
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Request inventory
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public void requestInventory(StorageService.StoreType storeType) {
-        dataService.orElseThrow().requestInventory(storeType);
-    }
-
-    public void requestInventory(String storeName) {
-        dataService.orElseThrow().requestInventory(storeName);
     }
 
 
@@ -280,11 +272,11 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     // Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addDataServiceListener(DataService.Listener listener) {
+    public void addDataServiceListener(Listener listener) {
         dataService.orElseThrow().addListener(listener);
     }
 
-    public void removeDataServiceListener(DataService.Listener listener) {
+    public void removeDataServiceListener(Listener listener) {
         dataService.orElseThrow().removeListener(listener);
     }
 

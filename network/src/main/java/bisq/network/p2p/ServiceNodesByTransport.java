@@ -20,6 +20,8 @@ package bisq.network.p2p;
 
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkId;
+import bisq.network.NetworkService;
+import bisq.network.NetworkService.InitializeServerResult;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
@@ -37,7 +39,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -46,6 +51,7 @@ import java.util.stream.Collectors;
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.CompletableFuture.runAsync;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ServiceNodesByTransport {
@@ -96,13 +102,12 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Map<Transport.Type, CompletableFuture<Boolean>> maybeInitializeServer(Map<Transport.Type, Integer> portByTransport, String nodeId) {
-        return map.entrySet().stream()
+
+    public InitializeServerResult maybeInitializeServer(Map<Transport.Type, Integer> portByTransport, String nodeId) {
+        return new InitializeServerResult(map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry ->
-                        runAsync(() -> {
-                            int port = portByTransport.get(entry.getKey());
-                            entry.getValue().maybeInitializeServer(nodeId, port);
-                        }, NETWORK_IO_POOL).thenApply(__ -> true)));
+                        supplyAsync(() -> entry.getValue().maybeInitializeServer(nodeId, portByTransport.get(entry.getKey()))
+                                , NETWORK_IO_POOL))));
     }
 
     public CompletableFuture<Boolean> bootstrapToNetwork(Map<Transport.Type, Integer> portByTransport, String nodeId) {
@@ -121,11 +126,11 @@ public class ServiceNodesByTransport {
                 })).thenApply(list -> true);
     }
 
-    public Map<Transport.Type, ConfidentialMessageService.Result> confidentialSend(Message message,
-                                                                                   NetworkId receiverNetworkId,
-                                                                                   KeyPair senderKeyPair,
-                                                                                   String senderNodeId) {
-        Map<Transport.Type, ConfidentialMessageService.Result> resultsByType = new HashMap<>();
+    public NetworkService.SendMessageResult confidentialSend(Message message,
+                                                             NetworkId receiverNetworkId,
+                                                             KeyPair senderKeyPair,
+                                                             String senderNodeId) {
+        NetworkService.SendMessageResult resultsByType = new NetworkService.SendMessageResult();
         receiverNetworkId.getAddressByNetworkType().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);

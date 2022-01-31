@@ -214,8 +214,8 @@ public class OfferbookController implements Controller {
                         UIThread.run(() -> model.setRemoveOfferError(offer, throwable2));
                         return;
                     }
-                    broadCastResultFutures.forEach(broadCastResultFuture -> {
-                        broadCastResultFuture.whenComplete((broadcastResult, throwable3) -> {
+                    broadCastResultFutures.entrySet().forEach(broadCastResultFuture -> {
+                        broadCastResultFuture.getValue().whenComplete((broadcastResult, throwable3) -> {
                             if (throwable3 != null) {
                                 UIThread.run(() -> model.setRemoveOfferError(offer, throwable3));
                                 return;

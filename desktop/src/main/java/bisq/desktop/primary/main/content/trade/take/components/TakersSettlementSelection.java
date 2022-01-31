@@ -214,17 +214,17 @@ public class TakersSettlementSelection {
                     Res.offerbook.get("receiving");
 
             if (model.baseSideAccountsVisibility.get()) {
-                model.baseSideDescription.set(Res.offerbook.get("createOffer.account.description",
+                model.baseSideDescription.set(Res.offerbook.get("takeOffer.account.description",
                         baseSideVerb, market.baseCurrencyCode()));
             } else {
-                model.baseSideDescription.set(Res.offerbook.get("createOffer.settlement.description",
+                model.baseSideDescription.set(Res.offerbook.get("takeOffer.settlement.description",
                         baseSideVerb, market.baseCurrencyCode()));
             }
             if (model.quoteSideAccountsVisibility.get()) {
-                model.quoteSideDescription.set(Res.offerbook.get("createOffer.account.description",
+                model.quoteSideDescription.set(Res.offerbook.get("takeOffer.account.description",
                         quoteSideVerb, market.quoteCurrencyCode()));
             } else {
-                model.quoteSideDescription.set(Res.offerbook.get("createOffer.settlement.description",
+                model.quoteSideDescription.set(Res.offerbook.get("takeOffer.settlement.description",
                         quoteSideVerb, market.quoteCurrencyCode()));
             }
         }
