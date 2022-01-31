@@ -24,7 +24,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqComboBox;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
-import bisq.user.UserService;
+import bisq.settings.SettingsService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -43,8 +43,8 @@ import javax.annotation.Nullable;
 public class MarketSelection {
     private final MarketSelectionController controller;
 
-    public MarketSelection(UserService userService) {
-        controller = new MarketSelectionController(userService);
+    public MarketSelection(SettingsService settingsService) {
+        controller = new MarketSelectionController(settingsService);
     }
 
     public ReadOnlyObjectProperty<Market> selectedMarketProperty() {
@@ -64,15 +64,15 @@ public class MarketSelection {
         @Getter
         private final MarketSelectionView view;
 
-        private MarketSelectionController(UserService userService) {
-            model = new MarketSelectionModel(userService);
+        private MarketSelectionController(SettingsService settingsService) {
+            model = new MarketSelectionModel(settingsService);
             view = new MarketSelectionView(model, this);
         }
 
         @Override
         public void onViewAttached() {
-            model.markets.setAll(model.userService.getMarkets());
-            model.selectedMarket.set(model.userService.getSelectedMarket());
+            model.markets.setAll(model.settingsService.getMarkets());
+            model.selectedMarket.set(model.settingsService.getSelectedMarket());
         }
 
         @Override
@@ -89,10 +89,10 @@ public class MarketSelection {
     private static class MarketSelectionModel implements Model {
         private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
         private final ObservableList<Market> markets = FXCollections.observableArrayList();
-        private final UserService userService;
+        private final SettingsService settingsService;
 
-        public MarketSelectionModel(UserService userService) {
-            this.userService = userService;
+        public MarketSelectionModel(SettingsService settingsService) {
+            this.settingsService = settingsService;
         }
     }
 

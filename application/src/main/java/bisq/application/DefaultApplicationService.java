@@ -36,7 +36,7 @@ import bisq.persistence.PersistenceService;
 import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.social.chat.ChatService;
-import bisq.user.UserService;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,7 +66,7 @@ public class DefaultApplicationService extends ServiceProvider {
     private final MarketPriceService marketPriceService;
     private final ApplicationConfig applicationConfig;
     private final PersistenceService persistenceService;
-    private final UserService userService;
+    private final SettingsService settingsService;
     private final ChatService chatService;
     private final ProtocolService protocolService;
     private final OfferBookService offerBookService;
@@ -83,7 +83,7 @@ public class DefaultApplicationService extends ServiceProvider {
         persistenceService = new PersistenceService(applicationConfig.baseDir());
         keyPairService = new KeyPairService(persistenceService);
 
-        userService = new UserService(persistenceService);
+        settingsService = new SettingsService(persistenceService);
 
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationConfig.baseDir(),

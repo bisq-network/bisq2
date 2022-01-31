@@ -53,7 +53,7 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
         offerService = applicationService.getOfferService();
         model = new CreateOfferModel();
 
-        marketSelection = new MarketSelection(applicationService.getUserService());
+        marketSelection = new MarketSelection(applicationService.getSettingsService());
         model.setSelectedMarketProperty(marketSelection.selectedMarketProperty());
 
         directionSelection = new DirectionSelection(model.selectedMarketProperty());

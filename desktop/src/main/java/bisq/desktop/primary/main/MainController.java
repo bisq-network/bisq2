@@ -24,8 +24,8 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.nav.LeftNavController;
 import bisq.desktop.primary.main.top.TopPanelController;
-import bisq.user.CookieKey;
-import bisq.user.UserService;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,10 +36,10 @@ public class MainController implements Controller, Navigation.Listener {
     private final MainModel model = new MainModel();
     @Getter
     private final MainView view;
-    private final UserService userService;
+    private final SettingsService settingsService;
 
     public MainController(DefaultApplicationService applicationService) {
-        userService = applicationService.getUserService();
+        settingsService = applicationService.getSettingsService();
         ContentController contentController = new ContentController(applicationService);
         LeftNavController leftNavController = new LeftNavController(applicationService);
         TopPanelController topPanelController = new TopPanelController(applicationService);
@@ -55,7 +55,7 @@ public class MainController implements Controller, Navigation.Listener {
     }
 
     public void onViewAttached() {
-        String persisted = userService.getPersistableStore().getCookie().get(CookieKey.NAVIGATION_TARGET);
+        String persisted = settingsService.getPersistableStore().getCookie().get(CookieKey.NAVIGATION_TARGET);
         if (persisted != null) {
             Navigation.navigateTo(NavigationTarget.valueOf(persisted));
         } else {
@@ -72,8 +72,8 @@ public class MainController implements Controller, Navigation.Listener {
     @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
         if (navigationTarget.isAllowPersistence()) {
-            userService.getPersistableStore().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
-            userService.persist();
+            settingsService.getPersistableStore().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
+            settingsService.persist();
         }
     }
 }

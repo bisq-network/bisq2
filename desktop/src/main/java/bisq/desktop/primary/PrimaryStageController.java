@@ -23,8 +23,8 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.primary.main.MainController;
-import bisq.user.CookieKey;
-import bisq.user.UserService;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,11 +37,11 @@ public class PrimaryStageController implements Controller {
     private final PrimaryStageView view;
     private final MainController mainController;
     private final OverlayController overlayController;
-    private final UserService userService;
+    private final SettingsService settingsService;
 
     public PrimaryStageController(DefaultApplicationService applicationService, JavaFXApplication.Data applicationData) {
         this.applicationService = applicationService;
-        userService = applicationService.getUserService();
+        settingsService = applicationService.getSettingsService();
         Browser.setHostServices(applicationData.hostServices());
 
         model = new PrimaryStageModel(applicationService);
@@ -80,22 +80,22 @@ public class PrimaryStageController implements Controller {
     }
 
     public void onStageXChanged(double value) {
-        userService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_X, value);
-        userService.persist();
+        settingsService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_X, value);
+        settingsService.persist();
     }
 
     public void onStageYChanged(double value) {
-        userService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_Y, value);
-        userService.persist();
+        settingsService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_Y, value);
+        settingsService.persist();
     }
 
     public void onStageWidthChanged(double value) {
-        userService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_W, value);
-        userService.persist();
+        settingsService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_W, value);
+        settingsService.persist();
     }
 
     public void onStageHeightChanged(double value) {
-        userService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_H, value);
-        userService.persist();
+        settingsService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_H, value);
+        settingsService.persist();
     }
 }

@@ -51,9 +51,9 @@ public class OfferbookModel implements Model {
     final SortedList<OfferListItem> sortedItems = new SortedList<>(filteredItems);
     final StringProperty addDataResultProperty = new SimpleStringProperty("");
     final StringProperty removeDataResultProperty = new SimpleStringProperty("");
-    final StringProperty priceHeaderTitle = new SimpleStringProperty(Res.offerbook.get("offerbook.table.header.price"));
-    final StringProperty baseAmountHeaderTitle = new SimpleStringProperty(Res.offerbook.get("offerbook.table.header.baseAmount"));
-    final StringProperty quoteAmountHeaderTitle = new SimpleStringProperty(Res.offerbook.get("offerbook.table.header.quoteAmount"));
+    final StringProperty priceHeaderTitle = new SimpleStringProperty();
+    final StringProperty baseAmountHeaderTitle = new SimpleStringProperty();
+    final StringProperty quoteAmountHeaderTitle = new SimpleStringProperty();
     final BooleanProperty showAllMarkets = new SimpleBooleanProperty();
     final BooleanProperty marketSelectionDisabled = new SimpleBooleanProperty();
     final MarketPriceService marketPriceService;

@@ -54,6 +54,8 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
         log.error("serialized={}", Hex.encode(serialized));
         log.error("signature={}", Hex.encode(signature));
         log.error("data={}", data);*/
+
+        log.error("##sequenceNumber "+sequenceNumber);
         return new AddAuthenticatedDataRequest(data, signature, keyPair.getPublic());
     }
 

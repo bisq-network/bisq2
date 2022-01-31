@@ -57,7 +57,7 @@ public class OfferbookController implements Controller {
         offerBookService = applicationService.getOfferBookService();
         offerService = applicationService.getOfferService();
 
-        marketSelection = new MarketSelection(applicationService.getUserService());
+        marketSelection = new MarketSelection(applicationService.getSettingsService());
         directionSelection = new DirectionSelection(marketSelection.selectedMarketProperty());
 
         model = new OfferbookModel(applicationService,
@@ -79,6 +79,7 @@ public class OfferbookController implements Controller {
         directionSelection.setDirection(Direction.BUY);
 
         model.getSelectedMarketProperty().addListener(selectedMarketListener);
+        applyMarketChange(model.getSelectedMarketProperty().get());
         model.getDirectionProperty().addListener(directionListener);
 
         updateFilterPredicate();

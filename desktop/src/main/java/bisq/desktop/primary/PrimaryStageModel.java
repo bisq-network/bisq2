@@ -21,8 +21,8 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
-import bisq.user.Cookie;
-import bisq.user.CookieKey;
+import bisq.settings.Cookie;
+import bisq.settings.CookieKey;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Parent;
@@ -47,7 +47,7 @@ public class PrimaryStageModel implements Model {
     public PrimaryStageModel(DefaultApplicationService applicationService) {
         title = applicationService.getApplicationConfig().appName();
 
-        Cookie cookie = applicationService.getUserService().getPersistableStore().getCookie();
+        Cookie cookie = applicationService.getSettingsService().getPersistableStore().getCookie();
         stageX = cookie.getAsOptionalDouble(CookieKey.STAGE_X);
         stageY = cookie.getAsOptionalDouble(CookieKey.STAGE_Y);
         stageWidth = cookie.getAsOptionalDouble(CookieKey.STAGE_W);

@@ -25,6 +25,7 @@ import bisq.persistence.PersistenceService;
 import bisq.protocol.ProtocolService;
 import bisq.protocol.reputation.messages.TakeOfferRequest;
 
+import java.io.Serializable;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -32,7 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
-public abstract class Protocol implements MessageListener {
+public abstract class Protocol implements MessageListener, Serializable {
 
     //todo move to maker protocol 
     public abstract void onTakeOfferRequest(TakeOfferRequest takeOfferRequest);

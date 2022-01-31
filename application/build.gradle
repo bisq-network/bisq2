@@ -26,9 +26,9 @@ dependencies {
     implementation project(':offer')
     implementation project(':protocol')
     implementation project(':oracle')
+    implementation project(':settings')
     implementation project(':social')
     implementation project(':support')
-    implementation project(':user')
     implementation project(':presentation')
 
     implementation 'com.google.guava:guava'

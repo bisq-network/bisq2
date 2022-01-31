@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user;
+package bisq.settings;
 
 import bisq.common.monetary.Market;
 import bisq.common.monetary.MarketRepository;
@@ -26,31 +26,31 @@ import lombok.Setter;
 import java.util.List;
 
 @Getter
-public class UserStore implements PersistableStore<UserStore> {
+public class SettingsStore implements PersistableStore<SettingsStore> {
     private final Cookie cookie;
     private final List<Market> markets;
     @Setter
     private Market selectedMarket;
 
-    public UserStore() {
+    public SettingsStore() {
         cookie = new Cookie();
         markets = MarketRepository.getMajorMarkets();
         selectedMarket = MarketRepository.getDefault();
     }
 
-    public UserStore(Cookie cookie, List<Market> markets, Market selectedMarket) {
+    public SettingsStore(Cookie cookie, List<Market> markets, Market selectedMarket) {
         this.cookie = cookie;
         this.markets = markets;
         this.selectedMarket = selectedMarket;
     }
 
     @Override
-    public UserStore getClone() {
-        return new UserStore(cookie, markets, selectedMarket);
+    public SettingsStore getClone() {
+        return new SettingsStore(cookie, markets, selectedMarket);
     }
 
     @Override
-    public void applyPersisted(UserStore persisted) {
+    public void applyPersisted(SettingsStore persisted) {
         cookie.putAll(persisted.getCookie());
         markets.clear();
         markets.addAll(persisted.getMarkets());

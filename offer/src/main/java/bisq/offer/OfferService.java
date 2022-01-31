@@ -57,7 +57,7 @@ public class OfferService {
         future.complete(true);
 
         //todo
-        Scheduler.run(()->openOfferService.getOpenOffers().forEach(openOffer -> publishOffer(openOffer.getOffer()))).after(1000);
+        Scheduler.run(()->openOfferService.getOpenOffers().forEach(openOffer -> publishOffer(openOffer.getOffer()))).after(2000);
         
         return future;
     }
@@ -139,7 +139,6 @@ public class OfferService {
         return identityService.findActiveIdentity(offer.getId())
                 .map(identity -> networkService.removeData(offer, identity.getNodeIdAndKeyPair()))
                 .orElse(CompletableFuture.completedFuture(new BroadCastDataResult()));
-        // return networkService.removeData(offer, identity.getNodeIdAndKeyPair());
     }
 
     public CompletableFuture<List<BroadCastDataResult>> removeMyOffersFromNetwork() {

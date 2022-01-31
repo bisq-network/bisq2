@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user;
+package bisq.settings;
 
 // Used for persistence of Cookie. Entries must not be changes or removed. Only adding entries is permitted.
 public enum CookieKey {

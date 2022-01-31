@@ -40,7 +40,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -253,7 +252,7 @@ public class TakersSettlementSelection {
             var selectedSettlementMethod = isBaseSide ?
                     model.selectedBaseSideSettlementMethod :
                     model.selectedQuoteSideSettlementMethod;
-            
+
             selectedAccount.set(listItem.account);
             selectedSettlementMethod.set(listItem.settlementMethod);
         }
@@ -262,7 +261,7 @@ public class TakersSettlementSelection {
             var selectedSettlementMethod = isBaseSide ?
                     model.selectedBaseSideSettlementMethod :
                     model.selectedQuoteSideSettlementMethod;
-                selectedSettlementMethod.set(listItem.settlementMethod);
+            selectedSettlementMethod.set(listItem.settlementMethod);
         }
 
         private void onCreateBaseSideAccount() {
@@ -278,7 +277,7 @@ public class TakersSettlementSelection {
 
     private static class SettlementModel implements Model {
         private final ObjectProperty<Account<? extends SettlementMethod>> selectedBaseSideAccount = new SimpleObjectProperty<>();
-        private final ObjectProperty<Account<? extends SettlementMethod>> selectedQuoteSideAccount =new SimpleObjectProperty<>();
+        private final ObjectProperty<Account<? extends SettlementMethod>> selectedQuoteSideAccount = new SimpleObjectProperty<>();
         private final ObjectProperty<SettlementMethod> selectedBaseSideSettlementMethod = new SimpleObjectProperty<>();
         private final ObjectProperty<SettlementMethod> selectedQuoteSideSettlementMethod = new SimpleObjectProperty<>();
         private final ReadOnlyObjectProperty<Market> selectedMarket;
@@ -336,8 +335,6 @@ public class TakersSettlementSelection {
             setupAccountStringConverter(baseSideAccountsComboBox);
             VBox.setMargin(baseSideAccountsComboBox, new Insets(0, 0, 20, 0));
             baseSideButton = new BisqButton(Res.offerbook.get("createOffer.account.createNew"));
-            VBox baseSidePlaceHolderBox = createPlaceHolderBox(baseSideButton);
-            baseSideAccountsComboBox.setPlaceholder(baseSidePlaceHolderBox);
 
             baseSideSettlementComboBox = new BisqComboBox<>(model.baseSideSettlementSortedList);
             setupSettlementStringConverter(baseSideSettlementComboBox);
@@ -354,8 +351,6 @@ public class TakersSettlementSelection {
             setupAccountStringConverter(quoteSideAccountsComboBox);
             VBox.setMargin(quoteSideAccountsComboBox, new Insets(0, 0, 20, 0));
             quoteSideButton = new BisqButton(Res.offerbook.get("createOffer.account.createNew"));
-            VBox quoteSidePlaceHolderBox = createPlaceHolderBox(quoteSideButton);
-            quoteSideAccountsComboBox.setPlaceholder(quoteSidePlaceHolderBox);
 
             quoteSideSettlementComboBox = new BisqComboBox<>(model.quoteSideSettlementSortedList);
             setupSettlementStringConverter(quoteSideSettlementComboBox);
@@ -383,7 +378,7 @@ public class TakersSettlementSelection {
                     baseSideSettlementComboBox.getSelectionModel().getSelectedItem(), true));
             quoteSideSettlementComboBox.setOnAction(e -> controller.onSettlementSelectionChanged(
                     quoteSideSettlementComboBox.getSelectionModel().getSelectedItem(), false));
-            
+
             baseSideLabel.textProperty().bind(model.baseSideDescription);
             quoteSideLabel.textProperty().bind(model.quoteSideDescription);
 
@@ -426,15 +421,6 @@ public class TakersSettlementSelection {
             baseSideSettlementComboBox.managedProperty().unbind();
             quoteSideSettlementComboBox.visibleProperty().unbind();
             quoteSideSettlementComboBox.managedProperty().unbind();
-        }
-
-        private VBox createPlaceHolderBox(BisqButton baseSideButton) {
-            BisqLabel placeholderLabel = new BisqLabel(Res.offerbook.get("createOffer.account.placeholder.noAccounts"));
-            VBox vBox = new VBox();
-            vBox.setSpacing(10);
-            vBox.getChildren().addAll(placeholderLabel, baseSideButton);
-            vBox.setAlignment(Pos.CENTER);
-            return vBox;
         }
 
         private void setupAccountStringConverter(BisqComboBox<AccountListItem> comboBox) {

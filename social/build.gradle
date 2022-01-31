@@ -21,7 +21,7 @@ dependencies {
     implementation project(':security')
     implementation project(':network')
     implementation project(':identity')
-    implementation project(':user')
+    implementation project(':settings')
 
     implementation 'com.google.guava:guava'
     implementation 'com.typesafe:config'
