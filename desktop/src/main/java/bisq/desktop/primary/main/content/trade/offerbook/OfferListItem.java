@@ -64,10 +64,10 @@ public class OfferListItem implements TableItem {
                 .map(SettlementSpec::settlementMethodName)
                 .map(settlementMethodName -> Res.offerbook.get(settlementMethodName))
                 .collect(Collectors.joining("\n"));
-       
+
         String baseCurrencyCode = offer.getMarket().baseCurrencyCode();
         String quoteCurrencyCode = offer.getMarket().quoteCurrencyCode();
-       
+
         boolean isBaseCurrencyFiat = TradeCurrency.isFiat(baseCurrencyCode);
         boolean isQuoteCurrencyFiat = TradeCurrency.isFiat(quoteCurrencyCode);
 

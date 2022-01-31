@@ -17,28 +17,43 @@
 
 package bisq.user;
 
+import bisq.common.monetary.Market;
+import bisq.common.monetary.MarketRepository;
 import bisq.persistence.PersistableStore;
 import lombok.Getter;
+import lombok.Setter;
 
+import java.util.List;
+
+@Getter
 public class UserStore implements PersistableStore<UserStore> {
-    @Getter
     private final Cookie cookie;
+    private final List<Market> markets;
+    @Setter
+    private Market selectedMarket;
 
     public UserStore() {
         cookie = new Cookie();
+        markets = MarketRepository.getMajorMarkets();
+        selectedMarket = MarketRepository.getDefault();
     }
 
-    public UserStore(Cookie cookie) {
+    public UserStore(Cookie cookie, List<Market> markets, Market selectedMarket) {
         this.cookie = cookie;
+        this.markets = markets;
+        this.selectedMarket = selectedMarket;
     }
 
     @Override
     public UserStore getClone() {
-        return new UserStore(cookie);
+        return new UserStore(cookie, markets, selectedMarket);
     }
 
     @Override
-    public void applyPersisted(UserStore userStore) {
-        cookie.putAll(userStore.getCookie());
+    public void applyPersisted(UserStore persisted) {
+        cookie.putAll(persisted.getCookie());
+        markets.clear();
+        markets.addAll(persisted.getMarkets());
+        selectedMarket = persisted.getSelectedMarket();
     }
 }

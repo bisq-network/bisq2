@@ -15,22 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.monetary;
+package bisq.common.data;
 
-import bisq.common.currency.CryptoCurrencyRepository;
-import bisq.common.currency.FiatCurrencyRepository;
-import lombok.Setter;
-
-import java.io.Serializable;
-
-public record Market(String baseCurrencyCode, String quoteCurrencyCode) implements Serializable {
-    @Setter
-    private static String QUOTE_SEPARATOR = "/";
-
- 
-
-    @Override
-    public String toString() {
-        return baseCurrencyCode + QUOTE_SEPARATOR + quoteCurrencyCode;
-    }
+public interface ListItem {
 }

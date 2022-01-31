@@ -30,28 +30,17 @@ import bisq.desktop.primary.main.content.trade.components.MarketSelection;
 import bisq.desktop.primary.main.content.trade.create.CreateOfferController;
 import bisq.desktop.primary.main.content.trade.take.TakeOfferController;
 import bisq.i18n.Res;
-import bisq.identity.IdentityService;
-import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.NetworkPayload;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
+import bisq.offer.OfferBookService;
 import bisq.offer.OfferService;
-import bisq.oracle.marketprice.MarketPriceService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 @Slf4j
 public class OfferbookController implements Controller {
-    private final NetworkService networkService;
-    private final IdentityService identityService;
-    private final Optional<DataService> dataService;
     private final OfferbookModel model;
     @Getter
     private final OfferbookView view;
@@ -60,16 +49,15 @@ public class OfferbookController implements Controller {
     private final MarketSelection marketSelection;
     private final DirectionSelection directionSelection;
     private final OfferService offerService;
-    private Optional<DataService.Listener> dataListener = Optional.empty();
+    private final OfferBookService offerBookService;
+
+    private int offerBindingKey;
 
     public OfferbookController(DefaultApplicationService applicationService) {
-        networkService = applicationService.getNetworkService();
-        identityService = applicationService.getIdentityService();
+        offerBookService = applicationService.getOfferBookService();
         offerService = applicationService.getOfferService();
-        dataService = networkService.getDataService();
-        MarketPriceService marketPriceService = applicationService.getMarketPriceService();
 
-        marketSelection = new MarketSelection(marketPriceService);
+        marketSelection = new MarketSelection(applicationService.getUserService());
         directionSelection = new DirectionSelection(marketSelection.selectedMarketProperty());
 
         model = new OfferbookModel(applicationService,
@@ -84,44 +72,22 @@ public class OfferbookController implements Controller {
 
     @Override
     public void onViewAttached() {
+        offerBindingKey = offerBookService.getOffers().bind(model.getListItems(),
+                offer -> new OfferListItem(offer, model.marketPriceService),
+                UIThread::run);
         model.showAllMarkets.set(false);
         directionSelection.setDirection(Direction.BUY);
 
         model.getSelectedMarketProperty().addListener(selectedMarketListener);
         model.getDirectionProperty().addListener(directionListener);
 
-        dataService.ifPresent(dataService -> {
-            dataListener = Optional.of(new DataService.Listener() {
-                @Override
-                public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
-                    if (networkPayload instanceof AuthenticatedPayload payload &&
-                            payload.getData() instanceof Offer offer) {
-                        UIThread.run(() -> model.addOffer(offer));
-                    }
-                }
-
-                @Override
-                public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
-                    if (networkPayload instanceof AuthenticatedPayload payload && payload.getData() instanceof Offer offer) {
-                        UIThread.run(() -> model.removeOffer(offer));
-                    }
-                }
-            });
-            dataService.addListener(dataListener.get());
-            model.fillOfferListItems(dataService.getAuthenticatedPayloadByStoreName("Offer")
-                    .filter(payload -> payload.getData() instanceof Offer)
-                    .map(payload -> (Offer) payload.getData())
-                    .map(offer -> new OfferListItem(offer, model.marketPriceService))
-                    .collect(Collectors.toList()));
-        });
-
         updateFilterPredicate();
     }
 
     @Override
     public void onViewDetached() {
+        offerBookService.getOffers().unbind(offerBindingKey);
         model.getSelectedMarketProperty().removeListener(selectedMarketListener);
-        dataService.ifPresent(dataService -> dataListener.ifPresent(dataService::removeListener));
     }
 
     public ReadOnlyBooleanProperty showCreateOfferTab() {

@@ -18,15 +18,13 @@
 package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.common.monetary.Market;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqComboBox;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
-import bisq.oracle.marketprice.MarketPrice;
-import bisq.oracle.marketprice.MarketPriceService;
+import bisq.user.UserService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -40,15 +38,13 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class MarketSelection {
     private final MarketSelectionController controller;
 
-    public MarketSelection(MarketPriceService marketPriceService) {
-        controller = new MarketSelectionController(marketPriceService);
+    public MarketSelection(UserService userService) {
+        controller = new MarketSelectionController(userService);
     }
 
     public ReadOnlyObjectProperty<Market> selectedMarketProperty() {
@@ -63,35 +59,24 @@ public class MarketSelection {
         controller.model.selectedMarket.set(market);
     }
 
-    private static class MarketSelectionController implements Controller, MarketPriceService.Listener {
+    private static class MarketSelectionController implements Controller {
         private final MarketSelectionModel model;
         @Getter
         private final MarketSelectionView view;
 
-        private MarketSelectionController(MarketPriceService marketPriceService) {
-            model = new MarketSelectionModel(marketPriceService);
+        private MarketSelectionController(UserService userService) {
+            model = new MarketSelectionModel(userService);
             view = new MarketSelectionView(model, this);
         }
 
         @Override
-        public void onMarketPriceUpdate(Map<Market, MarketPrice> map) {
-            UIThread.run(this::applyMarketPriceDate);
-        }
-
-        @Override
-        public void onMarketPriceSelected(MarketPrice selected) {
-            UIThread.run(this::applyMarketPriceDate);
-        }
-
-        @Override
         public void onViewAttached() {
-            model.marketPriceService.addListener(this);
-            applyMarketPriceDate();
+            model.markets.setAll(model.userService.getMarkets());
+            model.selectedMarket.set(model.userService.getSelectedMarket());
         }
 
         @Override
         public void onViewDetached() {
-            model.marketPriceService.removeListener(this);
         }
 
         private void onSelectMarket(Market selected) {
@@ -99,32 +84,15 @@ public class MarketSelection {
                 model.selectedMarket.set(selected);
             }
         }
-
-        private void applyMarketPriceDate() {
-            if (model.markets.isEmpty()) {
-                model.markets.setAll(model.marketPriceService.getMarketPriceByCurrencyMap().values().stream()
-                        .map(MarketPrice::getMarket)
-                        .collect(Collectors.toList()));
-            }
-            Market selectedMarket = model.selectedMarket.get();
-            if (selectedMarket == null) {
-                model.marketPriceService.getSelectedMarketPrice()
-                        .ifPresent(marketPrice -> model.selectedMarket.set(marketPrice.getMarket()));
-            }
-
-            if (!model.markets.isEmpty() && selectedMarket != null) {
-                model.marketPriceService.removeListener(this);
-            }
-        }
     }
 
     private static class MarketSelectionModel implements Model {
         private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
         private final ObservableList<Market> markets = FXCollections.observableArrayList();
-        private final MarketPriceService marketPriceService;
+        private final UserService userService;
 
-        public MarketSelectionModel(MarketPriceService marketPriceService) {
-            this.marketPriceService = marketPriceService;
+        public MarketSelectionModel(UserService userService) {
+            this.userService = userService;
         }
     }
 

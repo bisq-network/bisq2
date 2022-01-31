@@ -21,8 +21,10 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 
 public class UserService implements PersistenceClient<UserStore> {
+    @Delegate
     @Getter
     private final UserStore persistableStore = new UserStore();
     @Getter

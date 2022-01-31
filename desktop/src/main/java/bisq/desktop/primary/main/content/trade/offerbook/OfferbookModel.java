@@ -29,14 +29,11 @@ import bisq.oracle.marketprice.MarketPriceService;
 import bisq.security.KeyPairService;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 @Slf4j
 @Getter
@@ -48,6 +45,7 @@ public class OfferbookModel implements Model {
     final ReadOnlyObjectProperty<Market> selectedMarketProperty;
     final ReadOnlyObjectProperty<Direction> directionProperty;
 
+    // listItems is bound to set from OfferBookService
     final ObservableList<OfferListItem> listItems = FXCollections.observableArrayList();
     final FilteredList<OfferListItem> filteredItems = new FilteredList<>(listItems);
     final SortedList<OfferListItem> sortedItems = new SortedList<>(filteredItems);
@@ -72,26 +70,6 @@ public class OfferbookModel implements Model {
         marketPriceService = applicationService.getMarketPriceService();
         this.selectedMarketProperty = selectedMarketProperty;
         this.directionProperty = directionProperty;
-    }
-
-    void addOffer(Offer offer) {
-        OfferListItem item = new OfferListItem(offer, marketPriceService);
-        if (!listItems.contains(item)) {
-            listItems.add(item);listItems.addListener(new ListChangeListener<OfferListItem>() {
-                @Override
-                public void onChanged(Change<? extends OfferListItem> c) {
-                    
-                }
-            });
-        }
-    }
-
-    void removeOffer(Offer offer) {
-        listItems.remove(new OfferListItem(offer, marketPriceService));
-    }
-
-    void fillOfferListItems(List<OfferListItem> list) {
-        listItems.setAll(list);
     }
 
     boolean isMyOffer(OfferListItem item) {

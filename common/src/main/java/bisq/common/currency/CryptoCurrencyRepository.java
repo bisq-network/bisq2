@@ -39,7 +39,10 @@ public class CryptoCurrencyRepository {
         currencyByCode.put("BTC", btc);
         currencyByCode.put("USDT", new CryptoCurrency("USDT", "USD-Tether"));
         currencyByCode.put("XMR", new CryptoCurrency("XMR", "Monero"));
-        currencyByCode.put("BTC-L", new CryptoCurrency("BTC-L", "Liquid-Bitcoin"));
+        currencyByCode.put("ETH", new CryptoCurrency("ETH", "Ethereum"));
+        currencyByCode.put("GRIN", new CryptoCurrency("GRIN", "Grin"));
+        currencyByCode.put("ZEC", new CryptoCurrency("ZEC", "Zcash"));
+        currencyByCode.put("L-BTC", new CryptoCurrency("L-BTC", "Liquid-Bitcoin"));
 
         defaultCurrency = btc;
         majorCurrencies = initMajorCurrencies();
@@ -54,7 +57,7 @@ public class CryptoCurrencyRepository {
     }
 
     private static List<CryptoCurrency> initMajorCurrencies() {
-        List<String> mainCodes = new ArrayList<>(List.of("BTC", "XMR"));
+        List<String> mainCodes = new ArrayList<>(List.of("BTC", "XMR", "L-BTC","ETH", "USDT","GRIN", "ZEC"));
         return mainCodes.stream()
                 .map(code -> currencyByCode.get(code))
                 .distinct()
