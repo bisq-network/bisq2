@@ -17,6 +17,7 @@
 
 package bisq.application;
 
+import bisq.common.locale.LocaleRepository;
 import bisq.common.options.PropertiesReader;
 
 import java.util.Locale;
@@ -28,7 +29,7 @@ public record ApplicationConfig(String baseDir, String appName) {
     public Locale getLocale() {
         Properties properties = PropertiesReader.getProperties("bisq.properties");
         if (properties == null) {
-            return Locale.getDefault();
+            return LocaleRepository.getDefaultLocale();
         }
         String language = properties.getProperty("language");
         String country = properties.getProperty("country");
