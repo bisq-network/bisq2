@@ -34,7 +34,7 @@ public record ApplicationConfig(String baseDir, String appName) {
         String language = properties.getProperty("language");
         String country = properties.getProperty("country");
         if (language == null || country == null || language.isEmpty() || country.isEmpty()) {
-            return Locale.getDefault();
+            return LocaleRepository.getDefaultLocale();
         }
 
         return new Locale(language, country);
