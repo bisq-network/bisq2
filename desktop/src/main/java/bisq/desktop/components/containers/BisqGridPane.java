@@ -90,7 +90,6 @@ public class BisqGridPane extends GridPane {
 
     public BisqTextField addTextField(String labelText, String textFieldText) {
         BisqTextField textField = new BisqTextField(textFieldText);
-        textField.setLabelFloat(true);
         textField.setPromptText(labelText);
         GridPane.setRowIndex(textField, getRowCount());
         GridPane.setColumnIndex(textField, 0);
