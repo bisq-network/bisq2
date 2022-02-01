@@ -22,6 +22,7 @@ import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.SepaAccount;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LocaleRepository;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
@@ -35,8 +36,10 @@ import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
 import bisq.persistence.PersistenceService;
 import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
-import bisq.social.chat.ChatService;
 import bisq.settings.SettingsService;
+import bisq.social.chat.ChatService;
+import bisq.social.intent.TradeIntentListingsService;
+import bisq.social.intent.TradeIntentService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -71,6 +74,8 @@ public class DefaultApplicationService extends ServiceProvider {
     private final ProtocolService protocolService;
     private final OfferBookService offerBookService;
     private final AccountService accountService;
+    private final TradeIntentListingsService tradeIntentListingsService;
+    private final TradeIntentService tradeIntentService;
 
     public DefaultApplicationService(String[] args) {
         super("Bisq");
@@ -93,14 +98,16 @@ public class DefaultApplicationService extends ServiceProvider {
         IdentityService.Config identityServiceConfig = IdentityService.Config.from(getConfig("bisq.identityServiceConfig"));
         identityService = new IdentityService(persistenceService, keyPairService, networkService, identityServiceConfig);
 
-        chatService = new ChatService(persistenceService, identityService, networkService);
-
         accountService = new AccountService(persistenceService);
 
+        chatService = new ChatService(persistenceService, identityService, networkService);
+        tradeIntentListingsService = new TradeIntentListingsService(networkService);
+        tradeIntentService = new TradeIntentService(networkService, identityService, tradeIntentListingsService,chatService);
+
         // add data use case is not available yet at networkService
-        openOfferService = new OpenOfferService(networkService, persistenceService);
-        offerService = new OfferService(networkService, identityService, openOfferService);
+        openOfferService = new OpenOfferService(persistenceService);
         offerBookService = new OfferBookService(networkService);
+        offerService = new OfferService(networkService, identityService, openOfferService, offerBookService);
 
         MarketPriceService.Config marketPriceServiceConf = MarketPriceServiceConfigFactory.getConfig();
         marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, ApplicationVersion.VERSION);
@@ -141,8 +148,9 @@ public class DefaultApplicationService extends ServiceProvider {
                     }
                 })
                 .thenCompose(result -> CompletableFutureUtils.allOf(offerService.initialize(),
-                        openOfferService.initialize(),
-                        offerBookService.initialize()))
+                        offerBookService.initialize(),
+                        tradeIntentListingsService.initialize(),
+                        tradeIntentService.initialize()))
                 .orTimeout(120, TimeUnit.SECONDS)
                 .whenComplete((list, throwable) -> {
                     if (throwable != null) {
@@ -155,25 +163,20 @@ public class DefaultApplicationService extends ServiceProvider {
 
     @Override
     public CompletableFuture<Void> shutdown() {
-        //todo maybe chain async shutdown calls
-        return offerService.removeMyOffersFromNetwork().thenCompose(list -> {
-            keyPairService.shutdown();
-            identityService.shutdown();
-            marketPriceService.shutdown();
-            offerService.shutdown();
-            openOfferService.shutdown();
-            offerBookService.shutdown();
-            return networkService.shutdown()
-                    .whenComplete((__, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Error at shutdown", throwable);
-                            System.exit(EXIT_FAILURE);
-                        } else {
-                            // In case the application is a JavaFXApplication give it chance to trigger the exit
-                            // via Platform.exit()
-                            runAsync(() -> System.exit(EXIT_SUCCESS));
-                        }
-                    });
-        });
+        return runAsync(() -> offerService.shutdown()
+                .thenCompose(list -> {
+                    marketPriceService.shutdown();
+                    return networkService.shutdown()
+                            .whenComplete((__, throwable) -> {
+                                if (throwable != null) {
+                                    log.error("Error at shutdown", throwable);
+                                    System.exit(EXIT_FAILURE);
+                                } else {
+                                    // In case the application is a JavaFXApplication give it chance to trigger the exit
+                                    // via Platform.exit()
+                                    runAsync(() -> System.exit(EXIT_SUCCESS));
+                                }
+                            });
+                }), ExecutorFactory.newSingleThreadExecutor("Shutdown"));
     }
 }

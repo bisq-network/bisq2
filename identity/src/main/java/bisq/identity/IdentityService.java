@@ -77,9 +77,6 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         return CompletableFuture.completedFuture(true);
     }
 
-    public void shutdown() {
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API

@@ -40,7 +40,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         super();
         this.fileName = fileName;
         subDirectory = SUB_PATH + File.separator + storeName;
-        persistence = persistenceService.getOrCreatePersistence(this, subDirectory, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, subDirectory, fileName);
     }
 
   /*  public Inventory getInventory(DataFilter dataFilter) {

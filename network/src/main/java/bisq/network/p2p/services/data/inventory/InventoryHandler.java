@@ -23,11 +23,16 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.filter.DataFilter;
+import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -66,8 +71,24 @@ class InventoryHandler implements Connection.Listener {
     public void onMessage(Message message) {
         if (message instanceof InventoryResponse response) {
             if (response.requestNonce() == nonce) {
+                Map<String, Integer> map = new HashMap<>();
+                response.inventory().entries().stream()
+                        .filter(e -> e instanceof AddAuthenticatedDataRequest)
+                        .map(e -> (AddAuthenticatedDataRequest) e)
+                        .map(AddAuthenticatedDataRequest::getAuthenticatedData)
+                        .map(AuthenticatedData::getPayload)
+                        .forEach(e -> {
+                            String simpleName = e.getData().getClass().getSimpleName();
+                            map.putIfAbsent(simpleName, 0);
+                            map.put(simpleName, map.get(simpleName) + 1);
+                        });
                 log.info("Node {} received GetInventoryResponse from {} with inventory {} and nonce {}. Connection={}",
                         node, connection.getPeerAddress(), response.inventory(), response.requestNonce(), connection.getId());
+                log.error("\n##########################################################################################\n" +
+                        "## INVENTORY\n" +
+                        "##########################################################################################\n" +
+                        map.entrySet().stream().map(e ->  e.getValue() + " " + e.getKey() + "(s)").collect(Collectors.joining("\n")) +
+                        "\n##########################################################################################");
                 removeListeners();
                 connection.getMetrics().addRtt(ts = System.currentTimeMillis() - ts);
                 future.complete(response.inventory());

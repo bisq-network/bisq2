@@ -22,9 +22,10 @@ import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.security.KeyPairService;
 import bisq.social.intent.TradeIntent;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -33,8 +34,6 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 @Slf4j
 @Getter
@@ -46,13 +45,14 @@ public class TradeIntentModel implements Model {
     private final SortedList<TradeIntentListItem> sortedItems = new SortedList<>(filteredItems);
     private final StringProperty addDataResultProperty = new SimpleStringProperty("");
     private final StringProperty removeDataResultProperty = new SimpleStringProperty("");
-
+    private final ObjectProperty<TradeIntent> tradeIntentProperty = new SimpleObjectProperty<>();
+    
     public TradeIntentModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
         keyPairService = applicationService.getKeyPairService();
     }
 
-    void addPayload(AuthenticatedPayload payload) {
+ /*   void addPayload(AuthenticatedPayload payload) {
         TradeIntentListItem item = new TradeIntentListItem(payload);
         if (!listItems.contains(item)) {
             listItems.add(item);
@@ -66,7 +66,7 @@ public class TradeIntentModel implements Model {
     void fillTradeIntentListItem(List<TradeIntentListItem> list) {
         listItems.setAll(list);
     }
-
+*/
     boolean isMyTradeIntent(TradeIntentListItem item) {
         return keyPairService.findKeyPair(item.getNetworkId().getPubKey().keyId()).isPresent();
     }

@@ -54,8 +54,6 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
         log.error("serialized={}", Hex.encode(serialized));
         log.error("signature={}", Hex.encode(signature));
         log.error("data={}", data);*/
-
-        log.error("##sequenceNumber "+sequenceNumber);
         return new AddAuthenticatedDataRequest(data, signature, keyPair.getPublic());
     }
 
@@ -138,8 +136,8 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
 
     @Override
     public String toString() {
-        return "AddProtectedDataRequest{" +
-                "\r\n     entry=" + authenticatedData +
+        return "AddAuthenticatedDataRequest{" +
+                "\r\n     authenticatedData=" + authenticatedData +
                 ",\r\n     signature=" + Hex.encode(signature) +
                 ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
                 "\r\n}";

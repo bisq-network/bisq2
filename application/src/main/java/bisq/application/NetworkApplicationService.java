@@ -82,7 +82,6 @@ public class NetworkApplicationService extends ServiceProvider {
 
     @Override
     public CompletableFuture<Void> shutdown() {
-        keyPairService.shutdown();
         return networkService.shutdown()
                 .whenComplete((__, throwable) -> {
                     if (throwable == null) {

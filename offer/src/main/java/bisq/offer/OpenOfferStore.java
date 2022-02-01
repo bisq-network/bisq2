@@ -20,17 +20,17 @@ package bisq.offer;
 import bisq.persistence.PersistableStore;
 import lombok.Getter;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class OpenOfferStore implements PersistableStore<OpenOfferStore> {
     @Getter
-    private final List<OpenOffer> openOffers = new CopyOnWriteArrayList<>();
+    private final Set<OpenOffer> openOffers = new CopyOnWriteArraySet<>();
 
     public OpenOfferStore() {
     }
 
-    private OpenOfferStore(List<OpenOffer> openOffers) {
+    private OpenOfferStore(Set<OpenOffer> openOffers) {
         this.openOffers.addAll(openOffers);
     }
 
@@ -46,14 +46,10 @@ public class OpenOfferStore implements PersistableStore<OpenOfferStore> {
     }
 
     public void add(OpenOffer openOffer) {
-        if (openOffers.contains(openOffer)) return;
-
         openOffers.add(openOffer);
     }
 
     public void remove(OpenOffer openOffer) {
-        if (!openOffers.contains(openOffer)) return;
-
         openOffers.remove(openOffer);
     }
 }
