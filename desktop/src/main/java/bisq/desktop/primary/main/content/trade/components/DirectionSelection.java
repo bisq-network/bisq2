@@ -53,6 +53,10 @@ public class DirectionSelection {
         controller.model.direction.set(direction);
     }
 
+    public void hideDirection(Direction direction) {
+        controller.hideDirection(direction);
+    }
+
     public void setIsTakeOffer() {
         controller.model.isCreateOffer = false;
     }
@@ -98,6 +102,11 @@ public class DirectionSelection {
         private void onSellSelected() {
             model.direction.set(Direction.SELL);
         }
+
+        private void hideDirection(Direction direction) {
+            model.isBuySideVisible.set(direction.isSell());
+            model.isSellSideVisible.set(direction.isBuy());
+        }
     }
 
     private static class DirectionModel implements Model {
@@ -105,6 +114,8 @@ public class DirectionSelection {
         private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final StringProperty baseCode = new SimpleStringProperty();
         private boolean isCreateOffer = true;
+        private final BooleanProperty isBuySideVisible = new SimpleBooleanProperty();
+        private final BooleanProperty isSellSideVisible = new SimpleBooleanProperty();
 
         private DirectionModel(ReadOnlyObjectProperty<Market> selectedMarket) {
             this.selectedMarket = selectedMarket;
@@ -156,12 +167,16 @@ public class DirectionSelection {
                 buy.setMouseTransparent(true);
                 sell.setMouseTransparent(true);
                 headline.setText(Res.offerbook.get("takeOffer.offerType"));
+
+                buy.visibleProperty().bind(model.isBuySideVisible);
+                buy.managedProperty().bind(model.isBuySideVisible);
+                sell.visibleProperty().bind(model.isSellSideVisible);
+                sell.managedProperty().bind(model.isSellSideVisible);
             }
             model.baseCode.addListener(baseCodeListener);
             model.direction.addListener(directionListener);
             applyBaseCodeChange();
             applyDirectionChange();
-
         }
 
         @Override
@@ -169,10 +184,14 @@ public class DirectionSelection {
             if (model.isCreateOffer) {
                 buy.setOnAction(null);
                 sell.setOnAction(null);
+            } else {
+                buy.visibleProperty().unbind();
+                buy.managedProperty().unbind();
+                sell.visibleProperty().unbind();
+                sell.managedProperty().unbind();
             }
             model.baseCode.removeListener(baseCodeListener);
             model.direction.removeListener(directionListener);
-
         }
 
         private void applyBaseCodeChange() {

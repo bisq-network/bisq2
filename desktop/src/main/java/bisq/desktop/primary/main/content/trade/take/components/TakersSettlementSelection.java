@@ -23,6 +23,7 @@ import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
@@ -158,6 +159,10 @@ public class TakersSettlementSelection {
                     .filter(account -> baseSideSettlementMethodByName.contains(account.getSettlementMethod()))
                     .map(AccountListItem::new)
                     .collect(Collectors.toList()));
+            if (model.baseSideAccountObservableList.size() == 1) {
+                // todo: use last selected from settings if there are multiple
+                model.selectedBaseSideAccountListItem.set(model.baseSideAccountObservableList.get(0));
+            }
 
             model.quoteSideAccountObservableList.clear();
             model.quoteSideAccountObservableList.setAll(model.accountService.getMatchingAccounts(selectedProtocolTyp, quoteSideCode)
@@ -165,17 +170,30 @@ public class TakersSettlementSelection {
                     .filter(account -> quoteSideSettlementMethodByName.contains(account.getSettlementMethod()))
                     .map(AccountListItem::new)
                     .collect(Collectors.toList()));
+            if (model.quoteSideAccountObservableList.size() == 1) {
+                // todo: use last selected from settings if there are multiple
+                model.selectedQuoteSideAccountListItem.set(model.quoteSideAccountObservableList.get(0));
+            }
 
             model.baseSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolTyp, baseSideCode)
                     .stream()
                     .filter(baseSideSettlementMethodByName::contains)
                     .map(e -> new SettlementListItem(e, baseSideCode))
                     .collect(Collectors.toList()));
+            if (model.baseSideSettlementObservableList.size() == 1) {
+                // todo: use last selected from settings if there are multiple
+                model.selectedBaseSideSettlementListItem.set(model.baseSideSettlementObservableList.get(0));
+            }
+
             model.quoteSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolTyp, quoteSideCode)
                     .stream()
                     .filter(quoteSideSettlementMethodByName::contains)
                     .map(e -> new SettlementListItem(e, quoteSideCode))
                     .collect(Collectors.toList()));
+            if (model.quoteSideSettlementObservableList.size() == 1) {
+                // todo: use last selected from settings if there are multiple
+                model.selectedQuoteSideSettlementListItem.set(model.quoteSideSettlementObservableList.get(0));
+            }
 
             // For Fiat we show always accounts. If no accounts set up yet the user gets the create-account button 
             // displayed (as prompt in the table view)
@@ -242,9 +260,17 @@ public class TakersSettlementSelection {
             model.direction.removeListener(directionListener);
             model.selectedBaseSideAccount.set(null);
             model.selectedQuoteSideAccount.set(null);
+            model.selectedBaseSideSettlementMethod.set(null);
+            model.selectedQuoteSideSettlementMethod.set(null);
+            model.selectedBaseSideAccountListItem.set(null);
+            model.selectedQuoteSideAccountListItem.set(null);
+            model.selectedBaseSideSettlementListItem.set(null);
+            model.selectedQuoteSideSettlementListItem.set(null);
         }
 
         private void onAccountSelectionChanged(AccountListItem listItem, boolean isBaseSide) {
+            if (listItem == null) return;
+
             var selectedAccount = isBaseSide ?
                     model.selectedBaseSideAccount :
                     model.selectedQuoteSideAccount;
@@ -257,6 +283,8 @@ public class TakersSettlementSelection {
         }
 
         private void onSettlementSelectionChanged(SettlementListItem listItem, boolean isBaseSide) {
+            if (listItem == null) return;
+
             var selectedSettlementMethod = isBaseSide ?
                     model.selectedBaseSideSettlementMethod :
                     model.selectedQuoteSideSettlementMethod;
@@ -286,12 +314,15 @@ public class TakersSettlementSelection {
         private final SortedList<AccountListItem> baseSideAccountSortedList = new SortedList<>(baseSideAccountObservableList);
         private final ObservableList<AccountListItem> quoteSideAccountObservableList = FXCollections.observableArrayList();
         private final SortedList<AccountListItem> quoteSideAccountSortedList = new SortedList<>(quoteSideAccountObservableList);
+        private final ObjectProperty<AccountListItem> selectedBaseSideAccountListItem = new SimpleObjectProperty<>();
+        private final ObjectProperty<AccountListItem> selectedQuoteSideAccountListItem = new SimpleObjectProperty<>();
 
         private final ObservableList<SettlementListItem> baseSideSettlementObservableList = FXCollections.observableArrayList();
         private final SortedList<SettlementListItem> baseSideSettlementSortedList = new SortedList<>(baseSideSettlementObservableList);
         private final ObservableList<SettlementListItem> quoteSideSettlementObservableList = FXCollections.observableArrayList();
         private final SortedList<SettlementListItem> quoteSideSettlementSortedList = new SortedList<>(quoteSideSettlementObservableList);
-
+        private final ObjectProperty<SettlementListItem> selectedBaseSideSettlementListItem = new SimpleObjectProperty<>();
+        private final ObjectProperty<SettlementListItem> selectedQuoteSideSettlementListItem = new SimpleObjectProperty<>();
         private Offer offer;
 
         private SettlementModel(ReadOnlyObjectProperty<Market> selectedMarket,
@@ -362,6 +393,13 @@ public class TakersSettlementSelection {
             quoteSideSettlementComboBox.setOnAction(e -> controller.onSettlementSelectionChanged(
                     quoteSideSettlementComboBox.getSelectionModel().getSelectedItem(), false));
 
+            UIThread.runLater(() -> {
+                baseSideAccountsComboBox.getSelectionModel().select(model.selectedBaseSideAccountListItem.get());
+                quoteSideAccountsComboBox.getSelectionModel().select(model.selectedQuoteSideAccountListItem.get());
+                baseSideSettlementComboBox.getSelectionModel().select(model.selectedBaseSideSettlementListItem.get());
+                quoteSideSettlementComboBox.getSelectionModel().select(model.selectedQuoteSideSettlementListItem.get());
+            });
+
             baseSideLabel.textProperty().bind(model.baseSideDescription);
             quoteSideLabel.textProperty().bind(model.quoteSideDescription);
 
@@ -385,6 +423,11 @@ public class TakersSettlementSelection {
             quoteSideAccountsComboBox.setOnAction(null);
             baseSideSettlementComboBox.setOnAction(null);
             quoteSideSettlementComboBox.setOnAction(null);
+
+            baseSideAccountsComboBox.getSelectionModel().clearSelection();
+            quoteSideAccountsComboBox.getSelectionModel().clearSelection();
+            baseSideSettlementComboBox.getSelectionModel().clearSelection();
+            quoteSideSettlementComboBox.getSelectionModel().clearSelection();
 
             baseSideLabel.textProperty().unbind();
             quoteSideLabel.textProperty().unbind();

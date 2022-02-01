@@ -87,6 +87,7 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
         model.offer = offer;
         model.selectedMarketProperty.set(offer.getMarket());
         directionSelection.setDirection(offer.getDirection().mirror());
+        directionSelection.hideDirection(offer.getDirection());
         model.selectedProtocolTypeProperty.set(offer.findProtocolType().orElseThrow());
 
         model.baseSideAmount = offer.getBaseAmountAsMonetary();
