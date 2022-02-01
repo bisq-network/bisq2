@@ -26,7 +26,6 @@ import bisq.common.monetary.Market;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqComboBox;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.table.TableItem;
@@ -263,16 +262,6 @@ public class TakersSettlementSelection {
                     model.selectedQuoteSideSettlementMethod;
             selectedSettlementMethod.set(listItem.settlementMethod);
         }
-
-        private void onCreateBaseSideAccount() {
-
-        }
-
-        private void onCreateQuoteSideAccount() {
-
-        }
-
-
     }
 
     private static class SettlementModel implements Model {
@@ -320,7 +309,6 @@ public class TakersSettlementSelection {
         private final BisqLabel baseSideLabel, quoteSideLabel;
         private final BisqComboBox<AccountListItem> baseSideAccountsComboBox, quoteSideAccountsComboBox;
         private final BisqComboBox<SettlementListItem> baseSideSettlementComboBox, quoteSideSettlementComboBox;
-        private final BisqButton baseSideButton, quoteSideButton;
         private final VBox baseSideBox, quoteSideBox;
 
         private SettlementView(SettlementModel model,
@@ -334,7 +322,6 @@ public class TakersSettlementSelection {
             baseSideAccountsComboBox = new BisqComboBox<>(model.baseSideAccountSortedList);
             setupAccountStringConverter(baseSideAccountsComboBox);
             VBox.setMargin(baseSideAccountsComboBox, new Insets(0, 0, 20, 0));
-            baseSideButton = new BisqButton(Res.offerbook.get("createOffer.account.createNew"));
 
             baseSideSettlementComboBox = new BisqComboBox<>(model.baseSideSettlementSortedList);
             setupSettlementStringConverter(baseSideSettlementComboBox);
@@ -350,7 +337,6 @@ public class TakersSettlementSelection {
             quoteSideAccountsComboBox = new BisqComboBox<>(model.quoteSideAccountSortedList);
             setupAccountStringConverter(quoteSideAccountsComboBox);
             VBox.setMargin(quoteSideAccountsComboBox, new Insets(0, 0, 20, 0));
-            quoteSideButton = new BisqButton(Res.offerbook.get("createOffer.account.createNew"));
 
             quoteSideSettlementComboBox = new BisqComboBox<>(model.quoteSideSettlementSortedList);
             setupSettlementStringConverter(quoteSideSettlementComboBox);
@@ -367,9 +353,6 @@ public class TakersSettlementSelection {
 
         @Override
         public void onViewAttached() {
-            baseSideButton.setOnAction(e -> controller.onCreateBaseSideAccount());
-            quoteSideButton.setOnAction(e -> controller.onCreateQuoteSideAccount());
-
             baseSideAccountsComboBox.setOnAction(e -> controller.onAccountSelectionChanged(
                     baseSideAccountsComboBox.getSelectionModel().getSelectedItem(), true));
             quoteSideAccountsComboBox.setOnAction(e -> controller.onAccountSelectionChanged(
@@ -398,9 +381,6 @@ public class TakersSettlementSelection {
 
         @Override
         public void onViewDetached() {
-            baseSideButton.setOnAction(null);
-            quoteSideButton.setOnAction(null);
-
             baseSideAccountsComboBox.setOnAction(null);
             quoteSideAccountsComboBox.setOnAction(null);
             baseSideSettlementComboBox.setOnAction(null);
