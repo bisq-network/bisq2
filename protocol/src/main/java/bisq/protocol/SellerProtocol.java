@@ -15,11 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.reputation.messages;
+package bisq.protocol;
 
-import bisq.contract.Contract;
-import bisq.network.p2p.message.Message;
-
-public interface TakeOfferRequest extends Message {
-    Contract getContract();
+public interface SellerProtocol {
 }

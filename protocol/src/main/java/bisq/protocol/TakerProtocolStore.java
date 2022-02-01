@@ -15,18 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.reputation.messages.taker;
+package bisq.protocol;
 
 import bisq.contract.Contract;
-import bisq.protocol.reputation.messages.TakeOfferRequest;
 import lombok.Getter;
 
 @Getter
-public class RP_TakeOfferRequest implements TakeOfferRequest {
+public class TakerProtocolStore extends ProtocolStore<TakerProtocolStore> {
 
-    private final Contract contract;
+    public TakerProtocolStore(Contract contract) {
+      super(contract);
+    }
 
-    public RP_TakeOfferRequest(Contract contract) {
-        this.contract = contract;
+    @Override
+    public TakerProtocolStore getClone() {
+        return new TakerProtocolStore(contract);
+    }
+
+    @Override
+    public void applyPersisted(TakerProtocolStore persisted) {
+        super.applyPersisted(persisted);
     }
 }

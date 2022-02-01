@@ -17,44 +17,53 @@
 
 package bisq.protocol;
 
+import bisq.contract.Contract;
+import bisq.network.p2p.message.Message;
 import bisq.persistence.PersistableStore;
-import bisq.protocol.reputation.Protocol;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import static com.google.common.base.Preconditions.checkArgument;
 
-public class ProtocolStore implements PersistableStore<ProtocolStore> {
-    @Getter
-    private final Map<String, Protocol> protocolByOfferId = new ConcurrentHashMap<>();
-
-    public ProtocolStore() {
+@Slf4j
+@Getter
+public abstract class ProtocolStore<T extends ProtocolStore<T>> implements PersistableStore<T> {
+    public enum State {
+        IDLE,
+        PENDING,
+        COMPLETED,
+        FAILED
     }
 
-    private ProtocolStore(Map<String, Protocol> protocolByOfferId) {
-        this.protocolByOfferId.putAll(protocolByOfferId);
+    protected Contract contract;
+    protected State state = State.IDLE;
+    @Setter
+    protected Class<? extends Message> expectedNextMessageClass;
+
+    public ProtocolStore(Contract contract) {
+        this.contract = contract;
     }
 
     @Override
-    public ProtocolStore getClone() {
-        return new ProtocolStore(protocolByOfferId);
+    public void applyPersisted(T persisted) {
+        log.error("applyPersisted {}", persisted);
+        contract = persisted.getContract();
+        state = persisted.getState();
+        expectedNextMessageClass = persisted.getExpectedNextMessageClass();
     }
 
-    @Override
-    public void applyPersisted(ProtocolStore persisted) {
-        protocolByOfferId.clear();
-        protocolByOfferId.putAll(persisted.getProtocolByOfferId());
+    void setState(State newState) {
+        checkArgument(state.ordinal() < newState.ordinal(),
+                "New state %s must have a higher ordinal as the current state %s", newState, state);
+        state = newState;
     }
 
-    public void add(Protocol protocol) {
-        if (protocolByOfferId.containsKey(protocol.getId())) return;
-
-        protocolByOfferId.put(protocol.getId(), protocol);
+    public boolean isPending() {
+        return state == State.PENDING;
     }
 
-    public void remove(Protocol protocol) {
-        if (!protocolByOfferId.containsKey(protocol.getId())) return;
-
-        protocolByOfferId.remove(protocol.getId());
+    public String getId() {
+        return contract.getOffer().getId();
     }
 }

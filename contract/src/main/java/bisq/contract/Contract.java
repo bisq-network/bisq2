@@ -21,10 +21,12 @@ import bisq.account.protocol.SwapProtocolType;
 import bisq.common.monetary.Monetary;
 import bisq.network.NetworkId;
 import bisq.offer.Offer;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.io.Serializable;
 
+@EqualsAndHashCode
 @Getter
 public class Contract implements Serializable {
     private final NetworkId takerNetworkId;
@@ -32,23 +34,23 @@ public class Contract implements Serializable {
     private final Offer offer;
     private final Monetary baseSideAmount;
     private final Monetary quoteSideAmount;
-    private final String takersBaseSideSettlementMethod;
-    private final String takersQuoteSideSettlementMethod;
+    private final String baseSideSettlementMethod;
+    private final String quoteSideSettlementMethod;
 
     public Contract(NetworkId takerNetworkId,
                     SwapProtocolType protocolType,
                     Offer offer,
                     Monetary baseSideAmount,
                     Monetary quoteSideAmount,
-                    String takersBaseSideSettlementMethod,
-                    String takersQuoteSideSettlementMethod) {
+                    String baseSideSettlementMethod,
+                    String quoteSideSettlementMethod) {
 
         this.takerNetworkId = takerNetworkId;
         this.protocolType = protocolType;
         this.offer = offer;
         this.baseSideAmount = baseSideAmount;
         this.quoteSideAmount = quoteSideAmount;
-        this.takersBaseSideSettlementMethod = takersBaseSideSettlementMethod;
-        this.takersQuoteSideSettlementMethod = takersQuoteSideSettlementMethod;
+        this.baseSideSettlementMethod = baseSideSettlementMethod;
+        this.quoteSideSettlementMethod = quoteSideSettlementMethod;
     }
 }

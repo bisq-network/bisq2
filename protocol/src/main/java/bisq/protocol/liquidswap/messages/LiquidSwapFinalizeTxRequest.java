@@ -15,8 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.fsm_demo;
+package bisq.protocol.liquidswap.messages;
 
-public class Term {
-    public Op op;
+import bisq.protocol.messages.ProtocolMessage;
+import lombok.Getter;
+
+@Getter
+public class LiquidSwapFinalizeTxRequest extends ProtocolMessage {
+
+
+    public LiquidSwapFinalizeTxRequest(String offerId) {
+        super(offerId);
+    }
 }

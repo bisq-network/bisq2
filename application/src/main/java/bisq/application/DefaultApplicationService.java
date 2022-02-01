@@ -102,7 +102,7 @@ public class DefaultApplicationService extends ServiceProvider {
 
         chatService = new ChatService(persistenceService, identityService, networkService);
         tradeIntentListingsService = new TradeIntentListingsService(networkService);
-        tradeIntentService = new TradeIntentService(networkService, identityService, tradeIntentListingsService,chatService);
+        tradeIntentService = new TradeIntentService(networkService, identityService, tradeIntentListingsService, chatService);
 
         // add data use case is not available yet at networkService
         openOfferService = new OpenOfferService(persistenceService);
@@ -147,6 +147,7 @@ public class DefaultApplicationService extends ServiceProvider {
                         accountService.addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
                     }
                 })
+                .thenCompose(result -> protocolService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(offerService.initialize(),
                         offerBookService.initialize(),
                         tradeIntentListingsService.initialize(),

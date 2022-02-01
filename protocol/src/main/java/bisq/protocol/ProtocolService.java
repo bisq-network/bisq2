@@ -20,6 +20,7 @@ package bisq.protocol;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.common.monetary.Monetary;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.Contract;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
@@ -32,21 +33,24 @@ import bisq.offer.OpenOfferService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.protocol.reputation.RP_MakerProtocol;
-import bisq.protocol.reputation.RP_TakerProtocol;
-import bisq.protocol.reputation.messages.TakeOfferRequest;
+import bisq.protocol.liquidswap.LiquidSwapMakerProtocol;
+import bisq.protocol.liquidswap.LiquidSwapTakerProtocol;
+import bisq.protocol.messages.TakeOfferRequest;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
-public class ProtocolService implements MessageListener, PersistenceClient<ProtocolStore> {
+@Slf4j
+public class ProtocolService implements MessageListener, PersistenceClient<ProtocolServiceStore> {
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
 
     @Getter
-    private final ProtocolStore persistableStore = new ProtocolStore();
+    private final ProtocolServiceStore persistableStore = new ProtocolServiceStore();
     @Getter
-    private final Persistence<ProtocolStore> persistence;
+    private final Persistence<ProtocolServiceStore> persistence;
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final PersistenceService persistenceService;
@@ -65,6 +69,27 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
         networkService.addMessageListener(this);
     }
 
+    public CompletableFuture<List<Boolean>> initialize() {
+        return CompletableFutureUtils.allOf(persistableStore.getProtocolStoreByOfferId().values().stream()
+                .filter(ProtocolStore::isPending)
+                .map(protocolStore ->
+                        identityService.getOrCreateIdentity(protocolStore.getId())
+                                .thenApply(identity -> {
+                                    if (protocolStore instanceof MakerProtocolStore) {
+                                        var protocol = getMakerProtocol(protocolStore.getContract(), identity.getNodeIdAndKeyPair());
+                                        protocol.onContinue();
+                                        return true;
+                                    } else if (protocolStore instanceof TakerProtocolStore) {
+                                        TakerProtocol<TakerProtocolStore> protocol = getTakerProtocol(protocolStore.getContract(), identity.getNodeIdAndKeyPair());
+                                        protocol.onContinue();
+                                        return true;
+                                    } else {
+                                        return false;
+                                    }
+                                })
+                ));
+    }
+
     @Override
     public void onMessage(Message message) {
         if (message instanceof TakeOfferRequest takeOfferRequest) {
@@ -72,10 +97,12 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
             openOfferService.findOpenOffer(offerId)
                     .ifPresent(openOffer -> identityService.getOrCreateIdentity(offerId)
                             .whenComplete((identity, throwable) -> {
-                                RP_MakerProtocol protocol = getMakerProtocol(takeOfferRequest.getContract(), identity.getNodeIdAndKeyPair());
+                                var protocol = getMakerProtocol(takeOfferRequest.getContract(), identity.getNodeIdAndKeyPair());
                                 persistableStore.add(protocol);
                                 persist();
-                                protocol.onTakeOfferRequest(takeOfferRequest);
+
+                                //todo figure out how to use generics without that hack
+                                protocol.onRawTakeOfferRequest(takeOfferRequest);
                             }));
         }
     }
@@ -95,34 +122,34 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                             quoteSideAmount,
                             baseSideSettlementMethod,
                             quoteSideSettlementMethod);
-                    RP_TakerProtocol protocol = getTakerProtocol(contract, identity.getNodeIdAndKeyPair());
+                    TakerProtocol<TakerProtocolStore> protocol = getTakerProtocol(contract, identity.getNodeIdAndKeyPair());
                     persistableStore.add(protocol);
                     persist();
                     protocol.takeOffer();
                 });
     }
 
-    private RP_TakerProtocol getTakerProtocol(Contract contract, NetworkIdWithKeyPair takerNodeIdAndKeyPair) {
+    private TakerProtocol<TakerProtocolStore> getTakerProtocol(Contract contract, NetworkIdWithKeyPair takerNodeIdAndKeyPair) {
         return switch (contract.getProtocolType()) {
             case BTC_XMR_SWAP -> null;
-            case LIQUID_SWAP -> null;
+            case LIQUID_SWAP -> LiquidSwapTakerProtocol.getProtocol(networkService, persistenceService, contract, takerNodeIdAndKeyPair);
             case BSQ_SWAP -> null;
             case LN_SWAP -> null;
             case MULTISIG -> null;
             case BSQ_BOND -> null;
-            case REPUTATION -> new RP_TakerProtocol(networkService, persistenceService, contract, takerNodeIdAndKeyPair);
+            case REPUTATION -> null;
         };
     }
 
-    private RP_MakerProtocol getMakerProtocol(Contract contract, NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
+    private MakerProtocol<MakerProtocolStore, ? extends TakeOfferRequest> getMakerProtocol(Contract contract, NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
         return switch (contract.getProtocolType()) {
             case BTC_XMR_SWAP -> null;
-            case LIQUID_SWAP -> null;
+            case LIQUID_SWAP -> LiquidSwapMakerProtocol.getProtocol(networkService, persistenceService, contract, makerNetworkIdWithKeyPair);
             case BSQ_SWAP -> null;
             case LN_SWAP -> null;
             case MULTISIG -> null;
             case BSQ_BOND -> null;
-            case REPUTATION -> new RP_MakerProtocol(networkService, persistenceService, contract, makerNetworkIdWithKeyPair);
+            case REPUTATION -> null;
         };
     }
 }

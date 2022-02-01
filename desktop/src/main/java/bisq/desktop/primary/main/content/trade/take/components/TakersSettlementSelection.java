@@ -162,6 +162,8 @@ public class TakersSettlementSelection {
             if (model.baseSideAccountObservableList.size() == 1) {
                 // todo: use last selected from settings if there are multiple
                 model.selectedBaseSideAccountListItem.set(model.baseSideAccountObservableList.get(0));
+                model.selectedBaseSideAccount.set(model.selectedBaseSideAccountListItem.get().getAccount());
+                model.selectedBaseSideSettlementMethod.set(model.selectedBaseSideAccountListItem.get().getSettlementMethod());
             }
 
             model.quoteSideAccountObservableList.clear();
@@ -173,6 +175,8 @@ public class TakersSettlementSelection {
             if (model.quoteSideAccountObservableList.size() == 1) {
                 // todo: use last selected from settings if there are multiple
                 model.selectedQuoteSideAccountListItem.set(model.quoteSideAccountObservableList.get(0));
+                model.selectedQuoteSideAccount.set(model.selectedQuoteSideAccountListItem.get().getAccount());
+                model.selectedQuoteSideSettlementMethod.set(model.selectedQuoteSideAccountListItem.get().getSettlementMethod());
             }
 
             model.baseSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolTyp, baseSideCode)
@@ -183,6 +187,7 @@ public class TakersSettlementSelection {
             if (model.baseSideSettlementObservableList.size() == 1) {
                 // todo: use last selected from settings if there are multiple
                 model.selectedBaseSideSettlementListItem.set(model.baseSideSettlementObservableList.get(0));
+                model.selectedBaseSideSettlementMethod.set(model.selectedBaseSideSettlementListItem.get().getSettlementMethod());
             }
 
             model.quoteSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolTyp, quoteSideCode)
@@ -193,6 +198,7 @@ public class TakersSettlementSelection {
             if (model.quoteSideSettlementObservableList.size() == 1) {
                 // todo: use last selected from settings if there are multiple
                 model.selectedQuoteSideSettlementListItem.set(model.quoteSideSettlementObservableList.get(0));
+                model.selectedQuoteSideSettlementMethod.set(model.selectedQuoteSideSettlementListItem.get().getSettlementMethod());
             }
 
             // For Fiat we show always accounts. If no accounts set up yet the user gets the create-account button 

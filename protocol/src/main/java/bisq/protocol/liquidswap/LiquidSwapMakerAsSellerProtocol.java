@@ -15,42 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.reputation;
+package bisq.protocol.liquidswap;
 
 import bisq.contract.Contract;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Message;
 import bisq.persistence.PersistenceService;
-import bisq.protocol.reputation.messages.TakeOfferRequest;
-import bisq.protocol.reputation.messages.taker.RP_TakeOfferRequest;
+import bisq.protocol.SellerProtocol;
 
-public class RP_MakerProtocol extends Protocol {
+public class LiquidSwapMakerAsSellerProtocol extends LiquidSwapMakerProtocol implements SellerProtocol {
 
-    public RP_MakerProtocol(NetworkService networkService,
-                            PersistenceService persistenceService,
-                            Contract contract,
-                            NetworkIdWithKeyPair myNodeIdAndKeyPair) {
+    public LiquidSwapMakerAsSellerProtocol(NetworkService networkService,
+                                           PersistenceService persistenceService,
+                                           Contract contract,
+                                           NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         super(networkService,
                 persistenceService,
                 contract,
                 myNodeIdAndKeyPair);
-    }
-
-    private void onTakeOfferRequest(RP_TakeOfferRequest takeOfferRequest) {
-    }
-
-    @Override
-    public void onMessage(Message message) {
-
-    }
-
-    @Override
-    public void onTakeOfferRequest(TakeOfferRequest takeOfferRequest) {
-        if (takeOfferRequest instanceof RP_TakeOfferRequest request) {
-            onTakeOfferRequest(request);
-        }else{
-            //todo error
-        }
     }
 }
