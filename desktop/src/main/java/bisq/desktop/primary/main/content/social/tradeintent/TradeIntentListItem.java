@@ -19,40 +19,33 @@ package bisq.desktop.primary.main.content.social.tradeintent;
 
 import bisq.desktop.components.table.TableItem;
 import bisq.network.NetworkId;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.presentation.formatters.TimeFormatter;
 import bisq.social.intent.TradeIntent;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
-import java.util.Objects;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 @Getter
 public class TradeIntentListItem implements TableItem {
-    private final AuthenticatedPayload payload;
     private final TradeIntent tradeIntent;
     private final NetworkId networkId;
+    @EqualsAndHashCode.Include
     private final String id;
     private final String dateString;
     private final String bid;
     private final String ask;
-    private final String ttl;
     private final Date date;
     private final String userName;
 
-    TradeIntentListItem(AuthenticatedPayload payload) {
-        this.payload = payload;
-        checkArgument(payload.getData() instanceof TradeIntent);
-        this.tradeIntent = (TradeIntent) payload.getData();
+    TradeIntentListItem(TradeIntent tradeIntent) {
+        this.tradeIntent = tradeIntent;
         networkId = tradeIntent.maker().networkId();
         id = tradeIntent.id();
         userName = tradeIntent.maker().userName();
-        ttl = TimeFormatter.formatTime(payload.getMetaData().getTtl());
         ask = tradeIntent.ask();
         bid = tradeIntent.bid();
         date = new Date(tradeIntent.date());
@@ -69,18 +62,5 @@ public class TradeIntentListItem implements TableItem {
 
     @Override
     public void deactivate() {
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        TradeIntentListItem that = (TradeIntentListItem) o;
-        return Objects.equals(payload, that.payload);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(payload);
     }
 }

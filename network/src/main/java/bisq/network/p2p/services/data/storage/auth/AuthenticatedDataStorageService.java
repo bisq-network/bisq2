@@ -86,10 +86,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
             requestFromMap = map.get(byteArray);
             if (request.equals(requestFromMap)) {
+                //log.warn("request.equals(requestFromMap). request={}", request);
                 return new Result(false).requestAlreadyReceived();
             }
 
             if (requestFromMap != null && data.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+                //log.warn("SequenceNrInvalid. request={}", request);
                 return new Result(false).sequenceNrInvalid();
             }
 
@@ -118,9 +120,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         persist();
 
         // If we had already the data (only updated seq nr) we return false as well and do not notify listeners.
-        if (requestFromMap != null) {
+       /* if (requestFromMap != null) {
+            log.warn("requestFromMap != null. request={}", request);
             return new Result(false).payloadAlreadyStored();
-        }
+        }*/
 
         listeners.forEach(listener -> listener.onAdded(payload));
         return new Result(true);

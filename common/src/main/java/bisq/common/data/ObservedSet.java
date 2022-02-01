@@ -70,6 +70,10 @@ public class ObservedSet<T> extends CopyOnWriteArraySet<T> {
     public <L> int bind(List<L> listItems, Function<T, L> mapper, Consumer<Runnable> executor) {
         int key = HANDLER_COUNTER.incrementAndGet();
         handlers.put(key, new Handler<>(listItems, mapper, executor));
+        handlers.values().forEach(l -> {
+            l.clear();
+            l.addAll(this);
+        });
         return key;
     }
 
@@ -80,27 +84,35 @@ public class ObservedSet<T> extends CopyOnWriteArraySet<T> {
     @Override
     public boolean add(T element) {
         boolean result = super.add(element);
-        handlers.values().forEach(l -> l.add(element));
+        if (result) {
+            handlers.values().forEach(l -> l.add(element));
+        }
         return result;
     }
 
     public boolean addAll(Collection<? extends T> c) {
         boolean result = super.addAll(c);
-        handlers.values().forEach(l -> l.addAll(c));
+        if (result) {
+            handlers.values().forEach(l -> l.addAll(c));
+        }
         return result;
     }
 
     @Override
     public boolean remove(Object element) {
         boolean result = super.remove(element);
-        handlers.values().forEach(l -> l.remove(element));
+        if (result) {
+            handlers.values().forEach(l -> l.remove(element));
+        }
         return result;
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
         boolean result = super.removeAll(c);
-        handlers.values().forEach(l -> l.removeAll(c));
+        if (result) {
+            handlers.values().forEach(l -> l.removeAll(c));
+        }
         return result;
     }
 

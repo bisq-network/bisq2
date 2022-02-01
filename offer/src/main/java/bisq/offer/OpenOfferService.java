@@ -18,61 +18,38 @@
 package bisq.offer;
 
 import bisq.common.threading.ExecutorFactory;
-import bisq.network.NetworkService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 
 import static java.util.concurrent.CompletableFuture.runAsync;
 
 public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
-    public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
-
+    public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("OpenOfferService.dispatcher");
 
     public interface Listener {
         void onOpenOfferAdded(OpenOffer openOffer);
 
         void onOpenOfferRemoved(OpenOffer openOffer);
     }
+
     @Getter
     private final OpenOfferStore persistableStore = new OpenOfferStore();
-    private final NetworkService networkService;
     @Getter
     private final Persistence<OpenOfferStore> persistence;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public OpenOfferService(NetworkService networkService, PersistenceService persistenceService) {
-        this.networkService = networkService;
+    public OpenOfferService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
-    public CompletableFuture<Boolean> initialize() {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        //todo
-        future.complete(true);
-        return future;
-    }
-
-    public void shutdown() {
-    }
-
-    public void addListener(Listener listener) {
-        listeners.add(listener);
-    }
-
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
-    }
-
-    public List<OpenOffer> getOpenOffers() {
+    public Set<OpenOffer> getOpenOffers() {
         return persistableStore.getOpenOffers();
     }
 
@@ -94,5 +71,13 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
         return persistableStore.getOpenOffers().stream()
                 .filter(openOffer -> openOffer.getOffer().getId().equals(offerId))
                 .findAny();
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
     }
 }

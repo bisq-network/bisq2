@@ -46,9 +46,6 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
         return getOrCreateKeyPairAsync(DEFAULT).thenApply(r -> true);
     }
 
-    public void shutdown() {
-    }
-
     public Optional<KeyPair> findKeyPair(String keyId) {
         synchronized (persistableStore) {
             return persistableStore.findKeyPair(keyId);

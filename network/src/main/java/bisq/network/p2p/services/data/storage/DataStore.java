@@ -20,10 +20,14 @@ package bisq.network.p2p.services.data.storage;
 import bisq.common.data.ByteArray;
 import bisq.persistence.PersistableStore;
 import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@ToString
+@Slf4j
 public class DataStore<T> implements PersistableStore<DataStore<T>> {
     @Getter
     private final ConcurrentHashMap<ByteArray, T> map = new ConcurrentHashMap<>();

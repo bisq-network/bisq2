@@ -60,7 +60,7 @@ public class TradeIntentView extends View<StackPane, TradeIntentModel, TradeInte
         Button addDataButton = addDataButtonPair.first();
         addDataResultLabel = addDataButtonPair.second();
         addDataButton.setOnAction(e -> {
-            controller.onAddTradeIntent(askTextField.getText(), bidTextField.getText());
+            controller.onCreateTradeIntent(askTextField.getText(), bidTextField.getText());
 
         });
         gridPane.endSection();

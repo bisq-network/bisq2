@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer;
+package bisq.social.intent;
 
 import bisq.common.data.ObservedSet;
 import bisq.network.NetworkService;
@@ -29,12 +29,12 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class OfferBookService {
+public class TradeIntentListingsService {
     @Getter
-    private final ObservedSet<Offer> offers = new ObservedSet<>();
+    private final ObservedSet<TradeIntent> tradeIntents = new ObservedSet<>();
     private final DataService dataService;
 
-    public OfferBookService(NetworkService networkService) {
+    public TradeIntentListingsService(NetworkService networkService) {
         checkArgument(networkService.getDataService().isPresent(),
                 "networkService.getDataService() is expected to be present if OfferBookService is used");
         dataService = networkService.getDataService().get();
@@ -42,25 +42,25 @@ public class OfferBookService {
             @Override
             public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
                 if (networkPayload instanceof AuthenticatedPayload payload &&
-                        payload.getData() instanceof Offer offer) {
-                    offers.add(offer);
+                        payload.getData() instanceof TradeIntent offer) {
+                    tradeIntents.add(offer);
                 }
             }
 
             @Override
             public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
                 if (networkPayload instanceof AuthenticatedPayload payload &&
-                        payload.getData() instanceof Offer offer) {
-                    offers.remove(offer);
+                        payload.getData() instanceof TradeIntent offer) {
+                    tradeIntents.remove(offer);
                 }
             }
         });
     }
 
     public CompletableFuture<Boolean> initialize() {
-        offers.addAll(dataService.getAuthenticatedPayloadByStoreName("Offer")
-                .filter(payload -> payload.getData() instanceof Offer)
-                .map(payload -> (Offer) payload.getData())
+        tradeIntents.addAll(dataService.getAuthenticatedPayloadByStoreName("TradeIntent")
+                .filter(payload -> payload.getData() instanceof TradeIntent)
+                .map(payload -> (TradeIntent) payload.getData())
                 .collect(Collectors.toList()));
         return CompletableFuture.completedFuture(true);
     }
