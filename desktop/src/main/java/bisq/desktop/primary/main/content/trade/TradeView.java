@@ -46,7 +46,7 @@ public class TradeView extends TabView<JFXTabPane, TradeModel, TradeController> 
     @Override
     public void onViewAttached() {
         createOfferTabVisibleSubscription = EasyBind.subscribe(model.createOfferTabVisible, this::onCreateOfferTabVisibleChange);
-        takeOfferTabVisibleSubscription = EasyBind.subscribe(model.takeOfferTabVisible, this::oTakeOfferTabVisibleChange);
+        takeOfferTabVisibleSubscription = EasyBind.subscribe(model.takeOfferTabVisible, this::onTakeOfferTabVisibleChange);
         super.onViewAttached();
     }
 
@@ -65,7 +65,7 @@ public class TradeView extends TabView<JFXTabPane, TradeModel, TradeController> 
         }
     }
 
-    private void oTakeOfferTabVisibleChange(boolean value) {
+    private void onTakeOfferTabVisibleChange(boolean value) {
         if (value) {
             root.getTabs().add(takeOffer);
         } else {

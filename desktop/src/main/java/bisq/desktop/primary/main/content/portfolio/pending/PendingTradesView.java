@@ -15,22 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.portfolio;
+package bisq.desktop.primary.main.content.portfolio.pending;
 
-import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.NavigationModel;
-import lombok.Getter;
+import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Getter
-public class PortfolioModel extends NavigationModel {
+public class PendingTradesView extends View<VBox, PendingTradesModel, PendingTradesController> {
 
-    public PortfolioModel( ) {
+    public PendingTradesView(PendingTradesModel model, PendingTradesController controller) {
+        super(new VBox(), model, controller);
+        root.setSpacing(20);
+        root.getChildren().addAll(new BisqLabel(this.getClass().getSimpleName()));
     }
 
     @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.OPEN_OFFERS;
+    public void onViewAttached() {
+    }
+
+    @Override
+    public void onViewDetached() {
     }
 }

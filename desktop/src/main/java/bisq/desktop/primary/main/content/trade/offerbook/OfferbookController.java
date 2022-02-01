@@ -33,7 +33,7 @@ import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.offer.OfferBookService;
-import bisq.offer.OfferService;
+import bisq.offer.OpenOfferService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;
@@ -48,14 +48,14 @@ public class OfferbookController implements Controller {
     private final ChangeListener<Direction> directionListener;
     private final MarketSelection marketSelection;
     private final DirectionSelection directionSelection;
-    private final OfferService offerService;
+    private final OpenOfferService openOfferService;
     private final OfferBookService offerBookService;
 
     private int offerBindingKey;
 
     public OfferbookController(DefaultApplicationService applicationService) {
         offerBookService = applicationService.getOfferBookService();
-        offerService = applicationService.getOfferService();
+        openOfferService = applicationService.getOpenOfferService();
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
         directionSelection = new DirectionSelection(marketSelection.selectedMarketProperty());
@@ -175,21 +175,19 @@ public class OfferbookController implements Controller {
 
     private void onRemoveOffer(OfferListItem item) {
         Offer offer = item.getOffer();
-        offerService.removeMyOffer(item.getOffer())
+        openOfferService.removeMyOffer(item.getOffer())
                 .whenComplete((broadCastResultFutures, throwable2) -> {
                     if (throwable2 != null) {
                         UIThread.run(() -> model.setRemoveOfferError(offer, throwable2));
                         return;
                     }
-                    broadCastResultFutures.entrySet().forEach(broadCastResultFuture -> {
-                        broadCastResultFuture.getValue().whenComplete((broadcastResult, throwable3) -> {
-                            if (throwable3 != null) {
-                                UIThread.run(() -> model.setRemoveOfferError(offer, throwable3));
-                                return;
-                            }
-                            UIThread.run(() -> model.setRemoveOfferResult(offer, broadcastResult));
-                        });
-                    });
+                    broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable3) -> {
+                        if (throwable3 != null) {
+                            UIThread.run(() -> model.setRemoveOfferError(offer, throwable3));
+                            return;
+                        }
+                        UIThread.run(() -> model.setRemoveOfferResult(offer, broadcastResult));
+                    }));
                 });
     }
 

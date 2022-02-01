@@ -42,6 +42,11 @@ public enum NavigationTarget {
     CREATE_OFFER(TRADE),
     TAKE_OFFER(TRADE, false),
 
+    PORTFOLIO(CONTENT),
+    OPEN_OFFERS(PORTFOLIO),
+    PENDING_TRADES(PORTFOLIO),
+    CLOSED_TRADES(PORTFOLIO),
+
     SETTINGS(CONTENT),
     PREFERENCES(SETTINGS),
 
@@ -58,7 +63,7 @@ public enum NavigationTarget {
 
     MARKETS(CONTENT),
 
-    PORTFOLIO(CONTENT),
+   
     WALLET(CONTENT);
 
 

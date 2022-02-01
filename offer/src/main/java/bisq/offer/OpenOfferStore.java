@@ -17,15 +17,15 @@
 
 package bisq.offer;
 
+import bisq.common.data.ObservedSet;
 import bisq.persistence.PersistableStore;
 import lombok.Getter;
 
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 public class OpenOfferStore implements PersistableStore<OpenOfferStore> {
     @Getter
-    private final Set<OpenOffer> openOffers = new CopyOnWriteArraySet<>();
+    private final ObservedSet<OpenOffer> openOffers = new ObservedSet<>();
 
     public OpenOfferStore() {
     }
