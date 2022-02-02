@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.social.tradeintent;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
+import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.security.KeyPairService;
@@ -45,8 +46,9 @@ public class TradeIntentModel implements Model {
     private final SortedList<TradeIntentListItem> sortedItems = new SortedList<>(filteredItems);
     private final StringProperty addDataResultProperty = new SimpleStringProperty("");
     private final StringProperty removeDataResultProperty = new SimpleStringProperty("");
+     final ObjectProperty<Identity> selectedUserIdentity = new SimpleObjectProperty<>();
     private final ObjectProperty<TradeIntent> tradeIntentProperty = new SimpleObjectProperty<>();
-    
+
     public TradeIntentModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
         keyPairService = applicationService.getKeyPairService();

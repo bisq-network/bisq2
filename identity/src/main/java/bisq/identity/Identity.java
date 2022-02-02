@@ -17,6 +17,7 @@
 
 package bisq.identity;
 
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
@@ -42,5 +43,9 @@ public record Identity(String domainId, NetworkId networkId, KeyPair keyPair) im
     // Use hash of public key as ID
     public String id() {
         return Hex.encode(DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded()));
+    }
+
+    public ByteArray pubKeyHash() {
+        return new ByteArray(DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded()));
     }
 }
