@@ -1,7 +1,7 @@
 package bisq.network.p2p.node.transport;
 
 import bisq.common.util.NetworkUtils;
-import bisq.i2p.SamClient;
+import bisq.i2p.I2pClient;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.ConnectionException;
@@ -21,7 +21,7 @@ import static java.io.File.separator;
 @Slf4j
 public class I2PTransport implements Transport {
     private final String i2pDirPath;
-    private SamClient samClient;
+    private I2pClient i2pClient;
     private boolean initializeCalled;
     private String sessionId;
 
@@ -37,7 +37,7 @@ public class I2PTransport implements Transport {
         }
         initializeCalled = true;
         log.debug("Initialize");
-        samClient = SamClient.getSamClient(i2pDirPath);
+        i2pClient = I2pClient.getI2pClient(i2pDirPath);
         return true;
     }
 
@@ -47,8 +47,8 @@ public class I2PTransport implements Transport {
         log.debug("Create serverSocket");
         try {
             sessionId = nodeId + port;
-            ServerSocket serverSocket = samClient.getServerSocket(sessionId, NetworkUtils.findFreeSystemPort());
-            String destination = samClient.getMyDestination(sessionId);
+            ServerSocket serverSocket = i2pClient.getServerSocket(sessionId, NetworkUtils.findFreeSystemPort());
+            String destination = i2pClient.getMyDestination(sessionId);
             // Port is irrelevant for I2P
             Address address = new Address(destination, port);
             log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
@@ -65,7 +65,7 @@ public class I2PTransport implements Transport {
             //todo check usage of sessionId
             log.debug("Create new Socket to {} with sessionId={}", address, sessionId);
             long ts = System.currentTimeMillis();
-            Socket socket = samClient.getSocket(address.getHost(), sessionId);
+            Socket socket = i2pClient.getSocket(address.getHost(), sessionId);
             log.info("I2P socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
             return socket;
         } catch (IOException exception) {
@@ -77,17 +77,17 @@ public class I2PTransport implements Transport {
     @Override
     public CompletableFuture<Void> shutdown() {
         initializeCalled = false;
-        if (samClient == null) {
+        if (i2pClient == null) {
             return CompletableFuture.completedFuture(null);
         }
-        return CompletableFuture.runAsync(samClient::shutdown, NetworkService.NETWORK_IO_POOL);
+        return CompletableFuture.runAsync(i2pClient::shutdown, NetworkService.NETWORK_IO_POOL);
     }
 
     @Override
     public Optional<Address> getServerAddress(String serverId) {
         try {
             //todo
-            String myDestination = samClient.getMyDestination(sessionId);
+            String myDestination = i2pClient.getMyDestination(sessionId);
             return Optional.of(new Address(myDestination, -1));
         } catch (IOException exception) {
             log.error(exception.toString(), exception);
