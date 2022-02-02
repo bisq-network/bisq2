@@ -142,30 +142,7 @@ If you want to use more seed nodes repeat it and fill in more but 1-2 is usually
 
 ### Example Run Configurations
 
-Here are three IntelliJ IDEA run configurations for simulating a clearnet setup locally:
-
-| Run Config                  | MultiNodesMain                              |
-|:----------------------------|:--------------------------------------------|
-| Classpath of module (Alt+O) | `bisq.tools.main`                           |
-| Main Class (Alt+C)          | `bisq.tools.network.monitor.MultiNodesMain` |
-| Program Arguments (Alt+R)   | `--bootstrapAll=true --transports=CLEAR`    |
-
-
-| Run Config                  | Bisq-clear-Alice                                                                                                  |
-|:----------------------------|:------------------------------------------------------------------------------------------------------------------|
-| Classpath of module (Alt+O) | `bisq.desktop.main`                                                                                               |
-| Main Class (Alt+C)          | `bisq.desktop.Main`                                                                                               |
-| Program Arguments (Alt+R)   | `--appName=bisq_Alice`                                                                                            |
-| VM Arguments (Alt+V)        | `--add-opens java.base/java.lang.reflect=ALL-UNNAMED -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR` |
-
-
-| Run Config                  | Bisq-clear-Bob       |
-|:----------------------------|:---------------------|
-| Classpath of module (Alt+O) | (same as Alice)      |
-| Main Class (Alt+C)          | (same as Alice)      |
-| Program Arguments (Alt+R)   | `--appName=bisq_Bob` |
-| VM Arguments (Alt+V)        | (same as Alice)      |
-
+See [here](docs/intellij-idea-sample-run-configs.md)
 
 
 ## Contributing
