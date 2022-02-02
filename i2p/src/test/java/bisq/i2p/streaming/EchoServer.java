@@ -1,4 +1,4 @@
-package bisq.i2p.v2.streaming;
+package bisq.i2p.streaming;
 
 import java.io.*;
 import java.net.ConnectException;

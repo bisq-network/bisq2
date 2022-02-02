@@ -1,4 +1,4 @@
-package bisq.i2p.v2.datagram;
+package bisq.i2p.datagram;
 
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;

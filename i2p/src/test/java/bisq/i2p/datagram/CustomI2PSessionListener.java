@@ -1,4 +1,4 @@
-package bisq.i2p.v2.datagram;
+package bisq.i2p.datagram;
 
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.client.I2PSession;
