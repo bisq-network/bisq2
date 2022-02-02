@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 // Takes about 1 minute until its ready
 @Slf4j
 public class I2PDemoRunner {
-    private final SamClient samClient;
+    private final I2pClient i2pClient;
 
     public static void main(String[] args) throws IOException {
         new I2PDemoRunner();
@@ -46,7 +46,7 @@ public class I2PDemoRunner {
     public I2PDemoRunner() throws IOException {
         String dirPath = OsUtils.getUserDataDir() + "/I2PDemoRunner";
         FileUtils.makeDirs(dirPath);
-        samClient = SamClient.getSamClient(dirPath);
+        i2pClient = I2pClient.getI2pClient(dirPath);
         String sessionIdAlice = "alice";
         String sessionIdBob = "bob";
         String sessionIdCarol = "carol";
@@ -56,8 +56,8 @@ public class I2PDemoRunner {
         new Thread(() -> {
             Thread.currentThread().setName("Alice");
             try {
-                destinationAlice.set(samClient.getMyDestination(sessionIdAlice));
-                ServerSocket serverSocket = samClient.getServerSocket(sessionIdAlice, NetworkUtils.findFreeSystemPort());
+                destinationAlice.set(i2pClient.getMyDestination(sessionIdAlice));
+                ServerSocket serverSocket = i2pClient.getServerSocket(sessionIdAlice, NetworkUtils.findFreeSystemPort());
                 startServer(serverSocket, aliceServerReady);
             } catch (IOException e) {
                 if (!(e instanceof SocketException)) {
@@ -70,7 +70,7 @@ public class I2PDemoRunner {
         new Thread(() -> {
             Thread.currentThread().setName("Bob");
             try {
-                destinationBob.set(samClient.getMyDestination(sessionIdBob));
+                destinationBob.set(i2pClient.getMyDestination(sessionIdBob));
                 while (!aliceServerReady.get()) {
                     try {
                         Thread.sleep(100);
@@ -78,7 +78,7 @@ public class I2PDemoRunner {
                     }
                 }
 
-                Socket clientSocketBobToAlice = samClient.getSocket(destinationAlice.get(), sessionIdBob);
+                Socket clientSocketBobToAlice = i2pClient.getSocket(destinationAlice.get(), sessionIdBob);
                 PrintWriter printWriter = new PrintWriter(clientSocketBobToAlice.getOutputStream(), true);
                 printWriter.println("####### Hello from Bob1");
                 printWriter.flush();
@@ -99,14 +99,14 @@ public class I2PDemoRunner {
         new Thread(() -> {
             Thread.currentThread().setName("Carol");
             try {
-                destinationCarol.set(samClient.getMyDestination(sessionIdCarol));
+                destinationCarol.set(i2pClient.getMyDestination(sessionIdCarol));
                 while (!aliceServerReady.get()) {
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException ignore) {
                     }
                 }
-                Socket clientSocketCarolToAlice = samClient.getSocket(destinationAlice.get(), sessionIdCarol);
+                Socket clientSocketCarolToAlice = i2pClient.getSocket(destinationAlice.get(), sessionIdCarol);
                 PrintWriter printWriter = new PrintWriter(clientSocketCarolToAlice.getOutputStream(), true);
                 printWriter.println("####### Hello from Carol1");
                 printWriter.flush();
@@ -166,7 +166,7 @@ public class I2PDemoRunner {
                                 clientSocket.getRemoteSocketAddress(),
                                 msg);
                         if (msg.equals("stop")) {
-                            samClient.shutdown();
+                            i2pClient.shutdown();
                         }
                     }
                 } catch (IOException e) {

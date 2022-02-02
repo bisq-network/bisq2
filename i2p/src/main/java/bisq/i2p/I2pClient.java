@@ -39,46 +39,47 @@ import java.util.concurrent.TimeUnit;
 // Streaming API (TCP-like streams over I2P) docs: https://geti2p.net/en/docs/api/streaming
 // For UDP-like communication, see datagram spec: https://geti2p.net/spec/datagrams
 @Slf4j
-public class SamClient {
+public class I2pClient {
     public final static String DEFAULT_HOST = "127.0.0.1";
     public final static int DEFAULT_PORT = 7656;
     public final static long DEFAULT_SOCKET_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
-    private final static Map<String, SamClient> SAM_CLIENT_BY_APP = new ConcurrentHashMap<>();
+    private final static Map<String, I2pClient> I2P_CLIENT_BY_APP = new ConcurrentHashMap<>();
 
     private final String host;
     private final int port;
     private final long socketTimeout;
     private final String dirPath;
-    // key = sessionId (relevant in the Bisq domain), value = session object at I2P level
+    // key = sessionId (relevant in the Bisq domain), value = socket manager at I2P level
+    // Each socket manager has one session and one socket (although multiple sockets supported)
     private final Map<String, I2PSocketManager> sessionMap = new ConcurrentHashMap<>();
 
-    public static SamClient getSamClient(String dirPath) {
-        return getSamClient(dirPath, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SOCKET_TIMEOUT);
+    public static I2pClient getI2pClient(String dirPath) {
+        return getI2pClient(dirPath, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SOCKET_TIMEOUT);
     }
 
-    // We use one sam client per app
-    public static SamClient getSamClient(String dirPath, String host, int port, long socketTimeout) {
-        SamClient samClient;
-        synchronized (SAM_CLIENT_BY_APP) {
-            if (SAM_CLIENT_BY_APP.containsKey(dirPath)) {
-                samClient = SAM_CLIENT_BY_APP.get(dirPath);
+    // We use one i2p client per app
+    public static I2pClient getI2pClient(String dirPath, String host, int port, long socketTimeout) {
+        I2pClient i2pClient;
+        synchronized (I2P_CLIENT_BY_APP) {
+            if (I2P_CLIENT_BY_APP.containsKey(dirPath)) {
+                i2pClient = I2P_CLIENT_BY_APP.get(dirPath);
             } else {
-                samClient = new SamClient(dirPath, host, port, socketTimeout);
-                SAM_CLIENT_BY_APP.put(dirPath, samClient);
+                i2pClient = new I2pClient(dirPath, host, port, socketTimeout);
+                I2P_CLIENT_BY_APP.put(dirPath, i2pClient);
             }
         }
-        return samClient;
+        return i2pClient;
     }
 
-    private SamClient(String dirPath, String host, int port, long socketTimeout) {
+    private I2pClient(String dirPath, String host, int port, long socketTimeout) {
         this.host = host;
         this.port = port;
         this.socketTimeout = socketTimeout;
         this.dirPath = dirPath;
-        log.info("Sam client created with dirPath={}; host={}; port={}; socketTimeout={}",
+        log.info("I2P client created with dirPath={}; host={}; port={}; socketTimeout={}",
                 dirPath, host, port, socketTimeout);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("SamClient.shutdownHook");
+            Thread.currentThread().setName("I2pClient.shutdownHook");
             shutdown();
         }));
     }
