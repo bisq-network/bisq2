@@ -18,43 +18,47 @@
 package bisq.protocol;
 
 import bisq.persistence.PersistableStore;
-import bisq.protocol.reputation.Protocol;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 public class ProtocolStore implements PersistableStore<ProtocolStore> {
     @Getter
-    private final Map<String, Protocol> protocolByOfferId = new ConcurrentHashMap<>();
-
+    private final Map<String, ProtocolModel> protocolModelByOfferId = new ConcurrentHashMap<>();
+  
     public ProtocolStore() {
     }
 
-    private ProtocolStore(Map<String, Protocol> protocolByOfferId) {
-        this.protocolByOfferId.putAll(protocolByOfferId);
+    private ProtocolStore(Map<String, ProtocolModel> protocolModelByOfferId) {
+        this.protocolModelByOfferId.putAll(protocolModelByOfferId);
     }
 
     @Override
     public ProtocolStore getClone() {
-        return new ProtocolStore(protocolByOfferId);
+        return new ProtocolStore(protocolModelByOfferId);
     }
 
     @Override
     public void applyPersisted(ProtocolStore persisted) {
-        protocolByOfferId.clear();
-        protocolByOfferId.putAll(persisted.getProtocolByOfferId());
+        protocolModelByOfferId.clear();
+        protocolModelByOfferId.putAll(persisted.getProtocolModelByOfferId());
     }
 
-    public void add(Protocol protocol) {
-        if (protocolByOfferId.containsKey(protocol.getId())) return;
-
-        protocolByOfferId.put(protocol.getId(), protocol);
+    public void add( ProtocolModel protocolModel) {
+        String protocolId = protocolModel.getId();
+        if (!protocolModelByOfferId.containsKey(protocolId)) {
+            protocolModelByOfferId.put(protocolId, protocolModel);
+        }
     }
 
-    public void remove(Protocol protocol) {
-        if (!protocolByOfferId.containsKey(protocol.getId())) return;
+  /*  public void remove(Protocol<? extends ProtocolStore<?>> protocol) {
+        String protocolId = protocol.getId();
+        if (!protocolStoreByOfferId.containsKey(protocolId)) return;
 
-        protocolByOfferId.remove(protocol.getId());
-    }
+        protocolsByOfferId.remove(protocolId);
+        protocolStoreByOfferId.remove(protocolId);
+    }*/
 }

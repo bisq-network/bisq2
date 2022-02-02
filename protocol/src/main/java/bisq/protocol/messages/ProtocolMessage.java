@@ -15,22 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.portfolio;
+package bisq.protocol.messages;
 
-import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.NavigationModel;
+import bisq.common.util.StringUtils;
+import bisq.network.p2p.message.Message;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Getter
-public class PortfolioModel extends NavigationModel {
+public abstract class ProtocolMessage implements Message {
+    private final String messageId;
+    private final String offerId;
 
-    public PortfolioModel( ) {
+    public ProtocolMessage(String offerId) {
+        this(StringUtils.createUid(), offerId);
     }
 
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.OPEN_OFFERS;
+    public ProtocolMessage(String messageId, String offerId) {
+        this.messageId = messageId;
+        this.offerId = offerId;
     }
 }

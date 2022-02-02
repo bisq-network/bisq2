@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.fsm_demo;
+package bisq.protocol.prototype.fsm_demo;
 
 import org.jeasy.states.api.*;
 import org.jeasy.states.core.FiniteStateMachineBuilder;

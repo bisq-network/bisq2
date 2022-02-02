@@ -29,7 +29,6 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
 import bisq.offer.OfferBookService;
-import bisq.offer.OfferService;
 import bisq.offer.OpenOfferService;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
@@ -63,7 +62,6 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 public class DefaultApplicationService extends ServiceProvider {
     private final KeyPairService keyPairService;
     private final NetworkService networkService;
-    private final OfferService offerService;
     private final OpenOfferService openOfferService;
     private final IdentityService identityService;
     private final MarketPriceService marketPriceService;
@@ -102,12 +100,11 @@ public class DefaultApplicationService extends ServiceProvider {
 
         chatService = new ChatService(persistenceService, identityService, networkService);
         tradeIntentListingsService = new TradeIntentListingsService(networkService);
-        tradeIntentService = new TradeIntentService(networkService, identityService, tradeIntentListingsService,chatService);
+        tradeIntentService = new TradeIntentService(networkService, identityService, tradeIntentListingsService, chatService);
 
         // add data use case is not available yet at networkService
-        openOfferService = new OpenOfferService(persistenceService);
+        openOfferService = new OpenOfferService(networkService, identityService, persistenceService);
         offerBookService = new OfferBookService(networkService);
-        offerService = new OfferService(networkService, identityService, openOfferService, offerBookService);
 
         MarketPriceService.Config marketPriceServiceConf = MarketPriceServiceConfigFactory.getConfig();
         marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, ApplicationVersion.VERSION);
@@ -147,7 +144,9 @@ public class DefaultApplicationService extends ServiceProvider {
                         accountService.addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
                     }
                 })
-                .thenCompose(result -> CompletableFutureUtils.allOf(offerService.initialize(),
+                .thenCompose(result -> protocolService.initialize())
+                .thenCompose(result -> CompletableFutureUtils.allOf(
+                        openOfferService.initialize(),
                         offerBookService.initialize(),
                         tradeIntentListingsService.initialize(),
                         tradeIntentService.initialize()))
@@ -163,7 +162,7 @@ public class DefaultApplicationService extends ServiceProvider {
 
     @Override
     public CompletableFuture<Void> shutdown() {
-        return runAsync(() -> offerService.shutdown()
+        return runAsync(() -> openOfferService.shutdown()
                 .thenCompose(list -> {
                     marketPriceService.shutdown();
                     return networkService.shutdown()

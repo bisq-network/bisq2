@@ -17,27 +17,35 @@
 
 package bisq.desktop.primary.main.content.portfolio;
 
-import bisq.desktop.common.view.View;
-import javafx.geometry.Insets;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
+import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTargetTab;
+import bisq.desktop.common.view.TabView;
+import bisq.i18n.Res;
+import com.jfoenix.controls.JFXTabPane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PortfolioView extends View<VBox, PortfolioModel, PortfolioController> {
+public class PortfolioView extends TabView<JFXTabPane, PortfolioModel, PortfolioController> {
 
     public PortfolioView(PortfolioModel model, PortfolioController controller) {
-        super(new VBox(), model, controller);
-        root.setPadding(new Insets(20, 20, 20, 0));
-        root.getChildren().add(new Label(getClass().getSimpleName()));
+        super(new JFXTabPane(), model, controller);
+    }
+
+    @Override
+    protected void createAndAddTabs() {
+        NavigationTargetTab openOffers = createTab(Res.common.get("portfolio.openOffers"), NavigationTarget.OPEN_OFFERS);
+        NavigationTargetTab pendingTrades = createTab(Res.common.get("portfolio.pending"), NavigationTarget.PENDING_TRADES);
+        NavigationTargetTab closedTrades = createTab(Res.common.get("portfolio.closed"), NavigationTarget.CLOSED_TRADES);
+        root.getTabs().setAll(openOffers, pendingTrades, closedTrades);
     }
 
     @Override
     public void onViewAttached() {
+        super.onViewAttached();
     }
 
     @Override
-    protected void onViewDetached() {
+    public void onViewDetached() {
+        super.onViewDetached();
     }
-
 }

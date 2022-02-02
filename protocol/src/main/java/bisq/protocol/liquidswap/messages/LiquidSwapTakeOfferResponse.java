@@ -15,22 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.portfolio;
+package bisq.protocol.liquidswap.messages;
 
-import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.NavigationModel;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import bisq.contract.Contract;
+import bisq.protocol.messages.ProtocolMessage;
 
-@Slf4j
-@Getter
-public class PortfolioModel extends NavigationModel {
+public class LiquidSwapTakeOfferResponse extends ProtocolMessage {
+    private final Contract contract;
 
-    public PortfolioModel( ) {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.OPEN_OFFERS;
+    public LiquidSwapTakeOfferResponse(Contract contract) {
+        super(contract.getOffer().getId());
+        this.contract = contract;
     }
 }

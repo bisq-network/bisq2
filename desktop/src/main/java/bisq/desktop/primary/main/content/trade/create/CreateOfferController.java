@@ -25,7 +25,7 @@ import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.trade.components.*;
 import bisq.offer.Direction;
-import bisq.offer.OfferService;
+import bisq.offer.OpenOfferService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;
@@ -35,13 +35,14 @@ import java.util.ArrayList;
 
 @Slf4j
 public class CreateOfferController implements InitWithDataController<CreateOfferController.InitData> {
+
     public static record InitData(Market market, Direction direction, BooleanProperty showCreateOfferTab) {
     }
 
     private final CreateOfferModel model;
     @Getter
     private final CreateOfferView view;
-    private final OfferService offerService;
+    private final OpenOfferService openOfferService;
     private final ChangeListener<SwapProtocolType> selectedProtocolTypListener;
     private final MarketSelection marketSelection;
     private final DirectionSelection directionSelection;
@@ -50,7 +51,7 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
     private final SettlementSelection settlementSelection;
 
     public CreateOfferController(DefaultApplicationService applicationService) {
-        offerService = applicationService.getOfferService();
+        openOfferService = applicationService.getOpenOfferService();
         model = new CreateOfferModel();
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
@@ -107,7 +108,7 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
     }
 
     public void onCreateOffer() {
-        offerService.createOffer(model.getSelectedMarket(),
+        openOfferService.createOffer(model.getSelectedMarket(),
                         model.getDirection(),
                         model.getBaseSideAmount(),
                         model.getFixPrice(),
@@ -126,7 +127,7 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
     }
 
     public void onPublishOffer() {
-        offerService.publishOffer(model.getOffer());
+        openOfferService.publishOffer(model.getOffer());
         model.showCreateOfferTab.set(false);
         Navigation.navigateTo(NavigationTarget.OFFERBOOK);
     }

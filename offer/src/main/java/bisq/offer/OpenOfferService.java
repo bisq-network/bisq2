@@ -17,17 +17,33 @@
 
 package bisq.offer;
 
+import bisq.account.accounts.Account;
+import bisq.account.protocol.SwapProtocolType;
+import bisq.account.settlement.SettlementMethod;
+import bisq.common.data.ObservedSet;
+import bisq.common.monetary.Market;
+import bisq.common.monetary.Monetary;
+import bisq.common.monetary.Quote;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.CompletableFutureUtils;
+import bisq.common.util.StringUtils;
+import bisq.identity.IdentityService;
+import bisq.network.NetworkId;
+import bisq.network.NetworkIdWithKeyPair;
+import bisq.network.NetworkService;
+import bisq.offer.options.ListingOption;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
+import static bisq.network.p2p.services.data.DataService.BroadCastDataResult;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
 public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
@@ -39,17 +55,34 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
         void onOpenOfferRemoved(OpenOffer openOffer);
     }
 
+    private final NetworkService networkService;
+    private final IdentityService identityService;
     @Getter
     private final OpenOfferStore persistableStore = new OpenOfferStore();
     @Getter
     private final Persistence<OpenOfferStore> persistence;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public OpenOfferService(PersistenceService persistenceService) {
+    public OpenOfferService(NetworkService networkService,
+                            IdentityService identityService,
+                            PersistenceService persistenceService) {
+        this.networkService = networkService;
+        this.identityService = identityService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
-    public Set<OpenOffer> getOpenOffers() {
+    public CompletableFuture<Boolean> initialize() {
+        republishMyOffers();
+        return CompletableFuture.completedFuture(true);
+    }
+
+
+    public CompletableFuture<List<BroadCastDataResult>> shutdown() {
+        return CompletableFutureUtils.allOf(getOpenOffers().stream()
+                .map(openOffer -> removeFromNetwork(openOffer.getOffer())));
+    }
+
+    public ObservedSet<OpenOffer> getOpenOffers() {
         return persistableStore.getOpenOffers();
     }
 
@@ -71,6 +104,90 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
         return persistableStore.getOpenOffers().stream()
                 .filter(openOffer -> openOffer.getOffer().getId().equals(offerId))
                 .findAny();
+    }
+
+    public CompletableFuture<Offer> createOffer(Market selectedMarket,
+                                                Direction direction,
+                                                Monetary baseSideAmount,
+                                                Quote fixPrice,
+                                                SwapProtocolType selectedProtocolTyp,
+                                                List<Account<? extends SettlementMethod>> selectedBaseSideAccounts,
+                                                List<Account<? extends SettlementMethod>> selectedQuoteSideAccounts,
+                                                List<SettlementMethod> selectedBaseSideSettlementMethods,
+                                                List<SettlementMethod> selectedQuoteSideSettlementMethods) {
+        String offerId = StringUtils.createUid();
+        return identityService.getOrCreateIdentity(offerId).thenApply(identity -> {
+            NetworkId makerNetworkId = identity.networkId();
+            List<SwapProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
+
+            FixPrice priceSpec = new FixPrice(fixPrice.getValue());
+
+            List<SettlementSpec> baseSideSettlementSpecs;
+            if (!selectedBaseSideAccounts.isEmpty()) {
+                baseSideSettlementSpecs = selectedBaseSideAccounts.stream()
+                        .map(e -> new SettlementSpec(e.getSettlementMethod().name(), e.getId()))
+                        .collect(Collectors.toList());
+            } else {
+                baseSideSettlementSpecs = selectedBaseSideSettlementMethods.stream()
+                        .map(e -> new SettlementSpec(e.name(), null))
+                        .collect(Collectors.toList());
+            }
+            List<SettlementSpec> quoteSideSettlementSpecs;
+            if (!selectedBaseSideAccounts.isEmpty()) {
+                quoteSideSettlementSpecs = selectedQuoteSideAccounts.stream()
+                        .map(e -> new SettlementSpec(e.getSettlementMethod().name(), e.getId()))
+                        .collect(Collectors.toList());
+            } else {
+                quoteSideSettlementSpecs = selectedQuoteSideSettlementMethods.stream()
+                        .map(e -> new SettlementSpec(e.name(), null))
+                        .collect(Collectors.toList());
+            }
+
+            List<ListingOption> listingOptions = new ArrayList<>();
+
+            return new Offer(offerId,
+                    new Date().getTime(),
+                    makerNetworkId,
+                    selectedMarket,
+                    direction,
+                    baseSideAmount.getValue(),
+                    priceSpec,
+                    protocolTypes,
+                    baseSideSettlementSpecs,
+                    quoteSideSettlementSpecs,
+                    listingOptions
+            );
+        });
+    }
+
+    public CompletableFuture<BroadCastDataResult> publishOffer(Offer offer) {
+        add(offer);
+        return addToNetwork(offer);
+    }
+
+    private void republishMyOffers() {
+        getOpenOffers().forEach(openOffer -> addToNetwork(openOffer.getOffer()));
+    }
+
+    public CompletableFuture<BroadCastDataResult> removeMyOffer(Offer offer) {
+        remove(offer);
+        return removeFromNetwork(offer);
+    }
+
+    public CompletableFuture<BroadCastDataResult> addToNetwork(Offer offer) {
+        return identityService.getOrCreateIdentity(offer.getId())
+                .thenCompose(identity -> {
+                    NetworkIdWithKeyPair nodeIdAndKeyPair = identity.getNodeIdAndKeyPair();
+                    return networkService.addData(offer, nodeIdAndKeyPair);
+                });
+    }
+
+    public CompletableFuture<BroadCastDataResult> removeFromNetwork(Offer offer) {
+        // We do not retire the identity as it might be still used in the chat. For a mature implementation we would
+        // need to check if there is any usage still for that identity and if not retire it.
+        return identityService.findActiveIdentity(offer.getId())
+                .map(identity -> networkService.removeData(offer, identity.getNodeIdAndKeyPair()))
+                .orElse(CompletableFuture.completedFuture(new BroadCastDataResult()));
     }
 
     public void addListener(Listener listener) {

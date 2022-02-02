@@ -15,18 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.reputation.messages.taker;
+package bisq.protocol;
 
-import bisq.contract.Contract;
-import bisq.protocol.reputation.messages.TakeOfferRequest;
-import lombok.Getter;
-
-@Getter
-public class RP_TakeOfferRequest implements TakeOfferRequest {
-
-    private final Contract contract;
-
-    public RP_TakeOfferRequest(Contract contract) {
-        this.contract = contract;
-    }
+public interface BuyerProtocol{
 }

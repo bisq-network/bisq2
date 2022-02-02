@@ -40,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 public class OfferbookModel implements Model {
     private final NetworkService networkService;
     private final KeyPairService keyPairService;
-
     // References to data in component models
     final ReadOnlyObjectProperty<Market> selectedMarketProperty;
     final ReadOnlyObjectProperty<Direction> directionProperty;
@@ -68,6 +67,7 @@ public class OfferbookModel implements Model {
         networkService = applicationService.getNetworkService();
         keyPairService = applicationService.getKeyPairService();
         marketPriceService = applicationService.getMarketPriceService();
+
         this.selectedMarketProperty = selectedMarketProperty;
         this.directionProperty = directionProperty;
     }

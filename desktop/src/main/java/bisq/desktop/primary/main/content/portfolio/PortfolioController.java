@@ -18,26 +18,52 @@
 package bisq.desktop.primary.main.content.portfolio;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.TabController;
+import bisq.desktop.primary.main.content.portfolio.closed.ClosedTradesController;
+import bisq.desktop.primary.main.content.portfolio.openoffers.OpenOffersController;
+import bisq.desktop.primary.main.content.portfolio.pending.PendingTradesController;
 import lombok.Getter;
 
-public class PortfolioController implements Controller {
+import java.util.Optional;
+
+public class PortfolioController extends TabController {
+
+    private final DefaultApplicationService applicationService;
+    @Getter
     private final PortfolioModel model;
     @Getter
     private final PortfolioView view;
-    private final DefaultApplicationService applicationService;
 
     public PortfolioController(DefaultApplicationService applicationService) {
+        super(NavigationTarget.PORTFOLIO);
+
         this.applicationService = applicationService;
-        model = new PortfolioModel(applicationService);
+        model = new PortfolioModel();
         view = new PortfolioView(model, this);
     }
 
     @Override
-    public void onViewAttached() {
+    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+        super.onNavigate(navigationTarget, data);
     }
 
     @Override
-    public void onViewDetached() {
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        switch (navigationTarget) {
+            case OPEN_OFFERS -> {
+                return Optional.of(new OpenOffersController(applicationService));
+            }
+            case PENDING_TRADES -> {
+                return Optional.of(new PendingTradesController(applicationService));
+            }
+            case CLOSED_TRADES -> {
+                return Optional.of(new ClosedTradesController(applicationService));
+            }
+            default -> {
+                return Optional.empty();
+            }
+        }
     }
 }

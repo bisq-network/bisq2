@@ -15,7 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.fsm_demo;
+package bisq.protocol.prototype.fsm_demo;
 
-public class Op {
+import java.util.ArrayList;
+import java.util.List;
+
+public class Contract {
+    public List<Term> terms = new ArrayList<>(); 
 }

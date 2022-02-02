@@ -35,7 +35,6 @@ public interface PersistenceClient<T extends Serializable> {
     default void onPersistedApplied(T persisted) {
     }
 
-
     Persistence<T> getPersistence();
 
     PersistableStore<T> getPersistableStore();

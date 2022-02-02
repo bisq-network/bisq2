@@ -15,22 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.portfolio;
+package bisq.desktop.primary.main.content.portfolio.pending;
 
-import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.NavigationModel;
+import bisq.desktop.common.view.Model;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class PortfolioModel extends NavigationModel {
+@Setter
+public class PendingTradesModel implements Model {
+    final ObservableList<PendingTradeListItem> listItems = FXCollections.observableArrayList();
+    final FilteredList<PendingTradeListItem> filteredItems = new FilteredList<>(listItems);
+    final SortedList<PendingTradeListItem> sortedItems = new SortedList<>(filteredItems);
 
-    public PortfolioModel( ) {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.OPEN_OFFERS;
+    public PendingTradesModel() {
+    
     }
 }

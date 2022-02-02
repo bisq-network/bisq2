@@ -15,11 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.reputation.messages;
+package bisq.protocol;
 
 import bisq.contract.Contract;
-import bisq.network.p2p.message.Message;
+import lombok.Getter;
 
-public interface TakeOfferRequest extends Message {
-    Contract getContract();
+@Getter
+public class MakerProtocolModel extends ProtocolModel {
+
+    public MakerProtocolModel(Contract contract) {
+        super(contract);
+    }
+
+    public MakerProtocolModel getClone() {
+        return new MakerProtocolModel(contract);
+    }
 }

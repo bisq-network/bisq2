@@ -58,7 +58,9 @@ public interface ProtocolType extends Serializable {
     }
 
     private static boolean isLiquidSwapSupported(Market market) {
-        return false;//todo need some liquid asset lookup table
+        //todo we need a asset repository to check if any asset is a liquid asset
+        return (market.baseCurrencyCode().equals("L-BTC") ||
+                market.quoteCurrencyCode().equals("L-BTC"));
     }
 
     private static boolean isBsqSwapSupported(Market market) {
