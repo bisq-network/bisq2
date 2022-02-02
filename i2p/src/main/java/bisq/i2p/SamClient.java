@@ -19,22 +19,25 @@ package bisq.i2p;
 
 import bisq.common.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
+import net.i2p.I2PException;
+import net.i2p.client.streaming.I2PSocketManager;
+import net.i2p.client.streaming.I2PSocketManagerFactory;
+import net.i2p.client.streaming.I2PSocketOptions;
+import net.i2p.data.DataFormatException;
+import net.i2p.data.Destination;
+import net.i2p.data.PrivateKeyFile;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-// SAM documentation: https://geti2p.net/en/docs/api/samv3
+// Streaming API (TCP-like streams over I2P) docs: https://geti2p.net/en/docs/api/streaming
+// For UDP-like communication, see datagram spec: https://geti2p.net/spec/datagrams
 @Slf4j
 public class SamClient {
     public final static String DEFAULT_HOST = "127.0.0.1";
@@ -46,8 +49,8 @@ public class SamClient {
     private final int port;
     private final long socketTimeout;
     private final String dirPath;
-    private final Set<String> activeSessions = new CopyOnWriteArraySet<>();
-    private final Set<SamConnection> openSamConnections = new CopyOnWriteArraySet<>();
+    // key = sessionId (relevant in the Bisq domain), value = session object at I2P level
+    private final Map<String, I2PSocketManager> sessionMap = new ConcurrentHashMap<>();
 
     public static SamClient getSamClient(String dirPath) {
         return getSamClient(dirPath, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SOCKET_TIMEOUT);
@@ -87,109 +90,45 @@ public class SamClient {
      * @throws IOException
      */
     public Socket getSocket(String peer, String sessionId) throws IOException {
-        SamConnection samConnection = null;
         try {
             long ts = System.currentTimeMillis();
-            log.debug("Start connect handshake for {}", sessionId);
+            log.debug("Start to create session {}", sessionId);
 
-            maybeCreateSession(sessionId);
-            samConnection = startSamControlConnection();
+            Destination destination = getDestinationFor(peer);
 
-            String destination = toBase64Destination(peer, samConnection);
+            log.info("Connecting to {}", peer);
+            I2PSocketManager manager = maybeCreateClientSession(sessionId);
 
-            String request = String.format("STREAM CONNECT ID=%s DESTINATION=%s SILENT=false", sessionId, destination);
-            samConnection.doHandShake(request);
-            log.info("Connect handshake for {} completed. Took {} ms.", sessionId, System.currentTimeMillis() - ts);
+            // Each client (socket manager) can have multiple sockets
+            // However we only open one socket per client
+            Socket socket = manager.connectToSocket(destination);
+            log.info("Client socket for session {} created. Took {} ms.", sessionId, System.currentTimeMillis() - ts);
 
             // Now we are done, so we return the socket to be used by the client for sending messages
-            return samConnection.getClientSocket();
+            return socket;
         } catch (IOException e) {
-            handleIOException(e, sessionId, samConnection);
+            handleIOException(e, sessionId);
             throw e;
         }
     }
 
     public ServerSocket getServerSocket(String sessionId, int port) throws IOException {
-        long ts = System.currentTimeMillis();
-        log.info("Start forward handshake for {} using port {}", sessionId, port);
-        maybeCreateSession(sessionId);
-        SamConnection samConnection = startSamControlConnection();
-
-        String request = String.format("STREAM FORWARD ID=%s PORT=%d SILENT=true", sessionId, port);
-        samConnection.doHandShake(request);
-        log.info("Forward handshake for {} completed. Took {} ms.", sessionId, System.currentTimeMillis() - ts);
-        return new ServerSocket(port);
-    }
-
-    private SamConnection getConnectionForForward(String sessionId, int port) throws IOException {
-        long ts = System.currentTimeMillis();
-        log.info("Start forward handshake for {}", sessionId);
-        maybeCreateSession(sessionId);
-        SamConnection samConnection = startSamControlConnection();
-
-        String request = String.format("STREAM FORWARD ID=%s PORT=%d SILENT=true", sessionId, port);
-        samConnection.doHandShake(request);
-        log.info("Forward handshake for {} completed. Took {} ms.", sessionId, System.currentTimeMillis() - ts);
-        return samConnection;
-    }
-
-    public I2pServerSocket getServerSocket(String sessionId) throws IOException {
-        try {
-            Supplier<Socket> socketSupplier = () -> {
-                try {
-                    long ts = System.currentTimeMillis();
-                    SamConnection samConnection = getConnectionForAccept(sessionId);
-                    log.error("Establishing server socket took {} ms. Waiting for incoming connections now.",
-                            System.currentTimeMillis() - ts);
-
-                    // Blocking wait for inbound connection
-                    return samConnection.listenForClient();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            };
-
-            return new I2pServerSocket(port, socketSupplier);
-        } catch (IOException e) {
-            handleIOException(e, sessionId, null);
-            throw e;
-        }
+        return maybeCreateServerSession(sessionId, port).getStandardServerSocket();
     }
 
     public String getMyDestination(String sessionId) throws IOException {
-        FileUtils.makeDirs(dirPath);
-        String fileName = dirPath + File.separator + sessionId;
-        String destinationFileName = fileName + ".destination";
-        if (new File(destinationFileName).exists()) {
-            return FileUtils.readAsString(destinationFileName);
-        } else {
-            try {
-                maybeCreateSession(sessionId);
-                SamConnection samConnection = startSamControlConnection();
-                Reply reply = samConnection.doHandShake("DEST GENERATE SIGNATURE_TYPE=7");
-                String destination = reply.get("PUB");
-                FileUtils.write(destinationFileName, destination);
+        String destinationFileName = getFileName(sessionId) + ".destination";
 
-                // We also store the private key
-                String privKeyFileName = fileName + ".priv_key";
-                String privateKeyBase64 = reply.get("PRIV");
-                FileUtils.write(privKeyFileName, privateKeyBase64);
-                return destination;
-            } catch (IOException e) {
-                handleIOException(e, sessionId, null);
-                throw e;
-            }
-        }
+        // Destination file is stored at the same time when the private key file is written
+        return FileUtils.readAsString(destinationFileName);
     }
 
     public void shutdown() {
         long ts = System.currentTimeMillis();
-        openSamConnections.forEach(SamConnection::close);
+        sessionMap.values().forEach(I2PSocketManager::destroySocketManager);
+        sessionMap.clear();
 
-        activeSessions.clear();
-        openSamConnections.clear();
-        // Takes 800-1200 ms
+        // Takes < 20 ms per client
         log.info("I2P shutdown completed. Took {} ms.", System.currentTimeMillis() - ts);
     }
 
@@ -198,87 +137,77 @@ public class SamClient {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    private SamConnection getConnectionForAccept(String sessionId) throws IOException {
-        maybeCreateSession(sessionId);
-        SamConnection samConnection = startSamControlConnection();
-
-        String request = String.format("STREAM ACCEPT ID=%s SILENT=true", sessionId);
-        samConnection.doHandShake(request);
-        return samConnection;
-    }
-
-    private SamConnection startSamControlConnection() throws IOException {
-        SamConnection samConnection = new SamConnection(host, port, socketTimeout);
-        openSamConnections.add(samConnection);
-        String request = "HELLO VERSION MIN=3.1 MAX=3.1";
-        samConnection.doHandShake(request);
-        return samConnection;
-    }
-
-    private void maybeCreateSession(String sessionId) throws IOException {
-        if (activeSessions.contains(sessionId)) {
-            return;
-        }
-        long ts = System.currentTimeMillis();
-        log.info("Start creating session for {}", sessionId);
-        SamConnection samConnection;
-        try {
-            samConnection = startSamControlConnection();
-        } catch (ConnectException connectException) {
-            log.warn("Could not connect to I2P. This might be expected at startup if I2P is not ready yet. " +
-                    "We will try again after a delay. connectException={}", connectException.toString());
-            try {
-                Thread.sleep(10_000);
-            } catch (InterruptedException ignore) {
-            }
-            maybeCreateSession(sessionId);
-            return;
-        }
-        checkNotNull(samConnection);
-        String privateKeyBase64 = loadOrRequestPrivateKey(samConnection, sessionId);
-
-        String request = String.format("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=%s", sessionId, privateKeyBase64);
-        samConnection.doHandShake(request);
-        activeSessions.add(sessionId);
-        log.info("Session for {} created. Took {} ms.", sessionId, System.currentTimeMillis() - ts);
-    }
-
-    private String toBase64Destination(String destination, SamConnection samConnection) throws IOException {
-        if (isBase64Destination(destination)) {
-            return destination;
-        }
-
-        String request = "NAMING LOOKUP NAME=" + destination;
-        Reply lookupReply = samConnection.doHandShake(request);
-        return lookupReply.get("VALUE");
-    }
-
-    private String loadOrRequestPrivateKey(SamConnection samConnection,
-                                           String sessionId) throws IOException {
+    private String getFileName(String sessionId) throws IOException {
         FileUtils.makeDirs(dirPath);
-        String fileName = dirPath + File.separator + sessionId;
-        String privKeyFileName = fileName + ".priv_key";
-        if (new File(privKeyFileName).exists()) {
-            return FileUtils.readAsString(privKeyFileName);
-        }
-
-        // DEST GENERATE does not require that a session has been created first.
-        Reply reply = samConnection.doHandShake("DEST GENERATE SIGNATURE_TYPE=7");
-        FileUtils.write(fileName + ".destination", reply.get("PUB"));
-        String privateKeyBase64 = reply.get("PRIV");
-        FileUtils.write(privKeyFileName, privateKeyBase64);
-        return privateKeyBase64;
+        return dirPath + File.separator + sessionId;
     }
 
-    private boolean isBase64Destination(String peer) {
-        return peer.endsWith("AAA==");
+    private I2PSocketManager maybeCreateClientSession(String sessionId) {
+        if (! sessionMap.containsKey(sessionId)) {
+            sessionMap.put(sessionId, I2PSocketManagerFactory.createManager());
+        }
+
+        return sessionMap.get(sessionId);
     }
 
-    protected void handleIOException(IOException e, String sessionId, SamConnection samConnection) {
-        activeSessions.remove(sessionId);
-        if (samConnection != null) {
-            samConnection.close();
-            openSamConnections.remove(samConnection);
+    private I2PSocketManager maybeCreateServerSession(String sessionId, int port) throws IOException {
+        if (! sessionMap.containsKey(sessionId)) {
+            long ts = System.currentTimeMillis();
+            log.info("Start to create server socket manager for session {} using port {}", sessionId, port);
+
+            String fileName = getFileName(sessionId);
+            String privKeyFileName = fileName + ".priv_key";
+            File privKeyFile = new File(privKeyFileName);
+            PrivateKeyFile pkf = new PrivateKeyFile(privKeyFile);
+            try {
+                // Persist priv key to disk
+                pkf.createIfAbsent();
+            } catch (I2PException e) {
+                throw new IOException("Could not persist priv key to disk", e);
+            }
+
+            // Create a I2PSocketManager based on the locally persisted private key
+            // This allows the server to preserve its identity and be reachable at the same destination
+            FileInputStream privKeyInputStream = new FileInputStream(privKeyFile);
+            I2PSocketManager manager = I2PSocketManagerFactory.createManager(privKeyInputStream);
+
+            // Set port (which is embedded in the generated destination)
+            I2PSocketOptions i2PSocketOptions = manager.getDefaultOptions();
+            i2PSocketOptions.setLocalPort(port);
+            manager.setDefaultOptions(i2PSocketOptions);
+
+            // Persist destination to disk
+            String destinationBase64 = manager.getSession().getMyDestination().toBase64();
+            String destinationFileName = fileName + ".destination";
+            File destinationFile = new File(destinationFileName);
+            if (! destinationFile.exists()) {
+                FileUtils.write(destinationFileName, destinationBase64);
+            }
+
+            // Takes 10-30 sec
+            log.info("Server socket manager ready for session {}. Took {} ms.", sessionId, System.currentTimeMillis() - ts);
+            sessionMap.put(sessionId, manager);
         }
+
+        return sessionMap.get(sessionId);
+    }
+
+    private Destination getDestinationFor(String peer) throws IOException {
+        try {
+            return new Destination(peer); // If peer is in base64 format
+        } catch (DataFormatException e) {
+            throw new IOException("Unexpected destination format", e);
+        }
+
+        // TODO lookup if not base64? can also be *.i2p, *b32.i2p
+        // See https://geti2p.net/en/docs/naming#base32
+    }
+
+    protected void handleIOException(IOException e, String sessionId) {
+        I2PSocketManager manager = sessionMap.get(sessionId);
+        if (manager != null) {
+            manager.destroySocketManager();
+        }
+        sessionMap.remove(sessionId);
     }
 }
