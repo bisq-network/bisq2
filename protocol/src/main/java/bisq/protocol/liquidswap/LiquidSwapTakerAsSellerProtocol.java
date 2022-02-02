@@ -17,20 +17,21 @@
 
 package bisq.protocol.liquidswap;
 
-import bisq.contract.Contract;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.persistence.PersistenceService;
+import bisq.persistence.PersistenceClient;
+import bisq.protocol.ProtocolStore;
 import bisq.protocol.SellerProtocol;
+import bisq.protocol.TakerProtocolModel;
 
 public class LiquidSwapTakerAsSellerProtocol extends LiquidSwapTakerProtocol implements SellerProtocol {
     public LiquidSwapTakerAsSellerProtocol(NetworkService networkService,
-                                           PersistenceService persistenceService,
-                                           Contract contract,
+                                           PersistenceClient<ProtocolStore> persistenceClient,
+                                           TakerProtocolModel protocolModel,
                                            NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         super(networkService,
-                persistenceService,
-                contract,
+                persistenceClient,
+                protocolModel,
                 myNodeIdAndKeyPair);
     }
 }

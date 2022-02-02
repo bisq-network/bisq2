@@ -17,20 +17,19 @@
 
 package bisq.protocol;
 
-import bisq.contract.Contract;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.persistence.PersistenceService;
+import bisq.persistence.PersistenceClient;
 
-public abstract class TakerProtocol<T extends ProtocolStore<T>> extends Protocol<T> {
+public abstract class TakerProtocol<T extends ProtocolModel> extends Protocol<T> {
     public TakerProtocol(NetworkService networkService,
-                         PersistenceService persistenceService,
-                         Contract contract,
+                         PersistenceClient<ProtocolStore> persistenceClient,
+                         T protocolModel,
                          NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         super(networkService,
-                persistenceService,
-                contract,
+                persistenceClient,
+                protocolModel,
                 myNodeIdAndKeyPair);
     }
 

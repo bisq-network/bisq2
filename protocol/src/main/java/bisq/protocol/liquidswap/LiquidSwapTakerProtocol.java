@@ -17,17 +17,18 @@
 
 package bisq.protocol.liquidswap;
 
-import bisq.contract.Contract;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
-import bisq.persistence.PersistenceService;
+import bisq.persistence.PersistenceClient;
+import bisq.protocol.ProtocolModel;
 import bisq.protocol.ProtocolStore;
 import bisq.protocol.TakerProtocol;
-import bisq.protocol.TakerProtocolStore;
+import bisq.protocol.TakerProtocolModel;
 import bisq.protocol.liquidswap.messages.LiquidSwapFinalizeTxRequest;
 import bisq.protocol.liquidswap.messages.LiquidSwapTakeOfferRequest;
 import bisq.protocol.liquidswap.messages.LiquidSwapTakeOfferResponse;
+import bisq.protocol.messages.ProtocolMessage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
@@ -36,31 +37,26 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public abstract class LiquidSwapTakerProtocol extends TakerProtocol<TakerProtocolStore> {
+public abstract class LiquidSwapTakerProtocol extends TakerProtocol<TakerProtocolModel> {
 
 
-    public static TakerProtocol<TakerProtocolStore> getProtocol(NetworkService networkService,
-                                                                PersistenceService persistenceService,
-                                                                Contract contract,
+    public static TakerProtocol<TakerProtocolModel> getProtocol(NetworkService networkService,
+                                                                PersistenceClient<ProtocolStore> persistenceClient,
+                                                                TakerProtocolModel protocolModel,
                                                                 NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
-        return contract.getOffer().getDirection().mirror().isBuy() ?
-                new LiquidSwapTakerAsBuyerProtocol(networkService, persistenceService, contract, makerNetworkIdWithKeyPair)
-                : new LiquidSwapTakerAsSellerProtocol(networkService, persistenceService, contract, makerNetworkIdWithKeyPair);
+        return protocolModel.getContract().getOffer().getDirection().mirror().isBuy() ?
+                new LiquidSwapTakerAsBuyerProtocol(networkService, persistenceClient, protocolModel, makerNetworkIdWithKeyPair)
+                : new LiquidSwapTakerAsSellerProtocol(networkService, persistenceClient, protocolModel, makerNetworkIdWithKeyPair);
     }
 
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public LiquidSwapTakerProtocol(NetworkService networkService,
-                                   PersistenceService persistenceService,
-                                   Contract contract,
+                                   PersistenceClient<ProtocolStore> persistenceClient,
+                                   TakerProtocolModel protocolModel,
                                    NetworkIdWithKeyPair myNodeIdAndKeyPair) {
-        super(networkService, persistenceService, contract, myNodeIdAndKeyPair);
-    }
-
-    @Override
-    protected TakerProtocolStore createProtocolStore(Contract contract) {
-        return new TakerProtocolStore(contract);
+        super(networkService, persistenceClient, protocolModel, myNodeIdAndKeyPair);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,8 +65,12 @@ public abstract class LiquidSwapTakerProtocol extends TakerProtocol<TakerProtoco
 
     @Override
     public void onMessage(Message message) {
-        if (message instanceof LiquidSwapTakeOfferResponse liquidSwapTakeOfferResponse) {
-            onTakeOfferResponse(liquidSwapTakeOfferResponse);
+        if (message instanceof ProtocolMessage protocolMessage) {
+            if (protocolMessage.getOfferId().equals(getId())) {
+                if (message instanceof LiquidSwapTakeOfferResponse liquidSwapTakeOfferResponse) {
+                    onTakeOfferResponse(liquidSwapTakeOfferResponse);
+                }
+            }
         }
     }
 
@@ -85,7 +85,7 @@ public abstract class LiquidSwapTakerProtocol extends TakerProtocol<TakerProtoco
             verifyPeer();
             createInputsAndChange();
             sendLiquidSwapTakeOfferRequest();
-            setState(ProtocolStore.State.PENDING);
+            setState(ProtocolModel.State.PENDING);
         } catch (Throwable t) {
             handleError(t);
         }
@@ -104,7 +104,7 @@ public abstract class LiquidSwapTakerProtocol extends TakerProtocol<TakerProtoco
 
     @Override
     protected void onContinue() {
-        checkArgument(getState() == ProtocolStore.State.PENDING);
+        checkArgument(getState() == ProtocolModel.State.PENDING);
     }
 
 

@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.portfolio.openoffers;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.InitWithDataController;
+import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
 import bisq.offer.OpenOfferService;
@@ -28,7 +28,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OpenOffersController implements InitWithDataController<OpenOffersController.InitData> {
+public class OpenOffersController implements Controller {
 
     public static record InitData(Offer offer, BooleanProperty showTakeOfferTab) {
     }
@@ -38,7 +38,7 @@ public class OpenOffersController implements InitWithDataController<OpenOffersCo
     private final OpenOffersView view;
     private final OpenOfferService openOfferService;
 
-    private int offerBindingKey;
+    private int bindingKey;
 
     public OpenOffersController(DefaultApplicationService applicationService) {
         model = new OpenOffersModel(applicationService);
@@ -49,7 +49,7 @@ public class OpenOffersController implements InitWithDataController<OpenOffersCo
 
     @Override
     public void onViewAttached() {
-        offerBindingKey = openOfferService.getOpenOffers().bind(model.getListItems(),
+        bindingKey = openOfferService.getOpenOffers().bind(model.getListItems(),
                 openOffer -> new OpenOfferListItem(openOffer, model.marketPriceService),
                 UIThread::run);
 
@@ -61,11 +61,7 @@ public class OpenOffersController implements InitWithDataController<OpenOffersCo
 
     @Override
     public void onViewDetached() {
-        openOfferService.getOpenOffers().unbind(offerBindingKey);
-    }
-
-    @Override
-    public void initWithData(InitData data) {
+        openOfferService.getOpenOffers().unbind(bindingKey);
     }
 
 

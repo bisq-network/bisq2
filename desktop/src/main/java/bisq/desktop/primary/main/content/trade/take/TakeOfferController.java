@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.InitWithDataController;
+import bisq.desktop.primary.main.content.portfolio.pending.PendingTradesController;
 import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.take.components.TakersSettlementSelection;
@@ -121,9 +122,9 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
                         model.quoteSideAmount,
                         baseSideSettlementMethod,
                         quoteSideSettlementMethod)
-                .whenComplete((identity, throwable) -> {
+                .whenComplete((protocol, throwable) -> {
                     model.showTakeOfferTab.set(false);
-                    Navigation.navigateTo(NavigationTarget.OFFERBOOK);
+                    Navigation.navigateTo(NavigationTarget.PENDING_TRADES, new PendingTradesController.InitData(protocol));
                 });
     }
 

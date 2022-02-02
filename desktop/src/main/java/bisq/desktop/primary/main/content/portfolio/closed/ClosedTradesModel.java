@@ -18,6 +18,10 @@
 package bisq.desktop.primary.main.content.portfolio.closed;
 
 import bisq.desktop.common.view.Model;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +30,10 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Setter
 public class ClosedTradesModel implements Model {
+
+    final ObservableList<ClosedTradeListItem> listItems = FXCollections.observableArrayList();
+    final FilteredList<ClosedTradeListItem> filteredItems = new FilteredList<>(listItems);
+    final SortedList<ClosedTradeListItem> sortedItems = new SortedList<>(filteredItems);
 
     public ClosedTradesModel() {
     }

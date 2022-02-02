@@ -18,6 +18,10 @@
 package bisq.desktop.primary.main.content.portfolio.pending;
 
 import bisq.desktop.common.view.Model;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Setter
 public class PendingTradesModel implements Model {
+    final ObservableList<PendingTradeListItem> listItems = FXCollections.observableArrayList();
+    final FilteredList<PendingTradeListItem> filteredItems = new FilteredList<>(listItems);
+    final SortedList<PendingTradeListItem> sortedItems = new SortedList<>(filteredItems);
 
     public PendingTradesModel() {
+    
     }
 }

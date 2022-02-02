@@ -17,53 +17,48 @@
 
 package bisq.protocol;
 
-import bisq.contract.Contract;
-import bisq.network.p2p.message.Message;
 import bisq.persistence.PersistableStore;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-@Getter
-public abstract class ProtocolStore<T extends ProtocolStore<T>> implements PersistableStore<T> {
-    public enum State {
-        IDLE,
-        PENDING,
-        COMPLETED,
-        FAILED
+public class ProtocolStore implements PersistableStore<ProtocolStore> {
+    @Getter
+    private final Map<String, ProtocolModel> protocolModelByOfferId = new ConcurrentHashMap<>();
+  
+    public ProtocolStore() {
     }
 
-    protected Contract contract;
-    protected State state = State.IDLE;
-    @Setter
-    protected Class<? extends Message> expectedNextMessageClass;
-
-    public ProtocolStore(Contract contract) {
-        this.contract = contract;
+    private ProtocolStore(Map<String, ProtocolModel> protocolModelByOfferId) {
+        this.protocolModelByOfferId.putAll(protocolModelByOfferId);
     }
 
     @Override
-    public void applyPersisted(T persisted) {
-        log.error("applyPersisted {}", persisted);
-        contract = persisted.getContract();
-        state = persisted.getState();
-        expectedNextMessageClass = persisted.getExpectedNextMessageClass();
+    public ProtocolStore getClone() {
+        return new ProtocolStore(protocolModelByOfferId);
     }
 
-    void setState(State newState) {
-        checkArgument(state.ordinal() < newState.ordinal(),
-                "New state %s must have a higher ordinal as the current state %s", newState, state);
-        state = newState;
+    @Override
+    public void applyPersisted(ProtocolStore persisted) {
+        protocolModelByOfferId.clear();
+        protocolModelByOfferId.putAll(persisted.getProtocolModelByOfferId());
     }
 
-    public boolean isPending() {
-        return state == State.PENDING;
+    public void add( ProtocolModel protocolModel) {
+        String protocolId = protocolModel.getId();
+        if (!protocolModelByOfferId.containsKey(protocolId)) {
+            protocolModelByOfferId.put(protocolId, protocolModel);
+        }
     }
 
-    public String getId() {
-        return contract.getOffer().getId();
-    }
+  /*  public void remove(Protocol<? extends ProtocolStore<?>> protocol) {
+        String protocolId = protocol.getId();
+        if (!protocolStoreByOfferId.containsKey(protocolId)) return;
+
+        protocolsByOfferId.remove(protocolId);
+        protocolStoreByOfferId.remove(protocolId);
+    }*/
 }

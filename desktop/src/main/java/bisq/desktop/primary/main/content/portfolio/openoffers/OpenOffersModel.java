@@ -41,8 +41,8 @@ public class OpenOffersModel implements Model {
     private final NetworkService networkService;
     private final KeyPairService keyPairService;
     final MarketPriceService marketPriceService;
-   
-    // listItems is bound to set from OfferBookService
+
+    // listItems is bound to set from OpenOfferService
     final ObservableList<OpenOfferListItem> listItems = FXCollections.observableArrayList();
     final FilteredList<OpenOfferListItem> filteredItems = new FilteredList<>(listItems);
     final SortedList<OpenOfferListItem> sortedItems = new SortedList<>(filteredItems);
@@ -58,11 +58,6 @@ public class OpenOffersModel implements Model {
         keyPairService = applicationService.getKeyPairService();
         marketPriceService = applicationService.getMarketPriceService();
     }
-
-    boolean isMyOffer(OpenOfferListItem item) {
-        return keyPairService.findKeyPair(item.getOffer().getMakerNetworkId().getPubKey().keyId()).isPresent();
-    }
-
 
     void setRemoveOfferError(Offer offer, Throwable throwable) {
         log.error("Error at remove offer: offer={}, error={}", offer, throwable.toString());  //todo

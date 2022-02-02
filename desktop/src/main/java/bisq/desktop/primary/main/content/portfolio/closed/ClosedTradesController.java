@@ -18,37 +18,39 @@
 package bisq.desktop.primary.main.content.portfolio.closed;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.InitWithDataController;
-import bisq.offer.Offer;
-import javafx.beans.property.BooleanProperty;
+import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.view.Controller;
+import bisq.protocol.ProtocolService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ClosedTradesController implements InitWithDataController<ClosedTradesController.InitData> {
-
-    public static record InitData(Offer offer, BooleanProperty showTakeOfferTab) {
-    }
-
+public class ClosedTradesController implements Controller {
     private final ClosedTradesModel model;
     @Getter
     private final ClosedTradesView view;
+    private final ProtocolService protocolService;
+    private int bindingKey;
 
 
     public ClosedTradesController(DefaultApplicationService applicationService) {
         model = new ClosedTradesModel();
         view = new ClosedTradesView(model, this);
+        protocolService = applicationService.getProtocolService();
+        model.filteredItems.setPredicate(e -> e.getProtocol().isCompleted());
     }
 
-    @Override
-    public void initWithData(InitData initData) {
-    }
 
     @Override
     public void onViewAttached() {
+        protocolService.getProtocols().unbind(bindingKey);
+        bindingKey = protocolService.getProtocols().bind(model.getListItems(),
+                protocol -> new ClosedTradeListItem(protocol),
+                UIThread::run);
     }
 
     @Override
     public void onViewDetached() {
+        protocolService.getProtocols().unbind(bindingKey);
     }
 }

@@ -21,19 +21,13 @@ import bisq.contract.Contract;
 import lombok.Getter;
 
 @Getter
-public class MakerProtocolStore extends ProtocolStore<MakerProtocolStore> {
+public class TakerProtocolModel extends ProtocolModel {
 
-    public MakerProtocolStore(Contract contract) {
+    public TakerProtocolModel(Contract contract) {
         super(contract);
     }
 
-    @Override
-    public MakerProtocolStore getClone() {
-        return new MakerProtocolStore(contract);
-    }
-
-    @Override
-    public void applyPersisted(MakerProtocolStore persisted) {
-        super.applyPersisted(persisted);
+    public TakerProtocolModel getClone() {
+        return new TakerProtocolModel(contract);
     }
 }

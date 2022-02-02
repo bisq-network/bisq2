@@ -17,22 +17,21 @@
 
 package bisq.protocol;
 
-import bisq.contract.Contract;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.persistence.PersistenceService;
+import bisq.persistence.PersistenceClient;
 import bisq.protocol.messages.TakeOfferRequest;
 
-public abstract class MakerProtocol<T extends ProtocolStore<T>, R extends TakeOfferRequest> extends Protocol<T> {
+public abstract class MakerProtocol<T extends ProtocolModel, R extends TakeOfferRequest> extends Protocol<T> {
 
     public MakerProtocol(NetworkService networkService,
-                         PersistenceService persistenceService,
-                         Contract contract,
+                         PersistenceClient<ProtocolStore> persistenceClient,
+                         T protocolModel,
                          NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         super(networkService,
-                persistenceService,
-                contract,
+                persistenceClient,
+                protocolModel,
                 myNodeIdAndKeyPair);
     }
 

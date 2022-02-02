@@ -23,9 +23,7 @@ import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.services.confidential.MessageListener;
-import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
-import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,9 +35,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
-public abstract class Protocol<T extends ProtocolStore<T>> implements MessageListener, Serializable, PersistenceClient<T> {
+public abstract class Protocol<T extends ProtocolModel> implements MessageListener, Serializable {
+
     public interface Listener {
-        void onStateChanged(ProtocolStore.State state);
+        void onStateChanged(ProtocolModel.State state);
     }
 
 /*    public interface State {
@@ -49,35 +48,34 @@ public abstract class Protocol<T extends ProtocolStore<T>> implements MessageLis
     }*/
 
     protected final NetworkService networkService;
+    private final PersistenceClient<ProtocolStore> persistenceClient;
     protected final NetworkIdWithKeyPair myNodeIdAndKeyPair;
     @Getter
-    private final T persistableStore;
-    @Getter
-    private final Persistence<T> persistence;
+    private final T protocolModel;
 
     protected final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public Protocol(NetworkService networkService,
-                    PersistenceService persistenceService,
-                    Contract contract,
+                    PersistenceClient<ProtocolStore> persistenceClient,
+                    T protocolModel,
                     NetworkIdWithKeyPair myNodeIdAndKeyPair) {
         this.networkService = networkService;
+        this.persistenceClient = persistenceClient;
         this.myNodeIdAndKeyPair = myNodeIdAndKeyPair;
+        this.protocolModel = protocolModel;
 
-        persistableStore = createProtocolStore(contract);
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        networkService.addMessageListener(this);
-        persist();
+        if (getState() == ProtocolModel.State.IDLE) {
+            networkService.addMessageListener(this);
+        }
+        persistenceClient.persist();
     }
 
     protected abstract void onContinue();
 
-    protected abstract T createProtocolStore(Contract contract);
-
     protected abstract NetworkId getPeersNetworkId();
 
     public Contract getContract() {
-        return persistableStore.getContract();
+        return protocolModel.getContract();
     }
 
     public String getId() {
@@ -92,26 +90,26 @@ public abstract class Protocol<T extends ProtocolStore<T>> implements MessageLis
         listeners.remove(listener);
     }
 
-    protected void setState(ProtocolStore.State newState) {
-        persistableStore.setState(newState);
-        persist();
-        runAsync(() -> listeners.forEach(e -> e.onStateChanged(persistableStore.getState())), ProtocolService.DISPATCHER);
+    protected void setState(ProtocolModel.State newState) {
+        protocolModel.setState(newState);
+        persistenceClient.persist();
+        runAsync(() -> listeners.forEach(e -> e.onStateChanged(protocolModel.getState())), ProtocolService.DISPATCHER);
     }
 
-    protected ProtocolStore.State getState() {
-        return persistableStore.getState();
+    protected ProtocolModel.State getState() {
+        return protocolModel.getState();
     }
 
     protected void onProtocolCompleted() {
         networkService.removeMessageListener(this);
-        persistableStore.setState(ProtocolStore.State.COMPLETED);
-        persist();
+        protocolModel.setState(ProtocolModel.State.COMPLETED);
+        persistenceClient.persist();
     }
 
     protected void onProtocolFailed() {
         networkService.removeMessageListener(this);
-        persistableStore.setState(ProtocolStore.State.FAILED);
-        persist();
+        protocolModel.setState(ProtocolModel.State.FAILED);
+        persistenceClient.persist();
     }
 
 
@@ -120,9 +118,9 @@ public abstract class Protocol<T extends ProtocolStore<T>> implements MessageLis
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected void verifyExpectedMessage(Message message) {
-        checkArgument(persistableStore.getExpectedNextMessageClass().equals(message.getClass()),
+        checkArgument(protocolModel.getExpectedNextMessageClass().equals(message.getClass()),
                 "Incorrect response message. Received " + message.getClass().getSimpleName() +
-                        " but expected " + persistableStore.getExpectedNextMessageClass().getSimpleName());
+                        " but expected " + protocolModel.getExpectedNextMessageClass().getSimpleName());
     }
 
     protected void verifyPeer() {
@@ -134,7 +132,7 @@ public abstract class Protocol<T extends ProtocolStore<T>> implements MessageLis
                 .whenComplete((resultMap, throwable) -> {
                     if (throwable == null) {
                         log.info("Sent successfully {} to {}", message.getClass().getSimpleName(), getPeersNetworkId());
-                        persist();
+                        persistenceClient.persist();
                     } else {
                         handleSendMessageError(throwable, message);
                     }
@@ -170,7 +168,19 @@ public abstract class Protocol<T extends ProtocolStore<T>> implements MessageLis
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected void setExpectedNextMessageClass(Class<? extends Message> value) {
-        persistableStore.setExpectedNextMessageClass(value);
-        persist();
+        protocolModel.setExpectedNextMessageClass(value);
+        persistenceClient.persist();
+    }
+
+    public boolean isPending() {
+        return protocolModel.isPending();
+    }
+
+    public boolean isCompleted() {
+        return protocolModel.isCompleted();
+    }
+
+    public boolean isFailed() {
+        return protocolModel.isFailed();
     }
 }

@@ -18,26 +18,34 @@
 package bisq.desktop.primary.main.content.portfolio.pending;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.InitWithDataController;
-import bisq.offer.Offer;
-import javafx.beans.property.BooleanProperty;
+import bisq.protocol.ProtocolService;
+import bisq.protocol.TakerProtocol;
+import bisq.protocol.TakerProtocolModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PendingTradesController implements InitWithDataController<PendingTradesController.InitData> {
 
-    public static record InitData(Offer offer, BooleanProperty showTakeOfferTab) {
+
+    public static record InitData(TakerProtocol<TakerProtocolModel> protocol) {
     }
 
     private final PendingTradesModel model;
     @Getter
     private final PendingTradesView view;
+    private final ProtocolService protocolService;
+    private int bindingKey;
 
 
     public PendingTradesController(DefaultApplicationService applicationService) {
         model = new PendingTradesModel();
         view = new PendingTradesView(model, this);
+
+        protocolService = applicationService.getProtocolService();
+        model.filteredItems.setPredicate(e -> e.getProtocol().isPending());
     }
 
     @Override
@@ -46,6 +54,10 @@ public class PendingTradesController implements InitWithDataController<PendingTr
 
     @Override
     public void onViewAttached() {
+        protocolService.getProtocols().unbind(bindingKey);
+        bindingKey = protocolService.getProtocols().bind(model.getListItems(),
+                protocol -> new PendingTradeListItem(protocol),
+                UIThread::run);
     }
 
     @Override

@@ -18,11 +18,11 @@
 package bisq.protocol;
 
 import bisq.account.protocol.SwapProtocolType;
+import bisq.common.data.ObservedSet;
 import bisq.common.monetary.Monetary;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.Contract;
-import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
@@ -44,17 +44,19 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
-public class ProtocolService implements MessageListener, PersistenceClient<ProtocolServiceStore> {
+public class ProtocolService implements MessageListener, PersistenceClient<ProtocolStore> {
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
 
     @Getter
-    private final ProtocolServiceStore persistableStore = new ProtocolServiceStore();
+    private final ProtocolStore persistableStore = new ProtocolStore();
     @Getter
-    private final Persistence<ProtocolServiceStore> persistence;
+    private final Persistence<ProtocolStore> persistence;
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final PersistenceService persistenceService;
     private final OpenOfferService openOfferService;
+    @Getter
+    private final ObservedSet<Protocol<? extends ProtocolModel>> protocols = new ObservedSet<>();
 
     public ProtocolService(NetworkService networkService,
                            IdentityService identityService,
@@ -70,22 +72,33 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
     }
 
     public CompletableFuture<List<Boolean>> initialize() {
-        return CompletableFutureUtils.allOf(persistableStore.getProtocolStoreByOfferId().values().stream()
-                .filter(ProtocolStore::isPending)
-                .map(protocolStore ->
-                        identityService.getOrCreateIdentity(protocolStore.getId())
+        return CompletableFutureUtils.allOf(persistableStore.getProtocolModelByOfferId().values().stream()
+                .map(protocolModel ->
+                        identityService.getOrCreateIdentity(protocolModel.getId())
                                 .thenApply(identity -> {
-                                    if (protocolStore instanceof MakerProtocolStore) {
-                                        var protocol = getMakerProtocol(protocolStore.getContract(), identity.getNodeIdAndKeyPair());
-                                        protocol.onContinue();
-                                        return true;
-                                    } else if (protocolStore instanceof TakerProtocolStore) {
-                                        TakerProtocol<TakerProtocolStore> protocol = getTakerProtocol(protocolStore.getContract(), identity.getNodeIdAndKeyPair());
-                                        protocol.onContinue();
-                                        return true;
+                                    Protocol<? extends ProtocolModel> protocol;
+                                    if (protocolModel instanceof MakerProtocolModel makerProtocolModel) {
+                                        protocol = getMakerProtocol(makerProtocolModel, identity.getNodeIdAndKeyPair());
+                                    } else if (protocolModel instanceof TakerProtocolModel takerProtocolModel) {
+                                        protocol = getTakerProtocol(takerProtocolModel, identity.getNodeIdAndKeyPair());
                                     } else {
                                         return false;
                                     }
+                                   /* // We do not rely on equals and hash code as protocol is very content rich. 
+                                    // We just want to be sure to always have the latest version, so if we find 
+                                    // one with the same id, we replace it with the new one.
+                                    // We could use a map instead but atm we don't have an ObservedSet-like implementation for a map (todo).
+                                    Optional<Protocol<? extends ProtocolModel>> optionalProtocol = protocols.stream()
+                                            .filter(p -> p.getId().equals(protocol.getId()))
+                                            .findAny();
+                                    optionalProtocol.ifPresent(protocols::remove);*/
+
+                                    protocols.add(protocol);
+                                    persistableStore.add(protocolModel);
+                                    if (protocol.isPending()) {
+                                        protocol.onContinue();
+                                    }
+                                    return true;
                                 })
                 ));
     }
@@ -97,8 +110,10 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
             openOfferService.findOpenOffer(offerId)
                     .ifPresent(openOffer -> identityService.getOrCreateIdentity(offerId)
                             .whenComplete((identity, throwable) -> {
-                                var protocol = getMakerProtocol(takeOfferRequest.getContract(), identity.getNodeIdAndKeyPair());
-                                persistableStore.add(protocol);
+                                MakerProtocolModel protocolModel = new MakerProtocolModel(takeOfferRequest.getContract());
+                                var protocol = getMakerProtocol(protocolModel, identity.getNodeIdAndKeyPair());
+                                persistableStore.add(protocolModel);
+                                protocols.add(protocol);
                                 persist();
 
                                 //todo figure out how to use generics without that hack
@@ -107,14 +122,14 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
         }
     }
 
-    public CompletableFuture<Identity> takeOffer(SwapProtocolType protocolType,
-                                                 Offer offer,
-                                                 Monetary baseSideAmount,
-                                                 Monetary quoteSideAmount,
-                                                 String baseSideSettlementMethod,
-                                                 String quoteSideSettlementMethod) {
+    public CompletableFuture<TakerProtocol<TakerProtocolModel>> takeOffer(SwapProtocolType protocolType,
+                                                                          Offer offer,
+                                                                          Monetary baseSideAmount,
+                                                                          Monetary quoteSideAmount,
+                                                                          String baseSideSettlementMethod,
+                                                                          String quoteSideSettlementMethod) {
         return identityService.getOrCreateIdentity(offer.getId())
-                .whenComplete((identity, throwable) -> {
+                .thenApply(identity -> {
                     Contract contract = new Contract(identity.networkId(),
                             protocolType,
                             offer,
@@ -122,17 +137,20 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                             quoteSideAmount,
                             baseSideSettlementMethod,
                             quoteSideSettlementMethod);
-                    TakerProtocol<TakerProtocolStore> protocol = getTakerProtocol(contract, identity.getNodeIdAndKeyPair());
-                    persistableStore.add(protocol);
+                    TakerProtocolModel protocolModel = new TakerProtocolModel(contract);
+                    TakerProtocol<TakerProtocolModel> protocol = getTakerProtocol(protocolModel, identity.getNodeIdAndKeyPair());
+                    persistableStore.add(protocolModel);
+                    protocols.add(protocol);
                     persist();
                     protocol.takeOffer();
+                    return protocol;
                 });
     }
 
-    private TakerProtocol<TakerProtocolStore> getTakerProtocol(Contract contract, NetworkIdWithKeyPair takerNodeIdAndKeyPair) {
-        return switch (contract.getProtocolType()) {
+    private TakerProtocol<TakerProtocolModel> getTakerProtocol(TakerProtocolModel protocolModel, NetworkIdWithKeyPair takerNodeIdAndKeyPair) {
+        return switch (protocolModel.getContract().getProtocolType()) {
             case BTC_XMR_SWAP -> null;
-            case LIQUID_SWAP -> LiquidSwapTakerProtocol.getProtocol(networkService, persistenceService, contract, takerNodeIdAndKeyPair);
+            case LIQUID_SWAP -> LiquidSwapTakerProtocol.getProtocol(networkService, this, protocolModel, takerNodeIdAndKeyPair);
             case BSQ_SWAP -> null;
             case LN_SWAP -> null;
             case MULTISIG -> null;
@@ -141,10 +159,10 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
         };
     }
 
-    private MakerProtocol<MakerProtocolStore, ? extends TakeOfferRequest> getMakerProtocol(Contract contract, NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
-        return switch (contract.getProtocolType()) {
+    private MakerProtocol<MakerProtocolModel, ? extends TakeOfferRequest> getMakerProtocol(MakerProtocolModel protocolModel, NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
+        return switch (protocolModel.getContract().getProtocolType()) {
             case BTC_XMR_SWAP -> null;
-            case LIQUID_SWAP -> LiquidSwapMakerProtocol.getProtocol(networkService, persistenceService, contract, makerNetworkIdWithKeyPair);
+            case LIQUID_SWAP -> LiquidSwapMakerProtocol.getProtocol(networkService, this, protocolModel, makerNetworkIdWithKeyPair);
             case BSQ_SWAP -> null;
             case LN_SWAP -> null;
             case MULTISIG -> null;
