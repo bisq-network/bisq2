@@ -64,6 +64,11 @@ public class TradeIntentController implements Controller/*, ChatService.Listener
 
     @Override
     public void onViewAttached() {
+        //todo
+        String userName = "Natoshi Sakamoto  ";
+        identityService.getOrCreateIdentity(userName)
+                .whenComplete((identity, t) -> model.selectedUserIdentity.set(identity));
+
         tradeIntentBindingKey = tradeIntentListingsService.getTradeIntents().bind(model.getListItems(),
                 TradeIntentListItem::new,
                 UIThread::run);

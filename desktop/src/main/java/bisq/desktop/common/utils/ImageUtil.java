@@ -27,11 +27,21 @@ import java.util.Objects;
 
 @Slf4j
 public class ImageUtil {
-    
+
     // Does not resolve the @2x automatically
     public static Image getImageByPath(String path) {
         try (InputStream resourceAsStream = ImageView.class.getResourceAsStream(path)) {
             return new Image(Objects.requireNonNull(resourceAsStream));
+        } catch (Exception e) {
+            log.error("Loading image failed: path={}", path);
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Image getImageByPath(String path, double size) {
+        try (InputStream resourceAsStream = ImageView.class.getResourceAsStream(path)) {
+            return new Image(Objects.requireNonNull(resourceAsStream), size, size, true, true);
         } catch (Exception e) {
             log.error("Loading image failed: path={}", path);
             e.printStackTrace();
