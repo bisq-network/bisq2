@@ -140,6 +140,11 @@ Copy those addresses and add it to the JVM args as following:
 
 If you want to use more seed nodes repeat it and fill in more but 1-2 is usually sufficient for dev testing.
 
+### Example Run Configurations
+
+See [here](docs/intellij-idea-sample-run-configs.md)
+
+
 ## Contributing
 
 Please get in touch on our [Matrix room](https://matrix.to/#/#bisq.v2.dev:bitcoin.kyoto). We can use help across many areas of development, UI/UX, etc!
