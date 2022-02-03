@@ -15,10 +15,11 @@ import java.math.BigInteger;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-// TODO add set2 and set3
 // TODO Maybe add backgrounds?
 public class RoboHash {
     private static final Configuration configuration = new Set1Configuration();
+//    private static final Configuration configuration = new Set2Configuration();
+//    private static final Configuration configuration = new Set3Configuration();
     private static final VariableSizeHashing hashing = new VariableSizeHashing(configuration.getBucketSizes());
     private static final HandleFactory handleFactory = new HandleFactory();
     private static final Map<ByteArray, Node> smallCache = new ConcurrentHashMap<>();
