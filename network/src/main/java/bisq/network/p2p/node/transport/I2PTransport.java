@@ -27,6 +27,7 @@ public class I2PTransport implements Transport {
 
     public I2PTransport(Config config) {
         i2pDirPath = config.baseDir() + separator + "i2p";
+        log.info("I2PTransport using i2pDirPath: {}", i2pDirPath);
     }
 
 
