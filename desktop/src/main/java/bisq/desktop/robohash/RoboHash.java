@@ -1,11 +1,5 @@
 package bisq.desktop.robohash;
 
-/*import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.util.LruCache;*/
-
 import bisq.common.data.ByteArray;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.robohash.buckets.VariableSizeHashing;
@@ -16,15 +10,11 @@ import bisq.desktop.robohash.paths.Set1Configuration;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.StackPane;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-// TODO Use low level image manipulation not StackPane and ImageView
 // TODO add set2 and set3
 // TODO Maybe add backgrounds?
 public class RoboHash {
@@ -51,27 +41,16 @@ public class RoboHash {
         }
         byte[] data = hashing.createBuckets(new BigInteger(pubKeyHash.getBytes()));
         Handle handle = handleFactory.calculateHandle(data);
-        Node node = imageForHandle(handle, configuration.height() / 4d);
+        Node node = imageForHandle(handle, (int) (configuration.height() / 4d));
         smallCache.put(pubKeyHash, node);
         return node;
     }
 
-    private static Node imageForHandle(Handle handle, double size) {
+    private static Node imageForHandle(Handle handle, int size) {
         byte[] bucketValues = handle.bucketValues();
         String[] paths = configuration.convertToFacetParts(bucketValues);
-
-        List<ImageView> imageViews = new ArrayList<>();
-        for (String path : paths) {
-            Image image = getImage(path, size);
-            imageViews.add(new ImageView(image));
-        }
-        StackPane stackPane = new StackPane();
-        stackPane.getChildren().addAll(imageViews);
-        return stackPane;
+        
+        Image image = ImageUtil.composeImage(paths, size, size);
+        return new ImageView(image);
     }
-
-    private static Image getImage(String path, double size) {
-        return ImageUtil.getImageByPath("/images/robohash/" + path, size);
-    }
-
 }
