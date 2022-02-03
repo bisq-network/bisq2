@@ -1,4 +1,4 @@
-package bisq.desktop.robohash.paths;
+package bisq.desktop.robohash;
 
 
 public interface Configuration {

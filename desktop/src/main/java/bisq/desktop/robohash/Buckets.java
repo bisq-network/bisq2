@@ -1,54 +1,45 @@
-package bisq.desktop.robohash.buckets;
+package bisq.desktop.robohash;
 
 
 import java.math.BigInteger;
-import java.util.UUID;
 
 /**
  * "Hash" a big integer (expected: hash or uuid) into buckets. The goal is to deterministically
  * "repack" the randomness of the hash into the bucket.
- * 
+ * <p>
  * Each bucket is defined by a maximum value. The implementation guarantees that the values in bucket n is in the
  * range 0..(bucketSize[n]-1).
  */
-public class VariableSizeHashing {
+public class Buckets {
     private final byte[] bucketSizes;
 
-    public VariableSizeHashing(byte[] bucketSizes) {
+    public Buckets(byte[] bucketSizes) {
         this.bucketSizes = bucketSizes;
-    }
-
-    static BigInteger uuidToBigInteger(UUID uuid) {
-        return BigInteger.valueOf(uuid.getMostSignificantBits()).shiftLeft(64).add(BigInteger.valueOf(uuid.getLeastSignificantBits()));
-    }
-
-    public byte[] createBuckets(UUID uuid) {
-        return createBuckets(uuidToBigInteger(uuid));
     }
 
     /**
      * Takes the hash value and distributes it over the buckets.
-     * 
+     * <p>
      * Assumption: the value of hash is (much) larger than 16^bucketSizes.length and uniformly distributed (random)
      *
-     * @param hash Any BigInteger that is to be split up in buckets according to the bucket configuration #bucketSizes. 
+     * @param hash Any BigInteger that is to be split up in buckets according to the bucket configuration #bucketSizes.
      * @return buckets The distributed hash
      */
-    public byte[] createBuckets(BigInteger hash) {
+    public byte[] createBuckets(byte[] hash) {
+        BigInteger bigInteger = new BigInteger(hash);
         int currentBucket = 0;
-        byte[] ret = new byte[this.bucketSizes.length];
+        byte[] ret = new byte[bucketSizes.length];
 
-        while (currentBucket < this.bucketSizes.length) {
-            BigInteger[] divisorReminder = hash.divideAndRemainder(BigInteger.valueOf(bucketSizes[currentBucket]));
+        while (currentBucket < bucketSizes.length) {
+            BigInteger[] divisorReminder = bigInteger.divideAndRemainder(BigInteger.valueOf(bucketSizes[currentBucket]));
 
-            hash = divisorReminder[0];
+            bigInteger = divisorReminder[0];
             long reminder = divisorReminder[1].longValue();
 
             ret[currentBucket] = (byte) Math.abs(reminder % bucketSizes[currentBucket]);
 
             currentBucket += 1;
         }
-
         return ret;
     }
 }
