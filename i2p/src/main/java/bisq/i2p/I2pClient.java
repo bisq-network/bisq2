@@ -19,6 +19,7 @@ package bisq.i2p;
 
 import bisq.common.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
+import net.i2p.I2PAppContext;
 import net.i2p.I2PException;
 import net.i2p.client.streaming.I2PSocketManager;
 import net.i2p.client.streaming.I2PSocketManagerFactory;
@@ -59,6 +60,28 @@ public class I2pClient {
 
     // We use one i2p client per app
     public static I2pClient getI2pClient(String dirPath, String host, int port, long socketTimeout) {
+
+        /*
+          I2P uses a custom log framework.
+
+          There are two ways to change logging-related configs:
+
+          1) Via a config file:
+          - The file must be called `logger.config` and must be placed in the current working directory (IdeaProjects/bisq2)
+          - For properties available, see net.i2p.util.LogManager.PROP_*
+
+          See https://geti2p.net/spec/configuration -> "Logger (logger.config)"
+
+          Note: A custom config file name and location can be loaded using
+          I2PAppContext.getGlobalContext().logManager().setConfig("desktop/src/main/resources/bisq.properties");
+          using a path relative to the current working directory.
+
+          2) Using the exposed setters on the log manager:
+          I2PAppContext.getGlobalContext().logManager().set*
+         */
+        I2PAppContext.getGlobalContext().logManager().setBaseLogfilename("logs/i2p-@.log");
+
+
         I2pClient i2pClient;
         synchronized (I2P_CLIENT_BY_APP) {
             if (I2P_CLIENT_BY_APP.containsKey(dirPath)) {
