@@ -1,4 +1,4 @@
-package bisq.desktop.robohash.handle;
+package bisq.desktop.components.robohash.handle;
 
 
 public final class Handle {

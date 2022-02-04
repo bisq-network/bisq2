@@ -32,34 +32,27 @@ public class IdentityStore implements PersistableStore<IdentityStore> {
     private final Map<String, Identity> activeIdentityByDomainId = new ConcurrentHashMap<>();
     @Getter
     private final Set<Identity> retired = new CopyOnWriteArraySet<>();
-    @Getter
-    private final Map<String, String> userNameByDomainId = new ConcurrentHashMap<>();
 
     public IdentityStore() {
     }
 
     private IdentityStore(Map<String, Identity> activeIdentityByDomainId,
-                          Map<String, String> userNameByDomainId,
                           Set<Identity> pool,
                           Set<Identity> retired) {
         this.activeIdentityByDomainId.putAll(activeIdentityByDomainId);
-        this.userNameByDomainId.putAll(userNameByDomainId);
         this.pool.addAll(pool);
         this.retired.addAll(retired);
     }
 
     @Override
     public IdentityStore getClone() {
-        return new IdentityStore(activeIdentityByDomainId, userNameByDomainId, pool, retired);
+        return new IdentityStore(activeIdentityByDomainId, pool, retired);
     }
 
     @Override
     public void applyPersisted(IdentityStore persisted) {
         activeIdentityByDomainId.clear();
         activeIdentityByDomainId.putAll(persisted.getActiveIdentityByDomainId());
-
-        userNameByDomainId.clear();
-        userNameByDomainId.putAll(persisted.getUserNameByDomainId());
 
         pool.clear();
         pool.addAll(persisted.getPool());

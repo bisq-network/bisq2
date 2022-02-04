@@ -23,6 +23,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.social.hangout.HangoutController;
 import bisq.desktop.primary.main.content.social.tradeintent.TradeIntentController;
+import bisq.desktop.primary.main.content.social.profile.UserProfileController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,6 +53,9 @@ public class SocialController extends TabController {
             }
             case HANGOUT -> {
                 return Optional.of(new HangoutController(applicationService));
+            }
+            case USER_PROFILE -> {
+                return Optional.of(new UserProfileController(applicationService));
             }
             default -> {
                 return Optional.empty();

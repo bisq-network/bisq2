@@ -39,6 +39,7 @@ import bisq.settings.SettingsService;
 import bisq.social.chat.ChatService;
 import bisq.social.intent.TradeIntentListingsService;
 import bisq.social.intent.TradeIntentService;
+import bisq.social.userprofile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,6 +75,7 @@ public class DefaultApplicationService extends ServiceProvider {
     private final AccountService accountService;
     private final TradeIntentListingsService tradeIntentListingsService;
     private final TradeIntentService tradeIntentService;
+    private final UserProfileService userProfileService;
 
     public DefaultApplicationService(String[] args) {
         super("Bisq");
@@ -98,6 +100,7 @@ public class DefaultApplicationService extends ServiceProvider {
 
         accountService = new AccountService(persistenceService);
 
+        userProfileService = new UserProfileService(persistenceService, keyPairService,identityService);
         chatService = new ChatService(persistenceService, identityService, networkService);
         tradeIntentListingsService = new TradeIntentListingsService(networkService);
         tradeIntentService = new TradeIntentService(networkService, identityService, tradeIntentListingsService, chatService);
@@ -146,6 +149,7 @@ public class DefaultApplicationService extends ServiceProvider {
                 })
                 .thenCompose(result -> protocolService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(
+                        userProfileService.initialize(),
                         openOfferService.initialize(),
                         offerBookService.initialize(),
                         tradeIntentListingsService.initialize(),

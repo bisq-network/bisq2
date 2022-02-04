@@ -7,13 +7,13 @@
         </encoder>
     </appender>
 
-    <root level="ERROR">
+    <root level="INFO">
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="bisq.desktop" level="ERROR"/>
+    <logger name="bisq.desktop" level="INFO"/>
     <logger name="bisq.protocol" level="INFO"/>
-    <logger name="bisq.network" level="ERROR"/>
+    <logger name="bisq.network" level="DEBUG"/>
     <logger name="bisq.persistence" level="WARN"/>
     <logger name="bisq.tor" level="INFO"/>
     <logger name="bisq.i2p" level="INFO"/>

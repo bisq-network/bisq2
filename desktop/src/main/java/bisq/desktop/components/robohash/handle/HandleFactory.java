@@ -1,5 +1,4 @@
-package bisq.desktop.robohash.handle;
-
+package bisq.desktop.components.robohash.handle;
 
 public class HandleFactory {
 
@@ -40,9 +39,8 @@ public class HandleFactory {
 
         long mask = (long) 0xf << (index * 4);
         long maskedValue = (value & mask);
-        byte nibbleValue = (byte) (maskedValue >> index * 4);
 
-        return nibbleValue;
+        return (byte) (maskedValue >> index * 4);
     }
 
     static int getSize(long value) {

@@ -167,7 +167,7 @@ public class I2pClient {
     }
 
     private I2PSocketManager maybeCreateClientSession(String sessionId) {
-        if (! sessionMap.containsKey(sessionId)) {
+        if (!sessionMap.containsKey(sessionId)) {
             sessionMap.put(sessionId, I2PSocketManagerFactory.createManager());
         }
 
@@ -175,7 +175,7 @@ public class I2pClient {
     }
 
     private I2PSocketManager maybeCreateServerSession(String sessionId, int port) throws IOException {
-        if (! sessionMap.containsKey(sessionId)) {
+        if (!sessionMap.containsKey(sessionId)) {
             long ts = System.currentTimeMillis();
             log.info("Start to create server socket manager for session {} using port {}", sessionId, port);
 
@@ -202,9 +202,10 @@ public class I2pClient {
 
             // Persist destination to disk
             String destinationBase64 = manager.getSession().getMyDestination().toBase64();
+            log.info("My destination: {}", destinationBase64);
             String destinationFileName = fileName + ".destination";
             File destinationFile = new File(destinationFileName);
-            if (! destinationFile.exists()) {
+            if (!destinationFile.exists()) {
                 FileUtils.write(destinationFileName, destinationBase64);
             }
 
@@ -228,6 +229,7 @@ public class I2pClient {
     }
 
     protected void handleIOException(IOException e, String sessionId) {
+        e.printStackTrace();
         I2PSocketManager manager = sessionMap.get(sessionId);
         if (manager != null) {
             manager.destroySocketManager();

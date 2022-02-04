@@ -18,11 +18,12 @@
 package bisq.desktop.primary.main.content.social.tradeintent;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.observable.Pin;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.social.user.ChatUserController;
+import bisq.desktop.primary.main.content.social.components.UserProfileDisplay;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
@@ -46,8 +47,9 @@ public class TradeIntentController implements Controller/*, ChatService.Listener
     private final TradeIntentView view;
     private final TradeIntentListingsService tradeIntentListingsService;
     private final TradeIntentService tradeIntentService;
+    private final UserProfileDisplay userProfileDisplay;
     private Optional<DataService.Listener> dataListener = Optional.empty();
-    private int tradeIntentBindingKey;
+    private Pin listItemsPin;
 
     public TradeIntentController(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
@@ -57,50 +59,21 @@ public class TradeIntentController implements Controller/*, ChatService.Listener
         tradeIntentListingsService = applicationService.getTradeIntentListingsService();
         dataService = networkService.getDataService();
 
-        ChatUserController chatUserController = new ChatUserController(applicationService);
+        userProfileDisplay = new UserProfileDisplay(applicationService.getUserProfileService());
         model = new TradeIntentModel(applicationService);
-        view = new TradeIntentView(model, this, chatUserController.getView());
+        view = new TradeIntentView(model, this, userProfileDisplay.getView());
     }
 
     @Override
     public void onViewAttached() {
-        //todo
-        String userName = "Natoshi Sakamoto  ";
-        identityService.getOrCreateIdentity(userName)
-                .whenComplete((identity, t) -> model.selectedUserIdentity.set(identity));
-
-        tradeIntentBindingKey = tradeIntentListingsService.getTradeIntents().bind(model.getListItems(),
-                TradeIntentListItem::new,
-                UIThread::run);
-        
-       /* dataService.ifPresent(dataService -> {
-            dataListener = Optional.of(new DataService.Listener() {
-                @Override
-                public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
-                    if (networkPayload instanceof AuthenticatedPayload payload &&
-                            payload.getData() instanceof TradeIntent) {
-                        UIThread.run(() -> model.addPayload(payload));
-                    }
-                }
-
-                @Override
-                public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
-                    if (networkPayload instanceof AuthenticatedPayload payload && payload.getData() instanceof TradeIntent) {
-                        UIThread.run(() -> model.removePayload(payload));
-                    }
-                }
-            });
-            dataService.addListener(dataListener.get());
-
-            model.fillTradeIntentListItem(dataService.getAuthenticatedPayloadByStoreName("TradeIntent")
-                    .map(TradeIntentListItem::new)
-                    .collect(Collectors.toList()));
-        });*/
+        listItemsPin = FxBindings.<TradeIntent, TradeIntentListItem>bind(model.getListItems())
+                .map(TradeIntentListItem::new)
+                .to(tradeIntentListingsService.getTradeIntents());
     }
 
     @Override
     public void onViewDetached() {
-        tradeIntentListingsService.getTradeIntents().unbind(tradeIntentBindingKey);
+        listItemsPin.unbind();
     }
 
 

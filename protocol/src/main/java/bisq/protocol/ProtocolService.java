@@ -18,7 +18,7 @@
 package bisq.protocol;
 
 import bisq.account.protocol.SwapProtocolType;
-import bisq.common.data.ObservedSet;
+import bisq.common.observable.ObservableSet;
 import bisq.common.monetary.Monetary;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
@@ -56,7 +56,7 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
     private final PersistenceService persistenceService;
     private final OpenOfferService openOfferService;
     @Getter
-    private final ObservedSet<Protocol<? extends ProtocolModel>> protocols = new ObservedSet<>();
+    private final ObservableSet<Protocol<? extends ProtocolModel>> protocols = new ObservableSet<>();
 
     public ProtocolService(NetworkService networkService,
                            IdentityService identityService,

@@ -18,18 +18,15 @@
 package bisq.desktop.primary.main.content.portfolio.pending;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.threading.UIThread;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.InitWithDataController;
-import bisq.protocol.ProtocolService;
-import bisq.protocol.TakerProtocol;
-import bisq.protocol.TakerProtocolModel;
+import bisq.protocol.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PendingTradesController implements InitWithDataController<PendingTradesController.InitData> {
-
-
     public static record InitData(TakerProtocol<TakerProtocolModel> protocol) {
     }
 
@@ -37,7 +34,7 @@ public class PendingTradesController implements InitWithDataController<PendingTr
     @Getter
     private final PendingTradesView view;
     private final ProtocolService protocolService;
-    private int bindingKey;
+    private Pin protocolsPin;
 
 
     public PendingTradesController(DefaultApplicationService applicationService) {
@@ -54,13 +51,13 @@ public class PendingTradesController implements InitWithDataController<PendingTr
 
     @Override
     public void onViewAttached() {
-        protocolService.getProtocols().unbind(bindingKey);
-        bindingKey = protocolService.getProtocols().bind(model.getListItems(),
-                protocol -> new PendingTradeListItem(protocol),
-                UIThread::run);
+        protocolsPin = FxBindings.<Protocol<? extends ProtocolModel>, PendingTradeListItem>bind(model.getListItems())
+                .map(PendingTradeListItem::new)
+                .to(protocolService.getProtocols());
     }
 
     @Override
     public void onViewDetached() {
+        protocolsPin.unbind();
     }
 }

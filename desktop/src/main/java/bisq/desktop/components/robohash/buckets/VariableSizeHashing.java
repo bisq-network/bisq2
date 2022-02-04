@@ -1,4 +1,4 @@
-package bisq.desktop.robohash.buckets;
+package bisq.desktop.components.robohash.buckets;
 
 
 import java.math.BigInteger;

@@ -1,10 +1,10 @@
-package bisq.desktop.robohash.paths;
+package bisq.desktop.components.robohash.paths;
 
 
 public class Set3Configuration implements Configuration {
     private final static String ROOT = "sets/set3";
 
-    private static final int BASE_FACES_COUNT = 10; // real value (90) causes IllegalArgumentException nibble to large
+    private static final int BASE_FACES_COUNT = 15; // Max nibble value
     private static final int WAVES_COUNT = 1;
     private static final int ANTENNAS_COUNT = 10;
     private static final int EYES_COUNT = 12;
@@ -35,9 +35,9 @@ public class Set3Configuration implements Configuration {
     @Override
     public String[] convertToFacetParts(byte[] bucketValues) {
         if (bucketValues.length != BUCKET_SIZES.length) throw new IllegalArgumentException();
-        
+
         String[] paths = new String[FACET_PATH_TEMPLATES.length];
-        
+
         for (int i = 0; i < FACET_PATH_TEMPLATES.length; i++) {
             int bucketValue = bucketValues[i] + 1;
             String facetPathTemplate = FACET_PATH_TEMPLATES[i];
@@ -47,7 +47,7 @@ public class Set3Configuration implements Configuration {
         }
         return paths;
     }
-    
+
 
     @Override
     public byte[] getBucketSizes() {
@@ -56,11 +56,11 @@ public class Set3Configuration implements Configuration {
 
     @Override
     public int width() {
-        return 1015;
+        return 300;
     }
 
     @Override
     public int height() {
-        return 1015;
+        return 300;
     }
 }

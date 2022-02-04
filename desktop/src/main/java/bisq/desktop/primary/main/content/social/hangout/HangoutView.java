@@ -22,7 +22,7 @@ import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTextField;
 import bisq.desktop.layout.Layout;
-import bisq.desktop.primary.main.content.social.user.ChatUserView;
+import bisq.desktop.primary.main.content.social.profile.UserProfileView;
 import bisq.i18n.Res;
 import bisq.social.chat.Channel;
 import com.jfoenix.controls.JFXButton;
@@ -57,10 +57,10 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
     private final Map<String, ChannelButton> channelButtonByChannelId = new HashMap<>();
     private final ChangeListener<String> textAreaListener;
 
-    public HangoutView(HangoutModel model, HangoutController controller, ChatUserView chatUserView) {
+    public HangoutView(HangoutModel model, HangoutController controller, UserProfileView userProfileView) {
         super(new HBox(), model, controller);
 
-        Node userViewRoot = chatUserView.getRoot();
+        Node userViewRoot = userProfileView.getRoot();
 
         root.setSpacing(Layout.SPACING);
         root.setPadding(new Insets(20, 20, 20, 0));

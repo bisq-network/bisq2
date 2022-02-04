@@ -17,7 +17,7 @@
 
 package bisq.offer;
 
-import bisq.common.data.ObservedSet;
+import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public class OfferBookService {
     @Getter
-    private final ObservedSet<Offer> offers = new ObservedSet<>();
+    private final ObservableSet<Offer> offers = new ObservableSet<>();
     private final DataService dataService;
 
     public OfferBookService(NetworkService networkService) {

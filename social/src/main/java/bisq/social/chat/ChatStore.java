@@ -35,7 +35,7 @@ public class ChatStore implements PersistableStore<ChatStore> {
     @Getter
     private final Set<PublicChannel> publicChannels = new CopyOnWriteArraySet<>();
     @Getter
-    private final Map<String, String> userNameByDomainId = new HashMap<>();
+    private final Map<String, String> userNameByDomainId = new HashMap<>(); //todo remove
     @Nullable
     @Setter
     private Channel selectedChannel;

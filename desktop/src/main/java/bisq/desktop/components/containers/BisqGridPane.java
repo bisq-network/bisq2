@@ -18,6 +18,7 @@
 package bisq.desktop.components.containers;
 
 import bisq.common.data.Pair;
+import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTextField;
@@ -26,7 +27,6 @@ import bisq.desktop.components.table.TableItem;
 import bisq.desktop.layout.Layout;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
@@ -88,6 +88,10 @@ public class BisqGridPane extends GridPane {
         return textField;
     }
 
+    public BisqTextField addTextField(String labelText) {
+        return addTextField(labelText, "");
+    }
+
     public BisqTextField addTextField(String labelText, String textFieldText) {
         BisqTextField textField = new BisqTextField(textFieldText);
         textField.setPromptText(labelText);
@@ -116,8 +120,8 @@ public class BisqGridPane extends GridPane {
         return textArea;
     }
 
-    public Pair<Button, Label> addButton(String text) {
-        Button button = new Button(text);
+    public Pair<BisqButton, Label> addButton(String text) {
+        BisqButton button = new BisqButton(text);
         Label label = new Label();
         label.setPadding(new Insets(5, 0, 0, 0));
 
@@ -131,8 +135,8 @@ public class BisqGridPane extends GridPane {
         return new Pair<>(button, label);
     }
 
-    public Pair<Button, Label> addButton(String label, Runnable handler) {
-        Pair<Button, Label> pair = addButton(label);
+    public Pair<BisqButton, Label> addButton(String label, Runnable handler) {
+        Pair<BisqButton, Label> pair = addButton(label);
         pair.first().setOnAction(e -> handler.run());
         return pair;
     }

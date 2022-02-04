@@ -61,6 +61,22 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
         }
     }
 
+    public KeyPair generateKeyPair() {
+        try {
+            return KeyGeneration.generateKeyPair();
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void persistKeyPair(String keyId, KeyPair keyPair) {
+        synchronized (persistableStore) {
+            persistableStore.put(keyId, keyPair);
+        }
+        persist();
+    }
+
     public CompletableFuture<KeyPair> getOrCreateKeyPairAsync(String keyId) {
         return findKeyPair(keyId).map(CompletableFuture::completedFuture)
                 .orElseGet(() -> CompletableFuture.supplyAsync(() -> {

@@ -17,7 +17,7 @@
 
 package bisq.offer;
 
-import bisq.common.data.ObservedSet;
+import bisq.common.observable.ObservableSet;
 import bisq.persistence.PersistableStore;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ import java.util.Set;
 
 public class OpenOfferStore implements PersistableStore<OpenOfferStore> {
     @Getter
-    private final ObservedSet<OpenOffer> openOffers = new ObservedSet<>();
+    private final ObservableSet<OpenOffer> openOffers = new ObservableSet<>();
 
     public OpenOfferStore() {
     }

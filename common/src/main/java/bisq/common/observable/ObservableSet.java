@@ -15,77 +15,65 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.data;
+package bisq.common.observable;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ObservedSet<T> extends CopyOnWriteArraySet<T> {
-    private static final AtomicInteger HANDLER_COUNTER = new AtomicInteger(0);
-
-    public static class Handler<M, L> {
-        private final List<L> listItems;
-        private final Function<M, L> mapper;
-        private final Consumer<Runnable> executor;
-
-        public Handler(List<L> listItems, Function<M, L> mapper, Consumer<Runnable> executor) {
-            this.listItems = listItems;
-            this.mapper = mapper;
-            this.executor = executor;
-        }
+public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
+    private record Observer<M, L>(Collection<L> collection, Function<M, L> mapper, Consumer<Runnable> executor) {
 
         public void add(M element) {
-            executor.accept(() -> listItems.add(mapper.apply(element)));
+            executor.accept(() -> collection.add(mapper.apply(element)));
         }
 
         public void addAll(Collection<? extends M> c) {
-            executor.accept(() -> listItems.addAll(c.stream().map(mapper).collect(Collectors.toSet())));
+            executor.accept(() -> collection.addAll(c.stream().map(mapper).collect(Collectors.toSet())));
         }
 
         public void remove(Object element) {
             //noinspection unchecked
-            executor.accept(() -> listItems.remove(mapper.apply((M) element)));
+            executor.accept(() -> collection.remove(mapper.apply((M) element)));
         }
 
         public void removeAll(Collection<?> c) {
             //noinspection unchecked
-            executor.accept(() -> listItems.removeAll(c.stream().map(element -> mapper.apply((M) element)).collect(Collectors.toSet())));
+            executor.accept(() -> collection.removeAll(c.stream().map(element -> mapper.apply((M) element)).collect(Collectors.toSet())));
         }
 
         public void clear() {
-            executor.accept(listItems::clear);
+            executor.accept(collection::clear);
         }
     }
 
+    private final Set<Observer<T, ?>> observers = new CopyOnWriteArraySet<>();
 
-    private final Map<Integer, Handler<T, ?>> handlers = new ConcurrentHashMap<>();
+    public ObservableSet() {
+    }
 
-    public <L> int bind(List<L> listItems, Function<T, L> mapper, Consumer<Runnable> executor) {
-        int key = HANDLER_COUNTER.incrementAndGet();
-        handlers.put(key, new Handler<>(listItems, mapper, executor));
-        handlers.values().forEach(l -> {
+    public ObservableSet(Collection<T> values) {
+        addAll(values);
+    }
+
+    public <L> Pin addObserver(Collection<L> collection, Function<T, L> mapper, Consumer<Runnable> executor) {
+        Observer<T, L> observer = new Observer<>(collection, mapper, executor);
+        observers.add(observer);
+        observers.forEach(l -> {
             l.clear();
             l.addAll(this);
         });
-        return key;
-    }
-
-    public void unbind(int key) {
-        handlers.remove(key);
+        return () -> observers.remove(observer);
     }
 
     @Override
     public boolean add(T element) {
         boolean result = super.add(element);
         if (result) {
-            handlers.values().forEach(l -> l.add(element));
+            observers.forEach(l -> l.add(element));
         }
         return result;
     }
@@ -93,7 +81,7 @@ public class ObservedSet<T> extends CopyOnWriteArraySet<T> {
     public boolean addAll(Collection<? extends T> c) {
         boolean result = super.addAll(c);
         if (result) {
-            handlers.values().forEach(l -> l.addAll(c));
+            observers.forEach(l -> l.addAll(c));
         }
         return result;
     }
@@ -102,7 +90,7 @@ public class ObservedSet<T> extends CopyOnWriteArraySet<T> {
     public boolean remove(Object element) {
         boolean result = super.remove(element);
         if (result) {
-            handlers.values().forEach(l -> l.remove(element));
+            observers.forEach(l -> l.remove(element));
         }
         return result;
     }
@@ -111,7 +99,7 @@ public class ObservedSet<T> extends CopyOnWriteArraySet<T> {
     public boolean removeAll(Collection<?> c) {
         boolean result = super.removeAll(c);
         if (result) {
-            handlers.values().forEach(l -> l.removeAll(c));
+            observers.forEach(l -> l.removeAll(c));
         }
         return result;
     }
@@ -119,6 +107,6 @@ public class ObservedSet<T> extends CopyOnWriteArraySet<T> {
     @Override
     public void clear() {
         super.clear();
-        handlers.values().forEach(Handler::clear);
+        observers.forEach(Observer::clear);
     }
 }

@@ -18,8 +18,11 @@
 package bisq.desktop.primary.main.content.portfolio.closed;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.threading.UIThread;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
+import bisq.protocol.Protocol;
+import bisq.protocol.ProtocolModel;
 import bisq.protocol.ProtocolService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +33,8 @@ public class ClosedTradesController implements Controller {
     @Getter
     private final ClosedTradesView view;
     private final ProtocolService protocolService;
-    private int bindingKey;
+    private int pin;
+    private Pin protocolsPin;
 
 
     public ClosedTradesController(DefaultApplicationService applicationService) {
@@ -43,14 +47,13 @@ public class ClosedTradesController implements Controller {
 
     @Override
     public void onViewAttached() {
-        protocolService.getProtocols().unbind(bindingKey);
-        bindingKey = protocolService.getProtocols().bind(model.getListItems(),
-                protocol -> new ClosedTradeListItem(protocol),
-                UIThread::run);
+        protocolsPin = FxBindings.<Protocol<? extends ProtocolModel>, ClosedTradeListItem>bind(model.getListItems())
+                .map(ClosedTradeListItem::new)
+                .to(protocolService.getProtocols());
     }
 
     @Override
     public void onViewDetached() {
-        protocolService.getProtocols().unbind(bindingKey);
+        protocolsPin.unbind();
     }
 }

@@ -1,4 +1,4 @@
-package bisq.desktop.robohash.paths;
+package bisq.desktop.components.robohash.paths;
 
 
 public class Set1Configuration implements Configuration {
@@ -42,10 +42,7 @@ public class Set1Configuration implements Configuration {
     public String[] convertToFacetParts(byte[] bucketValues) {
         if (bucketValues.length != BUCKET_COUNT) throw new IllegalArgumentException();
 
-
-        final String color = INT_TO_COLOR[bucketValues[BUCKET_COLOR]];
-
-
+        String color = INT_TO_COLOR[bucketValues[BUCKET_COLOR]];
         String[] paths = new String[FACET_COUNT];
 
         // e.g.
@@ -64,7 +61,9 @@ public class Set1Configuration implements Configuration {
 
     private String generatePath(String facetPathTemplate, String color, int bucketValue) {
         // TODO: Make more efficient
-        return facetPathTemplate.replace("#ROOT#", ROOT).replaceAll("#COLOR#", color).replaceAll("#ITEM#", String.format("%02d", bucketValue + 1));
+        return facetPathTemplate.replace("#ROOT#", ROOT)
+                .replaceAll("#COLOR#", color)
+                .replaceAll("#ITEM#", String.format("%02d", bucketValue + 1));
     }
 
     @Override

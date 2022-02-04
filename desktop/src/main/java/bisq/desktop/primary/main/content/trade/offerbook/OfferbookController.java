@@ -19,8 +19,10 @@ package bisq.desktop.primary.main.content.trade.offerbook;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
+import bisq.common.observable.Pin;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.controls.BisqButton;
@@ -51,7 +53,7 @@ public class OfferbookController implements Controller {
     private final OpenOfferService openOfferService;
     private final OfferBookService offerBookService;
 
-    private int offerBindingKey;
+    private Pin offerListPin;
 
     public OfferbookController(DefaultApplicationService applicationService) {
         offerBookService = applicationService.getOfferBookService();
@@ -72,9 +74,9 @@ public class OfferbookController implements Controller {
 
     @Override
     public void onViewAttached() {
-        offerBindingKey = offerBookService.getOffers().bind(model.getListItems(),
-                offer -> new OfferListItem(offer, model.marketPriceService),
-                UIThread::run);
+        offerListPin = FxBindings.<Offer, OfferListItem>bind(model.getListItems())
+                .map(offer -> new OfferListItem(offer, model.marketPriceService))
+                .to(offerBookService.getOffers());
         model.showAllMarkets.set(false);
         directionSelection.setDirection(Direction.BUY);
 
@@ -87,7 +89,7 @@ public class OfferbookController implements Controller {
 
     @Override
     public void onViewDetached() {
-        offerBookService.getOffers().unbind(offerBindingKey);
+        offerListPin.unbind();
         model.getSelectedMarketProperty().removeListener(selectedMarketListener);
     }
 

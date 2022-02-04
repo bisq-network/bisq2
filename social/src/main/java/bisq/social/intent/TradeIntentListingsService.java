@@ -17,7 +17,7 @@
 
 package bisq.social.intent;
 
-import bisq.common.data.ObservedSet;
+import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public class TradeIntentListingsService {
     @Getter
-    private final ObservedSet<TradeIntent> tradeIntents = new ObservedSet<>();
+    private final ObservableSet<TradeIntent> tradeIntents = new ObservableSet<>();
     private final DataService dataService;
 
     public TradeIntentListingsService(NetworkService networkService) {

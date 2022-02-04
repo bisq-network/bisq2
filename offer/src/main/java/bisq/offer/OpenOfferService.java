@@ -20,10 +20,10 @@ package bisq.offer;
 import bisq.account.accounts.Account;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
-import bisq.common.data.ObservedSet;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
+import bisq.common.observable.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
@@ -82,7 +82,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
                 .map(openOffer -> removeFromNetwork(openOffer.getOffer())));
     }
 
-    public ObservedSet<OpenOffer> getOpenOffers() {
+    public ObservableSet<OpenOffer> getOpenOffers() {
         return persistableStore.getOpenOffers();
     }
 

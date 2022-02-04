@@ -15,5 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Taken from https://github.com/neuhalje/android-robohash
-package bisq.desktop.robohash;
+package bisq.common.observable;
+
+public interface Pin {
+    void unbind();
+}
