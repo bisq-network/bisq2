@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.social.components;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.controls.BisqLabel;
-import bisq.desktop.robohash.RoboHash;
+import bisq.desktop.components.robohash.RoboHash;
 import bisq.social.userprofile.UserProfileService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -28,9 +28,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -67,7 +67,7 @@ public class UserProfileDisplay {
             pin = FxBindings.subscribe(userProfileService.getPersistableStore().getSelectedUserProfile(),
                     userProfile -> {
                         model.userName.set(userProfile.identity().domainId());
-                        model.roboHashNode.set(RoboHash.getSmall(userProfile.identity().pubKeyHash(), false));
+                        model.roboHashNode.set(RoboHash.getImage(userProfile.identity().pubKeyHash(), false));
                     });
         }
 
@@ -78,7 +78,7 @@ public class UserProfileDisplay {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        ObjectProperty<Node> roboHashNode = new SimpleObjectProperty<>();
+        ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         StringProperty userName = new SimpleStringProperty();
 
         private Model() {
@@ -87,7 +87,7 @@ public class UserProfileDisplay {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        private final Pane roboIconPane;
+        private final ImageView roboIconImageView;
         private final BisqLabel userName;
         private Subscription roboHashNodeSubscription;
 
@@ -98,9 +98,11 @@ public class UserProfileDisplay {
 
             userName = new BisqLabel();
             userName.getStyleClass().add("headline-label");
-            userName.setPadding(new Insets(10,0,0,0));
-            roboIconPane = new HBox();
-            root.getChildren().addAll(userName, roboIconPane);
+            userName.setPadding(new Insets(10, 0, 0, 0));
+            roboIconImageView = new ImageView();
+            roboIconImageView.setFitWidth(75);
+            roboIconImageView.setFitHeight(75);
+            root.getChildren().addAll(userName, roboIconImageView);
         }
 
         @Override
@@ -108,10 +110,8 @@ public class UserProfileDisplay {
             userName.textProperty().bind(model.userName);
 
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
-                if (roboIcon == null) {
-                    roboIconPane.getChildren().clear();
-                } else {
-                    roboIconPane.getChildren().setAll(roboIcon);
+                if (roboIcon != null) {
+                    roboIconImageView.setImage(roboIcon);
                 }
             });
         }

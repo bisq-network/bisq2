@@ -174,7 +174,7 @@ public abstract class Connection {
         if (future != null) {
             future.cancel(true);
         }
-        if (! socket.isClosed()) {
+        if (!socket.isClosed()) {
             try {
                 socket.close();
             } catch (IOException e) {

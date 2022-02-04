@@ -1,4 +1,4 @@
-package bisq.desktop.robohash;
+package bisq.desktop.components.robohash.paths;
 
 
 public class Set1Configuration implements Configuration {

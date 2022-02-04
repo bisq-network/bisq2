@@ -24,17 +24,17 @@ import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.controls.BisqTextField;
 import bisq.desktop.layout.Layout;
-import bisq.desktop.robohash.RoboHash;
+import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.social.userprofile.UserProfileService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -119,13 +119,13 @@ public class CreateUserProfile {
         private void onCreateRoboIcon() {
             model.ephemeralKeyId = StringUtils.createUid();
             model.ephemeralKeyPair = keyPairService.generateKeyPair();
-            model.roboHashNode.set(RoboHash.getSmall(new ByteArray(DigestUtil.hash(model.ephemeralKeyPair.getPublic().getEncoded())), false));
+            model.roboHashNode.set(RoboHash.getImage(new ByteArray(DigestUtil.hash(model.ephemeralKeyPair.getPublic().getEncoded())), false));
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         String ephemeralKeyId;
-        ObjectProperty<Node> roboHashNode = new SimpleObjectProperty<>();
+        ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         StringProperty feedback = new SimpleStringProperty();
         StringProperty userName = new SimpleStringProperty();
         BooleanProperty changeRoboIconButtonDisable = new SimpleBooleanProperty();
@@ -138,7 +138,7 @@ public class CreateUserProfile {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final Pane roboIconPane;
+        private final ImageView roboIconImageView;
         private final BisqButton changeRoboIconButton, createUserButton;
         private final BisqTextField userNameInputField;
         private final BisqLabel feedbackLabel;
@@ -165,8 +165,10 @@ public class CreateUserProfile {
 
             HBox hBox = new HBox();
             hBox.setSpacing(Layout.SPACING);
-            roboIconPane = new HBox();
-            hBox.getChildren().addAll(vBox, roboIconPane);
+            roboIconImageView = new ImageView();
+            roboIconImageView.setFitWidth(75);
+            roboIconImageView.setFitHeight(75);
+            hBox.getChildren().addAll(vBox, roboIconImageView);
 
             feedbackLabel = new BisqLabel();
             feedbackLabel.setWrapText(true);
@@ -185,10 +187,8 @@ public class CreateUserProfile {
             createUserButton.setOnAction(e -> controller.onCreateUserProfile());
 
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
-                if (roboIcon == null) {
-                    roboIconPane.getChildren().clear();
-                } else {
-                    roboIconPane.getChildren().setAll(roboIcon);
+                if (roboIcon != null) {
+                    roboIconImageView.setImage(roboIcon);
                 }
             });
         }
