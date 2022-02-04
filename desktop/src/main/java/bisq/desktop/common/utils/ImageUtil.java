@@ -17,8 +17,8 @@
 
 package bisq.desktop.common.utils;
 
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.image.*;
+import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,9 +39,9 @@ public class ImageUtil {
         }
     }
 
-    public static Image getImageByPath(String path, double size) {
+    public static Image getImageByPath(String path, int width, int height) {
         try (InputStream resourceAsStream = ImageView.class.getResourceAsStream(path)) {
-            return new Image(Objects.requireNonNull(resourceAsStream), size, size, true, true);
+            return new Image(Objects.requireNonNull(resourceAsStream), width, height, true, true);
         } catch (Exception e) {
             log.error("Loading image failed: path={}", path);
             e.printStackTrace();
@@ -60,5 +60,23 @@ public class ImageUtil {
     // https://stackoverflow.com/questions/20767708/how-do-you-detect-a-retina-display-in-java#20767802
     public static boolean isRetina() {
         return Screen.getPrimary().getOutputScaleX() > 1.5;
+    }
+
+    public static Image composeImage(String[] paths, int width, int height) {
+        WritableImage image = new WritableImage(width, height);
+        for (String path : paths) {
+            Image part = getImageByPath("/images/robohash/" + path, width, height);
+            PixelReader reader = part.getPixelReader();
+            PixelWriter writer = image.getPixelWriter();
+            for (int i = 0; i < width; i++) {
+                for (int j = 0; j < height; j++) {
+                    Color color = reader.getColor(i, j);
+                    if (color.isOpaque()) {
+                        writer.setColor(i, j, color);
+                    }
+                }
+            }
+        }
+        return image;
     }
 }
