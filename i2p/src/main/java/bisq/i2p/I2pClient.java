@@ -195,8 +195,10 @@ public class I2pClient {
 
             // Create a I2PSocketManager based on the locally persisted private key
             // This allows the server to preserve its identity and be reachable at the same destination
-            FileInputStream privKeyInputStream = new FileInputStream(privKeyFile);
-            I2PSocketManager manager = I2PSocketManagerFactory.createManager(privKeyInputStream);
+            I2PSocketManager manager;
+            try(FileInputStream privKeyInputStream = new FileInputStream(privKeyFile)) {
+                manager = I2PSocketManagerFactory.createManager(privKeyInputStream);
+            }
 
             // Set port (which is embedded in the generated destination)
             I2PSocketOptions i2PSocketOptions = manager.getDefaultOptions();
