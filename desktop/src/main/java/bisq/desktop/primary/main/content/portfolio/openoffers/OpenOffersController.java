@@ -18,10 +18,13 @@
 package bisq.desktop.primary.main.content.portfolio.openoffers;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
+import bisq.offer.OpenOffer;
 import bisq.offer.OpenOfferService;
 import javafx.beans.property.BooleanProperty;
 import lombok.Getter;
@@ -29,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class OpenOffersController implements Controller {
-
     public static record InitData(Offer offer, BooleanProperty showTakeOfferTab) {
     }
 
@@ -38,7 +40,8 @@ public class OpenOffersController implements Controller {
     private final OpenOffersView view;
     private final OpenOfferService openOfferService;
 
-    private int bindingKey;
+    private Pin offerListPin;
+
 
     public OpenOffersController(DefaultApplicationService applicationService) {
         model = new OpenOffersModel(applicationService);
@@ -49,9 +52,9 @@ public class OpenOffersController implements Controller {
 
     @Override
     public void onViewAttached() {
-        bindingKey = openOfferService.getOpenOffers().bind(model.getListItems(),
-                openOffer -> new OpenOfferListItem(openOffer, model.marketPriceService),
-                UIThread::run);
+        offerListPin = FxBindings.<OpenOffer, OpenOfferListItem>bind(model.getListItems())
+                .map(openOffer -> new OpenOfferListItem(openOffer, model.marketPriceService))
+                .to(openOfferService.getOpenOffers());
 
         //todo
         model.priceHeaderTitle.set(Res.offerbook.get("openOffers.table.header.price"));
@@ -61,7 +64,7 @@ public class OpenOffersController implements Controller {
 
     @Override
     public void onViewDetached() {
-        openOfferService.getOpenOffers().unbind(bindingKey);
+        offerListPin.unbind();
     }
 
 

@@ -44,7 +44,7 @@ public abstract class TabView<R extends TabPane, M extends NavigationModel, C ex
                 NavigationTargetTab tab = getTabFromTarget(model.getNavigationTarget());
                 tab.setContent(newValue.getRoot());
                 
-                // Remove listener temporarily to avoid that the tabChangeListener gets called from the selection call
+                // Remove collection temporarily to avoid that the tabChangeListener gets called from the selection call
                 root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
                 root.getSelectionModel().select(tab);
                 root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
@@ -59,7 +59,7 @@ public abstract class TabView<R extends TabPane, M extends NavigationModel, C ex
         }
         model.getView().addListener(viewChangeListener);
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
-        // We need to delay a bit to give the child view chance to register the listener
+        // We need to delay a bit to give the child view chance to register the collection
         UIThread.runLater(() -> controller.onTabSelected(model.getNavigationTarget()));
     }
 

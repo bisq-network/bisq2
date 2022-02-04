@@ -25,27 +25,35 @@ public class RoboHash {
     private static final Map<ByteArray, Node> LARGE_CACHE = new ConcurrentHashMap<>();
 
     public static Node getLarge(ByteArray pubKeyHash) {
-        if (LARGE_CACHE.containsKey(pubKeyHash)) {
+        return getLarge(pubKeyHash, true);
+    }
+
+    public static Node getLarge(ByteArray pubKeyHash, boolean useCache) {
+        if (useCache && LARGE_CACHE.containsKey(pubKeyHash)) {
             return LARGE_CACHE.get(pubKeyHash);
         }
         byte[] buckets = BUCKETS.createBuckets(pubKeyHash.getBytes());
         long handle = HandleFactory.calculateHandleValue(buckets);
         Node node = imageForHandle(handle, CONFIGURATION.height());
 
-        if (LARGE_CACHE.size() < MAX_CACHE_SIZE) {
+        if (useCache && LARGE_CACHE.size() < MAX_CACHE_SIZE) {
             LARGE_CACHE.put(pubKeyHash, node);
         }
         return node;
     }
 
     public static Node getSmall(ByteArray pubKeyHash) {
-        if (SMALL_CACHE.containsKey(pubKeyHash)) {
+        return getSmall(pubKeyHash, true);
+    }
+
+    public static Node getSmall(ByteArray pubKeyHash, boolean useCache) {
+        if (useCache && SMALL_CACHE.containsKey(pubKeyHash)) {
             return SMALL_CACHE.get(pubKeyHash);
         }
         byte[] buckets = BUCKETS.createBuckets(pubKeyHash.getBytes());
         long handle = HandleFactory.calculateHandleValue(buckets);
         Node node = imageForHandle(handle, CONFIGURATION.height() / 4d);
-        if (SMALL_CACHE.size() < MAX_CACHE_SIZE) {
+        if (useCache && SMALL_CACHE.size() < MAX_CACHE_SIZE) {
             SMALL_CACHE.put(pubKeyHash, node);
         }
         return node;

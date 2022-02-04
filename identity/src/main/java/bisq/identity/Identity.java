@@ -42,10 +42,10 @@ public record Identity(String domainId, NetworkId networkId, KeyPair keyPair) im
 
     // Use hash of public key as ID
     public String id() {
-        return Hex.encode(DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded()));
+        return Hex.encode(pubKeyHash().getBytes());
     }
 
     public ByteArray pubKeyHash() {
-        return new ByteArray(DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded()));
+        return new ByteArray(DigestUtil.hash(keyPair.getPublic().getEncoded()));
     }
 }

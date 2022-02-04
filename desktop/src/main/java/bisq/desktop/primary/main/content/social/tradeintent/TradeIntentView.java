@@ -19,24 +19,23 @@ package bisq.desktop.primary.main.content.social.tradeintent;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.composition.UserNameIconComponent;
 import bisq.desktop.components.containers.BisqGridPane;
+import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.primary.main.content.social.user.ChatUserView;
+import bisq.desktop.primary.main.content.social.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
@@ -45,27 +44,24 @@ public class TradeIntentView extends View<VBox, TradeIntentModel, TradeIntentCon
     private final BisqGridPane gridPane;
     private final Label addDataResultLabel;
     private final ChangeListener<TradeIntentListItem> dataTableSelectedItemListener;
-    private final UserNameIconComponent userNameIconComponent;
     private Subscription selectedUserIdSubscription;
 
-    public TradeIntentView(TradeIntentModel model, TradeIntentController controller, ChatUserView chatUserView) {
+    public TradeIntentView(TradeIntentModel model, TradeIntentController controller, UserProfileDisplay.View userProfileView) {
         super(new VBox(), model, controller);
         root.setSpacing(20);
-        
+
         gridPane = new BisqGridPane();
         gridPane.setPadding(new Insets(20, 20, 20, 0));
 
-        //todo user UI needs more work...
-        Node userViewRoot = chatUserView.getRoot();
-        StackPane.setAlignment(userViewRoot, Pos.TOP_RIGHT);
-        userNameIconComponent = new UserNameIconComponent();
-        userNameIconComponent.setPadding(new Insets(10, 0, 0, 10));
-        root.getChildren().addAll(userNameIconComponent, gridPane/*, userViewRoot*/);
+        HBox userProfileViewRoot = userProfileView.getRoot();
+        StackPane.setAlignment(userProfileViewRoot, Pos.TOP_RIGHT);
+        userProfileViewRoot.setPadding(new Insets(10, 0, 0, 10));
+        root.getChildren().addAll(userProfileViewRoot, gridPane);
 
         gridPane.startSection(Res.offerbook.get("tradeIntent.create.title"));
         TextField askTextField = gridPane.addTextField(Res.offerbook.get("tradeIntent.create.ask"), "I want 0.01 BTC");
         TextField bidTextField = gridPane.addTextField(Res.offerbook.get("tradeIntent.create.bid"), "Pay EUR via SEPA at market rate");
-        Pair<Button, Label> addDataButtonPair = gridPane.addButton(Res.common.get("publish"));
+        Pair<BisqButton, Label> addDataButtonPair = gridPane.addButton(Res.common.get("publish"));
         Button addDataButton = addDataButtonPair.first();
         addDataResultLabel = addDataButtonPair.second();
         addDataButton.setOnAction(e -> {
@@ -89,21 +85,12 @@ public class TradeIntentView extends View<VBox, TradeIntentModel, TradeIntentCon
     public void onViewAttached() {
         tableView.getSelectionModel().selectedItemProperty().addListener(dataTableSelectedItemListener);
         addDataResultLabel.textProperty().bind(model.getAddDataResultProperty());
-
-        selectedUserIdSubscription = EasyBind.subscribe(model.selectedUserIdentity, identity -> {
-            if (identity != null) {
-                // UserNameIconComponent userNameIconComponent = new UserNameIconComponent(identity);
-                userNameIconComponent.setIdentity(identity);
-                //   root.getChildren().add(0, userNameIconComponent);
-            }
-        });
     }
 
     @Override
     protected void onViewDetached() {
         tableView.getSelectionModel().selectedItemProperty().removeListener(dataTableSelectedItemListener);
         addDataResultLabel.textProperty().unbind();
-        selectedUserIdSubscription.unsubscribe();
     }
 
     private void configDataTableView() {
