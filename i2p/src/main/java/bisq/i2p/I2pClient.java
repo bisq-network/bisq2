@@ -60,28 +60,6 @@ public class I2pClient {
 
     // We use one i2p client per app
     public static I2pClient getI2pClient(String dirPath, String host, int port, long socketTimeout) {
-
-        /*
-          I2P uses a custom log framework.
-
-          There are two ways to change logging-related configs:
-
-          1) Via a config file:
-          - The file must be called `logger.config` and must be placed in the current working directory (IdeaProjects/bisq2)
-          - For properties available, see net.i2p.util.LogManager.PROP_*
-
-          See https://geti2p.net/spec/configuration -> "Logger (logger.config)"
-
-          Note: A custom config file name and location can be loaded using
-          I2PAppContext.getGlobalContext().logManager().setConfig("desktop/src/main/resources/bisq.properties");
-          using a path relative to the current working directory.
-
-          2) Using the exposed setters on the log manager:
-          I2PAppContext.getGlobalContext().logManager().set*
-         */
-        I2PAppContext.getGlobalContext().logManager().setBaseLogfilename("logs/i2p-@.log");
-
-
         I2pClient i2pClient;
         synchronized (I2P_CLIENT_BY_APP) {
             if (I2P_CLIENT_BY_APP.containsKey(dirPath)) {
@@ -101,10 +79,35 @@ public class I2pClient {
         this.dirPath = dirPath;
         log.info("I2P client created with dirPath={}; host={}; port={}; socketTimeout={}",
                 dirPath, host, port, socketTimeout);
+        configureI2pLogging();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Thread.currentThread().setName("I2pClient.shutdownHook");
             shutdown();
         }));
+    }
+
+    private void configureI2pLogging() {
+        /*
+          I2P uses a custom log framework.
+
+          There are two ways to change logging-related configs:
+
+          1) Via a config file:
+          - The file must be called `logger.config` and must be placed in the current working directory (IdeaProjects/bisq2)
+          - For properties available, see net.i2p.util.LogManager.PROP_*
+
+          See https://geti2p.net/spec/configuration -> "Logger (logger.config)"
+
+          Note: A custom config file name and location can be loaded using
+          I2PAppContext.getGlobalContext().logManager().setConfig("desktop/src/main/resources/bisq.properties");
+          using a path relative to the current working directory.
+
+          2) Using the exposed setters on the log manager:
+          I2PAppContext.getGlobalContext().logManager().set*
+         */
+        String baseLogFilename = dirPath + "/logs/i2p-@.log"; // @ = counter (starts with 0, incremented with every new log file)
+        I2PAppContext.getGlobalContext().logManager().setBaseLogfilename(baseLogFilename);
+        log.debug("I2P logs to {}", baseLogFilename);
     }
 
     /**
