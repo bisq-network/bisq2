@@ -26,10 +26,7 @@ import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.social.userprofile.Entitlement;
 import bisq.social.userprofile.UserProfileService;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -40,6 +37,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -49,8 +47,8 @@ import java.util.stream.Stream;
 public class EntitlementSelection {
     private final Controller controller;
 
-    public EntitlementSelection(UserProfileService userProfileService) {
-        controller = new Controller(userProfileService);
+    public EntitlementSelection(UserProfileService userProfileService, ObjectProperty<KeyPair> keyPair) {
+        controller = new Controller(userProfileService, keyPair);
     }
 
     public View getView() {
@@ -69,10 +67,10 @@ public class EntitlementSelection {
         private final UserProfileService userProfileService;
 
 
-        private Controller(UserProfileService userProfileService) {
+        private Controller(UserProfileService userProfileService, ObjectProperty<KeyPair> keyPair) {
             this.userProfileService = userProfileService;
 
-            model = new Model();
+            model = new Model(keyPair);
             view = new View(model, this);
         }
 
@@ -111,7 +109,7 @@ public class EntitlementSelection {
             String txId = entitlementItem.getTxId().get();
             Button button = entitlementItem.getButton();
             Entitlement.Type entitlementType = entitlementItem.getType();
-            userProfileService.verifyEntitlement(entitlementType, txId).whenComplete((result, throwable) -> {
+            userProfileService.verifyEntitlement(entitlementType, txId, model.keyPair.get().getPublic()).whenComplete((result, throwable) -> {
                 if (throwable == null) {
                     if (result) {
                         model.verifiedEntitlements.add(new Entitlement(entitlementType, txId));
@@ -135,14 +133,16 @@ public class EntitlementSelection {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        final Set<Entitlement> verifiedEntitlements = new HashSet<>();
-        final ObservableList<EntitlementItem> observableList = FXCollections.observableArrayList(Stream.of(Entitlement.Type.values())
+        private final Set<Entitlement> verifiedEntitlements = new HashSet<>();
+        private final ObservableList<EntitlementItem> observableList = FXCollections.observableArrayList(Stream.of(Entitlement.Type.values())
                 .map(EntitlementItem::new)
                 .collect(Collectors.toList()));
-        final SortedList<EntitlementItem> sortedList = new SortedList<>(observableList);
-        final BooleanProperty tableVisible = new SimpleBooleanProperty();
+        private final SortedList<EntitlementItem> sortedList = new SortedList<>(observableList);
+        private final BooleanProperty tableVisible = new SimpleBooleanProperty();
+        private final ObjectProperty<KeyPair> keyPair;
 
-        private Model() {
+        private Model(ObjectProperty<KeyPair> keyPair) {
+            this.keyPair = keyPair;
         }
     }
 

@@ -71,10 +71,10 @@ public class CreateUserProfile {
         private Controller(UserProfileService userProfileService, KeyPairService keyPairService) {
             this.userProfileService = userProfileService;
             this.keyPairService = keyPairService;
-
-            entitlementSelection = new EntitlementSelection(userProfileService);
-
             model = new Model();
+            entitlementSelection = new EntitlementSelection(userProfileService, model.tempKeyPair);
+
+           
             view = new View(model, this, entitlementSelection.getView());
 
             userNameListener = (observable, oldValue, newValue) -> onCreateRoboIcon();
@@ -103,10 +103,10 @@ public class CreateUserProfile {
             model.changeRoboIconButtonDisable.set(true);
             model.feedback.set(Res.common.get("social.createUserProfile.prepare"));
             String useName = model.userName.get();
-            userProfileService.createNewInitializedUserProfile(useName, model.tempKeyId, model.tempKeyPair, entitlementSelection.getVerifiedEntitlements())
+            userProfileService.createNewInitializedUserProfile(useName, model.tempKeyId, model.tempKeyPair.get(), entitlementSelection.getVerifiedEntitlements())
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
-                            checkArgument(userProfile.identity().pubKeyHash().equals(new ByteArray(DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded()))));
+                            checkArgument(userProfile.identity().pubKeyHash().equals(new ByteArray(DigestUtil.hash(model.tempKeyPair.get().getPublic().getEncoded()))));
                             checkArgument(userProfile.identity().domainId().equals(useName));
                             reset();
                             model.feedback.set(Res.common.get("social.createUserProfile.success", useName));
@@ -116,27 +116,27 @@ public class CreateUserProfile {
 
         private void onCreateRoboIcon() {
             model.tempKeyId = StringUtils.createUid();
-            model.tempKeyPair = keyPairService.generateKeyPair();
-            model.roboHashNode.set(RoboHash.getImage(new ByteArray(DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded())), false));
+            model.tempKeyPair.set(keyPairService.generateKeyPair());
+            model.roboHashNode.set(RoboHash.getImage(new ByteArray(DigestUtil.hash(model.tempKeyPair.get().getPublic().getEncoded())), false));
         }
 
         private void reset() {
             model.userName.set("");
             model.changeRoboIconButtonDisable.set(false);
             model.tempKeyId = null;
-            model.tempKeyPair = null;
+            model.tempKeyPair.set(null);
             model.roboHashNode.set(null);
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
+        final ObjectProperty<KeyPair> tempKeyPair = new SimpleObjectProperty<>();
         final StringProperty feedback = new SimpleStringProperty();
         final StringProperty userName = new SimpleStringProperty();
         final BooleanProperty changeRoboIconButtonDisable = new SimpleBooleanProperty();
         final BooleanProperty createProfileButtonDisable = new SimpleBooleanProperty();
         String tempKeyId;
-        KeyPair tempKeyPair;
 
         private Model() {
         }

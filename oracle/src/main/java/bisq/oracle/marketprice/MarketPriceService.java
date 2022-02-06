@@ -19,9 +19,9 @@ package bisq.oracle.marketprice;
 
 import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Pair;
+import bisq.common.monetary.Market;
 import bisq.common.monetary.MarketRepository;
 import bisq.common.monetary.Quote;
-import bisq.common.monetary.Market;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CollectionUtil;
@@ -86,16 +86,15 @@ public class MarketPriceService {
     }
 
     public CompletableFuture<Boolean> initialize() {
-        getHttpClientAndRequest().whenComplete((r, t) -> {
-            Scheduler.run(() -> request()
-                            .whenComplete((map, throwable) -> {
-                                if (map.isEmpty() || throwable != null) {
-                                    // Get a new provider/httpClient
-                                    getHttpClientAndRequest();
-                                }
-                            }))
-                    .periodically(REQUEST_INTERVAL_SEC, TimeUnit.SECONDS);
-        });
+        getHttpClientAndRequest();
+        Scheduler.run(() -> request()
+                        .whenComplete((map, throwable) -> {
+                            if (map.isEmpty() || throwable != null) {
+                                // Get a new provider/httpClient
+                                getHttpClientAndRequest();
+                            }
+                        }))
+                .periodically(REQUEST_INTERVAL_SEC, TimeUnit.SECONDS);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -188,14 +187,14 @@ public class MarketPriceService {
         return map;
     }
 
-    private CompletableFuture<BaseHttpClient> getHttpClientAndRequest() {
+    private BaseHttpClient getHttpClientAndRequest() {
         return findProvider()
-                .map(provider -> getHttpClient(provider)
-                        .whenComplete((httpClient, throwable) -> {
-                            this.httpClient = Optional.of(httpClient);
-                            request();
-                        })
-                ).orElse(CompletableFuture.failedFuture(new IllegalStateException("No provider found")));
+                .map(provider -> {
+                    BaseHttpClient httpClient = getHttpClient(provider);
+                    this.httpClient = Optional.of(httpClient);
+                    request();
+                    return httpClient;
+                }).orElseThrow();
     }
 
     private Optional<Provider> findProvider() {
@@ -222,7 +221,7 @@ public class MarketPriceService {
         return Optional.of(candidate);
     }
 
-    private CompletableFuture<BaseHttpClient> getHttpClient(Provider provider) {
+    private BaseHttpClient getHttpClient(Provider provider) {
         httpClient.ifPresent(BaseHttpClient::shutdown);
         return networkService.getHttpClient(provider.url, userAgent, provider.transportType);
     }

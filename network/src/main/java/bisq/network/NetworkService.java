@@ -301,7 +301,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BaseHttpClient> getHttpClient(String url, String userAgent, Transport.Type transportType) {
+    public BaseHttpClient getHttpClient(String url, String userAgent, Transport.Type transportType) {
         return httpService.getHttpClient(url, userAgent, transportType, serviceNodesByTransport.getSocksProxy(), socks5ProxyAddress);
     }
 
