@@ -28,29 +28,27 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class HttpService {
-    public CompletableFuture<BaseHttpClient> getHttpClient(String url,
-                                                           String userAgent,
-                                                           Transport.Type transportType,
-                                                           Optional<Socks5Proxy> socksProxy,
-                                                           Optional<String> socks5ProxyAddress) {
-        return CompletableFuture.supplyAsync(() -> {
-            switch (transportType) {
-                case TOR:
-                    // If we have a socks5ProxyAddress defined in options we use that as proxy
-                    Socks5ProxyProvider socks5ProxyProvider = socks5ProxyAddress
-                            .map(Socks5ProxyProvider::new)
-                            .orElse(socksProxy.map(Socks5ProxyProvider::new)
-                                    .orElseThrow(() -> new RuntimeException("No socks5ProxyAddress provided and no Tor socksProxy available.")));
-                    return new TorHttpClient(url, userAgent, socks5ProxyProvider);
-                case I2P:
-                    // TODO We need to figure out how to get a proxy from i2p or require tor in any case
-                    throw new IllegalArgumentException("I2P providers not supported yet.");
-                case CLEAR:
-                    return new ClearNetHttpClient(url, userAgent);
-                default:
-                    throw new IllegalArgumentException("Providers network type not recognized. " + transportType);
-            }
-        });
+    public BaseHttpClient getHttpClient(String url,
+                                        String userAgent,
+                                        Transport.Type transportType,
+                                        Optional<Socks5Proxy> socksProxy,
+                                        Optional<String> socks5ProxyAddress) {
+        switch (transportType) {
+            case TOR:
+                // If we have a socks5ProxyAddress defined in options we use that as proxy
+                Socks5ProxyProvider socks5ProxyProvider = socks5ProxyAddress
+                        .map(Socks5ProxyProvider::new)
+                        .orElse(socksProxy.map(Socks5ProxyProvider::new)
+                                .orElseThrow(() -> new RuntimeException("No socks5ProxyAddress provided and no Tor socksProxy available.")));
+                return new TorHttpClient(url, userAgent, socks5ProxyProvider);
+            case I2P:
+                // TODO We need to figure out how to get a proxy from i2p or require tor in any case
+                throw new IllegalArgumentException("I2P providers not supported yet.");
+            case CLEAR:
+                return new ClearNetHttpClient(url, userAgent);
+            default:
+                throw new IllegalArgumentException("Providers network type not recognized. " + transportType);
+        }
     }
 
     public CompletableFuture<Void> shutdown() {

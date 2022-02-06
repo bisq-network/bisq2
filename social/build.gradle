@@ -14,6 +14,7 @@ apply from: '../buildSrc/lombok-dependencies.gradle'
 
 dependencies {
     api platform(project(':platforms:common-platform'))
+    api platform(project(':platforms:network-platform'))
 
     implementation project(':common')
     implementation project(':i18n')
@@ -23,6 +24,7 @@ dependencies {
     implementation project(':identity')
     implementation project(':settings')
 
+    implementation 'com.github.chimp1984:jsocks'
     implementation 'com.google.guava:guava'
     implementation 'com.typesafe:config'
 }

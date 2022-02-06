@@ -100,7 +100,7 @@ public class DefaultApplicationService extends ServiceProvider {
 
         accountService = new AccountService(persistenceService);
 
-        userProfileService = new UserProfileService(persistenceService, keyPairService,identityService);
+        userProfileService = new UserProfileService(persistenceService, keyPairService, identityService, networkService);
         chatService = new ChatService(persistenceService, identityService, networkService);
         tradeIntentListingsService = new TradeIntentListingsService(networkService);
         tradeIntentService = new TradeIntentService(networkService, identityService, tradeIntentListingsService, chatService);

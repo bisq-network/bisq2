@@ -17,13 +17,29 @@
 
 package bisq.social.userprofile;
 
+import lombok.Getter;
+
 import java.io.Serializable;
+import java.util.List;
 
 public record Entitlement(Type entitlement, String txId) implements Serializable {
     public enum Type implements Serializable {
-        LIQUIDITY_PROVIDER,
-        CHANNEL_ADMIN,
-        CHANNEL_MODERATOR,
-        MEDIATOR,
+        LIQUIDITY_PROVIDER(ProofType.PROOF_OF_BURN),
+        CHANNEL_ADMIN(ProofType.BONDED_ROLE),
+        CHANNEL_MODERATOR(ProofType.CHANNEL_ADMIN_INVITATION, ProofType.PROOF_OF_BURN),
+        MEDIATOR(ProofType.BONDED_ROLE);
+
+        @Getter
+        private final List<ProofType> proofTypes;
+
+        Type(ProofType... proofTypes) {
+            this.proofTypes = List.of(proofTypes);
+        }
+    }
+
+    public enum ProofType implements Serializable {
+        PROOF_OF_BURN,
+        BONDED_ROLE,
+        CHANNEL_ADMIN_INVITATION
     }
 }
