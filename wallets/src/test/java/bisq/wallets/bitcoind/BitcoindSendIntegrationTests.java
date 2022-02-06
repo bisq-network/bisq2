@@ -4,7 +4,6 @@ import bisq.common.util.FileUtils;
 import bisq.wallets.AddressType;
 import bisq.wallets.bitcoind.responses.ListTransactionsResponseEntry;
 import bisq.wallets.bitcoind.responses.ListUnspentResponseEntry;
-import bisq.wallets.bitcoind.rpc.RpcCallFailureException;
 import bisq.wallets.bitcoind.rpc.RpcClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +27,7 @@ public class BitcoindSendIntegrationTests {
     private BitcoindWalletBackend walletBackend;
 
     @BeforeEach
-    public void setUp() throws IOException, RpcCallFailureException {
+    public void setUp() throws IOException {
         bitcoindProcess = BitcoindRegtestSetup.createAndStartBitcoind();
         tmpDirPath = FileUtils.createTempDir();
 
@@ -44,20 +43,20 @@ public class BitcoindSendIntegrationTests {
     }
 
     @AfterEach
-    public void cleanUp() throws RpcCallFailureException {
+    public void cleanUp() {
         chainBackend.unloadWallet(walletFilePath);
         bitcoindProcess.stopAndWaitUntilStopped();
     }
 
     @Test
-    public void mineInitialRegtestBlocks() throws RpcCallFailureException {
+    public void mineInitialRegtestBlocks() {
         String address = walletBackend.getNewAddress(AddressType.BECH32, "");
         chainBackend.generateToAddress(101, address);
         assertEquals(50, walletBackend.getBalance());
     }
 
     @Test
-    public void sendOneBtcToAddress() throws MalformedURLException, RpcCallFailureException {
+    public void sendOneBtcToAddress() throws MalformedURLException {
         mineInitialRegtestBlocks();
         var receiverBackend = BitcoindRegtestSetup
                 .createTestWalletBackend(chainBackend, tmpDirPath, "receiver_wallet");
@@ -73,7 +72,7 @@ public class BitcoindSendIntegrationTests {
     }
 
     @Test
-    public void sendBtcAndListTxs() throws MalformedURLException, RpcCallFailureException {
+    public void sendBtcAndListTxs() throws MalformedURLException {
         mineInitialRegtestBlocks();
         var receiverBackend = BitcoindRegtestSetup
                 .createTestWalletBackend(chainBackend, tmpDirPath, "receiver_wallet");
@@ -122,7 +121,7 @@ public class BitcoindSendIntegrationTests {
     }
 
     @Test
-    public void listUnspent() throws MalformedURLException, RpcCallFailureException {
+    public void listUnspent() throws MalformedURLException {
         mineInitialRegtestBlocks();
         BitcoindWalletBackend receiverBackend = BitcoindRegtestSetup
                 .createTestWalletBackend(chainBackend, tmpDirPath, "receiver_wallet");
