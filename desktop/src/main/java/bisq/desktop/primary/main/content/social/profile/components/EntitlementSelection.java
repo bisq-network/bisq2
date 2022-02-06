@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.social.profile.components;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqInputTextField;
 import bisq.desktop.components.controls.BisqLabel;
@@ -109,23 +110,25 @@ public class EntitlementSelection {
             String txId = entitlementItem.getTxId().get();
             Button button = entitlementItem.getButton();
             Entitlement.Type entitlementType = entitlementItem.getType();
-            userProfileService.verifyEntitlement(entitlementType, txId, model.keyPair.get().getPublic()).whenComplete((result, throwable) -> {
-                if (throwable == null) {
-                    if (result) {
-                        model.verifiedEntitlements.add(new Entitlement(entitlementType, txId));
-                        button.getStyleClass().add("action-button");
-                        entitlementItem.buttonText.set(Res.common.get("social.createUserProfile.table.entitlement.verify.success"));
-                    } else {
-                        button.getStyleClass().remove("action-button");
-                        entitlementItem.buttonText.set(Res.common.get("social.createUserProfile.table.entitlement.verify.failed"));
-                        log.warn("Entitlement verification failed."); // todo 
-                    }
-                } else {
-                    log.warn("Error at entitlement verification."); // todo 
-                }
-            });
+            userProfileService.verifyEntitlement(entitlementType, txId, model.keyPair.get().getPublic())
+                    .whenComplete((result, throwable) -> {
+                        UIThread.run(() -> {
+                            if (throwable == null) {
+                                if (result) {
+                                    model.verifiedEntitlements.add(new Entitlement(entitlementType, txId));
+                                    button.getStyleClass().add("action-button");
+                                    entitlementItem.buttonText.set(Res.common.get("social.createUserProfile.table.entitlement.verify.success"));
+                                } else {
+                                    button.getStyleClass().remove("action-button");
+                                    entitlementItem.buttonText.set(Res.common.get("social.createUserProfile.table.entitlement.verify.failed"));
+                                    log.warn("Entitlement verification failed."); // todo 
+                                }
+                            } else {
+                                log.warn("Error at entitlement verification."); // todo 
+                            }
+                        });
+                    });
         }
-
 
         private void onShowInfo(EntitlementItem entitlementItem) {
             //todo
