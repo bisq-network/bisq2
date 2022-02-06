@@ -20,6 +20,8 @@ package bisq.desktop.primary.main.content.social.profile;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.social.components.UserProfileDisplay;
+import bisq.desktop.primary.main.content.social.profile.components.CreateUserProfile;
+import bisq.desktop.primary.main.content.social.profile.components.UserProfileSelection;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,9 +46,14 @@ public class UserProfileController implements Controller {
 
     @Override
     public void onViewAttached() {
+        model.createUserProfileVisible.set(false);
     }
 
     @Override
     public void onViewDetached() {
+    }
+
+    public void showCreateUserProfile() {
+        model.createUserProfileVisible.set(true);
     }
 }

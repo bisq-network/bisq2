@@ -21,10 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
 import bisq.identity.IdentityService;
 import bisq.social.userprofile.UserProfile;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.scene.Node;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +37,7 @@ public class UserProfileModel implements Model {
     ObjectProperty<UserProfile> userProfile = new SimpleObjectProperty<>();
     StringProperty successText = new SimpleStringProperty();
     KeyPair keyPair;
+    final BooleanProperty createUserProfileVisible = new SimpleBooleanProperty();
 
     public UserProfileModel(DefaultApplicationService applicationService) {
         identityService = applicationService.getIdentityService();

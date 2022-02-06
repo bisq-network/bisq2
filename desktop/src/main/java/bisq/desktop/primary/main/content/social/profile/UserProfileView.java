@@ -18,13 +18,20 @@
 package bisq.desktop.primary.main.content.social.profile;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.content.social.components.UserProfileDisplay;
+import bisq.desktop.primary.main.content.social.profile.components.CreateUserProfile;
+import bisq.desktop.primary.main.content.social.profile.components.UserProfileSelection;
+import bisq.i18n.Res;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UserProfileView extends View<VBox, UserProfileModel, UserProfileController> {
+    private final VBox createUserProfile;
+    private final BisqButton showCreateUserProfileButton;
+
     public UserProfileView(UserProfileModel model,
                            UserProfileController controller,
                            UserProfileSelection.View userProfileSelectionView,
@@ -32,20 +39,35 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
                            CreateUserProfile.View createUserProfileView) {
         super(new VBox(), model, controller);
 
-        
         root.setPadding(Layout.PADDING);
         root.setSpacing(40);
 
-        root.getChildren().addAll(userProfileSelectionView.getRoot(), 
-                userProfileView.getRoot(), 
-                createUserProfileView.getRoot());
+        showCreateUserProfileButton = new BisqButton(Res.common.get("social.createUserProfile.headline"));
+        showCreateUserProfileButton.setMinWidth(300);
+        createUserProfile = createUserProfileView.getRoot();
+        root.getChildren().addAll(userProfileSelectionView.getRoot(),
+                userProfileView.getRoot(),
+                showCreateUserProfileButton,
+                createUserProfile);
     }
 
     @Override
     public void onViewAttached() {
+        showCreateUserProfileButton.setOnAction(e -> controller.showCreateUserProfile());
+
+        showCreateUserProfileButton.visibleProperty().bind(model.createUserProfileVisible.not());
+        showCreateUserProfileButton.managedProperty().bind(model.createUserProfileVisible.not());
+        createUserProfile.visibleProperty().bind(model.createUserProfileVisible);
+        createUserProfile.managedProperty().bind(model.createUserProfileVisible);
     }
 
     @Override
     protected void onViewDetached() {
+        showCreateUserProfileButton.setOnAction(null);
+        showCreateUserProfileButton.visibleProperty().unbind();
+        showCreateUserProfileButton.managedProperty().unbind();
+        createUserProfile.visibleProperty().unbind();
+        createUserProfile.managedProperty().unbind();
+
     }
 }

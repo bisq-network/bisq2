@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.profile;
+package bisq.desktop.primary.main.content.social.profile.components;
 
 import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
@@ -23,15 +23,15 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.controls.BisqTextField;
-import bisq.desktop.layout.Layout;
 import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.social.userprofile.UserProfileService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
-import javafx.scene.control.Label;
+import javafx.geometry.Insets;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -45,6 +45,7 @@ import java.security.KeyPair;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class CreateUserProfile {
     private final Controller controller;
 
@@ -56,6 +57,7 @@ public class CreateUserProfile {
         return controller.view;
     }
 
+    @Slf4j
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
@@ -63,13 +65,17 @@ public class CreateUserProfile {
         private final UserProfileService userProfileService;
         private final KeyPairService keyPairService;
         private final ChangeListener<String> userNameListener;
+        private final EntitlementSelection entitlementSelection;
+
 
         private Controller(UserProfileService userProfileService, KeyPairService keyPairService) {
             this.userProfileService = userProfileService;
             this.keyPairService = keyPairService;
 
+            entitlementSelection = new EntitlementSelection(userProfileService);
+
             model = new Model();
-            view = new View(model, this);
+            view = new View(model, this, entitlementSelection.getView());
 
             userNameListener = (observable, oldValue, newValue) -> onCreateRoboIcon();
         }
@@ -97,10 +103,10 @@ public class CreateUserProfile {
             model.changeRoboIconButtonDisable.set(true);
             model.feedback.set(Res.common.get("social.createUserProfile.prepare"));
             String useName = model.userName.get();
-            userProfileService.createNewInitializedUserProfile(useName, model.ephemeralKeyId, model.ephemeralKeyPair)
+            userProfileService.createNewInitializedUserProfile(useName, model.tempKeyId, model.tempKeyPair, entitlementSelection.getVerifiedEntitlements())
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
-                            checkArgument(userProfile.identity().pubKeyHash().equals(new ByteArray(DigestUtil.hash(model.ephemeralKeyPair.getPublic().getEncoded()))));
+                            checkArgument(userProfile.identity().pubKeyHash().equals(new ByteArray(DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded()))));
                             checkArgument(userProfile.identity().domainId().equals(useName));
                             reset();
                             model.feedback.set(Res.common.get("social.createUserProfile.success", useName));
@@ -108,29 +114,29 @@ public class CreateUserProfile {
                     });
         }
 
+        private void onCreateRoboIcon() {
+            model.tempKeyId = StringUtils.createUid();
+            model.tempKeyPair = keyPairService.generateKeyPair();
+            model.roboHashNode.set(RoboHash.getImage(new ByteArray(DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded())), false));
+        }
+
         private void reset() {
             model.userName.set("");
             model.changeRoboIconButtonDisable.set(false);
-            model.ephemeralKeyId = null;
-            model.ephemeralKeyPair = null;
+            model.tempKeyId = null;
+            model.tempKeyPair = null;
             model.roboHashNode.set(null);
-        }
-
-        private void onCreateRoboIcon() {
-            model.ephemeralKeyId = StringUtils.createUid();
-            model.ephemeralKeyPair = keyPairService.generateKeyPair();
-            model.roboHashNode.set(RoboHash.getImage(new ByteArray(DigestUtil.hash(model.ephemeralKeyPair.getPublic().getEncoded())), false));
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        String ephemeralKeyId;
-        ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
-        StringProperty feedback = new SimpleStringProperty();
-        StringProperty userName = new SimpleStringProperty();
-        BooleanProperty changeRoboIconButtonDisable = new SimpleBooleanProperty();
-        BooleanProperty createProfileButtonDisable = new SimpleBooleanProperty();
-        KeyPair ephemeralKeyPair;
+        final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
+        final StringProperty feedback = new SimpleStringProperty();
+        final StringProperty userName = new SimpleStringProperty();
+        final BooleanProperty changeRoboIconButtonDisable = new SimpleBooleanProperty();
+        final BooleanProperty createProfileButtonDisable = new SimpleBooleanProperty();
+        String tempKeyId;
+        KeyPair tempKeyPair;
 
         private Model() {
         }
@@ -142,26 +148,31 @@ public class CreateUserProfile {
         private final BisqButton changeRoboIconButton, createUserButton;
         private final BisqTextField userNameInputField;
         private final BisqLabel feedbackLabel;
-        private Subscription roboHashNodeSubscription, userProfileSubscription;
+        private Subscription roboHashNodeSubscription;
 
-        private View(Model model, Controller controller) {
+        private View(Model model, Controller controller, EntitlementSelection.View entitlementSelectionView) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-            Label headline = new BisqLabel(Res.common.get("social.createUserProfile.headline"));
+            BisqLabel headline = new BisqLabel(Res.common.get("social.createUserProfile.headline"));
             headline.getStyleClass().add("titled-group-bg-label-active");
+            headline.setPadding(new Insets(0, 0, 10, 0));
 
             userNameInputField = new BisqTextField();
+            userNameInputField.setMinWidth(300);
             userNameInputField.setPromptText(Res.common.get("social.createUserProfile.userName.prompt"));
 
             changeRoboIconButton = new BisqButton(Res.common.get("social.createUserProfile.changeIconButton"));
+            changeRoboIconButton.setMinWidth(userNameInputField.getMinWidth());
 
             createUserButton = new BisqButton(Res.common.get("social.createUserProfile.createButton"));
+            createUserButton.setMinWidth(userNameInputField.getMinWidth());
             createUserButton.disableProperty().bind(userNameInputField.textProperty().isEmpty());
+            createUserButton.getStyleClass().add("action-button");
 
             VBox vBox = new VBox();
             vBox.setSpacing(Layout.SPACING);
-            vBox.getChildren().addAll(userNameInputField, changeRoboIconButton, createUserButton);
+            vBox.getChildren().addAll(userNameInputField, changeRoboIconButton);
 
             HBox hBox = new HBox();
             hBox.setSpacing(Layout.SPACING);
@@ -173,7 +184,9 @@ public class CreateUserProfile {
             feedbackLabel = new BisqLabel();
             feedbackLabel.setWrapText(true);
 
-            root.getChildren().addAll(headline, hBox, feedbackLabel);
+            VBox entitlementSelectionViewRoot = entitlementSelectionView.getRoot();
+
+            root.getChildren().addAll(headline, hBox, entitlementSelectionViewRoot, createUserButton, feedbackLabel);
         }
 
         @Override
@@ -190,6 +203,7 @@ public class CreateUserProfile {
                 if (roboIcon != null) {
                     roboIconImageView.setImage(roboIcon);
                 }
+                roboIconImageView.setVisible(roboIcon != null);
             });
         }
 

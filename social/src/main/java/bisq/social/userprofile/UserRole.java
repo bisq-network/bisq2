@@ -17,10 +17,8 @@
 
 package bisq.social.userprofile;
 
-import bisq.identity.Identity;
-
 import java.io.Serializable;
-import java.util.Set;
 
-public record UserProfile(Identity identity, Set<Entitlement> entitlements) implements Serializable {
+public enum UserRole implements Serializable {
+    TRADER
 }
