@@ -3,7 +3,6 @@ package bisq.wallets.bitcoind;
 import bisq.wallets.bitcoind.responses.CreateOrLoadWalletResponse;
 import bisq.wallets.bitcoind.responses.FinalizePsbtResponse;
 import bisq.wallets.bitcoind.responses.UnloadWalletResponse;
-import bisq.wallets.bitcoind.rpc.RpcCallFailureException;
 import bisq.wallets.bitcoind.rpc.RpcClient;
 
 import java.nio.file.Path;
@@ -18,7 +17,7 @@ public class BitcoindChainBackend {
         this.rpcClient = rpcClient;
     }
 
-    public void createOrLoadWallet(Path walletPath, String passphrase, boolean isWatchOnly, boolean createBlankWallet) throws RpcCallFailureException {
+    public void createOrLoadWallet(Path walletPath, String passphrase, boolean isWatchOnly, boolean createBlankWallet) {
         if (!doesWalletExist(walletPath)) {
             createWallet(walletPath, passphrase, isWatchOnly, createBlankWallet);
         } else {
@@ -26,7 +25,7 @@ public class BitcoindChainBackend {
         }
     }
 
-    public FinalizePsbtResponse finalizePsbt(String psbt) throws RpcCallFailureException {
+    public FinalizePsbtResponse finalizePsbt(String psbt) {
         return rpcClient.invoke(
                 BitcoindRpcEndpoint.FINALIZE_PSBT,
                 new Object[]{psbt},
@@ -34,7 +33,7 @@ public class BitcoindChainBackend {
         );
     }
 
-    public List<String> generateToAddress(int numberOfBlocksToMine, String addressOfMiner) throws RpcCallFailureException {
+    public List<String> generateToAddress(int numberOfBlocksToMine, String addressOfMiner) {
         return Arrays.asList(
                 rpcClient.invoke(
                         BitcoindRpcEndpoint.GENERATE_TO_ADDRESS,
@@ -44,7 +43,7 @@ public class BitcoindChainBackend {
         );
     }
 
-    public String sendRawTransaction(String hexString) throws RpcCallFailureException {
+    public String sendRawTransaction(String hexString) {
         return rpcClient.invoke(
                 BitcoindRpcEndpoint.SEND_RAW_TRANSACTION,
                 new Object[]{hexString},
@@ -52,7 +51,7 @@ public class BitcoindChainBackend {
         );
     }
 
-    public boolean stop() throws RpcCallFailureException {
+    public boolean stop() {
         String result = rpcClient.invoke(
                 BitcoindRpcEndpoint.STOP,
                 new Object[0],
@@ -61,7 +60,7 @@ public class BitcoindChainBackend {
         return result.equals("Bitcoin Core stopping");
     }
 
-    public void unloadWallet(Path walletPath) throws RpcCallFailureException {
+    public void unloadWallet(Path walletPath) {
         String absoluteWalletPath = walletPath.toAbsolutePath().toString();
         UnloadWalletResponse response = rpcClient.invoke(
                 BitcoindRpcEndpoint.UNLOAD_WALLET,
@@ -75,7 +74,7 @@ public class BitcoindChainBackend {
         return walletPath.toFile().exists();
     }
 
-    private void createWallet(Path walletPath, String passphrase, boolean isWatchOnly, boolean createBlankWallet) throws RpcCallFailureException {
+    private void createWallet(Path walletPath, String passphrase, boolean isWatchOnly, boolean createBlankWallet) {
         String absoluteWalletPath = walletPath.toAbsolutePath().toString();
         CreateOrLoadWalletResponse response = rpcClient.invoke(
                 BitcoindRpcEndpoint.CREATE_WALLET,
@@ -90,7 +89,7 @@ public class BitcoindChainBackend {
         response.validate(absoluteWalletPath);
     }
 
-    private void loadWallet(Path walletPath) throws RpcCallFailureException {
+    private void loadWallet(Path walletPath) {
         String absoluteWalletPath = walletPath.toAbsolutePath().toString();
         CreateOrLoadWalletResponse response = rpcClient.invoke(
                 BitcoindRpcEndpoint.LOAD_WALLET,

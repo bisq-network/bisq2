@@ -5,7 +5,6 @@ import bisq.wallets.bitcoind.psbt.PsbtInput;
 import bisq.wallets.bitcoind.psbt.PsbtOptions;
 import bisq.wallets.bitcoind.psbt.PsbtOutput;
 import bisq.wallets.bitcoind.responses.*;
-import bisq.wallets.bitcoind.rpc.RpcCallFailureException;
 import bisq.wallets.bitcoind.rpc.RpcClient;
 
 import java.util.Arrays;
@@ -21,7 +20,7 @@ public class BitcoindWalletBackend {
         this.walletRpcClient = walletRpcClient;
     }
 
-    public AddMultisigAddressResponse addMultisigAddress(int nRequired, List<String> keys) throws RpcCallFailureException {
+    public AddMultisigAddressResponse addMultisigAddress(int nRequired, List<String> keys) {
         return walletRpcClient.invoke(
                 BitcoindRpcEndpoint.ADD_MULTISIG_ADDRESS,
                 new Object[]{nRequired, keys},
@@ -29,7 +28,7 @@ public class BitcoindWalletBackend {
         );
     }
 
-    public GetAddressInfoResponse getAddressInfo(String address) throws RpcCallFailureException {
+    public GetAddressInfoResponse getAddressInfo(String address) {
         return walletRpcClient.invoke(
                 BitcoindRpcEndpoint.GET_ADDRESS_INFO,
                 new Object[]{address},
@@ -37,7 +36,7 @@ public class BitcoindWalletBackend {
         );
     }
 
-    public double getBalance() throws RpcCallFailureException {
+    public double getBalance() {
         return walletRpcClient.invoke(
                 BitcoindRpcEndpoint.GET_BALANCE,
                 new Object[0],
@@ -45,7 +44,7 @@ public class BitcoindWalletBackend {
         );
     }
 
-    public String getNewAddress(AddressType addressType, String label) throws RpcCallFailureException {
+    public String getNewAddress(AddressType addressType, String label) {
         return walletRpcClient.invoke(
                 BitcoindRpcEndpoint.GET_NEW_ADDRESS,
                 new Object[]{label, addressType.getName()},
@@ -53,7 +52,7 @@ public class BitcoindWalletBackend {
         );
     }
 
-    public void importAddress(String address, String label) throws RpcCallFailureException {
+    public void importAddress(String address, String label) {
         walletRpcClient.invoke(
                 BitcoindRpcEndpoint.IMPORT_ADDRESS,
                 new Object[]{address, label},
@@ -61,7 +60,7 @@ public class BitcoindWalletBackend {
         );
     }
 
-    public List<ListTransactionsResponseEntry> listTransactions(int count) throws RpcCallFailureException {
+    public List<ListTransactionsResponseEntry> listTransactions(int count) {
         return Arrays.asList(
                 walletRpcClient.invoke(
                         BitcoindRpcEndpoint.LIST_TRANSACTIONS,
@@ -71,7 +70,7 @@ public class BitcoindWalletBackend {
         );
     }
 
-    public List<ListUnspentResponseEntry> listUnspent() throws RpcCallFailureException {
+    public List<ListUnspentResponseEntry> listUnspent() {
         return Arrays.asList(
                 walletRpcClient.invoke(
                         BitcoindRpcEndpoint.LIST_UNSPENT,
@@ -81,7 +80,7 @@ public class BitcoindWalletBackend {
         );
     }
 
-    public String sendToAddress(String address, double amount) throws RpcCallFailureException {
+    public String sendToAddress(String address, double amount) {
         return walletRpcClient.invoke(
                 BitcoindRpcEndpoint.SEND_TO_ADDRESS,
                 new Object[]{address, amount},
@@ -89,7 +88,7 @@ public class BitcoindWalletBackend {
         );
     }
 
-    public String signMessage(String address, String message) throws RpcCallFailureException {
+    public String signMessage(String address, String message) {
         return walletRpcClient.invoke(
                 BitcoindRpcEndpoint.SIGN_MESSAGE,
                 new Object[]{address, message},
@@ -97,7 +96,7 @@ public class BitcoindWalletBackend {
         );
     }
 
-    public boolean verifyMessage(String address, String signature, String message) throws RpcCallFailureException {
+    public boolean verifyMessage(String address, String signature, String message) {
         return walletRpcClient.invoke(
                 BitcoindRpcEndpoint.VERIFY_MESSAGE,
                 new Object[]{address, signature, message},
@@ -108,7 +107,7 @@ public class BitcoindWalletBackend {
     public WalletCreateFundedPsbtResponse walletCreateFundedPsbt(List<PsbtInput> inputs,
                                                                  PsbtOutput psbtOutput,
                                                                  int lockTime,
-                                                                 PsbtOptions psbtOptions) throws RpcCallFailureException {
+                                                                 PsbtOptions psbtOptions) {
         return walletRpcClient.invoke(
                 BitcoindRpcEndpoint.WALLET_CREATE_FUNDED_PSBT,
                 new Object[]{
@@ -121,7 +120,7 @@ public class BitcoindWalletBackend {
         );
     }
 
-    public void walletPassphrase(String passphrase, long timeout) throws RpcCallFailureException {
+    public void walletPassphrase(String passphrase, long timeout) {
         walletRpcClient.invoke(
                 BitcoindRpcEndpoint.WALLET_PASSPHRASE,
                 new Object[]{
@@ -132,7 +131,7 @@ public class BitcoindWalletBackend {
         );
     }
 
-    public WalletProcessPsbtResponse walletProcessPsbt(String psbt) throws RpcCallFailureException {
+    public WalletProcessPsbtResponse walletProcessPsbt(String psbt) {
         return walletRpcClient.invoke(
                 BitcoindRpcEndpoint.WALLET_PROCESS_PSBT,
                 new Object[]{psbt},

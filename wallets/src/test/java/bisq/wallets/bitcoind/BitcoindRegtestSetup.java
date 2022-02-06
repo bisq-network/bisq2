@@ -4,7 +4,6 @@ import bisq.common.util.FileUtils;
 import bisq.wallets.AddressType;
 import bisq.wallets.NetworkType;
 import bisq.wallets.bitcoind.responses.ListUnspentResponseEntry;
-import bisq.wallets.bitcoind.rpc.RpcCallFailureException;
 import bisq.wallets.bitcoind.rpc.RpcClient;
 import bisq.wallets.bitcoind.rpc.RpcConfig;
 
@@ -37,7 +36,7 @@ public class BitcoindRegtestSetup {
 
     public static BitcoindWalletBackend createTestWalletBackend(BitcoindChainBackend chainBackend,
                                                                 Path tmpDirPath,
-                                                                String walletName) throws MalformedURLException, RpcCallFailureException {
+                                                                String walletName) throws MalformedURLException {
         Path receiverWalletPath = tmpDirPath.resolve(walletName);
         RpcClient receiverWalletRpc = createWalletRpcClient(receiverWalletPath);
 
@@ -61,12 +60,12 @@ public class BitcoindRegtestSetup {
                 .findFirst();
     }
 
-    public static void mineInitialRegtestBlocks(BitcoindChainBackend minerChainBackend, BitcoindWalletBackend minerBackend) throws RpcCallFailureException {
+    public static void mineInitialRegtestBlocks(BitcoindChainBackend minerChainBackend, BitcoindWalletBackend minerBackend) {
         String address = minerBackend.getNewAddress(AddressType.BECH32, "");
         minerChainBackend.generateToAddress(101, address);
     }
 
-    public static void mineOneBlock(BitcoindChainBackend minerChainBackend, BitcoindWalletBackend minerBackend) throws RpcCallFailureException {
+    public static void mineOneBlock(BitcoindChainBackend minerChainBackend, BitcoindWalletBackend minerBackend) {
         String minerAddress = minerBackend.getNewAddress(AddressType.BECH32, "");
         minerChainBackend.generateToAddress(1, minerAddress);
     }
@@ -74,7 +73,7 @@ public class BitcoindRegtestSetup {
     public static String sendBtcAndMineOneBlock(BitcoindChainBackend minerChainBackend,
                                                 BitcoindWalletBackend minerWalletBackend,
                                                 BitcoindWalletBackend receiverBackend,
-                                                double amount) throws RpcCallFailureException {
+                                                double amount) {
         String receiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
         minerWalletBackend.sendToAddress(receiverAddress, amount);
 

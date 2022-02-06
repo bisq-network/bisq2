@@ -1,7 +1,6 @@
 package bisq.wallets.bitcoind;
 
 import bisq.common.util.FileUtils;
-import bisq.wallets.bitcoind.rpc.RpcCallFailureException;
 import bisq.wallets.bitcoind.rpc.RpcClient;
 import org.junit.jupiter.api.*;
 
@@ -32,7 +31,7 @@ abstract class SharedBitcoindInstanceTests {
     }
 
     @BeforeEach
-    public void setUp() throws IOException, RpcCallFailureException {
+    public void setUp() throws IOException {
         tmpDirPath = FileUtils.createTempDir();
         walletFilePath = tmpDirPath.resolve("wallet");
         assertFalse(walletFilePath.toFile().exists());
@@ -47,7 +46,7 @@ abstract class SharedBitcoindInstanceTests {
     }
 
     @AfterEach
-    public void cleanUp() throws RpcCallFailureException {
+    public void cleanUp() {
         minerChainBackend.unloadWallet(walletFilePath);
     }
 }

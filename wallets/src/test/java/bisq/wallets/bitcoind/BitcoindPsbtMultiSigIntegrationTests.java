@@ -4,7 +4,6 @@ import bisq.wallets.AddressType;
 import bisq.wallets.bitcoind.psbt.PsbtOptions;
 import bisq.wallets.bitcoind.psbt.PsbtOutput;
 import bisq.wallets.bitcoind.responses.*;
-import bisq.wallets.bitcoind.rpc.RpcCallFailureException;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
@@ -16,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class BitcoindPsbtMultiSigIntegrationTests extends SharedBitcoindInstanceTests {
 
     @Test
-    public void psbtMultiSigTest() throws MalformedURLException, RpcCallFailureException {
+    public void psbtMultiSigTest() throws MalformedURLException {
         BitcoindRegtestSetup.mineInitialRegtestBlocks(minerChainBackend, minerWalletBackend);
 
         var aliceBackend = BitcoindRegtestSetup

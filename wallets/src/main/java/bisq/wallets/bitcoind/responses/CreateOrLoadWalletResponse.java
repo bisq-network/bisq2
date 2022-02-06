@@ -13,7 +13,7 @@ public class CreateOrLoadWalletResponse extends BitcoindWalletResponse {
     public CreateOrLoadWalletResponse() {
     }
 
-    public void validate(String walletDirPath) throws RpcCallFailureException {
+    public void validate(String walletDirPath) {
         if (!isSuccess(walletDirPath)) {
             throw new RpcCallFailureException(warning);
         }
