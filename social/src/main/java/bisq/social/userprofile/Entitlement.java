@@ -17,10 +17,13 @@
 
 package bisq.social.userprofile;
 
-import bisq.identity.Identity;
-
 import java.io.Serializable;
-import java.util.Set;
 
-public record UserProfile(Identity identity, Set<Entitlement> entitlements) implements Serializable {
+public record Entitlement(Type entitlement, String txId) implements Serializable {
+    public enum Type implements Serializable {
+        LIQUIDITY_PROVIDER,
+        CHANNEL_ADMIN,
+        CHANNEL_MODERATOR,
+        MEDIATOR,
+    }
 }

@@ -28,6 +28,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -48,24 +50,24 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
 
     public CompletableFuture<Boolean> initialize() {
         if (persistableStore.getUserProfiles().isEmpty()) {
-            String keyId = StringUtils.createUid();
-            KeyPair keyPair = keyPairService.generateKeyPair();
-            String useName = "Satoshi";
-            return createNewInitializedUserProfile(useName, keyId, keyPair).thenApply(userProfile -> true);
+            return createDefaultUserProfile();
         } else {
             return CompletableFuture.completedFuture(true);
         }
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<UserProfile> createNewInitializedUserProfile(String domainId, String keyId, KeyPair keyPair) {
+    public CompletableFuture<UserProfile> createNewInitializedUserProfile(String domainId,
+                                                                          String keyId, 
+                                                                          KeyPair keyPair, 
+                                                                          Set<Entitlement> entitlements) {
         return identityService.createNewInitializedIdentity(domainId, keyId, keyPair)
                 .thenApply(identity -> {
-                    UserProfile userProfile = new UserProfile(identity);
+                    UserProfile userProfile = new UserProfile(identity, entitlements);
                     synchronized (lock) {
                         persistableStore.getUserProfiles().add(userProfile);
                         persistableStore.getSelectedUserProfile().set(userProfile);
@@ -78,5 +80,29 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     public void selectUserProfile(UserProfile value) {
         persistableStore.getSelectedUserProfile().set(value);
         persist();
+    }
+
+    public CompletableFuture<Boolean> verifyEntitlement(Entitlement.Type entitlementType, String txId) {
+        log.error("entitlementType {}, tx ID {}", entitlementType, txId);
+        // todo 
+        //  1. request from explorer nodes the tx data
+        //  2. check if tx is valid bsq tx and match requirements (proof or burn or bonded role tx id, correct 
+        //  amounts and op return data)
+        //  3a. for proof of burn user need to use pubkey hash as pre image. Others can see pubkey and can verify if 
+        //  its hash matches the attached proof of burn tx data.
+        //  3b. For bonded roles the user need to provide a signature of the user profile pubkey hash signed with the 
+        //  input EC key of the bonded role request tx. Others can verify if the signature matches the users pubkey hash
+        //  by requesting the bonded role tx data.
+        // 
+        
+        return CompletableFuture.completedFuture(txId.length() > 5); //todo
+    }
+
+    private CompletableFuture<Boolean> createDefaultUserProfile() {
+        String keyId = StringUtils.createUid();
+        KeyPair keyPair = keyPairService.generateKeyPair();
+        String useName = "Satoshi";
+        return createNewInitializedUserProfile(useName, keyId, keyPair, new HashSet<>())
+                .thenApply(userProfile -> true);
     }
 }
