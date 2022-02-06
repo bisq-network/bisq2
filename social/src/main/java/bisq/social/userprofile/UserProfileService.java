@@ -136,11 +136,12 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         return supplyAsync(() -> {
             try {
                 String json = httpClient.get(txId, Optional.of(new Pair<>("User-Agent", userAgent)));
-                //todo parse json for opReturn data
-                boolean isValidBsq = true; //todo
+                //todo parse json 
+                boolean isBsqTx = true; //todo
+                boolean isProofOfBurn = true; //todo
                 byte[] publicKeyHash = DigestUtil.hash(publicKey.getEncoded());
-                byte[] opReturn = null;
-                return isValidBsq && Arrays.equals(publicKeyHash, opReturn);
+                byte[] opReturn = publicKeyHash; //todo
+                return isBsqTx && isProofOfBurn && Arrays.equals(publicKeyHash, opReturn);
             } catch (IOException e) {
                 e.printStackTrace();
                 return false;
