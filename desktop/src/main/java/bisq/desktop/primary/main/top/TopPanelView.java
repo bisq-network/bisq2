@@ -20,17 +20,16 @@ package bisq.desktop.primary.main.top;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.BisqHSpacer;
-import bisq.desktop.primary.main.top.components.MarketPriceBox;
-import bisq.desktop.primary.main.top.components.WalletBalanceBox;
 import javafx.geometry.Insets;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 
 public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> {
     public TopPanelView(TopPanelModel model,
                         TopPanelController controller,
-                        MarketPriceBox.MarketPriceView marketPriceView,
-                        WalletBalanceBox.WalletBalanceView walletBalanceView) {
+                        Pane marketPriceBox,
+                        Pane walletBalanceBox) {
         super(new HBox(), model, controller);
 
         root.setMinHeight(53);
@@ -39,6 +38,6 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
 
         ImageView logo = ImageUtil.getImageViewById("logo-small");
 
-        root.getChildren().addAll(logo, new BisqHSpacer(), marketPriceView.getRoot(), walletBalanceView.getRoot());
+        root.getChildren().addAll(logo, new BisqHSpacer(), marketPriceBox, walletBalanceBox);
     }
 }

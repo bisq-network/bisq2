@@ -3,9 +3,6 @@ package bisq.desktop.primary.main.top.components;
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.wallets.WalletService;
@@ -15,31 +12,32 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 
-public class WalletBalanceBox {
-    private final WalletBalanceController walletBalanceController;
+public class WalletBalanceComponent {
+    private final Controller controller;
 
-    public WalletBalanceBox(WalletService walletService) {
-        walletBalanceController = new WalletBalanceController(walletService);
+    public WalletBalanceComponent(WalletService walletService) {
+        controller = new Controller(walletService);
     }
 
-    public WalletBalanceView getView() {
-        return walletBalanceController.getView();
+    public Pane getRootPane() {
+        return controller.getView().getRoot();
     }
 
-    private static class WalletBalanceController implements Controller {
-        private final WalletBalanceModel model;
+    private static class Controller implements bisq.desktop.common.view.Controller {
+        private final Model model;
         @Getter
-        private final WalletBalanceView view;
+        private final View view;
         private final WalletService walletService;
         private Pin balancePin;
 
-        private WalletBalanceController(WalletService walletService) {
+        private Controller(WalletService walletService) {
             this.walletService = walletService;
-            model = new WalletBalanceModel();
-            view = new WalletBalanceView(model, this);
+            model = new Model();
+            view = new View(model, this);
 
         }
 
@@ -54,15 +52,15 @@ public class WalletBalanceBox {
         }
     }
 
-    private static class WalletBalanceModel implements Model {
+    private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<Coin> balanceAsCoinProperty = new SimpleObjectProperty<>(Coin.of(0, "BTC"));
         private final ObservableValue<String> formattedBalanceProperty = Bindings.createStringBinding(
                 () -> Res.get("wallet.balance.box",
                         AmountFormatter.formatAmountWithCode(balanceAsCoinProperty.get())));
     }
 
-    public static class WalletBalanceView extends View<VBox, WalletBalanceModel, WalletBalanceController> {
-        private WalletBalanceView(WalletBalanceModel model, WalletBalanceController controller) {
+    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+        private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
             root.setAlignment(Pos.BASELINE_CENTER);
 
