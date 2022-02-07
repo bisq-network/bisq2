@@ -18,20 +18,20 @@
 package bisq.desktop.primary.main.content.wallet;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Model;
+import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class WalletModel implements Model {
+public class WalletModel extends NavigationModel {
 
     public WalletModel(DefaultApplicationService applicationService) {
     }
 
-    public void onViewAttached() {
-    }
-
-    public void onViewDetached() {
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.WALLET_TRANSACTIONS;
     }
 }

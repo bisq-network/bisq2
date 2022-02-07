@@ -61,9 +61,11 @@ public enum NavigationTarget {
 
     MARKETS(CONTENT),
 
-   
-    WALLET(CONTENT);
-
+    WALLET(CONTENT),
+    WALLET_TRANSACTIONS(WALLET),
+    WALLET_SEND(WALLET),
+    WALLET_RECEIVE(WALLET),
+    WALLET_UTXOS(WALLET);
 
     @Getter
     private final Optional<NavigationTarget> parent;

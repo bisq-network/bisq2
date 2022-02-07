@@ -17,27 +17,26 @@
 
 package bisq.desktop.primary.main.content.wallet;
 
-import bisq.desktop.common.view.View;
-import javafx.geometry.Insets;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
+import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTargetTab;
+import bisq.desktop.common.view.TabView;
+import bisq.i18n.Res;
+import com.jfoenix.controls.JFXTabPane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class WalletView extends View<VBox, WalletModel, WalletController> {
+public class WalletView extends TabView<JFXTabPane, WalletModel, WalletController> {
 
     public WalletView(WalletModel model, WalletController controller) {
-        super(new VBox(), model, controller);
-        root.setPadding(new Insets(20,20,20,0));
-        root.getChildren().add(new Label(getClass().getSimpleName()));
+        super(new JFXTabPane(), model, controller);
     }
 
     @Override
-    public void onViewAttached() {
+    protected void createAndAddTabs() {
+        NavigationTargetTab transactionsTab = createTab(Res.get("wallet.tab.transactions"), NavigationTarget.WALLET_TRANSACTIONS);
+        NavigationTargetTab sendTab = createTab(Res.get("send"), NavigationTarget.WALLET_SEND);
+        NavigationTargetTab receiveTab = createTab(Res.get("wallet.tab.receive"), NavigationTarget.WALLET_RECEIVE);
+        NavigationTargetTab utxosTab = createTab(Res.get("wallet.tab.utxos"), NavigationTarget.WALLET_UTXOS);
+        root.getTabs().setAll(transactionsTab, sendTab, receiveTab, utxosTab);
     }
-
-    @Override
-    protected void onViewDetached() {
-    }
-
 }
