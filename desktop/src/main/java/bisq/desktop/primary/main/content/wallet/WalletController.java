@@ -18,26 +18,53 @@
 package bisq.desktop.primary.main.content.wallet;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.TabController;
+import bisq.desktop.primary.main.content.wallet.dialog.WalletConfigDialogController;
+import bisq.desktop.primary.main.content.wallet.receive.WalletReceiveController;
+import bisq.desktop.primary.main.content.wallet.send.WalletSendController;
+import bisq.desktop.primary.main.content.wallet.transactions.WalletTransactionsController;
+import bisq.desktop.primary.main.content.wallet.utxos.WalletUtxosController;
 import lombok.Getter;
 
-public class WalletController implements Controller {
+import java.util.Optional;
+
+public class WalletController extends TabController {
+    @Getter
     private final WalletModel model;
     @Getter
     private final WalletView view;
     private final DefaultApplicationService applicationService;
 
     public WalletController(DefaultApplicationService applicationService) {
+        super(NavigationTarget.WALLET);
         this.applicationService = applicationService;
+
         model = new WalletModel(applicationService);
         view = new WalletView(model, this);
+
+        new WalletConfigDialogController(applicationService).showDialogAndConnectToWallet();
     }
 
     @Override
-    public void onViewAttached() {
-    }
-
-    @Override
-    public void onViewDetached() {
+    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+        switch (navigationTarget) {
+            case WALLET_TRANSACTIONS -> {
+                return Optional.of(new WalletTransactionsController(applicationService));
+            }
+            case WALLET_SEND -> {
+                return Optional.of(new WalletSendController(applicationService));
+            }
+            case WALLET_RECEIVE -> {
+                return Optional.of(new WalletReceiveController(applicationService));
+            }
+            case WALLET_UTXOS -> {
+                return Optional.of(new WalletUtxosController(applicationService));
+            }
+            default -> {
+                return Optional.empty();
+            }
+        }
     }
 }

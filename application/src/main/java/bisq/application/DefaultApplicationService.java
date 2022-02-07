@@ -40,6 +40,7 @@ import bisq.social.chat.ChatService;
 import bisq.social.intent.TradeIntentListingsService;
 import bisq.social.intent.TradeIntentService;
 import bisq.social.userprofile.UserProfileService;
+import bisq.wallets.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,6 +77,7 @@ public class DefaultApplicationService extends ServiceProvider {
     private final TradeIntentListingsService tradeIntentListingsService;
     private final TradeIntentService tradeIntentService;
     private final UserProfileService userProfileService;
+    private final WalletService walletService;
 
     public DefaultApplicationService(String[] args) {
         super("Bisq");
@@ -114,6 +116,8 @@ public class DefaultApplicationService extends ServiceProvider {
         // offerPresentationService = new OfferPresentationService(offerService, marketPriceService);
 
         protocolService = new ProtocolService(networkService, identityService, persistenceService, openOfferService);
+
+        walletService = new WalletService();
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
@@ -167,19 +171,21 @@ public class DefaultApplicationService extends ServiceProvider {
     @Override
     public CompletableFuture<Void> shutdown() {
         return runAsync(() -> openOfferService.shutdown()
-                .thenCompose(list -> {
-                    marketPriceService.shutdown();
-                    return networkService.shutdown()
-                            .whenComplete((__, throwable) -> {
-                                if (throwable != null) {
-                                    log.error("Error at shutdown", throwable);
-                                    System.exit(EXIT_FAILURE);
-                                } else {
-                                    // In case the application is a JavaFXApplication give it chance to trigger the exit
-                                    // via Platform.exit()
-                                    runAsync(() -> System.exit(EXIT_SUCCESS));
-                                }
-                            });
-                }), ExecutorFactory.newSingleThreadExecutor("Shutdown"));
+                        .thenCompose(list -> {
+                            marketPriceService.shutdown();
+                            return networkService.shutdown()
+                                    .whenComplete((__, throwable) -> {
+                                        if (throwable != null) {
+                                            log.error("Error at shutdown", throwable);
+                                            System.exit(EXIT_FAILURE);
+                                        } else {
+                                            // In case the application is a JavaFXApplication give it chance to trigger the exit
+                                            // via Platform.exit()
+                                            runAsync(() -> System.exit(EXIT_SUCCESS));
+                                        }
+                                    });
+                        })
+                        .thenRun(walletService::shutdown)
+                , ExecutorFactory.newSingleThreadExecutor("Shutdown"));
     }
 }

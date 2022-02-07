@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.top;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.top.components.MarketPriceBox;
+import bisq.desktop.primary.main.top.components.WalletBalanceBox;
 import lombok.Getter;
 
 public class TopPanelController implements Controller {
@@ -30,6 +31,7 @@ public class TopPanelController implements Controller {
         TopPanelModel model = new TopPanelModel();
 
         var marketPriceComponent = new MarketPriceBox.MarketPriceController(applicationService.getMarketPriceService());
-        view = new TopPanelView(model, this, marketPriceComponent.getView());
+        var walletBalanceComponent = new WalletBalanceBox.WalletBalanceController(applicationService.getWalletService());
+        view = new TopPanelView(model, this, marketPriceComponent.getView(), walletBalanceComponent.getView());
     }
 }

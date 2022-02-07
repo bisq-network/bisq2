@@ -30,6 +30,7 @@ dependencies {
     implementation project(':social')
     implementation project(':support')
     implementation project(':presentation')
+    implementation project(':wallets')
 
     implementation 'com.google.guava:guava'
     implementation 'com.typesafe:config'
