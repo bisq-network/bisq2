@@ -2,14 +2,11 @@ package bisq.wallets.bitcoind.rpc;
 
 import bisq.wallets.NetworkType;
 
-import java.util.Optional;
-
 public record RpcConfig(NetworkType networkType,
                         String hostname,
                         int port,
                         String user,
-                        String password,
-                        Optional<String> walletName) {
+                        String password) {
 
     public static class Builder {
         private static final int INVALID_PORT = -1;
@@ -21,7 +18,6 @@ public record RpcConfig(NetworkType networkType,
         private String password;
 
         private Integer port = INVALID_PORT;
-        private Optional<String> walletName = Optional.empty();
 
         public Builder() {
         }
@@ -33,14 +29,13 @@ public record RpcConfig(NetworkType networkType,
 
             this.user = configTemplate.user();
             this.password = configTemplate.password();
-            this.walletName = configTemplate.walletName();
         }
 
         public RpcConfig build() {
             if (port == INVALID_PORT) {
                 port = networkType.getRpcPort();
             }
-            return new RpcConfig(networkType, hostname, port, user, password, walletName);
+            return new RpcConfig(networkType, hostname, port, user, password);
         }
 
         public RpcConfig.Builder networkType(NetworkType networkType) {
@@ -65,11 +60,6 @@ public record RpcConfig(NetworkType networkType,
 
         public RpcConfig.Builder port(int port) {
             this.port = port;
-            return this;
-        }
-
-        public RpcConfig.Builder walletName(String walletName) {
-            this.walletName = Optional.of(walletName);
             return this;
         }
     }
