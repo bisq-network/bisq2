@@ -17,9 +17,28 @@
 
 package bisq.wallets;
 
+import bisq.wallets.model.Transaction;
+import bisq.wallets.model.Utxo;
+
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public interface Wallet {
+    void initialize(String walletPassphrase);
+
+    void shutdown();
+
+    double getBalance();
+
+    String getNewAddress(AddressType addressType, String label);
+
+    List<Transaction> listTransactions();
+
+    List<Utxo> listUnspent();
+
+    String sendToAddress(String address, double amount);
+
+    String signMessage(String address, String message);
 
     CompletableFuture<String> getUtxos();
 

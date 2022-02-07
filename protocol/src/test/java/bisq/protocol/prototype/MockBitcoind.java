@@ -17,9 +17,11 @@
 
 package bisq.protocol.prototype;
 
-import bisq.wallets.Chain;
-import bisq.wallets.Wallet;
+import bisq.wallets.*;
+import bisq.wallets.model.Transaction;
+import bisq.wallets.model.Utxo;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class MockBitcoind implements Chain, Wallet {
@@ -38,12 +40,52 @@ public class MockBitcoind implements Chain, Wallet {
     }
 
     @Override
+    public void initialize(String walletPassphrase) {
+
+    }
+
+    @Override
+    public void shutdown() {
+
+    }
+
+    @Override
+    public double getBalance() {
+        return 0.;
+    }
+
+    @Override
+    public String getNewAddress(AddressType addressType, String label) {
+        return null;
+    }
+
+    @Override
+    public List<Transaction> listTransactions() {
+        return null;
+    }
+
+    @Override
+    public String signMessage(String address, String message) {
+        return null;
+    }
+
+    @Override
+    public List<Utxo> listUnspent() {
+        return null;
+    }
+
+    @Override
+    public String sendToAddress(String address, double amount) {
+        return null;
+    }
+
+    @Override
     public CompletableFuture<String> getUtxos() {
-        return CompletableFuture.completedFuture("getUtxos.mock");
+        return null;
     }
 
     @Override
     public CompletableFuture<String> sign(String tx) {
-        return CompletableFuture.completedFuture("sign.mock");
+        return null;
     }
 }

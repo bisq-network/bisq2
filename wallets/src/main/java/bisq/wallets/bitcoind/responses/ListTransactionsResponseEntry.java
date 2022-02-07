@@ -1,5 +1,6 @@
 package bisq.wallets.bitcoind.responses;
 
+import bisq.wallets.model.Transaction;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -74,5 +75,14 @@ public class ListTransactionsResponseEntry {
 
     public void setBip125Replaceable(String bip125Replaceable) {
         this.bip125Replaceable = bip125Replaceable;
+    }
+
+    public Transaction toTransaction() {
+        return new Transaction.Builder()
+                .txId(txid)
+                .address(address)
+                .amount(amount)
+                .confirmations(confirmations)
+                .build();
     }
 }
