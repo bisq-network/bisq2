@@ -21,6 +21,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.content.social.components.UserProfileDisplay;
+import bisq.desktop.primary.main.content.social.profile.components.ChannelAdmin;
 import bisq.desktop.primary.main.content.social.profile.components.CreateUserProfile;
 import bisq.desktop.primary.main.content.social.profile.components.UserProfileSelection;
 import bisq.i18n.Res;
@@ -31,11 +32,13 @@ import lombok.extern.slf4j.Slf4j;
 public class UserProfileView extends View<VBox, UserProfileModel, UserProfileController> {
     private final VBox createUserProfile;
     private final BisqButton showCreateUserProfileButton;
+    private final VBox channelAdmin;
 
     public UserProfileView(UserProfileModel model,
                            UserProfileController controller,
                            UserProfileSelection.View userProfileSelectionView,
                            UserProfileDisplay.View userProfileView,
+                           ChannelAdmin.View channelAdminView,
                            CreateUserProfile.View createUserProfileView) {
         super(new VBox(), model, controller);
 
@@ -45,9 +48,11 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
         showCreateUserProfileButton = new BisqButton(Res.get("social.createUserProfile.headline"));
         showCreateUserProfileButton.setMinWidth(300);
         createUserProfile = createUserProfileView.getRoot();
-        root.getChildren().addAll(userProfileSelectionView.getRoot(),
+        channelAdmin = channelAdminView.getRoot();
+        this.root.getChildren().addAll(userProfileSelectionView.getRoot(),
                 userProfileView.getRoot(),
                 showCreateUserProfileButton,
+                channelAdmin,
                 createUserProfile);
     }
 
@@ -57,6 +62,8 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
 
         showCreateUserProfileButton.visibleProperty().bind(model.createUserProfileVisible.not());
         showCreateUserProfileButton.managedProperty().bind(model.createUserProfileVisible.not());
+        channelAdmin.visibleProperty().bind(model.channelAdminVisible);
+        channelAdmin.managedProperty().bind(model.channelAdminVisible);
         createUserProfile.visibleProperty().bind(model.createUserProfileVisible);
         createUserProfile.managedProperty().bind(model.createUserProfileVisible);
     }
@@ -66,6 +73,8 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
         showCreateUserProfileButton.setOnAction(null);
         showCreateUserProfileButton.visibleProperty().unbind();
         showCreateUserProfileButton.managedProperty().unbind();
+        channelAdmin.visibleProperty().unbind();
+        channelAdmin.managedProperty().unbind();
         createUserProfile.visibleProperty().unbind();
         createUserProfile.managedProperty().unbind();
 

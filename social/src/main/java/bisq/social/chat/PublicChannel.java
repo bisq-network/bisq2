@@ -17,8 +17,10 @@
 
 package bisq.social.chat;
 
+import bisq.social.userprofile.UserProfile;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.annotation.Nullable;
 import java.util.HashSet;
@@ -27,8 +29,10 @@ import java.util.Set;
 
 // TODO not used yet. Will require more work on the chatUser and chatIdentity management. 
 @Getter
+@ToString
 public class PublicChannel extends Channel {
     private final String channelName;
+    private final UserProfile channelOwner;
 
     // user can change their chatIdentity in a PublicChannel
     @Nullable
@@ -37,10 +41,11 @@ public class PublicChannel extends Channel {
     // Can be empty
     private final Set<ChatPeer> chatPeers = new HashSet<>();
 
-    public PublicChannel(String id, String channelName) {
+    public PublicChannel(String id, String channelName, UserProfile channelOwner) {
         super(id);
 
         this.channelName = channelName;
+        this.channelOwner = channelOwner;
     }
 
     public Optional<ChatIdentity> getChatIdentity() {

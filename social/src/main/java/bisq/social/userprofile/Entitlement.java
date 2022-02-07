@@ -22,7 +22,7 @@ import lombok.Getter;
 import java.io.Serializable;
 import java.util.List;
 
-public record Entitlement(Type entitlement, Proof proof) implements Serializable {
+public record Entitlement(Type entitlementType, Proof proof) implements Serializable {
     public interface Proof extends Serializable {
     }
 

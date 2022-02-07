@@ -33,11 +33,12 @@ import java.security.KeyPair;
 public class UserProfileModel implements Model {
     final IdentityService identityService;
     String keyId;
-    ObjectProperty<Node> roboHashNode = new SimpleObjectProperty<>();
-    ObjectProperty<UserProfile> userProfile = new SimpleObjectProperty<>();
-    StringProperty successText = new SimpleStringProperty();
+    final ObjectProperty<Node> roboHashNode = new SimpleObjectProperty<>();
+    final ObjectProperty<UserProfile> userProfile = new SimpleObjectProperty<>();
+    final StringProperty successText = new SimpleStringProperty();
     KeyPair keyPair;
     final BooleanProperty createUserProfileVisible = new SimpleBooleanProperty();
+    final BooleanProperty channelAdminVisible = new SimpleBooleanProperty();
 
     public UserProfileModel(DefaultApplicationService applicationService) {
         identityService = applicationService.getIdentityService();

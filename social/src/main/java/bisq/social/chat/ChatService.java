@@ -26,11 +26,15 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.social.userprofile.Entitlement;
+import bisq.social.userprofile.UserProfile;
+import bisq.social.userprofile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -43,6 +47,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public class ChatService implements PersistenceClient<ChatStore>, MessageListener {
+
     public interface Listener {
         void onChannelAdded(Channel channel);
 
@@ -53,17 +58,22 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     private final ChatStore persistableStore = new ChatStore();
     private final Persistence<ChatStore> persistence;
+    private final UserProfileService userProfileService;
     private final PersistenceService persistenceService;
     private final IdentityService identityService;
     private final NetworkService networkService;
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public ChatService(PersistenceService persistenceService, IdentityService identityService, NetworkService networkService) {
+    public ChatService(PersistenceService persistenceService,
+                       IdentityService identityService,
+                       NetworkService networkService,
+                       UserProfileService userProfileService) {
         this.persistenceService = persistenceService;
         this.identityService = identityService;
         this.networkService = networkService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        this.userProfileService = userProfileService;
 
         networkService.addMessageListener(this);
     }
@@ -91,6 +101,25 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Channels
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<Optional<PublicChannel>> addChannel(UserProfile userProfile, String channelName) {
+        return userProfile.entitlements().stream()
+                .filter(entitlement -> entitlement.entitlementType() == Entitlement.Type.CHANNEL_ADMIN)
+                .filter(entitlement -> entitlement.proof() instanceof Entitlement.BondedRoleProof)
+                .map(entitlement -> (Entitlement.BondedRoleProof) entitlement.proof())
+                .map(bondedRoleProof -> userProfileService.verifyBondedRole(bondedRoleProof.txId(),
+                        bondedRoleProof.signature(),
+                        userProfile.identity().pubKey().publicKey()))
+                .map(future -> future.thenApply(optionalProof -> optionalProof.map(e -> {
+                            PublicChannel publicChannel = new PublicChannel(StringUtils.createUid(), channelName, userProfile);
+                            persistableStore.getPublicChannels().add(publicChannel);
+                            persist();
+                            return Optional.of(publicChannel);
+                        })
+                        .orElse(Optional.empty())))
+                .findAny()
+                .orElse(CompletableFuture.completedFuture(Optional.empty()));
+    }
 
     public PrivateChannel getOrCreatePrivateChannel(String id, ChatPeer chatPeer, ChatIdentity chatIdentity) {
         PrivateChannel privateChannel = new PrivateChannel(id, chatPeer, chatIdentity);

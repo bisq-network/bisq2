@@ -116,7 +116,7 @@ public class EntitlementSelection {
                             if (throwable == null && proof.isPresent()) {
                                 model.verifiedEntitlements.add(new Entitlement(entitlementItem.getType(), proof.get()));
                             } else {
-                                log.warn("Error at entitlement verification."); // todo 
+                                log.warn("Error at entitlementType verification."); // todo 
                             }
                         });
                     });
@@ -135,7 +135,7 @@ public class EntitlementSelection {
                                     log.warn("Entitlement verification failed."); // todo 
                                 }
                             } else {
-                                log.warn("Error at entitlement verification."); // todo 
+                                log.warn("Error at entitlementType verification."); // todo 
                             }
                         });
                     });
@@ -152,7 +152,7 @@ public class EntitlementSelection {
                                     log.warn("Entitlement verification failed."); // todo 
                                 }
                             } else {
-                                log.warn("Error at entitlement verification."); // todo 
+                                log.warn("Error at entitlementType verification."); // todo 
                             }
                         });
                     });

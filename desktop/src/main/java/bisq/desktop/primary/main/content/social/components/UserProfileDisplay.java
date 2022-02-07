@@ -68,7 +68,7 @@ public class UserProfileDisplay {
                     userProfile -> {
                         model.userName.set(userProfile.identity().domainId());
                         model.id.set(Res.get("social.createUserProfile.id", userProfile.identity().id()));
-                        String entitledRoles = userProfile.entitlements().stream().map(e -> Res.get(e.entitlement().name())).collect(Collectors.joining(", "));
+                        String entitledRoles = userProfile.entitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
                         model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
                         model.entitlementsVisible.set(!userProfile.entitlements().isEmpty());
                         model.roboHashNode.set(RoboHash.getImage(userProfile.identity().pubKeyHash(), false));
