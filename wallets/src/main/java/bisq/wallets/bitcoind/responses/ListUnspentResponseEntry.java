@@ -1,5 +1,6 @@
 package bisq.wallets.bitcoind.responses;
 
+import bisq.wallets.model.Utxo;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -46,4 +47,14 @@ public class ListUnspentResponseEntry {
     @Getter
     @Setter
     private boolean safe;
+
+    public Utxo toUtxo() {
+        return new Utxo.Builder()
+                .txId(txid)
+                .address(address)
+                .amount(amount)
+                .confirmations(confirmations)
+                .reused(reused)
+                .build();
+    }
 }
