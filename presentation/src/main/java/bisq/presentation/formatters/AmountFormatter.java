@@ -18,7 +18,6 @@
 package bisq.presentation.formatters;
 
 import bisq.common.locale.LocaleRepository;
-import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.DecimalFormatters;
 import lombok.extern.slf4j.Slf4j;
@@ -31,10 +30,6 @@ public class AmountFormatter {
     public static String formatAmountWithMinAmount(Monetary amount, Optional<Long> optionalMinAmount) {
         return AmountFormatter.formatMinAmount(optionalMinAmount, amount) +
                 AmountFormatter.formatAmount(amount);
-    }
-
-    public static String formatAmount1(long amount, String currencyCode) {
-        return "TODO";//  Monetary.from(amount, currencyCode).formatWithCode();
     }
 
     public static String formatAmountWithCode(Monetary amount) {
@@ -64,7 +59,6 @@ public class AmountFormatter {
     }
 
     private static DecimalFormatters.Format getDecimalFormat(Monetary amount, Locale locale) {
-        int precision = amount instanceof Fiat ? 0 : 4;
-        return DecimalFormatters.getDecimalFormat(locale, precision);
+        return DecimalFormatters.getDecimalFormat(locale, amount.getDisplayPrecision());
     }
 }

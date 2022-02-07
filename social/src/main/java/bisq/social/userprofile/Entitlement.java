@@ -22,7 +22,19 @@ import lombok.Getter;
 import java.io.Serializable;
 import java.util.List;
 
-public record Entitlement(Type entitlement, String txId) implements Serializable {
+public record Entitlement(Type entitlement, Proof proof) implements Serializable {
+    public interface Proof extends Serializable {
+    }
+
+    public record ProofOfBurnProof(String txId) implements Proof {
+    }
+
+    public record BondedRoleProof(String txId, String signature) implements Proof {
+    }
+
+    public record ChannelAdminInvitationProof(String invitationCode) implements Proof {
+    }
+
     public enum Type implements Serializable {
         LIQUIDITY_PROVIDER(ProofType.PROOF_OF_BURN),
         CHANNEL_ADMIN(ProofType.BONDED_ROLE),

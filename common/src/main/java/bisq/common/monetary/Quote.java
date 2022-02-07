@@ -60,7 +60,7 @@ public class Quote implements Comparable<Quote>, Serializable {
         this.baseMonetary = baseMonetary;
         this.quoteMonetary = quoteMonetary;
         this.precision = quoteMonetary.precision;
-        lowPrecision = quoteMonetary.lowPrecision;
+        lowPrecision = quoteMonetary.displayPrecision;
         market = new Market(baseMonetary.getCode(), quoteMonetary.getCode());
     }
 

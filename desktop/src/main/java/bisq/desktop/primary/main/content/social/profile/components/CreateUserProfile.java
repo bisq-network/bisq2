@@ -42,6 +42,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.security.KeyPair;
+import java.util.HashSet;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -103,7 +104,10 @@ public class CreateUserProfile {
             model.changeRoboIconButtonDisable.set(true);
             model.feedback.set(Res.get("social.createUserProfile.prepare"));
             String useName = model.userName.get();
-            userProfileService.createNewInitializedUserProfile(useName, model.tempKeyId, model.tempKeyPair.get(), entitlementSelection.getVerifiedEntitlements())
+            userProfileService.createNewInitializedUserProfile(useName, 
+                            model.tempKeyId, 
+                            model.tempKeyPair.get(), 
+                            new HashSet<>(entitlementSelection.getVerifiedEntitlements()))
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
                             checkArgument(userProfile.identity().pubKeyHash().equals(new ByteArray(DigestUtil.hash(model.tempKeyPair.get().getPublic().getEncoded()))));
@@ -126,6 +130,7 @@ public class CreateUserProfile {
             model.tempKeyId = null;
             model.tempKeyPair.set(null);
             model.roboHashNode.set(null);
+            entitlementSelection.reset();
         }
     }
 

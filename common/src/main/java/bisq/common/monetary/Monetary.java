@@ -62,18 +62,18 @@ public abstract class Monetary implements Comparable<Monetary>, Serializable {
     protected final long value;
     protected final String code;
     protected final int precision;
-    protected final int lowPrecision;
+    protected final int displayPrecision;
 
-    protected Monetary(String id, long value, String code, int precision, int lowPrecision) {
+    protected Monetary(String id, long value, String code, int precision, int displayPrecision) {
         this.id = id;
         this.value = value;
         this.code = code;
         this.precision = precision;
-        this.lowPrecision = lowPrecision;
+        this.displayPrecision = displayPrecision;
     }
 
-    protected Monetary(String id, double value, String code, int precision, int lowPrecision) {
-        this(id, doubleValueToLong(value, precision), code, precision, lowPrecision);
+    protected Monetary(String id, double value, String code, int precision, int displayPrecision) {
+        this(id, doubleValueToLong(value, precision), code, precision, displayPrecision);
     }
 
     abstract public double toDouble(long value);

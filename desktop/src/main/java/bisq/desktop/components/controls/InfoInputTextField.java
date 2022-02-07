@@ -17,11 +17,11 @@
 
 package bisq.desktop.components.controls;
 
+import bisq.desktop.components.controls.controlsfx.control.PopOver;
 import bisq.desktop.components.overlay.PopOverWrapper;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
@@ -29,17 +29,22 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class InfoInputTextField extends AnchorPane {
-    private final StringProperty text = new SimpleStringProperty();
+
     @Getter
     private final BisqInputTextField inputTextField;
+
     private final Label icon;
     private final PopOverWrapper popoverWrapper = new PopOverWrapper();
     @Nullable
     private Node node;
 
-    public InfoInputTextField() {
+    public InfoInputTextField(String text, String infoText) {
         this(0);
+        inputTextField.setText(text);
+        setContentForPopOver(defaultContentForPopOver(infoText), AwesomeIcon.INFO_SIGN);
     }
 
     public InfoInputTextField(double inputLineExtension) {
@@ -54,8 +59,7 @@ public class InfoInputTextField extends AnchorPane {
         AnchorPane.setLeftAnchor(icon, 7.0);
         icon.setOnMouseEntered(e -> {
             if (node != null) {
-                //todo
-                // popoverWrapper.showPopOver(() -> checkNotNull(createPopOver()));
+                popoverWrapper.showPopOver(() -> checkNotNull(createPopOver()));
             }
         });
         icon.setOnMouseExited(e -> {
@@ -115,27 +119,10 @@ public class InfoInputTextField extends AnchorPane {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters/Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setText(String text) {
-        this.text.set(text);
-    }
-
-    public String getText() {
-        return text.get();
-    }
-
-    public StringProperty textProperty() {
-        return text;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-    //todo
-   /* private PopOver createPopOver() {
+
+    private PopOver createPopOver() {
         if (node == null) {
             return null;
         }
@@ -149,5 +136,13 @@ public class InfoInputTextField extends AnchorPane {
             popover.show(icon, -17);
         }
         return popover;
-    }*/
+    }
+
+    private Label defaultContentForPopOver(String text) {
+        final Label label = new Label(text);
+        label.setPrefWidth(300);
+        label.setWrapText(true);
+        label.setPadding(new Insets(10));
+        return label;
+    }
 }
