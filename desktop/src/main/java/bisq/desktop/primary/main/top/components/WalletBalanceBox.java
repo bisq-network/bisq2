@@ -17,7 +17,7 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 
 public class WalletBalanceBox {
-    public static class WalletBalanceController implements Controller, WalletService.Listener {
+    public static class WalletBalanceController implements Controller, WalletService.BalanceListener {
         private final WalletBalanceModel model;
         @Getter
         private final WalletBalanceView view;
@@ -25,7 +25,7 @@ public class WalletBalanceBox {
         public WalletBalanceController(WalletService walletService) {
             model = new WalletBalanceModel();
             view = new WalletBalanceView(model, this);
-            walletService.addListener(this);
+            walletService.addBalanceListener(this);
         }
 
         @Override

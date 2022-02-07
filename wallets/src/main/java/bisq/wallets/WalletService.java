@@ -14,12 +14,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class WalletService {
-    public interface Listener {
+    public interface BalanceListener {
         void onBalanceChanged(double newBalance);
     }
 
     private Optional<Wallet> wallet = Optional.empty();
-    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Set<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
 
     public CompletableFuture<Void> initialize(Path walletsDataDir, RpcConfig rpcConfig, String walletPassphrase) {
         return CompletableFuture.runAsync(() -> {
@@ -42,7 +42,7 @@ public class WalletService {
             Wallet wallet = getWalletOrThrowException();
             double balance = wallet.getBalance();
 
-            listeners.forEach(listener -> listener.onBalanceChanged(balance));
+            balanceListeners.forEach(balanceListener -> balanceListener.onBalanceChanged(balance));
             return balance;
         });
     }
@@ -82,12 +82,12 @@ public class WalletService {
         });
     }
 
-    public void addListener(Listener listener) {
-        listeners.add(listener);
+    public void addBalanceListener(BalanceListener balanceListener) {
+        balanceListeners.add(balanceListener);
     }
 
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
+    public void removeBalanceListener(BalanceListener balanceListener) {
+        balanceListeners.remove(balanceListener);
     }
 
     private Wallet getWalletOrThrowException() {
