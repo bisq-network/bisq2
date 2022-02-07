@@ -1,15 +1,17 @@
 package bisq.desktop.primary.main.top.components;
 
-import bisq.common.locale.LocaleRepository;
-import bisq.desktop.common.threading.UIThread;
+import bisq.common.monetary.Coin;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.AmountFormatter;
 import bisq.wallets.WalletService;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -17,31 +19,36 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 
 public class WalletBalanceBox {
-    public static class WalletBalanceController implements Controller, WalletService.BalanceListener {
+    public static class WalletBalanceController implements Controller {
         private final WalletBalanceModel model;
         @Getter
         private final WalletBalanceView view;
+        private final WalletService walletService;
+        private Pin balancePin;
 
         public WalletBalanceController(WalletService walletService) {
+            this.walletService = walletService;
             model = new WalletBalanceModel();
             view = new WalletBalanceView(model, this);
-            walletService.addBalanceListener(this);
+
         }
 
         @Override
-        public void onBalanceChanged(double newBalance) {
-            UIThread.run(() -> model.balanceDoubleProperty.set(newBalance));
+        public void onViewAttached() {
+            balancePin = FxBindings.bind(model.balanceAsCoinProperty).to(walletService.getObservableBalanceAsCoin());
+        }
+
+        @Override
+        public void onViewDetached() {
+            balancePin.unbind();
         }
     }
 
     public static class WalletBalanceModel implements Model {
-        private final DoubleProperty balanceDoubleProperty = new SimpleDoubleProperty(this, "balance", 0);
-        private final ObservableValue<String> formattedBalanceProperty = Bindings
-                .format(
-                        LocaleRepository.getDefaultLocale(),
-                        Res.get("wallet.balance.box"),
-                        balanceDoubleProperty
-                );
+        private final ObjectProperty<Coin> balanceAsCoinProperty = new SimpleObjectProperty<>(Coin.of(0, "BTC"));
+        private final ObservableValue<String> formattedBalanceProperty = Bindings.createStringBinding(
+                () -> Res.get("wallet.balance.box",
+                        AmountFormatter.formatAmountWithCode(balanceAsCoinProperty.get())));
     }
 
     public static class WalletBalanceView extends View<VBox, WalletBalanceModel, WalletBalanceController> {
@@ -51,7 +58,7 @@ public class WalletBalanceBox {
 
             var descriptionLabel = new Label();
             descriptionLabel.textProperty().bind(model.formattedBalanceProperty);
-            root.getChildren().addAll(descriptionLabel);
+            root.getChildren().add(descriptionLabel);
         }
     }
 }

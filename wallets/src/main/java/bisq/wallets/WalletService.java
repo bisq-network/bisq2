@@ -1,25 +1,24 @@
 package bisq.wallets;
 
+import bisq.common.monetary.Coin;
+import bisq.common.observable.Observable;
 import bisq.wallets.bitcoind.BitcoindWallet;
 import bisq.wallets.bitcoind.rpc.RpcConfig;
 import bisq.wallets.exceptions.WalletNotInitializedException;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
+import lombok.Getter;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 public class WalletService {
-    public interface BalanceListener {
-        void onBalanceChanged(double newBalance);
-    }
 
     private Optional<Wallet> wallet = Optional.empty();
-    private final Set<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
+    @Getter
+    private final Observable<Coin> observableBalanceAsCoin = new Observable(0);
 
     public CompletableFuture<Void> initialize(Path walletsDataDir, RpcConfig rpcConfig, String walletPassphrase) {
         return CompletableFuture.runAsync(() -> {
@@ -37,12 +36,13 @@ public class WalletService {
         return CompletableFuture.runAsync(() -> wallet.ifPresent(Wallet::shutdown));
     }
 
-    public CompletableFuture<Double> getBalance() {
+    public CompletableFuture<Long> getBalance() {
         return CompletableFuture.supplyAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
-            double balance = wallet.getBalance();
-
-            balanceListeners.forEach(balanceListener -> balanceListener.onBalanceChanged(balance));
+            double walletBalance = wallet.getBalance();
+            Coin coin = Coin.of(walletBalance, "BTC");
+            observableBalanceAsCoin.set(coin);
+            long balance = coin.getValue();
             return balance;
         });
     }
@@ -80,14 +80,6 @@ public class WalletService {
             Wallet wallet = getWalletOrThrowException();
             return wallet.sendToAddress(address, amount);
         });
-    }
-
-    public void addBalanceListener(BalanceListener balanceListener) {
-        balanceListeners.add(balanceListener);
-    }
-
-    public void removeBalanceListener(BalanceListener balanceListener) {
-        balanceListeners.remove(balanceListener);
     }
 
     private Wallet getWalletOrThrowException() {
