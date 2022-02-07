@@ -29,9 +29,6 @@ public enum NavigationTarget {
     NONE(),
     ROOT(),
 
-    OVERLAY(ROOT),
-    POPUP_WINDOW(OVERLAY),
-
     PRIMARY_STAGE(ROOT),
 
     MAIN(PRIMARY_STAGE),

@@ -23,8 +23,8 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.utils.DontShowAgainLookup;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.overlay.Notification;
 import bisq.desktop.overlay.Overlay;
-import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.primary.main.MainController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -39,27 +39,26 @@ public class PrimaryStageController implements Controller {
     @Getter
     private final PrimaryStageView view;
     private final MainController mainController;
-    private final OverlayController overlayController;
     private final SettingsService settingsService;
 
     public PrimaryStageController(DefaultApplicationService applicationService, JavaFXApplication.Data applicationData) {
         this.applicationService = applicationService;
         settingsService = applicationService.getSettingsService();
-        
+
+        model = new PrimaryStageModel(applicationService);
+        view = new PrimaryStageView(model, this, applicationData.stage());
+        mainController = new MainController(applicationService);
+
         Browser.setHostServices(applicationData.hostServices());
         Transitions.setDisplaySettings(applicationService.getSettingsService().getDisplaySettings());
         DontShowAgainLookup.setPreferences(applicationService.getSettingsService());
-        
-        model = new PrimaryStageModel(applicationService);
-        view = new PrimaryStageView(model, this, applicationData.stage());
-        overlayController = new OverlayController(view.getScene(), applicationService);
-        mainController = new MainController(applicationService);
-        model.setView(mainController.getView());
-
+        Notification.init(view.getRoot(), applicationService.getSettingsService().getDisplaySettings());
         Overlay.init(view.getRoot(),
                 applicationService.getApplicationConfig().baseDir(),
                 applicationService.getSettingsService().getDisplaySettings(),
                 this::shutdown);
+
+        model.setView(mainController.getView());
     }
 
     @Override
