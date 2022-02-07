@@ -1,4 +1,4 @@
-package bisq.wallets.bitcoind.rpc;
+package bisq.wallets.exceptions;
 
 public class RpcCallFailureException extends RuntimeException {
     public RpcCallFailureException(String message) {

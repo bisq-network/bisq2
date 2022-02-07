@@ -2,6 +2,7 @@ package bisq.wallets.bitcoind.rpc;
 
 import bisq.common.encoding.Base64;
 import bisq.wallets.bitcoind.BitcoindRpcEndpoint;
+import bisq.wallets.exceptions.RpcCallFailureException;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 
 import java.net.MalformedURLException;

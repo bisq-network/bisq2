@@ -1,6 +1,6 @@
 package bisq.wallets.bitcoind.responses;
 
-import bisq.wallets.bitcoind.rpc.RpcCallFailureException;
+import bisq.wallets.exceptions.RpcCallFailureException;
 import lombok.Getter;
 import lombok.Setter;
 

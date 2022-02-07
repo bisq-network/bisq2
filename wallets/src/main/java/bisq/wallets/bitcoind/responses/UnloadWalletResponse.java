@@ -1,6 +1,6 @@
 package bisq.wallets.bitcoind.responses;
 
-import bisq.wallets.bitcoind.rpc.RpcCallFailureException;
+import bisq.wallets.exceptions.RpcCallFailureException;
 
 public class UnloadWalletResponse extends BitcoindWalletResponse {
 
