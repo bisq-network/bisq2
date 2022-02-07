@@ -21,7 +21,10 @@ public class BitcoindChainBackend {
         if (!doesWalletExist(walletPath)) {
             createWallet(walletPath, passphrase, isWatchOnly, createBlankWallet);
         } else {
-            loadWallet(walletPath);
+            List<String> loadedWallets = listWallets();
+            if (!loadedWallets.contains(walletPath.toString())) {
+                loadWallet(walletPath);
+            }
         }
     }
 
@@ -38,6 +41,16 @@ public class BitcoindChainBackend {
                 rpcClient.invoke(
                         BitcoindRpcEndpoint.GENERATE_TO_ADDRESS,
                         new Object[]{numberOfBlocksToMine, addressOfMiner},
+                        String[].class
+                )
+        );
+    }
+
+    public List<String> listWallets() {
+        return Arrays.asList(
+                rpcClient.invoke(
+                        BitcoindRpcEndpoint.LIST_WALLETS,
+                        new Object[0],
                         String[].class
                 )
         );
