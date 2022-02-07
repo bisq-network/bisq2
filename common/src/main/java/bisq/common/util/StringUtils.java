@@ -51,4 +51,12 @@ public class StringUtils {
     public static String trimWhitespace(String value) {
         return value.replaceAll("\\s+", "");
     }
+
+    public static String abbreviate(String message, int maxChar) {
+        if (message.length() <= maxChar) {
+            return message;
+        }
+
+        return message.substring(0, maxChar - 3) + "...";
+    }
 }

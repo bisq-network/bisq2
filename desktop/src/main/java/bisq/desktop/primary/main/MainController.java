@@ -20,7 +20,9 @@ package bisq.desktop.primary.main;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.overlay.Popup;
 import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.nav.LeftNavController;
 import bisq.desktop.primary.main.top.TopPanelController;
@@ -55,12 +57,21 @@ public class MainController implements Controller, Navigation.Listener {
     }
 
     public void onViewAttached() {
+       //   new Popup().headLine("test").message("message").show();
+        //  Popup p1 = new Popup().headLine("test").message("message");
+        // p1.show();
+        // UIScheduler.run(()->p1.hide()).after(2000);
+        UIScheduler.run(() -> new Popup().headLine("test2").message("message2").show()).after(5);
+        UIScheduler.run(() -> new Popup().headLine("test23").message("message23").show()).after(5);
+
+
         String persisted = settingsService.getPersistableStore().getCookie().get(CookieKey.NAVIGATION_TARGET);
-        if (persisted != null) {
+        // Navigation.navigateTo(NavigationTarget.POPUP_WINDOW);
+       /* if (persisted != null) {
             Navigation.navigateTo(NavigationTarget.valueOf(persisted));
         } else {
             Navigation.navigateTo(NavigationTarget.OFFERBOOK);
-        }
+        }*/
     }
 
     public void onViewDetached() {

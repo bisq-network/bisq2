@@ -54,6 +54,7 @@ public class OverlayController extends NavigationController {
         switch (navigationTarget) {
             case POPUP_WINDOW -> {
                 return Optional.of(new PopupWindowController(applicationService));
+                //return Optional.of(new OverlayController(applicationService));
             }
             default -> {
                 return Optional.empty();

@@ -29,8 +29,20 @@ public class SettingsService implements PersistenceClient<SettingsStore> {
     private final SettingsStore persistableStore = new SettingsStore();
     @Getter
     private final Persistence<SettingsStore> persistence;
+    
 
     public SettingsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
+
+    public boolean showAgain(String key) {
+        return !persistableStore.getDontShowAgainMap().containsKey(key) ||
+                !persistableStore.getDontShowAgainMap().get(key);
+    }
+
+    public void dontShowAgain(String key, boolean dontShowAgain) {
+        persistableStore.getDontShowAgainMap().put(key, dontShowAgain);
+        persist();
+    }
+
 }
