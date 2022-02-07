@@ -5,67 +5,29 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+@Getter
+@Setter
 public class ListTransactionsResponseEntry {
-    @Getter
-    @Setter
     private boolean involvesWatchonly;
-    @Getter
-    @Setter
     private String address;
-    @Getter
-    @Setter
     private String category;
-    @Getter
-    @Setter
     private double amount;
-    @Getter
-    @Setter
     private String label;
-    @Getter
-    @Setter
     private int vout;
-    @Getter
-    @Setter
     private double fee;
-    @Getter
-    @Setter
     private int confirmations;
-    @Getter
-    @Setter
     private boolean generated;
-    @Getter
-    @Setter
     private boolean trusted;
-    @Getter
-    @Setter
     private String blockhash;
-    @Getter
-    @Setter
     private int blockheight;
-    @Getter
-    @Setter
     private int blockindex;
-    @Getter
-    @Setter
     private int blocktime;
-    @Getter
-    @Setter
     private String txid;
-    @Getter
-    @Setter
     private String[] walletconflicts;
-    @Getter
-    @Setter
     private int time;
-    @Getter
-    @Setter
     private int timereceived;
-    @Getter
-    @Setter
     private String comment;
     private String bip125Replaceable;
-    @Getter
-    @Setter
     private boolean abandoned;
 
     @JsonProperty("bip125-replaceable")
