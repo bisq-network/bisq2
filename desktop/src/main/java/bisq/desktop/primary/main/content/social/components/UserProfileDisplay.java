@@ -21,20 +21,20 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.robohash.RoboHash;
+import bisq.i18n.Res;
 import bisq.social.userprofile.UserProfileService;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import java.util.stream.Collectors;
 
 @Slf4j
 public class UserProfileDisplay {
@@ -67,6 +67,10 @@ public class UserProfileDisplay {
             pin = FxBindings.subscribe(userProfileService.getPersistableStore().getSelectedUserProfile(),
                     userProfile -> {
                         model.userName.set(userProfile.identity().domainId());
+                        model.id.set(Res.get("social.createUserProfile.id", userProfile.identity().id()));
+                        String entitledRoles = userProfile.entitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
+                        model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
+                        model.entitlementsVisible.set(!userProfile.entitlements().isEmpty());
                         model.roboHashNode.set(RoboHash.getImage(userProfile.identity().pubKeyHash(), false));
                     });
         }
@@ -80,34 +84,51 @@ public class UserProfileDisplay {
     private static class Model implements bisq.desktop.common.view.Model {
         ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         StringProperty userName = new SimpleStringProperty();
+        StringProperty id = new SimpleStringProperty();
+        BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
+        StringProperty entitlements = new SimpleStringProperty();
 
         private Model() {
         }
     }
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
+    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final BisqLabel userName;
+        private final BisqLabel userName, id, entitlements;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
-            super(new HBox(), model, controller);
+            super(new VBox(), model, controller);
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
 
             userName = new BisqLabel();
             userName.getStyleClass().add("headline-label");
             userName.setPadding(new Insets(10, 0, 0, 0));
+
             roboIconImageView = new ImageView();
             roboIconImageView.setFitWidth(75);
             roboIconImageView.setFitHeight(75);
-            root.getChildren().addAll(userName, roboIconImageView);
+
+            id = new BisqLabel();
+            id.getStyleClass().add("offer-label-small"); //todo
+            id.setPadding(new Insets(-5, 0, 0, 0));
+
+            entitlements = new BisqLabel();
+            entitlements.getStyleClass().add("offer-label-small"); //todo
+            entitlements.setPadding(new Insets(-5, 0, 0, 0));
+
+            root.getChildren().addAll(userName, roboIconImageView, id, entitlements);
         }
 
         @Override
         public void onViewAttached() {
             userName.textProperty().bind(model.userName);
+            id.textProperty().bind(model.id);
+            entitlements.textProperty().bind(model.entitlements);
+            entitlements.visibleProperty().bind(model.entitlementsVisible);
+            entitlements.managedProperty().bind(model.entitlementsVisible);
 
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
@@ -119,6 +140,10 @@ public class UserProfileDisplay {
         @Override
         protected void onViewDetached() {
             userName.textProperty().unbindBidirectional(model.userName);
+            id.textProperty().unbind();
+            entitlements.textProperty().unbind();
+            entitlements.visibleProperty().unbind();
+            entitlements.managedProperty().unbind();
             roboHashNodeSubscription.unsubscribe();
         }
     }

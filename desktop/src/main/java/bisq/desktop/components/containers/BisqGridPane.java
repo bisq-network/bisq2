@@ -18,10 +18,7 @@
 package bisq.desktop.components.containers;
 
 import bisq.common.data.Pair;
-import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.BisqLabel;
-import bisq.desktop.components.controls.BisqTextArea;
-import bisq.desktop.components.controls.BisqTextField;
+import bisq.desktop.components.controls.*;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.layout.Layout;
@@ -94,6 +91,17 @@ public class BisqGridPane extends GridPane {
 
     public BisqTextField addTextField(String labelText, String textFieldText) {
         BisqTextField textField = new BisqTextField(textFieldText);
+        textField.setPromptText(labelText);
+        GridPane.setRowIndex(textField, getRowCount());
+        GridPane.setColumnIndex(textField, 0);
+        GridPane.setColumnSpan(textField, getColumnCount());
+        GridPane.setMargin(textField, new Insets(0, 0, 15, 0));
+        getChildren().addAll(textField);
+        return textField;
+    }
+
+    public BisqTextFieldWithCopyIcon addTextFieldWithCopyIcon(String labelText, String textFieldText) {
+        BisqTextFieldWithCopyIcon textField = new BisqTextFieldWithCopyIcon(textFieldText);
         textField.setPromptText(labelText);
         GridPane.setRowIndex(textField, getRowCount());
         GridPane.setColumnIndex(textField, 0);

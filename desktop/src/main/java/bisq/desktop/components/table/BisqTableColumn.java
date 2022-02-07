@@ -410,9 +410,9 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                         tableItem.activate();
                                     }
                                     if (value.isPresent()) {
-                                        button.setTextAsUppercase(value.get());
+                                        button.setText(value.get());
                                     } else if (valueSupplier.isPresent()) {
-                                        button.setTextAsUppercase(valueSupplier.get().apply(item));
+                                        button.setText(valueSupplier.get().apply(item));
                                     } else if (valuePropertySupplier.isPresent()) {
                                         valuePropertySupplier.ifPresent(supplier ->
                                                 button.textProperty().bind(supplier.apply(item)));

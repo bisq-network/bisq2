@@ -17,22 +17,31 @@
 
 package bisq.desktop.primary.main.content.social.profile.components;
 
+import bisq.common.encoding.Hex;
+import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.BisqInputTextField;
 import bisq.desktop.components.controls.BisqLabel;
+import bisq.desktop.components.controls.BisqTextField;
+import bisq.desktop.components.controls.BisqTextFieldWithCopyIcon;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
+import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.AmountFormatter;
+import bisq.security.DigestUtil;
 import bisq.social.userprofile.Entitlement;
 import bisq.social.userprofile.UserProfileService;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,10 +49,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+//todo missing validations
 @Slf4j
 public class EntitlementSelection {
     private final Controller controller;
@@ -54,6 +66,10 @@ public class EntitlementSelection {
 
     public View getView() {
         return controller.view;
+    }
+
+    public void reset() {
+        controller.reset();
     }
 
     public Set<Entitlement> getVerifiedEntitlements() {
@@ -80,55 +96,63 @@ public class EntitlementSelection {
             model.tableVisible.set(false);
         }
 
+        private void reset() {
+            model.verifiedEntitlements.clear();
+            model.tableVisible.set(false);
+        }
+
         @Override
         public void onViewDetached() {
         }
-
 
         private void onShowTable() {
             model.tableVisible.set(true);
         }
 
-        private void onUpdateItemWithTxIdInputTextField(EntitlementItem entitlementItem, BisqInputTextField inputTextField) {
-            if (entitlementItem == null) return;
-
-            if (entitlementItem.getType().getProofTypes().contains(Entitlement.ProofType.PROOF_OF_BURN)) {
-                //inputTextField.setPromptText("PROOF_OF_BURN");
-            } else if (entitlementItem.getType().getProofTypes().contains(Entitlement.ProofType.BONDED_ROLE)) {
-                // inputTextField.setPromptText(Res.get("social.createUserProfile.entitlement.table.header.proof.prompt.bondedRole"));
-            }
-            //todo show input validation result
+        private CompletableFuture<Optional<Entitlement.Proof>> onVerifyProofOfBurn(EntitlementItem entitlementItem, String pubKeyHash, String proofOfBurnTxId) {
+            return userProfileService.verifyProofOfBurn(entitlementItem.getType(), proofOfBurnTxId, pubKeyHash)
+                    .whenComplete((proof, throwable) -> {
+                        UIThread.run(() -> {
+                            if (throwable == null && proof.isPresent()) {
+                                model.verifiedEntitlements.add(new Entitlement(entitlementItem.getType(), proof.get()));
+                            } else {
+                                log.warn("Error at entitlementType verification."); // todo 
+                            }
+                        });
+                    });
         }
 
-        private void onUpdateItemWithVerifyButton(EntitlementItem entitlementItem, Button button) {
-            if (entitlementItem == null)
-                return;
-
-            entitlementItem.setButton(button);
-        }
-
-        private void onVerifyEntitlementItem(EntitlementItem entitlementItem) {
-            if (entitlementItem == null || entitlementItem.getProof().get() == null || entitlementItem.getProof().get().isEmpty())
-                return;
-
-            String proof = entitlementItem.getProof().get();
-            Button button = entitlementItem.getButton();
-            Entitlement.Type entitlementType = entitlementItem.getType();
-            userProfileService.verifyEntitlement(entitlementType, proof, model.keyPair.get().getPublic())
-                    .whenComplete((result, throwable) -> {
+        private CompletableFuture<Optional<Entitlement.Proof>> onVerifyBondedRole(EntitlementItem entitlementItem, String bondedRoleTxId, String bondedRoleSig) {
+            return userProfileService.verifyBondedRole(bondedRoleTxId,
+                            bondedRoleSig,
+                            model.keyPair.get().getPublic())
+                    .whenComplete((proof, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null) {
-                                if (result) {
-                                    model.verifiedEntitlements.add(new Entitlement(entitlementType, proof));
-                                    button.getStyleClass().add("action-button");
-                                    entitlementItem.buttonText.set(Res.get("social.createUserProfile.table.entitlement.verify.success"));
+                                if (proof.isPresent()) {
+                                    model.verifiedEntitlements.add(new Entitlement(entitlementItem.getType(), proof.get()));
                                 } else {
-                                    button.getStyleClass().remove("action-button");
-                                    entitlementItem.buttonText.set(Res.get("social.createUserProfile.table.entitlement.verify.failed"));
                                     log.warn("Entitlement verification failed."); // todo 
                                 }
                             } else {
-                                log.warn("Error at entitlement verification."); // todo 
+                                log.warn("Error at entitlementType verification."); // todo 
+                            }
+                        });
+                    });
+        }
+
+        private CompletableFuture<Optional<Entitlement.Proof>> onVerifyModerator(EntitlementItem entitlementItem, String invitationCode) {
+            return userProfileService.verifyModerator(invitationCode, model.keyPair.get().getPublic())
+                    .whenComplete((proof, throwable) -> {
+                        UIThread.run(() -> {
+                            if (throwable == null) {
+                                if (proof.isPresent()) {
+                                    model.verifiedEntitlements.add(new Entitlement(entitlementItem.getType(), proof.get()));
+                                } else {
+                                    log.warn("Entitlement verification failed."); // todo 
+                                }
+                            } else {
+                                log.warn("Error at entitlementType verification."); // todo 
                             }
                         });
                     });
@@ -136,6 +160,13 @@ public class EntitlementSelection {
 
         private void onShowInfo(EntitlementItem entitlementItem) {
             //todo
+        }
+
+        public void onOpenProofWindow(EntitlementItem entitlementItem) {
+            model.minBurnAmount = AmountFormatter.formatAmountWithCode(Coin.of(userProfileService.getMinBurnAmount(entitlementItem.getType()), "BSQ"));
+            if (model.keyPair.get() != null) {
+                new ProofPopup(this, model, entitlementItem).show();
+            }
         }
     }
 
@@ -147,6 +178,7 @@ public class EntitlementSelection {
         private final SortedList<EntitlementItem> sortedList = new SortedList<>(observableList);
         private final BooleanProperty tableVisible = new SimpleBooleanProperty();
         private final ObjectProperty<KeyPair> keyPair;
+        private String minBurnAmount;
 
         private Model(ObjectProperty<KeyPair> keyPair) {
             this.keyPair = keyPair;
@@ -205,54 +237,157 @@ public class EntitlementSelection {
                     .minWidth(400)
                     .valueSupplier(EntitlementItem::getTypeName)
                     .build());
-
             tableView.getColumns().add(new BisqTableColumn.Builder<EntitlementItem>()
                     .title(Res.get("social.createUserProfile.entitlement.table.header.proof"))
-                    .minWidth(200)
-                    .cellFactory(BisqTableColumn.CellFactory.TEXT_INPUT)
-                    .updateItemWithInputTextFieldHandler(controller::onUpdateItemWithTxIdInputTextField)
-                    .valuePropertyBiDirBindingSupplier(item -> item.proof)
-                    .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<EntitlementItem>()
-                    .title(Res.get("social.createUserProfile.entitlement.table.header.verification"))
                     .fixWidth(160)
                     .cellFactory(BisqTableColumn.CellFactory.BUTTON)
-                    .updateItemWithButtonHandler(controller::onUpdateItemWithVerifyButton)
-                    .actionHandler(controller::onVerifyEntitlementItem)
-                    .valuePropertyBiDirBindingSupplier(item -> item.buttonText)
+                    .actionHandler(controller::onOpenProofWindow)
+                    .value(Res.get("social.createUserProfile.entitlement.table.proof.button"))
                     .build());
             tableView.getColumns().add(new BisqTableColumn.Builder<EntitlementItem>()
-                    .fixWidth(160)
+                    .fixWidth(120)
                     .cellFactory(BisqTableColumn.CellFactory.BUTTON)
                     .actionHandler(controller::onShowInfo)
                     .value(Res.get("social.createUserProfile.entitlement.table.header.info"))
                     .build());
         }
-
     }
 
     @Getter
     private static class EntitlementItem implements TableItem {
         private final String typeName;
         private final Entitlement.Type type;
-        private final StringProperty proof = new SimpleStringProperty();
-        private final StringProperty proofPrompt = new SimpleStringProperty();
-        private final StringProperty buttonText = new SimpleStringProperty(Res.get("social.createUserProfile.table.entitlement.verify"));
         @Setter
         private Button button;
 
         private EntitlementItem(Entitlement.Type type) {
             this.type = type;
-            this.typeName = Res.get(type.name());
+            String info = switch (type) {
+                case LIQUIDITY_PROVIDER -> Res.get("social.createUserProfile.liquidityProvider.info");
+                case CHANNEL_ADMIN -> Res.get("social.createUserProfile.administrator.info");
+                case CHANNEL_MODERATOR -> Res.get("social.createUserProfile.moderator.info");
+                case MEDIATOR -> Res.get("social.createUserProfile.mediator.info");
+            };
+            this.typeName = Res.get(type.name()) + "\n" + info;
         }
 
         @Override
         public void activate() {
-            proof.set("");
         }
 
         @Override
         public void deactivate() {
+        }
+    }
+
+    private static class ProofPopup extends Popup {
+        private final Controller controller;
+        private final Model model;
+        private final EntitlementItem entitlementItem;
+        private BisqTextField firstField, secondField;
+        private BisqTextFieldWithCopyIcon pubKeyHashField;
+
+        //todo missing validations
+        public ProofPopup(Controller controller, Model model, EntitlementItem entitlementItem) {
+            super();
+            this.controller = controller;
+            this.model = model;
+            this.entitlementItem = entitlementItem;
+            headLine(Res.get("social.createUserProfile.entitlement.popup.headline"));
+            if (entitlementItem.getType().getProofTypes().contains(Entitlement.ProofType.CHANNEL_ADMIN_INVITATION)) {
+                message(Res.get("social.createUserProfile.entitlement.popup.moderator.message"));
+            } else if (entitlementItem.getType().getProofTypes().contains(Entitlement.ProofType.PROOF_OF_BURN)) {
+                message(Res.get("social.createUserProfile.entitlement.popup.proofOfBurn.message"));
+            } else if (entitlementItem.getType().getProofTypes().contains(Entitlement.ProofType.BONDED_ROLE)) {
+                message(Res.get("social.createUserProfile.entitlement.popup.bondedRole.message"));
+            }
+            actionButtonText(Res.get("social.createUserProfile.table.entitlement.verify"));
+        }
+
+        @Override
+        protected void onActionButtonClicked() {
+            // deactivate close with empty override  
+        }
+
+        @Override
+        protected void addContent() {
+            super.addContent();
+
+            GridPane.setMargin(messageLabel, new Insets(0, 0, 20, 0));
+
+            String pubKeyHash = Hex.encode(DigestUtil.hash(model.keyPair.get().getPublic().getEncoded()));
+
+            gridPane.addTextFieldWithCopyIcon(Res.get("social.createUserProfile.entitlement.popup.pubKeyHash"), pubKeyHash);
+            gridPane.addTextFieldWithCopyIcon(Res.get("social.createUserProfile.entitlement.popup.minBurnAmount"), model.minBurnAmount);
+            firstField = gridPane.addTextField("", "3bbb2f597e714257d4a2f573e9ebfff4ab631277186a40875dbbf4140e90b748");
+
+            switch (entitlementItem.getType()) {
+                case LIQUIDITY_PROVIDER -> {
+                    firstField.setPromptText(Res.get("social.createUserProfile.entitlement.popup.proofOfBurn"));
+                    onAction(() -> {
+                                actionButton.setDisable(true); //todo add busy animation
+                                controller.onVerifyProofOfBurn(entitlementItem, pubKeyHash, firstField.getText())
+                                        .whenComplete((proof, throwable) -> {
+                                            UIThread.run(() -> {
+                                                if (throwable == null && proof.isPresent()) {
+                                                    //todo hide button and show feedback text instead
+                                                    actionButton.setDisable(false);
+                                                    actionButton.getStyleClass().add("action-button");
+                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.success").toUpperCase());
+                                                } else {
+                                                    actionButton.getStyleClass().remove("action-button");
+                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.failed").toUpperCase());
+                                                }
+                                            });
+                                        });
+                            }
+                    );
+                }
+                case MEDIATOR, CHANNEL_ADMIN -> {
+                    firstField.setPromptText(Res.get("social.createUserProfile.entitlement.popup.bondedRole.txId"));
+                    secondField = new BisqTextField();
+                    secondField = gridPane.addTextField(Res.get("social.createUserProfile.entitlement.popup.bondedRole.sig"), "");
+                    onAction(() -> {
+                                actionButton.setDisable(true); //todo add busy animation
+                                controller.onVerifyBondedRole(entitlementItem, firstField.getText(), secondField.getText())
+                                        .whenComplete((proof, throwable) -> {
+                                            UIThread.run(() -> {
+                                                if (throwable == null && proof.isPresent()) {
+                                                    //todo hide button and show feedback text instead
+                                                    actionButton.setDisable(false);
+                                                    actionButton.getStyleClass().add("action-button");
+                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.success").toUpperCase());
+                                                } else {
+                                                    actionButton.getStyleClass().remove("action-button");
+                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.failed").toUpperCase());
+                                                }
+                                            });
+                                        });
+                            }
+                    );
+                }
+                case CHANNEL_MODERATOR -> {
+                    firstField.setPromptText(Res.get("social.createUserProfile.entitlement.popup.moderator.code"));
+                    onAction(() -> {
+                                actionButton.setDisable(true); //todo add busy animation
+                                controller.onVerifyModerator(entitlementItem, firstField.getText())
+                                        .whenComplete((proof, throwable) -> {
+                                            UIThread.run(() -> {
+                                                if (throwable == null && proof.isPresent()) {
+                                                    //todo hide button and show feedback text instead
+                                                    actionButton.setDisable(false);
+                                                    actionButton.getStyleClass().add("action-button");
+                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.success").toUpperCase());
+                                                } else {
+                                                    actionButton.getStyleClass().remove("action-button");
+                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.failed").toUpperCase());
+                                                }
+                                            });
+                                        });
+                            }
+                    );
+                }
+            }
         }
     }
 }

@@ -32,7 +32,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +53,7 @@ public class TradeIntentView extends View<VBox, TradeIntentModel, TradeIntentCon
         gridPane = new BisqGridPane();
         gridPane.setPadding(new Insets(20, 20, 20, 0));
 
-        HBox userProfileViewRoot = userProfileView.getRoot();
+        Pane userProfileViewRoot = userProfileView.getRoot();
         StackPane.setAlignment(userProfileViewRoot, Pos.TOP_RIGHT);
         userProfileViewRoot.setPadding(new Insets(10, 0, 0, 10));
         root.getChildren().addAll(userProfileViewRoot, gridPane);

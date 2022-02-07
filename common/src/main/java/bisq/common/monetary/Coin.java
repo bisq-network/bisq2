@@ -51,6 +51,12 @@ public class Coin extends Monetary {
                 12);
     }
 
+    public static Coin parseBsq(String string) {
+        return Coin.of(new BigDecimal(string).movePointRight(12).longValue(),
+                "BSQ",
+                2);
+    }
+
     // Unsafe method. We do not know the currency and the precision, just that it is not a fiat currency.
     // We exclude XMR
     public static Coin parse(String string) {
@@ -98,7 +104,8 @@ public class Coin extends Monetary {
     Coin(long value, String code, int precision) {
         // We add a `c` as prefix for crypto-currencies to avoid that we get a collusion with the code. 
         // It happened in the past that altcoins used a fiat code.
-        super(code + " [crypto]", value, code, precision, precision);
+
+        super(code + " [crypto]", value, code, precision, code.equals("BSQ") ? 2 : 4);
     }
 
     private Coin(double value, String code, int precision) {
@@ -129,7 +136,9 @@ public class Coin extends Monetary {
     }
 
     private static int deriveExponent(String code) {
-        return code.equals("XMR") ? 12 : 8;
+        if (code.equals("XMR")) return 12;
+        if (code.equals("BSQ")) return 2;
+        return 8;
     }
 
     @Override

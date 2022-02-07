@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.social.profile;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.social.components.UserProfileDisplay;
+import bisq.desktop.primary.main.content.social.profile.components.ChannelAdmin;
 import bisq.desktop.primary.main.content.social.profile.components.CreateUserProfile;
 import bisq.desktop.primary.main.content.social.profile.components.UserProfileSelection;
 import lombok.Getter;
@@ -35,18 +36,25 @@ public class UserProfileController implements Controller {
     @Getter
     private final UserProfileView view;
     private final UserProfileDisplay userProfileDisplay;
+    private final ChannelAdmin channelAdmin;
 
     public UserProfileController(DefaultApplicationService applicationService) {
         userProfileSelection = new UserProfileSelection(applicationService.getUserProfileService());
         userProfileDisplay = new UserProfileDisplay(applicationService.getUserProfileService());
         createUserProfile = new CreateUserProfile(applicationService.getUserProfileService(), applicationService.getKeyPairService());
+        channelAdmin = new ChannelAdmin(applicationService.getUserProfileService(), applicationService.getChatService());
         model = new UserProfileModel(applicationService);
-        view = new UserProfileView(model, this, userProfileSelection.getView(), userProfileDisplay.getView(), createUserProfile.getView());
+        view = new UserProfileView(model, this,
+                userProfileSelection.getView(),
+                userProfileDisplay.getView(),
+                channelAdmin.getView(),
+                createUserProfile.getView());
     }
 
     @Override
     public void onViewAttached() {
         model.createUserProfileVisible.set(false);
+        model.channelAdminVisible.set(true);
     }
 
     @Override

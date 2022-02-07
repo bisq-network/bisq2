@@ -26,6 +26,7 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.DontShowAgainLookup;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
+import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqCheckBox;
 import bisq.desktop.components.controls.BisqLabel;
@@ -138,9 +139,9 @@ public abstract class Overlay<T extends Overlay<T>> {
 
 
     protected Stage stage;
-    protected GridPane gridPane;
+    protected BisqGridPane gridPane;
 
-    protected int rowIndex = -1;
+   // protected int rowIndex = -1;
     protected double width = DEFAULT_WIDTH;
     protected double buttonDistance = 20;
 
@@ -209,7 +210,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                 addBusyAnimation();
             }
 
-            addMessage();
+            addContent();
             if (showReportErrorButtons) {
                 addReportErrorButtons();
             }
@@ -477,7 +478,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void createGridPane() {
-        gridPane = new GridPane();
+        gridPane = new BisqGridPane();
         gridPane.setHgap(5);
         gridPane.setVgap(5);
         gridPane.setPadding(new Insets(64, 64, 64, 64));
@@ -772,7 +773,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected void addHeadLine() {
         if (headLine != null) {
-            ++rowIndex;
+           // ++rowIndex;
 
             HBox hBox = new HBox();
             hBox.setSpacing(7);
@@ -789,13 +790,13 @@ public abstract class Overlay<T extends Overlay<T>> {
             hBox.getChildren().addAll(headlineIcon, headLineLabel);
 
             GridPane.setHalignment(hBox, HPos.LEFT);
-            GridPane.setRowIndex(hBox, rowIndex);
+            GridPane.setRowIndex(hBox, gridPane.getRowCount());
             GridPane.setColumnSpan(hBox, 2);
             gridPane.getChildren().addAll(hBox);
         }
     }
 
-    protected void addMessage() {
+    protected void addContent() {
         if (message != null) {
             messageLabel = new BisqLabel(truncatedMessage);
             messageLabel.setMouseTransparent(true);
@@ -803,7 +804,8 @@ public abstract class Overlay<T extends Overlay<T>> {
             GridPane.setHalignment(messageLabel, HPos.LEFT);
             GridPane.setHgrow(messageLabel, Priority.ALWAYS);
             GridPane.setMargin(messageLabel, new Insets(3, 0, 0, 0));
-            GridPane.setRowIndex(messageLabel, ++rowIndex);
+            //GridPane.setRowIndex(messageLabel, ++rowIndex);
+            GridPane.setRowIndex(messageLabel, gridPane.getRowCount());
             GridPane.setColumnIndex(messageLabel, 0);
             GridPane.setColumnSpan(messageLabel, 2);
             gridPane.getChildren().add(messageLabel);
@@ -812,10 +814,11 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     // footer contains optional hyperlinks extracted from the message
-    private void addFooter() {
+    protected void addFooter() {
         if (messageHyperlinks != null && messageHyperlinks.size() > 0) {
             VBox footerBox = new VBox();
-            GridPane.setRowIndex(footerBox, ++rowIndex);
+            //GridPane.setRowIndex(footerBox, ++rowIndex);
+            GridPane.setRowIndex(footerBox, gridPane.getRowCount());
             GridPane.setColumnSpan(footerBox, 2);
             GridPane.setMargin(footerBox, new Insets(buttonDistance, 0, 0, 0));
             gridPane.getChildren().add(footerBox);
@@ -834,13 +837,15 @@ public abstract class Overlay<T extends Overlay<T>> {
         Button logButton = new BisqButton(Res.get("popup.reportError.log"));
         GridPane.setMargin(logButton, new Insets(20, 0, 0, 0));
         GridPane.setHalignment(logButton, HPos.LEFT);
-        GridPane.setRowIndex(logButton, ++rowIndex);
+        //GridPane.setRowIndex(logButton, ++rowIndex);
+        GridPane.setRowIndex(logButton, gridPane.getRowCount());
         gridPane.getChildren().add(logButton);
         logButton.setOnAction(event -> OsUtils.open(new File(baseDir, "bisq.log")));
 
         Button gitHubButton = new BisqButton(Res.get("popup.reportError.gitHub"));
         GridPane.setHalignment(gitHubButton, HPos.RIGHT);
-        GridPane.setRowIndex(gitHubButton, ++rowIndex);
+        //GridPane.setRowIndex(gitHubButton, ++rowIndex);
+        GridPane.setRowIndex(gitHubButton, gridPane.getRowCount());
         gridPane.getChildren().add(gitHubButton);
         gitHubButton.setOnAction(event -> {
             if (message != null) {
@@ -854,7 +859,8 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected void addBusyAnimation() {
         BusyAnimation busyAnimation = new BusyAnimation();
         GridPane.setHalignment(busyAnimation, HPos.CENTER);
-        GridPane.setRowIndex(busyAnimation, ++rowIndex);
+        //GridPane.setRowIndex(busyAnimation, ++rowIndex);
+        GridPane.setRowIndex(busyAnimation, gridPane.getRowCount());
         GridPane.setColumnSpan(busyAnimation, 2);
         gridPane.getChildren().add(busyAnimation);
     }
@@ -899,7 +905,8 @@ public abstract class Overlay<T extends Overlay<T>> {
         buttonBox = new HBox();
 
         GridPane.setHalignment(buttonBox, buttonAlignment);
-        GridPane.setRowIndex(buttonBox, ++rowIndex);
+        //GridPane.setRowIndex(buttonBox, ++rowIndex);
+        GridPane.setRowIndex(buttonBox, gridPane.getRowCount());
         GridPane.setColumnSpan(buttonBox, 2);
         GridPane.setMargin(buttonBox, new Insets(buttonDistance, 0, 0, 0));
         gridPane.getChildren().add(buttonBox);
@@ -920,7 +927,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
             if (!disableActionButton) {
                 actionButton.setOnAction(event -> {
-                    hide();
+                    onActionButtonClicked();
                     actionHandlerOptional.ifPresent(Runnable::run);
                 });
             }
@@ -937,7 +944,7 @@ public abstract class Overlay<T extends Overlay<T>> {
             if (secondaryActionButtonText != null && secondaryActionHandlerOptional.isPresent()) {
                 secondaryActionButton = new BisqButton(secondaryActionButtonText);
                 secondaryActionButton.setOnAction(event -> {
-                    hide();
+                    onSecondaryActionButtonClicked();
                     secondaryActionHandlerOptional.ifPresent(Runnable::run);
                 });
 
@@ -950,6 +957,14 @@ public abstract class Overlay<T extends Overlay<T>> {
             closeButton.setDefaultButton(true);
             buttonBox.getChildren().addAll(spacer, closeButton);
         }
+    }
+
+    protected void onActionButtonClicked() {
+        hide();
+    }
+
+    protected void onSecondaryActionButtonClicked() {
+        hide();
     }
 
     protected void doClose() {
