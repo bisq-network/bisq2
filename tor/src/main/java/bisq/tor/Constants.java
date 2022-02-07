@@ -56,7 +56,7 @@ public class Constants {
     public final static String TORRC_KEY_COOKIE = "CookieAuthFile";
 
     // Tor control connection
-    public final static String CONTROL_PORT_LOG_SUB_STRING = "Control collection listening on port ";
+    public final static String CONTROL_PORT_LOG_SUB_STRING = "Control listener listening on port ";
     public final static List<String> CONTROL_EVENTS = List.of("INFO", "NOTICE", "WARN", "ERR", "CIRC", "ORCONN", "HS_DESC", "HS_DESC_CONTENT");
     public final static String CONTROL_STATUS_BOOTSTRAP_PHASE = "status/bootstrap-phase";
     public final static String CONTROL_DISABLE_NETWORK = "DisableNetwork";
