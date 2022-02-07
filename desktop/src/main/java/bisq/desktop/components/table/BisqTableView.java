@@ -29,7 +29,7 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         sortedList.comparatorProperty().bind(comparatorProperty());
 
-        setPlaceholder(new BisqLabel(Res.common.get("table.placeholder.noData")));
+        setPlaceholder(new BisqLabel(Res.get("table.placeholder.noData")));
     }
 
     public void setFixHeight(double value) {

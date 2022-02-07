@@ -105,7 +105,7 @@ public class MarketSelection {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-            Label headline = new BisqLabel(Res.offerbook.get("createOffer.selectMarket"));
+            Label headline = new BisqLabel(Res.get("createOffer.selectMarket"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
             comboBox = new BisqComboBox<>();

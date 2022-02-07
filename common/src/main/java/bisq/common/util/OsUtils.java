@@ -17,10 +17,16 @@
 
 package bisq.common.util;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
+@Slf4j
 public class OsUtils {
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = 1;
@@ -89,6 +95,63 @@ public class OsUtils {
     public static String getOSName() {
         return System.getProperty("os.name").toLowerCase(Locale.US);
     }
-    
-    
+
+    public static boolean open(File file) {
+        return open(file.getPath());
+    }
+
+    public static boolean open(String fileName) {
+        if (isLinux()) {
+            if (runCommand("kde-open", "%s", fileName)) return true;
+            if (runCommand("gnome-open", "%s", fileName)) return true;
+            if (runCommand("xdg-open", "%s", fileName)) return true;
+        }
+
+        if (isOSX()) {
+            if (runCommand("open", "%s", fileName)) return true;
+        }
+
+        if (isWindows()) {
+            return runCommand("explorer", "%s", "\"" + fileName + "\"");
+        }
+
+        return false;
+    }
+
+    private static boolean runCommand(String command, String args, String fileName) {
+        log.info("Trying to exec: cmd = {} args = {} file = {}", command, args, fileName);
+        String[] parts = prepareCommand(command, args, fileName);
+        try {
+            Process p = Runtime.getRuntime().exec(parts);
+            if (p == null) return false;
+
+            try {
+                int value = p.exitValue();
+                if (value == 0) {
+                    log.warn("Process ended immediately.");
+                } else {
+                    log.warn("Process crashed.");
+                }
+                return false;
+            } catch (IllegalThreadStateException e) {
+                log.info("Process is running.");
+                return true;
+            }
+        } catch (IOException e) {
+            log.warn("Error running command. {}", e.toString());
+            return false;
+        }
+    }
+
+    private static String[] prepareCommand(String command, String args, String fileName) {
+        List<String> parts = new ArrayList<>();
+        parts.add(command);
+        if (args != null) {
+            for (String s : args.split(" ")) {
+                s = String.format(s, fileName);
+                parts.add(s.trim());
+            }
+        }
+        return parts.toArray(new String[parts.size()]);
+    }
 }

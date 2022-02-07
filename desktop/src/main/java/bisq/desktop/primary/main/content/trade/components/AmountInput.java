@@ -134,15 +134,15 @@ public class AmountInput {
 
             model.code.set(model.isBaseCurrency ? market.baseCurrencyCode() : market.quoteCurrencyCode());
             String code = model.code.get();
-            model.prompt.set(Res.offerbook.get("createOffer.amount.prompt", code));
+            model.prompt.set(Res.get("createOffer.amount.prompt", code));
             String dir;
             Direction direction = model.direction.get();
             if (model.isBaseCurrency) {
-                dir = direction == Direction.BUY ? Res.offerbook.get("buy") : Res.offerbook.get("sell");
+                dir = direction == Direction.BUY ? Res.get("buy") : Res.get("sell");
             } else {
-                dir = direction == Direction.BUY ? Res.offerbook.get("spend") : Res.offerbook.get("receive");
+                dir = direction == Direction.BUY ? Res.get("spend") : Res.get("receive");
             }
-            model.description.set(Res.offerbook.get("createOffer.amount.description", code, dir));
+            model.description.set(Res.get("createOffer.amount.description", code, dir));
         }
     }
 

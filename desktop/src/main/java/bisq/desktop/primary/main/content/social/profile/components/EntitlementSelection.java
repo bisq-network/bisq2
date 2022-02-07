@@ -90,9 +90,13 @@ public class EntitlementSelection {
         }
 
         private void onUpdateItemWithTxIdInputTextField(EntitlementItem entitlementItem, BisqInputTextField inputTextField) {
-            String txId = inputTextField.getText();
-            if (entitlementItem == null || txId == null || txId.isEmpty()) return;
+            if (entitlementItem == null) return;
 
+            if (entitlementItem.getType().getProofTypes().contains(Entitlement.ProofType.PROOF_OF_BURN)) {
+                //inputTextField.setPromptText("PROOF_OF_BURN");
+            } else if (entitlementItem.getType().getProofTypes().contains(Entitlement.ProofType.BONDED_ROLE)) {
+                // inputTextField.setPromptText(Res.get("social.createUserProfile.entitlement.table.header.proof.prompt.bondedRole"));
+            }
             //todo show input validation result
         }
 
@@ -104,23 +108,23 @@ public class EntitlementSelection {
         }
 
         private void onVerifyEntitlementItem(EntitlementItem entitlementItem) {
-            if (entitlementItem == null || entitlementItem.getTxId().get() == null || entitlementItem.getTxId().get().isEmpty())
+            if (entitlementItem == null || entitlementItem.getProof().get() == null || entitlementItem.getProof().get().isEmpty())
                 return;
 
-            String txId = entitlementItem.getTxId().get();
+            String proof = entitlementItem.getProof().get();
             Button button = entitlementItem.getButton();
             Entitlement.Type entitlementType = entitlementItem.getType();
-            userProfileService.verifyEntitlement(entitlementType, txId, model.keyPair.get().getPublic())
+            userProfileService.verifyEntitlement(entitlementType, proof, model.keyPair.get().getPublic())
                     .whenComplete((result, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null) {
                                 if (result) {
-                                    model.verifiedEntitlements.add(new Entitlement(entitlementType, txId));
+                                    model.verifiedEntitlements.add(new Entitlement(entitlementType, proof));
                                     button.getStyleClass().add("action-button");
-                                    entitlementItem.buttonText.set(Res.common.get("social.createUserProfile.table.entitlement.verify.success"));
+                                    entitlementItem.buttonText.set(Res.get("social.createUserProfile.table.entitlement.verify.success"));
                                 } else {
                                     button.getStyleClass().remove("action-button");
-                                    entitlementItem.buttonText.set(Res.common.get("social.createUserProfile.table.entitlement.verify.failed"));
+                                    entitlementItem.buttonText.set(Res.get("social.createUserProfile.table.entitlement.verify.failed"));
                                     log.warn("Entitlement verification failed."); // todo 
                                 }
                             } else {
@@ -159,10 +163,10 @@ public class EntitlementSelection {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-            button = new BisqButton(Res.common.get("social.createUserProfile.entitlement.headline"));
+            button = new BisqButton(Res.get("social.createUserProfile.entitlement.headline"));
             button.setMinWidth(300);
 
-            headline = new BisqLabel(Res.common.get("social.createUserProfile.entitlement.headline"));
+            headline = new BisqLabel(Res.get("social.createUserProfile.entitlement.headline"));
             headline.getStyleClass().add("titled-group-bg-label-active");
             headline.setPadding(new Insets(20, 0, 0, 0));
 
@@ -197,20 +201,20 @@ public class EntitlementSelection {
 
         private void configTableView() {
             tableView.getColumns().add(new BisqTableColumn.Builder<EntitlementItem>()
-                    .title(Res.common.get("social.createUserProfile.entitlement.table.header.typeName"))
+                    .title(Res.get("social.createUserProfile.entitlement.table.header.typeName"))
                     .minWidth(400)
                     .valueSupplier(EntitlementItem::getTypeName)
                     .build());
 
             tableView.getColumns().add(new BisqTableColumn.Builder<EntitlementItem>()
-                    .title(Res.common.get("social.createUserProfile.entitlement.table.header.proof"))
+                    .title(Res.get("social.createUserProfile.entitlement.table.header.proof"))
                     .minWidth(200)
                     .cellFactory(BisqTableColumn.CellFactory.TEXT_INPUT)
-                    .valuePropertyBiDirBindingSupplier(item -> item.txId)
                     .updateItemWithInputTextFieldHandler(controller::onUpdateItemWithTxIdInputTextField)
+                    .valuePropertyBiDirBindingSupplier(item -> item.proof)
                     .build());
             tableView.getColumns().add(new BisqTableColumn.Builder<EntitlementItem>()
-                    .title(Res.common.get("social.createUserProfile.entitlement.table.header.verification"))
+                    .title(Res.get("social.createUserProfile.entitlement.table.header.verification"))
                     .fixWidth(160)
                     .cellFactory(BisqTableColumn.CellFactory.BUTTON)
                     .updateItemWithButtonHandler(controller::onUpdateItemWithVerifyButton)
@@ -221,7 +225,7 @@ public class EntitlementSelection {
                     .fixWidth(160)
                     .cellFactory(BisqTableColumn.CellFactory.BUTTON)
                     .actionHandler(controller::onShowInfo)
-                    .value(Res.common.get("social.createUserProfile.entitlement.table.header.info"))
+                    .value(Res.get("social.createUserProfile.entitlement.table.header.info"))
                     .build());
         }
 
@@ -231,19 +235,20 @@ public class EntitlementSelection {
     private static class EntitlementItem implements TableItem {
         private final String typeName;
         private final Entitlement.Type type;
-        private final StringProperty txId = new SimpleStringProperty();
-        private final StringProperty buttonText = new SimpleStringProperty(Res.common.get("social.createUserProfile.table.entitlement.verify"));
+        private final StringProperty proof = new SimpleStringProperty();
+        private final StringProperty proofPrompt = new SimpleStringProperty();
+        private final StringProperty buttonText = new SimpleStringProperty(Res.get("social.createUserProfile.table.entitlement.verify"));
         @Setter
         private Button button;
 
         private EntitlementItem(Entitlement.Type type) {
             this.type = type;
-            this.typeName = Res.common.get(type.name());
+            this.typeName = Res.get(type.name());
         }
 
         @Override
         public void activate() {
-            txId.set("");
+            proof.set("");
         }
 
         @Override

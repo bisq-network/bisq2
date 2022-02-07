@@ -100,7 +100,7 @@ public class UserProfileSelection {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-            Label headline = new BisqLabel(Res.common.get("social.userProfileSelection.headline"));
+            Label headline = new BisqLabel(Res.get("social.userProfileSelection.headline"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
             comboBox = new BisqComboBox<>(model.userProfiles);

@@ -35,7 +35,7 @@ public class PriceValidator extends InputValidator {
             Double.parseDouble(value);
             return new ValidationResult(true);
         } catch (Throwable error) {
-            return new ValidationResult(false, Res.common.get("validation.invalid"));
+            return new ValidationResult(false, Res.get("validation.invalid"));
         }
     }
 }

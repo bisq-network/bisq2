@@ -26,34 +26,31 @@ import java.util.ResourceBundle;
 
 @Slf4j
 public class Res {
-    public static Res common, network, offerbook;
-    private final String resourceName;
+    private static ResourceBundle bisq1ResourceBundle, defaultBundle;
 
     public static void initialize(Locale locale) {
-        common = new Res(locale, "default");
-        network = new Res(locale, "network");
-        offerbook = new Res(locale, "offerbook");
-    }
-
-    private final ResourceBundle resourceBundle;
-
-    private Res(Locale locale, String resourceName) {
-        this.resourceName = resourceName;
         if ("en".equalsIgnoreCase(locale.getLanguage())) {
             locale = Locale.ROOT;
         }
-        resourceBundle = ResourceBundle.getBundle(resourceName, locale, new UTF8Control());
+        bisq1ResourceBundle = ResourceBundle.getBundle("displayStrings", locale, new UTF8Control());
+        defaultBundle = ResourceBundle.getBundle("default", locale, new UTF8Control());
     }
 
-    public String get(String key, Object... arguments) {
+    public static String get(String key, Object... arguments) {
         return MessageFormat.format(get(key), arguments);
     }
 
-    public String get(String key) {
+    public static String get(String key) {
         try {
-            return resourceBundle.getString(key);
+            if (defaultBundle.containsKey(key)) {
+                return defaultBundle.getString(key);
+            } else if (bisq1ResourceBundle.containsKey(key)) {
+                return bisq1ResourceBundle.getString(key);
+            } else {
+                return "MISSING: " + key;
+            }
         } catch (MissingResourceException e) {
-            log.warn("Missing resource for key: " + resourceName + "." + key, e);
+            log.warn("Missing resource for key: " + key, e);
             return key;
         }
     }

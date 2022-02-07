@@ -54,12 +54,12 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
         root.setSpacing(5);
         root.setPadding(new Insets(0, 20, 20, 20));
 
-        NavigationButton trade = createNavigationButton(Res.common.get("trade"), NavigationTarget.TRADE);
-        NavigationButton portfolio = createNavigationButton(Res.common.get("portfolio"), NavigationTarget.PORTFOLIO);
-        NavigationButton social = createNavigationButton(Res.common.get("social"), NavigationTarget.SOCIAL);
-        NavigationButton markets = createNavigationButton(Res.common.get("markets"), NavigationTarget.MARKETS);
-        NavigationButton wallet = createNavigationButton(Res.common.get("wallet"), NavigationTarget.WALLET);
-        NavigationButton settings = createNavigationButton(Res.common.get("settings"), NavigationTarget.SETTINGS);
+        NavigationButton trade = createNavigationButton(Res.get("trade"), NavigationTarget.TRADE);
+        NavigationButton portfolio = createNavigationButton(Res.get("portfolio"), NavigationTarget.PORTFOLIO);
+        NavigationButton social = createNavigationButton(Res.get("social"), NavigationTarget.SOCIAL);
+        NavigationButton markets = createNavigationButton(Res.get("markets"), NavigationTarget.MARKETS);
+        NavigationButton wallet = createNavigationButton(Res.get("wallet"), NavigationTarget.WALLET);
+        NavigationButton settings = createNavigationButton(Res.get("settings"), NavigationTarget.SETTINGS);
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
@@ -184,7 +184,7 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
             hBox.managedProperty().bind(isVisible);
             hBox.visibleProperty().bind(isVisible);
 
-            Label peers = new Label(Res.network.get("peers"));
+            Label peers = new Label(Res.get("peers"));
 
             Label numConnectionsLabel = new Label();
             numConnectionsLabel.textProperty().bind(numConnections);

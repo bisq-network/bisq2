@@ -37,9 +37,9 @@ public class TradeView extends TabView<JFXTabPane, TradeModel, TradeController> 
 
     @Override
     protected void createAndAddTabs() {
-        NavigationTargetTab offerbook = createTab(Res.common.get("trade.offerbook"), NavigationTarget.OFFERBOOK);
-        createOffer = createTab(Res.common.get("trade.createOffer"), NavigationTarget.CREATE_OFFER);
-        takeOffer = createTab(Res.common.get("trade.takeOffer"), NavigationTarget.TAKE_OFFER);
+        NavigationTargetTab offerbook = createTab(Res.get("trade.offerbook"), NavigationTarget.OFFERBOOK);
+        createOffer = createTab(Res.get("trade.createOffer"), NavigationTarget.CREATE_OFFER);
+        takeOffer = createTab(Res.get("trade.takeOffer"), NavigationTarget.TAKE_OFFER);
         root.getTabs().setAll(offerbook);
     }
 

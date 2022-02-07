@@ -47,16 +47,16 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
 
         amountPriceView.getRoot().setPadding(new Insets(0, 0, -5, 0));
 
-        createOfferButton = new BisqButton(Res.offerbook.get("createOffer.button"));
+        createOfferButton = new BisqButton(Res.get("createOffer.button"));
         createOfferButton.getStyleClass().add("action-button");
-        BisqButton cancelButton = new BisqButton(Res.common.get("cancel"));
+        BisqButton cancelButton = new BisqButton(Res.get("cancel"));
         cancelButton.setOnAction(e -> controller.onCancel());
 
         //todo temp
         BisqTextArea offerSummary = new BisqTextArea();
         offerSummary.setVisible(false);
 
-        BisqButton publishButton = new BisqButton(Res.offerbook.get("publishOffer.button"));
+        BisqButton publishButton = new BisqButton(Res.get("publishOffer.button"));
         publishButton.setOnAction(e -> controller.onPublishOffer());
         publishButton.setVisible(false);
 

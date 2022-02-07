@@ -101,7 +101,7 @@ public class CreateUserProfile {
 
         private void onCreateUserProfile() {
             model.changeRoboIconButtonDisable.set(true);
-            model.feedback.set(Res.common.get("social.createUserProfile.prepare"));
+            model.feedback.set(Res.get("social.createUserProfile.prepare"));
             String useName = model.userName.get();
             userProfileService.createNewInitializedUserProfile(useName, model.tempKeyId, model.tempKeyPair.get(), entitlementSelection.getVerifiedEntitlements())
                     .thenAccept(userProfile -> {
@@ -109,7 +109,7 @@ public class CreateUserProfile {
                             checkArgument(userProfile.identity().pubKeyHash().equals(new ByteArray(DigestUtil.hash(model.tempKeyPair.get().getPublic().getEncoded()))));
                             checkArgument(userProfile.identity().domainId().equals(useName));
                             reset();
-                            model.feedback.set(Res.common.get("social.createUserProfile.success", useName));
+                            model.feedback.set(Res.get("social.createUserProfile.success", useName));
                         });
                     });
         }
@@ -154,18 +154,18 @@ public class CreateUserProfile {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-            BisqLabel headline = new BisqLabel(Res.common.get("social.createUserProfile.headline"));
+            BisqLabel headline = new BisqLabel(Res.get("social.createUserProfile.headline"));
             headline.getStyleClass().add("titled-group-bg-label-active");
             headline.setPadding(new Insets(0, 0, 10, 0));
 
             userNameInputField = new BisqTextField();
             userNameInputField.setMinWidth(300);
-            userNameInputField.setPromptText(Res.common.get("social.createUserProfile.userName.prompt"));
+            userNameInputField.setPromptText(Res.get("social.createUserProfile.userName.prompt"));
 
-            changeRoboIconButton = new BisqButton(Res.common.get("social.createUserProfile.changeIconButton"));
+            changeRoboIconButton = new BisqButton(Res.get("social.createUserProfile.changeIconButton"));
             changeRoboIconButton.setMinWidth(userNameInputField.getMinWidth());
 
-            createUserButton = new BisqButton(Res.common.get("social.createUserProfile.createButton"));
+            createUserButton = new BisqButton(Res.get("social.createUserProfile.createButton"));
             createUserButton.setMinWidth(userNameInputField.getMinWidth());
             createUserButton.disableProperty().bind(userNameInputField.textProperty().isEmpty());
             createUserButton.getStyleClass().add("action-button");

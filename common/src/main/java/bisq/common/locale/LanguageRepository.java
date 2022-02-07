@@ -44,6 +44,10 @@ public class LanguageRepository {
             "iw" // Hebrew
     );
 
+    public static boolean isDefaultLanguageRTL() {
+        return RTL_LANGUAGES_CODES.contains(defaultLanguage);
+    }
+
     public static final List<String> CODES = LocaleRepository.LOCALES.stream()
             .filter(locale -> !locale.getLanguage().isEmpty() &&
                     !locale.getDisplayLanguage().isEmpty())

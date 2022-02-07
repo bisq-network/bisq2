@@ -36,7 +36,7 @@ public class NetworkInfoView extends TabView<JFXTabPane, NetworkInfoModel, Netwo
 
     @Override
     protected void createAndAddTabs() {
-        NavigationTargetTab clearNetTab = createTab(Res.network.get("clearNet"), NavigationTarget.CLEAR_NET);
+        NavigationTargetTab clearNetTab = createTab(Res.get("clearNet"), NavigationTarget.CLEAR_NET);
         NavigationTargetTab torTab = createTab("Tor", NavigationTarget.TOR);
         NavigationTargetTab i2pTab = createTab("I2P", NavigationTarget.I2P);
         root.getTabs().setAll(clearNetTab, torTab, i2pTab);

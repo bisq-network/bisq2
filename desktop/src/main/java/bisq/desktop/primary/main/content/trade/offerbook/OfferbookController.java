@@ -103,9 +103,9 @@ public class OfferbookController implements Controller {
 
     private void applyMarketChange(Market market) {
         if (market != null) {
-            model.priceHeaderTitle.set(Res.offerbook.get("offerbook.table.header.price", market.quoteCurrencyCode(), market.baseCurrencyCode()));
-            model.baseAmountHeaderTitle.set(Res.offerbook.get("offerbook.table.header.baseAmount", market.baseCurrencyCode()));
-            model.quoteAmountHeaderTitle.set(Res.offerbook.get("offerbook.table.header.quoteAmount", market.quoteCurrencyCode()));
+            model.priceHeaderTitle.set(Res.get("offerbook.table.header.price", market.quoteCurrencyCode(), market.baseCurrencyCode()));
+            model.baseAmountHeaderTitle.set(Res.get("offerbook.table.header.baseAmount", market.baseCurrencyCode()));
+            model.quoteAmountHeaderTitle.set(Res.get("offerbook.table.header.quoteAmount", market.quoteCurrencyCode()));
         }
         updateFilterPredicate();
     }
@@ -165,11 +165,11 @@ public class OfferbookController implements Controller {
                 if (item.getOffer().getDirection().mirror().isBuy()) {
                     bisqIconButton.getIcon().setId("image-buy-white");
                     bisqIconButton.setId("buy-button");
-                    // bisqIconButton.setText(Res.offerbook.get("direction.label.buy", item.getOffer().getMarket().baseCurrencyCode()));
+                    // bisqIconButton.setText(Res.get("direction.label.buy", item.getOffer().getMarket().baseCurrencyCode()));
                 } else {
                     bisqIconButton.getIcon().setId("image-sell-white");
                     bisqIconButton.setId("sell-button");
-                    //  bisqIconButton.setText(Res.offerbook.get("direction.label.sell", item.getOffer().getMarket().baseCurrencyCode()));
+                    //  bisqIconButton.setText(Res.get("direction.label.sell", item.getOffer().getMarket().baseCurrencyCode()));
                 }
             }
         }

@@ -42,7 +42,7 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
         root.setPadding(Layout.PADDING);
         root.setSpacing(40);
 
-        showCreateUserProfileButton = new BisqButton(Res.common.get("social.createUserProfile.headline"));
+        showCreateUserProfileButton = new BisqButton(Res.get("social.createUserProfile.headline"));
         showCreateUserProfileButton.setMinWidth(300);
         createUserProfile = createUserProfileView.getRoot();
         root.getChildren().addAll(userProfileSelectionView.getRoot(),

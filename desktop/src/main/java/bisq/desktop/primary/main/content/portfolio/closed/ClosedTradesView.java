@@ -38,7 +38,7 @@ public class ClosedTradesView extends View<VBox, ClosedTradesModel, ClosedTrades
         root.setSpacing(30);
         root.setPadding(new Insets(20, 20, 20, 0));
 
-        Label headline = new BisqLabel(Res.offerbook.get("pendingTrades.headline"));
+        Label headline = new BisqLabel(Res.get("pendingTrades.headline"));
         headline.getStyleClass().add("titled-group-bg-label-active");
 
         tableView = new BisqTableView<>(model.getSortedItems());
@@ -59,28 +59,28 @@ public class ClosedTradesView extends View<VBox, ClosedTradesModel, ClosedTrades
 
     private void configDataTableView() {
         tableView.getColumns().add(new BisqTableColumn.Builder<ClosedTradeListItem>()
-                .title(Res.offerbook.get("offerbook.table.header.market"))
+                .title(Res.get("offerbook.table.header.market"))
                 .minWidth(80)
                 .valueSupplier(ClosedTradeListItem::getMarket)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ClosedTradeListItem>()
-                .title(Res.offerbook.get("openOffers.table.header.price"))
+                .title(Res.get("openOffers.table.header.price"))
                 .minWidth(120)
                 .valueSupplier(ClosedTradeListItem::getPrice)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ClosedTradeListItem>()
-                .title(Res.offerbook.get("openOffers.table.header.baseAmount"))
+                .title(Res.get("openOffers.table.header.baseAmount"))
                 .minWidth(80)
                 .valueSupplier(ClosedTradeListItem::getBaseAmount)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ClosedTradeListItem>()
                 .minWidth(80)
-                .title(Res.offerbook.get("openOffers.table.header.quoteAmount"))
+                .title(Res.get("openOffers.table.header.quoteAmount"))
                 .valueSupplier(ClosedTradeListItem::getQuoteAmount)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ClosedTradeListItem>()
                 .minWidth(100)
-                .title(Res.offerbook.get("offerbook.table.header.settlement"))
+                .title(Res.get("offerbook.table.header.settlement"))
                 .valueSupplier(ClosedTradeListItem::getSettlement)
                 .build());
     }

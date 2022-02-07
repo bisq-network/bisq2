@@ -56,6 +56,6 @@ public class TradeIntentModel implements Model {
     }
 
     String getActionButtonTitle(TradeIntentListItem item) {
-        return isMyTradeIntent(item) ? Res.common.get("remove") : Res.common.get("contact");
+        return isMyTradeIntent(item) ? Res.get("remove") : Res.get("contact");
     }
 }

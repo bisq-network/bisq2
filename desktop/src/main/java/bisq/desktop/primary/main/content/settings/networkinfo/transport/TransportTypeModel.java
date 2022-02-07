@@ -57,7 +57,7 @@ public class TransportTypeModel implements Model {
     private final ObservableList<NodeListItem> nodeListItems = FXCollections.observableArrayList();
     private final FilteredList<NodeListItem> filteredNodeListItems = new FilteredList<>(nodeListItems);
     private final SortedList<NodeListItem> sortedNodeListItems = new SortedList<>(filteredNodeListItems);
-    private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.common.get("na"));
+    private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.get("na"));
     private final StringProperty nodeIdString = new SimpleStringProperty();
     private final StringProperty messageReceiver = new SimpleStringProperty();
     private final StringProperty receivedMessages = new SimpleStringProperty("");

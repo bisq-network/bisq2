@@ -17,6 +17,8 @@
 
 package bisq.desktop.common.utils;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.GlyphIcons;
 import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 import javafx.scene.control.ContentDisplay;
@@ -28,6 +30,11 @@ public class Icons {
 
     public static Text getIconForLabel(GlyphIcons icon, String iconSize, Label label) {
         return getIconForLabel(icon, iconSize, label, null);
+    }
+
+    public static Label getIconForLabel(AwesomeIcon icon, Label label, String fontSize) {
+        AwesomeDude.setIcon(label, icon, fontSize);
+        return label;
     }
 
     public static Text getSmallIconForLabel(GlyphIcons icon, Label label, String style) {

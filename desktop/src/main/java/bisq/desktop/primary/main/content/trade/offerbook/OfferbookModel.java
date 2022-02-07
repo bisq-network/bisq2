@@ -56,7 +56,7 @@ public class OfferbookModel implements Model {
     final BooleanProperty showAllMarkets = new SimpleBooleanProperty();
     final BooleanProperty marketSelectionDisabled = new SimpleBooleanProperty();
     final MarketPriceService marketPriceService;
-    final StringProperty createOfferButtonText = new SimpleStringProperty(Res.offerbook.get("offerbook.table.header.quoteAmount"));
+    final StringProperty createOfferButtonText = new SimpleStringProperty(Res.get("offerbook.table.header.quoteAmount"));
 
     final BooleanProperty showCreateOfferTab = new SimpleBooleanProperty();
     final BooleanProperty showTakeOfferTab = new SimpleBooleanProperty();
@@ -78,22 +78,22 @@ public class OfferbookModel implements Model {
 
     String getActionButtonTitle(OfferListItem item) {
         if (isMyOffer(item)) {
-            return Res.common.get("remove");
+            return Res.get("remove");
         } else {
             String currencyCode = item.getOffer().getMarket().baseCurrencyCode();
             String dir = item.getOffer().getDirection().isBuy() ?
-                    Res.offerbook.get("direction.label.sell", currencyCode) :
-                    Res.offerbook.get("direction.label.buy", currencyCode);
-            return Res.offerbook.get("offerbook.table.action.takeOffer", dir);
+                    Res.get("direction.label.sell", currencyCode) :
+                    Res.get("direction.label.buy", currencyCode);
+            return Res.get("offerbook.table.action.takeOffer", dir);
         }
     }
 
     String getCreateOfferButtonTitle() {
         String currencyCode = selectedMarketProperty.get().baseCurrencyCode();
         String dir = directionProperty.get().isBuy() ?
-                Res.offerbook.get("direction.label.sell", currencyCode) :
-                Res.offerbook.get("direction.label.buy", currencyCode);
-        return Res.offerbook.get("offerbook.createOffer.button", dir);
+                Res.get("direction.label.sell", currencyCode) :
+                Res.get("direction.label.buy", currencyCode);
+        return Res.get("offerbook.createOffer.button", dir);
     }
 
     void setAddOfferError(Offer offer, Throwable throwable) {

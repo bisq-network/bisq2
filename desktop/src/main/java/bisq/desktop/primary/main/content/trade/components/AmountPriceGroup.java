@@ -198,7 +198,7 @@ public class AmountPriceGroup {
 
             root.setSpacing(0);
 
-            headline = new BisqLabel(Res.offerbook.get("createOffer.setAmountAndPrice"));
+            headline = new BisqLabel(Res.get("createOffer.setAmountAndPrice"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
             Label xLabel = new Label();
@@ -217,7 +217,7 @@ public class AmountPriceGroup {
 
         public void onViewAttached() {
             if (!model.isCreateOffer) {
-                headline.setText(Res.offerbook.get("takeOffer.amountAndPrice"));
+                headline.setText(Res.get("takeOffer.amountAndPrice"));
             }
         }
 

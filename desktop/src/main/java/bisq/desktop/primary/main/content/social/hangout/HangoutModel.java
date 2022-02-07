@@ -120,9 +120,9 @@ public class HangoutModel implements Model {
 
     String getDisplayString(PublicChannelId publicChannelId) {
         return switch (publicChannelId) {
-            case BTC_EUR -> Res.common.get("social.hangout.btcEurMarket");
-            case BTC_USD -> Res.common.get("social.hangout.btcUsdMarket");
-            case ANY -> Res.common.get("social.hangout.anyMarket");
+            case BTC_EUR -> Res.get("social.hangout.btcEurMarket");
+            case BTC_USD -> Res.get("social.hangout.btcUsdMarket");
+            case ANY -> Res.get("social.hangout.anyMarket");
         };
     }
 

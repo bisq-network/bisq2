@@ -23,11 +23,15 @@ import bisq.persistence.PersistableStore;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 public class SettingsStore implements PersistableStore<SettingsStore> {
     private final Cookie cookie;
+    private DisplaySettings displaySettings = new DisplaySettings();
+    private final Map<String, Boolean> dontShowAgainMap = new HashMap<>();
     private final List<Market> markets;
     @Setter
     private Market selectedMarket;
@@ -38,20 +42,32 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
         selectedMarket = MarketRepository.getDefault();
     }
 
-    public SettingsStore(Cookie cookie, List<Market> markets, Market selectedMarket) {
+    public SettingsStore(Cookie cookie,
+                         DisplaySettings displaySettings,
+                         Map<String, Boolean> dontShowAgainMap,
+                         List<Market> markets,
+                         Market selectedMarket) {
         this.cookie = cookie;
+        this.displaySettings = displaySettings;
+        this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.markets = markets;
         this.selectedMarket = selectedMarket;
     }
 
     @Override
     public SettingsStore getClone() {
-        return new SettingsStore(cookie, markets, selectedMarket);
+        return new SettingsStore(cookie,
+                displaySettings,
+                dontShowAgainMap,
+                markets,
+                selectedMarket);
     }
 
     @Override
     public void applyPersisted(SettingsStore persisted) {
         cookie.putAll(persisted.getCookie());
+        displaySettings = persisted.getDisplaySettings();
+        dontShowAgainMap.putAll(persisted.getDontShowAgainMap());
         markets.clear();
         markets.addAll(persisted.getMarkets());
         selectedMarket = persisted.getSelectedMarket();

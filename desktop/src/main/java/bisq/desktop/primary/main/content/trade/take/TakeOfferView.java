@@ -48,10 +48,10 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
 
         amountPriceView.getRoot().setPadding(new Insets(0, 0, -5, 0));
 
-        takeOfferButton = new BisqButton(Res.offerbook.get("takeOffer.button"));
+        takeOfferButton = new BisqButton(Res.get("takeOffer.button"));
         takeOfferButton.getStyleClass().add("action-button");
 
-        BisqButton cancelButton = new BisqButton(Res.common.get("cancel"));
+        BisqButton cancelButton = new BisqButton(Res.get("cancel"));
         cancelButton.setOnAction(e -> controller.onCancel());
 
         root.getChildren().addAll(
@@ -64,7 +64,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
 
     @Override
     public void onViewAttached() {
-        protocolLabel.setText(Res.offerbook.get("takeOffer.protocol", Res.offerbook.get(model.selectedProtocolTypeProperty.get().name())));
+        protocolLabel.setText(Res.get("takeOffer.protocol", Res.get(model.selectedProtocolTypeProperty.get().name())));
         takeOfferButton.setOnAction(e -> controller.onTakeOffer());
     }
 

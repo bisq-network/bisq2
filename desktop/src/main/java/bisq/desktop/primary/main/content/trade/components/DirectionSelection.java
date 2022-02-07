@@ -133,7 +133,7 @@ public class DirectionSelection {
             super(new VBox(), model, controller);
 
             root.setSpacing(10);
-            headline = new BisqLabel(Res.offerbook.get("createOffer.selectOfferType"));
+            headline = new BisqLabel(Res.get("createOffer.selectOfferType"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
             buy = new BisqButton();
@@ -166,7 +166,7 @@ public class DirectionSelection {
                 // will be used anyway diff design later. current solution is just for prototype dev
                 buy.setMouseTransparent(true);
                 sell.setMouseTransparent(true);
-                headline.setText(Res.offerbook.get("takeOffer.offerType"));
+                headline.setText(Res.get("takeOffer.offerType"));
 
                 buy.visibleProperty().bind(model.isBuySideVisible);
                 buy.managedProperty().bind(model.isBuySideVisible);
@@ -197,8 +197,8 @@ public class DirectionSelection {
         private void applyBaseCodeChange() {
             String baseCode = model.baseCode.get();
             if (baseCode == null) return;
-            buy.setText(Res.offerbook.get("direction.label.buy", baseCode));
-            sell.setText(Res.offerbook.get("direction.label.sell", baseCode));
+            buy.setText(Res.get("direction.label.buy", baseCode));
+            sell.setText(Res.get("direction.label.sell", baseCode));
         }
 
         private void applyDirectionChange() {
