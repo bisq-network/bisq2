@@ -57,13 +57,23 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class MarketPriceBox {
-    public static class MarketPriceController implements Controller, MarketPriceService.Listener {
+    private final MarketPriceController marketPriceController;
+
+    public MarketPriceBox(MarketPriceService marketPriceService) {
+        marketPriceController = new MarketPriceController(marketPriceService);
+    }
+
+    public MarketPriceView getView() {
+        return marketPriceController.getView();
+    }
+
+    private static class MarketPriceController implements Controller, MarketPriceService.Listener {
         private final MarketPriceService marketPriceService;
         private final MarketPriceModel model;
         @Getter
         private final MarketPriceView view;
 
-        public MarketPriceController(MarketPriceService marketPriceService) {
+        private MarketPriceController(MarketPriceService marketPriceService) {
             this.marketPriceService = marketPriceService;
             model = new MarketPriceModel();
             view = new MarketPriceView(model, this);
@@ -91,7 +101,7 @@ public class MarketPriceBox {
         private final ObservableList<ListItem> items = FXCollections.observableArrayList();
         private final ObjectProperty<ListItem> selected = new SimpleObjectProperty<>();
 
-        public void applyMarketPriceMap(Map<Market, MarketPrice> map) {
+        private void applyMarketPriceMap(Map<Market, MarketPrice> map) {
             //todo use preferred currencies + edit entry
             List<ListItem> list = map.values().stream().map(ListItem::new).collect(Collectors.toList());
             items.setAll(list);
@@ -103,7 +113,7 @@ public class MarketPriceBox {
 
     @Slf4j
     public static class MarketPriceView extends View<VBox, Model, Controller> {
-        public MarketPriceView(MarketPriceModel model, MarketPriceController controller) {
+        private MarketPriceView(MarketPriceModel model, MarketPriceController controller) {
             super(new VBox(), model, controller);
             root.setAlignment(Pos.CENTER_LEFT);
 
@@ -140,12 +150,12 @@ public class MarketPriceBox {
     @ToString
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     private static class ListItem {
-        public final StringProperty displayStringProperty = new SimpleStringProperty();
+        private final StringProperty displayStringProperty = new SimpleStringProperty();
         private final MarketPrice marketPrice;
         @EqualsAndHashCode.Include
         private final String code;
 
-        public ListItem(MarketPrice marketPrice) {
+        private ListItem(MarketPrice marketPrice) {
             this.marketPrice = marketPrice;
             code = marketPrice.code();
             String pair = TradeCurrency.isFiat(code) ? ("BTC/" + code) : (code + "/BTC");

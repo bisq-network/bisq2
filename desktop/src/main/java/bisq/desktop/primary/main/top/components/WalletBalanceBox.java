@@ -19,14 +19,24 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 
 public class WalletBalanceBox {
-    public static class WalletBalanceController implements Controller {
+    private final WalletBalanceController walletBalanceController;
+
+    public WalletBalanceBox(WalletService walletService) {
+        walletBalanceController = new WalletBalanceController(walletService);
+    }
+
+    public WalletBalanceView getView() {
+        return walletBalanceController.getView();
+    }
+
+    private static class WalletBalanceController implements Controller {
         private final WalletBalanceModel model;
         @Getter
         private final WalletBalanceView view;
         private final WalletService walletService;
         private Pin balancePin;
 
-        public WalletBalanceController(WalletService walletService) {
+        private WalletBalanceController(WalletService walletService) {
             this.walletService = walletService;
             model = new WalletBalanceModel();
             view = new WalletBalanceView(model, this);
@@ -44,7 +54,7 @@ public class WalletBalanceBox {
         }
     }
 
-    public static class WalletBalanceModel implements Model {
+    private static class WalletBalanceModel implements Model {
         private final ObjectProperty<Coin> balanceAsCoinProperty = new SimpleObjectProperty<>(Coin.of(0, "BTC"));
         private final ObservableValue<String> formattedBalanceProperty = Bindings.createStringBinding(
                 () -> Res.get("wallet.balance.box",
@@ -52,7 +62,7 @@ public class WalletBalanceBox {
     }
 
     public static class WalletBalanceView extends View<VBox, WalletBalanceModel, WalletBalanceController> {
-        public WalletBalanceView(WalletBalanceModel model, WalletBalanceController controller) {
+        private WalletBalanceView(WalletBalanceModel model, WalletBalanceController controller) {
             super(new VBox(), model, controller);
             root.setAlignment(Pos.BASELINE_CENTER);
 
