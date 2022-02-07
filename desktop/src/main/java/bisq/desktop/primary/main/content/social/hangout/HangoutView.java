@@ -75,7 +75,7 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
         HBox sendBox = new HBox();
         sendBox.setSpacing(Layout.SPACING);
         inputTextField = new BisqTextField();
-        sendButton = new BisqButton(Res.common.get("send"));
+        sendButton = new BisqButton(Res.get("send"));
         sendBox.getChildren().addAll(inputTextField, sendButton);
         chatSpace.getChildren().addAll(textArea, sendBox);
 
@@ -118,7 +118,7 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
             inputTextField.clear();
         });
 
-        inputTextField.setPromptText(Res.common.get("sendMessagePrompt"));
+        inputTextField.setPromptText(Res.get("sendMessagePrompt"));
         updateChannels();
         sendButton.setDisable(model.getSelectedChannel().get() == null);
     }

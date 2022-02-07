@@ -291,7 +291,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     public T notification(String message) {
         type = Type.Notification;
         if (headLine == null)
-            this.headLine = Res.bisq1.get("popup.headline.notification");
+            this.headLine = Res.get("popup.headline.notification");
         preProcessMessage(message);
         return cast();
     }
@@ -299,7 +299,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     public T instruction(String message) {
         type = Type.Instruction;
         if (headLine == null)
-            this.headLine = Res.bisq1.get("popup.headline.instruction");
+            this.headLine = Res.get("popup.headline.instruction");
         preProcessMessage(message);
         return cast();
     }
@@ -307,7 +307,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     public T attention(String message) {
         type = Type.Attention;
         if (headLine == null)
-            this.headLine = Res.bisq1.get("popup.headline.attention");
+            this.headLine = Res.get("popup.headline.attention");
         preProcessMessage(message);
         return cast();
     }
@@ -315,7 +315,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     public T backgroundInfo(String message) {
         type = Type.BackgroundInfo;
         if (headLine == null)
-            this.headLine = Res.bisq1.get("popup.headline.backgroundInfo");
+            this.headLine = Res.get("popup.headline.backgroundInfo");
         preProcessMessage(message);
         return cast();
     }
@@ -323,7 +323,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     public T feedback(String message) {
         type = Type.Feedback;
         if (headLine == null)
-            this.headLine = Res.bisq1.get("popup.headline.feedback");
+            this.headLine = Res.get("popup.headline.feedback");
         preProcessMessage(message);
         return cast();
     }
@@ -331,7 +331,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     public T confirmation(String message) {
         type = Type.Confirmation;
         if (headLine == null)
-            this.headLine = Res.bisq1.get("popup.headline.confirmation");
+            this.headLine = Res.get("popup.headline.confirmation");
         preProcessMessage(message);
         return cast();
     }
@@ -339,7 +339,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     public T information(String message) {
         type = Type.Information;
         if (headLine == null)
-            this.headLine = Res.bisq1.get("popup.headline.information");
+            this.headLine = Res.get("popup.headline.information");
         preProcessMessage(message);
         return cast();
     }
@@ -348,7 +348,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.Warning;
 
         if (headLine == null)
-            this.headLine = Res.bisq1.get("popup.headline.warning");
+            this.headLine = Res.get("popup.headline.warning");
         preProcessMessage(message);
         return cast();
     }
@@ -358,7 +358,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         showReportErrorButtons();
         width = 1100;
         if (headLine == null)
-            this.headLine = Res.bisq1.get("popup.headline.error");
+            this.headLine = Res.get("popup.headline.error");
         preProcessMessage(message);
         return cast();
     }
@@ -380,28 +380,28 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T useReportBugButton() {
-        this.closeButtonText = Res.bisq1.get("shared.reportBug");
+        this.closeButtonText = Res.get("shared.reportBug");
         this.closeHandlerOptional = Optional.of(() -> Browser.open("https://bisq.network/source/bisq/issues"));
         return cast();
     }
 
     public T useIUnderstandButton() {
-        this.closeButtonText = Res.bisq1.get("shared.iUnderstand");
+        this.closeButtonText = Res.get("shared.iUnderstand");
         return cast();
     }
 
     public T actionButtonTextWithGoTo(String target) {
-        this.actionButtonText = Res.bisq1.get("shared.goTo", Res.bisq1.get(target));
+        this.actionButtonText = Res.get("shared.goTo", Res.get(target));
         return cast();
     }
 
     public T secondaryActionButtonTextWithGoTo(String target) {
-        this.secondaryActionButtonText = Res.bisq1.get("shared.goTo", Res.bisq1.get(target));
+        this.secondaryActionButtonText = Res.get("shared.goTo", Res.get(target));
         return cast();
     }
 
     public T closeButtonTextWithGoTo(String target) {
-        this.closeButtonText = Res.bisq1.get("shared.goTo", Res.bisq1.get(target));
+        this.closeButtonText = Res.get("shared.goTo", Res.get(target));
         return cast();
     }
 
@@ -416,7 +416,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T useShutDownButton() {
-        this.actionButtonText = Res.bisq1.get("shared.shutDown");
+        this.actionButtonText = Res.get("shared.shutDown");
         this.actionHandlerOptional = Optional.ofNullable(shutdownHandler);
         return cast();
     }
@@ -829,16 +829,16 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     private void addReportErrorButtons() {
-        messageLabel.setText(Res.common.get("popup.reportError", truncatedMessage));
+        messageLabel.setText(Res.get("popup.reportError", truncatedMessage));
 
-        Button logButton = new BisqButton(Res.common.get("popup.reportError.log"));
+        Button logButton = new BisqButton(Res.get("popup.reportError.log"));
         GridPane.setMargin(logButton, new Insets(20, 0, 0, 0));
         GridPane.setHalignment(logButton, HPos.LEFT);
         GridPane.setRowIndex(logButton, ++rowIndex);
         gridPane.getChildren().add(logButton);
         logButton.setOnAction(event -> OsUtils.open(new File(baseDir, "bisq.log")));
 
-        Button gitHubButton = new BisqButton(Res.common.get("popup.reportError.gitHub"));
+        Button gitHubButton = new BisqButton(Res.get("popup.reportError.gitHub"));
         GridPane.setHalignment(gitHubButton, HPos.RIGHT);
         GridPane.setRowIndex(gitHubButton, ++rowIndex);
         gridPane.getChildren().add(gitHubButton);
@@ -863,7 +863,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         if (dontShowAgainId != null) {
             // We might have set it and overridden the default, so we check if it is not set
             if (dontShowAgainText == null) {
-                dontShowAgainText = Res.bisq1.get("popup.doNotShowAgain");
+                dontShowAgainText = Res.get("popup.doNotShowAgain");
             }
 
             CheckBox dontShowAgainCheckBox = new BisqCheckBox(dontShowAgainText);
@@ -882,7 +882,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected void addButtons() {
         if (!hideCloseButton) {
-            closeButton = new BisqButton(closeButtonText == null ? Res.bisq1.get("shared.close") : closeButtonText);
+            closeButton = new BisqButton(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
             closeButton.getStyleClass().add("compact-button");
             closeButton.setOnAction(event -> doClose());
             closeButton.setMinWidth(70);
@@ -905,7 +905,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         gridPane.getChildren().add(buttonBox);
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
-            actionButton = new BisqButton(actionButtonText == null ? Res.bisq1.get("shared.ok") : actionButtonText);
+            actionButton = new BisqButton(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
 
             if (!disableActionButton)
                 actionButton.setDefaultButton(true);

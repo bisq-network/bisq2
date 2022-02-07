@@ -124,7 +124,7 @@ public class ProtocolSelection {
 
         private ListItem(SwapProtocolType protocolType) {
             this.protocolType = protocolType;
-            protocolName = Res.offerbook.get(protocolType.name());
+            protocolName = Res.get(protocolType.name());
         }
 
         @Override
@@ -145,7 +145,7 @@ public class ProtocolSelection {
                              ProtocolController controller) {
             super(new VBox(), model, controller);
 
-            Label headline = new BisqLabel(Res.offerbook.get("createOffer.selectProtocol"));
+            Label headline = new BisqLabel(Res.get("createOffer.selectProtocol"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
             tableView = new BisqTableView<>(model.sortedList);
@@ -178,7 +178,7 @@ public class ProtocolSelection {
 
         private void configTableView() {
             tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                    .title(Res.offerbook.get("createOffer.protocol.names"))
+                    .title(Res.get("createOffer.protocol.names"))
                     .minWidth(120)
                     .valueSupplier(ListItem::getProtocolName)
                     .build());

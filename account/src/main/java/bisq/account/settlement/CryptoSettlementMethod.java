@@ -28,7 +28,7 @@ public enum CryptoSettlementMethod implements SettlementMethod {
 
     @Override
     public String getDisplayName(String code) {
-        return Res.offerbook.get(name(), code);
+        return Res.get(name(), code);
     }
 
     public static List<CryptoSettlementMethod> getSettlementMethods(SwapProtocolType protocolType, String code) {

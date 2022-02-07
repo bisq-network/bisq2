@@ -31,9 +31,9 @@ public class SettingsView extends TabView<JFXTabPane, SettingsModel, SettingsCon
 
     @Override
     protected void createAndAddTabs() {
-        NavigationTargetTab preferencesTab = createTab(Res.common.get("settings.preferences"), NavigationTarget.PREFERENCES);
-        NavigationTargetTab networkTab = createTab(Res.common.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
-        NavigationTargetTab aboutTab = createTab(Res.common.get("settings.about"), NavigationTarget.ABOUT);
+        NavigationTargetTab preferencesTab = createTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
+        NavigationTargetTab networkTab = createTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
+        NavigationTargetTab aboutTab = createTab(Res.get("settings.about"), NavigationTarget.ABOUT);
         root.getTabs().setAll(preferencesTab, networkTab, aboutTab);
     }
 

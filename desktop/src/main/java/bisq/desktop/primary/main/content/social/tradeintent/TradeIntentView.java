@@ -58,10 +58,10 @@ public class TradeIntentView extends View<VBox, TradeIntentModel, TradeIntentCon
         userProfileViewRoot.setPadding(new Insets(10, 0, 0, 10));
         root.getChildren().addAll(userProfileViewRoot, gridPane);
 
-        gridPane.startSection(Res.offerbook.get("tradeIntent.create.title"));
-        TextField askTextField = gridPane.addTextField(Res.offerbook.get("tradeIntent.create.ask"), "I want 0.01 BTC");
-        TextField bidTextField = gridPane.addTextField(Res.offerbook.get("tradeIntent.create.bid"), "Pay EUR via SEPA at market rate");
-        Pair<BisqButton, Label> addDataButtonPair = gridPane.addButton(Res.common.get("publish"));
+        gridPane.startSection(Res.get("tradeIntent.create.title"));
+        TextField askTextField = gridPane.addTextField(Res.get("tradeIntent.create.ask"), "I want 0.01 BTC");
+        TextField bidTextField = gridPane.addTextField(Res.get("tradeIntent.create.bid"), "Pay EUR via SEPA at market rate");
+        Pair<BisqButton, Label> addDataButtonPair = gridPane.addButton(Res.get("publish"));
         Button addDataButton = addDataButtonPair.first();
         addDataResultLabel = addDataButtonPair.second();
         addDataButton.setOnAction(e -> {
@@ -70,7 +70,7 @@ public class TradeIntentView extends View<VBox, TradeIntentModel, TradeIntentCon
         });
         gridPane.endSection();
 
-        gridPane.startSection(Res.offerbook.get("tradeIntent.table.title"));
+        gridPane.startSection(Res.get("tradeIntent.table.title"));
         tableView = new BisqTableView<>(model.getSortedItems());
         tableView.setMinHeight(200);
         gridPane.addTableView(tableView);
@@ -95,7 +95,7 @@ public class TradeIntentView extends View<VBox, TradeIntentModel, TradeIntentCon
 
     private void configDataTableView() {
         var dateColumn = new BisqTableColumn.Builder<TradeIntentListItem>()
-                .title(Res.common.get("date"))
+                .title(Res.get("date"))
                 .minWidth(180)
                 .maxWidth(180)
                 .valueSupplier(TradeIntentListItem::getDateString)
@@ -106,18 +106,18 @@ public class TradeIntentView extends View<VBox, TradeIntentModel, TradeIntentCon
         tableView.getSortOrder().add(dateColumn);
 
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
-                .title(Res.common.get("social.userName"))
+                .title(Res.get("social.userName"))
                 .minWidth(120)
                 .valueSupplier(TradeIntentListItem::getUserName)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
-                .title(Res.common.get("ask"))
+                .title(Res.get("ask"))
                 .minWidth(150)
                 .valueSupplier(TradeIntentListItem::getAsk)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()
                 .minWidth(150)
-                .title(Res.common.get("bid"))
+                .title(Res.get("bid"))
                 .valueSupplier(TradeIntentListItem::getBid)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeIntentListItem>()

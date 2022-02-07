@@ -58,11 +58,11 @@ public class OfferListItem implements TableItem {
 
         String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
                 .map(SettlementSpec::settlementMethodName)
-                .map(settlementMethodName -> Res.offerbook.get(settlementMethodName))
+                .map(settlementMethodName -> Res.get(settlementMethodName))
                 .collect(Collectors.joining("\n"));
         String quoteSideSettlement = offer.getQuoteSideSettlementSpecs().stream()
                 .map(SettlementSpec::settlementMethodName)
-                .map(settlementMethodName -> Res.offerbook.get(settlementMethodName))
+                .map(settlementMethodName -> Res.get(settlementMethodName))
                 .collect(Collectors.joining("\n"));
 
         String baseCurrencyCode = offer.getMarket().baseCurrencyCode();
@@ -79,7 +79,7 @@ public class OfferListItem implements TableItem {
             settlement = quoteSideSettlement;
         } else if (isBaseSideFiatOrMultiple) {
             // both
-            settlement = Res.offerbook.get("offerbook.table.settlement.multi",
+            settlement = Res.get("offerbook.table.settlement.multi",
                     baseCurrencyCode, baseSideSettlement, quoteCurrencyCode, quoteSideSettlement);
         } else {
             // none (both are using non fiat mandatory settlement method 

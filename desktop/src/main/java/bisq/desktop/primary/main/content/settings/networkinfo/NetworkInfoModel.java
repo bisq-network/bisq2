@@ -49,7 +49,7 @@ public class NetworkInfoModel extends NavigationModel {
     // private final Optional<Transport.Type> selectedTransportType = Optional.empty();
 
     private final KeyPairService keyPairService;
-    private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.common.get("na"));
+    private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.get("na"));
 
     public NetworkInfoModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();

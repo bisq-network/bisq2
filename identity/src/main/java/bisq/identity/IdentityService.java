@@ -242,7 +242,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     }
 
     private void createAndInitializeNewPooledIdentity() {
-        createAndInitializeNewIdentity(Res.common.get("na"))
+        createAndInitializeNewIdentity(Res.get("na"))
                 .whenComplete((identity, throwable) -> {
                     if (throwable == null) {
                         log.info("Network node for pooled identity {} created and initialized. NetworkId={}",

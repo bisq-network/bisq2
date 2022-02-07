@@ -86,7 +86,7 @@ public class PriceInput {
         private void updateFromMarketPrice(Market newValue) {
             if (newValue != null) {
                 model.marketString.set(newValue.toString());
-                model.description.set(Res.offerbook.get("createOffer.price.fix.description.buy", newValue.baseCurrencyCode()));
+                model.description.set(Res.get("createOffer.price.fix.description.buy", newValue.baseCurrencyCode()));
             }
             model.fixPrice.set(null);
             setFixPriceFromMarketPrice();
@@ -180,7 +180,7 @@ public class PriceInput {
             super(new VBox(), model, controller);
 
             textInput = new BisqInputTextField(60);
-            textInput.setPromptText(Res.offerbook.get("createOffer.price.fix.prompt"));
+            textInput.setPromptText(Res.get("createOffer.price.fix.prompt"));
             textInput.setMaxWidth(Double.MAX_VALUE);
             textInput.setValidator(validator);
 

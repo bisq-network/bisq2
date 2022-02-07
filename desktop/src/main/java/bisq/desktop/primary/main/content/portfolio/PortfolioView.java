@@ -33,9 +33,9 @@ public class PortfolioView extends TabView<JFXTabPane, PortfolioModel, Portfolio
 
     @Override
     protected void createAndAddTabs() {
-        NavigationTargetTab openOffers = createTab(Res.common.get("portfolio.openOffers"), NavigationTarget.OPEN_OFFERS);
-        NavigationTargetTab pendingTrades = createTab(Res.common.get("portfolio.pending"), NavigationTarget.PENDING_TRADES);
-        NavigationTargetTab closedTrades = createTab(Res.common.get("portfolio.closed"), NavigationTarget.CLOSED_TRADES);
+        NavigationTargetTab openOffers = createTab(Res.get("portfolio.openOffers"), NavigationTarget.OPEN_OFFERS);
+        NavigationTargetTab pendingTrades = createTab(Res.get("portfolio.pending"), NavigationTarget.PENDING_TRADES);
+        NavigationTargetTab closedTrades = createTab(Res.get("portfolio.closed"), NavigationTarget.CLOSED_TRADES);
         root.getTabs().setAll(openOffers, pendingTrades, closedTrades);
     }
 

@@ -229,24 +229,24 @@ public class TakersSettlementSelection {
             if (market == null) return;
 
             String baseSideVerb = direction == Direction.SELL ?
-                    Res.offerbook.get("sending") :
-                    Res.offerbook.get("receiving");
+                    Res.get("sending") :
+                    Res.get("receiving");
             String quoteSideVerb = direction == Direction.BUY ?
-                    Res.offerbook.get("sending") :
-                    Res.offerbook.get("receiving");
+                    Res.get("sending") :
+                    Res.get("receiving");
 
             if (model.baseSideAccountsVisibility.get()) {
-                model.baseSideDescription.set(Res.offerbook.get("takeOffer.account.description",
+                model.baseSideDescription.set(Res.get("takeOffer.account.description",
                         baseSideVerb, market.baseCurrencyCode()));
             } else {
-                model.baseSideDescription.set(Res.offerbook.get("takeOffer.settlement.description",
+                model.baseSideDescription.set(Res.get("takeOffer.settlement.description",
                         baseSideVerb, market.baseCurrencyCode()));
             }
             if (model.quoteSideAccountsVisibility.get()) {
-                model.quoteSideDescription.set(Res.offerbook.get("takeOffer.account.description",
+                model.quoteSideDescription.set(Res.get("takeOffer.account.description",
                         quoteSideVerb, market.quoteCurrencyCode()));
             } else {
-                model.quoteSideDescription.set(Res.offerbook.get("takeOffer.settlement.description",
+                model.quoteSideDescription.set(Res.get("takeOffer.settlement.description",
                         quoteSideVerb, market.quoteCurrencyCode()));
             }
         }
@@ -492,7 +492,7 @@ public class TakersSettlementSelection {
             this.account = account;
             accountName = account.getAccountName();
             settlementMethod = account.getSettlementMethod();
-            settlementMethodName = Res.offerbook.get(settlementMethod.name());
+            settlementMethodName = Res.get(settlementMethod.name());
         }
 
         @Override

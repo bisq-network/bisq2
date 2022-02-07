@@ -175,24 +175,24 @@ public class SettlementSelection {
             if (market == null) return;
 
             String baseSideVerb = direction == Direction.SELL ?
-                    Res.offerbook.get("sending") :
-                    Res.offerbook.get("receiving");
+                    Res.get("sending") :
+                    Res.get("receiving");
             String quoteSideVerb = direction == Direction.BUY ?
-                    Res.offerbook.get("sending") :
-                    Res.offerbook.get("receiving");
+                    Res.get("sending") :
+                    Res.get("receiving");
 
             if (model.baseSideAccountsVisibility.get()) {
-                model.baseSideDescription.set(Res.offerbook.get("createOffer.account.description",
+                model.baseSideDescription.set(Res.get("createOffer.account.description",
                         baseSideVerb, market.baseCurrencyCode()));
             } else {
-                model.baseSideDescription.set(Res.offerbook.get("createOffer.settlement.description",
+                model.baseSideDescription.set(Res.get("createOffer.settlement.description",
                         baseSideVerb, market.baseCurrencyCode()));
             }
             if (model.quoteSideAccountsVisibility.get()) {
-                model.quoteSideDescription.set(Res.offerbook.get("createOffer.account.description",
+                model.quoteSideDescription.set(Res.get("createOffer.account.description",
                         quoteSideVerb, market.quoteCurrencyCode()));
             } else {
-                model.quoteSideDescription.set(Res.offerbook.get("createOffer.settlement.description",
+                model.quoteSideDescription.set(Res.get("createOffer.settlement.description",
                         quoteSideVerb, market.quoteCurrencyCode()));
             }
         }
@@ -310,7 +310,7 @@ public class SettlementSelection {
             baseSideAccountsTableView.setFixHeight(tableHeight);
             configAccountTableView(baseSideAccountsTableView, true);
             VBox.setMargin(baseSideAccountsTableView, new Insets(0, 0, 20, 0));
-            baseSideButton = new BisqButton(Res.offerbook.get("createOffer.account.createNew"));
+            baseSideButton = new BisqButton(Res.get("createOffer.account.createNew"));
             VBox baseSidePlaceHolderBox = createPlaceHolderBox(baseSideButton);
             baseSideAccountsTableView.setPlaceholder(baseSidePlaceHolderBox);
 
@@ -330,7 +330,7 @@ public class SettlementSelection {
             quoteSideAccountsTableView.setFixHeight(tableHeight);
             configAccountTableView(quoteSideAccountsTableView, false);
             VBox.setMargin(quoteSideAccountsTableView, new Insets(0, 0, 20, 0));
-            quoteSideButton = new BisqButton(Res.offerbook.get("createOffer.account.createNew"));
+            quoteSideButton = new BisqButton(Res.get("createOffer.account.createNew"));
             VBox quoteSidePlaceHolderBox = createPlaceHolderBox(quoteSideButton);
             quoteSideAccountsTableView.setPlaceholder(quoteSidePlaceHolderBox);
 
@@ -391,7 +391,7 @@ public class SettlementSelection {
         }
 
         private VBox createPlaceHolderBox(BisqButton baseSideButton) {
-            BisqLabel placeholderLabel = new BisqLabel(Res.offerbook.get("createOffer.account.placeholder.noAccounts"));
+            BisqLabel placeholderLabel = new BisqLabel(Res.get("createOffer.account.placeholder.noAccounts"));
             VBox vBox = new VBox();
             vBox.setSpacing(10);
             vBox.getChildren().addAll(placeholderLabel, baseSideButton);
@@ -401,17 +401,17 @@ public class SettlementSelection {
 
         private void configAccountTableView(BisqTableView<AccountListItem> tableView, boolean isBaseSide) {
             tableView.getColumns().add(new BisqTableColumn.Builder<AccountListItem>()
-                    .title(Res.offerbook.get("createOffer.account.table.accountName"))
+                    .title(Res.get("createOffer.account.table.accountName"))
                     .minWidth(120)
                     .valueSupplier(AccountListItem::getAccountName)
                     .build());
             tableView.getColumns().add(new BisqTableColumn.Builder<AccountListItem>()
-                    .title(Res.offerbook.get("createOffer.account.table.method"))
+                    .title(Res.get("createOffer.account.table.method"))
                     .minWidth(120)
                     .valueSupplier(AccountListItem::getSettlementMethodName)
                     .build());
             tableView.getColumns().add(new BisqTableColumn.Builder<AccountListItem>()
-                    .title(Res.offerbook.get("createOffer.account.table.select"))
+                    .title(Res.get("createOffer.account.table.select"))
                     .minWidth(40)
                     .cellFactory(BisqTableColumn.CellFactory.CHECKBOX)
                     .toggleHandler((item, selected) -> controller.onAccountSelectionChanged(item, selected, isBaseSide))
@@ -420,12 +420,12 @@ public class SettlementSelection {
 
         private void configSettlementTableView(BisqTableView<SettlementListItem> tableView, boolean isBaseSide) {
             tableView.getColumns().add(new BisqTableColumn.Builder<SettlementListItem>()
-                    .title(Res.offerbook.get("createOffer.account.table.method"))
+                    .title(Res.get("createOffer.account.table.method"))
                     .minWidth(150)
                     .valueSupplier(SettlementListItem::getName)
                     .build());
             tableView.getColumns().add(new BisqTableColumn.Builder<SettlementListItem>()
-                    .title(Res.offerbook.get("createOffer.account.table.select"))
+                    .title(Res.get("createOffer.account.table.select"))
                     .minWidth(40)
                     .cellFactory(BisqTableColumn.CellFactory.CHECKBOX)
                     .toggleHandler((item, selected) -> controller.onSettlementSelectionChanged(item, selected, isBaseSide))
@@ -444,7 +444,7 @@ public class SettlementSelection {
             this.account = account;
             accountName = account.getAccountName();
             settlementMethod = account.getSettlementMethod();
-            settlementMethodName = Res.offerbook.get(settlementMethod.name());
+            settlementMethodName = Res.get(settlementMethod.name());
         }
 
         @Override

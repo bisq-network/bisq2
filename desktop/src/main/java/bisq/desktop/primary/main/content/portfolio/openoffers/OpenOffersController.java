@@ -57,9 +57,9 @@ public class OpenOffersController implements Controller {
                 .to(openOfferService.getOpenOffers());
 
         //todo
-        model.priceHeaderTitle.set(Res.offerbook.get("openOffers.table.header.price"));
-        model.baseAmountHeaderTitle.set(Res.offerbook.get("openOffers.table.header.baseAmount"));
-        model.quoteAmountHeaderTitle.set(Res.offerbook.get("openOffers.table.header.quoteAmount"));
+        model.priceHeaderTitle.set(Res.get("openOffers.table.header.price"));
+        model.baseAmountHeaderTitle.set(Res.get("openOffers.table.header.baseAmount"));
+        model.quoteAmountHeaderTitle.set(Res.get("openOffers.table.header.quoteAmount"));
     }
 
     @Override

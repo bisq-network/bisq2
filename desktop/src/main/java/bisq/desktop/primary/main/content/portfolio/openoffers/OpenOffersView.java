@@ -38,7 +38,7 @@ public class OpenOffersView extends View<VBox, OpenOffersModel, OpenOffersContro
         root.setSpacing(30);
         root.setPadding(new Insets(20, 20, 20, 0));
 
-        Label headline = new BisqLabel(Res.offerbook.get("openOffers.headline"));
+        Label headline = new BisqLabel(Res.get("openOffers.headline"));
         headline.getStyleClass().add("titled-group-bg-label-active");
 
         tableView = new BisqTableView<>(model.getSortedItems());
@@ -59,7 +59,7 @@ public class OpenOffersView extends View<VBox, OpenOffersModel, OpenOffersContro
 
     private void configDataTableView() {
         tableView.getColumns().add(new BisqTableColumn.Builder<OpenOfferListItem>()
-                .title(Res.offerbook.get("offerbook.table.header.market"))
+                .title(Res.get("offerbook.table.header.market"))
                 .minWidth(80)
                 .valueSupplier(OpenOfferListItem::getMarket)
                 .build());
@@ -80,17 +80,17 @@ public class OpenOffersView extends View<VBox, OpenOffersModel, OpenOffersContro
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<OpenOfferListItem>()
                 .minWidth(100)
-                .title(Res.offerbook.get("offerbook.table.header.settlement"))
+                .title(Res.get("offerbook.table.header.settlement"))
                 .valueSupplier(OpenOfferListItem::getSettlement)
                 .build());
       /*  tableView.getColumns().add(new BisqTableColumn.Builder<OpenOfferListItem>()
                 .minWidth(150)
-                .title(Res.offerbook.get("offerbook.table.header.options"))
+                .title(Res.get("offerbook.table.header.options"))
                 .valueSupplier(OpenOfferListItem::getOptions)
                 .build());*/
         tableView.getColumns().add(new BisqTableColumn.Builder<OpenOfferListItem>()
                 .fixWidth(100)
-                .value(Res.common.get("remove"))
+                .value(Res.get("remove"))
                 .cellFactory(BisqTableColumn.CellFactory.BUTTON)
                 .buttonClass(BisqIconButton.class)
                 .actionHandler(controller::onRemoveOffer)

@@ -28,7 +28,7 @@ public interface SettlementMethod extends Serializable {
     String name();
 
     default String getDisplayName(String code) {
-        return Res.offerbook.get(name());
+        return Res.get(name());
     }
 
     static List<? extends SettlementMethod> from(SwapProtocolType protocolType, String code) {
