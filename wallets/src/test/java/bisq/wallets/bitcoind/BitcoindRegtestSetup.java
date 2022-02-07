@@ -6,6 +6,7 @@ import bisq.wallets.NetworkType;
 import bisq.wallets.bitcoind.responses.ListUnspentResponseEntry;
 import bisq.wallets.bitcoind.rpc.RpcClient;
 import bisq.wallets.bitcoind.rpc.RpcConfig;
+import bisq.wallets.bitcoind.rpc.WalletRpcConfig;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -48,10 +49,9 @@ public class BitcoindRegtestSetup {
     }
 
     public static RpcClient createWalletRpcClient(Path walletFilePath) throws MalformedURLException {
-        RpcConfig walletConfig = new RpcConfig.Builder(BitcoindRegtestSetup.RPC_CONFIG)
-                .walletName(walletFilePath.toAbsolutePath().toString())
-                .build();
-        return new RpcClient(walletConfig);
+        RpcConfig rpcConfig = new RpcConfig.Builder(BitcoindRegtestSetup.RPC_CONFIG).build();
+        var walletRpcConfig = new WalletRpcConfig(rpcConfig, walletFilePath);
+        return new RpcClient(walletRpcConfig);
     }
 
     public static Optional<ListUnspentResponseEntry> filterUtxosByAddress(List<ListUnspentResponseEntry> utxos, String address) {

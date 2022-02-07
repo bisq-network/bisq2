@@ -11,6 +11,7 @@ public enum BitcoindRpcEndpoint {
     IMPORT_ADDRESS("importaddress"),
     LIST_TRANSACTIONS("listtransactions"),
     LIST_UNSPENT("listunspent"),
+    LIST_WALLETS("listwallets"),
     LOAD_WALLET("loadwallet"),
     SEND_RAW_TRANSACTION("sendrawtransaction"),
     SEND_TO_ADDRESS("sendtoaddress"),
