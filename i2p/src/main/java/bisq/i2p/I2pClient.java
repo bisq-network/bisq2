@@ -124,11 +124,10 @@ public class I2pClient {
             Destination destination = getDestinationFor(peer);
 
             log.info("Connecting to {}", peer);
-            I2PSocketManager manager = maybeCreateClientSession(sessionId);
-
             // Each client (socket manager) can have multiple sockets
-            // However we only open one socket per client
-            Socket socket = manager.connectToSocket(destination);
+            // However we only open one socket per client => one socket per manager per client
+            I2PSocketManager manager = maybeCreateClientSession(sessionId);
+            Socket socket = manager.connectToSocket(destination, Math.toIntExact(socketTimeout));
             log.info("Client socket for session {} created. Took {} ms.", sessionId, System.currentTimeMillis() - ts);
 
             // Now we are done, so we return the socket to be used by the client for sending messages
@@ -203,6 +202,7 @@ public class I2pClient {
             // Set port (which is embedded in the generated destination)
             I2PSocketOptions i2PSocketOptions = manager.getDefaultOptions();
             i2PSocketOptions.setLocalPort(port);
+            i2PSocketOptions.setConnectTimeout(Math.toIntExact(socketTimeout));
             manager.setDefaultOptions(i2PSocketOptions);
 
             // Persist destination to disk
