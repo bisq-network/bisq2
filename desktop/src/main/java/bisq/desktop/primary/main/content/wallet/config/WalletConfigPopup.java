@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.wallet.config;
 
-import bisq.application.ApplicationConfig;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.BisqGridPane;
@@ -56,7 +55,6 @@ public class WalletConfigPopup extends Popup {
 
     @Slf4j
     private static class Controller implements bisq.desktop.common.view.Controller {
-        private final ApplicationConfig applicationConfig;
         private final WalletService walletService;
         private final Popup popup;
 
@@ -65,7 +63,6 @@ public class WalletConfigPopup extends Popup {
         private final View view;
 
         private Controller(DefaultApplicationService applicationService, Popup popup) {
-            this.applicationConfig = applicationService.getApplicationConfig();
             this.walletService = applicationService.getWalletService();
             this.popup = popup;
 
@@ -131,9 +128,9 @@ public class WalletConfigPopup extends Popup {
         private final StringProperty walletPathProperty = new SimpleStringProperty(this, "walletPath");
         private final StringProperty hostnameProperty = new SimpleStringProperty(this, "hostname", "127.0.0.1");
         private final StringProperty portProperty = new SimpleStringProperty(this, "port", "18443");
-        private final StringProperty usernameProperty = new SimpleStringProperty(this, "username", "user");
-        private final StringProperty passwordProperty = new SimpleStringProperty(this, "password", "pw");
-        private final StringProperty walletPassphraseProperty = new SimpleStringProperty(this, "wallet_passphrase", "");
+        private final StringProperty usernameProperty = new SimpleStringProperty(this, "username", "bisq");
+        private final StringProperty passwordProperty = new SimpleStringProperty(this, "password", "bisq");
+        private final StringProperty walletPassphraseProperty = new SimpleStringProperty(this, "wallet_passphrase", "bisq");
     }
 
     private static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {

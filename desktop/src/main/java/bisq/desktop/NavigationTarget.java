@@ -77,7 +77,7 @@ public enum NavigationTarget {
     NavigationTarget() {
         parent = Optional.empty();
         path = new ArrayList<>();
-        this.allowPersistence = false;
+        allowPersistence = true;
     }
 
     NavigationTarget(NavigationTarget parent) {
