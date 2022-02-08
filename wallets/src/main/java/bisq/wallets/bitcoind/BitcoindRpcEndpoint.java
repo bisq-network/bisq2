@@ -1,5 +1,7 @@
 package bisq.wallets.bitcoind;
 
+import lombok.Getter;
+
 public enum BitcoindRpcEndpoint {
     ADD_MULTISIG_ADDRESS("addmultisigaddress"),
     CREATE_WALLET("createwallet"),
@@ -23,13 +25,10 @@ public enum BitcoindRpcEndpoint {
     WALLET_PASSPHRASE("walletpassphrase"),
     WALLET_PROCESS_PSBT("walletprocesspsbt");
 
+    @Getter
     private final String methodName;
 
     BitcoindRpcEndpoint(String methodName) {
         this.methodName = methodName;
-    }
-
-    public String getMethodName() {
-        return methodName;
     }
 }

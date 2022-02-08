@@ -11,7 +11,7 @@ public class WalletUtxoListItem {
     private final StringProperty address = new SimpleStringProperty(this, "address");
     private final StringProperty amount = new SimpleStringProperty(this, "amount");
     private final StringProperty confirmations = new SimpleStringProperty(this, "wallet.column.confirmations");
-    private final BooleanProperty reused = new SimpleBooleanProperty(this, "wallet.column.txId");
+    private final BooleanProperty reused = new SimpleBooleanProperty(this, "wallet.column.reused");
 
     public WalletUtxoListItem(Utxo utxo) {
         txId.set(utxo.txId());

@@ -20,9 +20,6 @@ package bisq.desktop.primary.main.top.components;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqComboBox;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -37,6 +34,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import lombok.EqualsAndHashCode;
@@ -56,17 +54,27 @@ import java.util.stream.Collectors;
  * Is never removed so no need to handle onViewDetached case
  */
 @Slf4j
-public class MarketPriceBox {
-    public static class MarketPriceController implements Controller, MarketPriceService.Listener {
-        private final MarketPriceService marketPriceService;
-        private final MarketPriceModel model;
-        @Getter
-        private final MarketPriceView view;
+public class MarketPriceComponent {
+    private final Controller controller;
 
-        public MarketPriceController(MarketPriceService marketPriceService) {
+    public MarketPriceComponent(MarketPriceService marketPriceService) {
+        controller = new Controller(marketPriceService);
+    }
+
+    public Pane getRootPane() {
+        return controller.getView().getRoot();
+    }
+
+    private static class Controller implements bisq.desktop.common.view.Controller, MarketPriceService.Listener {
+        private final MarketPriceService marketPriceService;
+        private final Model model;
+        @Getter
+        private final View view;
+
+        private Controller(MarketPriceService marketPriceService) {
             this.marketPriceService = marketPriceService;
-            model = new MarketPriceModel();
-            view = new MarketPriceView(model, this);
+            model = new Model();
+            view = new View(model, this);
             marketPriceService.addListener(this);
         }
 
@@ -87,11 +95,11 @@ public class MarketPriceBox {
         }
     }
 
-    private static class MarketPriceModel implements Model {
+    private static class Model implements bisq.desktop.common.view.Model {
         private final ObservableList<ListItem> items = FXCollections.observableArrayList();
         private final ObjectProperty<ListItem> selected = new SimpleObjectProperty<>();
 
-        public void applyMarketPriceMap(Map<Market, MarketPrice> map) {
+        private void applyMarketPriceMap(Map<Market, MarketPrice> map) {
             //todo use preferred currencies + edit entry
             List<ListItem> list = map.values().stream().map(ListItem::new).collect(Collectors.toList());
             items.setAll(list);
@@ -102,8 +110,8 @@ public class MarketPriceBox {
     }
 
     @Slf4j
-    public static class MarketPriceView extends View<VBox, Model, Controller> {
-        public MarketPriceView(MarketPriceModel model, MarketPriceController controller) {
+    public static class View extends bisq.desktop.common.view.View<VBox, bisq.desktop.common.view.Model, bisq.desktop.common.view.Controller> {
+        private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
             root.setAlignment(Pos.CENTER_LEFT);
 
@@ -140,12 +148,12 @@ public class MarketPriceBox {
     @ToString
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     private static class ListItem {
-        public final StringProperty displayStringProperty = new SimpleStringProperty();
+        private final StringProperty displayStringProperty = new SimpleStringProperty();
         private final MarketPrice marketPrice;
         @EqualsAndHashCode.Include
         private final String code;
 
-        public ListItem(MarketPrice marketPrice) {
+        private ListItem(MarketPrice marketPrice) {
             this.marketPrice = marketPrice;
             code = marketPrice.code();
             String pair = TradeCurrency.isFiat(code) ? ("BTC/" + code) : (code + "/BTC");

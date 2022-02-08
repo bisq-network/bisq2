@@ -5,6 +5,8 @@ import bisq.wallets.bitcoind.responses.ListTransactionsResponseEntry;
 import bisq.wallets.bitcoind.responses.ListUnspentResponseEntry;
 import bisq.wallets.bitcoind.rpc.*;
 import bisq.wallets.exceptions.InvalidRpcCredentialsException;
+import bisq.wallets.exceptions.RpcCallFailureException;
+import bisq.wallets.exceptions.WalletInitializationFailedException;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
 

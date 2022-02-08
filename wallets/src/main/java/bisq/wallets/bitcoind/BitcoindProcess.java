@@ -2,7 +2,7 @@ package bisq.wallets.bitcoind;
 
 import bisq.common.util.FileUtils;
 import bisq.wallets.NetworkType;
-import bisq.wallets.bitcoind.rpc.RpcCallFailureException;
+import bisq.wallets.exceptions.RpcCallFailureException;
 import bisq.wallets.bitcoind.rpc.RpcClient;
 import bisq.wallets.bitcoind.rpc.RpcConfig;
 import lombok.extern.slf4j.Slf4j;

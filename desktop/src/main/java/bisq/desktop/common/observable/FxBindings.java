@@ -21,6 +21,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
+import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.collections.ObservableList;
 
@@ -34,6 +35,10 @@ public class FxBindings {
 
     public static <T> ObservablePropertyBindings<T> bind(ObjectProperty<T> observer) {
         return new ObservablePropertyBindings<>(observer);
+    }
+
+    public static LongPropertyBindings bind(LongProperty observer) {
+        return new LongPropertyBindings(observer);
     }
 
     public static <T> Pin subscribe(Observable<T> observable, Consumer<T> consumer) {
@@ -58,14 +63,14 @@ public class FxBindings {
         }
     }
 
-    public static class ObservablePropertyBindings<T> {
-        private final ObjectProperty<T> observer;
-
-        private ObservablePropertyBindings(ObjectProperty<T> observer) {
-            this.observer = observer;
-        }
-
+    public record ObservablePropertyBindings<T>(ObjectProperty<T> observer) {
         public Pin to(Observable<T> observable) {
+            return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+        }
+    }
+
+    public record LongPropertyBindings(LongProperty observer) {
+        public Pin to(Observable<Long> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
     }

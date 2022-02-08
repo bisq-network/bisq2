@@ -18,7 +18,9 @@
 package bisq.desktop.components.table;
 
 public interface TableItem {
-    void activate();
+    default void activate() {
+    }
 
-    void deactivate();
+    default void deactivate() {
+    }
 }

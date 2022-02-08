@@ -26,9 +26,9 @@ public class BisqComboBox<T> extends JFXComboBox<T> {
         setPromptText(title);
     }
 
-    public BisqComboBox(ObservableList<T> value) {
+    public BisqComboBox(ObservableList<T> items) {
         this();
-        setItems(value);
+        setItems(items);
     }
 
     public BisqComboBox() {

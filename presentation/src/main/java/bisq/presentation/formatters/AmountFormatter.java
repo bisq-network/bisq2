@@ -59,6 +59,6 @@ public class AmountFormatter {
     }
 
     private static DecimalFormatters.Format getDecimalFormat(Monetary amount, Locale locale) {
-        return DecimalFormatters.getDecimalFormat(locale, amount.getDisplayPrecision());
+        return DecimalFormatters.getDecimalFormat(locale, amount.getPrecision());
     }
 }

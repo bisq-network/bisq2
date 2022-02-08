@@ -19,13 +19,13 @@ package bisq.desktop.primary.main.content.wallet;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.wallet.dialog.WalletConfigDialogController;
+import bisq.desktop.primary.main.content.wallet.config.WalletConfigPopup;
 import bisq.desktop.primary.main.content.wallet.receive.WalletReceiveController;
 import bisq.desktop.primary.main.content.wallet.send.WalletSendController;
 import bisq.desktop.primary.main.content.wallet.transactions.WalletTransactionsController;
 import bisq.desktop.primary.main.content.wallet.utxos.WalletUtxosController;
+import bisq.wallets.WalletService;
 import lombok.Getter;
 
 import java.util.Optional;
@@ -36,19 +36,34 @@ public class WalletController extends TabController {
     @Getter
     private final WalletView view;
     private final DefaultApplicationService applicationService;
+    private final WalletConfigPopup walletConfigPopup;
+    private final WalletService walletService;
 
     public WalletController(DefaultApplicationService applicationService) {
         super(NavigationTarget.WALLET);
         this.applicationService = applicationService;
+        walletService = applicationService.getWalletService();
 
-        model = new WalletModel(applicationService);
+        model = new WalletModel();
         view = new WalletView(model, this);
 
-        new WalletConfigDialogController(applicationService).showDialogAndConnectToWallet();
+        walletConfigPopup = new WalletConfigPopup(applicationService);
+
     }
 
     @Override
-    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+    public void onViewAttached() {
+        if (walletService.getWallet().isEmpty()) {
+            walletConfigPopup.show();
+        }
+    }
+
+    @Override
+    public void onViewDetached() {
+    }
+
+    @Override
+    protected Optional<bisq.desktop.common.view.Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case WALLET_TRANSACTIONS -> {
                 return Optional.of(new WalletTransactionsController(applicationService));

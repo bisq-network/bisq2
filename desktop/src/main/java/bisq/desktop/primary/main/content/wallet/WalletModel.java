@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.wallet;
 
-import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
 import lombok.Getter;
@@ -27,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class WalletModel extends NavigationModel {
 
-    public WalletModel(DefaultApplicationService applicationService) {
+    public WalletModel() {
     }
 
     @Override

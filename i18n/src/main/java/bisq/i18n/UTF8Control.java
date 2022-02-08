@@ -32,6 +32,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Adds UTF8 support for property files
  */
+//todo check if still needed. Seems Java9 fixed the issue
+// https://www.baeldung.com/java-resourcebundle
 class UTF8Control extends ResourceBundle.Control {
     public ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload)
             throws IOException {
