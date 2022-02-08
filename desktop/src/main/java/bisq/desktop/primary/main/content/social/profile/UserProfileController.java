@@ -51,11 +51,12 @@ public class UserProfileController implements Controller {
         createUserProfile = new CreateUserProfile(userProfileService, applicationService.getKeyPairService());
         channelAdmin = new ChannelAdmin(userProfileService, applicationService.getChatService());
         model = new UserProfileModel(applicationService);
-        view = new UserProfileView(model, this,
-                userProfileSelection.getView(),
-                userProfileDisplay.getView(),
-                channelAdmin.getView(),
-                createUserProfile.getView());
+        view = new UserProfileView(model,
+                this,
+                userProfileSelection.getRoot(),
+                userProfileDisplay.getRoot(),
+                channelAdmin.getRoot(),
+                createUserProfile.getRoot());
     }
 
     @Override

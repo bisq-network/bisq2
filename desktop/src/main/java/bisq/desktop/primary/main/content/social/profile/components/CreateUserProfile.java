@@ -35,6 +35,7 @@ import javafx.geometry.Insets;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -54,8 +55,8 @@ public class CreateUserProfile {
         controller = new Controller(userProfileService, keyPairService);
     }
 
-    public View getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
 
     @Slf4j
@@ -75,8 +76,8 @@ public class CreateUserProfile {
             model = new Model();
             entitlementSelection = new EntitlementSelection(userProfileService, model.tempKeyPair);
 
-           
-            view = new View(model, this, entitlementSelection.getView());
+
+            view = new View(model, this, entitlementSelection.getRoot());
 
             userNameListener = (observable, oldValue, newValue) -> onCreateRoboIcon();
         }
@@ -104,9 +105,9 @@ public class CreateUserProfile {
             model.changeRoboIconButtonDisable.set(true);
             model.feedback.set(Res.get("social.createUserProfile.prepare"));
             String useName = model.userName.get();
-            userProfileService.createNewInitializedUserProfile(useName, 
-                            model.tempKeyId, 
-                            model.tempKeyPair.get(), 
+            userProfileService.createNewInitializedUserProfile(useName,
+                            model.tempKeyId,
+                            model.tempKeyPair.get(),
                             new HashSet<>(entitlementSelection.getVerifiedEntitlements()))
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
@@ -155,7 +156,7 @@ public class CreateUserProfile {
         private final BisqLabel feedbackLabel;
         private Subscription roboHashNodeSubscription;
 
-        private View(Model model, Controller controller, EntitlementSelection.View entitlementSelectionView) {
+        private View(Model model, Controller controller, Pane entitlementSelection) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
@@ -189,9 +190,7 @@ public class CreateUserProfile {
             feedbackLabel = new BisqLabel();
             feedbackLabel.setWrapText(true);
 
-            VBox entitlementSelectionViewRoot = entitlementSelectionView.getRoot();
-
-            root.getChildren().addAll(headline, hBox, entitlementSelectionViewRoot, createUserButton, feedbackLabel);
+            root.getChildren().addAll(headline, hBox, entitlementSelection, createUserButton, feedbackLabel);
         }
 
         @Override

@@ -22,7 +22,6 @@ import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTextField;
 import bisq.desktop.layout.Layout;
-import bisq.desktop.primary.main.content.social.profile.UserProfileView;
 import bisq.i18n.Res;
 import bisq.social.chat.Channel;
 import com.jfoenix.controls.JFXButton;
@@ -34,10 +33,10 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,10 +56,8 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
     private final Map<String, ChannelButton> channelButtonByChannelId = new HashMap<>();
     private final ChangeListener<String> textAreaListener;
 
-    public HangoutView(HangoutModel model, HangoutController controller, UserProfileView userProfileView) {
+    public HangoutView(HangoutModel model, HangoutController controller, Pane userProfile) {
         super(new HBox(), model, controller);
-
-        Node userViewRoot = userProfileView.getRoot();
 
         root.setSpacing(Layout.SPACING);
         root.setPadding(new Insets(20, 20, 20, 0));
@@ -80,7 +77,7 @@ public class HangoutView extends View<HBox, HangoutModel, HangoutController> {
         chatSpace.getChildren().addAll(textArea, sendBox);
 
         //todo user UI needs more work...
-        root.getChildren().addAll(channelList, chatSpace/*, userViewRoot*/);
+        root.getChildren().addAll(userProfile,channelList, chatSpace);
 
         channelsChangeListener = c -> updateChannels();
         selectedChannelListener = (observable, oldValue, newValue) -> {

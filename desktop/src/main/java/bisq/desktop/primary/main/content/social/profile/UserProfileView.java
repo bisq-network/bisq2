@@ -20,40 +20,37 @@ package bisq.desktop.primary.main.content.social.profile;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.layout.Layout;
-import bisq.desktop.primary.main.content.social.components.UserProfileDisplay;
-import bisq.desktop.primary.main.content.social.profile.components.ChannelAdmin;
-import bisq.desktop.primary.main.content.social.profile.components.CreateUserProfile;
-import bisq.desktop.primary.main.content.social.profile.components.UserProfileSelection;
 import bisq.i18n.Res;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UserProfileView extends View<VBox, UserProfileModel, UserProfileController> {
-    private final VBox createUserProfile;
     private final BisqButton showCreateUserProfileButton;
-    private final VBox channelAdmin;
+    private final Pane channelAdmin;
+    private final Pane createUserProfile;
 
     public UserProfileView(UserProfileModel model,
                            UserProfileController controller,
-                           UserProfileSelection.View userProfileSelectionView,
-                           UserProfileDisplay.View userProfileView,
-                           ChannelAdmin.View channelAdminView,
-                           CreateUserProfile.View createUserProfileView) {
+                           Pane userProfileSelection,
+                           Pane userProfile,
+                           Pane channelAdmin,
+                           Pane createUserProfile) {
         super(new VBox(), model, controller);
+        this.channelAdmin = channelAdmin;
+        this.createUserProfile = createUserProfile;
 
         root.setPadding(Layout.PADDING);
         root.setSpacing(40);
 
         showCreateUserProfileButton = new BisqButton(Res.get("social.createUserProfile.headline"));
         showCreateUserProfileButton.setMinWidth(300);
-        createUserProfile = createUserProfileView.getRoot();
-        channelAdmin = channelAdminView.getRoot();
-        this.root.getChildren().addAll(userProfileSelectionView.getRoot(),
-                userProfileView.getRoot(),
+        root.getChildren().addAll(userProfileSelection,
+                userProfile,
                 showCreateUserProfileButton,
                 channelAdmin,
-                createUserProfile);
+               createUserProfile);
     }
 
     @Override

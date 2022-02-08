@@ -31,6 +31,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,8 +46,8 @@ public class ChannelAdmin {
         controller = new Controller(userProfileService, chatService);
     }
 
-    public View getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {

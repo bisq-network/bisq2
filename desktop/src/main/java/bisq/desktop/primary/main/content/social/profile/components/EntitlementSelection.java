@@ -42,6 +42,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
@@ -64,8 +65,8 @@ public class EntitlementSelection {
         controller = new Controller(userProfileService, keyPair);
     }
 
-    public View getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
 
     public void reset() {

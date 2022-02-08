@@ -61,7 +61,7 @@ public class TradeIntentController implements Controller/*, ChatService.Listener
 
         userProfileDisplay = new UserProfileDisplay(applicationService.getUserProfileService());
         model = new TradeIntentModel(applicationService);
-        view = new TradeIntentView(model, this, userProfileDisplay.getView());
+        view = new TradeIntentView(model, this, userProfileDisplay.getRoot());
     }
 
     @Override
