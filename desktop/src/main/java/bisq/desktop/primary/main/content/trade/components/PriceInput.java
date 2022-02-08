@@ -21,9 +21,6 @@ import bisq.common.monetary.Market;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.PriceValidator;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqInputTextField;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
@@ -46,10 +43,10 @@ import java.util.Map;
 
 @Slf4j
 public class PriceInput {
-    private final PriceController controller;
+    private final Controller controller;
 
     public PriceInput(ReadOnlyObjectProperty<Market> selectedMarket, MarketPriceService marketPriceService) {
-        controller = new PriceController(selectedMarket, marketPriceService);
+        controller = new Controller(selectedMarket, marketPriceService);
     }
 
     public ReadOnlyObjectProperty<Quote> fixPriceProperty() {
@@ -68,17 +65,17 @@ public class PriceInput {
         return controller.view.getRoot();
     }
 
-    private static class PriceController implements Controller, MarketPriceService.Listener {
-        private final PriceModel model;
+    private static class Controller implements bisq.desktop.common.view.Controller, MarketPriceService.Listener {
+        private final Model model;
         @Getter
-        private final PriceView view;
+        private final View view;
         private final PriceValidator validator = new PriceValidator();
         private final ChangeListener<Market> selectedMarketListener;
 
-        private PriceController(ReadOnlyObjectProperty<Market> selectedMarket,
-                                MarketPriceService marketPriceService) {
-            model = new PriceModel(selectedMarket, marketPriceService);
-            view = new PriceView(model, this, validator);
+        private Controller(ReadOnlyObjectProperty<Market> selectedMarket,
+                           MarketPriceService marketPriceService) {
+            model = new Model(selectedMarket, marketPriceService);
+            view = new View(model, this, validator);
 
             selectedMarketListener = (observable, oldValue, newValue) -> updateFromMarketPrice(newValue);
         }
@@ -150,7 +147,7 @@ public class PriceInput {
         }
     }
 
-    private static class PriceModel implements Model {
+    private static class Model implements bisq.desktop.common.view.Model {
         private ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
         private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final MarketPriceService marketPriceService;
@@ -159,14 +156,14 @@ public class PriceInput {
         private final StringProperty description = new SimpleStringProperty();
         private boolean isCreateOffer = true;
 
-        private PriceModel(ReadOnlyObjectProperty<Market> selectedMarket,
-                           MarketPriceService marketPriceService) {
+        private Model(ReadOnlyObjectProperty<Market> selectedMarket,
+                      MarketPriceService marketPriceService) {
             this.selectedMarket = selectedMarket;
             this.marketPriceService = marketPriceService;
         }
     }
 
-    public static class PriceView extends View<VBox, PriceModel, PriceController> {
+    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqInputTextField textInput;
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
@@ -174,9 +171,9 @@ public class PriceInput {
         private final BisqLabel marketLabel;
         private final BisqLabel descriptionLabel;
 
-        private PriceView(PriceModel model,
-                          PriceController controller,
-                          PriceValidator validator) {
+        private View(Model model,
+                     Controller controller,
+                     PriceValidator validator) {
             super(new VBox(), model, controller);
 
             textInput = new BisqInputTextField(60);

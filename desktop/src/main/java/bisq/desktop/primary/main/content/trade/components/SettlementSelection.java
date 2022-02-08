@@ -23,9 +23,6 @@ import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -54,13 +51,13 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class SettlementSelection {
-    private final SettlementController controller;
+    private final Controller controller;
 
     public SettlementSelection(ReadOnlyObjectProperty<Market> selectedMarket,
                                ReadOnlyObjectProperty<Direction> direction,
                                ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
                                AccountService accountService) {
-        controller = new SettlementController(selectedMarket, direction, selectedProtocolType, accountService);
+        controller = new Controller(selectedMarket, direction, selectedProtocolType, accountService);
     }
 
 
@@ -84,23 +81,23 @@ public class SettlementSelection {
         return controller.model.selectedQuoteSideSettlementMethods;
     }
 
-    private static class SettlementController implements Controller {
-        private final SettlementModel model;
+    private static class Controller implements bisq.desktop.common.view.Controller {
+        private final Model model;
         @Getter
-        private final SettlementView view;
+        private final View view;
         private final ChangeListener<SwapProtocolType> selectedProtocolListener;
         private final ChangeListener<Direction> directionListener;
         private final ChangeListener<Market> selectedMarketListener;
 
-        private SettlementController(ReadOnlyObjectProperty<Market> selectedMarket,
-                                     ReadOnlyObjectProperty<Direction> direction,
-                                     ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
-                                     AccountService accountService) {
-            model = new SettlementModel(selectedMarket,
+        private Controller(ReadOnlyObjectProperty<Market> selectedMarket,
+                           ReadOnlyObjectProperty<Direction> direction,
+                           ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
+                           AccountService accountService) {
+            model = new Model(selectedMarket,
                     direction,
                     selectedProtocolType,
                     accountService);
-            view = new SettlementView(model, this);
+            view = new View(model, this);
 
             selectedProtocolListener = (observable, oldValue, newValue) -> resetAndApplyData();
             directionListener = (observable, oldValue, newValue) -> updateStrings();
@@ -197,6 +194,7 @@ public class SettlementSelection {
                         quoteSideVerb, market.quoteCurrencyCode()));
             }
         }
+
         @Override
         public void onViewAttached() {
             resetAndApplyData();
@@ -204,6 +202,7 @@ public class SettlementSelection {
             model.selectedMarket.addListener(selectedMarketListener);
             model.direction.addListener(directionListener);
         }
+
         @Override
         public void onViewDetached() {
             model.selectedProtocolType.removeListener(selectedProtocolListener);
@@ -251,7 +250,7 @@ public class SettlementSelection {
 
     }
 
-    private static class SettlementModel implements Model {
+    private static class Model implements bisq.desktop.common.view.Model {
         private final ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
         private final ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
         private final ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
@@ -280,10 +279,10 @@ public class SettlementSelection {
         private final SortedList<SettlementListItem> quoteSideSettlementSortedList = new SortedList<>(quoteSideSettlementObservableList);
 
 
-        private SettlementModel(ReadOnlyObjectProperty<Market> selectedMarket,
-                                ReadOnlyObjectProperty<Direction> direction,
-                                ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
-                                AccountService accountService) {
+        private Model(ReadOnlyObjectProperty<Market> selectedMarket,
+                      ReadOnlyObjectProperty<Direction> direction,
+                      ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
+                      AccountService accountService) {
             this.selectedMarket = selectedMarket;
             this.direction = direction;
             this.selectedProtocolType = selectedProtocolType;
@@ -291,15 +290,15 @@ public class SettlementSelection {
         }
     }
 
-    public static class SettlementView extends View<HBox, SettlementModel, SettlementController> {
+    public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final BisqLabel baseSideLabel, quoteSideLabel;
         private final BisqTableView<AccountListItem> baseSideAccountsTableView, quoteSideAccountsTableView;
         private final BisqTableView<SettlementListItem> baseSideSettlementTableView, quoteSideSettlementTableView;
         private final BisqButton baseSideButton, quoteSideButton;
         private final VBox baseSideBox, quoteSideBox;
 
-        private SettlementView(SettlementModel model,
-                               SettlementController controller) {
+        private View(Model model,
+                     Controller controller) {
             super(new HBox(), model, controller);
             root.setSpacing(10);
 
@@ -348,6 +347,7 @@ public class SettlementSelection {
             HBox.setHgrow(quoteSideBox, Priority.ALWAYS);
             root.getChildren().addAll(baseSideBox, quoteSideBox);
         }
+
         @Override
         public void onViewAttached() {
             baseSideButton.setOnAction(e -> controller.onCreateBaseSideAccount());
@@ -369,6 +369,7 @@ public class SettlementSelection {
             quoteSideSettlementTableView.visibleProperty().bind(model.quoteSideSettlementVisibility);
             quoteSideSettlementTableView.managedProperty().bind(model.quoteSideSettlementVisibility);
         }
+
         @Override
         public void onViewDetached() {
             baseSideButton.setOnAction(null);

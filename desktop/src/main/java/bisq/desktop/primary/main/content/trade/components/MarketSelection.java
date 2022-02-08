@@ -18,9 +18,6 @@
 package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.common.monetary.Market;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqComboBox;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
@@ -42,10 +39,10 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class MarketSelection {
-    private final MarketSelectionController controller;
+    private final Controller controller;
 
     public MarketSelection(SettingsService settingsService) {
-        controller = new MarketSelectionController(settingsService);
+        controller = new Controller(settingsService);
     }
 
     public ReadOnlyObjectProperty<Market> selectedMarketProperty() {
@@ -60,14 +57,14 @@ public class MarketSelection {
         controller.model.selectedMarket.set(market);
     }
 
-    private static class MarketSelectionController implements Controller {
-        private final MarketSelectionModel model;
+    private static class Controller implements bisq.desktop.common.view.Controller {
+        private final Model model;
         @Getter
-        private final MarketSelectionView view;
+        private final View view;
 
-        private MarketSelectionController(SettingsService settingsService) {
-            model = new MarketSelectionModel(settingsService);
-            view = new MarketSelectionView(model, this);
+        private Controller(SettingsService settingsService) {
+            model = new Model(settingsService);
+            view = new View(model, this);
         }
 
         @Override
@@ -87,22 +84,22 @@ public class MarketSelection {
         }
     }
 
-    private static class MarketSelectionModel implements Model {
+    private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
         private final ObservableList<Market> markets = FXCollections.observableArrayList();
         private final SettingsService settingsService;
 
-        public MarketSelectionModel(SettingsService settingsService) {
+        public Model(SettingsService settingsService) {
             this.settingsService = settingsService;
         }
     }
 
     @Slf4j
-    public static class MarketSelectionView extends View<VBox, MarketSelectionModel, MarketSelectionController> {
+    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqComboBox<Market> comboBox;
         private final ChangeListener<Market> selectedMarketListener;
 
-        private MarketSelectionView(MarketSelectionModel model, MarketSelectionController controller) {
+        private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 

@@ -22,9 +22,6 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Icons;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -42,12 +39,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AmountPriceGroup {
-    private final AmountPriceController controller;
+    private final Controller controller;
 
     public AmountPriceGroup(ReadOnlyObjectProperty<Market> selectedMarket,
                             ReadOnlyObjectProperty<Direction> direction,
                             MarketPriceService marketPriceService) {
-        controller = new AmountPriceController(selectedMarket, direction, marketPriceService);
+        controller = new Controller(selectedMarket, direction, marketPriceService);
     }
 
     public ReadOnlyObjectProperty<Monetary> baseSideAmountProperty() {
@@ -86,27 +83,27 @@ public class AmountPriceGroup {
         return controller.view.getRoot();
     }
 
-    public static class AmountPriceController implements Controller {
-        private final AmountPriceModel model;
+    public static class Controller implements bisq.desktop.common.view.Controller {
+        private final Model model;
         @Getter
-        private final AmountPriceGroup.AmountPriceView view;
+        private final View view;
         private final ChangeListener<Monetary> baseCurrencyAmountListener, quoteCurrencyAmountListener;
         private final ChangeListener<Quote> fixPriceQuoteListener;
         private final AmountInput baseAmount;
         private final AmountInput quoteAmount;
         private final PriceInput price;
 
-        public AmountPriceController(ReadOnlyObjectProperty<Market> selectedMarket,
-                                     ReadOnlyObjectProperty<Direction> direction,
-                                     MarketPriceService marketPriceService) {
+        public Controller(ReadOnlyObjectProperty<Market> selectedMarket,
+                          ReadOnlyObjectProperty<Direction> direction,
+                          MarketPriceService marketPriceService) {
 
             baseAmount = new AmountInput(selectedMarket, direction, true);
             quoteAmount = new AmountInput(selectedMarket, direction, false);
             price = new PriceInput(selectedMarket, marketPriceService);
 
-            model = new AmountPriceModel(baseAmount.amountProperty(), quoteAmount.amountProperty(), price.fixPriceProperty());
+            model = new Model(baseAmount.amountProperty(), quoteAmount.amountProperty(), price.fixPriceProperty());
 
-            view = new AmountPriceView(model,
+            view = new View(model,
                     this,
                     baseAmount.getRoot(),
                     price.getRoot(),
@@ -171,15 +168,15 @@ public class AmountPriceGroup {
         }
     }
 
-    private static class AmountPriceModel implements Model {
+    private static class Model implements bisq.desktop.common.view.Model {
         private final ReadOnlyObjectProperty<Monetary> baseSideAmount;
         private final ReadOnlyObjectProperty<Monetary> quoteSideAmount;
         private final ReadOnlyObjectProperty<Quote> fixPrice;
         public boolean isCreateOffer = true;
 
-        public AmountPriceModel(ReadOnlyObjectProperty<Monetary> baseSideAmount,
-                                ReadOnlyObjectProperty<Monetary> quoteSideAmount,
-                                ReadOnlyObjectProperty<Quote> fixPrice) {
+        public Model(ReadOnlyObjectProperty<Monetary> baseSideAmount,
+                     ReadOnlyObjectProperty<Monetary> quoteSideAmount,
+                     ReadOnlyObjectProperty<Quote> fixPrice) {
             this.baseSideAmount = baseSideAmount;
             this.quoteSideAmount = quoteSideAmount;
             this.fixPrice = fixPrice;
@@ -187,14 +184,14 @@ public class AmountPriceGroup {
     }
 
     @Slf4j
-    public static class AmountPriceView extends View<VBox, AmountPriceModel, AmountPriceGroup.AmountPriceController> {
+    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqLabel headline;
 
-        public AmountPriceView(AmountPriceModel model,
-                               AmountPriceController controller,
-                               Pane baseAmount,
-                               Pane price,
-                               Pane quoteAmount) {
+        public View(Model model,
+                    Controller controller,
+                    Pane baseAmount,
+                    Pane price,
+                    Pane quoteAmount) {
             super(new VBox(), model, controller);
 
             root.setSpacing(0);
