@@ -20,9 +20,6 @@ package bisq.desktop.primary.main.content.trade.components;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqInputTextField;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
@@ -34,6 +31,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -41,12 +39,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AmountInput {
-    private final AmountInput.AmountController controller;
+    private final Controller controller;
 
     public AmountInput(ReadOnlyObjectProperty<Market> selectedMarket,
                        ReadOnlyObjectProperty<Direction> direction,
                        boolean isBaseCurrency) {
-        controller = new AmountInput.AmountController(selectedMarket, direction, isBaseCurrency);
+        controller = new Controller(selectedMarket, direction, isBaseCurrency);
     }
 
     public ReadOnlyObjectProperty<Monetary> amountProperty() {
@@ -61,23 +59,23 @@ public class AmountInput {
         controller.model.isCreateOffer = false;
     }
 
-    public AmountView getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
 
-    public static class AmountController implements Controller {
-        private final AmountModel model;
+    private static class Controller implements bisq.desktop.common.view.Controller {
+        private final Model model;
         @Getter
-        private final AmountView view;
+        private final View view;
         private final MonetaryValidator validator = new MonetaryValidator();
         private final ChangeListener<Market> selectedMarketListener;
         private final ChangeListener<Direction> directionListener;
 
-        private AmountController(ReadOnlyObjectProperty<Market> selectedMarket,
-                                 ReadOnlyObjectProperty<Direction> direction,
-                                 boolean isBaseCurrency) {
-            model = new AmountModel(selectedMarket, direction, isBaseCurrency);
-            view = new AmountView(model, this, validator);
+        private Controller(ReadOnlyObjectProperty<Market> selectedMarket,
+                           ReadOnlyObjectProperty<Direction> direction,
+                           boolean isBaseCurrency) {
+            model = new Model(selectedMarket, direction, isBaseCurrency);
+            view = new View(model, this, validator);
 
             selectedMarketListener = (observable, oldValue, newValue) -> {
                 model.amount.set(null);
@@ -146,7 +144,7 @@ public class AmountInput {
         }
     }
 
-    private static class AmountModel implements Model {
+    private static class Model implements bisq.desktop.common.view.Model {
         private ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final ReadOnlyObjectProperty<Direction> direction;
@@ -157,16 +155,16 @@ public class AmountInput {
         public boolean hasFocus;
         private boolean isCreateOffer = true;
 
-        private AmountModel(ReadOnlyObjectProperty<Market> selectedMarket,
-                            ReadOnlyObjectProperty<Direction> direction,
-                            boolean isBaseCurrency) {
+        private Model(ReadOnlyObjectProperty<Market> selectedMarket,
+                      ReadOnlyObjectProperty<Direction> direction,
+                      boolean isBaseCurrency) {
             this.selectedMarket = selectedMarket;
             this.direction = direction;
             this.isBaseCurrency = isBaseCurrency;
         }
     }
 
-    public static class AmountView extends View<VBox, AmountModel, AmountController> {
+    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqInputTextField textInput;
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
@@ -174,9 +172,9 @@ public class AmountInput {
         private final BisqLabel code;
         private final BisqLabel descriptionLabel;
 
-        private AmountView(AmountModel model,
-                           AmountController controller,
-                           MonetaryValidator validator) {
+        private View(Model model,
+                     Controller controller,
+                     MonetaryValidator validator) {
             super(new VBox(), model, controller);
 
             textInput = new BisqInputTextField(60);

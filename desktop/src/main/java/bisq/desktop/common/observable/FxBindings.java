@@ -21,8 +21,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
-import javafx.beans.property.LongProperty;
-import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 
 import java.util.function.Consumer;
@@ -41,25 +40,42 @@ public class FxBindings {
         return new LongPropertyBindings(observer);
     }
 
+    public static DoublePropertyBindings bind(DoubleProperty observer) {
+        return new DoublePropertyBindings(observer);
+    }
+
+    public static IntegerPropertyBindings bind(IntegerProperty observer) {
+        return new IntegerPropertyBindings(observer);
+    }
+
+    public static BooleanPropertyBindings bind(BooleanProperty observer) {
+        return new BooleanPropertyBindings(observer);
+    }
+
+    public static StringPropertyBindings bind(StringProperty observer) {
+        return new StringPropertyBindings(observer);
+    }
+
     public static <T> Pin subscribe(Observable<T> observable, Consumer<T> consumer) {
         return observable.addObserver(e -> UIThread.run(() -> consumer.accept(e)));
     }
 
     public static class ObservableListBindings<T, R> {
         private final ObservableList<R> observer;
-        private Function<T, R> mapper = e -> (R) e;
+        @SuppressWarnings("unchecked")
+        private Function<T, R> mapFunction = e -> (R) e;
 
         private ObservableListBindings(ObservableList<R> observer) {
             this.observer = observer;
         }
 
         public ObservableListBindings<T, R> map(Function<T, R> mapper) {
-            this.mapper = mapper;
+            this.mapFunction = mapper;
             return this;
         }
 
         public Pin to(ObservableSet<T> observable) {
-            return observable.addObserver(observer, mapper, UIThread::run);
+            return observable.addObserver(observer, mapFunction, UIThread::run);
         }
     }
 
@@ -71,6 +87,30 @@ public class FxBindings {
 
     public record LongPropertyBindings(LongProperty observer) {
         public Pin to(Observable<Long> observable) {
+            return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+        }
+    }
+
+    public record DoublePropertyBindings(DoubleProperty observer) {
+        public Pin to(Observable<Double> observable) {
+            return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+        }
+    }
+
+    public record IntegerPropertyBindings(IntegerProperty observer) {
+        public Pin to(Observable<Integer> observable) {
+            return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+        }
+    }
+
+    public record BooleanPropertyBindings(BooleanProperty observer) {
+        public Pin to(Observable<Boolean> observable) {
+            return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+        }
+    }
+
+    public record StringPropertyBindings(StringProperty observer) {
+        public Pin to(Observable<String> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
     }

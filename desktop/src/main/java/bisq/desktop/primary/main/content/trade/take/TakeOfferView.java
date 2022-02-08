@@ -21,11 +21,9 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.layout.Layout;
-import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
-import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
-import bisq.desktop.primary.main.content.trade.take.components.TakersSettlementSelection;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,9 +34,9 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
 
     public TakeOfferView(TakeOfferModel model,
                          TakeOfferController controller,
-                         DirectionSelection.DirectionView directionView,
-                         AmountPriceGroup.AmountPriceView amountPriceView,
-                         TakersSettlementSelection.SettlementView settlementView) {
+                         Pane directionSelection,
+                         Pane amountPrice,
+                         Pane settlement) {
         super(new VBox(), model, controller);
         root.setSpacing(30);
         root.setPadding(new Insets(20, 20, 20, 0));
@@ -46,7 +44,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
         protocolLabel = new BisqLabel();
         protocolLabel.getStyleClass().add("titled-group-bg-label-active");
 
-        amountPriceView.getRoot().setPadding(new Insets(0, 0, -5, 0));
+        amountPrice.setPadding(new Insets(0, 0, -5, 0));
 
         takeOfferButton = new BisqButton(Res.get("takeOffer.button"));
         takeOfferButton.getStyleClass().add("action-button");
@@ -55,10 +53,10 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
         cancelButton.setOnAction(e -> controller.onCancel());
 
         root.getChildren().addAll(
-                directionView.getRoot(),
+                directionSelection,
                 protocolLabel,
-                amountPriceView.getRoot(),
-                settlementView.getRoot(),
+                amountPrice,
+                settlement,
                 Layout.hBoxWith(takeOfferButton, cancelButton));
     }
 

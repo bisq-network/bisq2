@@ -23,7 +23,6 @@ import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.primary.main.content.social.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -46,17 +45,16 @@ public class TradeIntentView extends View<VBox, TradeIntentModel, TradeIntentCon
     private final ChangeListener<TradeIntentListItem> dataTableSelectedItemListener;
     private Subscription selectedUserIdSubscription;
 
-    public TradeIntentView(TradeIntentModel model, TradeIntentController controller, UserProfileDisplay.View userProfileView) {
+    public TradeIntentView(TradeIntentModel model, TradeIntentController controller, Pane userProfile) {
         super(new VBox(), model, controller);
         root.setSpacing(20);
 
         gridPane = new BisqGridPane();
         gridPane.setPadding(new Insets(20, 20, 20, 0));
 
-        Pane userProfileViewRoot = userProfileView.getRoot();
-        StackPane.setAlignment(userProfileViewRoot, Pos.TOP_RIGHT);
-        userProfileViewRoot.setPadding(new Insets(10, 0, 0, 10));
-        root.getChildren().addAll(userProfileViewRoot, gridPane);
+        StackPane.setAlignment(userProfile, Pos.TOP_RIGHT);
+        userProfile.setPadding(new Insets(10, 0, 0, 10));
+        root.getChildren().addAll(userProfile, gridPane);
 
         gridPane.startSection(Res.get("tradeIntent.create.title"));
         TextField askTextField = gridPane.addTextField(Res.get("tradeIntent.create.ask"), "I want 0.01 BTC");

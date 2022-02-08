@@ -20,9 +20,6 @@ package bisq.desktop.primary.main.content.trade.components;
 import bisq.account.protocol.ProtocolType;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.common.monetary.Market;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -36,6 +33,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,29 +43,29 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class ProtocolSelection {
-    private final ProtocolController controller;
+    private final Controller controller;
 
     public ProtocolSelection(ReadOnlyObjectProperty<Market> selectedMarket) {
-        controller = new ProtocolController(selectedMarket);
+        controller = new Controller(selectedMarket);
     }
 
     public ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType() {
         return controller.model.selectedProtocolType;
     }
 
-    public ProtocolSelection.ProtocolView getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
 
-    private static class ProtocolController implements Controller {
-        private final ProtocolModel model;
+    private static class Controller implements bisq.desktop.common.view.Controller {
+        private final Model model;
         @Getter
-        private final ProtocolView view;
+        private final View view;
         private final ChangeListener<Market> selectedMarketListener;
 
-        private ProtocolController(ReadOnlyObjectProperty<Market> selectedMarket) {
-            model = new ProtocolModel(selectedMarket);
-            view = new ProtocolView(model, this);
+        private Controller(ReadOnlyObjectProperty<Market> selectedMarket) {
+            model = new Model(selectedMarket);
+            view = new View(model, this);
 
             selectedMarketListener = (observable, oldValue, newValue) -> {
                 if (newValue == null) return;
@@ -96,14 +94,14 @@ public class ProtocolSelection {
         }
     }
 
-    private static class ProtocolModel implements Model {
+    private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<SwapProtocolType> selectedProtocolType = new SimpleObjectProperty<>();
         private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final ObservableList<ListItem> observableList = FXCollections.observableArrayList();
         private final SortedList<ListItem> sortedList = new SortedList<>(observableList);
         private final ObjectProperty<ListItem> selectedProtocolItem = new SimpleObjectProperty<>();
 
-        private ProtocolModel(ReadOnlyObjectProperty<Market> selectedMarket) {
+        private Model(ReadOnlyObjectProperty<Market> selectedMarket) {
             this.selectedMarket = selectedMarket;
         }
 
@@ -136,13 +134,13 @@ public class ProtocolSelection {
         }
     }
 
-    public static class ProtocolView extends View<VBox, ProtocolModel, ProtocolController> {
+    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqTableView<ListItem> tableView;
         private final ChangeListener<ListItem> selectedProtocolItemListener;
         private final ChangeListener<ListItem> selectedTableItemListener;
 
-        private ProtocolView(ProtocolModel model,
-                             ProtocolController controller) {
+        private View(Model model,
+                     Controller controller) {
             super(new VBox(), model, controller);
 
             Label headline = new BisqLabel(Res.get("createOffer.selectProtocol"));

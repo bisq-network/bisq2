@@ -25,24 +25,30 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
-    private record Observer<M, L>(Collection<L> collection, Function<M, L> mapper, Consumer<Runnable> executor) {
+    private record Observer<M, L>(Collection<L> collection, 
+                                  Function<M, L> mapFunction, 
+                                  Consumer<Runnable> executor) {
 
         public void add(M element) {
-            executor.accept(() -> collection.add(mapper.apply(element)));
+            executor.accept(() -> collection.add(mapFunction.apply(element)));
         }
 
-        public void addAll(Collection<? extends M> c) {
-            executor.accept(() -> collection.addAll(c.stream().map(mapper).collect(Collectors.toSet())));
+        public void addAll(Collection<? extends M> values) {
+            executor.accept(() -> collection.addAll(values.stream()
+                    .map(mapFunction)
+                    .collect(Collectors.toSet())));
         }
 
         public void remove(Object element) {
             //noinspection unchecked
-            executor.accept(() -> collection.remove(mapper.apply((M) element)));
+            executor.accept(() -> collection.remove(mapFunction.apply((M) element)));
         }
 
-        public void removeAll(Collection<?> c) {
+        public void removeAll(Collection<?> values) {
             //noinspection unchecked
-            executor.accept(() -> collection.removeAll(c.stream().map(element -> mapper.apply((M) element)).collect(Collectors.toSet())));
+            executor.accept(() -> collection.removeAll(values.stream()
+                    .map(element -> mapFunction.apply((M) element))
+                    .collect(Collectors.toSet())));
         }
 
         public void clear() {
@@ -59,13 +65,11 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
         addAll(values);
     }
 
-    public <L> Pin addObserver(Collection<L> collection, Function<T, L> mapper, Consumer<Runnable> executor) {
-        Observer<T, L> observer = new Observer<>(collection, mapper, executor);
+    public <L> Pin addObserver(Collection<L> collection, Function<T, L> mapFunction, Consumer<Runnable> executor) {
+        Observer<T, L> observer = new Observer<>(collection, mapFunction, executor);
+        observer.clear();
+        observer.addAll(this);
         observers.add(observer);
-        observers.forEach(l -> {
-            l.clear();
-            l.addAll(this);
-        });
         return () -> observers.remove(observer);
     }
 
@@ -73,15 +77,15 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     public boolean add(T element) {
         boolean result = super.add(element);
         if (result) {
-            observers.forEach(l -> l.add(element));
+            observers.forEach(observer -> observer.add(element));
         }
         return result;
     }
 
-    public boolean addAll(Collection<? extends T> c) {
-        boolean result = super.addAll(c);
+    public boolean addAll(Collection<? extends T> values) {
+        boolean result = super.addAll(values);
         if (result) {
-            observers.forEach(l -> l.addAll(c));
+            observers.forEach(observer -> observer.addAll(values));
         }
         return result;
     }
@@ -90,16 +94,16 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     public boolean remove(Object element) {
         boolean result = super.remove(element);
         if (result) {
-            observers.forEach(l -> l.remove(element));
+            observers.forEach(observer -> observer.remove(element));
         }
         return result;
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
-        boolean result = super.removeAll(c);
+    public boolean removeAll(Collection<?> values) {
+        boolean result = super.removeAll(values);
         if (result) {
-            observers.forEach(l -> l.removeAll(c));
+            observers.forEach(observer -> observer.removeAll(values));
         }
         return result;
     }

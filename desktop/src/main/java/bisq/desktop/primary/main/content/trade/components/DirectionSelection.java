@@ -18,9 +18,6 @@
 package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.common.monetary.Market;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
@@ -29,22 +26,23 @@ import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DirectionSelection {
-    private final DirectionController controller;
+    private final Controller controller;
 
     public DirectionSelection(ReadOnlyObjectProperty<Market> selectedMarket) {
-        controller = new DirectionController(selectedMarket);
+        controller = new Controller(selectedMarket);
     }
 
-    public DirectionView getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
-
+ 
     public ReadOnlyObjectProperty<Direction> directionProperty() {
         return controller.model.direction;
     }
@@ -61,16 +59,16 @@ public class DirectionSelection {
         controller.model.isCreateOffer = false;
     }
 
-    private static class DirectionController implements Controller {
+    private static class Controller implements bisq.desktop.common.view.Controller {
 
-        private final DirectionModel model;
+        private final Model model;
         @Getter
-        private final DirectionView view;
+        private final View view;
         private final ChangeListener<Market> selectedMarketListener;
 
-        private DirectionController(ReadOnlyObjectProperty<Market> selectedMarket) {
-            model = new DirectionModel(selectedMarket);
-            view = new DirectionView(model, this);
+        private Controller(ReadOnlyObjectProperty<Market> selectedMarket) {
+            model = new Model(selectedMarket);
+            view = new View(model, this);
 
             selectedMarketListener = (observable, oldValue, newValue) -> {
                 if (newValue != null) {
@@ -109,7 +107,7 @@ public class DirectionSelection {
         }
     }
 
-    private static class DirectionModel implements Model {
+    private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
         private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final StringProperty baseCode = new SimpleStringProperty();
@@ -117,19 +115,19 @@ public class DirectionSelection {
         private final BooleanProperty isBuySideVisible = new SimpleBooleanProperty();
         private final BooleanProperty isSellSideVisible = new SimpleBooleanProperty();
 
-        private DirectionModel(ReadOnlyObjectProperty<Market> selectedMarket) {
+        private Model(ReadOnlyObjectProperty<Market> selectedMarket) {
             this.selectedMarket = selectedMarket;
         }
     }
 
     @Slf4j
-    public static class DirectionView extends View<VBox, DirectionModel, DirectionController> {
+    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqButton buy, sell;
         private final ChangeListener<String> baseCodeListener;
         private final ChangeListener<Direction> directionListener;
         private final BisqLabel headline;
 
-        private DirectionView(DirectionModel model, DirectionController controller) {
+        private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
 
             root.setSpacing(10);

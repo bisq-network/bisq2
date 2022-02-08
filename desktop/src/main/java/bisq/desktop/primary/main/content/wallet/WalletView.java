@@ -39,4 +39,13 @@ public class WalletView extends TabView<JFXTabPane, WalletModel, WalletControlle
         NavigationTargetTab utxosTab = createTab(Res.get("wallet.tab.utxos"), NavigationTarget.WALLET_UTXOS);
         root.getTabs().setAll(transactionsTab, sendTab, receiveTab, utxosTab);
     }
+    @Override
+    public void onViewAttached() {
+        super.onViewAttached();
+    }
+
+    @Override
+    public void onViewDetached() {
+        super.onViewDetached();
+    }
 }
