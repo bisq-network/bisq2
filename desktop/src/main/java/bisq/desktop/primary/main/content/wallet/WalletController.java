@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.wallet;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.wallet.config.WalletConfigPopup;
 import bisq.desktop.primary.main.content.wallet.receive.WalletReceiveController;
@@ -53,6 +54,7 @@ public class WalletController extends TabController {
 
     @Override
     public void onViewAttached() {
+        super.onViewAttached();
         if (walletService.getWallet().isEmpty()) {
             walletConfigPopup.show();
         }
@@ -60,10 +62,11 @@ public class WalletController extends TabController {
 
     @Override
     public void onViewDetached() {
+        super.onViewDetached();
     }
 
     @Override
-    protected Optional<bisq.desktop.common.view.Controller> createController(NavigationTarget navigationTarget) {
+    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case WALLET_TRANSACTIONS -> {
                 return Optional.of(new WalletTransactionsController(applicationService));
