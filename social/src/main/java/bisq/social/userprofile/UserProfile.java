@@ -23,4 +23,7 @@ import java.io.Serializable;
 import java.util.Set;
 
 public record UserProfile(Identity identity, Set<Entitlement> entitlements) implements Serializable {
+    public boolean hasEntitlementType(Entitlement.Type type) {
+        return entitlements.stream().anyMatch(e -> e.entitlementType() == type);
+    }
 }

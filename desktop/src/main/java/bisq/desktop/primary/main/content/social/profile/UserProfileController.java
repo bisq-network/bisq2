@@ -23,8 +23,12 @@ import bisq.desktop.primary.main.content.social.components.UserProfileDisplay;
 import bisq.desktop.primary.main.content.social.profile.components.ChannelAdmin;
 import bisq.desktop.primary.main.content.social.profile.components.CreateUserProfile;
 import bisq.desktop.primary.main.content.social.profile.components.UserProfileSelection;
+import bisq.social.userprofile.Entitlement;
+import bisq.social.userprofile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class UserProfileController implements Controller {
@@ -37,12 +41,15 @@ public class UserProfileController implements Controller {
     private final UserProfileView view;
     private final UserProfileDisplay userProfileDisplay;
     private final ChannelAdmin channelAdmin;
+    private final UserProfileService userProfileService;
+    private Subscription selectedUserProfileSubscription;
 
     public UserProfileController(DefaultApplicationService applicationService) {
-        userProfileSelection = new UserProfileSelection(applicationService.getUserProfileService());
-        userProfileDisplay = new UserProfileDisplay(applicationService.getUserProfileService());
-        createUserProfile = new CreateUserProfile(applicationService.getUserProfileService(), applicationService.getKeyPairService());
-        channelAdmin = new ChannelAdmin(applicationService.getUserProfileService(), applicationService.getChatService());
+        userProfileService = applicationService.getUserProfileService();
+        userProfileSelection = new UserProfileSelection(userProfileService);
+        userProfileDisplay = new UserProfileDisplay(userProfileService);
+        createUserProfile = new CreateUserProfile(userProfileService, applicationService.getKeyPairService());
+        channelAdmin = new ChannelAdmin(userProfileService, applicationService.getChatService());
         model = new UserProfileModel(applicationService);
         view = new UserProfileView(model, this,
                 userProfileSelection.getView(),
@@ -55,10 +62,15 @@ public class UserProfileController implements Controller {
     public void onViewAttached() {
         model.createUserProfileVisible.set(false);
         model.channelAdminVisible.set(true);
+        selectedUserProfileSubscription = EasyBind.subscribe(userProfileSelection.getSelectedUserProfile(),
+                userProfile -> {
+                    model.channelAdminVisible.set(userProfile.hasEntitlementType(Entitlement.Type.CHANNEL_ADMIN));
+                });
     }
 
     @Override
     public void onViewDetached() {
+        selectedUserProfileSubscription.unsubscribe();
     }
 
     public void showCreateUserProfile() {

@@ -26,6 +26,7 @@ import bisq.i18n.Res;
 import bisq.social.userprofile.UserProfile;
 import bisq.social.userprofile.UserProfileService;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -48,6 +49,9 @@ public class UserProfileSelection {
 
     public View getView() {
         return controller.view;
+    }
+    public ReadOnlyObjectProperty<UserProfile> getSelectedUserProfile() {
+        return controller.model.selectedUserProfile;
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
