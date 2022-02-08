@@ -8,27 +8,29 @@ import bisq.wallets.exceptions.WalletNotInitializedException;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-
+@Slf4j
 public class WalletService {
-
+    @Getter
     private Optional<Wallet> wallet = Optional.empty();
     @Getter
-    private final Observable<Coin> observableBalanceAsCoin = new Observable(0);
+    private final Observable<Coin> observableBalanceAsCoin = new Observable<>(Coin.of(0, "BTC"));
 
     public CompletableFuture<Void> initialize(Path walletsDataDir, RpcConfig rpcConfig, String walletPassphrase) {
         return CompletableFuture.runAsync(() -> {
             walletsDataDir.toFile().mkdirs();
-            Path bitcoindDataDir = walletsDataDir.resolve("bitcoind");
+            Path bitcoindDataDir = walletsDataDir.resolve("bitcoind"); // directory name for bitcoind wallet
 
             var bitcoindWallet = new BitcoindWallet(bitcoindDataDir, rpcConfig);
             bitcoindWallet.initialize(walletPassphrase);
 
             wallet = Optional.of(bitcoindWallet);
+            log.info("Successfully created wallet at {}", walletsDataDir);
         }).thenRun(this::getBalance);
     }
 
