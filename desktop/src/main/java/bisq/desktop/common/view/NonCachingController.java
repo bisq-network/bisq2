@@ -17,5 +17,5 @@
 
 package bisq.desktop.common.view;
 
-public interface NonCachingController {
+public interface NonCachingController extends Controller {
 }

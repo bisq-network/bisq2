@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.wallet;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
@@ -48,14 +49,13 @@ public class WalletController extends TabController {
         model = new WalletModel();
         view = new WalletView(model, this);
 
-        walletConfigPopup = new WalletConfigPopup(applicationService);
-
+        walletConfigPopup = new WalletConfigPopup(applicationService, this::onConfigPopupClosed);
     }
 
     @Override
     public void onViewAttached() {
         super.onViewAttached();
-        if (walletService.getWallet().isEmpty()) {
+        if (!isWalletReady()) {
             walletConfigPopup.show();
         }
     }
@@ -67,6 +67,10 @@ public class WalletController extends TabController {
 
     @Override
     protected Optional<Controller> createController(NavigationTarget navigationTarget) {
+        if (!isWalletReady()) {
+            return Optional.empty();
+        }
+        
         switch (navigationTarget) {
             case WALLET_TRANSACTIONS -> {
                 return Optional.of(new WalletTransactionsController(applicationService));
@@ -84,5 +88,13 @@ public class WalletController extends TabController {
                 return Optional.empty();
             }
         }
+    }
+
+    private boolean isWalletReady() {
+        return walletService.getWallet().isPresent();
+    }
+
+    private void onConfigPopupClosed() {
+        Navigation.navigateTo(model.getDefaultNavigationTarget());
     }
 }
