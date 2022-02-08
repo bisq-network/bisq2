@@ -61,7 +61,7 @@ public class TradeIntentView extends View<VBox, TradeIntentModel, TradeIntentCon
         gridPane.startSection(Res.get("tradeIntent.create.title"));
         TextField askTextField = gridPane.addTextField(Res.get("tradeIntent.create.ask"), "I want 0.01 BTC");
         TextField bidTextField = gridPane.addTextField(Res.get("tradeIntent.create.bid"), "Pay EUR via SEPA at market rate");
-        Pair<BisqButton, Label> addDataButtonPair = gridPane.addButton(Res.get("publish"));
+        Pair<BisqButton, Label> addDataButtonPair = gridPane.addButtonWithLabel(Res.get("publish"));
         Button addDataButton = addDataButtonPair.first();
         addDataResultLabel = addDataButtonPair.second();
         addDataButton.setOnAction(e -> {

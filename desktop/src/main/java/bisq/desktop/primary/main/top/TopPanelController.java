@@ -29,7 +29,6 @@ public class TopPanelController implements Controller {
 
     public TopPanelController(DefaultApplicationService applicationService) {
         TopPanelModel model = new TopPanelModel();
-
         var marketPriceComponent = new MarketPriceComponent(applicationService.getMarketPriceService());
         var walletBalanceComponent = new WalletBalanceComponent(applicationService.getWalletService());
         view = new TopPanelView(model, this, marketPriceComponent.getRootPane(), walletBalanceComponent.getRootPane());

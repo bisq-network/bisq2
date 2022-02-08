@@ -302,11 +302,7 @@ public class EntitlementSelection {
                 message(Res.get("social.createUserProfile.entitlement.popup.bondedRole.message"));
             }
             actionButtonText(Res.get("social.createUserProfile.table.entitlement.verify"));
-        }
-
-        @Override
-        protected void onActionButtonClicked() {
-            // deactivate close with empty override  
+            doCloseOnAction(false);
         }
 
         @Override
