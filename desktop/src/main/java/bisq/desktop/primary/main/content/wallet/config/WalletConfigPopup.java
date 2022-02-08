@@ -42,9 +42,9 @@ import java.nio.file.Path;
 public class WalletConfigPopup extends Popup {
     private final Controller controller;
 
-    public WalletConfigPopup(DefaultApplicationService applicationService) {
+    public WalletConfigPopup(DefaultApplicationService applicationService, Runnable closeHandler) {
         super();
-        controller = new Controller(applicationService, this);
+        controller = new Controller(applicationService, this, closeHandler);
     }
 
     @Override
@@ -57,14 +57,16 @@ public class WalletConfigPopup extends Popup {
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final WalletService walletService;
         private final Popup popup;
+        private final Runnable closeHandler;
 
         private final Model model;
         @Getter
         private final View view;
 
-        private Controller(DefaultApplicationService applicationService, Popup popup) {
+        private Controller(DefaultApplicationService applicationService, Popup popup, Runnable closeHandler) {
             this.walletService = applicationService.getWalletService();
             this.popup = popup;
+            this.closeHandler = closeHandler;
 
             model = new Model();
             view = new View(model, this, popup);
@@ -88,11 +90,15 @@ public class WalletConfigPopup extends Popup {
             walletService.initialize(walletsDataDirPath, rpcConfig, passphrase)
                     .whenComplete((__, throwable) -> {
                         if (throwable == null) {
-                            UIThread.run(popup::hide);
+                            UIThread.run(() -> {
+                                popup.hide();
+                                closeHandler.run();
+                            });
                         } else {
                             throwable.printStackTrace();
                             UIThread.run(() -> {
                                 popup.hide();
+                                closeHandler.run();
                                 new Popup().error(throwable.toString()).show();
                             });
                         }

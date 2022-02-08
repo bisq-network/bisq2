@@ -13,7 +13,7 @@ public class WalletTransactionsModel implements Model {
     @Getter
     private final ObservableList<WalletTransactionListItem> listItems = FXCollections.observableArrayList();
     @Getter
-    private final SortedList<WalletTransactionListItem> sortedList = new SortedList(listItems);
+    private final SortedList<WalletTransactionListItem> sortedList = new SortedList<>(listItems);
 
     public void addTransactions(List<Transaction> transactions) {
         transactions.stream()
