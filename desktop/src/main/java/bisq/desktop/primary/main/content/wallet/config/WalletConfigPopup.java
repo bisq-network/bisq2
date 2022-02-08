@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.wallet.dialog;
+package bisq.desktop.primary.main.content.wallet.config;
 
 import bisq.application.ApplicationConfig;
 import bisq.application.DefaultApplicationService;

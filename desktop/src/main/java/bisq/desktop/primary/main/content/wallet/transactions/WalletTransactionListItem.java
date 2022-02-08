@@ -1,10 +1,11 @@
 package bisq.desktop.primary.main.content.wallet.transactions;
 
+import bisq.desktop.components.table.TableItem;
 import bisq.wallets.model.Transaction;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-public class WalletTransactionListItem {
+public class WalletTransactionListItem implements TableItem {
     private final StringProperty txId = new SimpleStringProperty(this, "wallet.column.txId");
     private final StringProperty address = new SimpleStringProperty(this, "address");
     private final StringProperty amount = new SimpleStringProperty(this, "amount");

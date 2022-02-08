@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.wallet;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.wallet.dialog.WalletConfigPopup;
+import bisq.desktop.primary.main.content.wallet.config.WalletConfigPopup;
 import bisq.desktop.primary.main.content.wallet.receive.WalletReceiveController;
 import bisq.desktop.primary.main.content.wallet.send.WalletSendController;
 import bisq.desktop.primary.main.content.wallet.transactions.WalletTransactionsController;
