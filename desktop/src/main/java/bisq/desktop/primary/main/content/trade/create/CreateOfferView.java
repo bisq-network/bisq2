@@ -21,11 +21,11 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.layout.Layout;
-import bisq.desktop.primary.main.content.trade.components.*;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,16 +36,16 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
 
     public CreateOfferView(CreateOfferModel model,
                            CreateOfferController controller,
-                           MarketSelection.MarketSelectionView marketSelectionView,
-                           DirectionSelection.DirectionView directionView,
-                           AmountPriceGroup.AmountPriceView amountPriceView,
-                           ProtocolSelection.ProtocolView protocolView,
-                           SettlementSelection.SettlementView settlementView) {
+                           Pane marketSelection,
+                           Pane direction,
+                           Pane amountPrice,
+                           Pane protocol,
+                           Pane settlement) {
         super(new VBox(), model, controller);
         root.setSpacing(30);
         root.setPadding(new Insets(20, 20, 20, 0));
 
-        amountPriceView.getRoot().setPadding(new Insets(0, 0, -5, 0));
+        amountPrice.setPadding(new Insets(0, 0, -5, 0));
 
         createOfferButton = new BisqButton(Res.get("createOffer.button"));
         createOfferButton.getStyleClass().add("action-button");
@@ -61,11 +61,11 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         publishButton.setVisible(false);
 
         root.getChildren().addAll(
-                marketSelectionView.getRoot(),
-                directionView.getRoot(),
-                amountPriceView.getRoot(),
-                protocolView.getRoot(),
-                settlementView.getRoot(),
+                marketSelection,
+                direction,
+                amountPrice,
+                protocol,
+                settlement,
                 Layout.hBoxWith(createOfferButton, cancelButton),
                 offerSummary,
                 publishButton);

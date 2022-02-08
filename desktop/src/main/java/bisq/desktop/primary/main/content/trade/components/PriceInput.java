@@ -36,6 +36,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -63,10 +64,9 @@ public class PriceInput {
         controller.model.isCreateOffer = false;
     }
 
-    public PriceView getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
-
 
     private static class PriceController implements Controller, MarketPriceService.Listener {
         private final PriceModel model;

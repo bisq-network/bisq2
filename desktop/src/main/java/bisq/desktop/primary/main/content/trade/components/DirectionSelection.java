@@ -29,6 +29,7 @@ import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,10 +42,10 @@ public class DirectionSelection {
         controller = new DirectionController(selectedMarket);
     }
 
-    public DirectionView getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
-
+ 
     public ReadOnlyObjectProperty<Direction> directionProperty() {
         return controller.model.direction;
     }

@@ -42,6 +42,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -63,8 +64,8 @@ public class SettlementSelection {
     }
 
 
-    public SettlementView getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
 
     public ObservableSet<Account<? extends SettlementMethod>> getSelectedBaseSideAccounts() {

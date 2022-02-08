@@ -77,9 +77,9 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
         model.setSelectedQuoteSideSettlementMethod(settlementSelection.getSelectedQuoteSideSettlementMethod());
 
         view = new TakeOfferView(model, this,
-                directionSelection.getView(),
-                amountPriceGroup.getView(),
-                settlementSelection.getView());
+                directionSelection.getRoot(),
+                amountPriceGroup.getRoot(),
+                settlementSelection.getRoot());
     }
 
     @Override

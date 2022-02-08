@@ -34,6 +34,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -61,8 +62,8 @@ public class AmountInput {
         controller.model.isCreateOffer = false;
     }
 
-    public AmountView getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
 
     public static class AmountController implements Controller {

@@ -32,6 +32,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import lombok.Getter;
@@ -51,8 +52,8 @@ public class MarketSelection {
         return controller.model.selectedMarket;
     }
 
-    public MarketSelectionView getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
 
     public void setSelectedMarket(Market market) {

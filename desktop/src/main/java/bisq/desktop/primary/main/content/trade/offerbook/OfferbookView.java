@@ -26,12 +26,11 @@ import bisq.desktop.components.controls.BisqToggleButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.layout.Layout;
-import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
-import bisq.desktop.primary.main.content.trade.components.MarketSelection;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,13 +38,14 @@ import lombok.extern.slf4j.Slf4j;
 public class OfferbookView extends View<VBox, OfferbookModel, OfferbookController> {
     private final BisqTableView<OfferListItem> tableView;
     private final BisqToggleButton showAllMarkets;
-    private final VBox marketSelection;
     private final BisqButton createOfferButton;
+    private final Pane marketSelection;
 
     public OfferbookView(OfferbookModel model, OfferbookController controller,
-                         MarketSelection.MarketSelectionView marketSelectionView,
-                         DirectionSelection.DirectionView directionView) {
+                         Pane marketSelection,
+                         Pane directionSelection) {
         super(new VBox(), model, controller);
+        this.marketSelection = marketSelection;
 
         root.setSpacing(30);
         root.setPadding(new Insets(20, 20, 20, 0));
@@ -67,10 +67,8 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         tableView.setPadding(new Insets(-20, 0, 0, 0));
         configDataTableView();
 
-
-        marketSelection = marketSelectionView.getRoot();
         this.root.getChildren().addAll(Layout.hBoxWith(marketSelection, showAllMarkets),
-                Layout.hBoxWith(directionView.getRoot(), new BisqHSpacer(), createOfferButton),
+                Layout.hBoxWith(directionSelection, new BisqHSpacer(), createOfferButton),
                 headline,
                 tableView);
     }

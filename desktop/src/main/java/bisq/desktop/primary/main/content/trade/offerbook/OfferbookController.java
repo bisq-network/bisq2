@@ -66,7 +66,7 @@ public class OfferbookController implements Controller {
                 marketSelection.selectedMarketProperty(),
                 directionSelection.directionProperty());
 
-        view = new OfferbookView(model, this, marketSelection.getView(), directionSelection.getView());
+        view = new OfferbookView(model, this, marketSelection.getRoot(), directionSelection.getRoot());
 
         selectedMarketListener = (observable, oldValue, newValue) -> applyMarketChange(newValue);
         directionListener = (observable, oldValue, newValue) -> applyDirectionChange(newValue);

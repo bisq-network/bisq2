@@ -41,6 +41,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
@@ -64,8 +65,8 @@ public class TakersSettlementSelection {
         controller = new SettlementController(selectedMarket, direction, selectedProtocolType, accountService);
     }
 
-    public SettlementView getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
 
     public ReadOnlyObjectProperty<Account<? extends SettlementMethod>> getSelectedBaseSideAccount() {

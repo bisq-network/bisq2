@@ -80,11 +80,11 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
         model.setSelectedQuoteSideSettlementMethods(settlementSelection.getSelectedQuoteSideSettlementMethods());
 
         view = new CreateOfferView(model, this,
-                marketSelection.getView(),
-                directionSelection.getView(),
-                amountPriceGroup.getView(),
-                protocolSelection.getView(),
-                settlementSelection.getView());
+                marketSelection.getRoot(),
+                directionSelection.getRoot(),
+                amountPriceGroup.getRoot(),
+                protocolSelection.getRoot(),
+                settlementSelection.getRoot());
 
         selectedProtocolTypListener = (observable, oldValue, newValue) -> model.getCreateOfferButtonVisibleProperty().set(newValue != null);
     }

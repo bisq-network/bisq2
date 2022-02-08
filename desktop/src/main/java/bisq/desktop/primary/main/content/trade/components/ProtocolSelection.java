@@ -36,6 +36,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -55,8 +56,8 @@ public class ProtocolSelection {
         return controller.model.selectedProtocolType;
     }
 
-    public ProtocolSelection.ProtocolView getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
 
     private static class ProtocolController implements Controller {

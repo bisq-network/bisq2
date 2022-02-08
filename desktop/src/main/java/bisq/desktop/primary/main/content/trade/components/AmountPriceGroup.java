@@ -34,6 +34,7 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.Getter;
@@ -81,8 +82,8 @@ public class AmountPriceGroup {
         controller.price.setPrice(price);
     }
 
-    public AmountPriceView getView() {
-        return controller.view;
+    public Pane getRoot() {
+        return controller.view.getRoot();
     }
 
     public static class AmountPriceController implements Controller {
@@ -107,9 +108,9 @@ public class AmountPriceGroup {
 
             view = new AmountPriceView(model,
                     this,
-                    baseAmount.getView(),
-                    price.getView(),
-                    quoteAmount.getView());
+                    baseAmount.getRoot(),
+                    price.getRoot(),
+                    quoteAmount.getRoot());
 
             // We delay with runLater to avoid that we get triggered at market change from the component's data changes and
             // apply the conversion before the other component has processed the market change event.
@@ -191,9 +192,9 @@ public class AmountPriceGroup {
 
         public AmountPriceView(AmountPriceModel model,
                                AmountPriceController controller,
-                               AmountInput.AmountView baseView,
-                               PriceInput.PriceView priceView,
-                               AmountInput.AmountView quoteView) {
+                               Pane baseAmount,
+                               Pane price,
+                               Pane quoteAmount) {
             super(new VBox(), model, controller);
 
             root.setSpacing(0);
@@ -210,7 +211,7 @@ public class AmountPriceGroup {
             resultLabel.getStyleClass().add("opaque-icon-character");
 
             HBox hBox = new HBox();
-            hBox.getChildren().addAll(headline, baseView.getRoot(), xLabel, priceView.getRoot(), resultLabel, quoteView.getRoot());
+            hBox.getChildren().addAll(headline, baseAmount, xLabel, price, resultLabel, quoteAmount);
 
             root.getChildren().addAll(headline, hBox);
         }
