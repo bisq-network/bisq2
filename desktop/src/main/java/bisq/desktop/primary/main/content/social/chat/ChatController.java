@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.hangout;
+package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.util.StringUtils;
@@ -38,22 +38,22 @@ import static bisq.social.chat.ChannelType.PRIVATE;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class HangoutController implements InitWithDataController<TradeIntent>, ChatService.Listener {
+public class ChatController implements InitWithDataController<TradeIntent>, ChatService.Listener {
     private final ChatService chatService;
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final HangoutModel model;
+    private final ChatModel model;
     @Getter
-    private final HangoutView view;
+    private final ChatView view;
 
-    public HangoutController(DefaultApplicationService applicationService) {
+    public ChatController(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
         identityService = applicationService.getIdentityService();
         chatService = applicationService.getChatService();
 
         UserProfileDisplay  userProfileDisplay = new UserProfileDisplay(applicationService.getUserProfileService());
-        model = new HangoutModel(applicationService);
-        view = new HangoutView(model, this, userProfileDisplay.getRoot());
+        model = new ChatModel(applicationService);
+        view = new ChatView(model, this, userProfileDisplay.getRoot());
     }
 
     @Override

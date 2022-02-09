@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.social.hangout.HangoutController;
+import bisq.desktop.primary.main.content.social.chat.ChatController;
 import bisq.desktop.primary.main.content.social.tradeintent.TradeIntentController;
 import bisq.desktop.primary.main.content.social.profile.UserProfileController;
 import lombok.Getter;
@@ -52,7 +52,7 @@ public class SocialController extends TabController {
                 return Optional.of(new TradeIntentController(applicationService));
             }
             case HANGOUT -> {
-                return Optional.of(new HangoutController(applicationService));
+                return Optional.of(new ChatController(applicationService));
             }
             case USER_PROFILE -> {
                 return Optional.of(new UserProfileController(applicationService));

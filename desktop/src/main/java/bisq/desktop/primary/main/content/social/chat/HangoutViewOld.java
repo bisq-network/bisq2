@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.hangout;
+package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqButton;
@@ -45,7 +45,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class HangoutViewOld extends View<HBox, HangoutModel, HangoutController> {
+public class HangoutViewOld extends View<HBox, ChatModel, ChatController> {
     private final ToggleGroup toggleGroup = new ToggleGroup();
     private final BisqButton sendButton;
     private final BisqTextField inputTextField;
@@ -56,7 +56,7 @@ public class HangoutViewOld extends View<HBox, HangoutModel, HangoutController> 
     private final Map<String, ChannelButton> channelButtonByChannelId = new HashMap<>();
     private final ChangeListener<String> textAreaListener;
 
-    public HangoutViewOld(HangoutModel model, HangoutController controller, Pane userProfile) {
+    public HangoutViewOld(ChatModel model, ChatController controller, Pane userProfile) {
         super(new HBox(), model, controller);
 
         root.setSpacing(Layout.SPACING);

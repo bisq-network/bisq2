@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.hangout;
+package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
@@ -47,7 +47,7 @@ import java.util.Map;
 
 @Slf4j
 @Getter
-public class HangoutModel implements Model {
+public class ChatModel implements Model {
 
 
     public enum PublicChannelId implements Serializable {
@@ -63,11 +63,12 @@ public class HangoutModel implements Model {
 
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
+    private final StringProperty selectedChannelAsString = new SimpleStringProperty("");
 
     private final ObservableList<Channel> channels = FXCollections.observableArrayList();
     public final ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
 
-    public HangoutModel(DefaultApplicationService applicationService) {
+    public ChatModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
         identityService = applicationService.getIdentityService();
         keyPairService = applicationService.getKeyPairService();
