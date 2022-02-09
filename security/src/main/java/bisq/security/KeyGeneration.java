@@ -17,7 +17,12 @@
 
 package bisq.security;
 
+import org.bouncycastle.jce.ECNamedCurveTable;
+import org.bouncycastle.jce.ECPointUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.provider.asymmetric.ec.EC5Util;
+import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
+import org.bouncycastle.math.ec.ECCurve;
 
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
@@ -45,6 +50,17 @@ public class KeyGeneration {
     public static PublicKey generatePublic(byte[] encodedKey) throws GeneralSecurityException {
         EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedKey);
         return getKeyFactory().generatePublic(keySpec);
+    }
+
+    public static PublicKey generatePublicFromCompressed(byte[] compressedKey) throws GeneralSecurityException {
+        ECNamedCurveParameterSpec params = ECNamedCurveTable.getParameterSpec("secp256k1");
+        KeyFactory fact = KeyFactory.getInstance("ECDSA", "BC");
+        ECCurve curve = params.getCurve();
+        java.security.spec.EllipticCurve ellipticCurve = EC5Util.convertCurve(curve, params.getSeed());
+        java.security.spec.ECPoint point = ECPointUtil.decodePoint(ellipticCurve, compressedKey);
+        java.security.spec.ECParameterSpec params2 = EC5Util.convertSpec(ellipticCurve, params);
+        java.security.spec.ECPublicKeySpec keySpec = new java.security.spec.ECPublicKeySpec(point,params2);
+        return fact.generatePublic(keySpec);
     }
 
     public static PrivateKey generatePrivate(byte[] encodedKey) throws GeneralSecurityException {

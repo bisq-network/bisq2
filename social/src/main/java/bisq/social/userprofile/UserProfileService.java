@@ -17,8 +17,9 @@
 
 package bisq.social.userprofile;
 
-
 import bisq.common.data.Pair;
+import bisq.common.encoding.Hex;
+import bisq.common.encoding.Base64;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
@@ -28,19 +29,27 @@ import bisq.network.p2p.node.transport.Transport;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.KeyGeneration;
 import bisq.security.KeyPairService;
+import bisq.security.DigestUtil;
+import bisq.security.SignatureUtil;
+
+import com.google.gson.JsonSyntaxException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
@@ -126,53 +135,63 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     }*/
 
     public CompletableFuture<Optional<Entitlement.Proof>> verifyProofOfBurn(Entitlement.Type type, String proofOfBurnTxId, String pubKeyHash) {
-        // todo impl
-        //  https://github.com/bisq-network/bisq2/issues/68
-        // 
-        String userAgent = "Bisq 2";
-        //todo add providers to Bisq.config
-        List<String> providers = List.of("https://bisq.mempool.emzy.de/api/tx/",
-                "https://mempool.space/bisq/api/tx/",
-                "https://mempool.bisq.services/bisq/api/tx/");
-        String url = CollectionUtil.getRandomElement(providers);
-        Set<Transport.Type> supportedTransportTypes = networkService.getSupportedTransportTypes();
-        Transport.Type transportType;
-        if (supportedTransportTypes.contains(Transport.Type.CLEAR)) {
-            transportType = Transport.Type.CLEAR;
-        } else if (supportedTransportTypes.contains(Transport.Type.TOR)) {
-            transportType = Transport.Type.TOR;
-        } else {
-            throw new RuntimeException("I2P is not supported yet");
-        }
-        BaseHttpClient httpClient = networkService.getHttpClient(url, userAgent, transportType);
         return supplyAsync(() -> {
             try {
-                String json = httpClient.get(proofOfBurnTxId, Optional.of(new Pair<>("User-Agent", userAgent)));
-                //todo parse json 
-                boolean isBsqTx = true; //todo
-                boolean isProofOfBurn = true; //todo
-                String opReturn = pubKeyHash; //todo
-                long minBurnAmount = getMinBurnAmount(type); //todo verify if tx burned amount is >= minBurnAmount
-                if (isBsqTx && isProofOfBurn && pubKeyHash.equals(opReturn)) {
-                    return Optional.of(new Entitlement.ProofOfBurnProof(proofOfBurnTxId));
-                } else {
+                BaseHttpClient httpClient = getBsqApiHttpClient();
+                String jsonTxLookup = httpClient.get("tx/" + proofOfBurnTxId, Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
+                if (!BsqTxValidator.initialSanityChecks(proofOfBurnTxId, jsonTxLookup)) {
                     return Optional.empty();
                 }
+                boolean isBsqTx = httpClient.getBaseUrl().matches(".*//bisq.*");
+                boolean isProofOfBurn = BsqTxValidator.isProofOfBurn(jsonTxLookup);
+                byte[] publicKeyHash = Hex.decode(pubKeyHash);
+                byte[] opReturn = BsqTxValidator.getOpReturnData(jsonTxLookup);
+                boolean opReturnMatches = Arrays.equals(publicKeyHash, opReturn);
+                if (isBsqTx && isProofOfBurn && opReturnMatches) {
+                    return Optional.of(new Entitlement.ProofOfBurnProof(proofOfBurnTxId));
+                }
+                log.warn("isBsqTx={}, isProofOfBurn={}, opReturnMatches={}, pkHash={}, opReturn={}",
+                        isBsqTx, isProofOfBurn, opReturnMatches, Hex.encode(publicKeyHash), Hex.encode(opReturn));
             } catch (IOException e) {
                 e.printStackTrace();
-                return Optional.empty();
             }
+            return Optional.empty();
         });
     }
-    // result for proof of burn tx id 3bbb2f597e714257d4a2f573e9ebfff4ab631277186a40875dbbf4140e90b748
-    // 
-                    /*
-                    {"txid":"3bbb2f597e714257d4a2f573e9ebfff4ab631277186a40875dbbf4140e90b748","version":1,"locktime":0,"vin":[{"txid":"706d78ae02013837ca1ea83b2ac7cae2481a1a3de2c0a1401e78d4736ac6505b","vout":1,"prevout":{"scriptpubkey":"76a91499898c703b6c37d9d753883056bca076e430293d88ac","scriptpubkey_asm":"OP_DUP OP_HASH160 OP_PUSHBYTES_20 99898c703b6c37d9d753883056bca076e430293d OP_EQUALVERIFY OP_CHECKSIG","scriptpubkey_type":"p2pkh","scriptpubkey_address":"1EzqAPpc7MqTncf6atHMMfCS4UBX8vwzvB","value":1133333},"scriptsig":"473044022030e579d8282f15743824ab44aa43baf44b865c8bc9b0098115c59cd44a4a6f8d02205b4152057fab450e23ab65918267ef7d0f84948621a122ed3093b58e8c2dcd2c01210285f726704fd47100df1921f47bda36d266d31a38040bde3b2ffc0639b069bda6","scriptsig_asm":"OP_PUSHBYTES_71 3044022030e579d8282f15743824ab44aa43baf44b865c8bc9b0098115c59cd44a4a6f8d02205b4152057fab450e23ab65918267ef7d0f84948621a122ed3093b58e8c2dcd2c01 OP_PUSHBYTES_33 0285f726704fd47100df1921f47bda36d266d31a38040bde3b2ffc0639b069bda6","is_coinbase":false,"sequence":4294967295},{"txid":"706d78ae02013837ca1ea83b2ac7cae2481a1a3de2c0a1401e78d4736ac6505b","vout":2,"prevout":{"scriptpubkey":"76a914754b3c2861c4a28fbf993bf938c70b1429cb58b188ac","scriptpubkey_asm":"OP_DUP OP_HASH160 OP_PUSHBYTES_20 754b3c2861c4a28fbf993bf938c70b1429cb58b1 OP_EQUALVERIFY OP_CHECKSIG","scriptpubkey_type":"p2pkh","scriptpubkey_address":"1BhCBs46WpMkG9vYxyma9eiT5BMPJrbEiK","value":52393250},"scriptsig":"483045022100ea0aa77e1e58005996c7c62f08b933271c33c0c0d8ff5b0e6fdc171338d0ec5f022023ea101475313227165d0a4791273baabea5e2690cce5467c78307ec9a9d31180121029f0e29b99d820af0c0cd96bebea8a330d95b041eb3049438eec1b6e26bb5e330","scriptsig_asm":"OP_PUSHBYTES_72 3045022100ea0aa77e1e58005996c7c62f08b933271c33c0c0d8ff5b0e6fdc171338d0ec5f022023ea101475313227165d0a4791273baabea5e2690cce5467c78307ec9a9d311801 OP_PUSHBYTES_33 029f0e29b99d820af0c0cd96bebea8a330d95b041eb3049438eec1b6e26bb5e330","is_coinbase":false,"sequence":4294967295}],"vout":[{"scriptpubkey":"76a914926ed5b7088bfb50bf2a28ee782f92c76f1190fe88ac","scriptpubkey_asm":"OP_DUP OP_HASH160 OP_PUSHBYTES_20 926ed5b7088bfb50bf2a28ee782f92c76f1190fe OP_EQUALVERIFY OP_CHECKSIG","scriptpubkey_type":"p2pkh","scriptpubkey_address":"1EMGRwrmJ5EN95H5aXkjr9fG3HjnPAuM2A","value":1132333},{"scriptpubkey":"76a9140e54b44d63fa16782f11c2fe9ff580d3718d183a88ac","scriptpubkey_asm":"OP_DUP OP_HASH160 OP_PUSHBYTES_20 0e54b44d63fa16782f11c2fe9ff580d3718d183a OP_EQUALVERIFY OP_CHECKSIG","scriptpubkey_type":"p2pkh","scriptpubkey_address":"12Jmw3YwGCn83uZBzKSb5jnJWxcfaK2FnX","value":52390190},{"scriptpubkey":"6a161701544b4337cd600cad892f12383525087bebc8b591","scriptpubkey_asm":"OP_RETURN OP_PUSHBYTES_22 1701544b4337cd600cad892f12383525087bebc8b591","scriptpubkey_type":"op_return","value":0}],"size":406,"weight":1624,"fee":4060,"status":{"confirmed":true,"block_height":613546,"block_hash":"0000000000000000000496cd14e563bb739f09da09ffe42297e35a3be133383c","block_time":1579438021}}
-                     */
 
-    public CompletableFuture<Optional<Entitlement.Proof>> verifyBondedRole(String txId, String signature, PublicKey publicKey) {
-        //todo
-        return CompletableFuture.completedFuture(Optional.of(new Entitlement.BondedRoleProof(txId, signature)));
+    public CompletableFuture<Optional<Entitlement.Proof>> verifyBondedRole(String txId, String signature, PublicKey identityPublicKey) {
+        // inputs: txid, signature from Bisq1
+        // process: get txinfo, grab pubkey from 1st output
+        // verify provided signature matches with pubkey from 1st output and hash of provided identity pubkey
+        return supplyAsync(() -> {
+            try {
+                BaseHttpClient httpClientBsq = getBsqApiHttpClient();
+                BaseHttpClient httpClientBtc = getBtcApiHttpClient();
+                String jsonBsqTx = httpClientBsq.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClientBsq.userAgent)));
+                String jsonBtcTx = httpClientBtc.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClientBtc.userAgent)));
+                checkArgument(BsqTxValidator.initialSanityChecks(txId, jsonBsqTx), "bsq tx sanity checks");
+                checkArgument(BtcTxValidator.initialSanityChecks(txId, jsonBtcTx), "btc tx sanity checks");
+                checkArgument(BsqTxValidator.isBsqTx(httpClientBsq.getBaseUrl(), txId, jsonBsqTx), "isBsqTx");
+                checkArgument(BsqTxValidator.isLockup(jsonBsqTx), "is lockup transaction");
+                String identityKeyHash = Hex.encode(DigestUtil.hash(identityPublicKey.getEncoded()));
+                String signingPubkeyTxt = BtcTxValidator.getFirstInputPubkey(jsonBtcTx);
+                PublicKey signingPubKey = KeyGeneration.generatePublicFromCompressed(Hex.decode(signingPubkeyTxt));
+                boolean signatureMatches = SignatureUtil.verify(Hex.decode(identityKeyHash), Base64.decode(signature), signingPubKey);
+                checkArgument(signatureMatches, "signature");
+                return Optional.of(new Entitlement.BondedRoleProof(txId, signature));
+            } catch (IllegalArgumentException e) {
+                log.warn("check failed: {}", e.getMessage(), e);
+            } catch (IOException e) {
+                log.warn("mempool query failed:", e);
+            } catch (GeneralSecurityException e) {
+                log.warn("signature validation failed:", e);
+            } catch (JsonSyntaxException e) {
+                log.warn("json decoding failed:", e);
+            } catch (NullPointerException e) {
+                log.error("unexpected failure:", e);
+            }
+            return Optional.empty();
+        });
     }
 
     public CompletableFuture<Optional<Entitlement.Proof>> verifyModerator(String invitationCode, PublicKey publicKey) {
@@ -197,4 +216,49 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
             default -> 0;
         };
     }
+
+    private BaseHttpClient getBsqApiHttpClient() {
+        String userAgent = "Bisq 2";
+        //todo add providers to Bisq.config
+        List<String> providers = List.of(   // note the BSQ urls are different than the BTC urls
+                "https://bisq.mempool.emzy.de/bisq/api/",
+                "https://bisq.markets/bisq/api/",
+                "https://markets.bisq.services/bisq/api/");
+        String url = CollectionUtil.getRandomElement(providers);
+        Set<Transport.Type> supportedTransportTypes = networkService.getSupportedTransportTypes();
+        Transport.Type transportType;
+        if (supportedTransportTypes.contains(Transport.Type.CLEAR)) {
+            transportType = Transport.Type.CLEAR;
+        } else if (supportedTransportTypes.contains(Transport.Type.TOR)) {
+            transportType = Transport.Type.TOR;
+        } else {
+            throw new RuntimeException("I2P is not supported yet");
+        }
+        BaseHttpClient httpClient = networkService.getHttpClient(url, userAgent, transportType);
+        return httpClient;
+    }
+
+    private BaseHttpClient getBtcApiHttpClient() {
+        String userAgent = "Bisq 2";
+        //todo add providers to Bisq.config
+        List<String> providers = List.of(   // note the BSQ urls are different than the BTC urls
+                "https://mempool.emzy.de/api/",
+                "https://mempool.space/api/",
+                "https://markets.bisq.services/api/");
+        String url = CollectionUtil.getRandomElement(providers);
+        Set<Transport.Type> supportedTransportTypes = networkService.getSupportedTransportTypes();
+        Transport.Type transportType;
+        if (supportedTransportTypes.contains(Transport.Type.CLEAR)) {
+            transportType = Transport.Type.CLEAR;
+        } else if (supportedTransportTypes.contains(Transport.Type.TOR)) {
+            transportType = Transport.Type.TOR;
+        } else {
+            throw new RuntimeException("I2P is not supported yet");
+        }
+        BaseHttpClient httpClient = networkService.getHttpClient(url, userAgent, transportType);
+        return httpClient;
+    }
+
+
+
 }

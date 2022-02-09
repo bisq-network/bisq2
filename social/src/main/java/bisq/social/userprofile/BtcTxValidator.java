@@ -1,0 +1,82 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.social.userprofile;
+
+import bisq.common.data.Pair;
+import bisq.common.encoding.Hex;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
+
+import lombok.extern.slf4j.Slf4j;
+
+import java.security.PublicKey;
+
+@Slf4j
+public class BtcTxValidator {
+
+    public static boolean initialSanityChecks(String txId, String jsonTxt) {
+        if (jsonTxt == null || jsonTxt.length() == 0) {
+            return false;
+        }
+        JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
+        // there should always be "txid" string element at the top level
+        if (json.get("txid") == null) {
+            return false;
+        }
+        // txid should match what we requested
+        if (!txId.equals(json.get("txid").getAsString())) {
+            return false;
+        }
+        return true;
+    }
+
+    public static String getFirstInputPubkey(String jsonTxt) {
+        try {
+            Pair<JsonArray, JsonArray> vinAndVout = getVinAndVout(jsonTxt);
+            JsonArray vinArray = vinAndVout.first();
+            for (JsonElement x : vinArray) {
+                JsonObject vin = x.getAsJsonObject();
+                JsonArray witnesses = vin.getAsJsonArray("witness");
+                if (witnesses != null) {
+                    JsonElement witnessPubKey = witnesses.get(1);
+                    String pubKey = witnessPubKey.getAsString();
+                    return pubKey;
+                }
+            }
+        } catch (JsonSyntaxException e) {
+            log.error("json error:", e);
+        }
+        throw new JsonSyntaxException("could not find pubkey");
+    }
+
+    private static Pair<JsonArray, JsonArray> getVinAndVout(String jsonTxt) throws JsonSyntaxException {
+        JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
+        if (json.get("vin") == null || json.get("vout") == null) {
+            throw new JsonSyntaxException("missing vin/vout");
+        }
+        JsonArray jsonVin = json.get("vin").getAsJsonArray();
+        JsonArray jsonVout = json.get("vout").getAsJsonArray();
+        if (jsonVin == null || jsonVout == null || jsonVin.size() < 1 || jsonVout.size() < 1) {
+            throw new JsonSyntaxException("not enough vins/vouts");
+        }
+        return new Pair<>(jsonVin, jsonVout);
+    }
+}
