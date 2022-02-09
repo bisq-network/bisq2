@@ -56,7 +56,8 @@ public class WalletBalanceComponent {
         private final ObjectProperty<Coin> balanceAsCoinProperty = new SimpleObjectProperty<>(Coin.of(0, "BTC"));
         private final ObservableValue<String> formattedBalanceProperty = Bindings.createStringBinding(
                 () -> Res.get("wallet.balance.box",
-                        AmountFormatter.formatAmountWithCode(balanceAsCoinProperty.get())));
+                        AmountFormatter.formatAmountWithCode(balanceAsCoinProperty.get())),
+                balanceAsCoinProperty);
     }
 
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
