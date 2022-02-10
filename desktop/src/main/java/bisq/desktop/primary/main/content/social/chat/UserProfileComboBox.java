@@ -79,13 +79,15 @@ public class UserProfileComboBox {
 
         @Override
         public void onViewDetached() {
-            selectedUserProfilePin.unbind();
+            if (selectedUserProfilePin != null) {
+                selectedUserProfilePin.unbind();
+            }
             userProfilesPin.unbind();
         }
 
         private void onSelected(ListItem selectedItem) {
             if (selectedItem != null) {
-                  userProfileService.selectUserProfile(selectedItem.userProfile);
+                userProfileService.selectUserProfile(selectedItem.userProfile);
             }
         }
     }

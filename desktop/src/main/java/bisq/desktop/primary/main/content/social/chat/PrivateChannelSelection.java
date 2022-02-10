@@ -21,14 +21,13 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
-import bisq.social.chat.Channel;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.PrivateChannel;
-import bisq.social.chat.PublicChannel;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.Pane;
@@ -112,6 +111,8 @@ public class PrivateChannelSelection {
             root.setSpacing(10);
 
             BisqLabel headline = new BisqLabel(Res.get("social.privateChannels"));
+            headline.setPadding(new Insets(0, 0, 0, 10));
+            headline.setStyle("-fx-text-fill: -bs-color-green-5; -fx-font-size: 1.4em");
 
             listView = new ListView<>();
             listView.setItems(model.channels);

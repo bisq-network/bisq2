@@ -85,8 +85,10 @@ public class PriceInput {
                 model.marketString.set(newValue.toString());
                 model.description.set(Res.get("createOffer.price.fix.description.buy", newValue.baseCurrencyCode()));
             }
-            model.fixPrice.set(null);
-            setFixPriceFromMarketPrice();
+            if (model.isCreateOffer) {
+                model.fixPrice.set(null);
+                setFixPriceFromMarketPrice();
+            }
         }
 
         @Override
@@ -222,6 +224,7 @@ public class PriceInput {
             marketLabel.textProperty().bind(model.marketString);
             descriptionLabel.textProperty().bind(model.description);
             model.fixPrice.addListener(fixPriceListener);
+            textInput.setText(model.fixPrice.get() == null ? "" : QuoteFormatter.format(model.fixPrice.get()));
         }
 
         @Override
