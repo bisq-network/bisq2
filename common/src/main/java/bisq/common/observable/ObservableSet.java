@@ -25,8 +25,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
-    private record Observer<M, L>(Collection<L> collection, 
-                                  Function<M, L> mapFunction, 
+    private record Observer<M, L>(Collection<L> collection,
+                                  Function<M, L> mapFunction,
                                   Consumer<Runnable> executor) {
 
         public void add(M element) {
@@ -56,7 +56,7 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
         }
     }
 
-    private final Set<Observer<T, ?>> observers = new CopyOnWriteArraySet<>();
+    private transient Set<Observer<T, ?>> observers = new CopyOnWriteArraySet<>();
 
     public ObservableSet() {
     }
@@ -65,19 +65,26 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
         addAll(values);
     }
 
+    private Set<Observer<T, ?>> getObservers() {
+        if (observers == null) {
+            observers = new CopyOnWriteArraySet<>();
+        }
+        return observers;
+    }
+
     public <L> Pin addObserver(Collection<L> collection, Function<T, L> mapFunction, Consumer<Runnable> executor) {
         Observer<T, L> observer = new Observer<>(collection, mapFunction, executor);
         observer.clear();
         observer.addAll(this);
-        observers.add(observer);
-        return () -> observers.remove(observer);
+        getObservers().add(observer);
+        return () -> getObservers().remove(observer);
     }
 
     @Override
     public boolean add(T element) {
         boolean result = super.add(element);
         if (result) {
-            observers.forEach(observer -> observer.add(element));
+            getObservers().forEach(observer -> observer.add(element));
         }
         return result;
     }
@@ -85,7 +92,7 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     public boolean addAll(Collection<? extends T> values) {
         boolean result = super.addAll(values);
         if (result) {
-            observers.forEach(observer -> observer.addAll(values));
+            getObservers().forEach(observer -> observer.addAll(values));
         }
         return result;
     }
@@ -94,7 +101,7 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     public boolean remove(Object element) {
         boolean result = super.remove(element);
         if (result) {
-            observers.forEach(observer -> observer.remove(element));
+            getObservers().forEach(observer -> observer.remove(element));
         }
         return result;
     }
@@ -103,7 +110,7 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     public boolean removeAll(Collection<?> values) {
         boolean result = super.removeAll(values);
         if (result) {
-            observers.forEach(observer -> observer.removeAll(values));
+            getObservers().forEach(observer -> observer.removeAll(values));
         }
         return result;
     }
@@ -111,6 +118,6 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     @Override
     public void clear() {
         super.clear();
-        observers.forEach(Observer::clear);
+        getObservers().forEach(Observer::clear);
     }
 }

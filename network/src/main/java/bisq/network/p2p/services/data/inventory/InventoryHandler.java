@@ -84,7 +84,7 @@ class InventoryHandler implements Connection.Listener {
                         });
                 log.info("Node {} received GetInventoryResponse from {} with inventory {} and nonce {}. Connection={}",
                         node, connection.getPeerAddress(), response.inventory(), response.requestNonce(), connection.getId());
-                log.error("\n##########################################################################################\n" +
+                log.info("\n##########################################################################################\n" +
                         "## INVENTORY\n" +
                         "##########################################################################################\n" +
                         map.entrySet().stream().map(e ->  e.getValue() + " " + e.getKey() + "(s)").collect(Collectors.joining("\n")) +

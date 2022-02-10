@@ -41,7 +41,7 @@ public class SocialController extends TabController {
         super(NavigationTarget.SOCIAL);
 
         this.applicationService = applicationService;
-        model = new SocialModel(applicationService);
+        model = new SocialModel();
         view = new SocialView(model, this);
     }
 
@@ -51,7 +51,7 @@ public class SocialController extends TabController {
             case TRADE_INTENT -> {
                 return Optional.of(new TradeIntentController(applicationService));
             }
-            case HANGOUT -> {
+            case CHAT -> {
                 return Optional.of(new ChatController(applicationService));
             }
             case USER_PROFILE -> {

@@ -95,7 +95,7 @@ public class ConnectionListItem implements TableItem {
     private void updateRtt() {
         long rrt = Math.round(metrics.getAverageRtt());
         if (rrt > 0) {
-            rtt.set(TimeFormatter.formatTime(rrt));
+            rtt.set(TimeFormatter.formatDuration(rrt));
         }
     }
 

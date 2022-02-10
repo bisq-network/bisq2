@@ -62,11 +62,11 @@ public class PendingTradeListItem implements TableItem {
 
         String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
                 .map(SettlementSpec::settlementMethodName)
-                .map(settlementMethodName -> Res.get(settlementMethodName))
+                .map(Res::get)
                 .collect(Collectors.joining("\n"));
         String quoteSideSettlement = offer.getQuoteSideSettlementSpecs().stream()
                 .map(SettlementSpec::settlementMethodName)
-                .map(settlementMethodName -> Res.get(settlementMethodName))
+                .map(Res::get)
                 .collect(Collectors.joining("\n"));
 
         String baseCurrencyCode = offer.getMarket().baseCurrencyCode();

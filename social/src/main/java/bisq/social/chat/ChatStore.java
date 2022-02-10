@@ -17,28 +17,26 @@
 
 package bisq.social.chat;
 
+import bisq.common.observable.Observable;
+import bisq.common.observable.ObservableSet;
 import bisq.persistence.PersistableStore;
 import lombok.Getter;
-import lombok.Setter;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 public class ChatStore implements PersistableStore<ChatStore> {
 
     @Getter
-    private final Set<PrivateChannel> privateChannels = new CopyOnWriteArraySet<>();
+    private final ObservableSet<PrivateChannel> privateChannels = new ObservableSet<>();
     @Getter
-    private final Set<PublicChannel> publicChannels = new CopyOnWriteArraySet<>();
+    private final ObservableSet<PublicChannel> publicChannels = new ObservableSet<>();
     @Getter
     private final Map<String, String> userNameByDomainId = new HashMap<>(); //todo remove
-    @Nullable
-    @Setter
-    private Channel selectedChannel;
+    @Getter
+    private final Observable<Channel> selectedChannel = new Observable<>();
 
     public ChatStore() {
     }
@@ -57,7 +55,7 @@ public class ChatStore implements PersistableStore<ChatStore> {
     public void applyPersisted(ChatStore chatStore) {
         setAll(chatStore.privateChannels,
                 chatStore.publicChannels,
-                chatStore.selectedChannel,
+                chatStore.selectedChannel.get(),
                 chatStore.userNameByDomainId);
     }
 
@@ -65,7 +63,7 @@ public class ChatStore implements PersistableStore<ChatStore> {
     public ChatStore getClone() {
         return new ChatStore(privateChannels,
                 publicChannels,
-                selectedChannel,
+                selectedChannel.get(),
                 userNameByDomainId);
     }
 
@@ -77,13 +75,9 @@ public class ChatStore implements PersistableStore<ChatStore> {
         this.privateChannels.addAll(privateChannels);
         this.publicChannels.clear();
         this.publicChannels.addAll(publicChannels);
-        this.selectedChannel = selectedChannel;
+        this.selectedChannel.set(selectedChannel);
         this.userNameByDomainId.clear();
         this.userNameByDomainId.putAll(userNameByDomainId);
-    }
-
-    public Optional<Channel> getSelectedChannel() {
-        return Optional.ofNullable(selectedChannel);
     }
 
     public Optional<PrivateChannel> findPrivateChannel(String id) {
