@@ -64,7 +64,7 @@ public class BtcTxValidator {
                         return witnessPubKey;
                     }
                 }
-                JsonElement scriptsig = vin.getAsJsonObject("scriptsig");
+                JsonElement scriptsig = vin.get("scriptsig");
                 if (scriptsig != null) {
                     String scriptsigAsHex = scriptsig.getAsString();
                     if (scriptsigAsHex.length() >= PUBLIC_KEY_LENGTH * 2) {
