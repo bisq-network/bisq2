@@ -184,7 +184,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     private CompletableFuture<Boolean> createDefaultUserProfile() {
         String keyId = StringUtils.createUid();
         KeyPair keyPair = keyPairService.generateKeyPair();
-        String useName = "Satoshi";
+
+        String useName = CollectionUtil.getRandomElement(List.of("Satoshi Nakamoto", "Hal Finney", "Wei Dai", "Adam Back", "David Chaum", "Neal Koblitz", "Whitfield Diffie", "Adi Shamir", "Dan Boneh", "Daniel J. Bernstein", "Bruce Schneier", "Ralph Merkle", "Horst Feistel", "Claude Elwood Shannon", "John Nash", "Leonard Adleman", "Martin Hellman", "Ronald Rivest"));
         return createNewInitializedUserProfile(useName, keyId, keyPair, new HashSet<>())
                 .thenApply(userProfile -> true);
     }

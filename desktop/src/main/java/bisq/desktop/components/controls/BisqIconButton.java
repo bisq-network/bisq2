@@ -30,4 +30,9 @@ public class BisqIconButton extends BisqButton {
         icon = new ImageView();
         setGraphic(icon);
     }
+
+    public BisqIconButton(String iconId) {
+        this();
+        icon.setId(iconId);
+    }
 }

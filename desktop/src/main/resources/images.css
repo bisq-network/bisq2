@@ -17,7 +17,9 @@
 #logo-small {
     -fx-image: url("images/logo_small.png");
 }
-
+#chat-settings {
+    -fx-image: url("images/nav/settings.png");
+}
 
 /* unused....*/
 

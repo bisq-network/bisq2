@@ -29,7 +29,6 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
-import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.offer.options.ListingOption;
 import bisq.persistence.Persistence;
@@ -177,8 +176,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
     public CompletableFuture<BroadCastDataResult> addToNetwork(Offer offer) {
         return identityService.getOrCreateIdentity(offer.getId())
                 .thenCompose(identity -> {
-                    NetworkIdWithKeyPair nodeIdAndKeyPair = identity.getNodeIdAndKeyPair();
-                    return networkService.addData(offer, nodeIdAndKeyPair);
+                    return networkService.addData(offer, identity.getNodeIdAndKeyPair());
                 });
     }
 

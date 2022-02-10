@@ -17,16 +17,15 @@
 
 package bisq.social.chat;
 
+import bisq.common.observable.ObservableSet;
 import lombok.Getter;
 
 import java.io.Serializable;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 @Getter
 public abstract class Channel implements Serializable {
     protected final String id;
-    protected final Set<ChatMessage> chatMessages = new CopyOnWriteArraySet<>();
+    protected final ObservableSet<ChatMessage> chatMessages = new ObservableSet<>();
 
     public Channel(String id) {
         this.id = id;

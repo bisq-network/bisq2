@@ -126,6 +126,6 @@ public class TradeIntentController implements Controller/*, ChatService.Listener
     }
 
     private void onContactPeer(TradeIntentListItem item) {
-        Navigation.navigateTo(NavigationTarget.HANGOUT, item.getTradeIntent());
+        Navigation.navigateTo(NavigationTarget.CHAT, item.getTradeIntent());
     }
 }

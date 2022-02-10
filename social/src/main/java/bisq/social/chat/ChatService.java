@@ -23,6 +23,9 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -46,8 +49,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 @Getter
-public class ChatService implements PersistenceClient<ChatStore>, MessageListener {
-
+public class ChatService implements PersistenceClient<ChatStore>, MessageListener, DataService.Listener {
     public interface Listener {
         void onChannelAdded(Channel channel);
 
@@ -76,6 +78,18 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         this.userProfileService = userProfileService;
 
         networkService.addMessageListener(this);
+        networkService.addDataServiceListener(this);
+
+        addDummyChannels();
+    }
+
+    public void addDummyChannels() {
+        PublicChannel element = new PublicChannel("BTC-EUR Market", "BTC-EUR Market", null);
+        persistableStore.getPublicChannels().add(element);
+        persistableStore.getPublicChannels().add(new PublicChannel("BTC-USD Market", "BTC-USD Market", null));
+        persistableStore.getPublicChannels().add(new PublicChannel("Other Markets", "Other Markets", null));
+        persistableStore.getPublicChannels().add(new PublicChannel("Off-topic", "Off-topic", null));
+        persistableStore.getSelectedChannel().set(element); //todo
     }
 
 
@@ -86,6 +100,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     @Override
     public void onMessage(Message message) {
         if (message instanceof ChatMessage chatMessage) {
+            log.error("chatMessage " + chatMessage);
             String domainId = chatMessage.getChannelId();
             String userName = findUserName(domainId).orElse("Maker@" + StringUtils.truncate(domainId, 8));
             ChatIdentity chatIdentity = getOrCreateChatIdentity(userName, domainId);
@@ -97,6 +112,35 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         }
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // DataService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
+        if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
+            if (authenticatedPayload.getData() instanceof ChatMessage chatMessage) {
+                if (chatMessage.getChannelType() == ChannelType.PUBLIC) {
+                    persistableStore.getPublicChannels().stream()
+                            .filter(publicChannel -> publicChannel.getId().equals(chatMessage.getChannelId()))
+                            .findAny()
+                            .ifPresent(publicChannel -> {
+                                synchronized (persistableStore) {
+                                    publicChannel.addChatMessage(chatMessage);
+                                }
+                                persist();
+                                listeners.forEach(listener -> listener.onChatMessageAdded(publicChannel, chatMessage));
+                            });
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
+
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Channels
@@ -140,7 +184,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public void selectChannel(Channel channel) {
-        persistableStore.setSelectedChannel(channel);
+        persistableStore.getSelectedChannel().set(channel);
         persist();
         listeners.forEach(listener -> listener.onChannelSelected(channel));
     }

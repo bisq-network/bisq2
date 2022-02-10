@@ -41,7 +41,7 @@ What is missing is a way to manage the selection of identities. A user can defin
 - use one global identity (as it is in Bisq v1)  
 
 ### Desktop module
-The current UI prototype comes with a simple offer message board (Social/Trade Intent) and a chat (Social/Hangout).
+The current UI prototype comes with a create offer, offerbook, take offer, portfolio screens and a chat (Social).
 In Settings/Network there is information about the network (connections, nodes).
 
 Currently, one peer can publish an offer intent, and another peer can contact the maker peer and start a chat with them. The purpose here is mainly to test the network with more realistic use cases. It is not clear yet if this example use-case will get developed further for production or if it will be dropped.

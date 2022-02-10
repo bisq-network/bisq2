@@ -21,16 +21,23 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+
+import javax.annotation.Nullable;
 
 public class Layout {
     public static final Insets PADDING = new Insets(20);
     public static final double SPACING = 20;
 
-    public static void pinToAnchorPane(Node node, int top, int right, int bottom, int left) {
-        AnchorPane.setTopAnchor(node, (double) top);
-        AnchorPane.setRightAnchor(node, (double) right);
-        AnchorPane.setBottomAnchor(node, (double) bottom);
-        AnchorPane.setLeftAnchor(node, (double) left);
+    public static void pinToAnchorPane(Node node,
+                                       @Nullable Integer top,
+                                       @Nullable Integer right,
+                                       @Nullable Integer bottom,
+                                       @Nullable Integer left) {
+        if (top != null) AnchorPane.setTopAnchor(node, (double) top);
+        if (right != null) AnchorPane.setRightAnchor(node, (double) right);
+        if (bottom != null) AnchorPane.setBottomAnchor(node, (double) bottom);
+        if (left != null) AnchorPane.setLeftAnchor(node, (double) left);
     }
 
     public static HBox hBoxWith(Node... nodes) {
@@ -38,5 +45,12 @@ public class Layout {
         hBox.setSpacing(10);
         hBox.getChildren().addAll(nodes);
         return hBox;
+    }
+
+    public static VBox vBoxWith(Node... nodes) {
+        VBox vBox = new VBox();
+        vBox.setSpacing(10);
+        vBox.getChildren().addAll(nodes);
+        return vBox;
     }
 }

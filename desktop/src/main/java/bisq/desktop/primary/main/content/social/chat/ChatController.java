@@ -18,87 +18,74 @@
 package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.util.StringUtils;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.InitWithDataController;
-import bisq.desktop.primary.main.content.social.components.UserProfileDisplay;
-import bisq.identity.IdentityService;
+import bisq.desktop.common.view.Controller;
+import bisq.identity.Identity;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.social.chat.*;
-import bisq.social.intent.TradeIntent;
+import bisq.social.userprofile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
 import java.util.Date;
 
 import static bisq.social.chat.ChannelType.PRIVATE;
-import static com.google.common.base.Preconditions.checkArgument;
+import static bisq.social.chat.ChannelType.PUBLIC;
 
 @Slf4j
-public class ChatController implements InitWithDataController<TradeIntent>, ChatService.Listener {
+public class ChatController implements Controller {
     private final ChatService chatService;
-    private final NetworkService networkService;
-    private final IdentityService identityService;
     private final ChatModel model;
     @Getter
     private final ChatView view;
+    private final UserProfileService userProfileService;
+    private final NetworkService networkService;
+    private Pin chatMessagesPin;
+    private Pin selectedChannelPin;
 
     public ChatController(DefaultApplicationService applicationService) {
-        networkService = applicationService.getNetworkService();
-        identityService = applicationService.getIdentityService();
         chatService = applicationService.getChatService();
+        userProfileService = applicationService.getUserProfileService();
+        networkService = applicationService.getNetworkService();
 
-        UserProfileDisplay  userProfileDisplay = new UserProfileDisplay(applicationService.getUserProfileService());
-        model = new ChatModel(applicationService);
-        view = new ChatView(model, this, userProfileDisplay.getRoot());
-    }
+        UserProfileComboBox userProfileDisplay = new UserProfileComboBox(userProfileService);
+        PublicChannelSelection publicChannelSelection = new PublicChannelSelection(chatService);
+        PrivateChannelSelection privateChannelSelection = new PrivateChannelSelection(chatService);
+        model = new ChatModel();
+        view = new ChatView(model,
+                this,
+                userProfileDisplay.getComboBox(),
+                publicChannelSelection.getRoot(),
+                privateChannelSelection.getRoot());
 
-    @Override
-    public void initWithData(TradeIntent tradeIntent) {
-        // todo add tradeIntent
-        String tradeIntentId = tradeIntent.id();
-        ChatPeer chatPeer = tradeIntent.maker();
-        String userName = chatService.findUserName(tradeIntentId).orElse("Taker@" + StringUtils.truncate(tradeIntentId, 8));
-        ChatIdentity chatIdentity = chatService.getOrCreateChatIdentity(userName, tradeIntentId);
-        PrivateChannel privateChannel = chatService.getOrCreatePrivateChannel(tradeIntentId, chatPeer, chatIdentity);
-        model.addChannel(privateChannel);
-        chatService.selectChannel(privateChannel);
+        model.getSortedChatMessages().setComparator(Comparator.naturalOrder());
     }
 
     @Override
     public void onViewAttached() {
-        chatService.addListener(this);
+        chatService.addDummyChannels();
 
-        model.setAllChannels(chatService.getPersistableStore().getPrivateChannels());
-        chatService.getPersistableStore().getSelectedChannel().ifPresent(model::selectChannel);
+        selectedChannelPin = chatService.getPersistableStore().getSelectedChannel().addObserver(selected -> {
+            log.error("selected " + selected);
+            if (chatMessagesPin != null) {
+                chatMessagesPin.unbind();
+            }
+            chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem>bind(model.chatMessages)
+                    .map(ChatMessageListItem::new)
+                    .to(selected.getChatMessages());
+        });
     }
 
     @Override
     public void onViewDetached() {
-        chatService.removeListener(this);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // ChatService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onChannelAdded(Channel channel) {
-        UIThread.run(() -> model.addChannel(channel));
-    }
-
-    @Override
-    public void onChannelSelected(Channel channel) {
-        UIThread.run(() -> model.selectChannel(channel));
-    }
-
-    @Override
-    public void onChatMessageAdded(Channel channel, ChatMessage newChatMessage) {
-        UIThread.run(() -> model.addChatMessage(channel, newChatMessage));
+        selectedChannelPin.unbind();
+        chatMessagesPin.unbind();
     }
 
 
@@ -106,24 +93,38 @@ public class ChatController implements InitWithDataController<TradeIntent>, Chat
     // UI
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onSendMessage(String text) {
-        Channel channel = model.getSelectedChannel().get();
-        ChatIdentity chatIdentity = chatService.findChatIdentity(channel.getId())
-                .orElseThrow(() -> new IllegalArgumentException("optionalChatIdentity must be present"));
-        String channelId = channel.getId();
+    void onSendMessage(String text) {
+        Channel channel = chatService.getPersistableStore().getSelectedChannel().get();
+        Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
+        if (channel instanceof PublicChannel publicChannel) {
+            sendMessageToPublicChannel(text, publicChannel, identity);
+        } else if (channel instanceof PrivateChannel privateChannel) {
+            sendMessageToPrivateChannel(text, privateChannel, identity);
+        }
+    }
+
+    private void sendMessageToPublicChannel(String text, PublicChannel publicChannel, Identity identity) {
+        log.error("sendMessageToPublicChannel");
+        networkService.addData(new ChatMessage(publicChannel.getId(),
+                        text,
+                        identity.domainId(),
+                        identity.networkId(),
+                        new Date().getTime(),
+                        PUBLIC),
+                identity.getNodeIdAndKeyPair());
+    }
+
+    private void sendMessageToPrivateChannel(String text, PrivateChannel privateChannel, Identity identity) {
+        String channelId = privateChannel.getId();
         ChatMessage chatMessage = new ChatMessage(channelId,
                 text,
-                chatIdentity.userName(),
-                chatIdentity.identity().networkId(),
+                identity.domainId(),
+                identity.networkId(),
                 new Date().getTime(),
                 PRIVATE);
-        chatService.addChatMessage(chatMessage, channel);
-
-        checkArgument(channel instanceof PrivateChannel, "channel must be PrivateChannel");
-        PrivateChannel privateChannel = (PrivateChannel) channel;
+        chatService.addChatMessage(chatMessage, privateChannel);
         NetworkId receiverNetworkId = privateChannel.getChatPeer().networkId();
-
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = chatIdentity.identity().getNodeIdAndKeyPair();
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = identity.getNodeIdAndKeyPair();
         networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair)
                 .whenComplete((resultMap, throwable2) -> {
                     if (throwable2 != null) {
@@ -144,7 +145,8 @@ public class ChatController implements InitWithDataController<TradeIntent>, Chat
                 });
     }
 
-    public void onSelectChannel(Channel channel) {
-        chatService.selectChannel(channel);
+    public void onToggleSettings() {
+        boolean sideBarVisible = !model.getSideBarVisible().get();
+        model.getSideBarVisible().set(sideBarVisible);
     }
 }

@@ -17,9 +17,11 @@
 
 package bisq.social.chat;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
+@EqualsAndHashCode
 public class PrivateChannel extends Channel {
     private final ChatPeer chatPeer;
     private final ChatIdentity chatIdentity;

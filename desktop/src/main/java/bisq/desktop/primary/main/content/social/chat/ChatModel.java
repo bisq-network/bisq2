@@ -17,31 +17,19 @@
 
 package bisq.desktop.primary.main.content.social.chat;
 
-import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
-import bisq.i18n.Res;
-import bisq.identity.IdentityService;
-import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
-import bisq.presentation.formatters.DateFormatter;
-import bisq.security.KeyPairService;
-import bisq.social.chat.Channel;
-import bisq.social.chat.ChatMessage;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.PrivateChannel;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,57 +37,19 @@ import java.util.Map;
 @Getter
 public class ChatModel implements Model {
 
-
-    public enum PublicChannelId implements Serializable {
-        BTC_EUR,
-        BTC_USD,
-        ANY
-    }
-
-    private final NetworkService networkService;
-    private final IdentityService identityService;
-    private final KeyPairService keyPairService;
-    private final ChatService chatService;
-
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
     private final StringProperty selectedChannelAsString = new SimpleStringProperty("");
 
-    private final ObservableList<Channel> channels = FXCollections.observableArrayList();
-    public final ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
 
-    public ChatModel(DefaultApplicationService applicationService) {
-        networkService = applicationService.getNetworkService();
-        identityService = applicationService.getIdentityService();
-        keyPairService = applicationService.getKeyPairService();
-        chatService = applicationService.getChatService();
+    private final BooleanProperty sideBarVisible = new SimpleBooleanProperty();
+    private final double defaultLeftDividerPosition = 0.3;
+    public final ObservableList<ChatMessageListItem> chatMessages = FXCollections.observableArrayList();
+    public final SortedList<ChatMessageListItem> sortedChatMessages = new SortedList<>(chatMessages);
+
+    public ChatModel( ) {
     }
-
-    public void setAllChannels(Collection<PrivateChannel> privateChannels) {
-        this.channels.setAll(privateChannels);
-    }
-
-    public void addChannel(Channel channel) {
-        if (!channels.contains(channel)) {
-            channels.add(channel);
-        }
-    }
-
-    void selectChannel(Channel channel) {
-        selectedChannel.set(channel);
-        setAllChatMessages(channel);
-    }
-
-    void setAllChatMessages(Channel channel) {
-        chatMessagesByChannelId.putIfAbsent(channel.getId(), new SimpleStringProperty(""));
-        StringProperty chatMessages = chatMessagesByChannelId.get(channel.getId());
-        chatMessages.set("");
-        channel.getChatMessages().forEach(chatMessage -> addChatMessage(channel, chatMessage));
-        if (selectedChannel.get() != null && selectedChannel.get().getId().equals(channel.getId())) {
-            selectedChatMessages.set(chatMessages.get());
-        }
-    }
-
+/*
     void addChatMessage(Channel channel, ChatMessage chatMessage) {
         chatMessagesByChannelId.putIfAbsent(channel.getId(), new SimpleStringProperty(""));
         StringProperty chatMessages = chatMessagesByChannelId.get(channel.getId());
@@ -110,7 +60,7 @@ public class ChatModel implements Model {
         chatMessages.set(previous +
                 "[" + DateFormatter.formatDateTime(new Date(chatMessage.getDate())) +
                 "] [" +
-                chatMessage.getSenderUserName().substring(0,12) +
+                chatMessage.getSenderUserName().substring(0, 12) +
                 "] " +
                 chatMessage.getText());
 
@@ -121,11 +71,11 @@ public class ChatModel implements Model {
 
     String getDisplayString(PublicChannelId publicChannelId) {
         return switch (publicChannelId) {
-            case BTC_EUR -> Res.get("social.hangout.btcEurMarket");
-            case BTC_USD -> Res.get("social.hangout.btcUsdMarket");
-            case ANY -> Res.get("social.hangout.anyMarket");
+            case BTC_EUR -> Res.get("social.chat.btcEurMarket");
+            case BTC_USD -> Res.get("social.chat.btcUsdMarket");
+            case ANY -> Res.get("social.chat.anyMarket");
         };
-    }
+    }*/
 
     void setSendMessageResult(String channelId, ConfidentialMessageService.Result result, BroadcastResult broadcastResult) {
         log.info("Send message result for channelId {}: {}",

@@ -17,8 +17,14 @@
 
 package bisq.presentation.formatters;
 
+import bisq.common.locale.LocaleRepository;
+
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
 public class TimeFormatter {
-    public static String formatTime(long duration) {
+    public static String formatDuration(long duration) {
         //todo
         if (duration < 1000) {
             return duration + " ms";
@@ -30,6 +36,26 @@ public class TimeFormatter {
             } else {
                 return sec + " sec, " + ms + " ms";
             }
+        }
+    }
+
+    public static String formatTime(Date date) {
+        return formatTime(date, true);
+    }
+
+    public static String formatTime(Date date, boolean useLocaleAndLocalTimezone) {
+        DateFormat timeInstance = DateFormat.getTimeInstance(DateFormat.SHORT, LocaleRepository.getDefaultLocale());
+        if (!useLocaleAndLocalTimezone) {
+            timeInstance.setTimeZone(TimeZone.getTimeZone("UTC"));
+        }
+        return formatTime(date, timeInstance);
+    }
+
+    public static String formatTime(Date date, DateFormat timeFormatter) {
+        if (date != null) {
+            return timeFormatter.format(date);
+        } else {
+            return "";
         }
     }
 }

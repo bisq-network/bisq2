@@ -56,7 +56,7 @@ public enum NavigationTarget {
 
     SOCIAL(CONTENT),
     TRADE_INTENT(SOCIAL),
-    HANGOUT(SOCIAL),
+    CHAT(SOCIAL),
     USER_PROFILE(SOCIAL),
 
     MARKETS(CONTENT),
