@@ -30,7 +30,7 @@ import java.util.Optional;
 @Slf4j
 public abstract class BaseHttpClient implements HttpClient {
     public final String baseUrl;
-    protected final String userAgent;
+    public final String userAgent;
     protected final String uid;
 
     public boolean hasPendingRequest;
