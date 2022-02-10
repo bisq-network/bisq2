@@ -102,7 +102,8 @@ public class DefaultApplicationService extends ServiceProvider {
 
         accountService = new AccountService(persistenceService);
 
-        userProfileService = new UserProfileService(persistenceService, keyPairService, identityService, networkService);
+        UserProfileService.Config userProfileServiceConfig = UserProfileService.Config.from(getConfig("bisq.userProfileServiceConfig"));
+        userProfileService = new UserProfileService(persistenceService, userProfileServiceConfig, keyPairService, identityService, networkService);
         chatService = new ChatService(persistenceService, identityService, networkService,userProfileService);
         tradeIntentListingsService = new TradeIntentListingsService(networkService);
         tradeIntentService = new TradeIntentService(networkService, identityService, tradeIntentListingsService, chatService);

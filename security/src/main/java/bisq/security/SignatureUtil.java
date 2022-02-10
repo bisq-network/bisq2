@@ -17,8 +17,14 @@
 
 package bisq.security;
 
+import bisq.common.encoding.Hex;
+import bisq.common.encoding.Base64;
+
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 
 public class SignatureUtil {
@@ -42,5 +48,36 @@ public class SignatureUtil {
         sig.initVerify(publicKey);
         sig.update(message);
         return sig.verify(signature);
+    }
+
+    // input: a base-64 bitcoin sig
+    // output a DER signature
+    public static byte [] bitcoinSigToDer(String bitcoinSig) {
+        String sigHex = Hex.encode(Base64.decode(bitcoinSig));
+        String r = Integer.parseInt(sigHex.substring(2, 4), 16 ) > 127 ?
+                "00" + sigHex.substring(2, 66) : sigHex.substring(2, 66);
+        String s = Integer.parseInt(sigHex.substring(66, 68), 16 ) > 127 ?
+                "00" + sigHex.substring(66) : sigHex.substring(66);
+        String result = "02" + String.format("%02X", r.length() / 2) + r +
+                "02" + String.format("%02X", s.length() / 2) + s;
+        result = "30" + String.format("%02X", result.length() / 2) + result;
+        return Hex.decode(result);
+    }
+
+    private static final String BITCOIN_SIGNED_MESSAGE_HEADER = "Bitcoin Signed Message:\n";
+    private static final byte[] BITCOIN_SIGNED_MESSAGE_HEADER_BYTES = BITCOIN_SIGNED_MESSAGE_HEADER.getBytes(StandardCharsets.UTF_8);
+
+    public static byte[] formatMessageForSigning(String message) {
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            bos.write(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES.length);
+            bos.write(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES);
+            byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
+            bos.write(messageBytes.length);
+            bos.write(messageBytes);
+            return DigestUtil.sha256(DigestUtil.sha256(bos.toByteArray()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);  // Cannot happen.
+        }
     }
 }

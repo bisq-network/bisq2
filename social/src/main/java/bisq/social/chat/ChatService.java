@@ -109,7 +109,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 .map(entitlement -> (Entitlement.BondedRoleProof) entitlement.proof())
                 .map(bondedRoleProof -> userProfileService.verifyBondedRole(bondedRoleProof.txId(),
                         bondedRoleProof.signature(),
-                        userProfile.identity().pubKey().publicKey()))
+                        userProfile.identity().id()))
                 .map(future -> future.thenApply(optionalProof -> optionalProof.map(e -> {
                             PublicChannel publicChannel = new PublicChannel(StringUtils.createUid(), channelName, userProfile);
                             persistableStore.getPublicChannels().add(publicChannel);

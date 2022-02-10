@@ -27,6 +27,8 @@ import com.google.gson.JsonSyntaxException;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
 public class BsqTxValidator {
 
@@ -68,21 +70,29 @@ public class BsqTxValidator {
         return txType.getAsString().equalsIgnoreCase("LOCKUP");
     }
 
-    public static byte[] getOpReturnData(String jsonTxt) {
+    public static long getBurntAmount(String jsonTxt) {
+        JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
+        JsonElement burntFee = json.get("burntFee");
+        if (burntFee == null) {
+            return 0;   // no json element, assume zero burnt amount
+        }
+        return burntFee.getAsLong();
+    }
+
+    public static Optional<String> getOpReturnData(String jsonTxt) {
         try {
             Pair<JsonArray, JsonArray> vinAndVout = getVinAndVout(jsonTxt);
             JsonArray voutArray = vinAndVout.second();
             for (JsonElement x : voutArray) {
                 JsonObject y = x.getAsJsonObject();
                 if (y.get("txOutputType").getAsString().matches(".*OP_RETURN.*")) {
-                    String opReturnHexString = y.get("opReturn").getAsString();
-                    return Hex.decode(opReturnHexString);
+                    return Optional.of(y.get("opReturn").getAsString());
                 }
             }
         } catch (JsonSyntaxException e) {
             log.error("json error:", e);
         }
-        return null;
+        return Optional.empty();
     }
 
     private static Pair<JsonArray, JsonArray> getVinAndVout(String jsonTxt) throws JsonSyntaxException {

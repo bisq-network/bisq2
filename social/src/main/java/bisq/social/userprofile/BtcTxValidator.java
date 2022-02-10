@@ -32,6 +32,8 @@ import java.security.PublicKey;
 @Slf4j
 public class BtcTxValidator {
 
+    private static int PUBLIC_KEY_LENGTH = 33;
+
     public static boolean initialSanityChecks(String txId, String jsonTxt) {
         if (jsonTxt == null || jsonTxt.length() == 0) {
             return false;
@@ -48,23 +50,32 @@ public class BtcTxValidator {
         return true;
     }
 
-    public static String getFirstInputPubkey(String jsonTxt) {
+    public static String getFirstInputPubKey(String jsonTxt) {
         try {
             Pair<JsonArray, JsonArray> vinAndVout = getVinAndVout(jsonTxt);
             JsonArray vinArray = vinAndVout.first();
             for (JsonElement x : vinArray) {
                 JsonObject vin = x.getAsJsonObject();
+                // pubKey in witness or scriptsig (legacy or segwit txs)
                 JsonArray witnesses = vin.getAsJsonArray("witness");
                 if (witnesses != null) {
-                    JsonElement witnessPubKey = witnesses.get(1);
-                    String pubKey = witnessPubKey.getAsString();
-                    return pubKey;
+                    String witnessPubKey = witnesses.get(1).getAsString();
+                    if (witnessPubKey.length() >= PUBLIC_KEY_LENGTH * 2) {
+                        return witnessPubKey;
+                    }
+                }
+                JsonElement scriptsig = vin.getAsJsonObject("scriptsig");
+                if (scriptsig != null) {
+                    String scriptsigAsHex = scriptsig.getAsString();
+                    if (scriptsigAsHex.length() >= PUBLIC_KEY_LENGTH * 2) {
+                        return scriptsigAsHex.substring(scriptsigAsHex.length() - PUBLIC_KEY_LENGTH * 2);
+                    }
                 }
             }
         } catch (JsonSyntaxException e) {
             log.error("json error:", e);
         }
-        throw new JsonSyntaxException("could not find pubkey");
+        throw new JsonSyntaxException("could not find pubKey");
     }
 
     private static Pair<JsonArray, JsonArray> getVinAndVout(String jsonTxt) throws JsonSyntaxException {

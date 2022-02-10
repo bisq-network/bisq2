@@ -123,10 +123,10 @@ public class EntitlementSelection {
                     });
         }
 
-        private CompletableFuture<Optional<Entitlement.Proof>> onVerifyBondedRole(EntitlementItem entitlementItem, String bondedRoleTxId, String bondedRoleSig) {
+        private CompletableFuture<Optional<Entitlement.Proof>> onVerifyBondedRole(EntitlementItem entitlementItem, String bondedRoleTxId, String pubKeyHash, String bondedRoleSig) {
             return userProfileService.verifyBondedRole(bondedRoleTxId,
                             bondedRoleSig,
-                            model.keyPair.get().getPublic())
+                            pubKeyHash)
                     .whenComplete((proof, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null) {
@@ -180,6 +180,9 @@ public class EntitlementSelection {
         private final BooleanProperty tableVisible = new SimpleBooleanProperty();
         private final ObjectProperty<KeyPair> keyPair;
         private String minBurnAmount;
+        private String getPubKeyHash() {
+            return Hex.encode(DigestUtil.hash(keyPair.get().getPublic().getEncoded()));
+        }
 
         private Model(ObjectProperty<KeyPair> keyPair) {
             this.keyPair = keyPair;
@@ -312,7 +315,7 @@ public class EntitlementSelection {
 
             GridPane.setMargin(messageLabel, new Insets(0, 0, 20, 0));
 
-            String pubKeyHash = Hex.encode(DigestUtil.hash(model.keyPair.get().getPublic().getEncoded()));
+            String pubKeyHash = model.getPubKeyHash();
 
             gridPane.addTextFieldWithCopyIcon(Res.get("social.createUserProfile.entitlement.popup.pubKeyHash"), pubKeyHash);
             gridPane.addTextFieldWithCopyIcon(Res.get("social.createUserProfile.entitlement.popup.minBurnAmount"), model.minBurnAmount);
@@ -346,7 +349,7 @@ public class EntitlementSelection {
                     secondField = gridPane.addTextField(Res.get("social.createUserProfile.entitlement.popup.bondedRole.sig"), "");
                     onAction(() -> {
                                 actionButton.setDisable(true); //todo add busy animation
-                                controller.onVerifyBondedRole(entitlementItem, firstField.getText(), secondField.getText())
+                                controller.onVerifyBondedRole(entitlementItem, firstField.getText(), model.getPubKeyHash(), secondField.getText())
                                         .whenComplete((proof, throwable) -> {
                                             UIThread.run(() -> {
                                                 if (throwable == null && proof.isPresent()) {

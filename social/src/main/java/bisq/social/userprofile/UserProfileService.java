@@ -42,18 +42,25 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Arrays;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static bisq.security.SignatureUtil.formatMessageForSigning;
+import static bisq.security.SignatureUtil.bitcoinSigToDer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class UserProfileService implements PersistenceClient<UserProfileStore> {
+    public static record Config(List<String> btcMempoolProviders,
+                                List<String> bsqMempoolProviders) {
+        public static Config from(com.typesafe.config.Config typeSafeConfig) {
+            List<String> btcMempoolProviders = typeSafeConfig.getStringList("btcMempoolProviders");
+            List<String> bsqMempoolProviders = typeSafeConfig.getStringList("bsqMempoolProviders");
+            return new UserProfileService.Config(btcMempoolProviders, bsqMempoolProviders);
+        }
+    }
+
     @Getter
     private final UserProfileStore persistableStore = new UserProfileStore();
     @Getter
@@ -62,12 +69,15 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     private final IdentityService identityService;
     private final NetworkService networkService;
     private final Object lock = new Object();
+    private final Config config;
 
     public UserProfileService(PersistenceService persistenceService,
+                              Config config,
                               KeyPairService keyPairService,
                               IdentityService identityService,
                               NetworkService networkService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        this.config = config;
         this.keyPairService = keyPairService;
         this.identityService = identityService;
         this.networkService = networkService;
@@ -137,46 +147,42 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     public CompletableFuture<Optional<Entitlement.Proof>> verifyProofOfBurn(Entitlement.Type type, String proofOfBurnTxId, String pubKeyHash) {
         return supplyAsync(() -> {
             try {
-                BaseHttpClient httpClient = getBsqApiHttpClient();
-                String jsonTxLookup = httpClient.get("tx/" + proofOfBurnTxId, Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
-                if (!BsqTxValidator.initialSanityChecks(proofOfBurnTxId, jsonTxLookup)) {
-                    return Optional.empty();
-                }
-                boolean isBsqTx = httpClient.getBaseUrl().matches(".*//bisq.*");
-                boolean isProofOfBurn = BsqTxValidator.isProofOfBurn(jsonTxLookup);
-                byte[] publicKeyHash = Hex.decode(pubKeyHash);
-                byte[] opReturn = BsqTxValidator.getOpReturnData(jsonTxLookup);
-                boolean opReturnMatches = Arrays.equals(publicKeyHash, opReturn);
-                if (isBsqTx && isProofOfBurn && opReturnMatches) {
-                    return Optional.of(new Entitlement.ProofOfBurnProof(proofOfBurnTxId));
-                }
-                log.warn("isBsqTx={}, isProofOfBurn={}, opReturnMatches={}, pkHash={}, opReturn={}",
-                        isBsqTx, isProofOfBurn, opReturnMatches, Hex.encode(publicKeyHash), Hex.encode(opReturn));
+                BaseHttpClient httpClient = getApiHttpClient(config.bsqMempoolProviders());
+                String jsonBsqTx = httpClient.get("tx/" + proofOfBurnTxId, Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
+                checkArgument(BsqTxValidator.initialSanityChecks(proofOfBurnTxId, jsonBsqTx), "bsq tx sanity checks");
+                checkArgument(BsqTxValidator.isBsqTx(httpClient.getBaseUrl(), proofOfBurnTxId, jsonBsqTx), "isBsqTx");
+                checkArgument(BsqTxValidator.isProofOfBurn(jsonBsqTx), "is proof of burn transaction");
+                checkArgument(BsqTxValidator.getBurntAmount(jsonBsqTx) >= getMinBurnAmount(type), "insufficient burn");
+                BsqTxValidator.getOpReturnData(jsonBsqTx).ifPresentOrElse(
+                        (opReturn) -> checkArgument(pubKeyHash.equalsIgnoreCase(opReturn), "opReturnMatches"),
+                        () -> { throw new IllegalArgumentException("no opreturn found"); });
+                return Optional.of(new Entitlement.ProofOfBurnProof(proofOfBurnTxId));
+            } catch (IllegalArgumentException e) {
+                log.warn("check failed: {}", e.getMessage(), e);
             } catch (IOException e) {
-                e.printStackTrace();
+                log.warn("mempool query failed:", e);
             }
             return Optional.empty();
         });
     }
 
-    public CompletableFuture<Optional<Entitlement.Proof>> verifyBondedRole(String txId, String signature, PublicKey identityPublicKey) {
+    public CompletableFuture<Optional<Entitlement.Proof>> verifyBondedRole(String txId, String signature, String pubKeyHash) {
         // inputs: txid, signature from Bisq1
         // process: get txinfo, grab pubkey from 1st output
         // verify provided signature matches with pubkey from 1st output and hash of provided identity pubkey
         return supplyAsync(() -> {
             try {
-                BaseHttpClient httpClientBsq = getBsqApiHttpClient();
-                BaseHttpClient httpClientBtc = getBtcApiHttpClient();
+                BaseHttpClient httpClientBsq = getApiHttpClient(config.bsqMempoolProviders());
+                BaseHttpClient httpClientBtc = getApiHttpClient(config.btcMempoolProviders());
                 String jsonBsqTx = httpClientBsq.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClientBsq.userAgent)));
                 String jsonBtcTx = httpClientBtc.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClientBtc.userAgent)));
                 checkArgument(BsqTxValidator.initialSanityChecks(txId, jsonBsqTx), "bsq tx sanity checks");
                 checkArgument(BtcTxValidator.initialSanityChecks(txId, jsonBtcTx), "btc tx sanity checks");
                 checkArgument(BsqTxValidator.isBsqTx(httpClientBsq.getBaseUrl(), txId, jsonBsqTx), "isBsqTx");
                 checkArgument(BsqTxValidator.isLockup(jsonBsqTx), "is lockup transaction");
-                String identityKeyHash = Hex.encode(DigestUtil.hash(identityPublicKey.getEncoded()));
-                String signingPubkeyTxt = BtcTxValidator.getFirstInputPubkey(jsonBtcTx);
-                PublicKey signingPubKey = KeyGeneration.generatePublicFromCompressed(Hex.decode(signingPubkeyTxt));
-                boolean signatureMatches = SignatureUtil.verify(Hex.decode(identityKeyHash), Base64.decode(signature), signingPubKey);
+                String signingPubkeyAsHex = BtcTxValidator.getFirstInputPubKey(jsonBtcTx);
+                PublicKey signingPubKey = KeyGeneration.generatePublicFromCompressed(Hex.decode(signingPubkeyAsHex));
+                boolean signatureMatches = SignatureUtil.verify(formatMessageForSigning(pubKeyHash), bitcoinSigToDer(signature), signingPubKey);
                 checkArgument(signatureMatches, "signature");
                 return Optional.of(new Entitlement.BondedRoleProof(txId, signature));
             } catch (IllegalArgumentException e) {
@@ -199,7 +205,6 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         return CompletableFuture.completedFuture(Optional.of(new Entitlement.ChannelAdminInvitationProof(invitationCode)));
     }
 
-
     private CompletableFuture<Boolean> createDefaultUserProfile() {
         String keyId = StringUtils.createUid();
         KeyPair keyPair = keyPairService.generateKeyPair();
@@ -217,14 +222,9 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         };
     }
 
-    private BaseHttpClient getBsqApiHttpClient() {
+    private BaseHttpClient getApiHttpClient(List<String> providerUrls) {
         String userAgent = "Bisq 2";
-        //todo add providers to Bisq.config
-        List<String> providers = List.of(   // note the BSQ urls are different than the BTC urls
-                "https://bisq.mempool.emzy.de/bisq/api/",
-                "https://bisq.markets/bisq/api/",
-                "https://markets.bisq.services/bisq/api/");
-        String url = CollectionUtil.getRandomElement(providers);
+        String url = CollectionUtil.getRandomElement(providerUrls);
         Set<Transport.Type> supportedTransportTypes = networkService.getSupportedTransportTypes();
         Transport.Type transportType;
         if (supportedTransportTypes.contains(Transport.Type.CLEAR)) {
@@ -237,28 +237,4 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         BaseHttpClient httpClient = networkService.getHttpClient(url, userAgent, transportType);
         return httpClient;
     }
-
-    private BaseHttpClient getBtcApiHttpClient() {
-        String userAgent = "Bisq 2";
-        //todo add providers to Bisq.config
-        List<String> providers = List.of(   // note the BSQ urls are different than the BTC urls
-                "https://mempool.emzy.de/api/",
-                "https://mempool.space/api/",
-                "https://markets.bisq.services/api/");
-        String url = CollectionUtil.getRandomElement(providers);
-        Set<Transport.Type> supportedTransportTypes = networkService.getSupportedTransportTypes();
-        Transport.Type transportType;
-        if (supportedTransportTypes.contains(Transport.Type.CLEAR)) {
-            transportType = Transport.Type.CLEAR;
-        } else if (supportedTransportTypes.contains(Transport.Type.TOR)) {
-            transportType = Transport.Type.TOR;
-        } else {
-            throw new RuntimeException("I2P is not supported yet");
-        }
-        BaseHttpClient httpClient = networkService.getHttpClient(url, userAgent, transportType);
-        return httpClient;
-    }
-
-
-
 }
