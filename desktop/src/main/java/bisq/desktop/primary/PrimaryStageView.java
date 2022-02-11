@@ -106,11 +106,11 @@ public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, Primar
     private Image getApplicationIconImage() {
         String iconPath;
         if (OsUtils.isOSX())
-            iconPath = ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png";
+            iconPath = ImageUtil.isRetina() ? "images/window_icon@2x.png" : "images/window_icon.png";
         else if (OsUtils.isWindows())
-            iconPath = "/images/task_bar_icon_windows.png";
+            iconPath = "images/task_bar_icon_windows.png";
         else
-            iconPath = "/images/task_bar_icon_linux.png";
+            iconPath = "images/task_bar_icon_linux.png";
 
         return ImageUtil.getImageByPath(iconPath);
     }
