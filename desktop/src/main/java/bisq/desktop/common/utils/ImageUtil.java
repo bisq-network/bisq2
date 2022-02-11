@@ -30,7 +30,7 @@ public class ImageUtil {
 
     // Does not resolve the @2x automatically
     public static Image getImageByPath(String path) {
-        try (InputStream resourceAsStream = ImageView.class.getResourceAsStream(path)) {
+        try (InputStream resourceAsStream = ImageView.class.getClassLoader().getResourceAsStream(path)) {
             return new Image(Objects.requireNonNull(resourceAsStream));
         } catch (Exception e) {
             log.error("Loading image failed: path={}", path);
@@ -40,7 +40,7 @@ public class ImageUtil {
     }
 
     public static Image getImageByPath(String path, int width, int height) {
-        try (InputStream resourceAsStream = ImageView.class.getResourceAsStream(path)) {
+        try (InputStream resourceAsStream = ImageView.class.getClassLoader().getResourceAsStream(path)) {
             return new Image(Objects.requireNonNull(resourceAsStream), width, height, true, true);
         } catch (Exception e) {
             log.error("Loading image failed: path={}", path);
@@ -65,7 +65,7 @@ public class ImageUtil {
     public static Image composeImage(String[] paths, int width, int height) {
         WritableImage image = new WritableImage(width, height);
         for (String path : paths) {
-            Image part = getImageByPath("/images/robohash/" + path, width, height);
+            Image part = getImageByPath("images/robohash/" + path, width, height);
             PixelReader reader = part.getPixelReader();
             PixelWriter writer = image.getPixelWriter();
             for (int i = 0; i < width; i++) {
