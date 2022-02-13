@@ -19,6 +19,13 @@ application {
                                  '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED']
 }
 
+run {
+    // Pass command-line properties to application
+    // Normally they'd only be applied to the gradle process, but we need them in the started application
+    // See https://stackoverflow.com/a/23689696
+    systemProperties System.getProperties()
+}
+
 distributions {
     main {
         distributionBaseName = 'jfx-dist'
