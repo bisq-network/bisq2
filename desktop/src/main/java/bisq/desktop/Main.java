@@ -2,10 +2,6 @@ package bisq.desktop;
 
 import lombok.extern.slf4j.Slf4j;
 
-// Todo run via gradle fails with a nullPointer at loading images. Seems resources are not on classpath
-// jfoenix lib uses reflection in a way which is not supported in more recent java versions. Seems they have not fixed 
-// that since long... need to be checked at some point how to deal with it. Atm it prints a warning and all still works. 
-
 /**
  * The com.jfoenix.adapters.ReflectionHelper causes with Jav 16 an exception:
  * `java.base does not "opens java.lang.reflect" to unnamed module`
