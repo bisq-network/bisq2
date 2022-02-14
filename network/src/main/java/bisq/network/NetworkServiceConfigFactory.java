@@ -18,6 +18,7 @@
 package bisq.network;
 
 import bisq.common.util.ConfigUtil;
+import bisq.i2p.I2pUtils;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
@@ -112,7 +113,18 @@ public class NetworkServiceConfigFactory {
             }
             case I2P -> {
                 return ConfigUtil.getStringList(config, "i2p").stream()
-                        .map(Address::new)
+                        .map(fullAddress -> {
+                            // Default constructor tokenizes host and port
+                            Address i2pAddress = new Address(fullAddress);
+
+                            // Clients can be initialized with b32.i2p address types
+                            // To simplify connection mgmt and avoid future lookups, we immediately convert to base64
+                            String destinationInUnknownFormat = i2pAddress.getHost();
+                            String destinationBase64 = I2pUtils.maybeLookupAndConvertToBase64(destinationInUnknownFormat)
+                                    .orElseThrow(RuntimeException::new);
+                            // TODO When port is removed from I2P, remove this workaround
+                            return new Address(destinationBase64, i2pAddress.getPort());
+                        })
                         .collect(Collectors.toList());
             }
             default -> {

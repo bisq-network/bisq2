@@ -41,6 +41,20 @@ import java.util.concurrent.TimeUnit;
 // For UDP-like communication, see datagram spec: https://geti2p.net/spec/datagrams
 @Slf4j
 public class I2pClient {
+    /**
+     * "Base32 addresses are much shorter and easier to handle than the full 516-character Base64 Destinations or
+     * addresshelpers. Example: ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p"
+     * <br/><br/>
+     *
+     * "Base32 lookups will only be successful when the Destination is up and publishing a LeaseSet. Because resolution
+     * may require a network database lookup, it may take significantly longer than a local address book lookup."
+     * <br/><br/>
+     *
+     * https://geti2p.net/en/docs/naming#base32
+     */
+    static final String DESTINATION_EXTENSION_BASE_32 = ".destination.b32.i2p";
+    static final String DESTINATION_EXTENSION_BASE_64 = ".destination";
+
     public final static String DEFAULT_HOST = "127.0.0.1";
     public final static int DEFAULT_PORT = 7656;
     public final static long DEFAULT_SOCKET_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
@@ -121,7 +135,8 @@ public class I2pClient {
             long ts = System.currentTimeMillis();
             log.debug("Start to create session {}", sessionId);
 
-            Destination destination = getDestinationFor(peer);
+            Destination destination = I2pUtils.getDestinationFor(peer)
+                    .orElseThrow(() -> new IOException("Destination not found for peer " + peer));
 
             log.info("Connecting to {}", peer);
             // Each client (socket manager) can have multiple sockets
@@ -143,7 +158,7 @@ public class I2pClient {
     }
 
     public String getMyDestination(String sessionId) throws IOException {
-        String destinationFileName = getFileName(sessionId) + ".destination";
+        String destinationFileName = getFileName(sessionId) + DESTINATION_EXTENSION_BASE_64;
 
         // Destination file is stored at the same time when the private key file is written
         return FileUtils.readAsString(destinationFileName);
@@ -205,13 +220,22 @@ public class I2pClient {
             i2PSocketOptions.setConnectTimeout(Math.toIntExact(socketTimeout));
             manager.setDefaultOptions(i2PSocketOptions);
 
-            // Persist destination to disk
+            // Persist destination to disk (base64 format): 516 base-64 chars
             String destinationBase64 = manager.getSession().getMyDestination().toBase64();
-            log.info("My destination: {}", destinationBase64);
-            String destinationFileName = fileName + ".destination";
-            File destinationFile = new File(destinationFileName);
-            if (!destinationFile.exists()) {
-                FileUtils.write(destinationFileName, destinationBase64);
+            log.debug("My destination (base 64) is {}", destinationBase64);
+            String destinationFileNameB64 = fileName + DESTINATION_EXTENSION_BASE_64;
+            File destinationFileB64 = new File(destinationFileNameB64);
+            if (!destinationFileB64.exists()) {
+                FileUtils.write(destinationFileNameB64, destinationBase64);
+            }
+
+            // Persist destination to disk (base32 format): "{52 chars}.b32.i2p"
+            String destinationBase32 = manager.getSession().getMyDestination().toBase32();
+            log.debug("My destination (base 32) is {}", destinationBase32);
+            String destinationFileNameB32 = fileName + DESTINATION_EXTENSION_BASE_32;
+            File destinationFileB32 = new File(destinationFileNameB32);
+            if (!destinationFileB32.exists()) {
+                FileUtils.write(destinationFileNameB32, destinationBase32);
             }
 
             // Takes 10-30 sec
@@ -220,17 +244,6 @@ public class I2pClient {
         }
 
         return sessionMap.get(sessionId);
-    }
-
-    private Destination getDestinationFor(String peer) throws IOException {
-        try {
-            return new Destination(peer); // If peer is in base64 format
-        } catch (DataFormatException e) {
-            throw new IOException("Unexpected destination format", e);
-        }
-
-        // TODO lookup if not base64? can also be *.i2p, *b32.i2p
-        // See https://geti2p.net/en/docs/naming#base32
     }
 
     protected void handleIOException(IOException e, String sessionId) {
