@@ -17,11 +17,15 @@
 
 package bisq.wallets.bitcoind;
 
+import bisq.wallets.NetworkType;
 import bisq.wallets.bitcoind.rpc.RpcClient;
+import bisq.wallets.bitcoind.rpc.RpcConfig;
 import bisq.wallets.exceptions.CannotConnectToWalletException;
+import bisq.wallets.exceptions.InvalidRpcCredentialsException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
 
@@ -35,5 +39,24 @@ public class BitcoindConnectionFailureTests {
                 .assertThrows(CannotConnectToWalletException.class, minerChainBackend::listWallets);
 
         Assertions.assertTrue(exception.getCause() instanceof ConnectException);
+    }
+
+    @Test
+    void wrongRpcCredentialsTest() throws IOException {
+        BitcoindProcess bitcoindProcess = BitcoindRegtestSetup.createAndStartBitcoind();
+
+        RpcConfig rpcConfig = new RpcConfig.Builder()
+                .networkType(NetworkType.REGTEST)
+                .hostname("127.0.0.1")
+                .user("bisq")
+                .password("WRONG_PASSWORD")
+                .build();
+
+        var rpcClient = new RpcClient(rpcConfig);
+        var minerChainBackend = new BitcoindChainBackend(rpcClient);
+
+        Assertions.assertThrows(InvalidRpcCredentialsException.class, minerChainBackend::listWallets);
+
+        bitcoindProcess.stopAndWaitUntilStopped();
     }
 }
