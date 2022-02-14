@@ -17,8 +17,8 @@
 
 package bisq.wallets.exceptions;
 
-public class InvalidRpcCredentialsException extends RuntimeException {
-    public InvalidRpcCredentialsException(String message, Throwable cause) {
-        super(message, cause);
+public class CannotConnectToWalletException extends RuntimeException {
+    public CannotConnectToWalletException(Throwable cause) {
+        super(cause);
     }
 }

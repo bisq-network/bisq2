@@ -17,12 +17,13 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.wallets.*;
+import bisq.wallets.AddressType;
+import bisq.wallets.Wallet;
 import bisq.wallets.bitcoind.responses.ListTransactionsResponseEntry;
 import bisq.wallets.bitcoind.responses.ListUnspentResponseEntry;
-import bisq.wallets.bitcoind.rpc.*;
-import bisq.wallets.exceptions.InvalidRpcCredentialsException;
-import bisq.wallets.exceptions.RpcCallFailureException;
+import bisq.wallets.bitcoind.rpc.RpcClient;
+import bisq.wallets.bitcoind.rpc.RpcConfig;
+import bisq.wallets.bitcoind.rpc.WalletRpcConfig;
 import bisq.wallets.exceptions.WalletInitializationFailedException;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
@@ -55,12 +56,8 @@ public class BitcoindWallet implements Wallet {
 
     @Override
     public void initialize(String walletPassphrase) {
-        try {
-            chainBackend.createOrLoadWallet(walletPath, walletPassphrase, false, false);
-            walletBackend.walletPassphrase(walletPassphrase, BitcoindWalletBackend.DEFAULT_WALLET_TIMEOUT);
-        } catch (RpcCallFailureException e) {
-            throw new InvalidRpcCredentialsException(e);
-        }
+        chainBackend.createOrLoadWallet(walletPath, walletPassphrase, false, false);
+        walletBackend.walletPassphrase(walletPassphrase, BitcoindWalletBackend.DEFAULT_WALLET_TIMEOUT);
     }
 
     @Override

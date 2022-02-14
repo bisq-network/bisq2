@@ -19,9 +19,12 @@ package bisq.wallets.bitcoind.rpc;
 
 import bisq.common.encoding.Base64;
 import bisq.wallets.bitcoind.BitcoindRpcEndpoint;
+import bisq.wallets.exceptions.CannotConnectToWalletException;
+import bisq.wallets.exceptions.InvalidRpcCredentialsException;
 import bisq.wallets.exceptions.RpcCallFailureException;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 
+import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -44,7 +47,13 @@ public class RpcClient {
     public <T> T invoke(BitcoindRpcEndpoint rpcEndpoint, Object argument, Class<T> clazz) {
         try {
             return jsonRpcClient.invoke(rpcEndpoint.getMethodName(), argument, clazz);
-        } catch (Throwable t) {
+        } catch (ConnectException e) {
+            throw new CannotConnectToWalletException(e);
+        }
+        catch (Throwable t) {
+            if (rpcAuthenticationFailed(t)) {
+                throw new InvalidRpcCredentialsException("Invalid RPC credentials", t);
+            }
             throw new RpcCallFailureException("RPC call to " + rpcEndpoint.getMethodName() + " failed.", t);
         }
     }
@@ -62,6 +71,10 @@ public class RpcClient {
             url += urlSuffix.get();
         }
         return new JsonRpcHttpClient(new URL(url), createAuthHeader(rpcConfig));
+    }
+
+    private boolean rpcAuthenticationFailed(Throwable t) {
+        return t.getCause().toString().contains("401");
     }
 
     private Map<String, String> createAuthHeader(RpcConfig rpcConfig) {
