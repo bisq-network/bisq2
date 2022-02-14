@@ -17,13 +17,16 @@
 
 package bisq.network.p2p.services.data.storage.append;
 
+import bisq.common.data.ByteArray;
+import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.persistence.PersistenceService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static bisq.network.p2p.services.data.storage.StorageService.StoreType.APPEND_ONLY_DATA_STORE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,14 +35,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class AppendOnlyDataStorageServiceTest {
     private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "bisq_StorageTest";
 
+    @BeforeEach
+    public void setup() {
+        FileUtils.deleteDirectory(new File(appDirPath));
+    }
     @Test
-    public void testAppend() throws IOException {
+    public void testAppend() {
         MockAppendOnlyPayload data = new MockAppendOnlyPayload("test" + UUID.randomUUID());
         PersistenceService persistenceService = new PersistenceService(appDirPath);
         AppendOnlyDataStorageService store = new AppendOnlyDataStorageService(persistenceService, APPEND_ONLY_DATA_STORE.getStoreName(),
                 data.getMetaData().getFileName());
         store.readPersisted().join();
-        int previous = store.getPersistableStore().getClone().getMap().size();
+        ConcurrentHashMap<ByteArray, AddAppendOnlyDataRequest> map = store.getPersistableStore().getClone().getMap();
+        int previous = map.size();
         int iterations = 10;
         for (int i = 0; i < iterations; i++) {
             data = new MockAppendOnlyPayload("test" + UUID.randomUUID());

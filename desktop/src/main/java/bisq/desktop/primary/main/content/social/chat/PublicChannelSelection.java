@@ -27,6 +27,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.Pane;
@@ -110,6 +111,8 @@ public class PublicChannelSelection {
             root.setSpacing(10);
 
             BisqLabel headline = new BisqLabel(Res.get("social.publicChannels"));
+            headline.setPadding(new Insets(0, 0, 0, 10));
+            headline.setStyle("-fx-text-fill: -bs-color-green-5; -fx-font-size: 1.4em");
 
             listView = new ListView<>();
             listView.setItems(model.channels);
