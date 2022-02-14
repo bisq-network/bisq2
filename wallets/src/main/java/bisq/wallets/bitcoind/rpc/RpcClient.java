@@ -19,9 +19,11 @@ package bisq.wallets.bitcoind.rpc;
 
 import bisq.common.encoding.Base64;
 import bisq.wallets.bitcoind.BitcoindRpcEndpoint;
+import bisq.wallets.exceptions.CannotConnectToWalletException;
 import bisq.wallets.exceptions.RpcCallFailureException;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 
+import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -44,7 +46,10 @@ public class RpcClient {
     public <T> T invoke(BitcoindRpcEndpoint rpcEndpoint, Object argument, Class<T> clazz) {
         try {
             return jsonRpcClient.invoke(rpcEndpoint.getMethodName(), argument, clazz);
-        } catch (Throwable t) {
+        } catch (ConnectException e) {
+            throw new CannotConnectToWalletException(e);
+        }
+        catch (Throwable t) {
             throw new RpcCallFailureException("RPC call to " + rpcEndpoint.getMethodName() + " failed.", t);
         }
     }
