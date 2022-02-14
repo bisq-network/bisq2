@@ -142,7 +142,7 @@ If you want to use more seed nodes repeat it and fill in more but 1-2 is usually
 
 ### Example Run Configurations
 
-See [here](docs/intellij-idea-sample-run-configs.md)
+See [here](docs/sample-run-configs.md)
 
 
 ## Contributing

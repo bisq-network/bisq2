@@ -1,4 +1,4 @@
-### IntellJ IDEA Sample Run Configs
+### IntelliJ IDEA: Application Run Configs
 
 Here are a few IntelliJ IDEA run configurations for running two seeds and different desktop nodes.
 
@@ -91,4 +91,30 @@ Copy the `Alice_clear` run configuration, rename it to `Alice_i2p` and change:
 -Dbisq.networkServiceConfig.supportedTransportTypes.0=I2P 
 -Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.0=<i2p destination of seed 1>:5000 
 -Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.1=<i2p destination of seed 2>:5001
+```
+
+### IntelliJ IDEA: Gradle run configs
+
+* Create a new IntelliJ IDEA run config of type Gradle
+* Choose a config name (e.g. `[gradle] Alice I2P`)
+* Choose Gradle Project as `bisq2:desktop`
+* Add VM options as necessary, in the format `-Dprop=value` (e.g. `-Dbisq.application.appName=bisq_Alice_i2p`)
+
+
+### Command line: Gradle run configs
+
+Start a default desktop client with:
+
+```
+./gradlew desktop:run
+```
+
+Start a customized desktop client with:
+
+```
+./gradlew desktop:run \
+    -Dbisq.application.appName=bisq_Alice_i2p \
+    -Dbisq.networkServiceConfig.supportedTransportTypes.0=I2P \
+    -Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.0=<i2p destination of seed 1>:5000 \
+    -Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.1=<i2p destination of seed 2>:5001
 ```
