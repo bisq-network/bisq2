@@ -65,7 +65,7 @@ public class RpcClient {
 
     private JsonRpcHttpClient createRpcClientWithUrlSuffix(RpcConfig rpcConfig, Optional<String> urlSuffix) throws MalformedURLException {
         String hostname = rpcConfig.hostname();
-        int port = rpcConfig.networkType().getRpcPort();
+        int port = rpcConfig.port();
         var url = "http://" + hostname + ":" + port;
         if (urlSuffix.isPresent()) {
             url += urlSuffix.get();

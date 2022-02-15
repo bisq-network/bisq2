@@ -18,10 +18,12 @@
 package bisq.wallets.bitcoind;
 
 import bisq.common.util.FileUtils;
+import bisq.common.util.NetworkUtils;
 import bisq.wallets.NetworkType;
 import bisq.wallets.exceptions.RpcCallFailureException;
 import bisq.wallets.bitcoind.rpc.RpcClient;
 import bisq.wallets.bitcoind.rpc.RpcConfig;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -31,6 +33,7 @@ import java.util.Scanner;
 @Slf4j
 public class BitcoindProcess {
 
+    @Getter
     private final RpcConfig rpcConfig;
     private final Path dataDir;
 
@@ -71,9 +74,10 @@ public class BitcoindProcess {
                 "bitcoind",
                 networkArg,
                 "-datadir=" + dataDir.toAbsolutePath(),
+                "-bind=127.0.0.1:" + NetworkUtils.findFreeSystemPort(),
                 "-whitelist=127.0.0.1",
-                "-rpcbind",
-                "-rpcallowip=" + rpcConfig.hostname(),
+                "-rpcbind=127.0.0.1:" + rpcConfig.port(),
+                "-rpcallowip=127.0.0.1",
                 "-rpcuser=" + rpcConfig.user(),
                 "-rpcpassword=" + rpcConfig.password(),
                 "-fallbackfee=0.00000001",

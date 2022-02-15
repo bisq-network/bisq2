@@ -19,6 +19,7 @@ package bisq.wallets.bitcoind;
 
 import bisq.common.util.FileUtils;
 import bisq.wallets.bitcoind.rpc.RpcClient;
+import bisq.wallets.bitcoind.rpc.RpcConfig;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -53,11 +54,13 @@ abstract class SharedBitcoindInstanceTests {
         walletFilePath = tmpDirPath.resolve("wallet");
         assertFalse(walletFilePath.toFile().exists());
 
-        rpcClient = new RpcClient(BitcoindRegtestSetup.RPC_CONFIG);
+        RpcConfig rpcConfig = bitcoindProcess.getRpcConfig();
+        rpcClient = new RpcClient(rpcConfig);
+
         minerChainBackend = new BitcoindChainBackend(rpcClient);
         minerChainBackend.createOrLoadWallet(walletFilePath, BitcoindRegtestSetup.WALLET_PASSPHRASE, false, false);
 
-        RpcClient walletRpcClient = BitcoindRegtestSetup.createWalletRpcClient(walletFilePath);
+        RpcClient walletRpcClient = BitcoindRegtestSetup.createWalletRpcClient(rpcConfig, walletFilePath);
         minerWalletBackend = new BitcoindWalletBackend(walletRpcClient);
         minerWalletBackend.walletPassphrase(BitcoindRegtestSetup.WALLET_PASSPHRASE, BitcoindWalletBackend.DEFAULT_WALLET_TIMEOUT);
     }
