@@ -16,6 +16,7 @@ dependencies {
 
     implementation 'com.google.guava:guava'
     implementation 'com.typesafe:config'
+    implementation 'org.jetbrains:annotations:23.0.0'
 }
 
 test {
