@@ -103,15 +103,52 @@ Copy the `Alice_clear` run configuration, rename it to `Alice_i2p` and change:
 
 ### Command line: Gradle run configs
 
-Start a default desktop client with:
+Start a seed with:
 
 ```
+# Using default settings
+./gradlew seed:run
+```
+
+For example, to start two local seeds, `bisq2_seed1` and `bisq2_seed2`, reachable on all 3 networks:
+
+```
+# Seed 1
+./gradlew seed:run \
+    -Dbisq.application.appName=bisq2_seed1 \
+    -Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 \
+    -Dbisq.networkServiceConfig.defaultNodePortByTransportType.tor=1000 \
+    -Dbisq.networkServiceConfig.defaultNodePortByTransportType.i2p=5000 \
+    -Dbisq.networkServiceConfig.supportedTransportTypes.0=TOR \
+    -Dbisq.networkServiceConfig.supportedTransportTypes.1=I2P \
+    -Dbisq.networkServiceConfig.supportedTransportTypes.2=CLEAR \
+    -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+    -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
+
+# Seed 2
+./gradlew seed:run \
+    -Dbisq.application.appName=bisq2_seed2 \
+    -Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8001 \
+    -Dbisq.networkServiceConfig.defaultNodePortByTransportType.tor=1001 \
+    -Dbisq.networkServiceConfig.defaultNodePortByTransportType.i2p=5001 \
+    -Dbisq.networkServiceConfig.supportedTransportTypes.0=TOR \
+    -Dbisq.networkServiceConfig.supportedTransportTypes.1=I2P \
+    -Dbisq.networkServiceConfig.supportedTransportTypes.2=CLEAR \
+    -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+    -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
+```
+
+Start a desktop client with:
+
+```
+# Using default settings
 ./gradlew desktop:run
 ```
 
-Start a customized desktop client with:
+To start a custom desktop client connecting only to I2P:
 
 ```
+# Local client on I2P only
 ./gradlew desktop:run \
     -Dbisq.application.appName=bisq_Alice_i2p \
     -Dbisq.networkServiceConfig.supportedTransportTypes.0=I2P \
