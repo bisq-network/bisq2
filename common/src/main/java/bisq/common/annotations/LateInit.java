@@ -15,9 +15,8 @@
  */
 package bisq.common.annotations;
 
-import javax.annotation.Nonnull;
-import javax.annotation.meta.TypeQualifierNickname;
-import javax.annotation.meta.When;
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -28,8 +27,7 @@ import java.lang.annotation.RetentionPolicy;
  * Object.requireNonNull() should be used, as Preconditions.checkNotNull would cause a static code analyzer warning.
  */
 @Documented
-@TypeQualifierNickname
-@Nonnull(when = When.MAYBE)
+@NotNull
 @Retention(RetentionPolicy.RUNTIME)
 public @interface LateInit {
 } 

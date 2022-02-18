@@ -17,7 +17,8 @@
 
 package bisq.common.util;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
