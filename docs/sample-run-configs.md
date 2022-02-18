@@ -110,18 +110,14 @@ Start a seed with:
 ./gradlew seed:run
 ```
 
-For example, to start two local seeds, `bisq2_seed1` and `bisq2_seed2`, reachable on all 3 networks:
+For example, to start two local seeds, `bisq2_seed1` and `bisq2_seed2`, reachable on clearnet:
 
 ```
 # Seed 1
 ./gradlew seed:run \
     -Dbisq.application.appName=bisq2_seed1 \
     -Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 \
-    -Dbisq.networkServiceConfig.defaultNodePortByTransportType.tor=1000 \
-    -Dbisq.networkServiceConfig.defaultNodePortByTransportType.i2p=5000 \
-    -Dbisq.networkServiceConfig.supportedTransportTypes.0=TOR \
-    -Dbisq.networkServiceConfig.supportedTransportTypes.1=I2P \
-    -Dbisq.networkServiceConfig.supportedTransportTypes.2=CLEAR \
+    -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
     -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
     -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
 
@@ -129,11 +125,7 @@ For example, to start two local seeds, `bisq2_seed1` and `bisq2_seed2`, reachabl
 ./gradlew seed:run \
     -Dbisq.application.appName=bisq2_seed2 \
     -Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8001 \
-    -Dbisq.networkServiceConfig.defaultNodePortByTransportType.tor=1001 \
-    -Dbisq.networkServiceConfig.defaultNodePortByTransportType.i2p=5001 \
-    -Dbisq.networkServiceConfig.supportedTransportTypes.0=TOR \
-    -Dbisq.networkServiceConfig.supportedTransportTypes.1=I2P \
-    -Dbisq.networkServiceConfig.supportedTransportTypes.2=CLEAR \
+    -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
     -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
     -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
 ```
@@ -145,13 +137,13 @@ Start a desktop client with:
 ./gradlew desktop:run
 ```
 
-To start a custom desktop client connecting only to I2P:
+To start a custom desktop client connecting only to clearnet:
 
 ```
-# Local client on I2P only
+# Local client on clearnet only
 ./gradlew desktop:run \
-    -Dbisq.application.appName=bisq_Alice_i2p \
-    -Dbisq.networkServiceConfig.supportedTransportTypes.0=I2P \
-    -Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.0=<i2p destination of seed 1>:5000 \
-    -Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.1=<i2p destination of seed 2>:5001
+    -Dbisq.application.appName=bisq_Alice_clear \
+    -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
+    -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+    -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
 ```
