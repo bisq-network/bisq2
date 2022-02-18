@@ -1,0 +1,12 @@
+# This is a screen config used by the tests in Makefile in the same directory.
+
+# Change to previous / next tabs with F6 / F7
+bindkey -k k6 prev
+bindkey -k k7 next
+
+# Change default scrollback value for new windows
+defscrollback 10000
+
+# Bottom 2 lines: window title and list of windows as tabs
+caption always "%{= bb}%{+b w}%n %t %h %="
+hardstatus alwayslastline "%-Lw%{= BW}%50>%n%f* %t%{-}%+Lw%<"
