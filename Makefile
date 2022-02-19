@@ -57,23 +57,49 @@
 #     $ make clean
 #
 
+########
+# COMMON
+########
+
 # n = number of clients
 # Set n to 2, if otherwise not given as arg
 n ?= 2
 
+# Seed variables. Used for tab title and appName
+seed1-prefix = seed-1-
+seed2-prefix = seed-2-
+seed-postfix = -make-test
+seed1-title   = $(seed1-prefix)$(seed-type)
+seed2-title   = $(seed2-prefix)$(seed-type)
+seed1-appName = $(seed1-prefix)$(seed-type)$(seed-postfix)
+seed2-appName = $(seed2-prefix)$(seed-type)$(seed-postfix)
+
+# Reattach to the screen session
+.reconnect-screen-session:
+	screen -r localtests
+
+clean:
+	@rm -fv seed1-tor-hostname seed2-tor-hostname
+
+
+##########
+# CLEARNET
+##########
+
+.start-local-clearnet-seeds: seed-type=clear
 .start-local-clearnet-seeds:
 	# First screen command uses custom config, creates the session, and is detached
 	# All subsequent screen calls will create a new tab in the same session
 	# Seed 1
-	screen -c .screenrc-make -dmS localtests -t seed-1 ./gradlew --console=plain seed:run \
-		-Dbisq.application.appName=bisq2_seed1_test \
+	screen -c .screenrc-make -dmS localtests -t ${seed1-title} ./gradlew --console=plain seed:run \
+		-Dbisq.application.appName=${seed1-appName} \
 		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 \
 		-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
 		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
 		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
 	# Seed 2
-	screen -S localtests -X screen -t seed-2 ./gradlew --console=plain seed:run \
-		-Dbisq.application.appName=bisq2_seed2_test \
+	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed:run \
+		-Dbisq.application.appName=${seed2-appName} \
 		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8001 \
 		-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
 		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
@@ -88,20 +114,22 @@ n ?= 2
 			-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001; \
 	done
 
-# Reattach to the screen session
-.reconnect-screen-session:
-	screen -r localtests
-
-
 start-local-clearnet: .start-local-clearnet-seeds .start-clearnet-clients .reconnect-screen-session
 
+
+#####
+# TOR
+#####
+
 # Copy seed 1 hostname to a local file, which is read when starting the clients
+seed1-tor-hostname: seed-type=tor
 seed1-tor-hostname:
-	@cp -v ~/.local/share/bisq2_seed1_tor_test/tor/hiddenservice/default/hostname seed1-tor-hostname
+	@cp -v ~/.local/share/${seed1-appName}/tor/hiddenservice/default/hostname seed1-tor-hostname
 
 # Copy seed 2 hostname to a local file, which is read when starting the clients
+seed2-tor-hostname: seed-type=tor
 seed2-tor-hostname:
-	@cp -v ~/.local/share/bisq2_seed2_tor_test/tor/hiddenservice/default/hostname seed2-tor-hostname
+	@cp -v ~/.local/share/${seed2-appName}/tor/hiddenservice/default/hostname seed2-tor-hostname
 
 # Requires both seed hostnames to be known
 # If any is not known, this will fail
@@ -114,12 +142,13 @@ seed2-tor-hostname:
 			-Dbisq.networkServiceConfig.seedAddressByTransportType.tor.1=$(file < seed2-tor-hostname):1001; \
 	done
 
+.start-tor-seeds: seed-type=tor
 .start-tor-seeds:
 	# First screen command uses custom config, creates the session, and is detached
 	# All subsequent screen calls will create a new tab in the same session
 	# Seed 1
-	screen -c .screenrc-make -dmS localtests -t seed-1 ./gradlew --console=plain seed:run \
-		-Dbisq.application.appName=bisq2_seed1_tor_test \
+	screen -c .screenrc-make -dmS localtests -t ${seed1-title} ./gradlew --console=plain seed:run \
+		-Dbisq.application.appName=${seed1-appName} \
 		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 \
 		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.tor=1000 \
 		-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
@@ -127,8 +156,8 @@ seed2-tor-hostname:
 		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
 		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
 	# Seed 2
-	screen -S localtests -X screen -t seed-2 ./gradlew --console=plain seed:run \
-		-Dbisq.application.appName=bisq2_seed2_tor_test \
+	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed:run \
+		-Dbisq.application.appName=${seed2-appName} \
 		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8001 \
 		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.tor=1001 \
 		-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
@@ -140,6 +169,3 @@ seed2-tor-hostname:
 start-tor-seeds: .start-tor-seeds .reconnect-screen-session
 
 start-tor-full-env: .start-tor-seeds .start-tor-clients .reconnect-screen-session
-
-clean:
-	@rm -fv seed1-tor-hostname seed2-tor-hostname
