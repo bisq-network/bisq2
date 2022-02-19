@@ -97,13 +97,11 @@ start-local-clearnet: .start-local-clearnet-seeds .start-clearnet-clients .recon
 
 # Copy seed 1 hostname to a local file, which is read when starting the clients
 seed1-tor-hostname:
-	@echo "Reading seed 1 tor hostname"
-	cp ~/.local/share/bisq2_seed1_tor_test/tor/hiddenservice/default/hostname seed1-tor-hostname
+	@cp -v ~/.local/share/bisq2_seed1_tor_test/tor/hiddenservice/default/hostname seed1-tor-hostname
 
 # Copy seed 2 hostname to a local file, which is read when starting the clients
 seed2-tor-hostname:
-	@echo "Reading seed 2 tor hostname"
-	cp ~/.local/share/bisq2_seed2_tor_test/tor/hiddenservice/default/hostname seed2-tor-hostname
+	@cp -v ~/.local/share/bisq2_seed2_tor_test/tor/hiddenservice/default/hostname seed2-tor-hostname
 
 # Requires both seed hostnames to be known
 # If any is not known, this will fail
@@ -144,4 +142,4 @@ start-tor-seeds: .start-tor-seeds .reconnect-screen-session
 start-tor-full-env: .start-tor-seeds .start-tor-clients .reconnect-screen-session
 
 clean:
-	rm seed1-tor-hostname seed2-tor-hostname
+	@rm -fv seed1-tor-hostname seed2-tor-hostname
