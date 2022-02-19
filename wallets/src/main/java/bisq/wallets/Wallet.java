@@ -39,8 +39,4 @@ public interface Wallet {
     String sendToAddress(String address, double amount);
 
     String signMessage(String address, String message);
-
-    CompletableFuture<String> getUtxos();
-
-    CompletableFuture<String> sign(String tx);
 }

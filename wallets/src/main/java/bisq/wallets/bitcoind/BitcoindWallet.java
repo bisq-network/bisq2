@@ -100,14 +100,4 @@ public class BitcoindWallet implements Wallet {
     public String sendToAddress(String address, double amount) {
         return walletBackend.sendToAddress(address, amount);
     }
-
-    @Override
-    public CompletableFuture<String> getUtxos() {
-        return null;
-    }
-
-    @Override
-    public CompletableFuture<String> sign(String tx) {
-        return null;
-    }
 }
