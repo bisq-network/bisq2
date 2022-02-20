@@ -101,30 +101,38 @@ public class Persistence<T extends Serializable> {
                 File tempFile = File.createTempFile("temp_" + fileName, null, new File(directory));
                 FileUtils.deleteOnExit(tempFile);
                 File storageFile = new File(storagePath);
+                boolean tempSuccess = true;
                 try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
                      ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)) {
                     objectOutputStream.writeObject(serializable);
                     objectOutputStream.flush();
                     fileOutputStream.flush();
                     fileOutputStream.getFD().sync();
+                    // can't set tempSuccess to true here, because the close() is coming implicitly after closing brackets.
+                } catch(IOException ex) {
+                    log.error("Error at read for " + storagePath+ " msg: "+ex.getMessage(), ex);
+                    tempSuccess = false;
+                }// need to end the catch here to have the temp file autoclose
 
-                    // Atomic rename
-                    FileUtils.renameFile(tempFile, storageFile);
-                    //log.debug("Persisted {}", serializable);
-                    success = true;
+                try {
+                    if (tempSuccess) {
+                        // Atomic rename
+                        FileUtils.renameFile(tempFile, storageFile);
+                        //log.debug("Persisted {}", serializable);
+                        success = true;
+                    }
                 } catch (IOException exception) {
-                    log.error(exception.toString(), exception);
-                    log.error("Error at read for " + storagePath, exception);
+                    log.error("Error at read for " + storagePath+ " msg: "+exception.getMessage(), exception);
                     try {
                         FileUtils.backupCorruptedFile(directory, storageFile, fileName, "corruptedFilesAtWrite");
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        log.error("FileUtils.backupCorruptedFile failed: "+e.getMessage(),e);
                     }
                 } finally {
                     FileUtils.releaseTempFile(tempFile);
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error(e.getMessage(),e);
             }
             return success;
         }
