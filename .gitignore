@@ -37,3 +37,10 @@ hs_err_pid*
 .gradle
 build
 out
+
+# Makefile tests / Temp created by some targets, needed by other targets
+# can be removed with `make clean`
+seed1-tor-hostname
+seed2-tor-hostname
+seed1-i2p-destination
+seed2-i2p-destination
