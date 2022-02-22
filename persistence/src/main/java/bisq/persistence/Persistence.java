@@ -94,37 +94,54 @@ public class Persistence<T extends Serializable> {
     public boolean persist(T serializable) {
         synchronized (lock) {
             boolean success = false;
+            File tempFile = null;
+            ObjectOutputStream objectOutputStream = null;
+            FileOutputStream fileOutputStream = null;
+            File storageFile = null;
             try {
                 FileUtils.makeDirs(directory);
                 // We use a temp file to not risk data corruption in case the write operation fails.
                 // After write is done we rename the tempFile to our storageFile which is an atomic operation.
-                File tempFile = File.createTempFile("temp_" + fileName, null, new File(directory));
+                tempFile = File.createTempFile("temp_" + fileName, null, new File(directory));
                 FileUtils.deleteOnExit(tempFile);
-                File storageFile = new File(storagePath);
-                try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
-                     ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)) {
-                    objectOutputStream.writeObject(serializable);
-                    objectOutputStream.flush();
-                    fileOutputStream.flush();
-                    fileOutputStream.getFD().sync();
+                storageFile = new File(storagePath);
+                fileOutputStream = new FileOutputStream(tempFile);
+                objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                objectOutputStream.writeObject(serializable);
+                objectOutputStream.flush(); // this will flush fileOutputStream as well
+                fileOutputStream.getFD().sync();
 
-                    // Atomic rename
-                    FileUtils.renameFile(tempFile, storageFile);
-                    //log.debug("Persisted {}", serializable);
-                    success = true;
-                } catch (IOException exception) {
-                    log.error(exception.toString(), exception);
-                    log.error("Error at read for " + storagePath, exception);
-                    try {
+                objectOutputStream.close(); // this will close fileOutputStream as well
+                // close is needed on WinOS otherwise the rename will fail
+                // Atomic rename
+                FileUtils.renameFile(tempFile, storageFile);
+                //log.debug("Persisted {}", serializable);
+                success = true;
+            } catch(IOException ex) {
+                log.error("Error at read for " + storagePath+ " msg: "+ex.getMessage(), ex);
+                try {
+                    if (storageFile != null) {
                         FileUtils.backupCorruptedFile(directory, storageFile, fileName, "corruptedFilesAtWrite");
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
-                } finally {
+                } catch (IOException e) {
+                    log.error("FileUtils.backupCorruptedFile failed: "+e.getMessage(),e);
+                }
+            }
+            finally {
+                // close all and cleanup in case of Exception
+                // tempfile depends on objectOutputStream which depends on fileOutputstream, close in reverse order
+                try {
+                    if (objectOutputStream != null) {
+                        objectOutputStream.close(); // will close fileOutputStream first.
+                    } else if (fileOutputStream != null) {
+                        fileOutputStream.close();
+                    }
+                } catch (IOException ioe) {
+                    log.error("Error closing stream "+ioe.getMessage(), ioe); // swallow
+                }
+                if (tempFile != null) {
                     FileUtils.releaseTempFile(tempFile);
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
             return success;
         }
