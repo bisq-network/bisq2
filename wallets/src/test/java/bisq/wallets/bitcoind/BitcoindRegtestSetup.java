@@ -18,6 +18,7 @@
 package bisq.wallets.bitcoind;
 
 import bisq.common.util.FileUtils;
+import bisq.common.util.NetworkUtils;
 import bisq.wallets.AddressType;
 import bisq.wallets.NetworkType;
 import bisq.wallets.bitcoind.responses.ListUnspentResponseEntry;
@@ -35,28 +36,35 @@ import java.util.Optional;
 public class BitcoindRegtestSetup {
     public static final String WALLET_PASSPHRASE = "My super secret passphrase that nobody can guess.";
 
-    public static final RpcConfig RPC_CONFIG = new RpcConfig.Builder()
-            .networkType(NetworkType.REGTEST)
-            .hostname("127.0.0.1")
-            .user("bisq")
-            .password("bisq")
-            .build();
+    public static RpcConfig createRpcConfigForPort(int port) {
+        return new RpcConfig.Builder()
+                .networkType(NetworkType.REGTEST)
+                .hostname("127.0.0.1")
+                .user("bisq")
+                .password("bisq")
+                .port(port)
+                .build();
+    }
 
     public static BitcoindProcess createAndStartBitcoind() throws IOException {
+        int freePort = NetworkUtils.findFreeSystemPort();
+        RpcConfig rpcConfig = BitcoindRegtestSetup.createRpcConfigForPort(freePort);
+
         Path bitcoindDataDir = FileUtils.createTempDir();
         var bitcoindProcess = new BitcoindProcess(
-                BitcoindRegtestSetup.RPC_CONFIG,
+                rpcConfig,
                 bitcoindDataDir
         );
         bitcoindProcess.startAndWaitUntilReady();
         return bitcoindProcess;
     }
 
-    public static BitcoindWalletBackend createTestWalletBackend(BitcoindChainBackend chainBackend,
+    public static BitcoindWalletBackend createTestWalletBackend(RpcConfig rpcConfig,
+                                                                BitcoindChainBackend chainBackend,
                                                                 Path tmpDirPath,
                                                                 String walletName) throws MalformedURLException {
         Path receiverWalletPath = tmpDirPath.resolve(walletName);
-        RpcClient receiverWalletRpc = createWalletRpcClient(receiverWalletPath);
+        RpcClient receiverWalletRpc = createWalletRpcClient(rpcConfig, receiverWalletPath);
 
         chainBackend.createOrLoadWallet(receiverWalletPath, BitcoindRegtestSetup.WALLET_PASSPHRASE, false, false);
 
@@ -65,8 +73,7 @@ public class BitcoindRegtestSetup {
         return walletBackend;
     }
 
-    public static RpcClient createWalletRpcClient(Path walletFilePath) throws MalformedURLException {
-        RpcConfig rpcConfig = new RpcConfig.Builder(BitcoindRegtestSetup.RPC_CONFIG).build();
+    public static RpcClient createWalletRpcClient(RpcConfig rpcConfig, Path walletFilePath) throws MalformedURLException {
         var walletRpcConfig = new WalletRpcConfig(rpcConfig, walletFilePath);
         return new RpcClient(walletRpcConfig);
     }

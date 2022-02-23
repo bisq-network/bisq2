@@ -17,7 +17,7 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.wallets.NetworkType;
+import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.RpcClient;
 import bisq.wallets.bitcoind.rpc.RpcConfig;
 import bisq.wallets.exceptions.CannotConnectToWalletException;
@@ -29,10 +29,13 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
 
-public class BitcoindConnectionFailureTests {
+public class BitcoindConnectionFailureIntegrationTests {
     @Test
     void bitcoindNotRunningTest() throws MalformedURLException {
-        var rpcClient = new RpcClient(BitcoindRegtestSetup.RPC_CONFIG);
+        int freePort = NetworkUtils.findFreeSystemPort();
+        RpcConfig rpcConfig = BitcoindRegtestSetup.createRpcConfigForPort(freePort);
+
+        var rpcClient = new RpcClient(rpcConfig);
         var minerChainBackend = new BitcoindChainBackend(rpcClient);
 
         CannotConnectToWalletException exception = Assertions
@@ -45,14 +48,11 @@ public class BitcoindConnectionFailureTests {
     void wrongRpcCredentialsTest() throws IOException {
         BitcoindProcess bitcoindProcess = BitcoindRegtestSetup.createAndStartBitcoind();
 
-        RpcConfig rpcConfig = new RpcConfig.Builder()
-                .networkType(NetworkType.REGTEST)
-                .hostname("127.0.0.1")
-                .user("bisq")
+        RpcConfig wrongRpcConfig = new RpcConfig.Builder(bitcoindProcess.getRpcConfig())
                 .password("WRONG_PASSWORD")
                 .build();
 
-        var rpcClient = new RpcClient(rpcConfig);
+        var rpcClient = new RpcClient(wrongRpcConfig);
         var minerChainBackend = new BitcoindChainBackend(rpcClient);
 
         Assertions.assertThrows(InvalidRpcCredentialsException.class, minerChainBackend::listWallets);

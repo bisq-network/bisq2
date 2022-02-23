@@ -21,6 +21,7 @@ import bisq.wallets.AddressType;
 import bisq.wallets.bitcoind.psbt.PsbtOptions;
 import bisq.wallets.bitcoind.psbt.PsbtOutput;
 import bisq.wallets.bitcoind.responses.*;
+import bisq.wallets.bitcoind.rpc.RpcConfig;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
@@ -34,13 +35,14 @@ public class BitcoindPsbtMultiSigIntegrationTests extends SharedBitcoindInstance
     @Test
     public void psbtMultiSigTest() throws MalformedURLException {
         BitcoindRegtestSetup.mineInitialRegtestBlocks(minerChainBackend, minerWalletBackend);
+        RpcConfig rpcConfig = bitcoindProcess.getRpcConfig();
 
         var aliceBackend = BitcoindRegtestSetup
-                .createTestWalletBackend(minerChainBackend, tmpDirPath, "alice_wallet");
+                .createTestWalletBackend(rpcConfig, minerChainBackend, tmpDirPath, "alice_wallet");
         var bobBackend = BitcoindRegtestSetup
-                .createTestWalletBackend(minerChainBackend, tmpDirPath, "bob_wallet");
+                .createTestWalletBackend(rpcConfig, minerChainBackend, tmpDirPath, "bob_wallet");
         var charlieBackend = BitcoindRegtestSetup
-                .createTestWalletBackend(minerChainBackend, tmpDirPath, "charlie_wallet");
+                .createTestWalletBackend(rpcConfig, minerChainBackend, tmpDirPath, "charlie_wallet");
 
         String aliceAddress = aliceBackend.getNewAddress(AddressType.BECH32, "");
         String bobAddress = bobBackend.getNewAddress(AddressType.BECH32, "");
