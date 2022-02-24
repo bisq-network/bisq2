@@ -97,6 +97,12 @@ seed2-title   = $(seed2-prefix)$(seed-type)
 seed1-appName = $(seed1-prefix)$(seed-type)$(seed-postfix)
 seed2-appName = $(seed2-prefix)$(seed-type)$(seed-postfix)
 
+# Create the session in the background
+# Future commands will add new tabs to it, each running their own gradle instance (seed or client)
+# Finally, to "view" the session and all its tabs, the last command has to be to re-attach
+.init-screen-session:
+	screen -c .screenrc-make -dmS localtests
+
 # Reattach to the screen session
 .reconnect-screen-session:
 	screen -r localtests
@@ -111,10 +117,8 @@ clean:
 
 .start-local-clearnet-seeds: seed-type=clear
 .start-local-clearnet-seeds:
-	# First screen command uses custom config, creates the session, and is detached
-	# All subsequent screen calls will create a new tab in the same session
 	# Seed 1
-	screen -c .screenrc-make -dmS localtests -t ${seed1-title} ./gradlew --console=plain seed:run \
+	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed:run \
 		-Dbisq.application.appName=${seed1-appName} \
 		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 \
 		-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
@@ -137,7 +141,7 @@ clean:
 			-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001; \
 	done
 
-start-local-clearnet: .start-local-clearnet-seeds .start-clearnet-clients .reconnect-screen-session
+start-local-clearnet: .init-screen-session .start-local-clearnet-seeds .start-clearnet-clients .reconnect-screen-session
 
 
 #####
@@ -167,10 +171,8 @@ seed2-tor-hostname:
 
 .start-tor-seeds: seed-type=tor
 .start-tor-seeds:
-	# First screen command uses custom config, creates the session, and is detached
-	# All subsequent screen calls will create a new tab in the same session
 	# Seed 1
-	screen -c .screenrc-make -dmS localtests -t ${seed1-title} ./gradlew --console=plain seed:run \
+	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed:run \
 		-Dbisq.application.appName=${seed1-appName} \
 		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 \
 		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.tor=1000 \
@@ -188,9 +190,9 @@ seed2-tor-hostname:
 		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
 		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
 
-start-tor-seeds: .start-tor-seeds .reconnect-screen-session
+start-tor-seeds: .init-screen-session .start-tor-seeds .reconnect-screen-session
 
-start-tor-full-env: .start-tor-seeds .start-tor-clients .reconnect-screen-session
+start-tor-full-env: .init-screen-session .start-tor-seeds .start-tor-clients .reconnect-screen-session
 
 
 #####
@@ -209,10 +211,8 @@ seed2-i2p-destination:
 
 .start-i2p-seeds: seed-type=i2p
 .start-i2p-seeds:
-	# First screen command uses custom config, creates the session, and is detached
-	# All subsequent screen calls will create a new tab in the same session
 	# Seed 1
-	screen -c .screenrc-make -dmS localtests -t ${seed1-title} ./gradlew --console=plain seed:run \
+	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed:run \
 		-Dbisq.application.appName=${seed1-appName} \
 		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 \
 		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.i2p=5000 \
@@ -246,9 +246,11 @@ seed2-i2p-destination:
 		screen -S localtests -X stuff '\n' ;\
 	done
 
-start-i2p-seeds: .start-i2p-seeds .reconnect-screen-session
+start-i2p-seeds: .init-screen-session .start-i2p-seeds .reconnect-screen-session
 
-start-i2p-full-env: .start-i2p-seeds .start-i2p-clients .reconnect-screen-session
+start-i2p-clients: .init-screen-session .start-i2p-clients .reconnect-screen-session
+
+start-i2p-full-env: .init-screen-session .start-i2p-seeds .start-i2p-clients .reconnect-screen-session
 
 # Executing commands via the -X flag may fail if the commands are too long
 # The alternative then is to "type" the commands in the screen session via `stuff`, then send a '\n' which triggers execution
