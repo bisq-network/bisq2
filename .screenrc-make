@@ -7,6 +7,10 @@ bindkey -k k7 next
 # Change default scrollback value for new windows
 defscrollback 10000
 
+# Enable mousewheel scroll
+# https://stackoverflow.com/a/1125947
+termcapinfo xterm* ti@:te@
+
 # Bottom 2 lines: window title and list of windows as tabs
 caption always "%{= bb}%{+b w}%n %t %h %="
 hardstatus alwayslastline "%-Lw%{= BW}%50>%n%f* %t%{-}%+Lw%<"
