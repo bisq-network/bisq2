@@ -18,8 +18,8 @@ dependencies {
 
     implementation 'com.google.guava:guava'
 
-    implementation 'net.i2p:i2p:1.6.1'
-    implementation 'net.i2p.client:streaming:1.6.1'
+    implementation 'net.i2p:i2p:1.7.0'
+    implementation 'net.i2p.client:streaming:1.7.0'
 }
 
 test {
