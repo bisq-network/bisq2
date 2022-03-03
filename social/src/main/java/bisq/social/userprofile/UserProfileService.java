@@ -19,21 +19,20 @@ package bisq.social.userprofile;
 
 import bisq.common.data.Pair;
 import bisq.common.encoding.Hex;
-import bisq.common.encoding.Base64;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
+import bisq.identity.UserNameGenerator;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.KeyPairService;
-import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
-
 import com.google.gson.JsonSyntaxException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,11 +41,14 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-import static bisq.security.SignatureUtil.formatMessageForSigning;
 import static bisq.security.SignatureUtil.bitcoinSigToDer;
+import static bisq.security.SignatureUtil.formatMessageForSigning;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -155,7 +157,9 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                 checkArgument(BsqTxValidator.getBurntAmount(jsonBsqTx) >= getMinBurnAmount(type), "insufficient burn");
                 BsqTxValidator.getOpReturnData(jsonBsqTx).ifPresentOrElse(
                         (opReturn) -> checkArgument(pubKeyHash.equalsIgnoreCase(opReturn), "opReturnMatches"),
-                        () -> { throw new IllegalArgumentException("no opreturn found"); });
+                        () -> {
+                            throw new IllegalArgumentException("no opreturn found");
+                        });
                 return Optional.of(new Entitlement.ProofOfBurnProof(proofOfBurnTxId));
             } catch (IllegalArgumentException e) {
                 log.warn("check failed: {}", e.getMessage(), e);
@@ -208,8 +212,9 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     private CompletableFuture<Boolean> createDefaultUserProfile() {
         String keyId = StringUtils.createUid();
         KeyPair keyPair = keyPairService.generateKeyPair();
-
-        String useName = CollectionUtil.getRandomElement(List.of("Satoshi Nakamoto", "Hal Finney", "Wei Dai", "Adam Back", "David Chaum", "Neal Koblitz", "Whitfield Diffie", "Adi Shamir", "Dan Boneh", "Daniel J. Bernstein", "Bruce Schneier", "Ralph Merkle", "Horst Feistel", "Claude Elwood Shannon", "John Nash", "Leonard Adleman", "Martin Hellman", "Ronald Rivest"));
+        byte[] pubKeyBytes = keyPair.getPublic().getEncoded();
+        byte[] hash = DigestUtil.hash(pubKeyBytes);
+        String useName = UserNameGenerator.fromHash(hash);
         return createNewInitializedUserProfile(useName, keyId, keyPair, new HashSet<>())
                 .thenApply(userProfile -> true);
     }
