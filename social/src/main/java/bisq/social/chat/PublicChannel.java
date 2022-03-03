@@ -25,7 +25,7 @@ import lombok.ToString;
 // TODO not used yet. Will require more work on the chatUser and chatIdentity management. 
 @Getter
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 public class PublicChannel extends Channel {
     private final String channelName;
     private final UserProfile channelOwner;

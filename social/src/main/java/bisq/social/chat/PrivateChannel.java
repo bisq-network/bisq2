@@ -21,7 +21,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 public class PrivateChannel extends Channel {
     private final ChatPeer chatPeer;
     private final ChatIdentity chatIdentity;
