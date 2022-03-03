@@ -27,7 +27,7 @@ import java.util.List;
 public class WalletUtxosModel implements Model {
     public final ObservableList<WalletUtxoListItem> listItems = FXCollections.observableArrayList();
 
-    public void addUtxos(List<Utxo> utxos) {
+    public void addUtxos(List<? extends Utxo> utxos) {
         utxos.stream()
                 .map(WalletUtxoListItem::new)
                 .forEach(listItems::add);

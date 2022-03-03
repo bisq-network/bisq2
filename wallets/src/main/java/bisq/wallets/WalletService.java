@@ -19,11 +19,11 @@ package bisq.wallets;
 
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
-import bisq.wallets.bitcoind.BitcoindWallet;
-import bisq.wallets.bitcoind.rpc.RpcConfig;
+import bisq.wallets.bitcoind.BitcoinWallet;
 import bisq.wallets.exceptions.WalletNotInitializedException;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
+import bisq.wallets.rpc.RpcConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
 @Slf4j
 public class WalletService {
     @Getter
@@ -38,12 +39,13 @@ public class WalletService {
     @Getter
     private final Observable<Coin> observableBalanceAsCoin = new Observable<>(Coin.of(0, "BTC"));
 
-    public CompletableFuture<Void> initialize(Path walletsDataDir, RpcConfig rpcConfig, String walletPassphrase) {
+    public CompletableFuture<Void> initialize(Path walletsDataDir, WalletConfig walletConfig, String walletPassphrase) {
         return CompletableFuture.runAsync(() -> {
             walletsDataDir.toFile().mkdirs();
-            Path bitcoindDataDir = walletsDataDir.resolve("bitcoind"); // directory name for bitcoind wallet
 
-            var bitcoindWallet = new BitcoindWallet(bitcoindDataDir, rpcConfig);
+            Path bitcoindDataDir = walletsDataDir.resolve("bitcoind"); // directory name for bitcoind wallet
+            RpcConfig rpcConfig = createRpcConfigFromWalletConfig(walletConfig, bitcoindDataDir);
+            var bitcoindWallet = new BitcoinWallet(bitcoindDataDir, rpcConfig);
             bitcoindWallet.initialize(walletPassphrase);
 
             wallet = Optional.of(bitcoindWallet);
@@ -80,14 +82,14 @@ public class WalletService {
         });
     }
 
-    public CompletableFuture<List<Transaction>> listTransactions() {
+    public CompletableFuture<List<? extends Transaction>> listTransactions() {
         return CompletableFuture.supplyAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
             return wallet.listTransactions();
         });
     }
 
-    public CompletableFuture<List<Utxo>> listUnspent() {
+    public CompletableFuture<List<? extends Utxo>> listUnspent() {
         return CompletableFuture.supplyAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
             return wallet.listUnspent();
@@ -99,6 +101,17 @@ public class WalletService {
             Wallet wallet = getWalletOrThrowException();
             return wallet.sendToAddress(address, amount);
         });
+    }
+
+    private RpcConfig createRpcConfigFromWalletConfig(WalletConfig walletConfig, Path walletPath) {
+        return new RpcConfig.Builder()
+                .networkType(NetworkType.REGTEST)
+                .hostname(walletConfig.getHostname())
+                .port(walletConfig.getPort())
+                .user(walletConfig.getUser())
+                .password(walletConfig.getPassword())
+                .walletPath(walletPath)
+                .build();
     }
 
     private Wallet getWalletOrThrowException() {

@@ -21,7 +21,6 @@ import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 public interface Wallet {
     void initialize(String walletPassphrase);
@@ -32,9 +31,9 @@ public interface Wallet {
 
     String getNewAddress(AddressType addressType, String label);
 
-    List<Transaction> listTransactions();
+    List<? extends Transaction> listTransactions();
 
-    List<Utxo> listUnspent();
+    List<? extends Utxo> listUnspent();
 
     String sendToAddress(String address, double amount);
 

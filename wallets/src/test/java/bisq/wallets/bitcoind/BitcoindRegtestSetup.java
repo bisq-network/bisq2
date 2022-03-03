@@ -17,91 +17,157 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
+import bisq.wallets.AbstractRegtestSetup;
 import bisq.wallets.AddressType;
 import bisq.wallets.NetworkType;
-import bisq.wallets.bitcoind.responses.ListUnspentResponseEntry;
-import bisq.wallets.bitcoind.rpc.RpcClient;
-import bisq.wallets.bitcoind.rpc.RpcConfig;
-import bisq.wallets.bitcoind.rpc.WalletRpcConfig;
+import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
+import bisq.wallets.bitcoind.rpc.BitcoindWallet;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponseEntry;
+import bisq.wallets.rpc.RpcClient;
+import bisq.wallets.rpc.RpcClientFactory;
+import bisq.wallets.rpc.RpcConfig;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
-public class BitcoindRegtestSetup {
-    public static final String WALLET_PASSPHRASE = "My super secret passphrase that nobody can guess.";
+public class BitcoindRegtestSetup
+        extends AbstractRegtestSetup<BitcoindProcess, BitcoindWallet> {
 
-    public static RpcConfig createRpcConfigForPort(int port) {
+    @Getter
+    private final RpcConfig rpcConfig;
+    private final BitcoindProcess bitcoindProcess;
+
+    @Getter
+    private final BitcoindDaemon daemon;
+    private final Set<Path> loadedWalletPaths;
+
+    @Getter
+    private BitcoindWallet minerWallet;
+
+    public BitcoindRegtestSetup() throws IOException {
+        super();
+        rpcConfig = createRpcConfig();
+        bitcoindProcess = createBitcoindProcess();
+
+        daemon = createDaemon();
+        loadedWalletPaths = new HashSet<>();
+    }
+
+    @Override
+    protected BitcoindProcess createProcess() {
+        return bitcoindProcess;
+    }
+
+    @Override
+    public void start() throws IOException {
+        super.start();
+        minerWallet = createNewWallet("miner_wallet");
+    }
+
+    @Override
+    public void shutdown() {
+        loadedWalletPaths.forEach(daemon::unloadWallet);
+        super.shutdown();
+    }
+
+    public BitcoindWallet createNewWallet(String walletName) throws MalformedURLException {
+        Path receiverWalletPath = tmpDirPath.resolve(walletName);
+        return createNewWallet(receiverWalletPath);
+    }
+
+    @Override
+    public BitcoindWallet createNewWallet(Path walletPath) throws MalformedURLException {
+        if (loadedWalletPaths.contains(walletPath)) {
+            throw new IllegalStateException("Cannot create wallet '" + walletPath.toAbsolutePath() +
+                    "'. It exists already.");
+        }
+
+        daemon.createOrLoadWallet(walletPath, WALLET_PASSPHRASE);
+        loadedWalletPaths.add(walletPath);
+
+        BitcoindWallet walletBackend = newWallet(walletPath);
+        walletBackend.walletPassphrase(WALLET_PASSPHRASE, BitcoindWallet.DEFAULT_WALLET_TIMEOUT);
+        return walletBackend;
+    }
+
+    private BitcoindWallet newWallet(Path walletPath) throws MalformedURLException {
+        RpcConfig walletRpcConfig = new RpcConfig.Builder(rpcConfig)
+                .walletPath(walletPath)
+                .build();
+        RpcClient rpcClient = RpcClientFactory.create(walletRpcConfig);
+        return new BitcoindWallet(rpcClient);
+    }
+
+    public void mineInitialRegtestBlocks() {
+        String address = minerWallet.getNewAddress(AddressType.BECH32, "");
+        daemon.generateToAddress(101, address);
+    }
+
+    @Override
+    public void mineOneBlock() {
+        mineBlocks(1);
+    }
+
+    public void mineBlocks(int numberOfBlocks) {
+        String minerAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
+        daemon.generateToAddress(numberOfBlocks, minerAddress);
+    }
+
+    @Override
+    public void fundWallet(BitcoindWallet receiverWallet, double amount) {
+        sendBtcAndMineOneBlock(minerWallet, receiverWallet, amount);
+    }
+
+    public String fundAddress(String address, double amount) {
+        String txId = minerWallet.sendToAddress(address, amount);
+        mineOneBlock();
+        return txId;
+    }
+
+    public String sendBtcAndMineOneBlock(BitcoindWallet senderWallet,
+                                         BitcoindWallet receiverWallet,
+                                         double amount) {
+        String receiverAddress = receiverWallet.getNewAddress(AddressType.BECH32, "");
+        senderWallet.sendToAddress(receiverAddress, amount);
+        mineOneBlock();
+        return receiverAddress;
+    }
+
+    public Optional<BitcoindListUnspentResponseEntry> filterUtxosByAddress(
+            List<BitcoindListUnspentResponseEntry> utxos,
+            String address) {
+        return utxos.stream()
+                .filter(u -> Objects.equals(u.getAddress(), address))
+                .findFirst();
+    }
+
+    private RpcConfig createRpcConfig() {
+        int port = NetworkUtils.findFreeSystemPort();
+        Path walletPath = tmpDirPath.resolve("wallet");
         return new RpcConfig.Builder()
                 .networkType(NetworkType.REGTEST)
                 .hostname("127.0.0.1")
                 .user("bisq")
                 .password("bisq")
                 .port(port)
+                .walletPath(walletPath)
                 .build();
     }
 
-    public static BitcoindProcess createAndStartBitcoind() throws IOException {
-        int freePort = NetworkUtils.findFreeSystemPort();
-        RpcConfig rpcConfig = BitcoindRegtestSetup.createRpcConfigForPort(freePort);
-
-        Path bitcoindDataDir = FileUtils.createTempDir();
-        var bitcoindProcess = new BitcoindProcess(
+    private BitcoindProcess createBitcoindProcess() {
+        Path bitcoindDataDir = tmpDirPath.resolve("bitcoind_data_dir");
+        return new BitcoindProcess(
                 rpcConfig,
                 bitcoindDataDir
         );
-        bitcoindProcess.startAndWaitUntilReady();
-        return bitcoindProcess;
     }
 
-    public static BitcoindWalletBackend createTestWalletBackend(RpcConfig rpcConfig,
-                                                                BitcoindChainBackend chainBackend,
-                                                                Path tmpDirPath,
-                                                                String walletName) throws MalformedURLException {
-        Path receiverWalletPath = tmpDirPath.resolve(walletName);
-        RpcClient receiverWalletRpc = createWalletRpcClient(rpcConfig, receiverWalletPath);
-
-        chainBackend.createOrLoadWallet(receiverWalletPath, BitcoindRegtestSetup.WALLET_PASSPHRASE, false, false);
-
-        var walletBackend = new BitcoindWalletBackend(receiverWalletRpc);
-        walletBackend.walletPassphrase(BitcoindRegtestSetup.WALLET_PASSPHRASE, BitcoindWalletBackend.DEFAULT_WALLET_TIMEOUT);
-        return walletBackend;
-    }
-
-    public static RpcClient createWalletRpcClient(RpcConfig rpcConfig, Path walletFilePath) throws MalformedURLException {
-        var walletRpcConfig = new WalletRpcConfig(rpcConfig, walletFilePath);
-        return new RpcClient(walletRpcConfig);
-    }
-
-    public static Optional<ListUnspentResponseEntry> filterUtxosByAddress(List<ListUnspentResponseEntry> utxos, String address) {
-        return utxos.stream()
-                .filter(u -> Objects.equals(u.getAddress(), address))
-                .findFirst();
-    }
-
-    public static void mineInitialRegtestBlocks(BitcoindChainBackend minerChainBackend, BitcoindWalletBackend minerBackend) {
-        String address = minerBackend.getNewAddress(AddressType.BECH32, "");
-        minerChainBackend.generateToAddress(101, address);
-    }
-
-    public static void mineOneBlock(BitcoindChainBackend minerChainBackend, BitcoindWalletBackend minerBackend) {
-        String minerAddress = minerBackend.getNewAddress(AddressType.BECH32, "");
-        minerChainBackend.generateToAddress(1, minerAddress);
-    }
-
-    public static String sendBtcAndMineOneBlock(BitcoindChainBackend minerChainBackend,
-                                                BitcoindWalletBackend minerWalletBackend,
-                                                BitcoindWalletBackend receiverBackend,
-                                                double amount) {
-        String receiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
-        minerWalletBackend.sendToAddress(receiverAddress, amount);
-
-        mineOneBlock(minerChainBackend, minerWalletBackend);
-        return receiverAddress;
+    protected BitcoindDaemon createDaemon() throws MalformedURLException {
+        RpcClient rpcClient = RpcClientFactory.create(rpcConfig);
+        return new BitcoindDaemon(rpcClient);
     }
 }
