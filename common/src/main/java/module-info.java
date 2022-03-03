@@ -2,7 +2,9 @@ module bisq.common {
     requires static lombok;
     requires static org.jetbrains.annotations;
     requires com.google.common;
-
+    requires typesafe.config;
+    requires org.slf4j;
+    
     exports bisq.common;
     exports bisq.common.annotations;
     exports bisq.common.currency;
