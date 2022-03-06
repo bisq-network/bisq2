@@ -15,21 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets;
+package bisq.wallets.elementsd;
 
-import lombok.Builder;
-import lombok.Getter;
+import bisq.wallets.AddressType;
+import org.junit.jupiter.api.Test;
 
-import java.nio.file.Path;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Builder
-@Getter
-public class WalletConfig {
-    private final WalletBackend walletBackend;
-    private final NetworkType networkType;
-    private final String hostname;
-    private final int port;
-    private final String user;
-    private final String password;
-    private final Path walletsDataDirPath;
+public class ElementsdSigningIntegrationTests extends SharedElementsdInstanceTests {
+    private static final String MESSAGE = "my message";
+
+    @Test
+    public void signAndVerifyMessage() {
+        String address = elementsdMinerWallet.getNewAddress(AddressType.LEGACY, "");
+        String signature = elementsdMinerWallet.signMessage(address, MESSAGE);
+        boolean isValid = elementsdMinerWallet.verifyMessage(address, signature, MESSAGE);
+        assertTrue(isValid);
+    }
 }

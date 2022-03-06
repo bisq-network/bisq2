@@ -15,21 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets;
+package bisq.wallets.elementsd.rpc;
 
-import lombok.Builder;
-import lombok.Getter;
+import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
+import bisq.wallets.bitcoind.rpc.calls.BitcoindGetTxOutProofRpcCall;
+import bisq.wallets.elementsd.rpc.calls.ElementsdStopRpcCall;
+import bisq.wallets.rpc.RpcClient;
 
-import java.nio.file.Path;
+import java.util.List;
 
-@Builder
-@Getter
-public class WalletConfig {
-    private final WalletBackend walletBackend;
-    private final NetworkType networkType;
-    private final String hostname;
-    private final int port;
-    private final String user;
-    private final String password;
-    private final Path walletsDataDirPath;
+public class ElementsdDaemon extends BitcoindDaemon {
+    public ElementsdDaemon(RpcClient rpcClient) {
+        super(rpcClient);
+    }
+
+    @Override
+    public void stop() {
+        var rpcCall = new ElementsdStopRpcCall();
+        rpcClient.invokeAndValidate(rpcCall);
+    }
 }

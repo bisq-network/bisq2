@@ -24,8 +24,11 @@ import bisq.desktop.components.controls.BisqComboBox;
 import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.wallets.NetworkType;
+import bisq.wallets.WalletBackend;
 import bisq.wallets.WalletConfig;
 import bisq.wallets.WalletService;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -115,6 +118,7 @@ public class WalletConfigPopup extends Popup {
 
         private WalletConfig createWalletConfigFromModel() {
             return WalletConfig.builder()
+                    .walletBackend(model.selectedWalletBackend.get())
                     .networkType(NetworkType.REGTEST)
                     .hostname(model.hostnameProperty.get())
                     .port(Integer.parseInt(model.portProperty.get()))
@@ -131,7 +135,10 @@ public class WalletConfigPopup extends Popup {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObservableList<String> walletBackends = FXCollections.observableArrayList("Bitcoin Core");
+        private final ObservableList<WalletBackend> walletBackends = FXCollections.observableArrayList(WalletBackend.values());
+        private final ObjectProperty<WalletBackend> selectedWalletBackend =
+                new SimpleObjectProperty<>(this, "selectedWalletBackend", WalletBackend.BITCOIND);
+
         private final StringProperty walletsDataDirPathProperty = new SimpleStringProperty(this, "walletPath");
         private final StringProperty hostnameProperty = new SimpleStringProperty(this, "hostname", "127.0.0.1");
         private final StringProperty portProperty = new SimpleStringProperty(this, "port", "18443");
@@ -160,9 +167,9 @@ public class WalletConfigPopup extends Popup {
             gridPane.addButton(Res.get("wallet.config.selectWalletPath"), controller::onSelectWalletPath);
             gridPane.addTextField(Res.get("wallet.config.walletsDataDirPath"), model.walletsDataDirPathProperty);
 
-            BisqComboBox<String> walletBackendComboBox = gridPane.addComboBox(model.walletBackends);
+            BisqComboBox<WalletBackend> walletBackendComboBox = gridPane.addComboBox(model.walletBackends);
             walletBackendComboBox.setPromptText(Res.get("wallet.config.selectWallet"));
-            walletBackendComboBox.getSelectionModel().selectFirst();
+            walletBackendComboBox.valueProperty().bindBidirectional(model.selectedWalletBackend);
 
             gridPane.addTextField(Res.get("wallet.config.enterHostname"), model.hostnameProperty);
             gridPane.addTextField(Res.get("wallet.config.enterPort"), model.portProperty);

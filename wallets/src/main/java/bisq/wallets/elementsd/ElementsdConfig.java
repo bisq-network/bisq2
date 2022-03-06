@@ -15,21 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets;
+package bisq.wallets.elementsd;
 
-import lombok.Builder;
-import lombok.Getter;
+import bisq.wallets.rpc.RpcConfig;
 
-import java.nio.file.Path;
-
-@Builder
-@Getter
-public class WalletConfig {
-    private final WalletBackend walletBackend;
-    private final NetworkType networkType;
-    private final String hostname;
-    private final int port;
-    private final String user;
-    private final String password;
-    private final Path walletsDataDirPath;
+public record ElementsdConfig(RpcConfig bitcoindRpcConfig, RpcConfig elementsdRpcConfig) {
 }

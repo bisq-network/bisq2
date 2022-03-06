@@ -15,21 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets;
+package bisq.wallets.elementsd.rpc.calls;
 
-import lombok.Builder;
-import lombok.Getter;
+import bisq.wallets.rpc.call.DaemonRpcCall;
 
-import java.nio.file.Path;
+public class ElementsdStopRpcCall extends DaemonRpcCall<Void, String> {
+    public ElementsdStopRpcCall() {
+        super(null);
+    }
 
-@Builder
-@Getter
-public class WalletConfig {
-    private final WalletBackend walletBackend;
-    private final NetworkType networkType;
-    private final String hostname;
-    private final int port;
-    private final String user;
-    private final String password;
-    private final Path walletsDataDirPath;
+    @Override
+    public String getRpcMethodName() {
+        return "stop";
+    }
+
+    @Override
+    public boolean isResponseValid(String response) {
+        return response.equals("Elements Core stopping");
+    }
+
+    @Override
+    public Class<String> getRpcResponseClass() {
+        return String.class;
+    }
 }

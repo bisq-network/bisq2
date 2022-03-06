@@ -15,21 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets;
+package bisq.wallets.elementsd.rpc.responses;
 
-import lombok.Builder;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindListTransactionsResponseEntry;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.Setter;
 
-import java.nio.file.Path;
-
-@Builder
 @Getter
-public class WalletConfig {
-    private final WalletBackend walletBackend;
-    private final NetworkType networkType;
-    private final String hostname;
-    private final int port;
-    private final String user;
-    private final String password;
-    private final Path walletsDataDirPath;
+@Setter
+public class ElementsdListTransactionsResponseEntry extends BitcoindListTransactionsResponseEntry {
+    @JsonProperty("amountblinder")
+    private String amountBlinder;
+    private String asset;
+    @JsonProperty("assetblinder")
+    private String assetBlinder;
 }

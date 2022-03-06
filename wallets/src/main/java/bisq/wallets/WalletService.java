@@ -20,6 +20,7 @@ package bisq.wallets;
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
 import bisq.wallets.bitcoind.BitcoinWallet;
+import bisq.wallets.elementsd.LiquidWallet;
 import bisq.wallets.exceptions.WalletNotInitializedException;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
@@ -43,14 +44,34 @@ public class WalletService {
         return CompletableFuture.runAsync(() -> {
             walletsDataDir.toFile().mkdirs();
 
-            Path bitcoindDataDir = walletsDataDir.resolve("bitcoind"); // directory name for bitcoind wallet
-            RpcConfig rpcConfig = createRpcConfigFromWalletConfig(walletConfig, bitcoindDataDir);
-            var bitcoindWallet = new BitcoinWallet(bitcoindDataDir, rpcConfig);
-            bitcoindWallet.initialize(walletPassphrase);
+            Wallet wallet = switch (walletConfig.getWalletBackend()) {
+                case BITCOIND -> {
+                    var bitcoindWallet = createBitcoinWallet(walletConfig, walletsDataDir);
+                    bitcoindWallet.initialize(walletPassphrase);
+                    yield bitcoindWallet;
+                }
+                case ELEMENTSD -> {
+                    var liquidWallet = createLiquidWallet(walletConfig, walletsDataDir);
+                    liquidWallet.initialize(walletPassphrase);
+                    yield liquidWallet;
+                }
+            };
 
-            wallet = Optional.of(bitcoindWallet);
+            this.wallet = Optional.of(wallet);
             log.info("Successfully created wallet at {}", walletsDataDir);
         }).thenRun(this::getBalance);
+    }
+
+    private BitcoinWallet createBitcoinWallet(WalletConfig walletConfig, Path walletsDataDir) {
+        Path bitcoindDataDir = walletsDataDir.resolve("bitcoind"); // directory name for bitcoind wallet
+        RpcConfig rpcConfig = createRpcConfigFromWalletConfig(walletConfig, bitcoindDataDir);
+        return new BitcoinWallet(bitcoindDataDir, rpcConfig);
+    }
+
+    private LiquidWallet createLiquidWallet(WalletConfig walletConfig, Path walletsDataDir) {
+        Path bitcoindDataDir = walletsDataDir.resolve("elementsd"); // directory name for bitcoind wallet
+        RpcConfig rpcConfig = createRpcConfigFromWalletConfig(walletConfig, bitcoindDataDir);
+        return new LiquidWallet(bitcoindDataDir, rpcConfig);
     }
 
     public CompletableFuture<Void> shutdown() {

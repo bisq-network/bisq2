@@ -17,19 +17,21 @@
 
 package bisq.wallets;
 
-import lombok.Builder;
 import lombok.Getter;
 
-import java.nio.file.Path;
+public enum WalletBackend {
+    BITCOIND("Bitcoin Core"),
+    ELEMENTSD("Elements Core");
 
-@Builder
-@Getter
-public class WalletConfig {
-    private final WalletBackend walletBackend;
-    private final NetworkType networkType;
-    private final String hostname;
-    private final int port;
-    private final String user;
-    private final String password;
-    private final Path walletsDataDirPath;
+    @Getter
+    private final String label;
+
+    WalletBackend(String label) {
+        this.label = label;
+    }
+
+    @Override
+    public String toString() {
+        return label;
+    }
 }

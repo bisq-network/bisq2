@@ -15,21 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets;
+package bisq.wallets.elementsd;
 
-import lombok.Builder;
-import lombok.Getter;
+import bisq.wallets.AbstractRegtestSetup;
+import bisq.wallets.ConnectionFailureIntegrationTests;
+import bisq.wallets.elementsd.rpc.ElementsdWallet;
+import bisq.wallets.process.MultiProcessCoordinator;
 
-import java.nio.file.Path;
+import java.io.IOException;
 
-@Builder
-@Getter
-public class WalletConfig {
-    private final WalletBackend walletBackend;
-    private final NetworkType networkType;
-    private final String hostname;
-    private final int port;
-    private final String user;
-    private final String password;
-    private final Path walletsDataDirPath;
+public class ElementsdConnectionFailureIntegrationTests
+        extends ConnectionFailureIntegrationTests<MultiProcessCoordinator, ElementsdWallet> {
+    @Override
+    protected AbstractRegtestSetup<MultiProcessCoordinator, ElementsdWallet> createRegtestSetup() throws IOException {
+        return new ElementsdRegtestSetup();
+    }
 }
