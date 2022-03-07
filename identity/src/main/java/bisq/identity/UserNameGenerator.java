@@ -29,26 +29,29 @@ import java.util.Scanner;
 import java.math.BigInteger;
 
 @Slf4j
+// Algorithm and word lists borrowed from: https://raw.githubusercontent.com/Reckless-Satoshi/robosats/main/api/nick_generator/
+// Combinations: 4833 * 450 * 12591 * 999 = 27356152813650
 public class UserNameGenerator {
     public static String fromHash(byte[] hash) {
         try {
+            // read words from text files in /resources
             List<String> adjectives = read("/adjectives.txt");
             List<String> nouns = read("/nouns.txt");
             List<String> adverbs = read("/adverbs.txt");
-
+            // calc BigIntegers from the number of words used in the nicknameGenerator
             BigInteger numAdverbs = BigInteger.valueOf(adverbs.size());
             BigInteger numAdjectives = BigInteger.valueOf(adjectives.size());
             BigInteger numNouns = BigInteger.valueOf(nouns.size());
             BigInteger maxNumber = BigInteger.valueOf(999);
             BigInteger poolSize = ((numAdverbs.multiply(numAdjectives)).multiply(numNouns)).multiply(maxNumber);
-
+            // calc maxHashSize 2**256
             BigInteger hashAsBigInteger = new BigInteger(hash);
             BigInteger base = BigInteger.valueOf(2);
             BigInteger maxHashSize = base.pow(256);
-
+            // normalize Hash to poolSize
             BigInteger normalizedHash = hashAsBigInteger.multiply(poolSize);
             normalizedHash = normalizedHash.divide(maxHashSize);
-
+            // calc Adverb, Adjectives + Nouns indexNumbers
             BigInteger adverbIndex = normalizedHash.divide(numAdjectives.multiply(numNouns.multiply(maxNumber)));
             BigInteger reminder = normalizedHash.subtract(adverbIndex.multiply(numAdjectives.multiply(numNouns.multiply(maxNumber))));
 
@@ -57,12 +60,12 @@ public class UserNameGenerator {
 
             BigInteger nounIndex = reminder.divide(maxNumber);
             reminder = reminder.subtract(nounIndex.multiply(maxNumber));
-
+            // convert BigIntegers back to Int.
             int adverbsIndexInt = adverbIndex.intValue();
             int adjectiveIndexInt = adjectiveIndex.intValue();
             int nounIndexInt = nounIndex.intValue();
             int reminderInt = reminder.intValue();
-
+            // construct the nickname 
             System.out.println(" ");
             System.out.println("From this day forward you shall also be known as: "+adverbs.get(adverbsIndexInt)+adjectives.get(adjectiveIndexInt)+nouns.get(nounIndexInt)+reminderInt);
             System.out.println(" ");
