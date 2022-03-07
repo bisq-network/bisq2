@@ -18,18 +18,24 @@
 package bisq.identity;
 
 import bisq.security.DigestUtil;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+
+import static bisq.security.DigestUtil.sha256;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class UserNameGeneratorTest {
     @Test
     void testFromHash() {
-        byte[] hash = DigestUtil.hash("test1".getBytes(StandardCharsets.UTF_8));
-        // byte[] hash = Hex.decode("11");
+        byte[] hash = sha256("test1".getBytes(StandardCharsets.UTF_8));
+
         String expected = "TODO";
         String result = UserNameGenerator.fromHash(hash);
         // todo enable once algorithm is implemented
-        //assertEquals(expected, result);
+        assertEquals(expected, result);
+
     }
 }
