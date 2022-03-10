@@ -40,11 +40,18 @@ import bisq.social.chat.ChatService;
 import bisq.social.intent.TradeIntentListingsService;
 import bisq.social.intent.TradeIntentService;
 import bisq.social.userprofile.UserProfileService;
+import bisq.wallets.NetworkType;
+import bisq.wallets.WalletBackend;
+import bisq.wallets.WalletConfig;
 import bisq.wallets.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -104,7 +111,7 @@ public class DefaultApplicationService extends ServiceProvider {
 
         UserProfileService.Config userProfileServiceConfig = UserProfileService.Config.from(getConfig("bisq.userProfileServiceConfig"));
         userProfileService = new UserProfileService(persistenceService, userProfileServiceConfig, keyPairService, identityService, networkService);
-        chatService = new ChatService(persistenceService, identityService, networkService,userProfileService);
+        chatService = new ChatService(persistenceService, identityService, networkService, userProfileService);
         tradeIntentListingsService = new TradeIntentListingsService(networkService);
         tradeIntentService = new TradeIntentService(networkService, identityService, tradeIntentListingsService, chatService);
 
@@ -118,7 +125,32 @@ public class DefaultApplicationService extends ServiceProvider {
 
         protocolService = new ProtocolService(networkService, identityService, persistenceService, openOfferService);
 
-        walletService = new WalletService();
+        Optional<WalletConfig> walletConfig = !isRegtestRun() ? Optional.empty() : createRegtestWalletConfig();
+        walletService = new WalletService(walletConfig);
+        walletService.tryAutoInitialization();
+    }
+
+    private boolean isRegtestRun() {
+        return applicationConfig.isBitcoindRegtest() || applicationConfig.isElementsdRegtest();
+    }
+
+    private Optional<WalletConfig> createRegtestWalletConfig() {
+        String walletsDataDir = applicationConfig.baseDir() + File.separator + "wallets";
+        Path walletsDataDirPath = FileSystems.getDefault().getPath(walletsDataDir);
+
+        WalletBackend walletBackend = applicationConfig.isBitcoindRegtest() ?
+                WalletBackend.BITCOIND : WalletBackend.ELEMENTSD;
+
+        var walletConfig = WalletConfig.builder()
+                .walletBackend(walletBackend)
+                .networkType(NetworkType.REGTEST)
+                .hostname(Optional.empty())
+                .port(Optional.empty())
+                .user("bisq")
+                .password("bisq")
+                .walletsDataDirPath(walletsDataDirPath)
+                .build();
+        return Optional.of(walletConfig);
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {

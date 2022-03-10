@@ -91,7 +91,7 @@ public class WalletController extends TabController {
     }
 
     private boolean isWalletReady() {
-        return walletService.getWallet().isPresent();
+        return walletService.isWalletReady();
     }
 
     private void onConfigPopupClosed() {

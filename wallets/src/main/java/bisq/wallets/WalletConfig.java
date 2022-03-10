@@ -21,14 +21,15 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Builder
 @Getter
 public class WalletConfig {
     private final WalletBackend walletBackend;
     private final NetworkType networkType;
-    private final String hostname;
-    private final int port;
+    private final Optional<String> hostname;
+    private final Optional<Integer> port;
     private final String user;
     private final String password;
     private final Path walletsDataDirPath;

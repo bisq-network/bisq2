@@ -39,8 +39,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class WalletConfigPopup extends Popup {
     private final Controller controller;
@@ -88,9 +88,8 @@ public class WalletConfigPopup extends Popup {
             String passphrase = model.walletPassphraseProperty.get();
             model.walletPassphraseProperty.setValue(""); // Wipe passphrase from memory
 
-            Path walletsDataDirPath = FileSystems.getDefault().getPath(model.walletsDataDirPathProperty.get());
             WalletConfig walletConfig = createWalletConfigFromModel();
-            walletService.initialize(walletsDataDirPath, walletConfig, passphrase)
+            walletService.initialize(walletConfig, passphrase)
                     .whenComplete((__, throwable) -> {
                         if (throwable == null) {
                             UIThread.run(() -> {
@@ -120,8 +119,8 @@ public class WalletConfigPopup extends Popup {
             return WalletConfig.builder()
                     .walletBackend(model.selectedWalletBackend.get())
                     .networkType(NetworkType.REGTEST)
-                    .hostname(model.hostnameProperty.get())
-                    .port(Integer.parseInt(model.portProperty.get()))
+                    .hostname(Optional.of(model.hostnameProperty.get()))
+                    .port(Optional.of(Integer.parseInt(model.portProperty.get())))
                     .user(model.usernameProperty.get())
                     .password(model.passwordProperty.get())
                     .walletsDataDirPath(Path.of(model.walletsDataDirPathProperty.get()))

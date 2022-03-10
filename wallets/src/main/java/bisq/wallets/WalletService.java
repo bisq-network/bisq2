@@ -35,13 +35,32 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class WalletService {
+    private static final String LOCALHOST = "127.0.0.1";
+
+    private final Optional<WalletConfig> walletConfig;
     @Getter
     private Optional<Wallet> wallet = Optional.empty();
     @Getter
     private final Observable<Coin> observableBalanceAsCoin = new Observable<>(Coin.of(0, "BTC"));
 
-    public CompletableFuture<Void> initialize(Path walletsDataDir, WalletConfig walletConfig, String walletPassphrase) {
+    public WalletService(Optional<WalletConfig> walletConfig) {
+        this.walletConfig = walletConfig;
+    }
+
+    public CompletableFuture<Void> tryAutoInitialization() {
+        if (walletConfig.isEmpty()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return initialize(walletConfig.get(), "bisq");
+    }
+
+    public CompletableFuture<Void> initialize(WalletConfig walletConfig, String walletPassphrase) {
+        if (wallet.isPresent()) {
+            return CompletableFuture.completedFuture(null);
+        }
+
         return CompletableFuture.runAsync(() -> {
+            Path walletsDataDir = walletConfig.getWalletsDataDirPath();
             walletsDataDir.toFile().mkdirs();
 
             Wallet wallet = switch (walletConfig.getWalletBackend()) {
@@ -78,14 +97,17 @@ public class WalletService {
         return CompletableFuture.runAsync(() -> wallet.ifPresent(Wallet::shutdown));
     }
 
+    public boolean isWalletReady() {
+        return walletConfig.isPresent() || wallet.isPresent();
+    }
+
     public CompletableFuture<Long> getBalance() {
         return CompletableFuture.supplyAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
             double walletBalance = wallet.getBalance();
             Coin coin = Coin.of(walletBalance, "BTC");
             observableBalanceAsCoin.set(coin);
-            long balance = coin.getValue();
-            return balance;
+            return coin.getValue();
         });
     }
 
@@ -125,10 +147,14 @@ public class WalletService {
     }
 
     private RpcConfig createRpcConfigFromWalletConfig(WalletConfig walletConfig, Path walletPath) {
+        String hostname = walletConfig.getHostname().orElse(LOCALHOST);
+        int port = walletConfig.getPort()
+                .orElseGet(() -> walletConfig.getWalletBackend() == WalletBackend.BITCOIND ? 18443 : 7040);
+
         return new RpcConfig.Builder()
                 .networkType(NetworkType.REGTEST)
-                .hostname(walletConfig.getHostname())
-                .port(walletConfig.getPort())
+                .hostname(hostname)
+                .port(port)
                 .user(walletConfig.getUser())
                 .password(walletConfig.getPassword())
                 .walletPath(walletPath)
