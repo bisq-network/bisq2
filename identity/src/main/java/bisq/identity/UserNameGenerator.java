@@ -17,8 +17,8 @@
 
 package bisq.identity;
 
-import bisq.common.util.CollectionUtil;
 import bisq.common.util.FileUtils;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -26,83 +26,63 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.math.BigInteger;
 
-@Slf4j
 // Algorithm and word lists borrowed from: https://raw.githubusercontent.com/Reckless-Satoshi/robosats/main/api/nick_generator/
-// Combinations: 4833 * 450 * 12591 * 999 = 27356152813650
+// Combinations: 4833 * 450 * 12591 * 1000 = 27385711200000 (2 ^ 44.6)
+@Slf4j
 public class UserNameGenerator {
+    private static final BigInteger MAX_INTEGER = BigInteger.valueOf(Integer.MAX_VALUE);
+
     public static String fromHash(byte[] hash) {
-        try {
-            // read words from text files in /resources
-            List<String> adjectives = read("/adjectives.txt");
-            List<String> nouns = read("/nouns.txt");
-            List<String> adverbs = read("/adverbs.txt");
-            // calc BigIntegers from the number of words used in the nicknameGenerator
-            BigInteger numAdverbs = BigInteger.valueOf(adverbs.size());
-            BigInteger numAdjectives = BigInteger.valueOf(adjectives.size());
-            BigInteger numNouns = BigInteger.valueOf(nouns.size());
-            BigInteger maxNumber = BigInteger.valueOf(999);
-            BigInteger poolSize = ((numAdverbs.multiply(numAdjectives)).multiply(numNouns)).multiply(maxNumber);
-            // calc maxHashSize 2**256
-            BigInteger hashAsBigInteger = new BigInteger(hash);
-            BigInteger base = BigInteger.valueOf(2);
-            BigInteger maxHashSize = base.pow(256);
-            // normalize Hash to poolSize
-            BigInteger normalizedHash = hashAsBigInteger.multiply(poolSize);
-            normalizedHash = normalizedHash.divide(maxHashSize);
-            // calc Adverb, Adjectives + Nouns indexNumbers
-            BigInteger adverbIndex = normalizedHash.divide(numAdjectives.multiply(numNouns.multiply(maxNumber)));
-            BigInteger reminder = normalizedHash.subtract(adverbIndex.multiply(numAdjectives.multiply(numNouns.multiply(maxNumber))));
-
-            BigInteger adjectiveIndex = reminder.divide(numNouns.multiply(maxNumber));
-            reminder = reminder.subtract(adjectiveIndex.multiply(numNouns.multiply(maxNumber)));
-
-            BigInteger nounIndex = reminder.divide(maxNumber);
-            reminder = reminder.subtract(nounIndex.multiply(maxNumber));
-            // convert BigIntegers back to Int.
-            int adverbsIndexInt = adverbIndex.intValue();
-            int adjectiveIndexInt = adjectiveIndex.intValue();
-            int nounIndexInt = nounIndex.intValue();
-            int reminderInt = reminder.intValue();
-            // construct the nickname 
-            System.out.println(" ");
-            System.out.println("From this day forward you shall also be known as: "+adverbs.get(adverbsIndexInt)+adjectives.get(adjectiveIndexInt)+nouns.get(nounIndexInt)+reminderInt);
-            System.out.println(" ");
-
-//            log.info("adverbs {}", adverbs);
-//            log.info("adjectives {}", adjectives);
-//            log.info("nouns {}", nouns);
-            log.info("numAdjectives {} ", numAdjectives);
-            log.info("numAdverbs {}", numAdverbs);
-            log.info("numNouns {}", numNouns);
-            log.info("poolSize {}", poolSize);
-            log.info("hashAsInt {}", hashAsBigInteger);
-            log.info("maxHashSi {}", maxHashSize);
-            log.info("normalizedHash {}", normalizedHash);
-            log.info("adverbIndex {}", adverbIndex);
-            log.info("adjectiveIndex {}", adjectiveIndex);
-            log.info("nounIndex {}", nounIndex);
-            log.info("reminder {}", reminder);
-
-
-
-            //todo implement algorithm
-        } catch (IOException error) {
-            log.error("Generating user name failed", error);
-            throw new RuntimeException(error);
-        }
-        //todo remove once algorithm is implemented
-        return "TODO";
+        List<String> adverbs = read("/adverbs.txt");
+        List<String> adjectives = read("/adjectives.txt");
+        List<String> nouns = read("/nouns.txt");
+        return fromHash(new BigInteger(hash), adverbs, adjectives, nouns);
     }
 
-    private static List<String> read(String resource) throws IOException {
+    @VisibleForTesting
+    static String fromHash(BigInteger hashAsBigInteger, List<String> adverbs, List<String> adjectives, List<String> nouns) {
+        hashAsBigInteger = hashAsBigInteger.abs();
+        BigInteger numAdverbs = BigInteger.valueOf(adverbs.size());
+        BigInteger numAdjectives = BigInteger.valueOf(adjectives.size());
+        BigInteger numNouns = BigInteger.valueOf(nouns.size());
+        BigInteger appendixNumber = BigInteger.valueOf(1000);
+
+
+        //adverbIndex = hash / adjectives * nouns * appendix
+        BigInteger adverbIndex = hashAsBigInteger.divide(numAdjectives.multiply(numNouns).multiply(appendixNumber));
+        //remainderHash = hash - (adverbIndex * adjectives * nouns * appendix)
+        BigInteger remainderHash = hashAsBigInteger.subtract(adverbIndex.multiply(numAdjectives.multiply(numNouns.multiply(appendixNumber))));
+        //adjedctivIndex = rema/inderHash / nouns * appendix
+        BigInteger adjectiveIndex = remainderHash.divide(numNouns.multiply(appendixNumber));
+        //remainderAdverb = remainderHash - (adjectiveIndex * nouns * appendix)
+        BigInteger remainderAdverb = remainderHash.subtract(adjectiveIndex.multiply(numNouns).multiply(appendixNumber));
+        //nounsIndex = remainderAdverb / appendix
+        BigInteger nounsIndex = remainderAdverb.divide(appendixNumber);
+        //appndixID = remainderAdverb - (nounsIndex * appendix )
+        BigInteger appendixIndex = remainderAdverb.subtract(nounsIndex.multiply(appendixNumber));
+
+        // Limit BigInteger value to MAX_INTEGER and further to list size by applying mod
+        int adverbsIndexInt = adverbIndex.mod(MAX_INTEGER).intValue() % adverbs.size();
+        int adjectiveIndexInt = adjectiveIndex.mod(MAX_INTEGER).intValue() % adjectives.size();
+        int nounIndexInt = nounsIndex.mod(MAX_INTEGER).intValue() % nouns.size();
+        int appendixInt = appendixIndex.mod(MAX_INTEGER).intValue();
+        appendixInt = appendixInt % 1000;
+        return adverbs.get(adverbsIndexInt) + adjectives.get(adjectiveIndexInt) + nouns.get(nounIndexInt) + appendixInt;
+    }
+
+    @VisibleForTesting
+    static List<String> read(String resource) {
         List<String> list = new ArrayList<>();
-        try (Scanner adjScanner = new Scanner(FileUtils.getResourceAsStream(resource))) {
-            while (adjScanner.hasNextLine()) {
-                list.add(adjScanner.nextLine());
+        try (Scanner scanner = new Scanner(FileUtils.getResourceAsStream(resource))) {
+            while (scanner.hasNextLine()) {
+                list.add(scanner.nextLine());
             }
             return list;
+        } catch (IOException e) {
+            // Not expected so we convert to a RuntimeException
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }
