@@ -29,6 +29,7 @@ import java.util.Scanner;
 
 // Algorithm and word lists borrowed from: https://raw.githubusercontent.com/Reckless-Satoshi/robosats/main/api/nick_generator/
 // Combinations: 4833 * 450 * 12591 * 1000 = 27385711200000 (2 ^ 44.6)
+// signed commit
 @Slf4j
 public class UserNameGenerator {
     private static final BigInteger MAX_INTEGER = BigInteger.valueOf(Integer.MAX_VALUE);
