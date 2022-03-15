@@ -33,11 +33,16 @@ public class ApplicationConfigFactory {
             appName = typesafeConfig.getString("appName");
         }
 
+        String dataDir = null;
         boolean isBitcoindRegtest = false;
         boolean isElementsdRegtest = false;
         for (String arg : args) {
             if (arg.startsWith("--appName")) {
                 appName = arg.split("=")[1];
+            }
+
+            if (arg.startsWith("--data-dir")) {
+                dataDir = arg.split("=")[1];
             }
 
             if (arg.startsWith("--regtest-bitcoind")) {
@@ -49,8 +54,9 @@ public class ApplicationConfigFactory {
             }
         }
 
-        String appDir = OsUtils.getUserDataDir() + File.separator + appName;
+        String appDir = dataDir == null ? OsUtils.getUserDataDir() + File.separator + appName : dataDir;
         log.info("Use application directory {}", appDir);
+
         return new ApplicationConfig(appDir, appName, isBitcoindRegtest, isElementsdRegtest);
     }
 }
