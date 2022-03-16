@@ -17,46 +17,16 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.common.util.NetworkUtils;
-import bisq.wallets.bitcoind.rpc.RpcClient;
-import bisq.wallets.bitcoind.rpc.RpcConfig;
-import bisq.wallets.exceptions.CannotConnectToWalletException;
-import bisq.wallets.exceptions.InvalidRpcCredentialsException;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import bisq.wallets.AbstractRegtestSetup;
+import bisq.wallets.ConnectionFailureIntegrationTests;
+import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 
 import java.io.IOException;
-import java.net.ConnectException;
-import java.net.MalformedURLException;
 
-public class BitcoindConnectionFailureIntegrationTests {
-    @Test
-    void bitcoindNotRunningTest() throws MalformedURLException {
-        int freePort = NetworkUtils.findFreeSystemPort();
-        RpcConfig rpcConfig = BitcoindRegtestSetup.createRpcConfigForPort(freePort);
-
-        var rpcClient = new RpcClient(rpcConfig);
-        var minerChainBackend = new BitcoindChainBackend(rpcClient);
-
-        CannotConnectToWalletException exception = Assertions
-                .assertThrows(CannotConnectToWalletException.class, minerChainBackend::listWallets);
-
-        Assertions.assertTrue(exception.getCause() instanceof ConnectException);
-    }
-
-    @Test
-    void wrongRpcCredentialsTest() throws IOException {
-        BitcoindProcess bitcoindProcess = BitcoindRegtestSetup.createAndStartBitcoind();
-
-        RpcConfig wrongRpcConfig = new RpcConfig.Builder(bitcoindProcess.getRpcConfig())
-                .password("WRONG_PASSWORD")
-                .build();
-
-        var rpcClient = new RpcClient(wrongRpcConfig);
-        var minerChainBackend = new BitcoindChainBackend(rpcClient);
-
-        Assertions.assertThrows(InvalidRpcCredentialsException.class, minerChainBackend::listWallets);
-
-        bitcoindProcess.stopAndWaitUntilStopped();
+public class BitcoindConnectionFailureIntegrationTests
+        extends ConnectionFailureIntegrationTests<BitcoindProcess, BitcoindWallet> {
+    @Override
+    protected AbstractRegtestSetup<BitcoindProcess, BitcoindWallet> createRegtestSetup() throws IOException {
+        return new BitcoindRegtestSetup();
     }
 }

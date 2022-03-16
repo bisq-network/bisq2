@@ -23,6 +23,7 @@ import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.util.Optional;
 
 @Slf4j
 public class ApplicationConfigFactory {
@@ -31,15 +32,31 @@ public class ApplicationConfigFactory {
         if (typesafeConfig.hasPath("appName")) {
             appName = typesafeConfig.getString("appName");
         }
-        
+
+        String dataDir = null;
+        boolean isBitcoindRegtest = false;
+        boolean isElementsdRegtest = false;
         for (String arg : args) {
             if (arg.startsWith("--appName")) {
                 appName = arg.split("=")[1];
             }
+
+            if (arg.startsWith("--data-dir")) {
+                dataDir = arg.split("=")[1];
+            }
+
+            if (arg.startsWith("--regtest-bitcoind")) {
+                isBitcoindRegtest = true;
+            }
+
+            if (arg.startsWith("--regtest-elementsd")) {
+                isElementsdRegtest = true;
+            }
         }
 
-        String appDir = OsUtils.getUserDataDir() + File.separator + appName;
+        String appDir = dataDir == null ? OsUtils.getUserDataDir() + File.separator + appName : dataDir;
         log.info("Use application directory {}", appDir);
-        return new ApplicationConfig(appDir, appName);
+
+        return new ApplicationConfig(appDir, appName, isBitcoindRegtest, isElementsdRegtest);
     }
 }

@@ -20,22 +20,29 @@ package bisq.wallets.bitcoind;
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.NetworkType;
+import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.exceptions.RpcCallFailureException;
-import bisq.wallets.bitcoind.rpc.RpcClient;
-import bisq.wallets.bitcoind.rpc.RpcConfig;
+import bisq.wallets.exceptions.WalletShutdownFailedException;
+import bisq.wallets.exceptions.WalletStartupFailedException;
+import bisq.wallets.process.DaemonProcess;
+import bisq.wallets.process.ProcessConfig;
+import bisq.wallets.rpc.RpcClient;
+import bisq.wallets.rpc.RpcClientFactory;
+import bisq.wallets.rpc.RpcConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Scanner;
 
 @Slf4j
-public class BitcoindProcess {
+public class BitcoindProcess implements DaemonProcess {
 
     @Getter
-    private final RpcConfig rpcConfig;
-    private final Path dataDir;
+    protected final RpcConfig rpcConfig;
+    protected final Path dataDir;
 
     private Process bitcoindProcess;
 
@@ -44,45 +51,64 @@ public class BitcoindProcess {
         this.dataDir = dataDir;
     }
 
-    public void startAndWaitUntilReady() throws IOException {
-        FileUtils.makeDirs(dataDir.toFile());
-        bitcoindProcess = createAndStartProcess();
-        waitUntilReady();
+    @Override
+    public ProcessConfig createProcessConfig() {
+        String networkArg = getParamForNetworkType(rpcConfig.networkType());
+        return new ProcessConfig(
+                "bitcoind",
+                List.of(
+                        networkArg,
+                        "-datadir=" + dataDir.toAbsolutePath(),
+
+                        "-bind=127.0.0.1:" + NetworkUtils.findFreeSystemPort(),
+                        "-whitelist=127.0.0.1",
+
+                        "-rpcbind=127.0.0.1:" + rpcConfig.port(),
+                        "-rpcallowip=127.0.0.1",
+                        "-rpcuser=" + rpcConfig.user(),
+                        "-rpcpassword=" + rpcConfig.password(),
+
+                        "-fallbackfee=0.00000001",
+                        "-txindex=1")
+        );
     }
 
-    public boolean stopAndWaitUntilStopped() {
+    @Override
+    public void start() {
+        try {
+            FileUtils.makeDirs(dataDir.toFile());
+            bitcoindProcess = createAndStartProcess();
+            waitUntilReady();
+        } catch (IOException e) {
+            throw new WalletStartupFailedException("Cannot start wallet process.", e);
+        }
+    }
+
+    @Override
+    public void invokeStopRpcCall() throws IOException {
+        try {
+            RpcClient rpcClient = RpcClientFactory.create(rpcConfig);
+            var chainBackend = new BitcoindDaemon(rpcClient);
+            chainBackend.stop();
+        } catch (RpcCallFailureException e) {
+            log.error("Failed to send stop command to bitcoind.", e);
+        }
+    }
+
+    @Override
+    public void shutdown() {
         try {
             invokeStopRpcCall();
             bitcoindProcess.waitFor();
-            return true;
-
         } catch (IOException | InterruptedException e) {
-            if (e instanceof IOException) {
-                log.error("Cannot send stop rpc call to bitcoind.", e);
-            }
-
-            if (e instanceof InterruptedException) {
-                log.error("Cannot wait until bitcoind terminated.", e);
-            }
-            return false;
+            throw new WalletShutdownFailedException("Cannot shutdown wallet process.", e);
         }
     }
 
     private Process createAndStartProcess() throws IOException {
-        String networkArg = getBitcoindParamForNetworkType(rpcConfig.networkType());
-        return new ProcessBuilder(
-                "bitcoind",
-                networkArg,
-                "-datadir=" + dataDir.toAbsolutePath(),
-                "-bind=127.0.0.1:" + NetworkUtils.findFreeSystemPort(),
-                "-whitelist=127.0.0.1",
-                "-rpcbind=127.0.0.1:" + rpcConfig.port(),
-                "-rpcallowip=127.0.0.1",
-                "-rpcuser=" + rpcConfig.user(),
-                "-rpcpassword=" + rpcConfig.password(),
-                "-fallbackfee=0.00000001",
-                "-txindex=1"
-        ).start();
+        ProcessConfig processConfig = createProcessConfig();
+        return new ProcessBuilder(processConfig.toCommandList())
+                .start();
     }
 
     private void waitUntilReady() {
@@ -103,16 +129,7 @@ public class BitcoindProcess {
         }
     }
 
-    private void invokeStopRpcCall() throws IOException {
-        try {
-            var chainBackend = new BitcoindChainBackend(new RpcClient(rpcConfig));
-            chainBackend.stop();
-        } catch (RpcCallFailureException e) {
-            log.error("Failed to send stop command to bitcoind.", e);
-        }
-    }
-
-    private String getBitcoindParamForNetworkType(NetworkType networkType) {
+    private String getParamForNetworkType(NetworkType networkType) {
         return switch (networkType) {
             case MAINNET -> "";
             case REGTEST -> "-regtest";

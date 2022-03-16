@@ -1,6 +1,10 @@
+import bisq.gradle.BisqPlugin
+
 plugins {
     id 'java'
 }
+
+apply plugin: BisqPlugin
 
 group 'bisq'
 

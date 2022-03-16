@@ -29,10 +29,10 @@ public class WalletTransactionListItem implements TableItem {
     private final StringProperty confirmations = new SimpleStringProperty(this, "wallet.column.confirmations");
 
     public WalletTransactionListItem(Transaction transaction) {
-        txId.set(transaction.txId());
-        address.set(transaction.address());
-        amount.set(String.valueOf(transaction.amount()));
-        confirmations.set(String.valueOf(transaction.confirmations()));
+        txId.set(transaction.getTxId());
+        address.set(transaction.getAddress());
+        amount.set(String.valueOf(transaction.getAmount()));
+        confirmations.set(String.valueOf(transaction.getConfirmations()));
     }
 
     public StringProperty txIdProperty() {

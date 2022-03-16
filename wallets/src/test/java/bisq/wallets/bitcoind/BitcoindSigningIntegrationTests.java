@@ -27,9 +27,9 @@ public class BitcoindSigningIntegrationTests extends SharedBitcoindInstanceTests
 
     @Test
     public void signAndVerifyMessage() {
-        String address = minerWalletBackend.getNewAddress(AddressType.LEGACY, "");
-        String signature = minerWalletBackend.signMessage(address, MESSAGE);
-        boolean isValid = minerWalletBackend.verifyMessage(address, signature, MESSAGE);
+        String address = minerWallet.getNewAddress(AddressType.LEGACY, "");
+        String signature = minerWallet.signMessage(address, MESSAGE);
+        boolean isValid = minerWallet.verifyMessage(address, signature, MESSAGE);
         assertTrue(isValid);
     }
 }

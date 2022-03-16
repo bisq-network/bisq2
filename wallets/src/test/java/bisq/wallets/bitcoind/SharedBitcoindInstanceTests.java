@@ -17,56 +17,32 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.common.util.FileUtils;
-import bisq.wallets.bitcoind.rpc.RpcClient;
-import bisq.wallets.bitcoind.rpc.RpcConfig;
-import org.junit.jupiter.api.*;
+import bisq.wallets.AbstractRegtestSetup;
+import bisq.wallets.AbstractSharedRegtestInstanceTests;
+import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
+import bisq.wallets.bitcoind.rpc.BitcoindWallet;
+import org.junit.jupiter.api.BeforeAll;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
+public abstract class SharedBitcoindInstanceTests
+        extends AbstractSharedRegtestInstanceTests<BitcoindProcess, BitcoindWallet> {
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class SharedBitcoindInstanceTests {
-    protected RpcClient rpcClient;
-    protected BitcoindProcess bitcoindProcess;
+    protected BitcoindRegtestSetup regtestSetup;
+    protected BitcoindDaemon daemon;
+    protected BitcoindWallet minerWallet;
 
-    protected BitcoindChainBackend minerChainBackend;
-    protected BitcoindWalletBackend minerWalletBackend;
+    @Override
+    public AbstractRegtestSetup<BitcoindProcess, BitcoindWallet> createRegtestSetup() throws IOException {
+        regtestSetup = new BitcoindRegtestSetup();
+        return regtestSetup;
+    }
 
-    protected Path tmpDirPath;
-    protected Path walletFilePath;
-
+    @Override
     @BeforeAll
-    public void startBitcoind() throws IOException {
-        bitcoindProcess = BitcoindRegtestSetup.createAndStartBitcoind();
-    }
-
-    @AfterAll
-    public void stopBitcoind() {
-        bitcoindProcess.stopAndWaitUntilStopped();
-    }
-
-    @BeforeEach
-    public void setUp() throws IOException {
-        tmpDirPath = FileUtils.createTempDir();
-        walletFilePath = tmpDirPath.resolve("wallet");
-        assertFalse(walletFilePath.toFile().exists());
-
-        RpcConfig rpcConfig = bitcoindProcess.getRpcConfig();
-        rpcClient = new RpcClient(rpcConfig);
-
-        minerChainBackend = new BitcoindChainBackend(rpcClient);
-        minerChainBackend.createOrLoadWallet(walletFilePath, BitcoindRegtestSetup.WALLET_PASSPHRASE, false, false);
-
-        RpcClient walletRpcClient = BitcoindRegtestSetup.createWalletRpcClient(rpcConfig, walletFilePath);
-        minerWalletBackend = new BitcoindWalletBackend(walletRpcClient);
-        minerWalletBackend.walletPassphrase(BitcoindRegtestSetup.WALLET_PASSPHRASE, BitcoindWalletBackend.DEFAULT_WALLET_TIMEOUT);
-    }
-
-    @AfterEach
-    public void cleanUp() {
-        minerChainBackend.unloadWallet(walletFilePath);
+    public void start() throws IOException {
+        super.start();
+        daemon = regtestSetup.getDaemon();
+        minerWallet = regtestSetup.getMinerWallet();
     }
 }

@@ -21,10 +21,15 @@ import bisq.common.locale.LocaleRepository;
 import bisq.common.options.PropertiesReader;
 
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Properties;
 
-public record ApplicationConfig(String baseDir, String appName) {
-    // To ensure the locale is set initially we should write it to property file instead of persisting it in 
+public record ApplicationConfig(String baseDir,
+                                String appName,
+
+                                boolean isBitcoindRegtest,
+                                boolean isElementsdRegtest) {
+    // To ensure the locale is set initially we should write it to property file instead of persisting it in
     // preferences which might be read out to a later moment.
     public Locale getLocale() {
         Properties properties = PropertiesReader.getProperties("bisq.properties");

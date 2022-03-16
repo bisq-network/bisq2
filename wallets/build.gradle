@@ -29,6 +29,8 @@ dependencies {
         exclude(module: 'httpcore-nio')
     }
     implementation("com.google.guava:guava:$guavaVersion")
+
+    testImplementation("org.assertj:assertj-core:3.22.0")
 }
 
 test {

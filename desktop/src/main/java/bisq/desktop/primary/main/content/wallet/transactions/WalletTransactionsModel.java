@@ -32,7 +32,7 @@ public class WalletTransactionsModel implements Model {
     @Getter
     private final SortedList<WalletTransactionListItem> sortedList = new SortedList<>(listItems);
 
-    public void addTransactions(List<Transaction> transactions) {
+    public void addTransactions(List<? extends Transaction> transactions) {
         transactions.stream()
                 .map(WalletTransactionListItem::new)
                 .forEach(listItems::add);

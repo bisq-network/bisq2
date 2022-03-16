@@ -31,11 +31,11 @@ public class WalletUtxoListItem {
     private final BooleanProperty reused = new SimpleBooleanProperty(this, "wallet.column.reused");
 
     public WalletUtxoListItem(Utxo utxo) {
-        txId.set(utxo.txId());
-        address.set(utxo.address());
-        amount.set(String.valueOf(utxo.amount()));
-        confirmations.set(String.valueOf(utxo.confirmations()));
-        reused.set(utxo.reused());
+        txId.set(utxo.getTxId());
+        address.set(utxo.getAddress());
+        amount.set(String.valueOf(utxo.getAmount()));
+        confirmations.set(String.valueOf(utxo.getConfirmations()));
+        reused.set(utxo.isReused());
     }
 
     public StringProperty txIdProperty() {
