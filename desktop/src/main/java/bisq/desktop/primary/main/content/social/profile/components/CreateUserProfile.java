@@ -74,7 +74,7 @@ public class CreateUserProfile {
             this.userProfileService = userProfileService;
             this.keyPairService = keyPairService;
             model = new Model();
-            entitlementSelection = new EntitlementSelection(userProfileService, model.tempKeyPair);
+            entitlementSelection = new EntitlementSelection(userProfileService);
 
             view = new View(model, this, entitlementSelection.getRoot());
 
@@ -106,11 +106,11 @@ public class CreateUserProfile {
             String useName = model.userName.get();
             userProfileService.createNewInitializedUserProfile(useName,
                             model.tempKeyId,
-                            model.tempKeyPair.get(),
+                            model.tempKeyPair,
                             new HashSet<>(entitlementSelection.getVerifiedEntitlements()))
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
-                            checkArgument(userProfile.identity().pubKeyHash().equals(new ByteArray(DigestUtil.hash(model.tempKeyPair.get().getPublic().getEncoded()))));
+                            checkArgument(userProfile.identity().pubKeyHash().equals(new ByteArray(DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded()))));
                             checkArgument(userProfile.identity().domainId().equals(useName));
                             reset();
                             model.feedback.set(Res.get("social.createUserProfile.success", useName));
@@ -120,8 +120,8 @@ public class CreateUserProfile {
 
         private void onCreateRoboIcon() {
             model.tempKeyId = StringUtils.createUid();
-            model.tempKeyPair.set(keyPairService.generateKeyPair());
-            model.roboHashNode.set(RoboHash.getImage(new ByteArray(DigestUtil.hash(model.tempKeyPair.get().getPublic().getEncoded())), false));
+            model.tempKeyPair = keyPairService.generateKeyPair();
+            model.roboHashNode.set(RoboHash.getImage(new ByteArray(DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded())), false));
         }
 
         private void reset() {
@@ -129,25 +129,26 @@ public class CreateUserProfile {
             model.changeRoboIconButtonDisable.set(false);
             model.entitlementSelectionVisible.set(false);
             model.tempKeyId = null;
-            model.tempKeyPair.set(null);
+            model.tempKeyPair = null;
             model.roboHashNode.set(null);
             entitlementSelection.reset();
         }
 
-        private void onShowTable() {
-            entitlementSelection.show();
+        private void onShowEntitlementSelection() {
+            entitlementSelection.show(model.tempKeyPair);
             model.entitlementSelectionVisible.set(true);
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
-        final ObjectProperty<KeyPair> tempKeyPair = new SimpleObjectProperty<>();
         final StringProperty feedback = new SimpleStringProperty();
         final StringProperty userName = new SimpleStringProperty();
         final BooleanProperty changeRoboIconButtonDisable = new SimpleBooleanProperty();
         final BooleanProperty createProfileButtonDisable = new SimpleBooleanProperty();
         private final BooleanProperty entitlementSelectionVisible = new SimpleBooleanProperty();
+
+        KeyPair tempKeyPair = null;
         String tempKeyId;
 
         private Model() {
@@ -206,7 +207,7 @@ public class CreateUserProfile {
         @Override
         public void onViewAttached() {
             changeRoboIconButton.disableProperty().bind(model.changeRoboIconButtonDisable);
-            entitlementButton.setOnAction(e -> controller.onShowTable());
+            entitlementButton.setOnAction(e -> controller.onShowEntitlementSelection());
             entitlementButton.visibleProperty().bind(model.entitlementSelectionVisible.not());
             entitlementButton.managedProperty().bind(model.entitlementSelectionVisible.not());
             createUserButton.disableProperty().bind(model.createProfileButtonDisable);

@@ -33,7 +33,6 @@ import bisq.security.DigestUtil;
 import bisq.social.userprofile.Entitlement;
 import bisq.social.userprofile.UserProfileService;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -60,8 +59,8 @@ import java.util.stream.Stream;
 public class EntitlementSelection {
     private final Controller controller;
 
-    public EntitlementSelection(UserProfileService userProfileService, ObjectProperty<KeyPair> keyPair) {
-        controller = new Controller(userProfileService, keyPair);
+    public EntitlementSelection(UserProfileService userProfileService) {
+        controller = new Controller(userProfileService);
     }
 
     public Pane getRoot() {
@@ -72,8 +71,9 @@ public class EntitlementSelection {
         controller.reset();
     }
 
-    public void show() {
+    public void show(KeyPair keyPair) {
         controller.model.tableVisible.set(true);
+        controller.model.keyPair = keyPair;
     }
 
     public Set<Entitlement> getVerifiedEntitlements() {
@@ -87,10 +87,10 @@ public class EntitlementSelection {
         private final View view;
         private final UserProfileService userProfileService;
 
-        private Controller(UserProfileService userProfileService, ObjectProperty<KeyPair> keyPair) {
+        private Controller(UserProfileService userProfileService) {
             this.userProfileService = userProfileService;
 
-            model = new Model(keyPair);
+            model = new Model();
             view = new View(model, this);
         }
 
@@ -141,7 +141,7 @@ public class EntitlementSelection {
         }
 
         private CompletableFuture<Optional<Entitlement.Proof>> onVerifyModerator(EntitlementItem entitlementItem, String invitationCode) {
-            return userProfileService.verifyModerator(invitationCode, model.keyPair.get().getPublic())
+            return userProfileService.verifyModerator(invitationCode, model.keyPair.getPublic())
                     .whenComplete((proof, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null) {
@@ -163,7 +163,7 @@ public class EntitlementSelection {
 
         public void onOpenProofWindow(EntitlementItem entitlementItem) {
             model.minBurnAmount = AmountFormatter.formatAmountWithCode(Coin.of(userProfileService.getMinBurnAmount(entitlementItem.getType()), "BSQ"));
-            if (model.keyPair.get() != null) {
+            if (model.keyPair != null) {
                 new ProofPopup(this, model, entitlementItem).show();
             }
         }
@@ -176,15 +176,14 @@ public class EntitlementSelection {
                 .collect(Collectors.toList()));
         private final SortedList<EntitlementItem> sortedList = new SortedList<>(observableList);
         private final BooleanProperty tableVisible = new SimpleBooleanProperty();
-        private final ObjectProperty<KeyPair> keyPair;
+        private KeyPair keyPair;
         private String minBurnAmount;
 
         private String getPubKeyHash() {
-            return Hex.encode(DigestUtil.hash(keyPair.get().getPublic().getEncoded()));
+            return Hex.encode(DigestUtil.hash(keyPair.getPublic().getEncoded()));
         }
 
-        private Model(ObjectProperty<KeyPair> keyPair) {
-            this.keyPair = keyPair;
+        private Model() {
         }
     }
 
