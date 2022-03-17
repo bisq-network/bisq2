@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 
+// Note: tradeintent package will likely get removed
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 @Getter

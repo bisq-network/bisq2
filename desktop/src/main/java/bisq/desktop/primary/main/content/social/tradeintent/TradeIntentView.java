@@ -37,6 +37,7 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.Subscription;
 
+// Note: tradeintent package will likely get removed
 @Slf4j
 public class TradeIntentView extends View<VBox, TradeIntentModel, TradeIntentController> {
     private final BisqTableView<TradeIntentListItem> tableView;
