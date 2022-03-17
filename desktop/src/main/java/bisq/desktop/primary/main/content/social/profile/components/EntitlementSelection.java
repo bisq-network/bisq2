@@ -20,7 +20,6 @@ package bisq.desktop.primary.main.content.social.profile.components;
 import bisq.common.encoding.Hex;
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.controls.BisqTextField;
 import bisq.desktop.components.controls.BisqTextFieldWithCopyIcon;
@@ -73,6 +72,10 @@ public class EntitlementSelection {
         controller.reset();
     }
 
+    public void show() {
+        controller.model.tableVisible.set(true);
+    }
+
     public Set<Entitlement> getVerifiedEntitlements() {
         return controller.model.verifiedEntitlements;
     }
@@ -83,7 +86,6 @@ public class EntitlementSelection {
         @Getter
         private final View view;
         private final UserProfileService userProfileService;
-
 
         private Controller(UserProfileService userProfileService, ObjectProperty<KeyPair> keyPair) {
             this.userProfileService = userProfileService;
@@ -104,10 +106,6 @@ public class EntitlementSelection {
 
         @Override
         public void onViewDetached() {
-        }
-
-        private void onShowTable() {
-            model.tableVisible.set(true);
         }
 
         private CompletableFuture<Optional<Entitlement.Proof>> onVerifyProofOfBurn(EntitlementItem entitlementItem, String pubKeyHash, String proofOfBurnTxId) {
@@ -180,6 +178,7 @@ public class EntitlementSelection {
         private final BooleanProperty tableVisible = new SimpleBooleanProperty();
         private final ObjectProperty<KeyPair> keyPair;
         private String minBurnAmount;
+
         private String getPubKeyHash() {
             return Hex.encode(DigestUtil.hash(keyPair.get().getPublic().getEncoded()));
         }
@@ -193,14 +192,10 @@ public class EntitlementSelection {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqTableView<EntitlementItem> tableView;
         private final BisqLabel headline;
-        private final BisqButton button;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
-
-            button = new BisqButton(Res.get("social.createUserProfile.entitlement.headline"));
-            button.setMinWidth(300);
 
             headline = new BisqLabel(Res.get("social.createUserProfile.entitlement.headline"));
             headline.getStyleClass().add("titled-group-bg-label-active");
@@ -210,14 +205,11 @@ public class EntitlementSelection {
             tableView.setMaxHeight(300);
             configTableView();
 
-            root.getChildren().addAll(button, headline, tableView);
+            root.getChildren().addAll(headline, tableView);
         }
 
         @Override
         public void onViewAttached() {
-            button.setOnAction(e -> controller.onShowTable());
-            button.visibleProperty().bind(model.tableVisible.not());
-            button.managedProperty().bind(model.tableVisible.not());
             headline.visibleProperty().bind(model.tableVisible);
             headline.managedProperty().bind(model.tableVisible);
             tableView.visibleProperty().bind(model.tableVisible);
@@ -226,9 +218,6 @@ public class EntitlementSelection {
 
         @Override
         protected void onViewDetached() {
-            button.setOnAction(null);
-            button.visibleProperty().unbind();
-            button.managedProperty().unbind();
             headline.visibleProperty().unbind();
             headline.managedProperty().unbind();
             tableView.visibleProperty().unbind();
