@@ -37,8 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 public class CreateOfferModel implements Model {
 
-    // References to data in component models
-    private ReadOnlyObjectProperty<Market> selectedMarketProperty;
+    Market selectedMarket;
     private ReadOnlyObjectProperty<Direction> directionProperty;
     private ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty;
     private ReadOnlyObjectProperty<Monetary> baseSideAmountProperty;
@@ -60,10 +59,6 @@ public class CreateOfferModel implements Model {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public Market getSelectedMarket() {
-        return selectedMarketProperty.get();
-    }
 
     public Direction getDirection() {
         return directionProperty.get();
@@ -113,10 +108,6 @@ public class CreateOfferModel implements Model {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // ReadOnlyObjectProperty
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public ReadOnlyObjectProperty<Market> selectedMarketProperty() {
-        return selectedMarketProperty;
-    }
 
     public ReadOnlyObjectProperty<Direction> directionProperty() {
         return directionProperty;

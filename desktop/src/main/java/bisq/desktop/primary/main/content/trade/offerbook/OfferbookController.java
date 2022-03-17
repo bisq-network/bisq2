@@ -40,6 +40,8 @@ import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class OfferbookController implements Controller {
@@ -54,13 +56,14 @@ public class OfferbookController implements Controller {
     private final OfferBookService offerBookService;
 
     private Pin offerListPin;
+    private Subscription selectedMarketSubscription;
 
     public OfferbookController(DefaultApplicationService applicationService) {
         offerBookService = applicationService.getOfferBookService();
         openOfferService = applicationService.getOpenOfferService();
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
-        directionSelection = new DirectionSelection(marketSelection.selectedMarketProperty());
+        directionSelection = new DirectionSelection();
 
         model = new OfferbookModel(applicationService,
                 marketSelection.selectedMarketProperty(),
@@ -74,6 +77,10 @@ public class OfferbookController implements Controller {
 
     @Override
     public void onViewAttached() {
+        selectedMarketSubscription = EasyBind.subscribe(marketSelection.selectedMarketProperty(),
+                selectedMarket -> {
+                    directionSelection.setSelectedMarket(selectedMarket);
+                });
         offerListPin = FxBindings.<Offer, OfferListItem>bind(model.getListItems())
                 .map(offer -> new OfferListItem(offer, model.marketPriceService))
                 .to(offerBookService.getOffers());
@@ -89,6 +96,7 @@ public class OfferbookController implements Controller {
 
     @Override
     public void onViewDetached() {
+        selectedMarketSubscription.unsubscribe();
         offerListPin.unbind();
         model.getSelectedMarketProperty().removeListener(selectedMarketListener);
     }

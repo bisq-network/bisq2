@@ -57,16 +57,19 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
         model = new TakeOfferModel();
 
         // will prob use custom design/component not reuse DirectionSelection
-        directionSelection = new DirectionSelection(model.selectedMarketProperty);
+        directionSelection = new DirectionSelection();
         directionSelection.setIsTakeOffer();
         model.setDirectionProperty(directionSelection.directionProperty());
 
-        amountPriceGroup = new AmountPriceGroup(model.selectedMarketProperty,
+        amountPriceGroup = new AmountPriceGroup(
                 model.directionProperty,
                 marketPriceService);
         amountPriceGroup.setIsTakeOffer();
 
-        settlementSelection = new TakersSettlementSelection(model.selectedMarketProperty,
+
+     
+
+        settlementSelection = new TakersSettlementSelection(
                 model.directionProperty,
                 model.selectedProtocolTypeProperty,
                 applicationService.getAccountService());
@@ -86,7 +89,11 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
     public void initWithData(InitData initData) {
         Offer offer = initData.offer();
         model.offer = offer;
-        model.selectedMarketProperty.set(offer.getMarket());
+
+        directionSelection.setSelectedMarket(offer.getMarket());
+        amountPriceGroup.setSelectedMarket(offer.getMarket());
+        settlementSelection.setSelectedMarket(offer.getMarket());
+        
         directionSelection.setDirection(offer.getDirection().mirror());
         directionSelection.hideDirection(offer.getDirection());
         model.selectedProtocolTypeProperty.set(offer.findProtocolType().orElseThrow());

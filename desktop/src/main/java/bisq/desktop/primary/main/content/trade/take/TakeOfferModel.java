@@ -20,7 +20,6 @@ package bisq.desktop.primary.main.content.trade.take;
 import bisq.account.accounts.Account;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
-import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Model;
@@ -37,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 public class TakeOfferModel implements Model {
     public ObjectProperty<SwapProtocolType> selectedProtocolTypeProperty = new SimpleObjectProperty<>(); //todo
 
-    ObjectProperty<Market> selectedMarketProperty = new SimpleObjectProperty<>();
     ReadOnlyObjectProperty<Direction> directionProperty;
    // SwapProtocolType selectedProtocol;
 

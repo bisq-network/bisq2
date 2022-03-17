@@ -35,14 +35,14 @@ import lombok.extern.slf4j.Slf4j;
 public class DirectionSelection {
     private final Controller controller;
 
-    public DirectionSelection(ReadOnlyObjectProperty<Market> selectedMarket) {
-        controller = new Controller(selectedMarket);
+    public DirectionSelection() {
+        controller = new Controller();
     }
 
     public Pane getRoot() {
         return controller.view.getRoot();
     }
- 
+
     public ReadOnlyObjectProperty<Direction> directionProperty() {
         return controller.model.direction;
     }
@@ -59,29 +59,32 @@ public class DirectionSelection {
         controller.model.isCreateOffer = false;
     }
 
+    public void setSelectedMarket(Market selectedMarket) {
+        controller.setSelectedMarket(selectedMarket);
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
 
         private final Model model;
         @Getter
         private final View view;
-        private final ChangeListener<Market> selectedMarketListener;
 
-        private Controller(ReadOnlyObjectProperty<Market> selectedMarket) {
-            model = new Model(selectedMarket);
+        private Controller() {
+            model = new Model();
             view = new View(model, this);
+        }
 
-            selectedMarketListener = (observable, oldValue, newValue) -> {
-                if (newValue != null) {
-                    model.baseCode.set(newValue.baseCurrencyCode());
-                }
-            };
+        private void setSelectedMarket(Market selectedMarket) {
+            model.selectedMarket = selectedMarket;
+            if (selectedMarket != null) {
+                model.baseCode.set(selectedMarket.baseCurrencyCode());
+            }
         }
 
         @Override
         public void onViewAttached() {
-            model.selectedMarket.addListener(selectedMarketListener);
-            if (model.selectedMarket.get() != null) {
-                model.baseCode.set(model.selectedMarket.get().baseCurrencyCode());
+            if (model.selectedMarket != null) {
+                model.baseCode.set(model.selectedMarket.baseCurrencyCode());
             }
             if (model.direction.get() == null) {
                 model.direction.set(Direction.BUY);
@@ -90,7 +93,6 @@ public class DirectionSelection {
 
         @Override
         public void onViewDetached() {
-            model.selectedMarket.removeListener(selectedMarketListener);
         }
 
         private void onBuySelected() {
@@ -109,14 +111,14 @@ public class DirectionSelection {
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
-        private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final StringProperty baseCode = new SimpleStringProperty();
         private boolean isCreateOffer = true;
         private final BooleanProperty isBuySideVisible = new SimpleBooleanProperty();
         private final BooleanProperty isSellSideVisible = new SimpleBooleanProperty();
 
-        private Model(ReadOnlyObjectProperty<Market> selectedMarket) {
-            this.selectedMarket = selectedMarket;
+        private Market selectedMarket;
+
+        private Model() {
         }
     }
 

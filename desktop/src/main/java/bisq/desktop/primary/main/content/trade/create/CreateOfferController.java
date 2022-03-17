@@ -30,12 +30,15 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.ArrayList;
 
 @Slf4j
 public class CreateOfferController implements InitWithDataController<CreateOfferController.InitData> {
 
+  
     public static record InitData(Market market, Direction direction, BooleanProperty showCreateOfferTab) {
     }
 
@@ -49,28 +52,28 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
     private final AmountPriceGroup amountPriceGroup;
     private final ProtocolSelection protocolSelection;
     private final SettlementSelection settlementSelection;
+    private Subscription selectedMarketSubscription;
 
     public CreateOfferController(DefaultApplicationService applicationService) {
         openOfferService = applicationService.getOpenOfferService();
         model = new CreateOfferModel();
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
-        model.setSelectedMarketProperty(marketSelection.selectedMarketProperty());
 
-        directionSelection = new DirectionSelection(model.selectedMarketProperty());
+        directionSelection = new DirectionSelection();
         model.setDirectionProperty(directionSelection.directionProperty());
 
-        amountPriceGroup = new AmountPriceGroup(model.selectedMarketProperty(),
+        amountPriceGroup = new AmountPriceGroup(
                 model.directionProperty(),
                 applicationService.getMarketPriceService());
         model.setBaseSideAmountProperty(amountPriceGroup.baseSideAmountProperty());
         model.setQuoteSideAmountProperty(amountPriceGroup.quoteSideAmountProperty());
         model.setFixPriceProperty(amountPriceGroup.fixPriceProperty());
 
-        protocolSelection = new ProtocolSelection(model.selectedMarketProperty());
+        protocolSelection = new ProtocolSelection();
         model.setSelectedProtocolTypeProperty(protocolSelection.selectedProtocolType());
 
-        settlementSelection = new SettlementSelection(model.selectedMarketProperty(),
+        settlementSelection = new SettlementSelection(
                 model.directionProperty(),
                 model.selectedProtocolTypeProperty(),
                 applicationService.getAccountService());
@@ -100,11 +103,21 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
     public void onViewAttached() {
         model.selectedProtocolTypeProperty().addListener(selectedProtocolTypListener);
         model.getCreateOfferButtonVisibleProperty().set(model.getSelectedProtocolType() != null);
+
+        selectedMarketSubscription=  EasyBind.subscribe(marketSelection.selectedMarketProperty(),
+                selectedMarket -> {
+                    model.selectedMarket = selectedMarket;
+                    directionSelection.setSelectedMarket(selectedMarket);
+                    amountPriceGroup.setSelectedMarket(selectedMarket);
+                    protocolSelection.setSelectedMarket(selectedMarket);
+                    settlementSelection.setSelectedMarket(selectedMarket);
+                });
     }
 
     @Override
     public void onViewDetached() {
         model.selectedProtocolTypeProperty().removeListener(selectedProtocolTypListener);
+        selectedMarketSubscription.unsubscribe();
     }
 
     public void onCreateOffer() {

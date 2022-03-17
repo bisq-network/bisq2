@@ -53,11 +53,10 @@ import java.util.stream.Collectors;
 public class SettlementSelection {
     private final Controller controller;
 
-    public SettlementSelection(ReadOnlyObjectProperty<Market> selectedMarket,
-                               ReadOnlyObjectProperty<Direction> direction,
+    public SettlementSelection(ReadOnlyObjectProperty<Direction> direction,
                                ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
                                AccountService accountService) {
-        controller = new Controller(selectedMarket, direction, selectedProtocolType, accountService);
+        controller = new Controller(direction, selectedProtocolType, accountService);
     }
 
 
@@ -81,34 +80,39 @@ public class SettlementSelection {
         return controller.model.selectedQuoteSideSettlementMethods;
     }
 
+    public void setSelectedMarket(Market selectedMarket) {
+        controller.setSelectedMarket(selectedMarket);
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
         private final View view;
         private final ChangeListener<SwapProtocolType> selectedProtocolListener;
         private final ChangeListener<Direction> directionListener;
-        private final ChangeListener<Market> selectedMarketListener;
 
-        private Controller(ReadOnlyObjectProperty<Market> selectedMarket,
-                           ReadOnlyObjectProperty<Direction> direction,
+        private Controller(ReadOnlyObjectProperty<Direction> direction,
                            ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
                            AccountService accountService) {
-            model = new Model(selectedMarket,
-                    direction,
+            model = new Model(direction,
                     selectedProtocolType,
                     accountService);
             view = new View(model, this);
 
             selectedProtocolListener = (observable, oldValue, newValue) -> resetAndApplyData();
             directionListener = (observable, oldValue, newValue) -> updateStrings();
-            selectedMarketListener = (observable, oldValue, newValue) -> resetAndApplyData();
+        }
+
+        private void setSelectedMarket(Market selectedMarket) {
+            model.selectedMarket = selectedMarket;
+            resetAndApplyData();
         }
 
         private void resetAndApplyData() {
             Direction direction = model.direction.get();
             if (direction == null) return;
 
-            Market market = model.selectedMarket.get();
+            Market market = model.selectedMarket;
 
             if (market == null) return;
 
@@ -169,7 +173,7 @@ public class SettlementSelection {
             Direction direction = model.direction.get();
             if (direction == null) return;
 
-            Market market = model.selectedMarket.get();
+            Market market = model.selectedMarket;
             if (market == null) return;
 
             String baseSideVerb = direction == Direction.SELL ?
@@ -199,14 +203,12 @@ public class SettlementSelection {
         public void onViewAttached() {
             resetAndApplyData();
             model.selectedProtocolType.addListener(selectedProtocolListener);
-            model.selectedMarket.addListener(selectedMarketListener);
             model.direction.addListener(directionListener);
         }
 
         @Override
         public void onViewDetached() {
             model.selectedProtocolType.removeListener(selectedProtocolListener);
-            model.selectedMarket.removeListener(selectedMarketListener);
             model.direction.removeListener(directionListener);
             model.selectedBaseSideAccounts.clear();
             model.selectedQuoteSideAccounts.clear();
@@ -255,7 +257,6 @@ public class SettlementSelection {
         private final ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
         private final ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
         private final ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
-        private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final ReadOnlyObjectProperty<Direction> direction;
 
         private final ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType;
@@ -278,12 +279,11 @@ public class SettlementSelection {
         private final ObservableList<SettlementListItem> quoteSideSettlementObservableList = FXCollections.observableArrayList();
         private final SortedList<SettlementListItem> quoteSideSettlementSortedList = new SortedList<>(quoteSideSettlementObservableList);
 
+        private Market selectedMarket;
 
-        private Model(ReadOnlyObjectProperty<Market> selectedMarket,
-                      ReadOnlyObjectProperty<Direction> direction,
+        private Model(ReadOnlyObjectProperty<Direction> direction,
                       ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
                       AccountService accountService) {
-            this.selectedMarket = selectedMarket;
             this.direction = direction;
             this.selectedProtocolType = selectedProtocolType;
             this.accountService = accountService;
