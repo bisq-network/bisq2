@@ -21,6 +21,6 @@ import bisq.identity.Identity;
 
 import java.io.Serializable;
 
-// Maybe we move userName inside of Identity ?
+// TODO replace this with UserProfile
 public record ChatIdentity(String userName, Identity identity) implements Serializable {
 }
