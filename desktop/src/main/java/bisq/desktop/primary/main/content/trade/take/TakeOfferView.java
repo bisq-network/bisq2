@@ -62,7 +62,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
 
     @Override
     public void onViewAttached() {
-        protocolLabel.setText(Res.get("takeOffer.protocol", Res.get(model.selectedProtocolTypeProperty.get().name())));
+        protocolLabel.setText(Res.get("takeOffer.protocol", Res.get(model.getSelectedProtocolType().name())));
         takeOfferButton.setOnAction(e -> controller.onTakeOffer());
     }
 

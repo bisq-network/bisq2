@@ -53,7 +53,7 @@ public class TradeController extends TabController {
     @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
         model.createOfferTabVisible.set(navigationTarget == NavigationTarget.CREATE_OFFER ||
-                offerbookController.showCreateOfferTab().get());
+                offerbookController.showCreateOfferTab());
         model.takeOfferTabVisible.set(navigationTarget == NavigationTarget.TAKE_OFFER ||
                 offerbookController.getShowTakeOfferTab().get());
 

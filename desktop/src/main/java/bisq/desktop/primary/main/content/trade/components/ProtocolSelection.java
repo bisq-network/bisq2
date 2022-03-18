@@ -45,8 +45,8 @@ import java.util.stream.Collectors;
 public class ProtocolSelection {
     private final Controller controller;
 
-    public ProtocolSelection(ReadOnlyObjectProperty<Market> selectedMarket) {
-        controller = new Controller(selectedMarket);
+    public ProtocolSelection() {
+        controller = new Controller();
     }
 
     public ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType() {
@@ -57,22 +57,25 @@ public class ProtocolSelection {
         return controller.view.getRoot();
     }
 
+    public void setSelectedMarket(Market selectedMarket) {
+        controller.setSelectedMarket(selectedMarket);
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
         private final View view;
-        private final ChangeListener<Market> selectedMarketListener;
 
-        private Controller(ReadOnlyObjectProperty<Market> selectedMarket) {
-            model = new Model(selectedMarket);
+        private Controller() {
+            model = new Model();
             view = new View(model, this);
+        }
 
-            selectedMarketListener = (observable, oldValue, newValue) -> {
-                if (newValue == null) return;
-                model.fillObservableList(ProtocolType.getProtocols(newValue));
-                model.selectedProtocolType.set(null);
-                model.selectListItem(null);
-            };
+        private void setSelectedMarket(Market selectedMarket) {
+            if (selectedMarket == null) return;
+            model.fillObservableList(ProtocolType.getProtocols(selectedMarket));
+            model.selectedProtocolType.set(null);
+            model.selectListItem(null);
         }
 
         private void onSelectProtocol(SwapProtocolType value) {
@@ -82,27 +85,24 @@ public class ProtocolSelection {
 
         @Override
         public void onViewAttached() {
-            model.selectedMarket.addListener(selectedMarketListener);
-            if (model.selectedMarket.get() != null) {
-                model.fillObservableList(ProtocolType.getProtocols(model.selectedMarket.get()));
+            if (model.selectedMarket != null) {
+                model.fillObservableList(ProtocolType.getProtocols(model.selectedMarket));
             }
         }
 
         @Override
         public void onViewDetached() {
-            model.selectedMarket.removeListener(selectedMarketListener);
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<SwapProtocolType> selectedProtocolType = new SimpleObjectProperty<>();
-        private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final ObservableList<ListItem> observableList = FXCollections.observableArrayList();
         private final SortedList<ListItem> sortedList = new SortedList<>(observableList);
         private final ObjectProperty<ListItem> selectedProtocolItem = new SimpleObjectProperty<>();
+        private Market selectedMarket;
 
-        private Model(ReadOnlyObjectProperty<Market> selectedMarket) {
-            this.selectedMarket = selectedMarket;
+        private Model() {
         }
 
         private void fillObservableList(List<SwapProtocolType> protocols) {

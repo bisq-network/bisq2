@@ -27,31 +27,39 @@ import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import javafx.beans.property.*;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
+
 @Slf4j
 @Getter
-@Setter
 public class CreateOfferModel implements Model {
+    @Setter
+    private Market selectedMarket;
+    @Setter
+    private Direction direction;
+    @Setter
+    private SwapProtocolType selectedProtocolType;
+    @Setter
+    private Monetary baseSideAmount;
+    @Setter
+    private Monetary quoteSideAmount;
+    @Setter
+    private Quote fixPrice;
 
-    // References to data in component models
-    private ReadOnlyObjectProperty<Market> selectedMarketProperty;
-    private ReadOnlyObjectProperty<Direction> directionProperty;
-    private ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty;
-    private ReadOnlyObjectProperty<Monetary> baseSideAmountProperty;
-    private ReadOnlyObjectProperty<Monetary> quoteSideAmountProperty;
-    private ReadOnlyObjectProperty<Quote> fixPriceProperty;
-    private ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts;
-    private ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts;
-    private ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods;
-    private ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods;
+    private ObservableSet<Account<? extends SettlementMethod>> selectedBaseSideAccounts = FXCollections.observableSet(new HashSet<>());
+    private ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
+    private ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
+    private ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
 
     private final ObjectProperty<Offer> offerProperty = new SimpleObjectProperty<>();
     private final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
-    BooleanProperty showCreateOfferTab;
+    @Setter
+    private boolean showCreateOfferTab;
 
     public CreateOfferModel() {
     }
@@ -61,91 +69,31 @@ public class CreateOfferModel implements Model {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Market getSelectedMarket() {
-        return selectedMarketProperty.get();
-    }
-
-    public Direction getDirection() {
-        return directionProperty.get();
-    }
-
-    public Monetary getBaseSideAmount() {
-        return baseSideAmountProperty.get();
-    }
-
-    public Monetary getQuoteSideAmount() {
-        return quoteSideAmountProperty.get();
-    }
-
-    public Quote getFixPrice() {
-        return fixPriceProperty.get();
-    }
-
-    public SwapProtocolType getSelectedProtocolType() {
-        return selectedProtocolTypeProperty.get();
-    }
-
-    public ObservableSet<Account<? extends SettlementMethod>> getSelectedBaseSideAccounts() {
-        return selectedBaseSideAccounts;
-    }
-
-    public ObservableSet<Account<? extends SettlementMethod>> getSelectedQuoteSideAccounts() {
-        return selectedQuoteSideAccounts;
-    }
-
-    public ObservableSet<SettlementMethod> getSelectedBaseSideSettlementMethods() {
-        return selectedBaseSideSettlementMethods;
-    }
-
-    public ObservableSet<SettlementMethod> getSelectedQuoteSideSettlementMethods() {
-        return selectedQuoteSideSettlementMethods;
-    }
-
-    public boolean isCreateOfferButtonVisible() {
-        return createOfferButtonVisibleProperty.get();
-    }
-
     public Offer getOffer() {
         return offerProperty.get();
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // ReadOnlyObjectProperty
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public ReadOnlyObjectProperty<Market> selectedMarketProperty() {
-        return selectedMarketProperty;
-    }
-
-    public ReadOnlyObjectProperty<Direction> directionProperty() {
-        return directionProperty;
-    }
-
-    public ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolTypeProperty() {
-        return selectedProtocolTypeProperty;
-    }
-
-    public ReadOnlyObjectProperty<Monetary> baseSideAmountProperty() {
-        return baseSideAmountProperty;
-    }
-
-    public ReadOnlyObjectProperty<Monetary> quoteSideAmountProperty() {
-        return quoteSideAmountProperty;
-    }
-
-    public ReadOnlyObjectProperty<Quote> fixPriceProperty() {
-        return fixPriceProperty;
-    }
-
 
     public ReadOnlyBooleanProperty createOfferButtonVisibleProperty() {
         return createOfferButtonVisibleProperty;
     }
 
-    public ReadOnlyObjectProperty<Offer> offerProperty() {
-        return offerProperty;
+    public void setAllSelectedBaseSideAccounts(ObservableSet<Account<? extends SettlementMethod>> set) {
+        selectedBaseSideAccounts.clear();
+        selectedBaseSideAccounts.addAll(set);
     }
 
+    public void setAllSelectedQuoteSideAccounts(ObservableSet<Account<? extends SettlementMethod>> set) {
+        selectedQuoteSideAccounts.clear();
+        selectedQuoteSideAccounts.addAll(set);
+    }
 
+    public void setAllSelectedBaseSideSettlementMethods(ObservableSet<SettlementMethod> set) {
+        selectedBaseSideSettlementMethods.clear();
+        selectedBaseSideSettlementMethods.addAll(set);
+    }
+
+    public void setAllSelectedQuoteSideSettlementMethods(ObservableSet<SettlementMethod> set) {
+        selectedQuoteSideSettlementMethods.clear();
+        selectedQuoteSideSettlementMethods.addAll(set);
+    }
 }

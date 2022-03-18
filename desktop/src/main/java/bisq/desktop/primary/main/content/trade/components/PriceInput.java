@@ -45,8 +45,12 @@ import java.util.Map;
 public class PriceInput {
     private final Controller controller;
 
-    public PriceInput(ReadOnlyObjectProperty<Market> selectedMarket, MarketPriceService marketPriceService) {
-        controller = new Controller(selectedMarket, marketPriceService);
+    public PriceInput(MarketPriceService marketPriceService) {
+        controller = new Controller(marketPriceService);
+    }
+
+    public void setSelectedMarket(Market selectedMarket) {
+        controller.setSelectedMarket(selectedMarket);
     }
 
     public ReadOnlyObjectProperty<Quote> fixPriceProperty() {
@@ -70,20 +74,21 @@ public class PriceInput {
         @Getter
         private final View view;
         private final PriceValidator validator = new PriceValidator();
-        private final ChangeListener<Market> selectedMarketListener;
 
-        private Controller(ReadOnlyObjectProperty<Market> selectedMarket,
-                           MarketPriceService marketPriceService) {
-            model = new Model(selectedMarket, marketPriceService);
+        private Controller(MarketPriceService marketPriceService) {
+            model = new Model(marketPriceService);
             view = new View(model, this, validator);
-
-            selectedMarketListener = (observable, oldValue, newValue) -> updateFromMarketPrice(newValue);
         }
 
-        private void updateFromMarketPrice(Market newValue) {
-            if (newValue != null) {
-                model.marketString.set(newValue.toString());
-                model.description.set(Res.get("createOffer.price.fix.description.buy", newValue.baseCurrencyCode()));
+        public void setSelectedMarket(Market selectedMarket) {
+            model.selectedMarket = selectedMarket;
+            updateFromMarketPrice();
+        }
+
+        private void updateFromMarketPrice() {
+            if (model.selectedMarket != null) {
+                model.marketString.set(model.selectedMarket.toString());
+                model.description.set(Res.get("createOffer.price.fix.description.buy", model.selectedMarket.baseCurrencyCode()));
             }
             if (model.isCreateOffer) {
                 model.fixPrice.set(null);
@@ -96,8 +101,7 @@ public class PriceInput {
             if (model.isCreateOffer) {
                 model.marketPriceService.addListener(this);
             }
-            model.selectedMarket.addListener(selectedMarketListener);
-            updateFromMarketPrice(model.selectedMarket.get());
+            updateFromMarketPrice();
         }
 
         @Override
@@ -105,7 +109,6 @@ public class PriceInput {
             if (model.isCreateOffer) {
                 model.marketPriceService.removeListener(this);
             }
-            model.selectedMarket.removeListener(selectedMarketListener);
         }
 
         @Override
@@ -137,13 +140,13 @@ public class PriceInput {
                 model.fixPrice.set(null);
                 return;
             }
-            if (model.selectedMarket.get() == null) return;
-            model.fixPrice.set(PriceParser.parse(value, model.selectedMarket.get()));
+            if (model.selectedMarket == null) return;
+            model.fixPrice.set(PriceParser.parse(value, model.selectedMarket));
         }
 
         private void setFixPriceFromMarketPrice() {
-            if (model.selectedMarket.get() == null) return;
-            MarketPrice marketPrice = model.marketPriceService.getMarketPriceByCurrencyMap().get(model.selectedMarket.get());
+            if (model.selectedMarket == null) return;
+            MarketPrice marketPrice = model.marketPriceService.getMarketPriceByCurrencyMap().get(model.selectedMarket);
             if (marketPrice == null) return;
             model.fixPrice.set(marketPrice.quote());
         }
@@ -151,16 +154,14 @@ public class PriceInput {
 
     private static class Model implements bisq.desktop.common.view.Model {
         private ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
-        private final ReadOnlyObjectProperty<Market> selectedMarket;
         private final MarketPriceService marketPriceService;
+        private Market selectedMarket;
         private boolean hasFocus;
         private final StringProperty marketString = new SimpleStringProperty();
         private final StringProperty description = new SimpleStringProperty();
         private boolean isCreateOffer = true;
 
-        private Model(ReadOnlyObjectProperty<Market> selectedMarket,
-                      MarketPriceService marketPriceService) {
-            this.selectedMarket = selectedMarket;
+        private Model(MarketPriceService marketPriceService) {
             this.marketPriceService = marketPriceService;
         }
     }

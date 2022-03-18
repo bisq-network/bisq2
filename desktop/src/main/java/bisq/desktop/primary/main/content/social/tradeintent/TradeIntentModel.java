@@ -34,6 +34,7 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+// Note: tradeintent package will likely get removed
 @Slf4j
 @Getter
 public class TradeIntentModel implements Model {

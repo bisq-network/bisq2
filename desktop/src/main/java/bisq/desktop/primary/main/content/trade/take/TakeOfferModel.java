@@ -20,13 +20,13 @@ package bisq.desktop.primary.main.content.trade.take;
 import bisq.account.accounts.Account;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
-import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,25 +35,18 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Setter
 public class TakeOfferModel implements Model {
-    public ObjectProperty<SwapProtocolType> selectedProtocolTypeProperty = new SimpleObjectProperty<>(); //todo
-
-    ObjectProperty<Market> selectedMarketProperty = new SimpleObjectProperty<>();
-    ReadOnlyObjectProperty<Direction> directionProperty;
-   // SwapProtocolType selectedProtocol;
-
+    Direction direction;
     Offer offer;
     Monetary baseSideAmount;
     Monetary quoteSideAmount;
     Quote fixPrice;
+    private SwapProtocolType selectedProtocolType;
 
-    private ReadOnlyObjectProperty<Account<? extends SettlementMethod>> selectedBaseSideAccount;
-    private ReadOnlyObjectProperty<Account<? extends SettlementMethod>> selectedQuoteSideAccount;
-    private ReadOnlyObjectProperty<SettlementMethod> selectedBaseSideSettlementMethod;
-    private ReadOnlyObjectProperty<SettlementMethod> selectedQuoteSideSettlementMethod;
-    
+    private Account<? extends SettlementMethod> selectedBaseSideAccount;
+    private Account<? extends SettlementMethod> selectedQuoteSideAccount;
+    private SettlementMethod selectedBaseSideSettlementMethod;
+    private SettlementMethod selectedQuoteSideSettlementMethod;
+
     final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
     BooleanProperty showTakeOfferTab;
-
-    public TakeOfferModel() {
-    }
 }

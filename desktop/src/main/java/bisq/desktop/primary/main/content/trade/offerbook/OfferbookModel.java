@@ -27,7 +27,10 @@ import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.security.KeyPairService;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -40,9 +43,6 @@ import lombok.extern.slf4j.Slf4j;
 public class OfferbookModel implements Model {
     private final NetworkService networkService;
     private final KeyPairService keyPairService;
-    // References to data in component models
-    final ReadOnlyObjectProperty<Market> selectedMarketProperty;
-    final ReadOnlyObjectProperty<Direction> directionProperty;
 
     // listItems is bound to set from OfferBookService
     final ObservableList<OfferListItem> listItems = FXCollections.observableArrayList();
@@ -58,18 +58,15 @@ public class OfferbookModel implements Model {
     final MarketPriceService marketPriceService;
     final StringProperty createOfferButtonText = new SimpleStringProperty(Res.get("offerbook.table.header.quoteAmount"));
 
-    final BooleanProperty showCreateOfferTab = new SimpleBooleanProperty();
+    boolean showCreateOfferTab;
     final BooleanProperty showTakeOfferTab = new SimpleBooleanProperty();
+    public Market selectedMarket;
+    public Direction direction;
 
-    public OfferbookModel(DefaultApplicationService applicationService,
-                          ReadOnlyObjectProperty<Market> selectedMarketProperty,
-                          ReadOnlyObjectProperty<Direction> directionProperty) {
+    public OfferbookModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
         keyPairService = applicationService.getKeyPairService();
         marketPriceService = applicationService.getMarketPriceService();
-
-        this.selectedMarketProperty = selectedMarketProperty;
-        this.directionProperty = directionProperty;
     }
 
     boolean isMyOffer(OfferListItem item) {
@@ -88,13 +85,13 @@ public class OfferbookModel implements Model {
         }
     }
 
-    String getCreateOfferButtonTitle() {
-        String currencyCode = selectedMarketProperty.get().baseCurrencyCode();
+ /*   String getCreateOfferButtonTitle() {
+        String currencyCode = selectedMarket.get().baseCurrencyCode();
         String dir = directionProperty.get().isBuy() ?
                 Res.get("direction.label.sell", currencyCode) :
                 Res.get("direction.label.buy", currencyCode);
         return Res.get("offerbook.createOffer.button", dir);
-    }
+    }*/
 
     void setAddOfferError(Offer offer, Throwable throwable) {
         log.error("Error at add offer: offer={}, error={}", offer, throwable.toString());  //todo
@@ -119,19 +116,4 @@ public class OfferbookModel implements Model {
                 offer, broadcastResult.toString()); //todo
         removeDataResultProperty.set(broadcastResult.toString());
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // ReadOnlyObjectProperty
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public ReadOnlyObjectProperty<Market> selectedMarketProperty() {
-        return selectedMarketProperty;
-    }
-
-
-    public ReadOnlyObjectProperty<Direction> directionProperty() {
-        return directionProperty;
-    }
-
 }

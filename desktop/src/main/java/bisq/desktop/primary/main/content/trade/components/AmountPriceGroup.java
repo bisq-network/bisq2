@@ -41,10 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 public class AmountPriceGroup {
     private final Controller controller;
 
-    public AmountPriceGroup(ReadOnlyObjectProperty<Market> selectedMarket,
-                            ReadOnlyObjectProperty<Direction> direction,
-                            MarketPriceService marketPriceService) {
-        controller = new Controller(selectedMarket, direction, marketPriceService);
+    public AmountPriceGroup(MarketPriceService marketPriceService) {
+        controller = new Controller(marketPriceService);
     }
 
     public ReadOnlyObjectProperty<Monetary> baseSideAmountProperty() {
@@ -83,6 +81,17 @@ public class AmountPriceGroup {
         return controller.view.getRoot();
     }
 
+    public void setSelectedMarket(Market selectedMarket) {
+        controller.baseAmount.setSelectedMarket(selectedMarket);
+        controller.quoteAmount.setSelectedMarket(selectedMarket);
+        controller.price.setSelectedMarket(selectedMarket);
+    }
+
+    public void setDirection(Direction direction) {
+        controller.baseAmount.setDirection(direction);
+        controller.quoteAmount.setDirection(direction);
+    }
+
     public static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
@@ -93,13 +102,10 @@ public class AmountPriceGroup {
         private final AmountInput quoteAmount;
         private final PriceInput price;
 
-        public Controller(ReadOnlyObjectProperty<Market> selectedMarket,
-                          ReadOnlyObjectProperty<Direction> direction,
-                          MarketPriceService marketPriceService) {
-
-            baseAmount = new AmountInput(selectedMarket, direction, true);
-            quoteAmount = new AmountInput(selectedMarket, direction, false);
-            price = new PriceInput(selectedMarket, marketPriceService);
+        public Controller(MarketPriceService marketPriceService) {
+            baseAmount = new AmountInput(true);
+            quoteAmount = new AmountInput(false);
+            price = new PriceInput(marketPriceService);
 
             model = new Model(baseAmount.amountProperty(), quoteAmount.amountProperty(), price.fixPriceProperty());
 

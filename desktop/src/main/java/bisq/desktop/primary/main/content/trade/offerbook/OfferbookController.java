@@ -37,63 +37,66 @@ import bisq.offer.Offer;
 import bisq.offer.OfferBookService;
 import bisq.offer.OpenOfferService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class OfferbookController implements Controller {
     private final OfferbookModel model;
     @Getter
     private final OfferbookView view;
-    private final ChangeListener<Market> selectedMarketListener;
-    private final ChangeListener<Direction> directionListener;
     private final MarketSelection marketSelection;
     private final DirectionSelection directionSelection;
     private final OpenOfferService openOfferService;
     private final OfferBookService offerBookService;
 
     private Pin offerListPin;
+    private Subscription selectedMarketSubscription, directionSubscription;
 
     public OfferbookController(DefaultApplicationService applicationService) {
         offerBookService = applicationService.getOfferBookService();
         openOfferService = applicationService.getOpenOfferService();
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
-        directionSelection = new DirectionSelection(marketSelection.selectedMarketProperty());
+        directionSelection = new DirectionSelection();
 
-        model = new OfferbookModel(applicationService,
-                marketSelection.selectedMarketProperty(),
-                directionSelection.directionProperty());
-
+        model = new OfferbookModel(applicationService);
         view = new OfferbookView(model, this, marketSelection.getRoot(), directionSelection.getRoot());
-
-        selectedMarketListener = (observable, oldValue, newValue) -> applyMarketChange(newValue);
-        directionListener = (observable, oldValue, newValue) -> applyDirectionChange(newValue);
     }
 
     @Override
     public void onViewAttached() {
+        selectedMarketSubscription = EasyBind.subscribe(marketSelection.selectedMarketProperty(),
+                selectedMarket -> {
+                    model.selectedMarket = selectedMarket;
+                    directionSelection.setSelectedMarket(selectedMarket);
+                    applyMarketChange(selectedMarket);
+                });
+        directionSubscription = EasyBind.subscribe(directionSelection.directionProperty(),
+                direction -> {
+                    model.direction = direction;
+                    applyDirectionChange(direction);
+                });
         offerListPin = FxBindings.<Offer, OfferListItem>bind(model.getListItems())
                 .map(offer -> new OfferListItem(offer, model.marketPriceService))
                 .to(offerBookService.getOffers());
+
         model.showAllMarkets.set(false);
         directionSelection.setDirection(Direction.BUY);
-
-        model.getSelectedMarketProperty().addListener(selectedMarketListener);
-        applyMarketChange(model.getSelectedMarketProperty().get());
-        model.getDirectionProperty().addListener(directionListener);
 
         updateFilterPredicate();
     }
 
     @Override
     public void onViewDetached() {
+        selectedMarketSubscription.unsubscribe();
+        directionSubscription.unsubscribe();
         offerListPin.unbind();
-        model.getSelectedMarketProperty().removeListener(selectedMarketListener);
     }
 
-    public ReadOnlyBooleanProperty showCreateOfferTab() {
+    public boolean showCreateOfferTab() {
         return model.showCreateOfferTab;
     }
 
@@ -116,10 +119,10 @@ public class OfferbookController implements Controller {
 
     private void updateFilterPredicate() {
         model.filteredItems.setPredicate(item -> {
-            if (!model.showAllMarkets.get() && !item.getOffer().getMarket().equals(model.selectedMarketProperty().get())) {
+            if (!model.showAllMarkets.get() && !item.getOffer().getMarket().equals(model.selectedMarket)) {
                 return false;
             }
-            if (item.getOffer().getDirection() == model.directionProperty().get()) {
+            if (item.getOffer().getDirection() == model.direction) {
                 return false;
             }
 
@@ -139,10 +142,10 @@ public class OfferbookController implements Controller {
     }
 
     void onCreateOffer() {
-        model.showCreateOfferTab.set(true);
+        model.showCreateOfferTab = true;
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER,
-                new CreateOfferController.InitData(model.selectedMarketProperty().get(),
-                        model.directionProperty().get(),
+                new CreateOfferController.InitData(model.selectedMarket,
+                        model.direction,
                         model.showCreateOfferTab));
     }
 

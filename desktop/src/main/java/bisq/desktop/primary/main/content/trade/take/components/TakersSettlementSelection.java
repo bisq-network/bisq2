@@ -32,7 +32,6 @@ import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.offer.SettlementSpec;
 import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -55,11 +54,24 @@ import java.util.stream.Collectors;
 public class TakersSettlementSelection {
     private final Controller controller;
 
-    public TakersSettlementSelection(ReadOnlyObjectProperty<Market> selectedMarket,
-                                     ReadOnlyObjectProperty<Direction> direction,
-                                     ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
-                                     AccountService accountService) {
-        controller = new Controller(selectedMarket, direction, selectedProtocolType, accountService);
+    public TakersSettlementSelection(AccountService accountService) {
+        controller = new Controller(accountService);
+    }
+
+    public void setOffer(Offer offer) {
+        controller.setOffer(offer);
+    }
+
+    public void setSelectedMarket(Market selectedMarket) {
+        controller.setSelectedMarket(selectedMarket);
+    }
+
+    public void setDirection(Direction direction) {
+        controller.setDirection(direction);
+    }
+
+    public void setSelectedProtocolType(SwapProtocolType selectedProtocolType) {
+        controller.setSelectedProtocolType(selectedProtocolType);
     }
 
     public Pane getRoot() {
@@ -82,32 +94,29 @@ public class TakersSettlementSelection {
         return controller.model.selectedQuoteSideSettlementMethod;
     }
 
-    public void setOffer(Offer offer) {
-        controller.setOffer(offer);
-    }
-
-
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
         private final View view;
-        private final ChangeListener<SwapProtocolType> selectedProtocolListener;
-        private final ChangeListener<Direction> directionListener;
-        private final ChangeListener<Market> selectedMarketListener;
 
-        private Controller(ReadOnlyObjectProperty<Market> selectedMarket,
-                           ReadOnlyObjectProperty<Direction> direction,
-                           ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
-                           AccountService accountService) {
-            model = new Model(selectedMarket,
-                    direction,
-                    selectedProtocolType,
-                    accountService);
+        private Controller(AccountService accountService) {
+            model = new Model(accountService);
             view = new View(model, this);
+        }
 
-            selectedProtocolListener = (observable, oldValue, newValue) -> resetAndApplyData();
-            directionListener = (observable, oldValue, newValue) -> updateStrings();
-            selectedMarketListener = (observable, oldValue, newValue) -> resetAndApplyData();
+        private void setSelectedProtocolType(SwapProtocolType selectedProtocolType) {
+            model.selectedProtocolType = selectedProtocolType;
+            resetAndApplyData();
+        }
+
+        private void setDirection(Direction direction) {
+            model.direction = direction;
+            updateStrings();
+        }
+
+        private void setSelectedMarket(Market selectedMarket) {
+            model.selectedMarket = selectedMarket;
+            resetAndApplyData();
         }
 
         private void setOffer(Offer offer) {
@@ -118,10 +127,9 @@ public class TakersSettlementSelection {
         private void resetAndApplyData() {
             if (model.offer == null) return;
 
-            Direction direction = model.direction.get();
-            if (direction == null) return;
+            if (model.direction == null) return;
 
-            Market market = model.selectedMarket.get();
+            Market market = model.selectedMarket;
 
             if (market == null) return;
 
@@ -130,8 +138,8 @@ public class TakersSettlementSelection {
             model.selectedBaseSideSettlementMethod.set(null);
             model.selectedQuoteSideSettlementMethod.set(null);
 
-            SwapProtocolType selectedProtocolTyp = model.selectedProtocolType.get();
-            if (selectedProtocolTyp == null) {
+            SwapProtocolType selectedProtocolType = model.selectedProtocolType;
+            if (selectedProtocolType == null) {
                 model.visibility.set(false);
                 return;
             }
@@ -152,7 +160,7 @@ public class TakersSettlementSelection {
                     .collect(Collectors.toSet());
 
             model.baseSideAccountObservableList.clear();
-            model.baseSideAccountObservableList.setAll(model.accountService.getMatchingAccounts(selectedProtocolTyp, baseSideCode)
+            model.baseSideAccountObservableList.setAll(model.accountService.getMatchingAccounts(selectedProtocolType, baseSideCode)
                     .stream()
                     .filter(account -> baseSideSettlementMethodByName.contains(account.getSettlementMethod()))
                     .map(AccountListItem::new)
@@ -165,7 +173,7 @@ public class TakersSettlementSelection {
             }
 
             model.quoteSideAccountObservableList.clear();
-            model.quoteSideAccountObservableList.setAll(model.accountService.getMatchingAccounts(selectedProtocolTyp, quoteSideCode)
+            model.quoteSideAccountObservableList.setAll(model.accountService.getMatchingAccounts(selectedProtocolType, quoteSideCode)
                     .stream()
                     .filter(account -> quoteSideSettlementMethodByName.contains(account.getSettlementMethod()))
                     .map(AccountListItem::new)
@@ -177,7 +185,7 @@ public class TakersSettlementSelection {
                 model.selectedQuoteSideSettlementMethod.set(model.selectedQuoteSideAccountListItem.get().getSettlementMethod());
             }
 
-            model.baseSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolTyp, baseSideCode)
+            model.baseSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolType, baseSideCode)
                     .stream()
                     .filter(baseSideSettlementMethodByName::contains)
                     .map(e -> new SettlementListItem(e, baseSideCode))
@@ -188,7 +196,7 @@ public class TakersSettlementSelection {
                 model.selectedBaseSideSettlementMethod.set(model.selectedBaseSideSettlementListItem.get().getSettlementMethod());
             }
 
-            model.quoteSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolTyp, quoteSideCode)
+            model.quoteSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolType, quoteSideCode)
                     .stream()
                     .filter(quoteSideSettlementMethodByName::contains)
                     .map(e -> new SettlementListItem(e, quoteSideCode))
@@ -220,10 +228,10 @@ public class TakersSettlementSelection {
         }
 
         private void updateStrings() {
-            Direction direction = model.direction.get();
+            Direction direction = model.direction;
             if (direction == null) return;
 
-            Market market = model.selectedMarket.get();
+            Market market = model.selectedMarket;
             if (market == null) return;
 
             String baseSideVerb = direction == Direction.SELL ?
@@ -252,16 +260,10 @@ public class TakersSettlementSelection {
         @Override
         public void onViewAttached() {
             resetAndApplyData();
-            model.selectedProtocolType.addListener(selectedProtocolListener);
-            model.selectedMarket.addListener(selectedMarketListener);
-            model.direction.addListener(directionListener);
         }
 
         @Override
         public void onViewDetached() {
-            model.selectedProtocolType.removeListener(selectedProtocolListener);
-            model.selectedMarket.removeListener(selectedMarketListener);
-            model.direction.removeListener(directionListener);
             model.selectedBaseSideAccount.set(null);
             model.selectedQuoteSideAccount.set(null);
             model.selectedBaseSideSettlementMethod.set(null);
@@ -301,10 +303,8 @@ public class TakersSettlementSelection {
         private final ObjectProperty<Account<? extends SettlementMethod>> selectedQuoteSideAccount = new SimpleObjectProperty<>();
         private final ObjectProperty<SettlementMethod> selectedBaseSideSettlementMethod = new SimpleObjectProperty<>();
         private final ObjectProperty<SettlementMethod> selectedQuoteSideSettlementMethod = new SimpleObjectProperty<>();
-        private final ReadOnlyObjectProperty<Market> selectedMarket;
-        private final ReadOnlyObjectProperty<Direction> direction;
 
-        private final ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType;
+
         private final AccountService accountService;
         private final StringProperty baseSideDescription = new SimpleStringProperty();
         private final StringProperty quoteSideDescription = new SimpleStringProperty();
@@ -327,15 +327,13 @@ public class TakersSettlementSelection {
         private final SortedList<SettlementListItem> quoteSideSettlementSortedList = new SortedList<>(quoteSideSettlementObservableList);
         private final ObjectProperty<SettlementListItem> selectedBaseSideSettlementListItem = new SimpleObjectProperty<>();
         private final ObjectProperty<SettlementListItem> selectedQuoteSideSettlementListItem = new SimpleObjectProperty<>();
+        private Market selectedMarket;
+        private Direction direction;
+        private SwapProtocolType selectedProtocolType;
         private Offer offer;
 
-        private Model(ReadOnlyObjectProperty<Market> selectedMarket,
-                      ReadOnlyObjectProperty<Direction> direction,
-                      ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
-                      AccountService accountService) {
-            this.selectedMarket = selectedMarket;
-            this.direction = direction;
-            this.selectedProtocolType = selectedProtocolType;
+
+        private Model(AccountService accountService) {
             this.accountService = accountService;
         }
     }

@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferController> {
     private final ChangeListener<Offer> offerListener;
     private final BisqButton createOfferButton;
+    private final BisqTextArea offerSummary;
 
     public CreateOfferView(CreateOfferModel model,
                            CreateOfferController controller,
@@ -53,7 +54,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         cancelButton.setOnAction(e -> controller.onCancel());
 
         //todo temp
-        BisqTextArea offerSummary = new BisqTextArea();
+        offerSummary = new BisqTextArea();
         offerSummary.setVisible(false);
 
         BisqButton publishButton = new BisqButton(Res.get("publishOffer.button"));
@@ -85,6 +86,8 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
         createOfferButton.visibleProperty().bind(model.createOfferButtonVisibleProperty());
         createOfferButton.managedProperty().bind(model.createOfferButtonVisibleProperty());
+
+        offerSummary.clear();
     }
 
     @Override
