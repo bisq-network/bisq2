@@ -35,7 +35,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class ChannelAdmin {
@@ -84,10 +83,16 @@ public class ChannelAdmin {
         }
 
         public void addChannel() {
-            chatService.addChannel(model.selectedUserProfile.get(), model.channelName.get())
+            chatService.addChannel(model.selectedUserProfile.get(), model.channelName.get(), model.description.get())
                     .whenComplete((publicChannel, throwable) -> {
-                        if (throwable == null && publicChannel.isPresent()) {
-                            log.error("publicChannel " + publicChannel);
+                        if (throwable == null) {
+                            if (publicChannel.isPresent()) {
+                                log.info("Added publicChannel {}", publicChannel);
+                            } else {
+                                log.error("AddChannel failed");
+                            }
+                        } else {
+                            log.error("Error at addChannel", throwable);
                         }
                     });
         }
@@ -95,6 +100,7 @@ public class ChannelAdmin {
 
     private static class Model implements bisq.desktop.common.view.Model {
         final StringProperty channelName = new SimpleStringProperty();
+        final StringProperty description = new SimpleStringProperty();
         ObjectProperty<UserProfile> selectedUserProfile = new SimpleObjectProperty<>();
 
         private Model() {
@@ -105,7 +111,7 @@ public class ChannelAdmin {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqButton addChannelButton;
         private final BisqTextField channelNameField;
-        private Subscription subscription;
+        private final BisqTextField descriptionField;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
@@ -115,20 +121,23 @@ public class ChannelAdmin {
             headline.getStyleClass().add("titled-group-bg-label-active");
 
             channelNameField = new BisqTextField();
+            descriptionField = new BisqTextField();
             addChannelButton = new BisqButton(Res.get("social.channelAdmin.addChannel"));
 
-            root.getChildren().addAll(headline, channelNameField, addChannelButton);
+            root.getChildren().addAll(headline, channelNameField, descriptionField, addChannelButton);
         }
 
         @Override
         public void onViewAttached() {
             addChannelButton.setOnAction(e -> controller.addChannel());
             channelNameField.textProperty().bindBidirectional(model.channelName);
+            descriptionField.textProperty().bindBidirectional(model.description);
         }
 
         @Override
         protected void onViewDetached() {
             channelNameField.textProperty().unbindBidirectional(model.channelName);
+            descriptionField.textProperty().unbindBidirectional(model.description);
         }
     }
 }

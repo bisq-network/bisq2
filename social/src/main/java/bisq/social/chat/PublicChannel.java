@@ -28,12 +28,14 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public class PublicChannel extends Channel {
     private final String channelName;
-    private final UserProfile channelOwner;
+    private final String description;
+    private final UserProfile channelAdmin;
 
-    public PublicChannel(String id, String channelName, UserProfile channelOwner) {
+    public PublicChannel(String id, String channelName, UserProfile channelAdmin, String description) {
         super(id);
 
         this.channelName = channelName;
-        this.channelOwner = channelOwner;
+        this.channelAdmin = channelAdmin;
+        this.description = description;
     }
 }
