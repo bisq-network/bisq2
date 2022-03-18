@@ -29,6 +29,7 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.social.user.ChatUser;
 import bisq.social.user.Entitlement;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
@@ -116,9 +117,9 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
             String domainId = chatMessage.getChannelId();
             String userName = findUserName(domainId).orElse("Maker@" + StringUtils.truncate(domainId, 8));
             ChatIdentity chatIdentity = getOrCreateChatIdentity(userName, domainId);
-            ChatPeer chatPeer = new ChatPeer(chatMessage.getSenderUserName(), chatMessage.getSenderNetworkId());
+            ChatUser chatUser = new ChatUser(chatMessage.getSenderNetworkId());
             PrivateChannel privateChannel = getOrCreatePrivateChannel(chatMessage.getChannelId(),
-                    chatPeer,
+                    chatUser,
                     chatIdentity);
             addChatMessage(chatMessage, privateChannel);
         }
@@ -180,8 +181,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 .orElse(CompletableFuture.completedFuture(Optional.empty()));
     }
 
-    public PrivateChannel getOrCreatePrivateChannel(String id, ChatPeer chatPeer, ChatIdentity chatIdentity) {
-        PrivateChannel privateChannel = new PrivateChannel(id, chatPeer, chatIdentity);
+    public PrivateChannel getOrCreatePrivateChannel(String id, ChatUser chatUser, ChatIdentity chatIdentity) {
+        PrivateChannel privateChannel = new PrivateChannel(id, chatUser, chatIdentity);
         Optional<PrivateChannel> previousChannel;
         synchronized (persistableStore) {
             previousChannel = persistableStore.findPrivateChannel(id);

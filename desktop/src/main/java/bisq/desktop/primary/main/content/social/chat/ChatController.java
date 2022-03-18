@@ -125,7 +125,7 @@ public class ChatController implements Controller {
                 new Date().getTime(),
                 PRIVATE);
         chatService.addChatMessage(chatMessage, privateChannel);
-        NetworkId receiverNetworkId = privateChannel.getChatPeer().networkId();
+        NetworkId receiverNetworkId = privateChannel.getPeer().networkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = identity.getNodeIdAndKeyPair();
         networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair)
                 .whenComplete((resultMap, throwable2) -> {
