@@ -14,7 +14,7 @@ apply from: '../buildSrc/lombok-dependencies.gradle'
 
 ext {
     guavaVersion = '31.0.1-jre'
-    jsonrpc4jVersion = '1.6.0.bisq.1'
+    jsonrpc4jVersion = '1.6.0.bisq.2'
     jacksonDatabindVersion = '2.12.0'
 }
 
