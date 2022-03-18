@@ -22,7 +22,6 @@ import bisq.common.encoding.Hex;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
-import bisq.identity.UserNameGenerator;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.node.transport.Transport;
