@@ -30,8 +30,10 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
@@ -53,12 +55,21 @@ import java.util.stream.Collectors;
 public class SettlementSelection {
     private final Controller controller;
 
-    public SettlementSelection(ReadOnlyObjectProperty<Direction> direction,
-                               ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
-                               AccountService accountService) {
-        controller = new Controller(direction, selectedProtocolType, accountService);
+    public SettlementSelection(AccountService accountService) {
+        controller = new Controller(accountService);
     }
 
+    public void setSelectedMarket(Market selectedMarket) {
+        controller.setSelectedMarket(selectedMarket);
+    }
+
+    public void setDirection(Direction direction) {
+        controller.setDirection(direction);
+    }
+
+    public void setSelectedProtocolType(SwapProtocolType selectedProtocolType) {
+        controller.setSelectedProtocolType(selectedProtocolType);
+    }
 
     public Pane getRoot() {
         return controller.view.getRoot();
@@ -80,27 +91,19 @@ public class SettlementSelection {
         return controller.model.selectedQuoteSideSettlementMethods;
     }
 
-    public void setSelectedMarket(Market selectedMarket) {
-        controller.setSelectedMarket(selectedMarket);
-    }
-
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
         private final View view;
-        private final ChangeListener<SwapProtocolType> selectedProtocolListener;
-        private final ChangeListener<Direction> directionListener;
 
-        private Controller(ReadOnlyObjectProperty<Direction> direction,
-                           ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
-                           AccountService accountService) {
-            model = new Model(direction,
-                    selectedProtocolType,
-                    accountService);
+        private Controller(AccountService accountService) {
+            model = new Model(accountService);
             view = new View(model, this);
+        }
 
-            selectedProtocolListener = (observable, oldValue, newValue) -> resetAndApplyData();
-            directionListener = (observable, oldValue, newValue) -> updateStrings();
+        private void setDirection(Direction direction) {
+            model.direction = direction;
+            updateStrings();
         }
 
         private void setSelectedMarket(Market selectedMarket) {
@@ -108,9 +111,13 @@ public class SettlementSelection {
             resetAndApplyData();
         }
 
+        private void setSelectedProtocolType(SwapProtocolType selectedProtocolType) {
+            model.selectedProtocolType = selectedProtocolType;
+            resetAndApplyData();
+        }
+
         private void resetAndApplyData() {
-            Direction direction = model.direction.get();
-            if (direction == null) return;
+            if (model.direction == null) return;
 
             Market market = model.selectedMarket;
 
@@ -121,7 +128,7 @@ public class SettlementSelection {
             model.selectedBaseSideSettlementMethods.clear();
             model.selectedQuoteSideSettlementMethods.clear();
 
-            SwapProtocolType selectedProtocolTyp = model.selectedProtocolType.get();
+            SwapProtocolType selectedProtocolTyp = model.selectedProtocolType;
             if (selectedProtocolTyp == null) {
                 model.visibility.set(false);
                 return;
@@ -170,7 +177,7 @@ public class SettlementSelection {
         }
 
         private void updateStrings() {
-            Direction direction = model.direction.get();
+            Direction direction = model.direction;
             if (direction == null) return;
 
             Market market = model.selectedMarket;
@@ -202,14 +209,10 @@ public class SettlementSelection {
         @Override
         public void onViewAttached() {
             resetAndApplyData();
-            model.selectedProtocolType.addListener(selectedProtocolListener);
-            model.direction.addListener(directionListener);
         }
 
         @Override
         public void onViewDetached() {
-            model.selectedProtocolType.removeListener(selectedProtocolListener);
-            model.direction.removeListener(directionListener);
             model.selectedBaseSideAccounts.clear();
             model.selectedQuoteSideAccounts.clear();
         }
@@ -257,9 +260,7 @@ public class SettlementSelection {
         private final ObservableSet<Account<? extends SettlementMethod>> selectedQuoteSideAccounts = FXCollections.observableSet(new HashSet<>());
         private final ObservableSet<SettlementMethod> selectedBaseSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
         private final ObservableSet<SettlementMethod> selectedQuoteSideSettlementMethods = FXCollections.observableSet(new HashSet<>());
-        private final ReadOnlyObjectProperty<Direction> direction;
 
-        private final ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType;
         private final AccountService accountService;
         private final StringProperty baseSideDescription = new SimpleStringProperty();
         private final StringProperty quoteSideDescription = new SimpleStringProperty();
@@ -280,12 +281,10 @@ public class SettlementSelection {
         private final SortedList<SettlementListItem> quoteSideSettlementSortedList = new SortedList<>(quoteSideSettlementObservableList);
 
         private Market selectedMarket;
+        private Direction direction;
+        private SwapProtocolType selectedProtocolType;
 
-        private Model(ReadOnlyObjectProperty<Direction> direction,
-                      ReadOnlyObjectProperty<SwapProtocolType> selectedProtocolType,
-                      AccountService accountService) {
-            this.direction = direction;
-            this.selectedProtocolType = selectedProtocolType;
+        private Model(AccountService accountService) {
             this.accountService = accountService;
         }
     }

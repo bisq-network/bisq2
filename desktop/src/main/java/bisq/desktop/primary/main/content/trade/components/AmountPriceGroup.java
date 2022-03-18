@@ -41,9 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 public class AmountPriceGroup {
     private final Controller controller;
 
-    public AmountPriceGroup(ReadOnlyObjectProperty<Direction> direction,
-                            MarketPriceService marketPriceService) {
-        controller = new Controller(direction, marketPriceService);
+    public AmountPriceGroup(MarketPriceService marketPriceService) {
+        controller = new Controller(marketPriceService);
     }
 
     public ReadOnlyObjectProperty<Monetary> baseSideAmountProperty() {
@@ -83,9 +82,14 @@ public class AmountPriceGroup {
     }
 
     public void setSelectedMarket(Market selectedMarket) {
-        controller.baseAmount.setSelectedMarket( selectedMarket);
-        controller.quoteAmount.setSelectedMarket( selectedMarket);
-        controller.price.setSelectedMarket( selectedMarket);
+        controller.baseAmount.setSelectedMarket(selectedMarket);
+        controller.quoteAmount.setSelectedMarket(selectedMarket);
+        controller.price.setSelectedMarket(selectedMarket);
+    }
+
+    public void setDirection(Direction direction) {
+        controller.baseAmount.setDirection(direction);
+        controller.quoteAmount.setDirection(direction);
     }
 
     public static class Controller implements bisq.desktop.common.view.Controller {
@@ -98,10 +102,9 @@ public class AmountPriceGroup {
         private final AmountInput quoteAmount;
         private final PriceInput price;
 
-        public Controller(ReadOnlyObjectProperty<Direction> direction,
-                          MarketPriceService marketPriceService) {
-            baseAmount = new AmountInput(direction, true);
-            quoteAmount = new AmountInput(direction, false);
+        public Controller(MarketPriceService marketPriceService) {
+            baseAmount = new AmountInput(true);
+            quoteAmount = new AmountInput(false);
             price = new PriceInput(marketPriceService);
 
             model = new Model(baseAmount.amountProperty(), quoteAmount.amountProperty(), price.fixPriceProperty());

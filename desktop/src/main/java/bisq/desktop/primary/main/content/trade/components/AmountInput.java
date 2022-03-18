@@ -41,9 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 public class AmountInput {
     private final Controller controller;
 
-    public AmountInput(ReadOnlyObjectProperty<Direction> direction,
-                       boolean isBaseCurrency) {
-        controller = new Controller(direction, isBaseCurrency);
+    public AmountInput(boolean isBaseCurrency) {
+        controller = new Controller(isBaseCurrency);
     }
 
     public ReadOnlyObjectProperty<Monetary> amountProperty() {
@@ -52,6 +51,10 @@ public class AmountInput {
 
     public void setSelectedMarket(Market selectedMarket) {
         controller.setSelectedMarket(selectedMarket);
+    }
+
+    public void setDirection(Direction direction) {
+        controller.setDirection(direction);
     }
 
     public void setAmount(Monetary value) {
@@ -71,14 +74,10 @@ public class AmountInput {
         @Getter
         private final View view;
         private final MonetaryValidator validator = new MonetaryValidator();
-        private final ChangeListener<Direction> directionListener;
 
-        private Controller(ReadOnlyObjectProperty<Direction> direction,
-                           boolean isBaseCurrency) {
-            model = new Model(direction, isBaseCurrency);
+        private Controller(boolean isBaseCurrency) {
+            model = new Model(isBaseCurrency);
             view = new View(model, this, validator);
-
-            directionListener = (observable, oldValue, newValue) -> updateModel();
         }
 
         private void setSelectedMarket(Market selectedMarket) {
@@ -87,9 +86,13 @@ public class AmountInput {
             updateModel();
         }
 
+        private void setDirection(Direction direction) {
+            model.direction = direction;
+            updateModel();
+        }
+
         @Override
         public void onViewAttached() {
-            model.direction.addListener(directionListener);
             if (model.isCreateOffer) {
                 model.amount.set(null);
             }
@@ -98,7 +101,6 @@ public class AmountInput {
 
         @Override
         public void onViewDetached() {
-            model.direction.removeListener(directionListener);
         }
 
         // View events
@@ -134,29 +136,27 @@ public class AmountInput {
             String code = model.code.get();
             model.prompt.set(Res.get("createOffer.amount.prompt", code));
             String dir;
-            Direction direction = model.direction.get();
             if (model.isBaseCurrency) {
-                dir = direction == Direction.BUY ? Res.get("buy") : Res.get("sell");
+                dir = model.direction == Direction.BUY ? Res.get("buy") : Res.get("sell");
             } else {
-                dir = direction == Direction.BUY ? Res.get("spend") : Res.get("receive");
+                dir = model.direction == Direction.BUY ? Res.get("spend") : Res.get("receive");
             }
             model.description.set(Res.get("createOffer.amount.description", code, dir));
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
-        private final ReadOnlyObjectProperty<Direction> direction;
+        private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         private final boolean isBaseCurrency;
         private final StringProperty description = new SimpleStringProperty();
         private final StringProperty prompt = new SimpleStringProperty();
         private final StringProperty code = new SimpleStringProperty();
         private Market selectedMarket;
+        private Direction direction;
         public boolean hasFocus;
         private boolean isCreateOffer = true;
 
-        private Model(ReadOnlyObjectProperty<Direction> direction, boolean isBaseCurrency) {
-            this.direction = direction;
+        private Model(boolean isBaseCurrency) {
             this.isBaseCurrency = isBaseCurrency;
         }
     }

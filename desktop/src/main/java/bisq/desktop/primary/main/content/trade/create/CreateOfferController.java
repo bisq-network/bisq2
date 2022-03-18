@@ -17,7 +17,8 @@
 
 package bisq.desktop.primary.main.content.trade.create;
 
-import bisq.account.protocol.SwapProtocolType;
+import bisq.account.accounts.Account;
+import bisq.account.settlement.SettlementMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
 import bisq.desktop.Navigation;
@@ -26,8 +27,7 @@ import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.trade.components.*;
 import bisq.offer.Direction;
 import bisq.offer.OpenOfferService;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.value.ChangeListener;
+import javafx.collections.SetChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -38,49 +38,34 @@ import java.util.ArrayList;
 @Slf4j
 public class CreateOfferController implements InitWithDataController<CreateOfferController.InitData> {
 
-  
-    public static record InitData(Market market, Direction direction, BooleanProperty showCreateOfferTab) {
+    public static record InitData(Market market, Direction direction, boolean showCreateOfferTab) {
     }
 
     private final CreateOfferModel model;
     @Getter
     private final CreateOfferView view;
     private final OpenOfferService openOfferService;
-    private final ChangeListener<SwapProtocolType> selectedProtocolTypListener;
     private final MarketSelection marketSelection;
     private final DirectionSelection directionSelection;
     private final AmountPriceGroup amountPriceGroup;
     private final ProtocolSelection protocolSelection;
     private final SettlementSelection settlementSelection;
-    private Subscription selectedMarketSubscription;
+    private final SetChangeListener<Account<? extends SettlementMethod>> selectedBaseSideAccountsListener,
+            selectedQuoteSideAccountsListener;
+    private final SetChangeListener<SettlementMethod> selectedBaseSideSettlementMethodsListener,
+            selectedQuoteSideSettlementMethodsListener;
+    private Subscription selectedMarketSubscription, directionSubscription, protocolSelectionSubscription,
+            baseSideAmountSubscription, quoteSideAmountSubscription, fixPriceSubscription;
 
     public CreateOfferController(DefaultApplicationService applicationService) {
         openOfferService = applicationService.getOpenOfferService();
         model = new CreateOfferModel();
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
-
         directionSelection = new DirectionSelection();
-        model.setDirectionProperty(directionSelection.directionProperty());
-
-        amountPriceGroup = new AmountPriceGroup(
-                model.directionProperty(),
-                applicationService.getMarketPriceService());
-        model.setBaseSideAmountProperty(amountPriceGroup.baseSideAmountProperty());
-        model.setQuoteSideAmountProperty(amountPriceGroup.quoteSideAmountProperty());
-        model.setFixPriceProperty(amountPriceGroup.fixPriceProperty());
-
+        amountPriceGroup = new AmountPriceGroup(applicationService.getMarketPriceService());
         protocolSelection = new ProtocolSelection();
-        model.setSelectedProtocolTypeProperty(protocolSelection.selectedProtocolType());
-
-        settlementSelection = new SettlementSelection(
-                model.directionProperty(),
-                model.selectedProtocolTypeProperty(),
-                applicationService.getAccountService());
-        model.setSelectedBaseSideAccounts(settlementSelection.getSelectedBaseSideAccounts());
-        model.setSelectedQuoteSideAccounts(settlementSelection.getSelectedQuoteSideAccounts());
-        model.setSelectedBaseSideSettlementMethods(settlementSelection.getSelectedBaseSideSettlementMethods());
-        model.setSelectedQuoteSideSettlementMethods(settlementSelection.getSelectedQuoteSideSettlementMethods());
+        settlementSelection = new SettlementSelection(applicationService.getAccountService());
 
         view = new CreateOfferView(model, this,
                 marketSelection.getRoot(),
@@ -89,35 +74,73 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
                 protocolSelection.getRoot(),
                 settlementSelection.getRoot());
 
-        selectedProtocolTypListener = (observable, oldValue, newValue) -> model.getCreateOfferButtonVisibleProperty().set(newValue != null);
+        selectedBaseSideAccountsListener = c -> model.setAllSelectedBaseSideAccounts(settlementSelection.getSelectedBaseSideAccounts());
+        selectedQuoteSideAccountsListener = c -> model.setAllSelectedQuoteSideAccounts(settlementSelection.getSelectedQuoteSideAccounts());
+        selectedBaseSideSettlementMethodsListener = c -> model.setAllSelectedBaseSideSettlementMethods(settlementSelection.getSelectedBaseSideSettlementMethods());
+        selectedQuoteSideSettlementMethodsListener = c -> model.setAllSelectedQuoteSideSettlementMethods(settlementSelection.getSelectedQuoteSideSettlementMethods());
     }
 
     @Override
     public void initWithData(InitData data) {
         marketSelection.setSelectedMarket(data.market());
         directionSelection.setDirection(data.direction());
-        model.showCreateOfferTab = data.showCreateOfferTab();
+        model.setShowCreateOfferTab(data.showCreateOfferTab());
     }
 
     @Override
     public void onViewAttached() {
-        model.selectedProtocolTypeProperty().addListener(selectedProtocolTypListener);
         model.getCreateOfferButtonVisibleProperty().set(model.getSelectedProtocolType() != null);
 
-        selectedMarketSubscription=  EasyBind.subscribe(marketSelection.selectedMarketProperty(),
+        selectedMarketSubscription = EasyBind.subscribe(marketSelection.selectedMarketProperty(),
                 selectedMarket -> {
-                    model.selectedMarket = selectedMarket;
+                    model.setSelectedMarket(selectedMarket);
                     directionSelection.setSelectedMarket(selectedMarket);
                     amountPriceGroup.setSelectedMarket(selectedMarket);
                     protocolSelection.setSelectedMarket(selectedMarket);
                     settlementSelection.setSelectedMarket(selectedMarket);
                 });
+        directionSubscription = EasyBind.subscribe(directionSelection.directionProperty(),
+                direction -> {
+                    model.setDirection(direction);
+                    settlementSelection.setDirection(direction);
+                });
+        protocolSelectionSubscription = EasyBind.subscribe(protocolSelection.selectedProtocolType(),
+                selectedProtocolType -> {
+                    model.setSelectedProtocolType(selectedProtocolType);
+                    settlementSelection.setSelectedProtocolType(selectedProtocolType);
+                    model.getCreateOfferButtonVisibleProperty().set(selectedProtocolType != null);
+                });
+        baseSideAmountSubscription = EasyBind.subscribe(amountPriceGroup.baseSideAmountProperty(),
+                model::setBaseSideAmount);
+        quoteSideAmountSubscription = EasyBind.subscribe(amountPriceGroup.quoteSideAmountProperty(),
+                model::setQuoteSideAmount);
+        fixPriceSubscription = EasyBind.subscribe(amountPriceGroup.fixPriceProperty(),
+                model::setFixPrice);
+
+        settlementSelection.getSelectedBaseSideAccounts().addListener(selectedBaseSideAccountsListener);
+        settlementSelection.getSelectedQuoteSideAccounts().addListener(selectedQuoteSideAccountsListener);
+        settlementSelection.getSelectedBaseSideSettlementMethods().addListener(selectedBaseSideSettlementMethodsListener);
+        settlementSelection.getSelectedQuoteSideSettlementMethods().addListener(selectedQuoteSideSettlementMethodsListener);
+
+        model.setAllSelectedBaseSideAccounts(settlementSelection.getSelectedBaseSideAccounts());
+        model.setAllSelectedQuoteSideAccounts(settlementSelection.getSelectedQuoteSideAccounts());
+        model.setAllSelectedBaseSideSettlementMethods(settlementSelection.getSelectedBaseSideSettlementMethods());
+        model.setAllSelectedQuoteSideSettlementMethods(settlementSelection.getSelectedQuoteSideSettlementMethods());
     }
 
     @Override
     public void onViewDetached() {
-        model.selectedProtocolTypeProperty().removeListener(selectedProtocolTypListener);
         selectedMarketSubscription.unsubscribe();
+        directionSubscription.unsubscribe();
+        protocolSelectionSubscription.unsubscribe();
+        baseSideAmountSubscription.unsubscribe();
+        quoteSideAmountSubscription.unsubscribe();
+        fixPriceSubscription.unsubscribe();
+
+        settlementSelection.getSelectedBaseSideAccounts().removeListener(selectedBaseSideAccountsListener);
+        settlementSelection.getSelectedQuoteSideAccounts().removeListener(selectedQuoteSideAccountsListener);
+        settlementSelection.getSelectedBaseSideSettlementMethods().removeListener(selectedBaseSideSettlementMethodsListener);
+        settlementSelection.getSelectedQuoteSideSettlementMethods().removeListener(selectedQuoteSideSettlementMethodsListener);
     }
 
     public void onCreateOffer() {
@@ -141,12 +164,12 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
 
     public void onPublishOffer() {
         openOfferService.publishOffer(model.getOffer());
-        model.showCreateOfferTab.set(false);
+        model.setShowCreateOfferTab(false);
         Navigation.navigateTo(NavigationTarget.OFFERBOOK);
     }
 
     public void onCancel() {
-        model.showCreateOfferTab.set(false);
+        model.setShowCreateOfferTab(false);
         Navigation.navigateTo(NavigationTarget.OFFERBOOK);
     }
 }
