@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
+// Note: will get probably removed
 @Slf4j
 public class TradeIntentService {
     private final NetworkService networkService;

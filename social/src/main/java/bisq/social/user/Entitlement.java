@@ -15,13 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.userprofile;
+package bisq.social.user;
 
 import lombok.Getter;
 
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Entitlement of a user profile. Requires some proof for verifying that the associated Entitlement to a user profile 
+ * is valid. 
+ */
 public record Entitlement(Type entitlementType, Proof proof) implements Serializable {
     public interface Proof extends Serializable {
     }

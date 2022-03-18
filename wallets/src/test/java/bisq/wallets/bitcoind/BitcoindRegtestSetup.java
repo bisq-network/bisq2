@@ -86,11 +86,11 @@ public class BitcoindRegtestSetup
                     "'. It exists already.");
         }
 
-        daemon.createOrLoadWallet(walletPath, WALLET_PASSPHRASE);
+        daemon.createOrLoadWallet(walletPath, Optional.of(WALLET_PASSPHRASE));
         loadedWalletPaths.add(walletPath);
 
         BitcoindWallet walletBackend = newWallet(walletPath);
-        walletBackend.walletPassphrase(WALLET_PASSPHRASE, BitcoindWallet.DEFAULT_WALLET_TIMEOUT);
+        walletBackend.walletPassphrase(Optional.of(WALLET_PASSPHRASE), BitcoindWallet.DEFAULT_WALLET_TIMEOUT);
         return walletBackend;
     }
 

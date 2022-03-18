@@ -15,10 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.userprofile;
+package bisq.social.user;
+
+import bisq.identity.Identity;
 
 import java.io.Serializable;
+import java.util.Set;
 
-public enum UserRole implements Serializable {
-    TRADER
+/**
+ * Local user profile
+ */
+public record UserProfile(Identity identity, Set<Entitlement> entitlements) implements Serializable {
+    public boolean hasEntitlementType(Entitlement.Type type) {
+        return entitlements.stream().anyMatch(e -> e.entitlementType() == type);
+    }
 }

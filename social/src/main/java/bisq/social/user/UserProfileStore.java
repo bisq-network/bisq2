@@ -15,13 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.userprofile;
+package bisq.social.user;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.persistence.PersistableStore;
 import lombok.Getter;
 
+/**
+ * Persists my user profiles and the selected user profile.
+ */
 public class UserProfileStore implements PersistableStore<UserProfileStore> {
     @Getter
     private final Observable<UserProfile> selectedUserProfile = new Observable<>();

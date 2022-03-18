@@ -22,7 +22,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.social.userprofile.UserProfileService;
+import bisq.social.user.UserProfileService;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

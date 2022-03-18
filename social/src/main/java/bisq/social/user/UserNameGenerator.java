@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.userprofile;
+package bisq.social.user;
 
 import bisq.common.util.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
@@ -27,9 +27,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-// Algorithm and word lists borrowed from: https://raw.githubusercontent.com/Reckless-Satoshi/robosats/main/api/nick_generator/
-// Combinations: 4833 * 450 * 12591 * 1000 = 27385711200000 (2 ^ 44.6)
-// signed commit
+/**
+ * Generates a combination of and adverb + adjective + noun + a number from a given hash as input (hash of pubkey).
+ * Number of combinations: 4833 * 450 * 12591 * 1000 = 27385711200000 (2 ^ 44.6)
+ * Algorithm and word lists borrowed from: https://raw.githubusercontent.com/Reckless-Satoshi/robosats/main/api/nick_generator/
+ */
 @Slf4j
 public class UserNameGenerator {
     private static final BigInteger MAX_INTEGER = BigInteger.valueOf(Integer.MAX_VALUE);
@@ -44,23 +46,15 @@ public class UserNameGenerator {
     @VisibleForTesting
     static String fromHash(BigInteger hashAsBigInteger, List<String> adverbs, List<String> adjectives, List<String> nouns) {
         hashAsBigInteger = hashAsBigInteger.abs();
-        BigInteger numAdverbs = BigInteger.valueOf(adverbs.size());
         BigInteger numAdjectives = BigInteger.valueOf(adjectives.size());
         BigInteger numNouns = BigInteger.valueOf(nouns.size());
         BigInteger appendixNumber = BigInteger.valueOf(1000);
 
-
-        //adverbIndex = hash / adjectives * nouns * appendix
         BigInteger adverbIndex = hashAsBigInteger.divide(numAdjectives.multiply(numNouns).multiply(appendixNumber));
-        //remainderHash = hash - (adverbIndex * adjectives * nouns * appendix)
         BigInteger remainderHash = hashAsBigInteger.subtract(adverbIndex.multiply(numAdjectives.multiply(numNouns.multiply(appendixNumber))));
-        //adjedctivIndex = rema/inderHash / nouns * appendix
         BigInteger adjectiveIndex = remainderHash.divide(numNouns.multiply(appendixNumber));
-        //remainderAdverb = remainderHash - (adjectiveIndex * nouns * appendix)
         BigInteger remainderAdverb = remainderHash.subtract(adjectiveIndex.multiply(numNouns).multiply(appendixNumber));
-        //nounsIndex = remainderAdverb / appendix
         BigInteger nounsIndex = remainderAdverb.divide(appendixNumber);
-        //appndixID = remainderAdverb - (nounsIndex * appendix )
         BigInteger appendixIndex = remainderAdverb.subtract(nounsIndex.multiply(appendixNumber));
 
         // Limit BigInteger value to MAX_INTEGER and further to list size by applying mod

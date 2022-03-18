@@ -24,9 +24,10 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BitcoindWalletCreationAndListIntegrationTests extends SharedBitcoindInstanceTests {
     private Path walletFilePath;
@@ -48,12 +49,12 @@ public class BitcoindWalletCreationAndListIntegrationTests extends SharedBitcoin
         assertThat(walletFilePath).doesNotExist();
 
         // Create Wallet
-        daemon.createOrLoadWallet(walletFilePath, BitcoindRegtestSetup.WALLET_PASSPHRASE);
+        daemon.createOrLoadWallet(walletFilePath, Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE));
         assertThat(walletFilePath).exists();
 
         // Unload and reload existing wallet
         daemon.unloadWallet(walletFilePath);
-        daemon.createOrLoadWallet(walletFilePath, BitcoindRegtestSetup.WALLET_PASSPHRASE);
+        daemon.createOrLoadWallet(walletFilePath, Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE));
 
         assertThat(minerWallet.getBalance())
                 .isZero();

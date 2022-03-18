@@ -17,7 +17,7 @@
 
 package bisq.social.chat;
 
-import bisq.social.userprofile.UserProfile;
+import bisq.social.user.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,23 +28,14 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public class PublicChannel extends Channel {
     private final String channelName;
-    private final UserProfile channelOwner;
+    private final String description;
+    private final UserProfile channelAdmin;
 
-    // user can change their chatIdentity in a PublicChannel
-  //  @Nullable
-  //  @Setter
-   // private ChatIdentity chatIdentity;
-    // Can be empty
-  //  private final Set<ChatPeer> chatPeers = new HashSet<>();
-
-    public PublicChannel(String id, String channelName, UserProfile channelOwner) {
+    public PublicChannel(String id, String channelName, UserProfile channelAdmin, String description) {
         super(id);
 
         this.channelName = channelName;
-        this.channelOwner = channelOwner;
+        this.channelAdmin = channelAdmin;
+        this.description = description;
     }
-
- //   public Optional<ChatIdentity> getChatIdentity() {
-      //  return Optional.ofNullable(chatIdentity);
-   // }
 }
