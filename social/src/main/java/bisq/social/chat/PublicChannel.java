@@ -31,11 +31,11 @@ public class PublicChannel extends Channel {
     private final String description;
     private final UserProfile channelAdmin;
 
-    public PublicChannel(String id, String channelName, UserProfile channelAdmin, String description) {
+    public PublicChannel(String id, String channelName, String description, UserProfile channelAdmin ) {
         super(id);
 
         this.channelName = channelName;
-        this.channelAdmin = channelAdmin;
         this.description = description;
+        this.channelAdmin = channelAdmin;
     }
 }

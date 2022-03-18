@@ -84,23 +84,23 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public void addDummyChannels() {
-        PublicChannel element = new PublicChannel("BTC-EUR Market", 
-                "BTC-EUR Market", 
-                null, 
-                "Channel for trading Bitcoin with EUR");
+        PublicChannel element = new PublicChannel("BTC-EUR Market",
+                "BTC-EUR Market",
+                "Channel for trading Bitcoin with EUR",
+                null);
         persistableStore.getPublicChannels().add(element);
-        persistableStore.getPublicChannels().add(new PublicChannel("BTC-USD Market", 
-                "BTC-USD Market", 
-                null, 
-                "Channel for trading Bitcoin with USD"));
-        persistableStore.getPublicChannels().add(new PublicChannel("Other Markets", 
-                "Other Markets", 
-                null, 
-                "Channel for trading any market"));
-        persistableStore.getPublicChannels().add(new PublicChannel("Off-topic", 
-                "Off-topic", 
-                null, 
-                "Channel for off topic"));
+        persistableStore.getPublicChannels().add(new PublicChannel("BTC-USD Market",
+                "BTC-USD Market",
+                "Channel for trading Bitcoin with USD",
+                null));
+        persistableStore.getPublicChannels().add(new PublicChannel("Other Markets",
+                "Other Markets",
+                "Channel for trading any market",
+                null));
+        persistableStore.getPublicChannels().add(new PublicChannel("Off-topic",
+                "Off-topic",
+                "Channel for off topic",
+                null));
         persistableStore.getSelectedChannel().set(element); //todo
     }
 
@@ -169,8 +169,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 .map(future -> future.thenApply(optionalProof -> optionalProof.map(e -> {
                             PublicChannel publicChannel = new PublicChannel(StringUtils.createUid(),
                                     channelName,
-                                    userProfile,
-                                    description);
+                                    description,
+                                    userProfile);
                             persistableStore.getPublicChannels().add(publicChannel);
                             persist();
                             return Optional.of(publicChannel);
