@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.identity;
+package bisq.social.userprofile;
 
 import bisq.common.util.FileUtils;
 import com.google.common.annotations.VisibleForTesting;

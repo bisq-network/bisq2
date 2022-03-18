@@ -46,6 +46,8 @@ public class ChatController implements Controller {
     private final ChatView view;
     private final UserProfileService userProfileService;
     private final NetworkService networkService;
+    private final PublicChannelSelection publicChannelSelection;
+    private final PrivateChannelSelection privateChannelSelection;
     private Pin chatMessagesPin;
     private Pin selectedChannelPin;
 
@@ -55,8 +57,8 @@ public class ChatController implements Controller {
         networkService = applicationService.getNetworkService();
 
         UserProfileComboBox userProfileDisplay = new UserProfileComboBox(userProfileService);
-        PublicChannelSelection publicChannelSelection = new PublicChannelSelection(chatService);
-        PrivateChannelSelection privateChannelSelection = new PrivateChannelSelection(chatService);
+        publicChannelSelection = new PublicChannelSelection(chatService);
+        privateChannelSelection = new PrivateChannelSelection(chatService);
         model = new ChatModel();
         view = new ChatView(model,
                 this,
