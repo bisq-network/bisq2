@@ -19,8 +19,6 @@ abstract class BitcoindCreateOrLoadWalletTask : DefaultTask() {
         } else {
             loadWallet(walletFile)
         }
-
-        setPassphrase(walletFile)
     }
 
     private fun createWallet(walletFile: File) {
@@ -30,7 +28,6 @@ abstract class BitcoindCreateOrLoadWalletTask : DefaultTask() {
                 "createwallet",
 
                 "wallet_name=${walletFile.absolutePath}",
-                "passphrase=bisq"
             )
         )
     }
@@ -40,17 +37,6 @@ abstract class BitcoindCreateOrLoadWalletTask : DefaultTask() {
             listOf(
                 "loadwallet",
                 walletFile.absolutePath,
-            )
-        )
-    }
-
-    private fun setPassphrase(walletFile: File) {
-        BitcoindRpcClient.walletRpcCall(
-            walletPath = walletFile.absolutePath,
-            listOf(
-                "walletpassphrase",
-                "bisq",
-                "10000000"
             )
         )
     }

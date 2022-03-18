@@ -28,6 +28,7 @@ import bisq.wallets.rpc.RpcClient;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class ElementsdWallet {
     private final RpcClient rpcClient;
@@ -126,9 +127,13 @@ public class ElementsdWallet {
         return rpcClient.invokeAndValidate(rpcCall);
     }
 
-    public void walletPassphrase(String passphrase, long timeout) {
+    public void walletPassphrase(Optional<String> passphrase, long timeout) {
+        if (passphrase.isEmpty()) {
+            return;
+        }
+
         var request = BitcoindWalletPassphraseRpcCall.Request.builder()
-                .passphrase(passphrase)
+                .passphrase(passphrase.get())
                 .timeout(timeout)
                 .build();
         var rpcCall = new BitcoindWalletPassphraseRpcCall(request);

@@ -51,10 +51,10 @@ public class WalletService {
         if (walletConfig.isEmpty()) {
             return CompletableFuture.completedFuture(null);
         }
-        return initialize(walletConfig.get(), "bisq");
+        return initialize(walletConfig.get(), Optional.empty());
     }
 
-    public CompletableFuture<Void> initialize(WalletConfig walletConfig, String walletPassphrase) {
+    public CompletableFuture<Void> initialize(WalletConfig walletConfig, Optional<String> walletPassphrase) {
         if (wallet.isPresent()) {
             return CompletableFuture.completedFuture(null);
         }
