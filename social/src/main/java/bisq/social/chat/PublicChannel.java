@@ -17,7 +17,7 @@
 
 package bisq.social.chat;
 
-import bisq.social.userprofile.UserProfile;
+import bisq.social.user.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

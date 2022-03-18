@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.userprofile;
+package bisq.social.user;
 
 import bisq.identity.Identity;
 

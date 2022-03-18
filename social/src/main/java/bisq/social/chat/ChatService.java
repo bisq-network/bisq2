@@ -29,9 +29,9 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.social.userprofile.Entitlement;
-import bisq.social.userprofile.UserProfile;
-import bisq.social.userprofile.UserProfileService;
+import bisq.social.user.Entitlement;
+import bisq.social.user.UserProfile;
+import bisq.social.user.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

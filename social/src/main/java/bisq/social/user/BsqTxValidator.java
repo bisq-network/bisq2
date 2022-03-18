@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.userprofile;
+package bisq.social.user;
 
 import bisq.common.data.Pair;
-import bisq.common.encoding.Hex;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -27,64 +26,81 @@ import com.google.gson.JsonSyntaxException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.PublicKey;
+import java.util.Optional;
 
 @Slf4j
-public class BtcTxValidator {
-
-    private static int PUBLIC_KEY_LENGTH = 33;
+public class BsqTxValidator {
 
     public static boolean initialSanityChecks(String txId, String jsonTxt) {
         if (jsonTxt == null || jsonTxt.length() == 0) {
             return false;
         }
         JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
-        // there should always be "txid" string element at the top level
-        if (json.get("txid") == null) {
+        // there should always be "id" string element at the top level
+        if (json.get("id") == null) {
             return false;
         }
         // txid should match what we requested
-        if (!txId.equals(json.get("txid").getAsString())) {
+        if (!txId.equals(json.get("id").getAsString())) {
             return false;
         }
         return true;
     }
 
-    public static String getFirstInputPubKey(String jsonTxt) {
+    public static boolean isBsqTx(String url, String txId, String jsonTxt) {
+        return url.matches(".*bisq.*") && initialSanityChecks(txId, jsonTxt);
+    }
+
+    public static boolean isProofOfBurn(String jsonTxt) {
+        JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
+        JsonElement txType = json.get("txType");
+        if (txType == null) {
+            return false;
+        }
+        return txType.getAsString().equalsIgnoreCase("PROOF_OF_BURN");
+    }
+
+    public static boolean isLockup(String jsonTxt) {
+        JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
+        JsonElement txType = json.get("txType");
+        if (txType == null) {
+            return false;
+        }
+        return txType.getAsString().equalsIgnoreCase("LOCKUP");
+    }
+
+    public static long getBurntAmount(String jsonTxt) {
+        JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
+        JsonElement burntFee = json.get("burntFee");
+        if (burntFee == null) {
+            return 0;   // no json element, assume zero burnt amount
+        }
+        return burntFee.getAsLong();
+    }
+
+    public static Optional<String> getOpReturnData(String jsonTxt) {
         try {
             Pair<JsonArray, JsonArray> vinAndVout = getVinAndVout(jsonTxt);
-            JsonArray vinArray = vinAndVout.first();
-            for (JsonElement x : vinArray) {
-                JsonObject vin = x.getAsJsonObject();
-                // pubKey in witness or scriptsig (legacy or segwit txs)
-                JsonArray witnesses = vin.getAsJsonArray("witness");
-                if (witnesses != null) {
-                    String witnessPubKey = witnesses.get(1).getAsString();
-                    if (witnessPubKey.length() >= PUBLIC_KEY_LENGTH * 2) {
-                        return witnessPubKey;
-                    }
-                }
-                JsonElement scriptsig = vin.get("scriptsig");
-                if (scriptsig != null) {
-                    String scriptsigAsHex = scriptsig.getAsString();
-                    if (scriptsigAsHex.length() >= PUBLIC_KEY_LENGTH * 2) {
-                        return scriptsigAsHex.substring(scriptsigAsHex.length() - PUBLIC_KEY_LENGTH * 2);
-                    }
+            JsonArray voutArray = vinAndVout.second();
+            for (JsonElement x : voutArray) {
+                JsonObject y = x.getAsJsonObject();
+                if (y.get("txOutputType").getAsString().matches(".*OP_RETURN.*")) {
+                    return Optional.of(y.get("opReturn").getAsString());
                 }
             }
         } catch (JsonSyntaxException e) {
             log.error("json error:", e);
         }
-        throw new JsonSyntaxException("could not find pubKey");
+        return Optional.empty();
     }
 
     private static Pair<JsonArray, JsonArray> getVinAndVout(String jsonTxt) throws JsonSyntaxException {
         JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
-        if (json.get("vin") == null || json.get("vout") == null) {
+        if (json.get("inputs") == null || json.get("outputs") == null) {
             throw new JsonSyntaxException("missing vin/vout");
         }
-        JsonArray jsonVin = json.get("vin").getAsJsonArray();
-        JsonArray jsonVout = json.get("vout").getAsJsonArray();
+        JsonArray jsonVin = json.get("inputs").getAsJsonArray();
+        JsonArray jsonVout = json.get("outputs").getAsJsonArray();
         if (jsonVin == null || jsonVout == null || jsonVin.size() < 1 || jsonVout.size() < 1) {
             throw new JsonSyntaxException("not enough vins/vouts");
         }

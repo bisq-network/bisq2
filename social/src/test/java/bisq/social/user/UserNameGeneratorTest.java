@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.userprofile;
+package bisq.social.user;
 
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static bisq.social.userprofile.UserNameGenerator.fromHash;
-import static bisq.social.userprofile.UserNameGenerator.read;
+import static bisq.social.user.UserNameGenerator.fromHash;
+import static bisq.social.user.UserNameGenerator.read;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
