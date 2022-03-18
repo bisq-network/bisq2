@@ -39,7 +39,7 @@ import bisq.settings.SettingsService;
 import bisq.social.chat.ChatService;
 import bisq.social.intent.TradeIntentListingsService;
 import bisq.social.intent.TradeIntentService;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.profile.UserProfileService;
 import bisq.wallets.NetworkType;
 import bisq.wallets.WalletBackend;
 import bisq.wallets.WalletConfig;

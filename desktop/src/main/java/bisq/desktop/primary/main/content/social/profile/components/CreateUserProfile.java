@@ -28,7 +28,7 @@ import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;

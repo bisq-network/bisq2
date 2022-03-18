@@ -24,7 +24,7 @@ import bisq.desktop.primary.main.content.social.profile.components.ChannelAdmin;
 import bisq.desktop.primary.main.content.social.profile.components.CreateUserProfile;
 import bisq.desktop.primary.main.content.social.profile.components.UserProfileSelection;
 import bisq.social.user.Entitlement;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;

@@ -30,8 +30,8 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.social.user.Entitlement;
-import bisq.social.user.UserProfile;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.profile.UserProfile;
+import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

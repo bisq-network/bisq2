@@ -31,7 +31,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.security.DigestUtil;
 import bisq.social.user.Entitlement;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
