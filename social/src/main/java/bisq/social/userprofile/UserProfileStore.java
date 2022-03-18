@@ -22,6 +22,9 @@ import bisq.common.observable.ObservableSet;
 import bisq.persistence.PersistableStore;
 import lombok.Getter;
 
+/**
+ * Persists my user profiles and the selected user profile.
+ */
 public class UserProfileStore implements PersistableStore<UserProfileStore> {
     @Getter
     private final Observable<UserProfile> selectedUserProfile = new Observable<>();

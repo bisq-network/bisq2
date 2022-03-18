@@ -30,21 +30,10 @@ public class PublicChannel extends Channel {
     private final String channelName;
     private final UserProfile channelOwner;
 
-    // user can change their chatIdentity in a PublicChannel
-  //  @Nullable
-  //  @Setter
-   // private ChatIdentity chatIdentity;
-    // Can be empty
-  //  private final Set<ChatPeer> chatPeers = new HashSet<>();
-
     public PublicChannel(String id, String channelName, UserProfile channelOwner) {
         super(id);
 
         this.channelName = channelName;
         this.channelOwner = channelOwner;
     }
-
- //   public Optional<ChatIdentity> getChatIdentity() {
-      //  return Optional.ofNullable(chatIdentity);
-   // }
 }

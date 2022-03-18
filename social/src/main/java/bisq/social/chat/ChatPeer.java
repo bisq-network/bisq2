@@ -22,15 +22,7 @@ import bisq.network.NetworkId;
 import bisq.security.DigestUtil;
 
 import java.io.Serializable;
-// The userName is not safe against impersonation attacks, so we have to combine it with some easy to remember 
-// addition.
 
-// The ID can be used to derive a unique identifier (e.g. emojiId - https://rfc.tari.com/RFC-0152_EmojiId.html
-// Emoji java lib: https://github.com/Coding/emoji-java)
-// Alternatively we could use a short sentence/poem deterministically created from the ID 
-// E.g. [userName] - the [color] [adjective/adverb] [verb] [noun]: 
-// Example: "John - the blue slowly wandering glacier". Will result mostly in nonsense but might be good enough 
-// to remember and detect an impersonator.
 public record ChatPeer(String userName, NetworkId networkId) implements Serializable {
     public String id() {
         return Hex.encode(DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded()));

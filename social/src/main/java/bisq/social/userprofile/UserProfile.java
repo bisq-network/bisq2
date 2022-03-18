@@ -22,6 +22,9 @@ import bisq.identity.Identity;
 import java.io.Serializable;
 import java.util.Set;
 
+/**
+ * Local user profile
+ */
 public record UserProfile(Identity identity, Set<Entitlement> entitlements) implements Serializable {
     public boolean hasEntitlementType(Entitlement.Type type) {
         return entitlements.stream().anyMatch(e -> e.entitlementType() == type);
