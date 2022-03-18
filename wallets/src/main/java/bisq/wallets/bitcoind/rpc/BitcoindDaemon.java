@@ -24,6 +24,7 @@ import bisq.wallets.rpc.RpcClient;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class BitcoindDaemon {
 
@@ -33,9 +34,9 @@ public class BitcoindDaemon {
         this.rpcClient = rpcClient;
     }
 
-    public void createOrLoadWallet(Path walletPath, String passphrase) {
+    public void createOrLoadWallet(Path walletPath, Optional<String> passphrase) {
         if (!doesWalletExist(walletPath)) {
-            createWallet(walletPath, passphrase);
+            createWallet(walletPath, passphrase.orElse(""));
         } else {
             List<String> loadedWallets = listWallets();
             if (!loadedWallets.contains(walletPath.toString())) {

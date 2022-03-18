@@ -31,6 +31,7 @@ import bisq.wallets.rpc.RpcConfig;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 public class BitcoinWallet implements Wallet {
     private final Path walletPath;
@@ -51,7 +52,7 @@ public class BitcoinWallet implements Wallet {
     }
 
     @Override
-    public void initialize(String walletPassphrase) {
+    public void initialize(Optional<String> walletPassphrase) {
         daemon.createOrLoadWallet(walletPath, walletPassphrase);
         wallet.walletPassphrase(walletPassphrase, BitcoindWallet.DEFAULT_WALLET_TIMEOUT);
     }

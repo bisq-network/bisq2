@@ -85,7 +85,9 @@ public class WalletConfigPopup extends Popup {
         }
 
         private void onConnectToWallet() {
-            String passphrase = model.walletPassphraseProperty.get();
+            String passphraseValue = model.walletPassphraseProperty.get();
+            Optional<String> passphrase = passphraseValue.isEmpty() ? Optional.empty()
+                    : Optional.of(passphraseValue);
             model.walletPassphraseProperty.setValue(""); // Wipe passphrase from memory
 
             WalletConfig walletConfig = createWalletConfigFromModel();

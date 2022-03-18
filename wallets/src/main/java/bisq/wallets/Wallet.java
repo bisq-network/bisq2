@@ -21,9 +21,10 @@ import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface Wallet {
-    void initialize(String walletPassphrase);
+    void initialize(Optional<String> walletPassphrase);
 
     void shutdown();
 
