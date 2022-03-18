@@ -17,22 +17,25 @@
 
 package bisq.social.chat;
 
+import bisq.security.DigestUtil;
+import bisq.social.user.ChatUser;
+import bisq.social.user.UserNameGenerator;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class PrivateChannel extends Channel {
-    private final ChatPeer chatPeer;
+    private final ChatUser peer;
     private final ChatIdentity chatIdentity;
 
-    public PrivateChannel(String id, ChatPeer chatPeer, ChatIdentity chatIdentity) {
+    public PrivateChannel(String id, ChatUser peer, ChatIdentity chatIdentity) {
         super(id);
-        this.chatPeer = chatPeer;
+        this.peer = peer;
         this.chatIdentity = chatIdentity;
     }
 
     public String getChannelName() {
-        return chatPeer.userName();
+        return UserNameGenerator.fromHash(DigestUtil.hash(peer.networkId().getPubKey().publicKey().getEncoded()));
     }
 }

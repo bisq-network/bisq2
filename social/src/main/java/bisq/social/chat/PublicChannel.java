@@ -17,7 +17,7 @@
 
 package bisq.social.chat;
 
-import bisq.social.user.UserProfile;
+import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,13 +29,13 @@ import lombok.ToString;
 public class PublicChannel extends Channel {
     private final String channelName;
     private final String description;
-    private final UserProfile channelAdmin;
+    private final ChatUser channelAdmin;
 
-    public PublicChannel(String id, String channelName, UserProfile channelAdmin, String description) {
+    public PublicChannel(String id, String channelName, String description, ChatUser channelAdmin ) {
         super(id);
 
         this.channelName = channelName;
-        this.channelAdmin = channelAdmin;
         this.description = description;
+        this.channelAdmin = channelAdmin;
     }
 }

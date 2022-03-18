@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user;
+package bisq.social.user.profile;
 
 import bisq.common.data.Pair;
 import bisq.common.encoding.Hex;
@@ -32,6 +32,11 @@ import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.KeyPairService;
 import bisq.security.SignatureUtil;
+import bisq.social.user.BsqTxValidator;
+import bisq.social.user.BtcTxValidator;
+import bisq.social.user.Entitlement;
+import bisq.social.user.UserNameGenerator;
+import com.google.common.base.Preconditions;
 import com.google.gson.JsonSyntaxException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -150,7 +155,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
             try {
                 BaseHttpClient httpClient = getApiHttpClient(config.bsqMempoolProviders());
                 String jsonBsqTx = httpClient.get("tx/" + proofOfBurnTxId, Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
-                checkArgument(BsqTxValidator.initialSanityChecks(proofOfBurnTxId, jsonBsqTx), "bsq tx sanity checks");
+                Preconditions.checkArgument(BsqTxValidator.initialSanityChecks(proofOfBurnTxId, jsonBsqTx), "bsq tx sanity checks");
                 checkArgument(BsqTxValidator.isBsqTx(httpClient.getBaseUrl(), proofOfBurnTxId, jsonBsqTx), "isBsqTx");
                 checkArgument(BsqTxValidator.isProofOfBurn(jsonBsqTx), "is proof of burn transaction");
                 checkArgument(BsqTxValidator.getBurntAmount(jsonBsqTx) >= getMinBurnAmount(type), "insufficient burn");
@@ -180,7 +185,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                 String jsonBsqTx = httpClientBsq.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClientBsq.userAgent)));
                 String jsonBtcTx = httpClientBtc.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClientBtc.userAgent)));
                 checkArgument(BsqTxValidator.initialSanityChecks(txId, jsonBsqTx), "bsq tx sanity checks");
-                checkArgument(BtcTxValidator.initialSanityChecks(txId, jsonBtcTx), "btc tx sanity checks");
+                Preconditions.checkArgument(BtcTxValidator.initialSanityChecks(txId, jsonBtcTx), "btc tx sanity checks");
                 checkArgument(BsqTxValidator.isBsqTx(httpClientBsq.getBaseUrl(), txId, jsonBsqTx), "isBsqTx");
                 checkArgument(BsqTxValidator.isLockup(jsonBsqTx), "is lockup transaction");
                 String signingPubkeyAsHex = BtcTxValidator.getFirstInputPubKey(jsonBtcTx);
@@ -239,7 +244,6 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         } else {
             throw new RuntimeException("I2P is not supported yet");
         }
-        BaseHttpClient httpClient = networkService.getHttpClient(url, userAgent, transportType);
-        return httpClient;
+        return networkService.getHttpClient(url, userAgent, transportType);
     }
 }

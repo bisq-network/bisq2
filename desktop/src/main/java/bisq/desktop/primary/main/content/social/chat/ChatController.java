@@ -28,7 +28,7 @@ import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.social.chat.*;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -125,7 +125,7 @@ public class ChatController implements Controller {
                 new Date().getTime(),
                 PRIVATE);
         chatService.addChatMessage(chatMessage, privateChannel);
-        NetworkId receiverNetworkId = privateChannel.getChatPeer().networkId();
+        NetworkId receiverNetworkId = privateChannel.getPeer().networkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = identity.getNodeIdAndKeyPair();
         networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair)
                 .whenComplete((resultMap, throwable2) -> {

@@ -23,7 +23,7 @@ import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService.BroadCastDataResult;
-import bisq.social.chat.ChatPeer;
+import bisq.social.user.ChatUser;
 import bisq.social.chat.ChatService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,7 +58,7 @@ public class TradeIntentService {
         return identityService.getOrCreateIdentity(tradeIntentId).thenApply(identity -> {
             NetworkId makerNetworkId = identity.networkId();
             String userName = chatService.findUserName(tradeIntentId).orElse("Maker@" + StringUtils.truncate(tradeIntentId));
-            ChatPeer maker = new ChatPeer(userName, makerNetworkId);
+            ChatUser maker = new ChatUser(makerNetworkId);
             return new TradeIntent(tradeIntentId, maker, ask, bid, new Date().getTime());
         });
     }

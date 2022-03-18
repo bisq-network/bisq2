@@ -15,15 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user;
+package bisq.social.user.profile;
 
 import bisq.identity.Identity;
+import bisq.social.user.Entitlement;
 
 import java.io.Serializable;
 import java.util.Set;
 
 /**
- * Local user profile
+ * Local user profile. Not shared over network.
  */
 public record UserProfile(Identity identity, Set<Entitlement> entitlements) implements Serializable {
     public boolean hasEntitlementType(Entitlement.Type type) {
