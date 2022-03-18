@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+// Note: will get probably removed
 public class TradeIntentListingsService {
     @Getter
     private final ObservableSet<TradeIntent> tradeIntents = new ObservableSet<>();

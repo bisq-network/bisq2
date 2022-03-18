@@ -7,6 +7,7 @@ import bisq.social.chat.ChatPeer;
 
 import java.util.concurrent.TimeUnit;
 
+// Note: will get probably removed
 public record TradeIntent(String id, ChatPeer maker, String ask, String bid, long date) implements NetworkPayload {
     @Override
     public MetaData getMetaData() {
