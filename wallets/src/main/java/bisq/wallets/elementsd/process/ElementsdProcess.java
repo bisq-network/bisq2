@@ -50,6 +50,7 @@ public class ElementsdProcess extends BitcoindProcess {
                 List.of(
                         "-chain=" + getNetworkName(),
                         "-datadir=" + dataDir.toAbsolutePath(),
+                        "-debug=1",
 
                         "-bind=127.0.0.1:" + NetworkUtils.findFreeSystemPort(),
                         "-whitelist=127.0.0.1",

@@ -59,6 +59,7 @@ public class BitcoindProcess implements DaemonProcess {
                 List.of(
                         networkArg,
                         "-datadir=" + dataDir.toAbsolutePath(),
+                        "-debug=1",
 
                         "-bind=127.0.0.1:" + NetworkUtils.findFreeSystemPort(),
                         "-whitelist=127.0.0.1",
