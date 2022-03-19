@@ -24,7 +24,10 @@ import java.util.function.Consumer;
 
 public class Observable<T> implements Serializable {
     private T value;
-    private transient final Set<Consumer<T>> observers = new CopyOnWriteArraySet<>();
+    // todo as observers is transient we get null after reading persisted data
+    // we will likely not persist it when we impl protobuf serialisation, so the Observable can be considered 
+    // not serializable
+    private transient Set<Consumer<T>> observers = new CopyOnWriteArraySet<>();
 
     public Observable() {
     }
@@ -34,6 +37,9 @@ public class Observable<T> implements Serializable {
     }
 
     public Pin addObserver(Consumer<T> observer) {
+        if (observers == null) {
+            observers = new CopyOnWriteArraySet<>();
+        }
         observers.add(observer);
         observer.accept(value);
         return () -> observers.remove(observer);
@@ -41,6 +47,9 @@ public class Observable<T> implements Serializable {
 
     public void set(T value) {
         this.value = value;
+        if (observers == null) {
+            observers = new CopyOnWriteArraySet<>();
+        }
         observers.forEach(observer -> observer.accept(value));
     }
 

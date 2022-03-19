@@ -23,6 +23,15 @@ New css for bisq2.
     -fx-fill: -bs-rd-nav-selected;
 }
 
+.accent-headline {
+    -fx-font-size: 1.1em;
+    -fx-text-fill: -bs-color-green-5;
+}
+
+.channel-settings-headline {
+    -fx-font-size: 1.692em;
+    -fx-text-fill: -bs-color-green-5;
+}
 
 /*
 .jfx-badge .badge-pane {

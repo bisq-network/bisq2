@@ -17,25 +17,10 @@
 
 package bisq.social.chat;
 
-import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableSet;
-import lombok.Getter;
-
 import java.io.Serializable;
 
-@Getter
-public abstract class Channel implements Serializable {
-    protected final String id;
-    protected final ObservableSet<ChatMessage> chatMessages = new ObservableSet<>();
-    protected final Observable<NotificationSetting> notificationSetting = new Observable<>(NotificationSetting.ALL);
-
-    public Channel(String id) {
-        this.id = id;
-    }
-
-    public void addChatMessage(ChatMessage chatMessage) {
-        chatMessages.add(chatMessage);
-    }
-
-    public abstract String getChannelName();
+public enum NotificationSetting implements Serializable {
+    ALL,
+    MENTION,
+    NEVER
 }

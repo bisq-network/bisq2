@@ -33,7 +33,15 @@ public record ChatUser(NetworkId networkId, Set<Entitlement> entitlements) imple
         this(networkId, new HashSet<>());
     }
 
+    public byte[] pubKeyHash() {
+        return DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded());
+    }
+
     public String id() {
-        return Hex.encode(DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded()));
+        return Hex.encode(pubKeyHash());
+    }
+
+    public String userName() {
+        return UserNameGenerator.fromHash(pubKeyHash());
     }
 }

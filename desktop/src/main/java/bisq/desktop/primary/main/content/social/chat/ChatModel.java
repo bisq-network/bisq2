@@ -20,10 +20,8 @@ package bisq.desktop.primary.main.content.social.chat;
 import bisq.desktop.common.view.Model;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import bisq.social.chat.Channel;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -37,13 +35,12 @@ import java.util.Map;
 @Slf4j
 @Getter
 public class ChatModel implements Model {
-
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
     private final StringProperty selectedChannelAsString = new SimpleStringProperty("");
-
-
-    private final BooleanProperty sideBarVisible = new SimpleBooleanProperty();
+    private final ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
+    private final BooleanProperty infoVisible = new SimpleBooleanProperty();
+    private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();
     private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
     private final double defaultLeftDividerPosition = 0.3;
     private final ObservableList<ChatMessageListItem> chatMessages = FXCollections.observableArrayList();

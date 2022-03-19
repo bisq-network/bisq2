@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.chat;
+package bisq.desktop.components.table;
 
 import bisq.desktop.components.controls.BisqInputTextField;
-import bisq.desktop.components.table.FilteredListItem;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.transformation.FilteredList;
@@ -56,7 +55,7 @@ public class FilterBox {
         public void onViewDetached() {
         }
 
-        public void onSearch(String filterString) {
+        private void onSearch(String filterString) {
             model.filteredList.setPredicate(item -> item.match(filterString));
         }
     }

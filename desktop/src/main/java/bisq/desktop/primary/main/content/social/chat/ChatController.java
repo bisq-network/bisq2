@@ -22,6 +22,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.primary.main.content.social.chat.components.*;
 import bisq.identity.Identity;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
@@ -31,6 +32,8 @@ import bisq.social.chat.*;
 import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.Date;
@@ -48,14 +51,19 @@ public class ChatController implements Controller {
     private final NetworkService networkService;
     private final PublicChannelSelection publicChannelSelection;
     private final PrivateChannelSelection privateChannelSelection;
+    private final ChannelInfo channelInfo;
+    private final NotificationsSettings notificationsSettings;
     private Pin chatMessagesPin;
     private Pin selectedChannelPin;
+    private Subscription notificationSettingSubscription;
 
     public ChatController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
         networkService = applicationService.getNetworkService();
 
+        channelInfo = new ChannelInfo();
+        notificationsSettings = new NotificationsSettings();
         UserProfileComboBox userProfileDisplay = new UserProfileComboBox(userProfileService);
         publicChannelSelection = new PublicChannelSelection(chatService);
         privateChannelSelection = new PrivateChannelSelection(chatService);
@@ -64,7 +72,9 @@ public class ChatController implements Controller {
                 this,
                 userProfileDisplay.getComboBox(),
                 publicChannelSelection.getRoot(),
-                privateChannelSelection.getRoot());
+                privateChannelSelection.getRoot(),
+                notificationsSettings.getRoot(),
+                channelInfo.getRoot());
 
         model.getSortedChatMessages().setComparator(Comparator.naturalOrder());
     }
@@ -72,6 +82,9 @@ public class ChatController implements Controller {
     @Override
     public void onViewAttached() {
         chatService.addDummyChannels();
+
+        notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
+                value -> chatService.setNotificationSetting(chatService.getPersistableStore().getSelectedChannel().get(), value));
 
         selectedChannelPin = chatService.getPersistableStore().getSelectedChannel().addObserver(channel -> {
             if (chatMessagesPin != null) {
@@ -82,11 +95,19 @@ public class ChatController implements Controller {
                     .to(channel.getChatMessages());
 
             model.getSelectedChannelAsString().set(channel.getChannelName());
+            model.getSelectedChannel().set(channel);
+            if (model.getInfoVisible().get()) {
+                channelInfo.setChannel(channel);
+            }
+            if (model.getNotificationsVisible().get()) {
+                notificationsSettings.setChannel(channel);
+            }
         });
     }
 
     @Override
     public void onViewDetached() {
+        notificationSettingSubscription.unsubscribe();
         selectedChannelPin.unbind();
         chatMessagesPin.unbind();
     }
@@ -148,17 +169,26 @@ public class ChatController implements Controller {
                 });
     }
 
-    public void onToggleSettings() {
-        boolean visible = !model.getSideBarVisible().get();
-        model.getSideBarVisible().set(visible);
-    }
-
     public void onToggleFilterBox() {
         boolean visible = !model.getFilterBoxVisible().get();
         model.getFilterBoxVisible().set(visible);
     }
 
-    public void onShowNotifications() {
-        
+    public void onToggleNotifications() {
+        boolean visible = !model.getNotificationsVisible().get();
+        model.getNotificationsVisible().set(visible);
+        model.getInfoVisible().set(false);
+        if (visible) {
+            notificationsSettings.setChannel(model.getSelectedChannel().get());
+        }
+    }
+
+    public void onToggleInfo() {
+        boolean visible = !model.getInfoVisible().get();
+        model.getInfoVisible().set(visible);
+        model.getNotificationsVisible().set(false);
+        if (visible) {
+            channelInfo.setChannel(model.getSelectedChannel().get());
+        }
     }
 }
