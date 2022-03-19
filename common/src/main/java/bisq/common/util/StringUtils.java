@@ -59,4 +59,11 @@ public class StringUtils {
 
         return message.substring(0, maxChar - 3) + "...";
     }
+
+    public static boolean containsIgnoreCase(String string, String searchString) {
+        if (string == null || searchString == null) {
+            return false;
+        }
+        return string.toLowerCase().contains(searchString.toLowerCase());
+    }
 }

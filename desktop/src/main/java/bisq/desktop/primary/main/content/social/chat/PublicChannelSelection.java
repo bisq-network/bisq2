@@ -78,6 +78,10 @@ public class PublicChannelSelection {
             channelsPin = FxBindings.<PublicChannel, ListItem>bind(model.channels)
                     .map(ListItem::new)
                     .to(chatService.getPersistableStore().getPublicChannels());
+
+            if (!model.channels.isEmpty()) {
+                chatService.selectChannel(model.channels.get(0).channel);
+            }
         }
 
         @Override

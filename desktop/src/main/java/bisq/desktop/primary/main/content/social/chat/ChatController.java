@@ -73,14 +73,15 @@ public class ChatController implements Controller {
     public void onViewAttached() {
         chatService.addDummyChannels();
 
-        selectedChannelPin = chatService.getPersistableStore().getSelectedChannel().addObserver(selected -> {
-            log.error("selected " + selected);
+        selectedChannelPin = chatService.getPersistableStore().getSelectedChannel().addObserver(channel -> {
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
             }
-            chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem>bind(model.chatMessages)
+            chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem>bind(model.getChatMessages())
                     .map(ChatMessageListItem::new)
-                    .to(selected.getChatMessages());
+                    .to(channel.getChatMessages());
+
+            model.getSelectedChannelAsString().set(channel.getChannelName());
         });
     }
 
@@ -148,7 +149,16 @@ public class ChatController implements Controller {
     }
 
     public void onToggleSettings() {
-        boolean sideBarVisible = !model.getSideBarVisible().get();
-        model.getSideBarVisible().set(sideBarVisible);
+        boolean visible = !model.getSideBarVisible().get();
+        model.getSideBarVisible().set(visible);
+    }
+
+    public void onToggleFilterBox() {
+        boolean visible = !model.getFilterBoxVisible().get();
+        model.getFilterBoxVisible().set(visible);
+    }
+
+    public void onShowNotifications() {
+        
     }
 }

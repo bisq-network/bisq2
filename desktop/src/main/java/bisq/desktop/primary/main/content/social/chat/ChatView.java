@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.BisqHSpacer;
 import bisq.desktop.components.controls.BisqInputTextField;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.layout.Layout;
@@ -40,10 +39,12 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
     private final ListView<ChatMessageListItem> messagesListView;
     private final BisqInputTextField inputField;
     private final BisqLabel selectedChannelLabel;
-    private final Button settingButton;
+    private final Button searchButton, notificationsButton, settingButton;
     private final VBox sideBar;
     private final ComboBox<UserProfileComboBox.ListItem> userProfileComboBox;
     private final VBox left;
+    private final FilterBox filterBox;
+    private final BisqInputTextField filterBoxRoot;
 
     public ChatView(ChatModel model, ChatController controller,
                     ComboBox<UserProfileComboBox.ListItem> userProfileComboBox,
@@ -55,14 +56,20 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
         userProfileComboBox.setPadding(new Insets(10, 10, 10, 10));
 
-
         left = Layout.vBoxWith(userProfileComboBox, publicChannelSelection, privateChannelSelection);
         left.setMinWidth(150);
 
         selectedChannelLabel = new BisqLabel();
         selectedChannelLabel.getStyleClass().add("headline-label");
+        filterBox = new FilterBox(model.getFilteredChatMessages());
+        filterBoxRoot = filterBox.getRoot();
+        HBox.setHgrow(filterBoxRoot,Priority.ALWAYS);
+        HBox.setMargin(filterBoxRoot,new Insets(0,0,0,10));
+        searchButton = AwesomeDude.createIconButton(AwesomeIcon.SEARCH);
+        notificationsButton = AwesomeDude.createIconButton(AwesomeIcon.BELL);
         settingButton = AwesomeDude.createIconButton(AwesomeIcon.GEAR);
-        HBox centerToolbar = Layout.hBoxWith(selectedChannelLabel, new BisqHSpacer(), settingButton);
+        HBox centerToolbar = Layout.hBoxWith(selectedChannelLabel, filterBoxRoot, searchButton, notificationsButton, settingButton);
+
         messagesListView = new ListView<>();
         messagesListView.setFocusTraversable(false);
         VBox.setVgrow(messagesListView, Priority.ALWAYS);
@@ -116,20 +123,32 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
     public void onViewAttached() {
         userProfileComboBox.prefWidthProperty().bind(left.widthProperty());
         selectedChannelLabel.textProperty().bind(model.getSelectedChannelAsString());
+        filterBoxRoot.visibleProperty().bind(model.getFilterBoxVisible());
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
 
+        searchButton.setOnAction(e -> controller.onToggleFilterBox());
+        notificationsButton.setOnAction(e -> controller.onShowNotifications());
         settingButton.setOnAction(e -> controller.onToggleSettings());
 
         inputField.setOnAction(e -> {
             controller.onSendMessage(inputField.getText());
             inputField.clear();
         });
-        messagesListView.setItems(model.getSortedChatMessages());
+        messagesListView.setItems(model.getFilteredChatMessages());
     }
 
     @Override
     protected void onViewDetached() {
-    }
+        userProfileComboBox.prefWidthProperty().unbind();
+        selectedChannelLabel.textProperty().unbind();
+        filterBoxRoot.visibleProperty().unbind();
+        sideBar.visibleProperty().unbind();
+        sideBar.managedProperty().unbind();
 
+        searchButton.setOnAction(null);
+        notificationsButton.setOnAction(null);
+        settingButton.setOnAction(null);
+        inputField.setOnAction(null);
+    }
 }
