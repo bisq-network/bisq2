@@ -110,7 +110,7 @@ public class CreateUserProfile {
                             new HashSet<>(entitlementSelection.getVerifiedEntitlements()))
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
-                            checkArgument(userProfile.identity().pubKeyHash().equals(new ByteArray(DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded()))));
+                            checkArgument(userProfile.identity().pubKeyHashAsByteArray().equals(new ByteArray(DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded()))));
                             checkArgument(userProfile.identity().domainId().equals(useName));
                             reset();
                             model.feedback.set(Res.get("social.createUserProfile.success", useName));

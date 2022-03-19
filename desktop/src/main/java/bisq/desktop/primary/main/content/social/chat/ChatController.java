@@ -22,14 +22,19 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.overlay.Notification;
 import bisq.desktop.primary.main.content.social.chat.components.*;
+import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.social.chat.*;
+import bisq.social.user.UserNameGenerator;
 import bisq.social.user.profile.UserProfileService;
+import com.google.common.base.Joiner;
+import javafx.collections.ListChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -37,6 +42,8 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static bisq.social.chat.ChannelType.PRIVATE;
 import static bisq.social.chat.ChannelType.PUBLIC;
@@ -56,6 +63,7 @@ public class ChatController implements Controller {
     private Pin chatMessagesPin;
     private Pin selectedChannelPin;
     private Subscription notificationSettingSubscription;
+    private ListChangeListener<ChatMessageListItem> messageListener;
 
     public ChatController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
@@ -102,6 +110,54 @@ public class ChatController implements Controller {
             if (model.getNotificationsVisible().get()) {
                 notificationsSettings.setChannel(channel);
             }
+
+            if (messageListener != null) {
+                model.getChatMessages().removeListener(messageListener);
+            }
+
+            // Notifications implementation is very preliminary. Not sure if another concept like its used in Element 
+            // would be better. E.g. Show all past notifications in the sidebar. When a new notification arrives, dont
+            // show the popup but only highlight the notifications icon (we would need to add a notification 
+            // settings tab then in the notifications component).
+            // We look up all our usernames, not only the selected one
+            Set<String> myUserNames = userProfileService.getPersistableStore().getUserProfiles().stream()
+                    .map(userProfile -> UserNameGenerator.fromHash(userProfile.identity().pubKeyHash()))
+                    .collect(Collectors.toSet());
+
+            messageListener = c -> {
+                c.next();
+                // At init, we get full list, but we don't want to show notifications in that event.
+                if (c.getAddedSubList().equals(model.getChatMessages())) {
+                    return;
+                }
+                if (channel.getNotificationSetting().get() == NotificationSetting.ALL) {
+                    String messages = Joiner.on("\n").join(
+                            c.getAddedSubList().stream()
+                                    .map(item -> item.getSenderUserName() + ": " + item.getChatMessage().getText())
+                                    .collect(Collectors.toSet()));
+                    if (!messages.isEmpty()) {
+                        new Notification().headLine(messages).autoClose().hideCloseButton().show();
+                    }
+                } else if (channel.getNotificationSetting().get() == NotificationSetting.MENTION) {
+                    // TODO
+                    // - Match only if mentioned username matches exactly (e.g. split item.getMessage() 
+                    // in space separated tokens and compare those)
+                    // - show user icon of sender (requires extending Notification to support custom graphics)
+                    // 
+                    String messages = Joiner.on("\n").join(
+                            c.getAddedSubList().stream()
+                                    .filter(item -> myUserNames.stream().anyMatch(myUserName -> item.getMessage().contains("@" + myUserName)))
+                                    .filter(item -> !myUserNames.contains(item.getSenderUserName()))
+                                    .map(item -> Res.get("social.notification.getMentioned",
+                                            item.getSenderUserName(),
+                                            item.getChatMessage().getText()))
+                                    .collect(Collectors.toSet()));
+                    if (!messages.isEmpty()) {
+                        new Notification().headLine(messages).autoClose().hideCloseButton().show();
+                    }
+                }
+            };
+            model.getChatMessages().addListener(messageListener);
         });
     }
 
@@ -110,6 +166,10 @@ public class ChatController implements Controller {
         notificationSettingSubscription.unsubscribe();
         selectedChannelPin.unbind();
         chatMessagesPin.unbind();
+
+        if (messageListener != null) {
+            model.getChatMessages().removeListener(messageListener);
+        }
     }
 
 

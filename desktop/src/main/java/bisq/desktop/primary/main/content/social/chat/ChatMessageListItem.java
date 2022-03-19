@@ -23,9 +23,10 @@ import bisq.presentation.formatters.TimeFormatter;
 import bisq.social.chat.ChatMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
-
+@Slf4j
 @Getter
 @EqualsAndHashCode
 class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredListItem {
@@ -38,6 +39,8 @@ class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredLi
         this.chatMessage = chatMessage;
         message = chatMessage.getText();
         senderUserName = chatMessage.getSenderUserName();
+        log.error(senderUserName);
+                
 
         date = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
     }

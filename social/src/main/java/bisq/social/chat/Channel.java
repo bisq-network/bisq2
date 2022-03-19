@@ -27,7 +27,7 @@ import java.io.Serializable;
 public abstract class Channel implements Serializable {
     protected final String id;
     protected final ObservableSet<ChatMessage> chatMessages = new ObservableSet<>();
-    protected final Observable<NotificationSetting> notificationSetting = new Observable<>(NotificationSetting.ALL);
+    protected final Observable<NotificationSetting> notificationSetting = new Observable<>(NotificationSetting.MENTION);
 
     public Channel(String id) {
         this.id = id;

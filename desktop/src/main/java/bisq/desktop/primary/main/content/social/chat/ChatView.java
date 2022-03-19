@@ -26,6 +26,7 @@ import bisq.desktop.primary.main.content.social.chat.components.UserProfileCombo
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -48,6 +49,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
     private final BisqInputTextField filterBoxRoot;
     private final Pane notificationsSettings;
     private final Pane channelInfo;
+    private final ListChangeListener<ChatMessageListItem> messagesListener;
 
     public ChatView(ChatModel model, ChatController controller,
                     ComboBox<UserProfileComboBox.ListItem> userProfileComboBox,
@@ -56,10 +58,11 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                     Pane notificationsSettings,
                     Pane channelInfo) {
         super(new SplitPane(), model, controller);
-        
+
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
         this.userProfileComboBox = userProfileComboBox;
+        
         root.getStyleClass().add("hide-focus");
 
         userProfileComboBox.setPadding(new Insets(10, 10, 10, 10));
@@ -79,8 +82,10 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         HBox centerToolbar = Layout.hBoxWith(selectedChannelLabel, filterBoxRoot, searchButton, notificationsButton, infoButton);
 
         messagesListView = new ListView<>();
+        messagesListView.setCellFactory(getCellFactory());
         messagesListView.setFocusTraversable(false);
         VBox.setVgrow(messagesListView, Priority.ALWAYS);
+        
         inputField = new BisqInputTextField();
         inputField.setPromptText(Res.get("social.chat.input.prompt"));
 
@@ -92,10 +97,54 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);
         VBox center = Layout.vBoxWith(centerToolbar, messagesListAndSideBar);
         center.setPadding(new Insets(10, 10, 10, 10));
-        this.root.setDividerPosition(0, model.getDefaultLeftDividerPosition());
-        this.root.getItems().addAll(left, center);
+        root.setDividerPosition(0, model.getDefaultLeftDividerPosition());
+        root.getItems().addAll(left, center);
 
-        messagesListView.setCellFactory(new Callback<>() {
+        messagesListener = c -> messagesListView.scrollTo(model.getFilteredChatMessages().size() - 1);
+    }
+
+    @Override
+    public void onViewAttached() {
+        userProfileComboBox.prefWidthProperty().bind(left.widthProperty());
+        selectedChannelLabel.textProperty().bind(model.getSelectedChannelAsString());
+        filterBoxRoot.visibleProperty().bind(model.getFilterBoxVisible());
+        notificationsSettings.visibleProperty().bind(model.getNotificationsVisible());
+        notificationsSettings.managedProperty().bind(model.getNotificationsVisible());
+        channelInfo.visibleProperty().bind(model.getInfoVisible());
+        channelInfo.managedProperty().bind(model.getInfoVisible());
+
+        searchButton.setOnAction(e -> controller.onToggleFilterBox());
+        notificationsButton.setOnAction(e -> controller.onToggleNotifications());
+        infoButton.setOnAction(e -> controller.onToggleInfo());
+
+        inputField.setOnAction(e -> {
+            controller.onSendMessage(inputField.getText());
+            inputField.clear();
+        });
+
+        model.getFilteredChatMessages().addListener(messagesListener);
+
+        messagesListView.setItems(model.getFilteredChatMessages());
+    }
+
+    @Override
+    protected void onViewDetached() {
+        userProfileComboBox.prefWidthProperty().unbind();
+        selectedChannelLabel.textProperty().unbind();
+        filterBoxRoot.visibleProperty().unbind();
+        notificationsSettings.visibleProperty().unbind();
+        notificationsSettings.managedProperty().unbind();
+        channelInfo.visibleProperty().unbind();
+        channelInfo.managedProperty().unbind();
+
+        searchButton.setOnAction(null);
+        notificationsButton.setOnAction(null);
+        infoButton.setOnAction(null);
+        inputField.setOnAction(null);
+        model.getFilteredChatMessages().removeListener(messagesListener);
+    }
+    private Callback<ListView<ChatMessageListItem>, ListCell<ChatMessageListItem>> getCellFactory() {
+        return new Callback<>() {
             @Override
             public ListCell<ChatMessageListItem> call(ListView<ChatMessageListItem> list) {
                 return new ListCell<>() {
@@ -124,43 +173,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                     }
                 };
             }
-        });
-    }
-
-    @Override
-    public void onViewAttached() {
-        userProfileComboBox.prefWidthProperty().bind(left.widthProperty());
-        selectedChannelLabel.textProperty().bind(model.getSelectedChannelAsString());
-        filterBoxRoot.visibleProperty().bind(model.getFilterBoxVisible());
-        notificationsSettings.visibleProperty().bind(model.getNotificationsVisible());
-        notificationsSettings.managedProperty().bind(model.getNotificationsVisible());
-        channelInfo.visibleProperty().bind(model.getInfoVisible());
-        channelInfo.managedProperty().bind(model.getInfoVisible());
-
-        searchButton.setOnAction(e -> controller.onToggleFilterBox());
-        notificationsButton.setOnAction(e -> controller.onToggleNotifications());
-        infoButton.setOnAction(e -> controller.onToggleInfo());
-
-        inputField.setOnAction(e -> {
-            controller.onSendMessage(inputField.getText());
-            inputField.clear();
-        });
-        messagesListView.setItems(model.getFilteredChatMessages());
-    }
-
-    @Override
-    protected void onViewDetached() {
-        userProfileComboBox.prefWidthProperty().unbind();
-        selectedChannelLabel.textProperty().unbind();
-        filterBoxRoot.visibleProperty().unbind();
-        notificationsSettings.visibleProperty().unbind();
-        notificationsSettings.managedProperty().unbind();
-        channelInfo.visibleProperty().unbind();
-        channelInfo.managedProperty().unbind();
-
-        searchButton.setOnAction(null);
-        notificationsButton.setOnAction(null);
-        infoButton.setOnAction(null);
-        inputField.setOnAction(null);
+        };
     }
 }

@@ -156,7 +156,7 @@ public class UserProfileComboBox {
         private ListItem(UserProfile userProfile) {
             this.userProfile = userProfile;
             userName = userProfile.identity().domainId();
-            roboHashNode = RoboHash.getImage(userProfile.identity().pubKeyHash(), false);
+            roboHashNode = RoboHash.getImage(userProfile.identity().pubKeyHashAsByteArray(), false);
         }
     }
 }

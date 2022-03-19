@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.social.chat.components;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
 import bisq.social.chat.Channel;
+import bisq.social.chat.ChatMessage;
 import bisq.social.chat.PublicChannel;
 import bisq.social.user.ChatUser;
 import javafx.beans.property.ObjectProperty;
@@ -89,7 +90,9 @@ public class ChannelInfo {
         private void setChannel(Channel channel) {
             channelName = channel.getChannelName();
             members.setAll(channel.getChatMessages().stream()
-                    .map(chatMessage -> new ChatUserDisplay(new ChatUser(chatMessage.getSenderNetworkId())))
+                    .map(ChatMessage::getSenderNetworkId)
+                    .distinct()
+                    .map(senderNetworkId -> new ChatUserDisplay(new ChatUser(senderNetworkId)))
                     .sorted()
                     .collect(Collectors.toList()));
             if (channel instanceof PublicChannel publicChannel) {
@@ -161,8 +164,6 @@ public class ChannelInfo {
                 @Override
                 public ListCell<ChatUserDisplay> call(ListView<ChatUserDisplay> list) {
                     return new ListCell<>() {
-                        BisqLabel label = new BisqLabel();
-
                         @Override
                         public void updateItem(final ChatUserDisplay item, boolean empty) {
                             super.updateItem(item, empty);
