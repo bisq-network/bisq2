@@ -51,6 +51,7 @@ public class UserProfileSelection {
     public Pane getRoot() {
         return controller.view.getRoot();
     }
+
     public ReadOnlyObjectProperty<UserProfile> getSelectedUserProfile() {
         return controller.model.selectedUserProfile;
     }

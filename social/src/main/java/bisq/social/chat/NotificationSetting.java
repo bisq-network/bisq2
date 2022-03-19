@@ -15,33 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user;
-
-import bisq.common.encoding.Hex;
-import bisq.network.NetworkId;
-import bisq.security.DigestUtil;
+package bisq.social.chat;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
-/**
- * Publicly shared chat user data
- */
-public record ChatUser(NetworkId networkId, Set<Entitlement> entitlements) implements Serializable {
-    public ChatUser(NetworkId networkId) {
-        this(networkId, new HashSet<>());
-    }
-
-    public byte[] pubKeyHash() {
-        return DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded());
-    }
-
-    public String id() {
-        return Hex.encode(pubKeyHash());
-    }
-
-    public String userName() {
-        return UserNameGenerator.fromHash(pubKeyHash());
-    }
+public enum NotificationSetting implements Serializable {
+    ALL,
+    MENTION,
+    NEVER
 }

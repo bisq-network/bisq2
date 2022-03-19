@@ -66,7 +66,7 @@ public class Notification extends Overlay<Notification> {
         super.display();
 
         if (autoClose && autoCloseTimer == null) {
-            autoCloseTimer = UIScheduler.run(this::doClose).after(1000);
+            autoCloseTimer = UIScheduler.run(this::doClose).after(5000);
         }
 
         stage.addEventHandler(MouseEvent.MOUSE_PRESSED, (event) -> doClose());

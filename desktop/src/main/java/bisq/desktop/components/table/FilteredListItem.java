@@ -15,27 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat;
+package bisq.desktop.components.table;
 
-import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableSet;
-import lombok.Getter;
-
-import java.io.Serializable;
-
-@Getter
-public abstract class Channel implements Serializable {
-    protected final String id;
-    protected final ObservableSet<ChatMessage> chatMessages = new ObservableSet<>();
-    protected final Observable<NotificationSetting> notificationSetting = new Observable<>(NotificationSetting.MENTION);
-
-    public Channel(String id) {
-        this.id = id;
-    }
-
-    public void addChatMessage(ChatMessage chatMessage) {
-        chatMessages.add(chatMessage);
-    }
-
-    public abstract String getChannelName();
+public interface FilteredListItem {
+    boolean match(String filterString);
 }

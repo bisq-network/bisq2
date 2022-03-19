@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.chat;
+package bisq.desktop.primary.main.content.social.chat.components;
 
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
@@ -156,7 +156,7 @@ public class UserProfileComboBox {
         private ListItem(UserProfile userProfile) {
             this.userProfile = userProfile;
             userName = userProfile.identity().domainId();
-            roboHashNode = RoboHash.getImage(userProfile.identity().pubKeyHash(), false);
+            roboHashNode = RoboHash.getImage(userProfile.identity().pubKeyHashAsByteArray(), false);
         }
     }
 }

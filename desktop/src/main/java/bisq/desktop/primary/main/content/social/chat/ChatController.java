@@ -22,18 +22,28 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.overlay.Notification;
+import bisq.desktop.primary.main.content.social.chat.components.*;
+import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.social.chat.*;
+import bisq.social.user.UserNameGenerator;
 import bisq.social.user.profile.UserProfileService;
+import com.google.common.base.Joiner;
+import javafx.collections.ListChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static bisq.social.chat.ChannelType.PRIVATE;
 import static bisq.social.chat.ChannelType.PUBLIC;
@@ -48,14 +58,20 @@ public class ChatController implements Controller {
     private final NetworkService networkService;
     private final PublicChannelSelection publicChannelSelection;
     private final PrivateChannelSelection privateChannelSelection;
+    private final ChannelInfo channelInfo;
+    private final NotificationsSettings notificationsSettings;
     private Pin chatMessagesPin;
     private Pin selectedChannelPin;
+    private Subscription notificationSettingSubscription;
+    private ListChangeListener<ChatMessageListItem> messageListener;
 
     public ChatController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
         networkService = applicationService.getNetworkService();
 
+        channelInfo = new ChannelInfo();
+        notificationsSettings = new NotificationsSettings();
         UserProfileComboBox userProfileDisplay = new UserProfileComboBox(userProfileService);
         publicChannelSelection = new PublicChannelSelection(chatService);
         privateChannelSelection = new PrivateChannelSelection(chatService);
@@ -64,7 +80,9 @@ public class ChatController implements Controller {
                 this,
                 userProfileDisplay.getComboBox(),
                 publicChannelSelection.getRoot(),
-                privateChannelSelection.getRoot());
+                privateChannelSelection.getRoot(),
+                notificationsSettings.getRoot(),
+                channelInfo.getRoot());
 
         model.getSortedChatMessages().setComparator(Comparator.naturalOrder());
     }
@@ -73,21 +91,85 @@ public class ChatController implements Controller {
     public void onViewAttached() {
         chatService.addDummyChannels();
 
-        selectedChannelPin = chatService.getPersistableStore().getSelectedChannel().addObserver(selected -> {
-            log.error("selected " + selected);
+        notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
+                value -> chatService.setNotificationSetting(chatService.getPersistableStore().getSelectedChannel().get(), value));
+
+        selectedChannelPin = chatService.getPersistableStore().getSelectedChannel().addObserver(channel -> {
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
             }
-            chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem>bind(model.chatMessages)
+            chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem>bind(model.getChatMessages())
                     .map(ChatMessageListItem::new)
-                    .to(selected.getChatMessages());
+                    .to(channel.getChatMessages());
+
+            model.getSelectedChannelAsString().set(channel.getChannelName());
+            model.getSelectedChannel().set(channel);
+            if (model.getInfoVisible().get()) {
+                channelInfo.setChannel(channel);
+            }
+            if (model.getNotificationsVisible().get()) {
+                notificationsSettings.setChannel(channel);
+            }
+
+            if (messageListener != null) {
+                model.getChatMessages().removeListener(messageListener);
+            }
+
+            // Notifications implementation is very preliminary. Not sure if another concept like its used in Element 
+            // would be better. E.g. Show all past notifications in the sidebar. When a new notification arrives, dont
+            // show the popup but only highlight the notifications icon (we would need to add a notification 
+            // settings tab then in the notifications component).
+            // We look up all our usernames, not only the selected one
+            Set<String> myUserNames = userProfileService.getPersistableStore().getUserProfiles().stream()
+                    .map(userProfile -> UserNameGenerator.fromHash(userProfile.identity().pubKeyHash()))
+                    .collect(Collectors.toSet());
+
+            messageListener = c -> {
+                c.next();
+                // At init, we get full list, but we don't want to show notifications in that event.
+                if (c.getAddedSubList().equals(model.getChatMessages())) {
+                    return;
+                }
+                if (channel.getNotificationSetting().get() == NotificationSetting.ALL) {
+                    String messages = Joiner.on("\n").join(
+                            c.getAddedSubList().stream()
+                                    .map(item -> item.getSenderUserName() + ": " + item.getChatMessage().getText())
+                                    .collect(Collectors.toSet()));
+                    if (!messages.isEmpty()) {
+                        new Notification().headLine(messages).autoClose().hideCloseButton().show();
+                    }
+                } else if (channel.getNotificationSetting().get() == NotificationSetting.MENTION) {
+                    // TODO
+                    // - Match only if mentioned username matches exactly (e.g. split item.getMessage() 
+                    // in space separated tokens and compare those)
+                    // - show user icon of sender (requires extending Notification to support custom graphics)
+                    // 
+                    String messages = Joiner.on("\n").join(
+                            c.getAddedSubList().stream()
+                                    .filter(item -> myUserNames.stream().anyMatch(myUserName -> item.getMessage().contains("@" + myUserName)))
+                                    .filter(item -> !myUserNames.contains(item.getSenderUserName()))
+                                    .map(item -> Res.get("social.notification.getMentioned",
+                                            item.getSenderUserName(),
+                                            item.getChatMessage().getText()))
+                                    .collect(Collectors.toSet()));
+                    if (!messages.isEmpty()) {
+                        new Notification().headLine(messages).autoClose().hideCloseButton().show();
+                    }
+                }
+            };
+            model.getChatMessages().addListener(messageListener);
         });
     }
 
     @Override
     public void onViewDetached() {
+        notificationSettingSubscription.unsubscribe();
         selectedChannelPin.unbind();
         chatMessagesPin.unbind();
+
+        if (messageListener != null) {
+            model.getChatMessages().removeListener(messageListener);
+        }
     }
 
 
@@ -147,8 +229,26 @@ public class ChatController implements Controller {
                 });
     }
 
-    public void onToggleSettings() {
-        boolean sideBarVisible = !model.getSideBarVisible().get();
-        model.getSideBarVisible().set(sideBarVisible);
+    public void onToggleFilterBox() {
+        boolean visible = !model.getFilterBoxVisible().get();
+        model.getFilterBoxVisible().set(visible);
+    }
+
+    public void onToggleNotifications() {
+        boolean visible = !model.getNotificationsVisible().get();
+        model.getNotificationsVisible().set(visible);
+        model.getInfoVisible().set(false);
+        if (visible) {
+            notificationsSettings.setChannel(model.getSelectedChannel().get());
+        }
+    }
+
+    public void onToggleInfo() {
+        boolean visible = !model.getInfoVisible().get();
+        model.getInfoVisible().set(visible);
+        model.getNotificationsVisible().set(false);
+        if (visible) {
+            channelInfo.setChannel(model.getSelectedChannel().get());
+        }
     }
 }

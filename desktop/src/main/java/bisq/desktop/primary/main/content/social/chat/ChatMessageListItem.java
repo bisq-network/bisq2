@@ -17,16 +17,19 @@
 
 package bisq.desktop.primary.main.content.social.chat;
 
+import bisq.common.util.StringUtils;
+import bisq.desktop.components.table.FilteredListItem;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.social.chat.ChatMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
-
+@Slf4j
 @Getter
 @EqualsAndHashCode
-class ChatMessageListItem implements Comparable<ChatMessageListItem> {
+class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredListItem {
     private final ChatMessage chatMessage;
     private final String message;
     private final String senderUserName;
@@ -36,12 +39,23 @@ class ChatMessageListItem implements Comparable<ChatMessageListItem> {
         this.chatMessage = chatMessage;
         message = chatMessage.getText();
         senderUserName = chatMessage.getSenderUserName();
-       
+        log.error(senderUserName);
+                
+
         date = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
     }
 
     @Override
     public int compareTo(ChatMessageListItem o) {
         return new Date(chatMessage.getDate()).compareTo(new Date(o.getChatMessage().getDate()));
+    }
+
+    @Override
+    public boolean match(String filterString) {
+        return filterString == null ||
+                filterString.isEmpty() ||
+                StringUtils.containsIgnoreCase(message, filterString) ||
+                StringUtils.containsIgnoreCase(senderUserName, filterString) ||
+                StringUtils.containsIgnoreCase(date, filterString);
     }
 }

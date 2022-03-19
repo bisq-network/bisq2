@@ -15,21 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.components;
+package bisq.desktop.primary.main.content.social.chat.components;
 
-import bisq.common.observable.Pin;
-import bisq.desktop.common.observable.FxBindings;
+import bisq.common.data.ByteArray;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.ChatUser;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -38,89 +37,95 @@ import org.fxmisc.easybind.Subscription;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class UserProfileDisplay {
+public class ChatUserDisplay implements Comparable<ChatUserDisplay> {
     private final Controller controller;
 
-    public UserProfileDisplay(UserProfileService userProfileService) {
-        controller = new Controller(userProfileService);
+    public ChatUserDisplay(ChatUser chatUser) {
+        controller = new Controller(chatUser);
     }
 
     public Pane getRoot() {
         return controller.view.getRoot();
     }
 
+    @Override
+    public int compareTo(ChatUserDisplay o) {
+        return controller.model.chatUser.userName().compareTo(o.controller.model.chatUser.userName());
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
         private final View view;
-        private final UserProfileService userProfileService;
-        private Pin pin;
 
-        private Controller(UserProfileService userProfileService) {
-            this.userProfileService = userProfileService;
 
-            model = new Model();
+        private Controller(ChatUser chatUser) {
+
+            model = new Model(chatUser);
             view = new View(model, this);
         }
 
         @Override
         public void onViewAttached() {
-            pin = FxBindings.subscribe(userProfileService.getPersistableStore().getSelectedUserProfile(),
-                    userProfile -> {
-                        model.userName.set(userProfile.identity().domainId());
-                        model.id.set(Res.get("social.createUserProfile.id", userProfile.identity().id()));
-                        String entitledRoles = userProfile.entitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
-                        model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
-                        model.entitlementsVisible.set(!userProfile.entitlements().isEmpty());
-                        model.roboHashNode.set(RoboHash.getImage(userProfile.identity().pubKeyHashAsByteArray(), false));
-                    });
+            ChatUser chatUser = model.chatUser;
+            if (chatUser == null) {
+                return;
+            }
+
+            model.id.set(chatUser.id());
+            model.userName.set(chatUser.userName());
+            model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.pubKeyHash()), false));
+            String entitledRoles = chatUser.entitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
+            model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
+            model.entitlementsVisible.set(!chatUser.entitlements().isEmpty());
         }
 
         @Override
         public void onViewDetached() {
-            pin.unbind();
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
+        private final ChatUser chatUser;
         ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         StringProperty userName = new SimpleStringProperty();
         StringProperty id = new SimpleStringProperty();
         BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
         StringProperty entitlements = new SimpleStringProperty();
 
-        private Model() {
+        private Model(ChatUser chatUser) {
+            this.chatUser = chatUser;
         }
     }
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+    public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final ImageView roboIconImageView;
         private final BisqLabel userName, id, entitlements;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
-            super(new VBox(), model, controller);
+            super(new HBox(), model, controller);
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
 
             userName = new BisqLabel();
-            userName.getStyleClass().add("headline-label");
-            userName.setPadding(new Insets(10, 0, 0, 0));
+            userName.setPadding(new Insets(4, 0, 0, 0));
 
             roboIconImageView = new ImageView();
-            roboIconImageView.setFitWidth(75);
-            roboIconImageView.setFitHeight(75);
+            roboIconImageView.setFitWidth(30);
+            roboIconImageView.setFitHeight(30);
 
+            root.getChildren().addAll(roboIconImageView, userName);
+
+            // todo add tooltip overlay for id and entitlements
             id = new BisqLabel();
-            id.getStyleClass().add("offer-label-small"); //todo
+            id.getStyleClass().add("offer-label-small");
             id.setPadding(new Insets(-5, 0, 0, 0));
 
             entitlements = new BisqLabel();
-            entitlements.getStyleClass().add("offer-label-small"); //todo
+            entitlements.getStyleClass().add("offer-label-small");
             entitlements.setPadding(new Insets(-5, 0, 0, 0));
-
-            root.getChildren().addAll(userName, roboIconImageView, id, entitlements);
         }
 
         @Override

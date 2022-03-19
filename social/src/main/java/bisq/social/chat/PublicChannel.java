@@ -22,7 +22,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-// TODO not used yet. Will require more work on the chatUser and chatIdentity management. 
+import java.util.Set;
+
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
@@ -30,12 +31,18 @@ public class PublicChannel extends Channel {
     private final String channelName;
     private final String description;
     private final ChatUser channelAdmin;
+    private final Set<ChatUser> channelModerators;
 
-    public PublicChannel(String id, String channelName, String description, ChatUser channelAdmin ) {
+    public PublicChannel(String id,
+                         String channelName,
+                         String description,
+                         ChatUser channelAdmin,
+                         Set<ChatUser> channelModerators) {
         super(id);
 
         this.channelName = channelName;
         this.description = description;
         this.channelAdmin = channelAdmin;
+        this.channelModerators = channelModerators;
     }
 }

@@ -36,10 +36,12 @@ import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -85,24 +87,37 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public void addDummyChannels() {
-        PublicChannel element = new PublicChannel("BTC-EUR Market",
+        UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
+        if (userProfile == null) {
+            return;
+        }
+        ChatUser dummyChannelAdmin = new ChatUser(userProfile.identity().networkId());
+        Set<ChatUser> dummyChannelModerators = userProfileService.getPersistableStore().getUserProfiles().stream()
+                .map(p -> new ChatUser(p.identity().networkId()))
+                .collect(Collectors.toSet());
+
+        PublicChannel defaultChannel = new PublicChannel("BTC-EUR Market",
                 "BTC-EUR Market",
                 "Channel for trading Bitcoin with EUR",
-                null);
-        persistableStore.getPublicChannels().add(element);
+                dummyChannelAdmin,
+                dummyChannelModerators);
+        persistableStore.getPublicChannels().add(defaultChannel);
         persistableStore.getPublicChannels().add(new PublicChannel("BTC-USD Market",
                 "BTC-USD Market",
                 "Channel for trading Bitcoin with USD",
-                null));
+                dummyChannelAdmin,
+                dummyChannelModerators));
         persistableStore.getPublicChannels().add(new PublicChannel("Other Markets",
                 "Other Markets",
                 "Channel for trading any market",
-                null));
+                dummyChannelAdmin,
+                dummyChannelModerators));
         persistableStore.getPublicChannels().add(new PublicChannel("Off-topic",
                 "Off-topic",
                 "Channel for off topic",
-                null));
-        persistableStore.getSelectedChannel().set(element); //todo
+                dummyChannelAdmin,
+                dummyChannelModerators));
+        persistableStore.getSelectedChannel().set(defaultChannel);
     }
 
 
@@ -113,8 +128,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     @Override
     public void onMessage(Message message) {
         if (message instanceof ChatMessage chatMessage) {
-            log.error("chatMessage " + chatMessage);
             String domainId = chatMessage.getChannelId();
+            //todo outdated userName concept
             String userName = findUserName(domainId).orElse("Maker@" + StringUtils.truncate(domainId, 8));
             ChatIdentity chatIdentity = getOrCreateChatIdentity(userName, domainId);
             ChatUser chatUser = new ChatUser(chatMessage.getSenderNetworkId());
@@ -168,11 +183,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                         bondedRoleProof.signature(),
                         userProfile.identity().id()))
                 .map(future -> future.thenApply(optionalProof -> optionalProof.map(e -> {
-                            ChatUser chatUser= new ChatUser(userProfile.identity().networkId(), userProfile.entitlements());
+                            ChatUser chatUser = new ChatUser(userProfile.identity().networkId(), userProfile.entitlements());
                             PublicChannel publicChannel = new PublicChannel(StringUtils.createUid(),
                                     channelName,
                                     description,
-                                    chatUser);
+                                    chatUser,
+                                    new HashSet<>());
                             persistableStore.getPublicChannels().add(publicChannel);
                             persist();
                             return Optional.of(publicChannel);
@@ -206,6 +222,11 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         listeners.forEach(listener -> listener.onChannelSelected(channel));
     }
 
+    public void setNotificationSetting(Channel channel, NotificationSetting notificationSetting) {
+        channel.getNotificationSetting().set(notificationSetting);
+        persist();
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // ChatMessage

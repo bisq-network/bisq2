@@ -20,6 +20,8 @@ package bisq.social.chat;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.security.DigestUtil;
+import bisq.social.user.UserNameGenerator;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -32,20 +34,23 @@ import java.util.concurrent.TimeUnit;
 public class ChatMessage implements MailboxMessage {
     private final String channelId;
     private final String text;
-    private final String senderUserName;
+    private final String senderUserName; 
     private final NetworkId senderNetworkId;
     private final long date;
     private final ChannelType channelType;
     private final MetaData metaData;
 
+    //todo remove senderUserName
     public ChatMessage(String channelId, String text, String senderUserName, NetworkId senderNetworkId,
                        long date, ChannelType channelType) {
         this.channelId = channelId;
         this.text = text;
-        this.senderUserName = senderUserName;
         this.senderNetworkId = senderNetworkId;
         this.date = date;
         this.channelType = channelType;
+
+        byte[] senderPubKeyHash = DigestUtil.hash(senderNetworkId.getPubKey().publicKey().getEncoded());
+        this.senderUserName = UserNameGenerator.fromHash(senderPubKeyHash);
         metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
     }
 

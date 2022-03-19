@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.chat;
+package bisq.desktop.primary.main.content.social.chat.components;
 
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
@@ -78,6 +78,10 @@ public class PublicChannelSelection {
             channelsPin = FxBindings.<PublicChannel, ListItem>bind(model.channels)
                     .map(ListItem::new)
                     .to(chatService.getPersistableStore().getPublicChannels());
+
+            if (!model.channels.isEmpty()) {
+                chatService.selectChannel(model.channels.get(0).channel);
+            }
         }
 
         @Override
