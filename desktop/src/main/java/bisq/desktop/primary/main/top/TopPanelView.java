@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.top;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.BisqHSpacer;
+import bisq.desktop.components.containers.Spacer;
 import javafx.geometry.Insets;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -38,6 +38,6 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
 
         ImageView logo = ImageUtil.getImageViewById("logo-small");
 
-        root.getChildren().addAll(logo, new BisqHSpacer(), marketPriceBox, walletBalanceBox);
+        root.getChildren().addAll(logo, Spacer.fillHBox(), marketPriceBox, walletBalanceBox);
     }
 }

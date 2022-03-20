@@ -37,19 +37,32 @@ import org.fxmisc.easybind.Subscription;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class ChatUserDisplay implements Comparable<ChatUserDisplay> {
+public class ChatUserOverview implements Comparable<ChatUserOverview> {
     private final Controller controller;
 
-    public ChatUserDisplay(ChatUser chatUser) {
+    public ChatUserOverview(ChatUser chatUser) {
+        this(chatUser, false);
+    }
+
+    public ChatUserOverview(ChatUser chatUser, boolean ignored) {
         controller = new Controller(chatUser);
+        controller.model.ignored = ignored;
     }
 
     public Pane getRoot() {
         return controller.view.getRoot();
     }
 
+    public boolean isIgnored() {
+        return controller.model.ignored;
+    }
+
+    public ChatUser getChatUser() {
+        return controller.model.chatUser;
+    }
+
     @Override
-    public int compareTo(ChatUserDisplay o) {
+    public int compareTo(ChatUserOverview o) {
         return controller.model.chatUser.userName().compareTo(o.controller.model.chatUser.userName());
     }
 
@@ -60,7 +73,6 @@ public class ChatUserDisplay implements Comparable<ChatUserDisplay> {
 
 
         private Controller(ChatUser chatUser) {
-
             model = new Model(chatUser);
             view = new View(model, this);
         }
@@ -87,11 +99,12 @@ public class ChatUserDisplay implements Comparable<ChatUserDisplay> {
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatUser chatUser;
-        ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
-        StringProperty userName = new SimpleStringProperty();
-        StringProperty id = new SimpleStringProperty();
-        BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
-        StringProperty entitlements = new SimpleStringProperty();
+        private boolean ignored;
+        private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
+        private final StringProperty userName = new SimpleStringProperty();
+        private final StringProperty id = new SimpleStringProperty();
+        private final BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
+        private final StringProperty entitlements = new SimpleStringProperty();
 
         private Model(ChatUser chatUser) {
             this.chatUser = chatUser;
@@ -145,7 +158,7 @@ public class ChatUserDisplay implements Comparable<ChatUserDisplay> {
 
         @Override
         protected void onViewDetached() {
-            userName.textProperty().unbindBidirectional(model.userName);
+            userName.textProperty().unbind();
             id.textProperty().unbind();
             entitlements.textProperty().unbind();
             entitlements.visibleProperty().unbind();

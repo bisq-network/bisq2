@@ -53,6 +53,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public class ChatService implements PersistenceClient<ChatStore>, MessageListener, DataService.Listener {
+
     public interface Listener {
         void onChannelAdded(Channel channel);
 
@@ -132,7 +133,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
             //todo outdated userName concept
             String userName = findUserName(domainId).orElse("Maker@" + StringUtils.truncate(domainId, 8));
             ChatIdentity chatIdentity = getOrCreateChatIdentity(userName, domainId);
-            ChatUser chatUser = new ChatUser(chatMessage.getSenderNetworkId());
+            ChatUser chatUser = chatMessage.getChatUser();
             PrivateChannel privateChannel = getOrCreatePrivateChannel(chatMessage.getChannelId(),
                     chatUser,
                     chatIdentity);
@@ -226,7 +227,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         channel.getNotificationSetting().set(notificationSetting);
         persist();
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // ChatMessage
@@ -270,6 +271,26 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         persist();
         Identity identity = identityService.getOrCreateIdentity(domainId).join(); //todo
         return new ChatIdentity(userName, identity);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ChatUser
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void reportChatUser(ChatUser chatUser, String reason) {
+        //todo report user to admin and moderators, add reason
+        log.info("called reportChatUser {} {}", chatUser, reason);
+    }
+
+    public void ignoreChatUser(ChatUser chatUser) {
+        persistableStore.getIgnoredChatUserIds().add(chatUser.id());
+        persist();
+    }
+
+    public void undoIgnoreChatUser(ChatUser chatUser) {
+        persistableStore.getIgnoredChatUserIds().remove(chatUser.id());
+        persist();
     }
 
 

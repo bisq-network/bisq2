@@ -79,8 +79,8 @@ public class NotificationsSettings {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private ObjectProperty<Channel> channel = new SimpleObjectProperty<>();
-        public ObjectProperty<NotificationSetting> notificationSetting = new SimpleObjectProperty<>(NotificationSetting.MENTION);
+        private final ObjectProperty<Channel> channel = new SimpleObjectProperty<>();
+        private final ObjectProperty<NotificationSetting> notificationSetting = new SimpleObjectProperty<>(NotificationSetting.MENTION);
 
         private Model() {
         }
@@ -95,7 +95,6 @@ public class NotificationsSettings {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ToggleGroup toggleGroup = new ToggleGroup();
-        ;
         private final ChangeListener<Toggle> toggleListener;
         private final BisqRadioButton all, mention, none;
 

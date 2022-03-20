@@ -59,7 +59,7 @@ public class MainController implements Controller, Navigation.Listener {
         if (persisted != null) {
             Navigation.navigateTo(NavigationTarget.valueOf(persisted));
         } else {
-            Navigation.navigateTo(NavigationTarget.OFFERBOOK);
+            Navigation.navigateTo(NavigationTarget.CHAT);
         }
     }
 

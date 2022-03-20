@@ -18,19 +18,25 @@
 package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.primary.main.content.social.chat.components.ChatUserDetails;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.social.chat.Channel;
+import bisq.social.chat.ChatService;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.scene.layout.Pane;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 @Slf4j
 @Getter
@@ -39,43 +45,27 @@ public class ChatModel implements Model {
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
     private final StringProperty selectedChannelAsString = new SimpleStringProperty("");
     private final ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
-    private final BooleanProperty infoVisible = new SimpleBooleanProperty();
+    private final ObjectProperty<Pane> chatUserDetailsRoot = new SimpleObjectProperty<>();
+    private final BooleanProperty sideBarVisible = new SimpleBooleanProperty();
+    private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();
     private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
+   
     private final double defaultLeftDividerPosition = 0.3;
     private final ObservableList<ChatMessageListItem> chatMessages = FXCollections.observableArrayList();
     private final SortedList<ChatMessageListItem> sortedChatMessages = new SortedList<>(chatMessages);
     private final FilteredList<ChatMessageListItem> filteredChatMessages = new FilteredList<>(sortedChatMessages);
+    private final StringProperty textInput = new SimpleStringProperty("");
+    private final ChatService chatService;
+    private final Predicate<ChatMessageListItem> ignoredChatUserPredicate;
+    @Setter
+    private Optional<ChatUserDetails> chatUserDetails = Optional.empty();
 
-    public ChatModel() {
+    public ChatModel(ChatService chatService) {
+        this.chatService = chatService;
+        ignoredChatUserPredicate = item -> !chatService.getPersistableStore().getIgnoredChatUserIds().contains(item.getChatUserId());
+        filteredChatMessages.setPredicate(ignoredChatUserPredicate);
     }
-/*
-    void addChatMessage(Channel channel, ChatMessage chatMessage) {
-        chatMessagesByChannelId.putIfAbsent(channel.getId(), new SimpleStringProperty(""));
-        StringProperty chatMessages = chatMessagesByChannelId.get(channel.getId());
-        String previous = chatMessages.get();
-        if (!previous.isEmpty()) {
-            previous += "\n";
-        }
-        chatMessages.set(previous +
-                "[" + DateFormatter.formatDateTime(new Date(chatMessage.getDate())) +
-                "] [" +
-                chatMessage.getSenderUserName().substring(0, 12) +
-                "] " +
-                chatMessage.getText());
-
-        if (selectedChannel.get() != null && selectedChannel.get().getId().equals(channel.getId())) {
-            selectedChatMessages.set(chatMessages.get());
-        }
-    }
-
-    String getDisplayString(PublicChannelId publicChannelId) {
-        return switch (publicChannelId) {
-            case BTC_EUR -> Res.get("social.chat.btcEurMarket");
-            case BTC_USD -> Res.get("social.chat.btcUsdMarket");
-            case ANY -> Res.get("social.chat.anyMarket");
-        };
-    }*/
 
     void setSendMessageResult(String channelId, ConfidentialMessageService.Result result, BroadcastResult broadcastResult) {
         log.info("Send message result for channelId {}: {}",
@@ -85,5 +75,4 @@ public class ChatModel implements Model {
     void setSendMessageError(String channelId, Throwable throwable) {
         log.error("Send message resulted in an error: channelId={}, error={}", channelId, throwable.toString());  //todo
     }
-
 }
