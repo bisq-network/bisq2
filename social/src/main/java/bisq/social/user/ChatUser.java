@@ -28,6 +28,7 @@ import java.util.Set;
 /**
  * Publicly shared chat user data
  */
+//todo use cache for pubKeyHash and userName
 public record ChatUser(NetworkId networkId, Set<Entitlement> entitlements) implements Serializable {
     public ChatUser(NetworkId networkId) {
         this(networkId, new HashSet<>());

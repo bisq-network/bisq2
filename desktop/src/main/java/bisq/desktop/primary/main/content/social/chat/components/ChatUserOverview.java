@@ -158,7 +158,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
         @Override
         protected void onViewDetached() {
-            userName.textProperty().unbindBidirectional(model.userName);
+            userName.textProperty().unbind();
             id.textProperty().unbind();
             entitlements.textProperty().unbind();
             entitlements.visibleProperty().unbind();

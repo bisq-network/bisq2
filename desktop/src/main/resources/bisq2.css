@@ -50,6 +50,34 @@ New css for bisq2.
 #chat-message-text {
     -fx-fill: -fx-mid-text-color;
 }
+#chat-quoted-message-text {
+    -fx-fill: -bs-color-gray-2;
+}
+
+#chat-quoted-message-vertical-line {
+    -fx-background-color: -bs-color-gray-2;
+}
+
+#chat-quoted-message {
+    -fx-fill: -bs-color-gray-2;
+}
+
+#chat-quoted-message-user-name {
+    -fx-text-fill:  derive(-bs-color-gray-2, 30%);
+}
+
+#chat-message-reactions {
+    -fx-background-color: -bs-content-background-gray;
+}
+
+#chat-message-reactions-separator {
+    -fx-text-fill: -bs-color-gray-dim;
+    -fx-font-weight: bold;
+}
+
+#chat-quoted-message-top-pane {
+    -fx-background-color: -bs-color-gray-5;
+}
 
 /*
 .jfx-badge .badge-pane {

@@ -133,7 +133,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
             //todo outdated userName concept
             String userName = findUserName(domainId).orElse("Maker@" + StringUtils.truncate(domainId, 8));
             ChatIdentity chatIdentity = getOrCreateChatIdentity(userName, domainId);
-            ChatUser chatUser = new ChatUser(chatMessage.getSenderNetworkId());
+            ChatUser chatUser = chatMessage.getChatUser();
             PrivateChannel privateChannel = getOrCreatePrivateChannel(chatMessage.getChannelId(),
                     chatUser,
                     chatIdentity);

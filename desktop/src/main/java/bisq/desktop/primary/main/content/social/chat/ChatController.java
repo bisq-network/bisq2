@@ -31,7 +31,6 @@ import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.social.chat.*;
-import bisq.social.user.ChatUser;
 import bisq.social.user.UserNameGenerator;
 import bisq.social.user.profile.UserProfileService;
 import com.google.common.base.Joiner;
@@ -62,6 +61,7 @@ public class ChatController implements Controller {
     private final PrivateChannelSelection privateChannelSelection;
     private final ChannelInfo channelInfo;
     private final NotificationsSettings notificationsSettings;
+    private final QuotedMessageBlock quotedMessageBlock;
     private Pin chatMessagesPin;
     private Pin selectedChannelPin;
     private Subscription notificationSettingSubscription;
@@ -77,6 +77,7 @@ public class ChatController implements Controller {
         UserProfileComboBox userProfileDisplay = new UserProfileComboBox(userProfileService);
         publicChannelSelection = new PublicChannelSelection(chatService);
         privateChannelSelection = new PrivateChannelSelection(chatService);
+        quotedMessageBlock = new QuotedMessageBlock();
         model = new ChatModel(chatService);
         view = new ChatView(model,
                 this,
@@ -84,7 +85,8 @@ public class ChatController implements Controller {
                 publicChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 notificationsSettings.getRoot(),
-                channelInfo.getRoot());
+                channelInfo.getRoot(),
+                quotedMessageBlock.getRoot());
 
         model.getSortedChatMessages().setComparator(Comparator.naturalOrder());
     }
@@ -186,16 +188,17 @@ public class ChatController implements Controller {
         Channel channel = chatService.getPersistableStore().getSelectedChannel().get();
         Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
         if (channel instanceof PublicChannel publicChannel) {
-            sendMessageToPublicChannel(text, publicChannel, identity);
+            sendMessageToPublicChannel(text,  quotedMessageBlock.getQuotedMessage(), publicChannel, identity);
         } else if (channel instanceof PrivateChannel privateChannel) {
-            sendMessageToPrivateChannel(text, privateChannel, identity);
+            sendMessageToPrivateChannel(text,  quotedMessageBlock.getQuotedMessage(), privateChannel, identity);
         }
+        quotedMessageBlock.close();
     }
 
-    private void sendMessageToPublicChannel(String text, PublicChannel publicChannel, Identity identity) {
-        log.error("sendMessageToPublicChannel");
+    private void sendMessageToPublicChannel(String text, Optional<QuotedMessage> reply, PublicChannel publicChannel, Identity identity) {
         networkService.addData(new ChatMessage(publicChannel.getId(),
                         text,
+                        reply,
                         identity.domainId(),
                         identity.networkId(),
                         new Date().getTime(),
@@ -203,10 +206,11 @@ public class ChatController implements Controller {
                 identity.getNodeIdAndKeyPair());
     }
 
-    private void sendMessageToPrivateChannel(String text, PrivateChannel privateChannel, Identity identity) {
+    private void sendMessageToPrivateChannel(String text, Optional<QuotedMessage>reply, PrivateChannel privateChannel, Identity identity) {
         String channelId = privateChannel.getId();
         ChatMessage chatMessage = new ChatMessage(channelId,
                 text,
+                reply,
                 identity.domainId(),
                 identity.networkId(),
                 new Date().getTime(),
@@ -271,7 +275,7 @@ public class ChatController implements Controller {
         model.getNotificationsVisible().set(false);
 
         ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(),
-                new ChatUser(chatMessage.getSenderNetworkId()));
+                chatMessage.getChatUser());
         chatUserDetails.setOnSendPrivateMessage(chatUser -> {
             // todo
             log.info("onSendPrivateMessage {}", chatUser);
@@ -314,5 +318,33 @@ public class ChatController implements Controller {
         chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem>bind(model.getChatMessages())
                 .map(ChatMessageListItem::new)
                 .to(model.getSelectedChannel().get().getChatMessages());
+    }
+
+    public void onOpenEmojiSelector(ChatMessage chatMessage) {
+
+    }
+
+    public void onReply(ChatMessage chatMessage) {
+        quotedMessageBlock.reply(chatMessage);
+    }
+
+    public void onSendPrivateMessage(ChatMessage chatMessage) {
+
+    }
+
+    public void onEditMessage(ChatMessage chatMessage) {
+
+    }
+
+    public void onDeleteMessage(ChatMessage chatMessage) {
+
+    }
+
+    public void onOpenMoreOptions(ChatMessage chatMessage) {
+
+    }
+
+    public void onAddEmoji(String emojiId) {
+
     }
 }

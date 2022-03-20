@@ -26,6 +26,7 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.security.DigestUtil;
 import bisq.social.chat.ChatMessage;
+import bisq.social.chat.QuotedMessage;
 import javafx.scene.image.Image;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -34,12 +35,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Getter
 @EqualsAndHashCode
 class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredListItem {
-    private static Map<ByteArray, Image> iconImageCache = new HashMap<>();
+    private static final Map<ByteArray, Image> iconImageCache = new HashMap<>();
 
     private final ChatMessage chatMessage;
     private final String message;
@@ -48,10 +50,12 @@ class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredLi
     private final String date;
     private final String chatUserId;
     private final ByteArray pubKeyHashAsByteArray;
+    private final Optional<QuotedMessage> quotedMessage;
 
     public ChatMessageListItem(ChatMessage chatMessage) {
         this.chatMessage = chatMessage;
         message = chatMessage.getText();
+        quotedMessage = Optional.ofNullable(chatMessage.getQuotedMessage());
         senderUserName = chatMessage.getSenderUserName();
         time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
         date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));

@@ -20,12 +20,13 @@ package bisq.social.chat;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.security.DigestUtil;
-import bisq.social.user.UserNameGenerator;
+import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import javax.annotation.Nullable;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Getter
@@ -34,24 +35,53 @@ import java.util.concurrent.TimeUnit;
 public class ChatMessage implements MailboxMessage {
     private final String channelId;
     private final String text;
-    private final String senderUserName; 
+
+    @Nullable
+    private final QuotedMessage quotedMessage;
     private final NetworkId senderNetworkId;
     private final long date;
     private final ChannelType channelType;
     private final MetaData metaData;
 
+    @Nullable
+    private transient String senderUserName;
+    @Nullable
+    private transient ChatUser chatUser;
+
     //todo remove senderUserName
-    public ChatMessage(String channelId, String text, String senderUserName, NetworkId senderNetworkId,
-                       long date, ChannelType channelType) {
+    public ChatMessage(String channelId,
+                       String text,
+                       Optional<QuotedMessage> reply,
+                       String senderUserName,
+                       NetworkId senderNetworkId,
+                       long date,
+                       ChannelType channelType) {
         this.channelId = channelId;
         this.text = text;
+        this.quotedMessage = reply.orElse(null);
         this.senderNetworkId = senderNetworkId;
         this.date = date;
         this.channelType = channelType;
 
-        byte[] senderPubKeyHash = DigestUtil.hash(senderNetworkId.getPubKey().publicKey().getEncoded());
-        this.senderUserName = UserNameGenerator.fromHash(senderPubKeyHash);
+        //todo we need also entitlements
+        chatUser = new ChatUser(senderNetworkId);
+        this.senderUserName = chatUser.userName();
+
         metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
+    }
+
+    public ChatUser getChatUser() {
+        if (chatUser == null) {
+            chatUser = new ChatUser(senderNetworkId);
+        }
+        return chatUser;
+    }
+
+    public String getSenderUserName() {
+        if (senderUserName == null) {
+            senderUserName = getChatUser().userName();
+        }
+        return senderUserName;
     }
 
     @Override

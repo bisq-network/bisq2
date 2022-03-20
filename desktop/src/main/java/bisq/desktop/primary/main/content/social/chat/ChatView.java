@@ -17,25 +17,28 @@
 
 package bisq.desktop.primary.main.content.social.chat;
 
+import bisq.common.data.ByteArray;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqInputTextField;
 import bisq.desktop.components.controls.BisqLabel;
+import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.content.social.chat.components.UserProfileComboBox;
 import bisq.i18n.Res;
+import bisq.social.chat.ChatMessage;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.Duration;
@@ -66,7 +69,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                     Pane publicChannelSelection,
                     Pane privateChannelSelection,
                     Pane notificationsSettings,
-                    Pane channelInfo) {
+                    Pane channelInfo,
+                    Pane reply) {
         super(new SplitPane(), model, controller);
 
         this.notificationsSettings = notificationsSettings;
@@ -99,12 +103,12 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         inputField = new BisqInputTextField();
         inputField.setPromptText(Res.get("social.chat.input.prompt"));
 
-        VBox messagesAndInput = Layout.vBoxWith(messagesListView, inputField);
+        VBox messagesAndInput = Layout.vBoxWith(messagesListView, reply, inputField);
         channelInfo.setMinWidth(200);
 
-        closeButton =  BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
+        closeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
 
-        sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo); 
+        sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo);
         sideBar.setAlignment(Pos.TOP_RIGHT);
         messagesListAndSideBar = Layout.hBoxWith(messagesAndInput, sideBar);
         HBox.setHgrow(messagesAndInput, Priority.ALWAYS);
@@ -188,12 +192,15 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
             @Override
             public ListCell<ChatMessageListItem> call(ListView<ChatMessageListItem> list) {
                 return new ListCell<>() {
-                    BisqLabel userName = new BisqLabel();
-                    BisqLabel time = new BisqLabel();
-                    Text message = new Text();
-                    ImageView icon = new ImageView();
-                    HBox hBox, reactionsBox;
-                    VBox vBox, messageBox;
+                    private final Button emojiButton1, emojiButton2, openEmojiSelectorButton, replyButton,
+                            pmButton, editButton, deleteButton, moreOptionsButton;
+                    private final BisqLabel userName = new BisqLabel();
+                    private final BisqLabel time = new BisqLabel();
+                    private final Text message = new Text();
+                    private Text quotedMessage = new Text();
+                    private final ImageView icon = new ImageView();
+                    private final HBox hBox, reactionsBox;
+                    private final VBox vBox, messageBox;
                     Tooltip dateTooltip;
                     Subscription widthSubscription;
 
@@ -207,7 +214,35 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         icon.setFitHeight(30);
                         message.setId("chat-message-text");
                         VBox.setMargin(message, new Insets(5, 0, 0, 5));
-                        reactionsBox = new HBox();
+                        //todo emojiButton1, emojiButton2, emojiButton3 will be filled with emoji icons
+                        emojiButton1 = BisqIconButton.createIconButton(AwesomeIcon.THUMBS_UP_ALT);
+                        emojiButton1.setUserData(":+1:");
+                        emojiButton2 = BisqIconButton.createIconButton(AwesomeIcon.THUMBS_DOWN_ALT);
+                        emojiButton1.setUserData(":-1:");
+                        openEmojiSelectorButton = BisqIconButton.createIconButton(AwesomeIcon.DOUBLE_ANGLE_UP);
+                        replyButton = BisqIconButton.createIconButton(AwesomeIcon.REPLY);
+                        pmButton = BisqIconButton.createIconButton(AwesomeIcon.COMMENT_ALT);
+                        editButton = BisqIconButton.createIconButton(AwesomeIcon.EDIT);
+                        deleteButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE);
+                        moreOptionsButton = BisqIconButton.createIconButton(AwesomeIcon.ELLIPSIS_HORIZONTAL);
+                        Label verticalLine = new Label("|");
+                        HBox.setMargin(verticalLine, new Insets(4, 0, 0, 0));
+                        verticalLine.setId("chat-message-reactions-separator");
+                        reactionsBox = Layout.hBoxWith(
+                                Spacer.fillHBox(),
+                                emojiButton1,
+                                emojiButton2,
+                                verticalLine,
+                                openEmojiSelectorButton,
+                                replyButton,
+                                pmButton,
+                                editButton,
+                                deleteButton,
+                                moreOptionsButton);
+                        reactionsBox.setSpacing(5);
+                        reactionsBox.setVisible(false);
+                        reactionsBox.setId("chat-message-reactions");
+
                         messageBox = Layout.vBoxWith(message, reactionsBox);
                         VBox.setVgrow(messageBox, Priority.ALWAYS);
                         vBox = Layout.vBoxWith(userName, messageBox);
@@ -219,6 +254,39 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                     public void updateItem(final ChatMessageListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
+                            item.getQuotedMessage().ifPresent(quotedMessage -> {
+                                if (quotedMessage.userName() != null &&
+                                        quotedMessage.pubKeyHash() != null &&
+                                        quotedMessage.message() != null) {
+                                    Region verticalLine = new Region();
+                                    verticalLine.setId("chat-quoted-message-vertical-line");
+                                    verticalLine.setMinWidth(3);
+                                    verticalLine.setMinHeight(20);
+                                    HBox.setMargin(verticalLine, new Insets(5, 0, 0, 5));
+                                    this.quotedMessage.setText(quotedMessage.message());
+                                    this.quotedMessage.setId("chat-quoted-message");
+                                    BisqLabel userName = new BisqLabel(quotedMessage.userName());
+                                    userName.setPadding(new Insets(4, 0, 0, 0));
+                                    userName.setId("chat-quoted-message-user-name");
+                                    ImageView roboIconImageView = new ImageView();
+                                    roboIconImageView.setFitWidth(20);
+                                    roboIconImageView.setFitHeight(20);
+                                    Image image = RoboHash.getImage(new ByteArray(quotedMessage.pubKeyHash()), false);
+                                    roboIconImageView.setImage(image);
+                                    HBox.setMargin(roboIconImageView, new Insets(0, 0, 0, -5));
+                                    HBox iconAndUserName = Layout.hBoxWith(roboIconImageView, userName);
+                                    iconAndUserName.setSpacing(3);
+                                    VBox contentBox = Layout.vBoxWith(iconAndUserName, this.quotedMessage);
+                                    contentBox.setSpacing(0);
+                                    HBox replyBox = Layout.hBoxWith(verticalLine, contentBox);
+                                    UIThread.runLater(() -> verticalLine.setMinHeight(contentBox.getHeight() - 10));
+                                    if (messageBox.getChildren().size() == 2) {
+                                        messageBox.getChildren().add(0, replyBox);
+                                    } else {
+                                        messageBox.getChildren().set(0, replyBox);
+                                    }
+                                }
+                            });
                             message.setText(item.getMessage());
                             time.setText(item.getTime());
 
@@ -235,15 +303,31 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
                             hBox.setOnMouseEntered(e -> {
                                 time.setVisible(true);
+                                reactionsBox.setVisible(true);
                                 messageBox.getStyleClass().add("chat-message-box-active");
                             });
                             hBox.setOnMouseExited(e -> {
                                 time.setVisible(false);
+                                reactionsBox.setVisible(false);
                                 messageBox.getStyleClass().remove("chat-message-box-active");
                             });
 
+                            ChatMessage chatMessage = item.getChatMessage();
+                            emojiButton1.setOnAction(e -> controller.onAddEmoji((String) emojiButton1.getUserData()));
+                            emojiButton2.setOnAction(e -> controller.onAddEmoji((String) emojiButton2.getUserData()));
+                            openEmojiSelectorButton.setOnAction(e -> controller.onOpenEmojiSelector(chatMessage));
+                            replyButton.setOnAction(e -> controller.onReply(chatMessage));
+                            pmButton.setOnAction(e -> controller.onSendPrivateMessage(chatMessage));
+                            editButton.setOnAction(e -> controller.onEditMessage(chatMessage));
+                            deleteButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
+                            moreOptionsButton.setOnAction(e -> controller.onOpenMoreOptions(chatMessage));
+
                             widthSubscription = EasyBind.subscribe(messagesListView.widthProperty(),
-                                    width -> message.setWrappingWidth(width.doubleValue() - 95));
+                                    width -> {
+                                        double wrappingWidth = width.doubleValue() - 95;
+                                        message.setWrappingWidth(wrappingWidth);
+                                        quotedMessage.setWrappingWidth(wrappingWidth - 20);
+                                    });
 
                             setGraphic(hBox);
                         } else {

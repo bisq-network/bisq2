@@ -50,7 +50,7 @@ public class ChatModel implements Model {
     private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();
     private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
-
+   
     private final double defaultLeftDividerPosition = 0.3;
     private final ObservableList<ChatMessageListItem> chatMessages = FXCollections.observableArrayList();
     private final SortedList<ChatMessageListItem> sortedChatMessages = new SortedList<>(chatMessages);
@@ -74,10 +74,5 @@ public class ChatModel implements Model {
 
     void setSendMessageError(String channelId, Throwable throwable) {
         log.error("Send message resulted in an error: channelId={}, error={}", channelId, throwable.toString());  //todo
-    }
-
-    public void refreshMessages() {
-        //filteredChatMessages.setPredicate(ignoredChatUserPredicate);
-        chatMessages.setAll(sortedChatMessages);
     }
 }

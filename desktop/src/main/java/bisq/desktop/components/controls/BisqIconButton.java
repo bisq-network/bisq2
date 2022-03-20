@@ -19,6 +19,7 @@ package bisq.desktop.components.controls;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import lombok.Getter;
@@ -47,7 +48,9 @@ public class BisqIconButton extends BisqButton {
         // button.getStyleClass().add("hide-focus");
         // button.setStyle("-fx-focus-color: transparent");
         // button.setStyle("-jfx-focus-color: transparent");
+        button.setStyle("-fx-background-color: transparent");
         button.setFocusTraversable(false);
+        button.setCursor(Cursor.HAND);
         return button;
     }
 }
