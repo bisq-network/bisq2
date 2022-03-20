@@ -18,13 +18,13 @@
 package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqInputTextField;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.content.social.chat.components.UserProfileComboBox;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
@@ -86,9 +86,9 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         filterBoxRoot = filterBox.getRoot();
         HBox.setHgrow(filterBoxRoot, Priority.ALWAYS);
         HBox.setMargin(filterBoxRoot, new Insets(0, 0, 0, 10));
-        searchButton = AwesomeDude.createIconButton(AwesomeIcon.SEARCH);
-        notificationsButton = AwesomeDude.createIconButton(AwesomeIcon.BELL);
-        infoButton = AwesomeDude.createIconButton(AwesomeIcon.INFO_SIGN);
+        searchButton = BisqIconButton.createIconButton(AwesomeIcon.SEARCH);
+        notificationsButton = BisqIconButton.createIconButton(AwesomeIcon.BELL);
+        infoButton = BisqIconButton.createIconButton(AwesomeIcon.INFO_SIGN);
         HBox centerToolbar = Layout.hBoxWith(selectedChannelLabel, filterBoxRoot, searchButton, notificationsButton, infoButton);
 
         messagesListView = new ListView<>();
@@ -103,7 +103,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         channelInfo.setMinWidth(200);
         channelInfo.setMaxWidth(600);
 
-        closeButton = AwesomeDude.createIconButton(AwesomeIcon.REMOVE_SIGN);
+        closeButton =  BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
 
         sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo); 
         sideBar.setAlignment(Pos.TOP_RIGHT);
