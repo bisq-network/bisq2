@@ -29,12 +29,17 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.util.Callback;
+import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class ChatView extends View<SplitPane, ChatModel, ChatController> {
@@ -62,7 +67,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
         this.userProfileComboBox = userProfileComboBox;
-        
+
         root.getStyleClass().add("hide-focus");
 
         userProfileComboBox.setPadding(new Insets(10, 10, 10, 10));
@@ -85,7 +90,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         messagesListView.setCellFactory(getCellFactory());
         messagesListView.setFocusTraversable(false);
         VBox.setVgrow(messagesListView, Priority.ALWAYS);
-        
+
         inputField = new BisqInputTextField();
         inputField.setPromptText(Res.get("social.chat.input.prompt"));
 
@@ -143,31 +148,74 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         inputField.setOnAction(null);
         model.getFilteredChatMessages().removeListener(messagesListener);
     }
+
     private Callback<ListView<ChatMessageListItem>, ListCell<ChatMessageListItem>> getCellFactory() {
         return new Callback<>() {
+
             @Override
             public ListCell<ChatMessageListItem> call(ListView<ChatMessageListItem> list) {
                 return new ListCell<>() {
-                    BisqLabel user = new BisqLabel();
-                    BisqLabel date = new BisqLabel();
-                    BisqLabel text = new BisqLabel();
+                    BisqLabel userName = new BisqLabel();
+                    BisqLabel time = new BisqLabel();
+                    Text message = new Text();
+                    ImageView icon = new ImageView();
+                    HBox hBox, reactionsBox;
+                    VBox vBox, messageBox;
+                    Tooltip dateTooltip;
+                    Subscription widthSubscription;
 
                     {
-                        user.setStyle("-fx-text-fill: -bs-color-green-5; -fx-font-size: 1.0em");
-                        user.setPadding(new Insets(5, 0, -8, 0));
-                        date.getStyleClass().add("message-header");
-                        date.setPadding(new Insets(1, 0, 0, 0));
+                        userName.setId("chat-user-name");
+                        userName.setPadding(new Insets(2, 0, -8, 0));
+                        time.getStyleClass().add("message-header");
+                        time.setPadding(new Insets(-6, 0, 0, 0));
+                        time.setVisible(false);
+                        icon.setFitWidth(30);
+                        icon.setFitHeight(30);
+                        message.setId("chat-message-text");
+                        VBox.setMargin(message, new Insets(5, 0, 0, 5));
+                        reactionsBox = new HBox();
+                        messageBox = Layout.vBoxWith(message, reactionsBox);
+                        VBox.setVgrow(messageBox, Priority.ALWAYS);
+                        vBox = Layout.vBoxWith(userName, messageBox);
+                        HBox.setHgrow(vBox, Priority.ALWAYS);
+                        hBox = Layout.hBoxWith(Layout.vBoxWith(icon, time), vBox);
                     }
 
                     @Override
                     public void updateItem(final ChatMessageListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            text.setText(item.getMessage());
-                            date.setText(item.getDate());
-                            user.setText(item.getSenderUserName());
-                            setGraphic(Layout.vBoxWith(user, Layout.hBoxWith(date, text)));
+                            message.setText(item.getMessage());
+                            time.setText(item.getTime());
+
+                            dateTooltip = new Tooltip(item.getDate());
+                            dateTooltip.setShowDelay(Duration.millis(100));
+                            Tooltip.install(time, dateTooltip);
+
+                            userName.setText(item.getSenderUserName());
+                            icon.setImage(item.getIconImage());
+
+                            hBox.setOnMouseEntered(e -> {
+                                time.setVisible(true);
+                                messageBox.getStyleClass().add("chat-message-box-active");
+                            });
+                            hBox.setOnMouseExited(e -> {
+                                time.setVisible(false);
+                                messageBox.getStyleClass().remove("chat-message-box-active");
+                            });
+
+                            widthSubscription = EasyBind.subscribe(messagesListView.widthProperty(),
+                                    width -> message.setWrappingWidth(width.doubleValue() - 95));
+
+                            setGraphic(hBox);
                         } else {
+                            if (widthSubscription != null) {
+                                widthSubscription.unsubscribe();
+                            }
+                            hBox.setOnMouseEntered(null);
+                            hBox.setOnMouseExited(null);
+                            icon.setImage(null);
                             setGraphic(null);
                         }
                     }

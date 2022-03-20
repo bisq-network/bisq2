@@ -33,6 +33,23 @@ New css for bisq2.
     -fx-text-fill: -bs-color-green-5;
 }
 
+.chat-message-box {
+    -fx-background-color: -bs-background-color;
+}
+
+.chat-message-box-active {
+    -fx-background-color: derive(-bs-background-color, 15%);
+}
+
+#chat-user-name {
+    -fx-text-fill: -bs-color-green-5;
+    -fx-font-size: 1.0em;
+}
+
+#chat-message-text {
+    -fx-fill: -fx-mid-text-color;
+}
+
 /*
 .jfx-badge .badge-pane {
     -fx-background-color: -bs-red;

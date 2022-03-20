@@ -17,32 +17,49 @@
 
 package bisq.desktop.primary.main.content.social.chat;
 
+import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
+import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.social.chat.ChatMessage;
+import javafx.scene.image.Image;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 @Slf4j
 @Getter
 @EqualsAndHashCode
 class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredListItem {
+    private static Map<ByteArray, Image> iconImageCache = new HashMap<>();
+
     private final ChatMessage chatMessage;
     private final String message;
     private final String senderUserName;
+    private final String time;
     private final String date;
+    private final ByteArray pubKeyHash;
 
     public ChatMessageListItem(ChatMessage chatMessage) {
         this.chatMessage = chatMessage;
         message = chatMessage.getText();
         senderUserName = chatMessage.getSenderUserName();
-        log.error(senderUserName);
-                
+        time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
+        date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));
+        pubKeyHash = new ByteArray(chatMessage.getSenderNetworkId().getPubKey().publicKey().getEncoded());
+    }
 
-        date = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
+    public Image getIconImage() {
+        if (!iconImageCache.containsKey(pubKeyHash)) {
+            iconImageCache.put(pubKeyHash, RoboHash.getImage(pubKeyHash, false));
+        }
+        return iconImageCache.get(pubKeyHash);
     }
 
     @Override
