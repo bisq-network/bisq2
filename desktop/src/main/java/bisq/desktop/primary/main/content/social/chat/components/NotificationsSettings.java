@@ -95,7 +95,6 @@ public class NotificationsSettings {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ToggleGroup toggleGroup = new ToggleGroup();
-        ;
         private final ChangeListener<Toggle> toggleListener;
         private final BisqRadioButton all, mention, none;
 

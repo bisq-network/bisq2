@@ -31,6 +31,7 @@ import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.social.chat.*;
+import bisq.social.user.ChatUser;
 import bisq.social.user.UserNameGenerator;
 import bisq.social.user.profile.UserProfileService;
 import com.google.common.base.Joiner;
@@ -104,7 +105,7 @@ public class ChatController implements Controller {
 
             model.getSelectedChannelAsString().set(channel.getChannelName());
             model.getSelectedChannel().set(channel);
-            if (model.getInfoVisible().get()) {
+            if (model.getChannelInfoVisible().get()) {
                 channelInfo.setChannel(channel);
             }
             if (model.getNotificationsVisible().get()) {
@@ -237,19 +238,32 @@ public class ChatController implements Controller {
     public void onToggleNotifications() {
         boolean visible = !model.getNotificationsVisible().get();
         model.getNotificationsVisible().set(visible);
-        model.getInfoVisible().set(false);
+        model.getSideBarVisible().set(visible);
+        model.getChannelInfoVisible().set(false);
+        model.getChatUserDetailsRoot().set(null);
         if (visible) {
             notificationsSettings.setChannel(model.getSelectedChannel().get());
         }
     }
 
-    public void onToggleInfo() {
-        boolean visible = !model.getInfoVisible().get();
-        model.getInfoVisible().set(visible);
+    public void onToggleChannelInfo() {
+        boolean visible = !model.getChannelInfoVisible().get();
+        model.getChannelInfoVisible().set(visible);
+        model.getSideBarVisible().set(visible);
         model.getNotificationsVisible().set(false);
+        model.getChatUserDetailsRoot().set(null);
         if (visible) {
             channelInfo.setChannel(model.getSelectedChannel().get());
         }
+    }
+
+    public void onShowChatUserDetails(ChatMessage chatMessage) {
+        model.getSideBarVisible().set(true);
+        model.getChannelInfoVisible().set(false);
+        model.getNotificationsVisible().set(false);
+
+        ChatUserDetails chatUserDetails = new ChatUserDetails(new ChatUser(chatMessage.getSenderNetworkId()));
+        model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
     }
 
     public void onUserNameClicked(String userName) {
@@ -260,7 +274,10 @@ public class ChatController implements Controller {
         model.getTextInput().set(existingText + "@" + userName);
     }
 
-    public void onUserIconClicked(ChatMessage chatMessage) {
-        //todo
+    public void onCloseSideBar() {
+        model.getSideBarVisible().set(false);
+        model.getChannelInfoVisible().set(false);
+        model.getNotificationsVisible().set(false);
+        model.getChatUserDetailsRoot().set(null);
     }
 }

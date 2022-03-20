@@ -28,6 +28,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
@@ -48,14 +49,17 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
     private final ListView<ChatMessageListItem> messagesListView;
     private final BisqInputTextField inputField;
     private final BisqLabel selectedChannelLabel;
-    private final Button searchButton, notificationsButton, infoButton;
+    private final Button searchButton, notificationsButton, infoButton, closeButton;
     private final ComboBox<UserProfileComboBox.ListItem> userProfileComboBox;
-    private final VBox left;
+    private final VBox left, sideBar;
     private final FilterBox filterBox;
     private final BisqInputTextField filterBoxRoot;
     private final Pane notificationsSettings;
     private final Pane channelInfo;
     private final ListChangeListener<ChatMessageListItem> messagesListener;
+    private final HBox messagesListAndSideBar;
+    private Subscription chatUserOverviewRootSubscription;
+    private Pane chatUserOverviewRoot;
 
     public ChatView(ChatModel model, ChatController controller,
                     ComboBox<UserProfileComboBox.ListItem> userProfileComboBox,
@@ -69,7 +73,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         this.channelInfo = channelInfo;
         this.userProfileComboBox = userProfileComboBox;
 
-        root.getStyleClass().add("hide-focus");
+        this.root.getStyleClass().add("hide-focus");
 
         userProfileComboBox.setPadding(new Insets(10, 10, 10, 10));
 
@@ -98,7 +102,12 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         VBox messagesAndInput = Layout.vBoxWith(messagesListView, inputField);
         channelInfo.setMinWidth(200);
         channelInfo.setMaxWidth(600);
-        HBox messagesListAndSideBar = Layout.hBoxWith(messagesAndInput, notificationsSettings, channelInfo);
+
+        closeButton = AwesomeDude.createIconButton(AwesomeIcon.REMOVE_SIGN);
+
+        sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo); 
+        sideBar.setAlignment(Pos.TOP_RIGHT);
+        messagesListAndSideBar = Layout.hBoxWith(messagesAndInput, sideBar);
         HBox.setHgrow(messagesAndInput, Priority.ALWAYS);
         VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);
         VBox center = Layout.vBoxWith(centerToolbar, messagesListAndSideBar);
@@ -116,22 +125,39 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         filterBoxRoot.visibleProperty().bind(model.getFilterBoxVisible());
         notificationsSettings.visibleProperty().bind(model.getNotificationsVisible());
         notificationsSettings.managedProperty().bind(model.getNotificationsVisible());
-        channelInfo.visibleProperty().bind(model.getInfoVisible());
-        channelInfo.managedProperty().bind(model.getInfoVisible());
+        channelInfo.visibleProperty().bind(model.getChannelInfoVisible());
+        channelInfo.managedProperty().bind(model.getChannelInfoVisible());
+        sideBar.visibleProperty().bind(model.getSideBarVisible());
+        sideBar.managedProperty().bind(model.getSideBarVisible());
+
         inputField.textProperty().bindBidirectional(model.getTextInput());
 
         searchButton.setOnAction(e -> controller.onToggleFilterBox());
         notificationsButton.setOnAction(e -> controller.onToggleNotifications());
-        infoButton.setOnAction(e -> controller.onToggleInfo());
+        infoButton.setOnAction(e -> controller.onToggleChannelInfo());
+        closeButton.setOnAction(e -> controller.onCloseSideBar());
 
         inputField.setOnAction(e -> {
             controller.onSendMessage(inputField.getText());
             inputField.clear();
         });
-        
+
         model.getFilteredChatMessages().addListener(messagesListener);
 
         messagesListView.setItems(model.getFilteredChatMessages());
+
+        chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
+                pane -> {
+                    if (chatUserOverviewRoot != null) {
+                        sideBar.getChildren().remove(chatUserOverviewRoot);
+                        chatUserOverviewRoot = null;
+                    }
+
+                    if (pane != null) {
+                        sideBar.getChildren().add(pane);
+                        chatUserOverviewRoot = pane;
+                    }
+                });
     }
 
     @Override
@@ -143,13 +169,18 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         notificationsSettings.managedProperty().unbind();
         channelInfo.visibleProperty().unbind();
         channelInfo.managedProperty().unbind();
+        sideBar.visibleProperty().unbind();
+        sideBar.managedProperty().unbind();
+
         inputField.textProperty().unbindBidirectional(model.getTextInput());
 
         searchButton.setOnAction(null);
         notificationsButton.setOnAction(null);
         infoButton.setOnAction(null);
         inputField.setOnAction(null);
+        closeButton.setOnAction(null);
         model.getFilteredChatMessages().removeListener(messagesListener);
+        chatUserOverviewRootSubscription.unsubscribe();
     }
 
     private Callback<ListView<ChatMessageListItem>, ListCell<ChatMessageListItem>> getCellFactory() {
@@ -198,10 +229,10 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
                             userName.setText(item.getSenderUserName());
                             userName.setOnMouseClicked(e -> controller.onUserNameClicked(item.getSenderUserName()));
-                          
+
                             icon.setImage(item.getIconImage());
                             icon.setCursor(Cursor.HAND);
-                            icon.setOnMouseClicked(e -> controller.onUserIconClicked(item.getChatMessage()));
+                            icon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
 
                             hBox.setOnMouseEntered(e -> {
                                 time.setVisible(true);

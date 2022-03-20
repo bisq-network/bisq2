@@ -26,6 +26,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,15 +40,18 @@ public class ChatModel implements Model {
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
     private final StringProperty selectedChannelAsString = new SimpleStringProperty("");
     private final ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
-    private final BooleanProperty infoVisible = new SimpleBooleanProperty();
+    private final ObjectProperty<Pane> chatUserDetailsRoot = new SimpleObjectProperty<>();
+    private final BooleanProperty sideBarVisible = new SimpleBooleanProperty();
+    private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();
     private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
+    
     private final double defaultLeftDividerPosition = 0.3;
     private final ObservableList<ChatMessageListItem> chatMessages = FXCollections.observableArrayList();
     private final SortedList<ChatMessageListItem> sortedChatMessages = new SortedList<>(chatMessages);
     private final FilteredList<ChatMessageListItem> filteredChatMessages = new FilteredList<>(sortedChatMessages);
     private final StringProperty textInput = new SimpleStringProperty("");
-
+    
     public ChatModel() {
     }
 /*

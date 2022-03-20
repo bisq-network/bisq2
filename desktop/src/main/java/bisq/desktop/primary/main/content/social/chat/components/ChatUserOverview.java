@@ -37,10 +37,10 @@ import org.fxmisc.easybind.Subscription;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class ChatUserDisplay implements Comparable<ChatUserDisplay> {
+public class ChatUserOverview implements Comparable<ChatUserOverview> {
     private final Controller controller;
 
-    public ChatUserDisplay(ChatUser chatUser) {
+    public ChatUserOverview(ChatUser chatUser) {
         controller = new Controller(chatUser);
     }
 
@@ -49,7 +49,7 @@ public class ChatUserDisplay implements Comparable<ChatUserDisplay> {
     }
 
     @Override
-    public int compareTo(ChatUserDisplay o) {
+    public int compareTo(ChatUserOverview o) {
         return controller.model.chatUser.userName().compareTo(o.controller.model.chatUser.userName());
     }
 
@@ -60,7 +60,6 @@ public class ChatUserDisplay implements Comparable<ChatUserDisplay> {
 
 
         private Controller(ChatUser chatUser) {
-
             model = new Model(chatUser);
             view = new View(model, this);
         }

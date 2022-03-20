@@ -80,9 +80,9 @@ public class ChannelInfo {
         private ObjectProperty<Channel> channel = new SimpleObjectProperty<>();
         private String channelName;
         private Optional<String> description = Optional.empty();
-        private final ObservableList<ChatUserDisplay> moderators = FXCollections.observableArrayList();
-        private Optional<ChatUserDisplay> adminProfile = Optional.empty();
-        private final ObservableList<ChatUserDisplay> members = FXCollections.observableArrayList();
+        private final ObservableList<ChatUserOverview> moderators = FXCollections.observableArrayList();
+        private Optional<ChatUserOverview> adminProfile = Optional.empty();
+        private final ObservableList<ChatUserOverview> members = FXCollections.observableArrayList();
 
         private Model() {
         }
@@ -92,14 +92,14 @@ public class ChannelInfo {
             members.setAll(channel.getChatMessages().stream()
                     .map(ChatMessage::getSenderNetworkId)
                     .distinct()
-                    .map(senderNetworkId -> new ChatUserDisplay(new ChatUser(senderNetworkId)))
+                    .map(senderNetworkId -> new ChatUserOverview(new ChatUser(senderNetworkId)))
                     .sorted()
                     .collect(Collectors.toList()));
             if (channel instanceof PublicChannel publicChannel) {
                 description = Optional.of(publicChannel.getDescription());
-                adminProfile = Optional.of(new ChatUserDisplay(publicChannel.getChannelAdmin()));
+                adminProfile = Optional.of(new ChatUserOverview(publicChannel.getChannelAdmin()));
                 moderators.setAll(publicChannel.getChannelModerators().stream()
-                        .map(ChatUserDisplay::new)
+                        .map(ChatUserOverview::new)
                         .sorted()
                         .collect(Collectors.toList()));
 
@@ -153,19 +153,19 @@ public class ChannelInfo {
                 moderatorsHeadLine.getStyleClass().add("accent-headline");
                 root.getChildren().add(moderatorsHeadLine);
                 root.getChildren().addAll(model.moderators.stream()
-                        .map(ChatUserDisplay::getRoot)
+                        .map(ChatUserOverview::getRoot)
                         .collect(Collectors.toList()));
             }
 
-            ListView<ChatUserDisplay> members = new ListView<>();
+            ListView<ChatUserOverview> members = new ListView<>();
             members.setFocusTraversable(false);
             VBox.setVgrow(members, Priority.ALWAYS);
             members.setCellFactory(new Callback<>() {
                 @Override
-                public ListCell<ChatUserDisplay> call(ListView<ChatUserDisplay> list) {
+                public ListCell<ChatUserOverview> call(ListView<ChatUserOverview> list) {
                     return new ListCell<>() {
                         @Override
-                        public void updateItem(final ChatUserDisplay item, boolean empty) {
+                        public void updateItem(final ChatUserOverview item, boolean empty) {
                             super.updateItem(item, empty);
                             if (item != null && !empty) {
                                 setGraphic(item.getRoot());

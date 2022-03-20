@@ -23,6 +23,7 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.security.DigestUtil;
 import bisq.social.chat.ChatMessage;
 import javafx.scene.image.Image;
 import lombok.EqualsAndHashCode;
@@ -52,7 +53,7 @@ class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredLi
         senderUserName = chatMessage.getSenderUserName();
         time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
         date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));
-        pubKeyHash = new ByteArray(chatMessage.getSenderNetworkId().getPubKey().publicKey().getEncoded());
+        pubKeyHash = new ByteArray(DigestUtil.hash(chatMessage.getSenderNetworkId().getPubKey().publicKey().getEncoded()));
     }
 
     public Image getIconImage() {
