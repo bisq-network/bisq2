@@ -79,8 +79,8 @@ public class NotificationsSettings {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private ObjectProperty<Channel> channel = new SimpleObjectProperty<>();
-        public ObjectProperty<NotificationSetting> notificationSetting = new SimpleObjectProperty<>(NotificationSetting.MENTION);
+        private final ObjectProperty<Channel> channel = new SimpleObjectProperty<>();
+        private final ObjectProperty<NotificationSetting> notificationSetting = new SimpleObjectProperty<>(NotificationSetting.MENTION);
 
         private Model() {
         }

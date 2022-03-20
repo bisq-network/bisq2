@@ -53,6 +53,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public class ChatService implements PersistenceClient<ChatStore>, MessageListener, DataService.Listener {
+
     public interface Listener {
         void onChannelAdded(Channel channel);
 
@@ -226,7 +227,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         channel.getNotificationSetting().set(notificationSetting);
         persist();
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // ChatMessage
@@ -270,6 +271,21 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         persist();
         Identity identity = identityService.getOrCreateIdentity(domainId).join(); //todo
         return new ChatIdentity(userName, identity);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ChatUser
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void reportChatUser(ChatUser chatUser) {
+        //todo
+        log.info("called reportChatUser");
+    }
+
+    public void ignoreChatUser(ChatUser chatUser) {
+        //todo
+        log.info("called ignoreChatUser");
     }
 
 

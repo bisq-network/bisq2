@@ -86,11 +86,11 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatUser chatUser;
-        ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
-        StringProperty userName = new SimpleStringProperty();
-        StringProperty id = new SimpleStringProperty();
-        BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
-        StringProperty entitlements = new SimpleStringProperty();
+        private ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
+        private StringProperty userName = new SimpleStringProperty();
+        private StringProperty id = new SimpleStringProperty();
+        private BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
+        private StringProperty entitlements = new SimpleStringProperty();
 
         private Model(ChatUser chatUser) {
             this.chatUser = chatUser;

@@ -43,6 +43,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -76,7 +77,7 @@ public class ChatController implements Controller {
         UserProfileComboBox userProfileDisplay = new UserProfileComboBox(userProfileService);
         publicChannelSelection = new PublicChannelSelection(chatService);
         privateChannelSelection = new PrivateChannelSelection(chatService);
-        model = new ChatModel();
+        model = new ChatModel(chatService);
         view = new ChatView(model,
                 this,
                 userProfileDisplay.getComboBox(),
@@ -124,7 +125,6 @@ public class ChatController implements Controller {
             Set<String> myUserNames = userProfileService.getPersistableStore().getUserProfiles().stream()
                     .map(userProfile -> UserNameGenerator.fromHash(userProfile.identity().pubKeyHash()))
                     .collect(Collectors.toSet());
-
             messageListener = c -> {
                 c.next();
                 // At init, we get full list, but we don't want to show notifications in that event.
@@ -240,7 +240,7 @@ public class ChatController implements Controller {
         model.getNotificationsVisible().set(visible);
         model.getSideBarVisible().set(visible);
         model.getChannelInfoVisible().set(false);
-        model.getChatUserDetailsRoot().set(null);
+        removeChatUserDetails();
         if (visible) {
             notificationsSettings.setChannel(model.getSelectedChannel().get());
         }
@@ -251,7 +251,7 @@ public class ChatController implements Controller {
         model.getChannelInfoVisible().set(visible);
         model.getSideBarVisible().set(visible);
         model.getNotificationsVisible().set(false);
-        model.getChatUserDetailsRoot().set(null);
+        removeChatUserDetails();
         if (visible) {
             channelInfo.setChannel(model.getSelectedChannel().get());
         }
@@ -262,22 +262,40 @@ public class ChatController implements Controller {
         model.getChannelInfoVisible().set(false);
         model.getNotificationsVisible().set(false);
 
-        ChatUserDetails chatUserDetails = new ChatUserDetails(new ChatUser(chatMessage.getSenderNetworkId()));
+        ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(), 
+                new ChatUser(chatMessage.getSenderNetworkId()));
+        chatUserDetails.setOnSendPrivateMessage(chatUser -> {
+            // todo
+            log.info("onSendPrivateMessage {}", chatUser);
+        });
+        chatUserDetails.setOnMentionUser(chatUser -> mentionUser(chatUser.userName()));
+        model.setChatUserDetails(Optional.of(chatUserDetails));
         model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
     }
 
     public void onUserNameClicked(String userName) {
-        String existingText = model.getTextInput().get();
-        if (!existingText.isEmpty() && !existingText.endsWith(" ")) {
-            existingText += " ";
-        }
-        model.getTextInput().set(existingText + "@" + userName);
+        mentionUser(userName);
     }
 
     public void onCloseSideBar() {
         model.getSideBarVisible().set(false);
         model.getChannelInfoVisible().set(false);
         model.getNotificationsVisible().set(false);
+        removeChatUserDetails();
+    }
+
+    private void removeChatUserDetails() {
+        model.getChatUserDetails().ifPresent(e -> e.setOnMentionUser(null));
+        model.getChatUserDetails().ifPresent(e -> e.setOnSendPrivateMessage(null));
+        model.setChatUserDetails(Optional.empty());
         model.getChatUserDetailsRoot().set(null);
+    }
+
+    private void mentionUser(String userName) {
+        String existingText = model.getTextInput().get();
+        if (!existingText.isEmpty() && !existingText.endsWith(" ")) {
+            existingText += " ";
+        }
+        model.getTextInput().set(existingText + "@" + userName + " ");
     }
 }

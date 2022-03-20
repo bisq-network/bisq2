@@ -18,9 +18,12 @@
 package bisq.desktop.primary.main.content.social.chat.components;
 
 import bisq.common.data.ByteArray;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
+import bisq.social.chat.ChatService;
 import bisq.social.user.ChatUser;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
@@ -34,18 +37,28 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class ChatUserDetails implements Comparable<ChatUserDetails> {
     private final Controller controller;
 
-    public ChatUserDetails(ChatUser chatUser) {
-        controller = new Controller(chatUser);
+    public ChatUserDetails(ChatService chatService, ChatUser chatUser) {
+        controller = new Controller(chatService, chatUser);
     }
 
     public Pane getRoot() {
         return controller.view.getRoot();
+    }
+
+    public void setOnMentionUser(Consumer<ChatUser> handler) {
+        controller.model.mentionUserHandler = Optional.ofNullable(handler);
+    }
+
+    public void setOnSendPrivateMessage(Consumer<ChatUser> handler) {
+        controller.model.sendPrivateMessageHandler = Optional.ofNullable(handler);
     }
 
     @Override
@@ -59,8 +72,8 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final View view;
 
 
-        private Controller(ChatUser chatUser) {
-            model = new Model(chatUser);
+        private Controller(ChatService chatService, ChatUser chatUser) {
+            model = new Model(chatService, chatUser);
             view = new View(model, this);
         }
 
@@ -77,25 +90,42 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             String entitledRoles = chatUser.entitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
             model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
             model.entitlementsVisible.set(!chatUser.entitlements().isEmpty());
-
-            log.error("senderUserName " + model.userName);
-            log.error("pubKeyHash " + new ByteArray(chatUser.pubKeyHash()));
         }
 
         @Override
         public void onViewDetached() {
         }
+
+        public void onSendPrivateMessage() {
+            model.sendPrivateMessageHandler.ifPresent(handler -> handler.accept(model.chatUser));
+        }
+
+        public void onMentionUser() {
+            model.mentionUserHandler.ifPresent(handler -> handler.accept(model.chatUser));
+        }
+
+        public void onIgnoreUser() {
+            model.chatService.ignoreChatUser(model.chatUser);
+        }
+
+        public void onReportUser() {
+            model.chatService.reportChatUser(model.chatUser);
+        }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
+        private final ChatService chatService;
         private final ChatUser chatUser;
-        ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
-        StringProperty userName = new SimpleStringProperty();
-        StringProperty id = new SimpleStringProperty();
-        BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
-        StringProperty entitlements = new SimpleStringProperty();
+        private Optional<Consumer<ChatUser>> mentionUserHandler = Optional.empty();
+        private Optional<Consumer<ChatUser>> sendPrivateMessageHandler = Optional.empty();
+        private ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
+        private StringProperty userName = new SimpleStringProperty();
+        private StringProperty id = new SimpleStringProperty();
+        private BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
+        private StringProperty entitlements = new SimpleStringProperty();
 
-        private Model(ChatUser chatUser) {
+        private Model(ChatService chatService, ChatUser chatUser) {
+            this.chatService = chatService;
             this.chatUser = chatUser;
         }
     }
@@ -104,11 +134,12 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
         private final BisqLabel userName, id, entitlements;
+        private final BisqButton openPrivateMessageButton, mentionButton, ignoreButton, reportButton;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
-            
+
             root.setSpacing(10);
             root.setAlignment(Pos.TOP_LEFT);
 
@@ -128,7 +159,13 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             entitlements.getStyleClass().add("offer-label-small"); //todo
             entitlements.setPadding(new Insets(-5, 0, 0, 0));
 
-            root.getChildren().addAll(userName, roboIconImageView, id, entitlements);
+            openPrivateMessageButton = new BisqButton(Res.get("social.sendPrivateMessage"));
+            mentionButton = new BisqButton(Res.get("social.mention"));
+            ignoreButton = new BisqButton(Res.get("social.ignore"));
+            reportButton = new BisqButton(Res.get("social.report"));
+
+            root.getChildren().addAll(userName, roboIconImageView, id, entitlements,  Spacer.height(10),
+                    openPrivateMessageButton, mentionButton, ignoreButton, reportButton);
         }
 
         @Override
@@ -138,12 +175,20 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             entitlements.textProperty().bind(model.entitlements);
             entitlements.visibleProperty().bind(model.entitlementsVisible);
             entitlements.managedProperty().bind(model.entitlementsVisible);
+            mentionButton.minWidthProperty().bind(openPrivateMessageButton.widthProperty());
+            ignoreButton.minWidthProperty().bind(openPrivateMessageButton.widthProperty());
+            reportButton.minWidthProperty().bind(openPrivateMessageButton.widthProperty());
 
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
                     roboIconImageView.setImage(roboIcon);
                 }
             });
+
+            openPrivateMessageButton.setOnAction(e -> controller.onSendPrivateMessage());
+            mentionButton.setOnAction(e -> controller.onMentionUser());
+            ignoreButton.setOnAction(e -> controller.onIgnoreUser());
+            reportButton.setOnAction(e -> controller.onReportUser());
         }
 
         @Override
@@ -153,7 +198,16 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             entitlements.textProperty().unbind();
             entitlements.visibleProperty().unbind();
             entitlements.managedProperty().unbind();
+            mentionButton.minWidthProperty().unbind();
+            ignoreButton.minWidthProperty().unbind();
+            reportButton.minWidthProperty().unbind();
+
             roboHashNodeSubscription.unsubscribe();
+
+            openPrivateMessageButton.setOnAction(null);
+            mentionButton.setOnAction(null);
+            ignoreButton.setOnAction(null);
+            reportButton.setOnAction(null);
         }
     }
 }

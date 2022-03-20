@@ -18,9 +18,11 @@
 package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.primary.main.content.social.chat.components.ChatUserDetails;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.social.chat.Channel;
+import bisq.social.chat.ChatService;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -28,10 +30,12 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Getter
@@ -45,42 +49,19 @@ public class ChatModel implements Model {
     private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();
     private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
-    
+
     private final double defaultLeftDividerPosition = 0.3;
     private final ObservableList<ChatMessageListItem> chatMessages = FXCollections.observableArrayList();
     private final SortedList<ChatMessageListItem> sortedChatMessages = new SortedList<>(chatMessages);
     private final FilteredList<ChatMessageListItem> filteredChatMessages = new FilteredList<>(sortedChatMessages);
     private final StringProperty textInput = new SimpleStringProperty("");
-    
-    public ChatModel() {
-    }
-/*
-    void addChatMessage(Channel channel, ChatMessage chatMessage) {
-        chatMessagesByChannelId.putIfAbsent(channel.getId(), new SimpleStringProperty(""));
-        StringProperty chatMessages = chatMessagesByChannelId.get(channel.getId());
-        String previous = chatMessages.get();
-        if (!previous.isEmpty()) {
-            previous += "\n";
-        }
-        chatMessages.set(previous +
-                "[" + DateFormatter.formatDateTime(new Date(chatMessage.getDate())) +
-                "] [" +
-                chatMessage.getSenderUserName().substring(0, 12) +
-                "] " +
-                chatMessage.getText());
+    private final ChatService chatService;
+    @Setter
+    private Optional<ChatUserDetails> chatUserDetails = Optional.empty();
 
-        if (selectedChannel.get() != null && selectedChannel.get().getId().equals(channel.getId())) {
-            selectedChatMessages.set(chatMessages.get());
-        }
+    public ChatModel(ChatService chatService) {
+        this.chatService = chatService;
     }
-
-    String getDisplayString(PublicChannelId publicChannelId) {
-        return switch (publicChannelId) {
-            case BTC_EUR -> Res.get("social.chat.btcEurMarket");
-            case BTC_USD -> Res.get("social.chat.btcUsdMarket");
-            case ANY -> Res.get("social.chat.anyMarket");
-        };
-    }*/
 
     void setSendMessageResult(String channelId, ConfidentialMessageService.Result result, BroadcastResult broadcastResult) {
         log.info("Send message result for channelId {}: {}",
