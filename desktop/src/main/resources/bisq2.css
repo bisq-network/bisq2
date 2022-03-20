@@ -44,6 +44,7 @@ New css for bisq2.
 #chat-user-name {
     -fx-text-fill: -bs-color-green-5;
     -fx-font-size: 1.0em;
+    -fx-cursor: hand;
 }
 
 #chat-message-text {

@@ -46,6 +46,7 @@ public class ChatModel implements Model {
     private final ObservableList<ChatMessageListItem> chatMessages = FXCollections.observableArrayList();
     private final SortedList<ChatMessageListItem> sortedChatMessages = new SortedList<>(chatMessages);
     private final FilteredList<ChatMessageListItem> filteredChatMessages = new FilteredList<>(sortedChatMessages);
+    private final StringProperty textInput = new SimpleStringProperty("");
 
     public ChatModel() {
     }

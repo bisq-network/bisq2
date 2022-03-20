@@ -28,6 +28,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
+import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -117,6 +118,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         notificationsSettings.managedProperty().bind(model.getNotificationsVisible());
         channelInfo.visibleProperty().bind(model.getInfoVisible());
         channelInfo.managedProperty().bind(model.getInfoVisible());
+        inputField.textProperty().bindBidirectional(model.getTextInput());
 
         searchButton.setOnAction(e -> controller.onToggleFilterBox());
         notificationsButton.setOnAction(e -> controller.onToggleNotifications());
@@ -126,7 +128,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
             controller.onSendMessage(inputField.getText());
             inputField.clear();
         });
-
+        
         model.getFilteredChatMessages().addListener(messagesListener);
 
         messagesListView.setItems(model.getFilteredChatMessages());
@@ -141,6 +143,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         notificationsSettings.managedProperty().unbind();
         channelInfo.visibleProperty().unbind();
         channelInfo.managedProperty().unbind();
+        inputField.textProperty().unbindBidirectional(model.getTextInput());
 
         searchButton.setOnAction(null);
         notificationsButton.setOnAction(null);
@@ -194,7 +197,11 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             Tooltip.install(time, dateTooltip);
 
                             userName.setText(item.getSenderUserName());
+                            userName.setOnMouseClicked(e -> controller.onUserNameClicked(item.getSenderUserName()));
+                          
                             icon.setImage(item.getIconImage());
+                            icon.setCursor(Cursor.HAND);
+                            icon.setOnMouseClicked(e -> controller.onUserIconClicked(item.getChatMessage()));
 
                             hBox.setOnMouseEntered(e -> {
                                 time.setVisible(true);
@@ -213,6 +220,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             if (widthSubscription != null) {
                                 widthSubscription.unsubscribe();
                             }
+                            userName.setOnMouseClicked(null);
+                            icon.setOnMouseClicked(null);
                             hBox.setOnMouseEntered(null);
                             hBox.setOnMouseExited(null);
                             icon.setImage(null);

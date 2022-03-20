@@ -251,4 +251,16 @@ public class ChatController implements Controller {
             channelInfo.setChannel(model.getSelectedChannel().get());
         }
     }
+
+    public void onUserNameClicked(String userName) {
+        String existingText = model.getTextInput().get();
+        if (!existingText.isEmpty() && !existingText.endsWith(" ")) {
+            existingText += " ";
+        }
+        model.getTextInput().set(existingText + "@" + userName);
+    }
+
+    public void onUserIconClicked(ChatMessage chatMessage) {
+        //todo
+    }
 }
