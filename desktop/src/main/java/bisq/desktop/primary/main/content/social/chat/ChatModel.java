@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 @Slf4j
 @Getter
@@ -56,11 +57,14 @@ public class ChatModel implements Model {
     private final FilteredList<ChatMessageListItem> filteredChatMessages = new FilteredList<>(sortedChatMessages);
     private final StringProperty textInput = new SimpleStringProperty("");
     private final ChatService chatService;
+    private final Predicate<ChatMessageListItem> ignoredChatUserPredicate;
     @Setter
     private Optional<ChatUserDetails> chatUserDetails = Optional.empty();
 
     public ChatModel(ChatService chatService) {
         this.chatService = chatService;
+        ignoredChatUserPredicate = item -> !chatService.getPersistableStore().getIgnoredChatUserIds().contains(item.getChatUserId());
+        filteredChatMessages.setPredicate(ignoredChatUserPredicate);
     }
 
     void setSendMessageResult(String channelId, ConfidentialMessageService.Result result, BroadcastResult broadcastResult) {
@@ -72,4 +76,8 @@ public class ChatModel implements Model {
         log.error("Send message resulted in an error: channelId={}, error={}", channelId, throwable.toString());  //todo
     }
 
+    public void refreshMessages() {
+        //filteredChatMessages.setPredicate(ignoredChatUserPredicate);
+        chatMessages.setAll(sortedChatMessages);
+    }
 }

@@ -41,11 +41,24 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
     private final Controller controller;
 
     public ChatUserOverview(ChatUser chatUser) {
+        this(chatUser, false);
+    }
+
+    public ChatUserOverview(ChatUser chatUser, boolean ignored) {
         controller = new Controller(chatUser);
+        controller.model.ignored = ignored;
     }
 
     public Pane getRoot() {
         return controller.view.getRoot();
+    }
+
+    public boolean isIgnored() {
+        return controller.model.ignored;
+    }
+
+    public ChatUser getChatUser() {
+        return controller.model.chatUser;
     }
 
     @Override
@@ -86,11 +99,12 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatUser chatUser;
-        private ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
-        private StringProperty userName = new SimpleStringProperty();
-        private StringProperty id = new SimpleStringProperty();
-        private BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
-        private StringProperty entitlements = new SimpleStringProperty();
+        private boolean ignored;
+        private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
+        private final StringProperty userName = new SimpleStringProperty();
+        private final StringProperty id = new SimpleStringProperty();
+        private final BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
+        private final StringProperty entitlements = new SimpleStringProperty();
 
         private Model(ChatUser chatUser) {
             this.chatUser = chatUser;

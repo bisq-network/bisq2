@@ -72,7 +72,7 @@ public class ChatController implements Controller {
         userProfileService = applicationService.getUserProfileService();
         networkService = applicationService.getNetworkService();
 
-        channelInfo = new ChannelInfo();
+        channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
         UserProfileComboBox userProfileDisplay = new UserProfileComboBox(userProfileService);
         publicChannelSelection = new PublicChannelSelection(chatService);
@@ -108,6 +108,10 @@ public class ChatController implements Controller {
             model.getSelectedChannel().set(channel);
             if (model.getChannelInfoVisible().get()) {
                 channelInfo.setChannel(channel);
+                channelInfo.setOnUndoIgnoreChatUser(() -> {
+                    refreshMessages();
+                    channelInfo.setChannel(channel);
+                });
             }
             if (model.getNotificationsVisible().get()) {
                 notificationsSettings.setChannel(channel);
@@ -254,6 +258,10 @@ public class ChatController implements Controller {
         removeChatUserDetails();
         if (visible) {
             channelInfo.setChannel(model.getSelectedChannel().get());
+            channelInfo.setOnUndoIgnoreChatUser(() -> {
+                refreshMessages();
+                channelInfo.setChannel(model.getSelectedChannel().get());
+            });
         }
     }
 
@@ -262,12 +270,13 @@ public class ChatController implements Controller {
         model.getChannelInfoVisible().set(false);
         model.getNotificationsVisible().set(false);
 
-        ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(), 
+        ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(),
                 new ChatUser(chatMessage.getSenderNetworkId()));
         chatUserDetails.setOnSendPrivateMessage(chatUser -> {
             // todo
             log.info("onSendPrivateMessage {}", chatUser);
         });
+        chatUserDetails.setOnIgnoreChatUser(this::refreshMessages);
         chatUserDetails.setOnMentionUser(chatUser -> mentionUser(chatUser.userName()));
         model.setChatUserDetails(Optional.of(chatUserDetails));
         model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
@@ -287,6 +296,7 @@ public class ChatController implements Controller {
     private void removeChatUserDetails() {
         model.getChatUserDetails().ifPresent(e -> e.setOnMentionUser(null));
         model.getChatUserDetails().ifPresent(e -> e.setOnSendPrivateMessage(null));
+        model.getChatUserDetails().ifPresent(e -> e.setOnIgnoreChatUser(null));
         model.setChatUserDetails(Optional.empty());
         model.getChatUserDetailsRoot().set(null);
     }
@@ -297,5 +307,12 @@ public class ChatController implements Controller {
             existingText += " ";
         }
         model.getTextInput().set(existingText + "@" + userName + " ");
+    }
+
+    private void refreshMessages() {
+        chatMessagesPin.unbind();
+        chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem>bind(model.getChatMessages())
+                .map(ChatMessageListItem::new)
+                .to(model.getSelectedChannel().get().getChatMessages());
     }
 }

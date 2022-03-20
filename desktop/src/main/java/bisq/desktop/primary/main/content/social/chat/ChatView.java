@@ -101,7 +101,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
         VBox messagesAndInput = Layout.vBoxWith(messagesListView, inputField);
         channelInfo.setMinWidth(200);
-        channelInfo.setMaxWidth(600);
 
         closeButton =  BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
 

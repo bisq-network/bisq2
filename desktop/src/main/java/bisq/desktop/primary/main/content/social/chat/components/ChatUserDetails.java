@@ -61,6 +61,10 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         controller.model.sendPrivateMessageHandler = Optional.ofNullable(handler);
     }
 
+    public void setOnIgnoreChatUser(Runnable handler) {
+        controller.model.ignoreChatUserHandler = Optional.ofNullable(handler);
+    }
+
     @Override
     public int compareTo(ChatUserDetails o) {
         return controller.model.chatUser.userName().compareTo(o.controller.model.chatUser.userName());
@@ -106,10 +110,12 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
         public void onIgnoreUser() {
             model.chatService.ignoreChatUser(model.chatUser);
+            model.ignoreChatUserHandler.ifPresent(Runnable::run);
         }
 
         public void onReportUser() {
-            model.chatService.reportChatUser(model.chatUser);
+            // todo open popup for editing reason
+            model.chatService.reportChatUser(model.chatUser, "");
         }
     }
 
@@ -118,11 +124,12 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final ChatUser chatUser;
         private Optional<Consumer<ChatUser>> mentionUserHandler = Optional.empty();
         private Optional<Consumer<ChatUser>> sendPrivateMessageHandler = Optional.empty();
-        private ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
-        private StringProperty userName = new SimpleStringProperty();
-        private StringProperty id = new SimpleStringProperty();
-        private BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
-        private StringProperty entitlements = new SimpleStringProperty();
+        private Optional<Runnable> ignoreChatUserHandler = Optional.empty();
+        private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
+        private final StringProperty userName = new SimpleStringProperty();
+        private final StringProperty id = new SimpleStringProperty();
+        private final BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
+        private final StringProperty entitlements = new SimpleStringProperty();
 
         private Model(ChatService chatService, ChatUser chatUser) {
             this.chatService = chatService;
@@ -159,12 +166,14 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             entitlements.getStyleClass().add("offer-label-small"); //todo
             entitlements.setPadding(new Insets(-5, 0, 0, 0));
 
+            //todo add reputation data. need more concept work
+
             openPrivateMessageButton = new BisqButton(Res.get("social.sendPrivateMessage"));
             mentionButton = new BisqButton(Res.get("social.mention"));
             ignoreButton = new BisqButton(Res.get("social.ignore"));
             reportButton = new BisqButton(Res.get("social.report"));
 
-            root.getChildren().addAll(userName, roboIconImageView, id, entitlements,  Spacer.height(10),
+            root.getChildren().addAll(userName, roboIconImageView, id, entitlements, Spacer.height(10),
                     openPrivateMessageButton, mentionButton, ignoreButton, reportButton);
         }
 

@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.common.data.ByteArray;
+import bisq.common.encoding.Hex;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
@@ -45,7 +46,8 @@ class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredLi
     private final String senderUserName;
     private final String time;
     private final String date;
-    private final ByteArray pubKeyHash;
+    private final String chatUserId;
+    private final ByteArray pubKeyHashAsByteArray;
 
     public ChatMessageListItem(ChatMessage chatMessage) {
         this.chatMessage = chatMessage;
@@ -53,14 +55,16 @@ class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredLi
         senderUserName = chatMessage.getSenderUserName();
         time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
         date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));
-        pubKeyHash = new ByteArray(DigestUtil.hash(chatMessage.getSenderNetworkId().getPubKey().publicKey().getEncoded()));
+        byte[] pubKeyHash = DigestUtil.hash(chatMessage.getSenderNetworkId().getPubKey().publicKey().getEncoded());
+        pubKeyHashAsByteArray = new ByteArray(pubKeyHash);
+        chatUserId = Hex.encode(pubKeyHash);
     }
 
     public Image getIconImage() {
-        if (!iconImageCache.containsKey(pubKeyHash)) {
-            iconImageCache.put(pubKeyHash, RoboHash.getImage(pubKeyHash, false));
+        if (!iconImageCache.containsKey(pubKeyHashAsByteArray)) {
+            iconImageCache.put(pubKeyHashAsByteArray, RoboHash.getImage(pubKeyHashAsByteArray, false));
         }
-        return iconImageCache.get(pubKeyHash);
+        return iconImageCache.get(pubKeyHashAsByteArray);
     }
 
     @Override

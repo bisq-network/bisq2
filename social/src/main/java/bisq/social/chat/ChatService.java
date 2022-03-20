@@ -278,14 +278,19 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     // ChatUser
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void reportChatUser(ChatUser chatUser) {
-        //todo
-        log.info("called reportChatUser");
+    public void reportChatUser(ChatUser chatUser, String reason) {
+        //todo report user to admin and moderators, add reason
+        log.info("called reportChatUser {} {}", chatUser, reason);
     }
 
     public void ignoreChatUser(ChatUser chatUser) {
-        //todo
-        log.info("called ignoreChatUser");
+        persistableStore.getIgnoredChatUserIds().add(chatUser.id());
+        persist();
+    }
+
+    public void undoIgnoreChatUser(ChatUser chatUser) {
+        persistableStore.getIgnoredChatUserIds().remove(chatUser.id());
+        persist();
     }
 
 
