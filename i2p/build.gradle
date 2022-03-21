@@ -24,9 +24,9 @@ dependencies {
         exclude group: 'org.apache.httpcomponents', module: 'httpclient'
     }
 
-    implementation 'net.i2p.client:streaming:1.7.0'
-    implementation 'net.i2p:i2p:1.7.0'
-    implementation 'net.i2p:router:1.7.0'
+    implementation "net.i2p.client:streaming:${i2pVersion}"
+    implementation "net.i2p:i2p:${i2pVersion}"
+    implementation "net.i2p:router:${i2pVersion}"
 }
 
 test {
