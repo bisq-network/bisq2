@@ -191,7 +191,8 @@ public class DefaultApplicationService extends ServiceProvider {
                         offerBookService.initialize(),
                         tradeIntentListingsService.initialize(),
                         tradeIntentService.initialize()))
-                .orTimeout(120, TimeUnit.SECONDS)
+                // TODO Needs to increase if using embedded I2P router (i2p internal bootstrap timeouts after 5 mins)
+                .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((list, throwable) -> {
                     if (throwable != null) {
                         log.error("Error at startup", throwable);
