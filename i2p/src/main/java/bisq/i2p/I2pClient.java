@@ -18,6 +18,7 @@
 package bisq.i2p;
 
 import bisq.common.util.FileUtils;
+import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.I2PAppContext;
 import net.i2p.I2PException;
@@ -198,6 +199,8 @@ public class I2pClient {
             try(FileInputStream privKeyInputStream = new FileInputStream(privKeyFile)) {
                 manager = I2PSocketManagerFactory.createManager(privKeyInputStream);
             }
+
+            Preconditions.checkNotNull(manager, "Cannot connect to I2P network because no I2P router found");
 
             // Set port (which is embedded in the generated destination)
             I2PSocketOptions i2PSocketOptions = manager.getDefaultOptions();
