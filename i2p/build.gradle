@@ -18,8 +18,15 @@ dependencies {
 
     implementation 'com.google.guava:guava'
 
-    implementation 'net.i2p:i2p:1.6.1'
-    implementation 'net.i2p.client:streaming:1.6.1'
+    // Exclude httpclient transitive dependency because it may override
+    // I2P-specific impl of some Apache classes like org.apache.http.util.Args
+    implementation ('org.apache.httpcomponents:httpcore:4.4.13'){
+        exclude group: 'org.apache.httpcomponents', module: 'httpclient'
+    }
+
+    implementation "net.i2p.client:streaming:${i2pVersion}"
+    implementation "net.i2p:i2p:${i2pVersion}"
+    implementation "net.i2p:router:${i2pVersion}"
 }
 
 test {
