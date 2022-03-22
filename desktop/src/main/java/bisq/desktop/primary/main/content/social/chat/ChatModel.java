@@ -22,7 +22,9 @@ import bisq.desktop.primary.main.content.social.chat.components.ChatUserDetails;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.social.chat.Channel;
+import bisq.social.chat.ChatMessage;
 import bisq.social.chat.ChatService;
+import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -58,12 +60,14 @@ public class ChatModel implements Model {
     private final StringProperty textInput = new SimpleStringProperty("");
     private final ChatService chatService;
     private final Predicate<ChatMessageListItem> ignoredChatUserPredicate;
+    private final UserProfileService userProfileService;
     @Setter
     private Optional<ChatUserDetails> chatUserDetails = Optional.empty();
 
-    public ChatModel(ChatService chatService) {
+    public ChatModel(ChatService chatService, UserProfileService userProfileService) {
         this.chatService = chatService;
         ignoredChatUserPredicate = item -> !chatService.getPersistableStore().getIgnoredChatUserIds().contains(item.getChatUserId());
+        this.userProfileService = userProfileService;
         filteredChatMessages.setPredicate(ignoredChatUserPredicate);
     }
 
@@ -74,5 +78,9 @@ public class ChatModel implements Model {
 
     void setSendMessageError(String channelId, Throwable throwable) {
         log.error("Send message resulted in an error: channelId={}, error={}", channelId, throwable.toString());  //todo
+    }
+
+     boolean isMyMessage(ChatMessage chatMessage) {
+        return chatMessage.getChatUser().id().equals(userProfileService.getPersistableStore().getSelectedUserProfile().get().id());
     }
 }

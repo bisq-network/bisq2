@@ -21,6 +21,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -29,7 +30,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
-
+@Slf4j
 public class KeyPairService implements PersistenceClient<KeyPairStore> {
     public static final String DEFAULT = "default";
     @Getter
@@ -43,6 +44,7 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
     }
 
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         return getOrCreateKeyPairAsync(DEFAULT).thenApply(r -> true);
     }
 

@@ -25,5 +25,5 @@ import java.io.Serializable;
 @Getter
 @Setter
 public class DisplaySettings implements Serializable {
-    private boolean useAnimations;
+    private boolean useAnimations = true;
 }

@@ -55,7 +55,7 @@ class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredLi
     public ChatMessageListItem(ChatMessage chatMessage) {
         this.chatMessage = chatMessage;
         message = chatMessage.getText();
-        quotedMessage = Optional.ofNullable(chatMessage.getQuotedMessage());
+        quotedMessage = chatMessage.getQuotedMessage();
         senderUserName = chatMessage.getSenderUserName();
         time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
         date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));

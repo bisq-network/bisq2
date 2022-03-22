@@ -20,16 +20,11 @@ package bisq.desktop.primary.main.content.social.chat;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.Notification;
 import bisq.desktop.primary.main.content.social.chat.components.*;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
-import bisq.network.NetworkId;
-import bisq.network.NetworkIdWithKeyPair;
-import bisq.network.NetworkService;
-import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.social.chat.*;
 import bisq.social.user.UserNameGenerator;
 import bisq.social.user.profile.UserProfileService;
@@ -41,13 +36,9 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
-import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static bisq.social.chat.ChannelType.PRIVATE;
-import static bisq.social.chat.ChannelType.PUBLIC;
 
 @Slf4j
 public class ChatController implements Controller {
@@ -56,7 +47,6 @@ public class ChatController implements Controller {
     @Getter
     private final ChatView view;
     private final UserProfileService userProfileService;
-    private final NetworkService networkService;
     private final PublicChannelSelection publicChannelSelection;
     private final PrivateChannelSelection privateChannelSelection;
     private final ChannelInfo channelInfo;
@@ -70,7 +60,6 @@ public class ChatController implements Controller {
     public ChatController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
-        networkService = applicationService.getNetworkService();
 
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
@@ -78,7 +67,7 @@ public class ChatController implements Controller {
         publicChannelSelection = new PublicChannelSelection(chatService);
         privateChannelSelection = new PrivateChannelSelection(chatService);
         quotedMessageBlock = new QuotedMessageBlock();
-        model = new ChatModel(chatService);
+        model = new ChatModel(chatService, userProfileService);
         view = new ChatView(model,
                 this,
                 userProfileDisplay.getComboBox(),
@@ -93,8 +82,6 @@ public class ChatController implements Controller {
 
     @Override
     public void onViewAttached() {
-        chatService.addDummyChannels();
-
         notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
                 value -> chatService.setNotificationSetting(chatService.getPersistableStore().getSelectedChannel().get(), value));
 
@@ -188,54 +175,11 @@ public class ChatController implements Controller {
         Channel channel = chatService.getPersistableStore().getSelectedChannel().get();
         Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
         if (channel instanceof PublicChannel publicChannel) {
-            sendMessageToPublicChannel(text,  quotedMessageBlock.getQuotedMessage(), publicChannel, identity);
+            chatService.publishPublicChatMessage(text, quotedMessageBlock.getQuotedMessage(), publicChannel, identity);
         } else if (channel instanceof PrivateChannel privateChannel) {
-            sendMessageToPrivateChannel(text,  quotedMessageBlock.getQuotedMessage(), privateChannel, identity);
+            chatService.sendPrivateChatMessage(text, quotedMessageBlock.getQuotedMessage(), privateChannel, identity);
         }
         quotedMessageBlock.close();
-    }
-
-    private void sendMessageToPublicChannel(String text, Optional<QuotedMessage> reply, PublicChannel publicChannel, Identity identity) {
-        networkService.addData(new ChatMessage(publicChannel.getId(),
-                        text,
-                        reply,
-                        identity.domainId(),
-                        identity.networkId(),
-                        new Date().getTime(),
-                        PUBLIC),
-                identity.getNodeIdAndKeyPair());
-    }
-
-    private void sendMessageToPrivateChannel(String text, Optional<QuotedMessage>reply, PrivateChannel privateChannel, Identity identity) {
-        String channelId = privateChannel.getId();
-        ChatMessage chatMessage = new ChatMessage(channelId,
-                text,
-                reply,
-                identity.domainId(),
-                identity.networkId(),
-                new Date().getTime(),
-                PRIVATE);
-        chatService.addChatMessage(chatMessage, privateChannel);
-        NetworkId receiverNetworkId = privateChannel.getPeer().networkId();
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = identity.getNodeIdAndKeyPair();
-        networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair)
-                .whenComplete((resultMap, throwable2) -> {
-                    if (throwable2 != null) {
-                        UIThread.run(() -> model.setSendMessageError(channelId, throwable2));
-                        return;
-                    }
-                    resultMap.forEach((transportType, res) -> {
-                        ConfidentialMessageService.Result result = resultMap.get(transportType);
-                        result.getMailboxFuture().values().forEach(broadcastFuture -> broadcastFuture
-                                .whenComplete((broadcastResult, throwable3) -> {
-                                    if (throwable3 != null) {
-                                        UIThread.run(() -> model.setSendMessageError(channelId, throwable3));
-                                        return;
-                                    }
-                                    UIThread.run(() -> model.setSendMessageResult(channelId, result, broadcastResult));
-                                }));
-                    });
-                });
     }
 
     public void onToggleFilterBox() {
@@ -325,19 +269,49 @@ public class ChatController implements Controller {
     }
 
     public void onReply(ChatMessage chatMessage) {
-        quotedMessageBlock.reply(chatMessage);
+        if (!model.isMyMessage(chatMessage)) {
+            quotedMessageBlock.reply(chatMessage);
+        }
     }
 
     public void onSendPrivateMessage(ChatMessage chatMessage) {
-
+        if (!model.isMyMessage(chatMessage)) {
+            // todo
+        }
     }
 
-    public void onEditMessage(ChatMessage chatMessage) {
-
+    public void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
+        if (!model.isMyMessage(chatMessage)) {
+            return;
+        }
+        // if (chatMessage instanceof ChatMessage publicChatMessage) {
+        Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
+        if (chatMessage.getSenderNetworkId().equals(identity.getNodeIdAndKeyPair().networkId())) {
+            chatService.publishEditedPublicChatMessage(chatMessage, editedText, identity)
+                    .whenComplete((r, t) -> {
+                        // todo maybe show spinner while deleting old msg and hide it once done?
+                    });
+        } else {
+            log.warn("To be removed chatMessage has different identity as selected identity");
+        }
+       /* } else {
+            //todo private message
+        }*/
     }
 
     public void onDeleteMessage(ChatMessage chatMessage) {
-
+        if (model.isMyMessage(chatMessage)) {
+            // if (chatMessage instanceof PublicChatMessage publicChatMessage) {
+            Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
+            if (chatMessage.getSenderNetworkId().equals(identity.getNodeIdAndKeyPair().networkId())) {
+                chatService.deletePublicChatMessage(chatMessage, identity);
+            } else {
+                log.warn("To be removed chatMessage has different identity as selected identity");
+            }
+           /* } else {
+                //todo delete private message
+            }*/
+        }
     }
 
     public void onOpenMoreOptions(ChatMessage chatMessage) {

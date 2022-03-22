@@ -42,6 +42,7 @@ public class ChatMessage implements MailboxMessage {
     private final long date;
     private final ChannelType channelType;
     private final MetaData metaData;
+    protected final boolean wasEdited;
 
     @Nullable
     private transient String senderUserName;
@@ -51,25 +52,31 @@ public class ChatMessage implements MailboxMessage {
     //todo remove senderUserName
     public ChatMessage(String channelId,
                        String text,
-                       Optional<QuotedMessage> reply,
-                       String senderUserName,
+                       Optional<QuotedMessage> quotedMessage,
                        NetworkId senderNetworkId,
                        long date,
-                       ChannelType channelType) {
+                       ChannelType channelType,
+                       boolean wasEdited) {
         this.channelId = channelId;
         this.text = text;
-        this.quotedMessage = reply.orElse(null);
+        this.quotedMessage = quotedMessage.orElse(null);
         this.senderNetworkId = senderNetworkId;
         this.date = date;
         this.channelType = channelType;
 
         //todo we need also entitlements
         chatUser = new ChatUser(senderNetworkId);
+        this.wasEdited = wasEdited;
         this.senderUserName = chatUser.userName();
 
         metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
     }
 
+    @Nullable
+    public Optional<QuotedMessage> getQuotedMessage() {
+        return Optional.ofNullable(quotedMessage);
+    }
+    
     public ChatUser getChatUser() {
         if (chatUser == null) {
             chatUser = new ChatUser(senderNetworkId);
