@@ -26,6 +26,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.Notification;
 import bisq.desktop.overlay.Overlay;
 import bisq.desktop.primary.main.MainController;
+import bisq.desktop.primary.splash.SplashController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.application.Platform;
@@ -38,16 +39,18 @@ public class PrimaryStageController implements Controller {
     private final PrimaryStageModel model;
     @Getter
     private final PrimaryStageView view;
-    private final MainController mainController;
     private final SettingsService settingsService;
+    private final Runnable onStageReadyHandler;
+    private MainController mainController;
 
-    public PrimaryStageController(DefaultApplicationService applicationService, JavaFXApplication.Data applicationData) {
+    public PrimaryStageController(DefaultApplicationService applicationService, 
+                                  JavaFXApplication.Data applicationData,
+                                  Runnable onStageReadyHandler) {
         this.applicationService = applicationService;
         settingsService = applicationService.getSettingsService();
-
+        this.onStageReadyHandler = onStageReadyHandler;
         model = new PrimaryStageModel(applicationService);
         view = new PrimaryStageView(model, this, applicationData.stage());
-        mainController = new MainController(applicationService);
 
         Browser.setHostServices(applicationData.hostServices());
         Transitions.setDisplaySettings(applicationService.getSettingsService().getDisplaySettings());
@@ -57,19 +60,23 @@ public class PrimaryStageController implements Controller {
                 applicationService.getApplicationConfig().baseDir(),
                 applicationService.getSettingsService().getDisplaySettings(),
                 this::shutdown);
-
-        model.setView(mainController.getView());
+        
+        // Here we start to attach the view hierarchy to the stage.
+        view.showStage();
     }
 
     @Override
     public void onViewAttached() {
-        // called at view creation
-        // todo add splash screen
+        SplashController splashController = new SplashController(applicationService);
+        model.setView(splashController.getView());
+
+        onStageReadyHandler.run();
     }
 
-
     public void onDomainInitialized() {
-        mainController.onDomainInitialized();
+        // After the domain is initialized we show the application content
+        mainController = new MainController(model.getApplicationService());
+        model.setView(mainController.getView());
     }
 
     public void onUncaughtException(Thread thread, Throwable throwable) {

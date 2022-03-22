@@ -53,9 +53,10 @@ public class JavaFxExecutable extends Executable<DefaultApplicationService> {
                 .whenComplete((applicationData, throwable) -> {
                     if (throwable == null) {
                         try {
-                            primaryStageController = new PrimaryStageController(applicationService, applicationData);
                             log.info("Java FX Application launched");
-                            onApplicationLaunched();
+                            primaryStageController = new PrimaryStageController(applicationService,
+                                    applicationData,
+                                    this::onApplicationLaunched);
                         } catch (Throwable t) {
                             t.printStackTrace();
                         }
