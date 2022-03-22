@@ -72,6 +72,7 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
     }
 
     public CompletableFuture<List<Boolean>> initialize() {
+        log.info("initialize");
         return CompletableFutureUtils.allOf(persistableStore.getProtocolModelByOfferId().values().stream()
                 .map(protocolModel ->
                         identityService.getOrCreateIdentity(protocolModel.getId())

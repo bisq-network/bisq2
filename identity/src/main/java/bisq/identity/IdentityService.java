@@ -70,6 +70,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     }
 
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         initializeActiveIdentities();
         initializePooledIdentities();
         initializeMissingPooledIdentities();

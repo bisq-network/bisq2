@@ -43,7 +43,7 @@ public class Transitions {
 
     public static void fadeIn(Node node, int duration) {
         FadeTransition fade = new FadeTransition(Duration.millis(getDuration(duration)), node);
-        fade.setFromValue(node.getOpacity());
+        fade.setFromValue(0);
         fade.setToValue(1.0);
         fade.play();
     }

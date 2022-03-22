@@ -18,18 +18,18 @@
 package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.common.data.ByteArray;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.BisqInputTextField;
-import bisq.desktop.components.controls.BisqLabel;
+import bisq.desktop.components.controls.*;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.content.social.chat.components.UserProfileComboBox;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatMessage;
+import bisq.social.chat.QuotedMessage;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
@@ -38,6 +38,7 @@ import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
@@ -50,7 +51,7 @@ import org.fxmisc.easybind.Subscription;
 public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
     private final ListView<ChatMessageListItem> messagesListView;
-    private final BisqInputTextField inputField;
+    private final BisqTextArea inputField;
     private final BisqLabel selectedChannelLabel;
     private final Button searchButton, notificationsButton, infoButton, closeButton;
     private final ComboBox<UserProfileComboBox.ListItem> userProfileComboBox;
@@ -100,7 +101,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         messagesListView.setFocusTraversable(false);
         VBox.setVgrow(messagesListView, Priority.ALWAYS);
 
-        inputField = new BisqInputTextField();
+        inputField = new BisqTextArea();
         inputField.setPromptText(Res.get("social.chat.input.prompt"));
 
         VBox messagesAndInput = Layout.vBoxWith(messagesListView, reply, inputField);
@@ -140,9 +141,18 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         infoButton.setOnAction(e -> controller.onToggleChannelInfo());
         closeButton.setOnAction(e -> controller.onCloseSideBar());
 
-        inputField.setOnAction(e -> {
-            controller.onSendMessage(inputField.getText());
-            inputField.clear();
+        inputField.autoAdjustHeight(19);
+        inputField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                event.consume();
+                if (event.isShiftDown()) {
+                    inputField.appendText(System.getProperty("line.separator"));
+                } else if (!inputField.getText().isEmpty()) {
+                    controller.onSendMessage( StringUtils.trimTrailingLinebreak(inputField.getText()));
+                    inputField.clear();
+                    inputField.resetAutoAdjustedHeight();
+                }
+            }
         });
 
         model.getFilteredChatMessages().addListener(messagesListener);
@@ -176,11 +186,12 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         sideBar.managedProperty().unbind();
 
         inputField.textProperty().unbindBidirectional(model.getTextInput());
+        inputField.releaseResources();
 
         searchButton.setOnAction(null);
         notificationsButton.setOnAction(null);
         infoButton.setOnAction(null);
-        inputField.setOnAction(null);
+        inputField.setOnKeyPressed(null);
         closeButton.setOnAction(null);
         model.getFilteredChatMessages().removeListener(messagesListener);
         chatUserOverviewRootSubscription.unsubscribe();
@@ -192,14 +203,16 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
             @Override
             public ListCell<ChatMessageListItem> call(ListView<ChatMessageListItem> list) {
                 return new ListCell<>() {
+                    private final BisqButton saveEditButton, cancelEditButton;
+                    private final BisqTextArea editedMessageField;
                     private final Button emojiButton1, emojiButton2, openEmojiSelectorButton, replyButton,
                             pmButton, editButton, deleteButton, moreOptionsButton;
                     private final BisqLabel userName = new BisqLabel();
                     private final BisqLabel time = new BisqLabel();
                     private final Text message = new Text();
-                    private Text quotedMessage = new Text();
+                    private final Text quotedMessageField = new Text();
                     private final ImageView icon = new ImageView();
-                    private final HBox hBox, reactionsBox;
+                    private final HBox hBox, reactionsBox, editControlsBox, quotedMessageBox;
                     private final VBox vBox, messageBox;
                     Tooltip dateTooltip;
                     Subscription widthSubscription;
@@ -223,7 +236,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         replyButton = BisqIconButton.createIconButton(AwesomeIcon.REPLY);
                         pmButton = BisqIconButton.createIconButton(AwesomeIcon.COMMENT_ALT);
                         editButton = BisqIconButton.createIconButton(AwesomeIcon.EDIT);
-                        deleteButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE);
+                        deleteButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
                         moreOptionsButton = BisqIconButton.createIconButton(AwesomeIcon.ELLIPSIS_HORIZONTAL);
                         Label verticalLine = new Label("|");
                         HBox.setMargin(verticalLine, new Insets(4, 0, 0, 0));
@@ -243,7 +256,20 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         reactionsBox.setVisible(false);
                         reactionsBox.setId("chat-message-reactions");
 
-                        messageBox = Layout.vBoxWith(message, reactionsBox);
+                        editedMessageField = new BisqTextArea();
+                        editedMessageField.setVisible(false);
+                        editedMessageField.setManaged(false);
+                        editedMessageField.setId("chat-message-edit-text-area");
+
+                        saveEditButton = new BisqButton(Res.get("shared.save"));
+                        cancelEditButton = new BisqButton(Res.get("shared.cancel"));
+
+                        editControlsBox = Layout.hBoxWith(Spacer.fillHBox(), cancelEditButton, saveEditButton);
+                        editControlsBox.setVisible(false);
+                        editControlsBox.setManaged(false);
+                        quotedMessageBox = new HBox();
+                        quotedMessageBox.setSpacing(10);
+                        messageBox = Layout.vBoxWith(quotedMessageBox, message, editedMessageField, editControlsBox, reactionsBox);
                         VBox.setVgrow(messageBox, Priority.ALWAYS);
                         vBox = Layout.vBoxWith(userName, messageBox);
                         HBox.setHgrow(vBox, Priority.ALWAYS);
@@ -254,7 +280,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                     public void updateItem(final ChatMessageListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            item.getQuotedMessage().ifPresent(quotedMessage -> {
+                            if (item.getQuotedMessage().isPresent()) {
+                                QuotedMessage quotedMessage = item.getQuotedMessage().get();
                                 if (quotedMessage.userName() != null &&
                                         quotedMessage.pubKeyHash() != null &&
                                         quotedMessage.message() != null) {
@@ -263,8 +290,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                     verticalLine.setMinWidth(3);
                                     verticalLine.setMinHeight(20);
                                     HBox.setMargin(verticalLine, new Insets(5, 0, 0, 5));
-                                    this.quotedMessage.setText(quotedMessage.message());
-                                    this.quotedMessage.setId("chat-quoted-message");
+                                    quotedMessageField.setText(quotedMessage.message());
+                                    quotedMessageField.setId("chat-quoted-message");
                                     BisqLabel userName = new BisqLabel(quotedMessage.userName());
                                     userName.setPadding(new Insets(4, 0, 0, 0));
                                     userName.setId("chat-quoted-message-user-name");
@@ -276,19 +303,22 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                     HBox.setMargin(roboIconImageView, new Insets(0, 0, 0, -5));
                                     HBox iconAndUserName = Layout.hBoxWith(roboIconImageView, userName);
                                     iconAndUserName.setSpacing(3);
-                                    VBox contentBox = Layout.vBoxWith(iconAndUserName, this.quotedMessage);
+                                    VBox contentBox = Layout.vBoxWith(iconAndUserName, quotedMessageField);
                                     contentBox.setSpacing(0);
-                                    HBox replyBox = Layout.hBoxWith(verticalLine, contentBox);
+                                    quotedMessageBox.getChildren().setAll(verticalLine, contentBox);
                                     UIThread.runLater(() -> verticalLine.setMinHeight(contentBox.getHeight() - 10));
-                                    if (messageBox.getChildren().size() == 2) {
-                                        messageBox.getChildren().add(0, replyBox);
-                                    } else {
-                                        messageBox.getChildren().set(0, replyBox);
-                                    }
                                 }
-                            });
+                            } else {
+                                quotedMessageBox.getChildren().clear();
+                            }
                             message.setText(item.getMessage());
                             time.setText(item.getTime());
+
+                            saveEditButton.setOnAction(e -> {
+                                controller.onSaveEditedMessage(item.getChatMessage(), editedMessageField.getText());
+                                onCloseEditMessage();
+                            });
+                            cancelEditButton.setOnAction(e -> onCloseEditMessage());
 
                             dateTooltip = new Tooltip(item.getDate());
                             dateTooltip.setShowDelay(Duration.millis(100));
@@ -318,15 +348,25 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             openEmojiSelectorButton.setOnAction(e -> controller.onOpenEmojiSelector(chatMessage));
                             replyButton.setOnAction(e -> controller.onReply(chatMessage));
                             pmButton.setOnAction(e -> controller.onSendPrivateMessage(chatMessage));
-                            editButton.setOnAction(e -> controller.onEditMessage(chatMessage));
+                            editButton.setOnAction(e -> onEditMessage(item));
                             deleteButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
                             moreOptionsButton.setOnAction(e -> controller.onOpenMoreOptions(chatMessage));
+
+                            boolean isMyMessage = model.isMyMessage(chatMessage);
+                            replyButton.setVisible(!isMyMessage);
+                            replyButton.setManaged(!isMyMessage);
+                            pmButton.setVisible(!isMyMessage);
+                            pmButton.setManaged(!isMyMessage);
+                            editButton.setVisible(isMyMessage);
+                            editButton.setManaged(isMyMessage);
+                            deleteButton.setVisible(isMyMessage);
+                            deleteButton.setManaged(isMyMessage);
 
                             widthSubscription = EasyBind.subscribe(messagesListView.widthProperty(),
                                     width -> {
                                         double wrappingWidth = width.doubleValue() - 95;
                                         message.setWrappingWidth(wrappingWidth);
-                                        quotedMessage.setWrappingWidth(wrappingWidth - 20);
+                                        quotedMessageField.setWrappingWidth(wrappingWidth - 20);
                                     });
 
                             setGraphic(hBox);
@@ -339,8 +379,58 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             hBox.setOnMouseEntered(null);
                             hBox.setOnMouseExited(null);
                             icon.setImage(null);
+
+                            emojiButton1.setOnAction(null);
+                            emojiButton2.setOnAction(null);
+                            openEmojiSelectorButton.setOnAction(null);
+                            replyButton.setOnAction(null);
+                            pmButton.setOnAction(null);
+                            editButton.setOnAction(null);
+                            deleteButton.setOnAction(null);
+                            moreOptionsButton.setOnAction(null);
+                            saveEditButton.setOnAction(null);
+                            cancelEditButton.setOnAction(null);
+
+                            editedMessageField.releaseResources();
+                            editedMessageField.setOnKeyPressed(null);
+                            
                             setGraphic(null);
                         }
+                    }
+
+                    private void onEditMessage(ChatMessageListItem item) {
+                        editedMessageField.setPrefWidth(message.getWrappingWidth());
+                        editedMessageField.setPrefHeight(message.getLayoutBounds().getHeight());
+                        editedMessageField.setText(message.getText());
+                        editedMessageField.setVisible(true);
+                        editedMessageField.setManaged(true);
+                        editControlsBox.setVisible(true);
+                        editControlsBox.setManaged(true);
+                        message.setVisible(false);
+                        message.setManaged(false);
+                        editedMessageField.autoAdjustHeight(19);
+                        editedMessageField.setOnKeyPressed(event -> {
+                            if (event.getCode() == KeyCode.ENTER) {
+                                event.consume();
+                                if (event.isShiftDown()) {
+                                    editedMessageField.appendText(System.getProperty("line.separator"));
+                                } else if (!editedMessageField.getText().isEmpty()) {
+                                    controller.onSaveEditedMessage(item.getChatMessage(), StringUtils.trimTrailingLinebreak(editedMessageField.getText()));
+                                    onCloseEditMessage();
+                                }
+                            }
+                        });
+                    }
+
+                    private void onCloseEditMessage() {
+                        editedMessageField.setVisible(false);
+                        editedMessageField.setManaged(false);
+                        editControlsBox.setVisible(false);
+                        editControlsBox.setManaged(false);
+                        message.setVisible(true);
+                        message.setManaged(true);
+                        editedMessageField.resetAutoAdjustedHeight();
+                        editedMessageField.setOnKeyPressed(null);
                     }
                 };
             }

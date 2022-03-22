@@ -23,6 +23,7 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 // Note: will get probably removed
+@Slf4j
 public class TradeIntentListingsService {
     @Getter
     private final ObservableSet<TradeIntent> tradeIntents = new ObservableSet<>();
@@ -59,6 +61,7 @@ public class TradeIntentListingsService {
     }
 
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         tradeIntents.addAll(dataService.getAuthenticatedPayloadByStoreName("TradeIntent")
                 .filter(payload -> payload.getData() instanceof TradeIntent)
                 .map(payload -> (TradeIntent) payload.getData())

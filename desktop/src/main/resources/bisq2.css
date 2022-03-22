@@ -79,6 +79,11 @@ New css for bisq2.
     -fx-background-color: -bs-color-gray-5;
 }
 
+#chat-message-edit-text-area {
+    -fx-background-color: -bs-color-gray-6;
+    -fx-text-fill: -bs-color-gray-fafa;
+}
+
 /*
 .jfx-badge .badge-pane {
     -fx-background-color: -bs-red;

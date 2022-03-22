@@ -37,5 +37,9 @@ public abstract class Channel implements Serializable {
         chatMessages.add(chatMessage);
     }
 
+    public void removeChatMessage(ChatMessage chatMessage) {
+        chatMessages.remove(chatMessage);
+    }
+
     public abstract String getChannelName();
 }
