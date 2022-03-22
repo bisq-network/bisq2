@@ -46,13 +46,13 @@ public class ChatModel implements Model {
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
     private final StringProperty selectedChannelAsString = new SimpleStringProperty("");
-    private final ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
+    private final ObjectProperty<Channel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
     private final ObjectProperty<Pane> chatUserDetailsRoot = new SimpleObjectProperty<>();
     private final BooleanProperty sideBarVisible = new SimpleBooleanProperty();
     private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();
     private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
-   
+
     private final double defaultLeftDividerPosition = 0.3;
     private final ObservableList<ChatMessageListItem> chatMessages = FXCollections.observableArrayList();
     private final SortedList<ChatMessageListItem> sortedChatMessages = new SortedList<>(chatMessages);

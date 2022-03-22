@@ -91,16 +91,16 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     @Override
     public void onMessage(Message message) {
-        if (message instanceof ChatMessage chatMessage) {
-            String domainId = chatMessage.getChannelId();
+        if (message instanceof PrivateChatMessage privateChatMessage) {
+            String domainId = privateChatMessage.getChannelId();
             //todo outdated userName concept
             String userName = findUserName(domainId).orElse("Maker@" + StringUtils.truncate(domainId, 8));
             ChatIdentity chatIdentity = getOrCreateChatIdentity(userName, domainId);
-            ChatUser chatUser = chatMessage.getChatUser();
-            PrivateChannel privateChannel = getOrCreatePrivateChannel(chatMessage.getChannelId(),
+            ChatUser chatUser = privateChatMessage.getChatUser();
+            PrivateChannel privateChannel = getOrCreatePrivateChannel(privateChatMessage.getChannelId(),
                     chatUser,
                     chatIdentity);
-            addChatMessage(chatMessage, privateChannel);
+            addPrivateChatMessage(privateChatMessage, privateChannel);
         }
     }
 
@@ -112,14 +112,14 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     @Override
     public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
         if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
-            if (authenticatedPayload.getData() instanceof ChatMessage chatMessage) {
-                if (chatMessage.getChannelType() == ChannelType.PUBLIC) {
+            if (authenticatedPayload.getData() instanceof PublicChatMessage publicChatMessage) {
+                if (publicChatMessage.getChannelType() == ChannelType.PUBLIC) {
                     persistableStore.getPublicChannels().stream()
-                            .filter(publicChannel -> publicChannel.getId().equals(chatMessage.getChannelId()))
+                            .filter(publicChannel -> publicChannel.getId().equals(publicChatMessage.getChannelId()))
                             .findAny()
                             .ifPresent(publicChannel -> {
                                 synchronized (persistableStore) {
-                                    publicChannel.addChatMessage(chatMessage);
+                                    publicChannel.addChatMessage(publicChatMessage);
                                 }
                                 persist();
                             });
@@ -131,7 +131,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     @Override
     public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
         if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
-            if (authenticatedPayload.getData() instanceof ChatMessage publicChatMessage) {
+            if (authenticatedPayload.getData() instanceof PublicChatMessage publicChatMessage) {
                 if (publicChatMessage.getChannelType() == ChannelType.PUBLIC) {
                     persistableStore.getPublicChannels().stream()
                             .filter(publicChannel -> publicChannel.getId().equals(publicChatMessage.getChannelId()))
@@ -193,16 +193,14 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         }
     }
 
-    public void selectChannel(Channel channel) {
+    public void selectChannel(Channel<? extends ChatMessage> channel) {
         persistableStore.getSelectedChannel().set(channel);
         persist();
     }
 
-    public void setNotificationSetting(Channel channel, NotificationSetting notificationSetting) {
-        if (channel != null) {
-            channel.getNotificationSetting().set(notificationSetting);
-            persist();
-        }
+    public void setNotificationSetting(Channel<? extends ChatMessage> channel, NotificationSetting notificationSetting) {
+        channel.getNotificationSetting().set(notificationSetting);
+        persist();
     }
 
 
@@ -211,27 +209,25 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void publishPublicChatMessage(String text, Optional<QuotedMessage> quotedMessage, PublicChannel publicChannel, Identity identity) {
-        ChatMessage chatMessage = new ChatMessage(publicChannel.getId(),
+        PublicChatMessage chatMessage = new PublicChatMessage(publicChannel.getId(),
                 text,
                 quotedMessage,
                 identity.networkId(),
                 new Date().getTime(),
-                ChannelType.PUBLIC,
                 false);
         networkService.addData(chatMessage,
                 identity.getNodeIdAndKeyPair());
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishEditedPublicChatMessage(ChatMessage originalChatMessage, String editedText, Identity identity) {
+    public CompletableFuture<DataService.BroadCastDataResult> publishEditedPublicChatMessage(PublicChatMessage originalChatMessage, String editedText, Identity identity) {
         return networkService.removeData(originalChatMessage, identity.getNodeIdAndKeyPair())
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
-                        ChatMessage newChatMessage = new ChatMessage(originalChatMessage.getChannelId(),
+                        ChatMessage newChatMessage = new PublicChatMessage(originalChatMessage.getChannelId(),
                                 editedText,
                                 originalChatMessage.getQuotedMessage(),
                                 originalChatMessage.getSenderNetworkId(),
                                 originalChatMessage.getDate(),
-                                ChannelType.PUBLIC,
                                 true);
                         networkService.addData(newChatMessage, identity.getNodeIdAndKeyPair());
                     } else {
@@ -240,8 +236,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 });
     }
 
-
-    public void deletePublicChatMessage(ChatMessage chatMessage, Identity identity) {
+    public void deletePublicChatMessage(PublicChatMessage chatMessage, Identity identity) {
         networkService.removeData(chatMessage, identity.getNodeIdAndKeyPair())
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
@@ -253,16 +248,15 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 });
     }
 
-    public void sendPrivateChatMessage(String text, Optional<QuotedMessage> reply, PrivateChannel privateChannel, Identity identity) {
+    public void sendPrivateChatMessage(String text, Optional<QuotedMessage> quotedMessage, PrivateChannel privateChannel, Identity identity) {
         String channelId = privateChannel.getId();
-        ChatMessage chatMessage = new ChatMessage(channelId,
+        PrivateChatMessage chatMessage = new PrivateChatMessage(channelId,
                 text,
-                reply,
+                quotedMessage,
                 identity.networkId(),
                 new Date().getTime(),
-                ChannelType.PRIVATE,
                 false);
-        addChatMessage(chatMessage, privateChannel);
+        addPrivateChatMessage(chatMessage, privateChannel);
         NetworkId receiverNetworkId = privateChannel.getPeer().networkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = identity.getNodeIdAndKeyPair();
         networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair)
@@ -285,7 +279,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 });
     }
 
-    public void addChatMessage(ChatMessage chatMessage, Channel privateChannel) {
+    public void addPrivateChatMessage(PrivateChatMessage chatMessage, PrivateChannel privateChannel) {
         synchronized (persistableStore) {
             privateChannel.addChatMessage(chatMessage);
         }
