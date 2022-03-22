@@ -33,6 +33,7 @@ import java.util.Optional;
 @Getter
 public class PrimaryStageModel implements Model {
     private final String title;
+    private final DefaultApplicationService applicationService;
     private final Optional<Double> stageX;
     private final Optional<Double> stageY;
     private final Optional<Double> stageWidth;
@@ -45,6 +46,7 @@ public class PrimaryStageModel implements Model {
     private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
     public PrimaryStageModel(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
         title = applicationService.getApplicationConfig().appName();
 
         Cookie cookie = applicationService.getSettingsService().getPersistableStore().getCookie();
