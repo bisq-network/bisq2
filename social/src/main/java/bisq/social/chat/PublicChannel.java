@@ -27,7 +27,7 @@ import java.util.Set;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class PublicChannel extends Channel {
+public class PublicChannel extends Channel<PublicChatMessage> {
     private final String channelName;
     private final String description;
     private final ChatUser channelAdmin;

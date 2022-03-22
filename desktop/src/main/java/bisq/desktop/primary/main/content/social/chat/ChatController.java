@@ -172,7 +172,7 @@ public class ChatController implements Controller {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     void onSendMessage(String text) {
-        Channel channel = chatService.getPersistableStore().getSelectedChannel().get();
+        Channel<? extends ChatMessage> channel = chatService.getPersistableStore().getSelectedChannel().get();
         Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
         if (channel instanceof PublicChannel publicChannel) {
             chatService.publishPublicChatMessage(text, quotedMessageBlock.getQuotedMessage(), publicChannel, identity);
@@ -284,33 +284,33 @@ public class ChatController implements Controller {
         if (!model.isMyMessage(chatMessage)) {
             return;
         }
-        // if (chatMessage instanceof ChatMessage publicChatMessage) {
-        Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
-        if (chatMessage.getSenderNetworkId().equals(identity.getNodeIdAndKeyPair().networkId())) {
-            chatService.publishEditedPublicChatMessage(chatMessage, editedText, identity)
-                    .whenComplete((r, t) -> {
-                        // todo maybe show spinner while deleting old msg and hide it once done?
-                    });
+        if (chatMessage instanceof PublicChatMessage publicChatMessage) {
+            Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
+            if (publicChatMessage.getSenderNetworkId().equals(identity.getNodeIdAndKeyPair().networkId())) {
+                chatService.publishEditedPublicChatMessage(publicChatMessage, editedText, identity)
+                        .whenComplete((r, t) -> {
+                            // todo maybe show spinner while deleting old msg and hide it once done?
+                        });
+            } else {
+                log.warn("To be removed chatMessage has different identity as selected identity");
+            }
         } else {
-            log.warn("To be removed chatMessage has different identity as selected identity");
-        }
-       /* } else {
             //todo private message
-        }*/
+        }
     }
 
     public void onDeleteMessage(ChatMessage chatMessage) {
         if (model.isMyMessage(chatMessage)) {
-            // if (chatMessage instanceof PublicChatMessage publicChatMessage) {
-            Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
-            if (chatMessage.getSenderNetworkId().equals(identity.getNodeIdAndKeyPair().networkId())) {
-                chatService.deletePublicChatMessage(chatMessage, identity);
+            if (chatMessage instanceof PublicChatMessage publicChatMessage) {
+                Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
+                if (publicChatMessage.getSenderNetworkId().equals(identity.getNodeIdAndKeyPair().networkId())) {
+                    chatService.deletePublicChatMessage(publicChatMessage, identity);
+                } else {
+                    log.warn("To be removed chatMessage has different identity as selected identity");
+                }
             } else {
-                log.warn("To be removed chatMessage has different identity as selected identity");
-            }
-           /* } else {
                 //todo delete private message
-            }*/
+            }
         }
     }
 

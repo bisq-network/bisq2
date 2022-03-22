@@ -60,7 +60,7 @@ public class ChannelInfo {
         return controller.view.getRoot();
     }
 
-    public void setChannel(Channel channel) {
+    public void setChannel(Channel<? extends ChatMessage> channel) {
         controller.model.setChannel(channel);
     }
 
@@ -94,7 +94,7 @@ public class ChannelInfo {
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatService chatService;
-        private ObjectProperty<Channel> channel = new SimpleObjectProperty<>();
+        private ObjectProperty<Channel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
         private String channelName;
         private Optional<String> description = Optional.empty();
         private final ObservableList<ChatUserOverview> moderators = FXCollections.observableArrayList();
@@ -106,7 +106,7 @@ public class ChannelInfo {
             this.chatService = chatService;
         }
 
-        private void setChannel(Channel channel) {
+        private void setChannel(Channel<? extends ChatMessage> channel) {
             channelName = channel.getChannelName();
             Set<String> ignoredChatUserIds = new HashSet<>(chatService.getPersistableStore().getIgnoredChatUserIds());
             members.setAll(channel.getChatMessages().stream()
