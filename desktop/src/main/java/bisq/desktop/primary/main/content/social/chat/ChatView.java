@@ -18,6 +18,8 @@
 package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.BisqHSpacer;
+import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqInputTextField;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.table.FilterBox;
@@ -62,7 +64,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
         this.userProfileComboBox = userProfileComboBox;
-        
+
         root.getStyleClass().add("hide-focus");
 
         userProfileComboBox.setPadding(new Insets(10, 10, 10, 10));
@@ -85,7 +87,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         messagesListView.setCellFactory(getCellFactory());
         messagesListView.setFocusTraversable(false);
         VBox.setVgrow(messagesListView, Priority.ALWAYS);
-        
+
         inputField = new BisqInputTextField();
         inputField.setPromptText(Res.get("social.chat.input.prompt"));
 
@@ -149,12 +151,16 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
             public ListCell<ChatMessageListItem> call(ListView<ChatMessageListItem> list) {
                 return new ListCell<>() {
                     BisqLabel user = new BisqLabel();
+                    BisqButton openPrivateChannel = new BisqButton();
                     BisqLabel date = new BisqLabel();
                     BisqLabel text = new BisqLabel();
 
                     {
                         user.setStyle("-fx-text-fill: -bs-color-green-5; -fx-font-size: 1.0em");
                         user.setPadding(new Insets(5, 0, -8, 0));
+//                        openPrivateChannel.setStyle("-fx-text-fill: -bs-color-green-5; -fx-font-size: 0.8em");
+                        openPrivateChannel.setPadding(new Insets(5, 0, -8, 10));
+                        openPrivateChannel.setText("create private Channel"); // TODO use Res.get()
                         date.getStyleClass().add("message-header");
                         date.setPadding(new Insets(1, 0, 0, 0));
                     }
@@ -164,9 +170,11 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             text.setText(item.getMessage());
+                            openPrivateChannel.setVisible(true); // TODO visibility if user is not myself
+                            openPrivateChannel.setOnAction(e -> controller.openPrivateChannel(item.getSenderUserName(), item.getChatMessage().getSenderNetworkId()));
                             date.setText(item.getDate());
                             user.setText(item.getSenderUserName());
-                            setGraphic(Layout.vBoxWith(user, Layout.hBoxWith(date, text)));
+                            setGraphic(Layout.vBoxWith(Layout.hBoxWith(user, openPrivateChannel), Layout.hBoxWith(date, text)));
                         } else {
                             setGraphic(null);
                         }

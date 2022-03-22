@@ -18,7 +18,9 @@
 package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -32,6 +34,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.social.chat.*;
 import bisq.social.user.UserNameGenerator;
+import bisq.social.user.ChatUser;
 import bisq.social.user.profile.UserProfileService;
 import com.google.common.base.Joiner;
 import javafx.collections.ListChangeListener;
@@ -115,9 +118,9 @@ public class ChatController implements Controller {
                 model.getChatMessages().removeListener(messageListener);
             }
 
-            // Notifications implementation is very preliminary. Not sure if another concept like its used in Element 
+            // Notifications implementation is very preliminary. Not sure if another concept like its used in Element
             // would be better. E.g. Show all past notifications in the sidebar. When a new notification arrives, dont
-            // show the popup but only highlight the notifications icon (we would need to add a notification 
+            // show the popup but only highlight the notifications icon (we would need to add a notification
             // settings tab then in the notifications component).
             // We look up all our usernames, not only the selected one
             Set<String> myUserNames = userProfileService.getPersistableStore().getUserProfiles().stream()
@@ -140,10 +143,10 @@ public class ChatController implements Controller {
                     }
                 } else if (channel.getNotificationSetting().get() == NotificationSetting.MENTION) {
                     // TODO
-                    // - Match only if mentioned username matches exactly (e.g. split item.getMessage() 
+                    // - Match only if mentioned username matches exactly (e.g. split item.getMessage()
                     // in space separated tokens and compare those)
                     // - show user icon of sender (requires extending Notification to support custom graphics)
-                    // 
+                    //
                     String messages = Joiner.on("\n").join(
                             c.getAddedSubList().stream()
                                     .filter(item -> myUserNames.stream().anyMatch(myUserName -> item.getMessage().contains("@" + myUserName)))
@@ -250,5 +253,23 @@ public class ChatController implements Controller {
         if (visible) {
             channelInfo.setChannel(model.getSelectedChannel().get());
         }
+    }
+
+    public void openPrivateChannel(String peerUserName, NetworkId peerNetworkId) {
+        Identity myIdentity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
+        ChatUser peerUser = new ChatUser(peerNetworkId);
+
+        String whatsMyName = myIdentity.domainId();
+        ChatIdentity meChatting = new ChatIdentity(whatsMyName, myIdentity);
+        String channelId;// here in chat-land we need a channel id which is unique here and for the peer.
+        if (peerUserName.compareTo(whatsMyName)<0) {
+            channelId = "PC@"+peerUserName+"$"+whatsMyName;
+        } else { // change order by lexi, so that the channelId is unique for all two users.
+            channelId = "PC@"+whatsMyName+"$"+peerUserName;
+        }
+
+        PrivateChannel privateChannel = chatService.getOrCreatePrivateChannel(channelId, peerUser, meChatting);
+        // display the channel and add to the list of private channels.
+        chatService.selectChannel(privateChannel);
     }
 }

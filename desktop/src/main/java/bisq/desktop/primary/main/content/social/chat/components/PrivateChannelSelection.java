@@ -73,6 +73,8 @@ public class PrivateChannelSelection {
                     channel -> {
                         if (channel instanceof PrivateChannel privateChannel) {
                             model.selectedChannel.set(new ListItem(privateChannel));
+                        } else {
+                            model.selectedChannel.set(null);
                         }
                     });
             channelsPin = FxBindings.<PrivateChannel, ListItem>bind(model.channels)
