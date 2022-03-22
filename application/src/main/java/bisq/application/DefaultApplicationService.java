@@ -186,8 +186,8 @@ public class DefaultApplicationService extends ServiceProvider {
                 })
                 .thenCompose(result -> protocolService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(
-                        userProfileService.initialize(),
-                        chatService.initialize(),
+                        userProfileService.initialize()
+                                .thenCompose(res -> chatService.initialize()),
                         openOfferService.initialize(),
                         offerBookService.initialize(),
                         tradeIntentListingsService.initialize(),
