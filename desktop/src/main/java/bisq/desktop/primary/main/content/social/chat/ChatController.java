@@ -116,7 +116,7 @@ public class ChatController implements Controller {
             // settings tab then in the notifications component).
             // We look up all our usernames, not only the selected one
             Set<String> myUserNames = userProfileService.getPersistableStore().getUserProfiles().stream()
-                    .map(userProfile -> UserNameGenerator.fromHash(userProfile.identity().pubKeyHash()))
+                    .map(userProfile -> UserNameGenerator.fromHash(userProfile.chatUser().getPubKeyHash()))
                     .collect(Collectors.toSet());
             messageListener = c -> {
                 c.next();

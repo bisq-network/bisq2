@@ -57,7 +57,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class UserProfileService implements PersistenceClient<UserProfileStore> {
-    private static final Map<ByteArray, Entitlement.ProofOfBurnProof> VERIFIED_PROOF_OF_BURN_PROOFS = new HashMap<>();
     // For dev testing we use hard coded txId and a pubkeyhash to get real data from Bisq explorer
     private static final boolean USE_DEV_TEST_POB_VALUES = true;
 
@@ -173,13 +172,13 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
             preImage = "6a4e52f31a24300fd2a03766b5ea6e4abf289609".getBytes(Charsets.UTF_8);
         } else {
             txId = _txId;
-           
             preImage = Hex.encode(pubKeyHash).getBytes(Charsets.UTF_8);
         }
         
-        ByteArray mapKey = new ByteArray(preImage);
-        if (VERIFIED_PROOF_OF_BURN_PROOFS.containsKey(mapKey)) {
-            return CompletableFuture.completedFuture(Optional.of(VERIFIED_PROOF_OF_BURN_PROOFS.get(mapKey)));
+        ByteArray mapKey = new ByteArray(pubKeyHash);
+        Map<ByteArray, Entitlement.ProofOfBurnProof> verifiedProofOfBurnProofs = persistableStore.getVerifiedProofOfBurnProofs();
+        if (verifiedProofOfBurnProofs.containsKey(mapKey)) {
+            return CompletableFuture.completedFuture(Optional.of(verifiedProofOfBurnProofs.get(mapKey)));
         } else {
             return supplyAsync(() -> {
                 try {
@@ -204,7 +203,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                             });
                     long date = BsqTxValidator.getValidatedTxDate(jsonBsqTx);
                     Entitlement.ProofOfBurnProof verifiedProof = new Entitlement.ProofOfBurnProof(txId, burntAmount, date);
-                    VERIFIED_PROOF_OF_BURN_PROOFS.put(mapKey, verifiedProof);
+                    verifiedProofOfBurnProofs.put(mapKey, verifiedProof);
+                    persist();
                     return Optional.of(verifiedProof);
                 } catch (IllegalArgumentException e) {
                     log.warn("check failed: {}", e.getMessage(), e);
@@ -267,8 +267,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         String keyId = StringUtils.createUid();
         KeyPair keyPair = keyPairService.generateKeyPair();
         byte[] pubKeyBytes = keyPair.getPublic().getEncoded();
-        byte[] hash = DigestUtil.hash(pubKeyBytes);
-        String useName = UserNameGenerator.fromHash(hash);
+        byte[] pubKeyHash = DigestUtil.hash(pubKeyBytes);
+        String useName = UserNameGenerator.fromHash(pubKeyHash);
         return createNewInitializedUserProfile(useName, keyId, keyPair, new HashSet<>())
                 .thenApply(userProfile -> true);
     }

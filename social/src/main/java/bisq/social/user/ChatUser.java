@@ -22,6 +22,7 @@ import bisq.common.encoding.Hex;
 import bisq.network.NetworkId;
 import bisq.security.DigestUtil;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -33,6 +34,7 @@ import java.util.Set;
  * Publicly shared chat user data
  * We cache pubKey hash, id and generated userName.
  */
+@Slf4j
 public class ChatUser implements Serializable {
     private static final Map<ByteArray, DerivedData> CACHE = new HashMap<>();
 
@@ -45,8 +47,7 @@ public class ChatUser implements Serializable {
     public ChatUser(NetworkId networkId, Set<Entitlement> entitlements) {
         this.networkId = networkId;
         this.entitlements = entitlements;
-        byte[] pubKey = networkId.getPubKey().publicKey().getEncoded();
-        derivedData = getDerivedData(pubKey);
+        derivedData = getDerivedData(networkId.getPubKey().publicKey().getEncoded());
     }
 
     public ChatUser(NetworkId networkId) {
@@ -70,16 +71,16 @@ public class ChatUser implements Serializable {
         return derivedData.pubKeyHash();
     }
 
-    private static DerivedData getDerivedData(byte[] pubKey) {
-        ByteArray key = new ByteArray(pubKey);
-        if (!CACHE.containsKey(key)) {
-            byte[] pubKeyHash = DigestUtil.hash(pubKey);
+    private static DerivedData getDerivedData(byte[] pubKeyBytes) {
+        ByteArray mapKey = new ByteArray(pubKeyBytes);
+        if (!CACHE.containsKey(mapKey)) {
+            byte[] pubKeyHash = DigestUtil.hash(pubKeyBytes);
             String id = Hex.encode(pubKeyHash);
             String userName = UserNameGenerator.fromHash(pubKeyHash);
             DerivedData derivedData = new DerivedData(pubKeyHash, id, userName);
-            CACHE.put(key, derivedData);
+            CACHE.put(mapKey, derivedData);
         }
-        return CACHE.get(key);
+        return CACHE.get(mapKey);
     }
 
     private static record DerivedData(byte[] pubKeyHash, String id, String userName) implements Serializable {

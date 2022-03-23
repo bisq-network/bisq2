@@ -54,7 +54,7 @@ class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredLi
         String editPostFix = chatMessage.isWasEdited() ? " " + Res.get("social.message.wasEdited") : "";
         message = chatMessage.getText() + editPostFix;
         quotedMessage = chatMessage.getQuotedMessage();
-         chatUser = chatMessage.getChatUser();
+        chatUser = chatMessage.getChatUser();
         senderUserName = chatUser.getUserName();
         time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
         date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));

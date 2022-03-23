@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.social.chat.components;
 
+import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -156,7 +157,8 @@ public class UserProfileComboBox {
         private ListItem(UserProfile userProfile) {
             this.userProfile = userProfile;
             userName = userProfile.identity().domainId();
-            roboHashNode = RoboHash.getImage(userProfile.identity().pubKeyHashAsByteArray(), false);
+
+            roboHashNode = RoboHash.getImage(new ByteArray(userProfile.chatUser().getPubKeyHash()), false);
         }
     }
 }

@@ -103,7 +103,6 @@ public class CreateUserProfile {
                             new HashSet<>(entitlementSelection.getVerifiedEntitlements()))
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
-                            checkArgument(userProfile.identity().pubKeyHashAsByteArray().equals(new ByteArray(DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded()))));
                             checkArgument(userProfile.identity().domainId().equals(useName));
                             reset();
                             model.feedback.set(Res.get("social.createUserProfile.success", useName));
@@ -114,8 +113,9 @@ public class CreateUserProfile {
         private void onCreateIdentity() {
             model.tempKeyId = StringUtils.createUid();
             model.tempKeyPair = keyPairService.generateKeyPair();
-            model.roboHashNode.set(RoboHash.getImage(new ByteArray(DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded())), false));
-            model.userName.set(UserNameGenerator.fromHash(model.tempKeyPair.getPublic().getEncoded()));
+            byte[] hash = DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded());
+            model.roboHashNode.set(RoboHash.getImage(new ByteArray(hash), false));
+            model.userName.set(UserNameGenerator.fromHash(hash));
         }
 
         private void reset() {

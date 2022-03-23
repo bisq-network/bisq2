@@ -59,7 +59,7 @@ public class ChatUserIcon extends Pane {
     }
 
     public void setChatUser(ChatUser chatUser, UserProfileService userProfileService) {
-        roboIcon.setImage(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash()), true));
+        roboIcon.setImage(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash()), false));
 
         if (chatUser.hasEntitlementType(Entitlement.Type.LIQUIDITY_PROVIDER)) {
             entitlement.setId("chat-trust");
