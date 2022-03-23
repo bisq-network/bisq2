@@ -19,13 +19,13 @@ package bisq.account.accounts;
 
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
+import bisq.common.encoding.Proto;
 import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class Account<T extends SettlementMethod> implements Serializable {
+public abstract class Account<T extends SettlementMethod> implements Proto {
     protected final String id;
     protected final long creationDate;
     protected final String accountName;

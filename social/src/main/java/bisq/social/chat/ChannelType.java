@@ -17,9 +17,9 @@
 
 package bisq.social.chat;
 
-import java.io.Serializable;
+import bisq.common.encoding.Proto;
 
-public enum ChannelType implements Serializable {
+public enum ChannelType implements Proto {
     PUBLIC,
     PRIVATE
 }

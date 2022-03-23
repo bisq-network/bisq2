@@ -15,21 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common;
+package bisq.common.encoding;
 
 import java.io.*;
 
 public class ObjectSerializer {
-    public static Serializable deserialize(byte[] bytes) {
+    public static Proto deserialize(byte[] bytes) {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes)) {
             ObjectInput in = new ObjectInputStream(bis);
-            return (Serializable) in.readObject();
+            return (Proto) in.readObject();
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static byte[] serialize(Serializable object) {
+    public static byte[] serialize(Proto object) {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
             objectOutputStream.writeObject(object);

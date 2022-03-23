@@ -17,6 +17,8 @@
 
 package bisq.network.p2p.message;
 
+import bisq.common.encoding.Proto;
+
 /**
  * Interface for any object sent over the network
  */

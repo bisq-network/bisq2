@@ -17,7 +17,8 @@
 
 package bisq.settings;
 
-import java.io.Serializable;
+import bisq.common.encoding.Proto;
+
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -25,7 +26,7 @@ import java.util.Optional;
  * Serves as flexible container for persisting UI states, layout,...
  * Should not be over-used for domain specific data where type safety and data integrity is important.
  */
-public class Cookie extends HashMap<CookieKey, String> implements Serializable {
+public class Cookie extends HashMap<CookieKey, String> implements Proto {
 
     public void putAsDouble(CookieKey key, double value) {
         put(key, String.valueOf(value));

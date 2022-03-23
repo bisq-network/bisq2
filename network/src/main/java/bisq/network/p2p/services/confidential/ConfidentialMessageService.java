@@ -17,7 +17,8 @@
 
 package bisq.network.p2p.services.confidential;
 
-import bisq.common.ObjectSerializer;
+import bisq.common.encoding.ObjectSerializer;
+import bisq.common.encoding.Proto;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.message.Message;
@@ -34,7 +35,6 @@ import bisq.security.PubKey;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Optional;
@@ -248,7 +248,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     try {
                         ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
                         byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
-                        Serializable deserialized = ObjectSerializer.deserialize(decrypted);
+                        Proto deserialized = ObjectSerializer.deserialize(decrypted);
                         if (deserialized instanceof Message decryptedMessage) {
                             runAsync(() -> listeners.forEach(l -> l.onMessage(decryptedMessage)), DISPATCHER);
                             return true;

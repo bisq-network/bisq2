@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.social.chat;
 
-import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
@@ -298,7 +297,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                     ImageView roboIconImageView = new ImageView();
                                     roboIconImageView.setFitWidth(20);
                                     roboIconImageView.setFitHeight(20);
-                                    Image image = RoboHash.getImage(new ByteArray(quotedMessage.pubKeyHash()), false);
+                                    Image image = RoboHash.getImage(quotedMessage.pubKeyHash(), false);
                                     roboIconImageView.setImage(image);
                                     HBox.setMargin(roboIconImageView, new Insets(0, 0, 0, -5));
                                     HBox iconAndUserName = Layout.hBoxWith(roboIconImageView, userName);

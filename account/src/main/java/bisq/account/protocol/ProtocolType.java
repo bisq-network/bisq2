@@ -18,12 +18,12 @@
 package bisq.account.protocol;
 
 import bisq.common.monetary.Market;
+import bisq.common.encoding.Proto;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public interface ProtocolType extends Serializable {
+public interface ProtocolType extends Proto {
 
     static List<SwapProtocolType> getProtocols(Market market) {
         List<SwapProtocolType> result = new ArrayList<>();

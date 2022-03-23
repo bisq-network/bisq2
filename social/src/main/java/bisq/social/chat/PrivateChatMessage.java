@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Getter
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
     private final MetaData metaData;

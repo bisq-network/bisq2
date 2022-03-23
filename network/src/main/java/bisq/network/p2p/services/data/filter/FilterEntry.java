@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.filter;
 
-import java.io.Serializable;
+import bisq.common.encoding.Proto;
 
-public record FilterEntry(byte[] hash, int sequenceNumber) implements Serializable {
+public record FilterEntry(byte[] hash, int sequenceNumber) implements Proto {
 }

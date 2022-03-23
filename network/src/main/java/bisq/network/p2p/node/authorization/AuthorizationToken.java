@@ -17,10 +17,9 @@
 
 package bisq.network.p2p.node.authorization;
 
+import bisq.common.encoding.Proto;
 import lombok.Data;
 
-import java.io.Serializable;
-
 @Data
-public class AuthorizationToken implements Serializable {
+public class AuthorizationToken implements Proto {
 }

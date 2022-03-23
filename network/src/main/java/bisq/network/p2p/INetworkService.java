@@ -18,7 +18,8 @@
 package bisq.network.p2p;
 
 
-import java.io.Serializable;
+import bisq.common.encoding.Proto;
+
 import java.util.Map;
 
 // todo remove once p2p network API is stable and app has adopted it
@@ -28,7 +29,7 @@ public interface INetworkService {
 
     void removeListener(MockNetworkService.Listener listener);
 
-    Map<String, Serializable> getMap();
+    Map<String, Proto> getMap();
 
-    void addData(Serializable serializable);
+    void addData(Proto serializable);
 }

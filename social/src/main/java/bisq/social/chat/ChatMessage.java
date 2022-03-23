@@ -17,7 +17,7 @@
 
 package bisq.social.chat;
 
-import bisq.network.p2p.message.Proto;
+import bisq.common.encoding.Proto;
 import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -19,12 +19,13 @@ package bisq.social.user;
 
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
+import bisq.common.encoding.Proto;
 import bisq.network.NetworkId;
 import bisq.security.DigestUtil;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -33,10 +34,14 @@ import java.util.Set;
 /**
  * Publicly shared chat user data
  * We cache pubKey hash, id and generated userName.
+ * ChatUser is part of the ChatMessage so we have many instances from the same chat user and want to avoid 
+ * costs from hashing and the userame generation. We could also try to restructure the domain model to avoid that 
+ * the chat user is part of the message (e.g. use an id and reference to p2p network data for chat user). 
  */
+@ToString
 @Slf4j
-public class ChatUser implements Serializable {
-    private static final Map<ByteArray, DerivedData> CACHE = new HashMap<>();
+public class ChatUser implements Proto {
+    private static final transient Map<ByteArray, DerivedData> CACHE = new HashMap<>();
 
     @Getter
     private final NetworkId networkId;
@@ -68,6 +73,8 @@ public class ChatUser implements Serializable {
     }
 
     public byte[] getPubKeyHash() {
+        return derivedData.pubKeyHash().getBytes();
+    }   public ByteArray getPubKeyHashAsByteArray() {
         return derivedData.pubKeyHash();
     }
 
@@ -77,15 +84,15 @@ public class ChatUser implements Serializable {
             byte[] pubKeyHash = DigestUtil.hash(pubKeyBytes);
             String id = Hex.encode(pubKeyHash);
             String userName = UserNameGenerator.fromHash(pubKeyHash);
-            DerivedData derivedData = new DerivedData(pubKeyHash, id, userName);
+            DerivedData derivedData = new DerivedData(new ByteArray(pubKeyHash), id, userName);
             CACHE.put(mapKey, derivedData);
         }
         return CACHE.get(mapKey);
     }
 
-    private static record DerivedData(byte[] pubKeyHash, String id, String userName) implements Serializable {
+    private static record DerivedData(ByteArray pubKeyHash, String id, String userName) implements Proto {
     }
 
-    public static record BurnInfo(long totalBsqBurned, long firstBurnDate) implements Serializable {
+    public static record BurnInfo(long totalBsqBurned, long firstBurnDate) implements Proto {
     }
 }

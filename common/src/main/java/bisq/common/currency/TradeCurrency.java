@@ -17,16 +17,15 @@
 
 package bisq.common.currency;
 
+import bisq.common.encoding.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.io.Serializable;
-
 @EqualsAndHashCode
 @ToString
 @Getter
-public abstract class TradeCurrency implements Comparable<TradeCurrency>, Serializable {
+public abstract class TradeCurrency implements Comparable<TradeCurrency>, Proto {
     protected final String code;
     @EqualsAndHashCode.Exclude
     protected final String name;

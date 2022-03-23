@@ -26,7 +26,7 @@ import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.message.Message;
-import bisq.network.p2p.message.Proto;
+import bisq.common.encoding.Proto;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;

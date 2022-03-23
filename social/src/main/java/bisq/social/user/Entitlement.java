@@ -17,17 +17,17 @@
 
 package bisq.social.user;
 
+import bisq.common.encoding.Proto;
 import lombok.Getter;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**
  * Entitlement of a user profile. Requires some proof for verifying that the associated Entitlement to a user profile 
  * is valid. 
  */
-public record Entitlement(Type entitlementType, Proof proof) implements Serializable {
-    public interface Proof extends Serializable {
+public record Entitlement(Type entitlementType, Proof proof) implements Proto {
+    public interface Proof extends Proto {
     }
 
     public record ProofOfBurnProof(String txId, long burntAmount, long date) implements Proof {
@@ -39,7 +39,7 @@ public record Entitlement(Type entitlementType, Proof proof) implements Serializ
     public record ChannelAdminInvitationProof(String invitationCode) implements Proof {
     }
 
-    public enum Type implements Serializable {
+    public enum Type implements Proto {
         LIQUIDITY_PROVIDER(ProofType.PROOF_OF_BURN),
         CHANNEL_ADMIN(ProofType.BONDED_ROLE),
         CHANNEL_MODERATOR(ProofType.CHANNEL_ADMIN_INVITATION, ProofType.PROOF_OF_BURN),
@@ -53,7 +53,7 @@ public record Entitlement(Type entitlementType, Proof proof) implements Serializ
         }
     }
 
-    public enum ProofType implements Serializable {
+    public enum ProofType implements Proto {
         PROOF_OF_BURN,
         BONDED_ROLE,
         CHANNEL_ADMIN_INVITATION

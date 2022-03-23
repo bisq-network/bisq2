@@ -17,12 +17,12 @@
 
 package bisq.network;
 
+import bisq.common.encoding.Proto;
 import bisq.security.PubKey;
 
-import java.io.Serializable;
 import java.security.KeyPair;
 
-public record NetworkIdWithKeyPair(NetworkId networkId, KeyPair keyPair) implements Serializable {
+public record NetworkIdWithKeyPair(NetworkId networkId, KeyPair keyPair) implements Proto {
     public String nodeId() {
         return networkId.getNodeId();
     }

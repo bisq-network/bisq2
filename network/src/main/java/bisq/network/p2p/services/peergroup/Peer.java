@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peergroup;
 
+import bisq.common.encoding.Proto;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.Load;
@@ -24,13 +25,12 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.io.Serializable;
 import java.util.Date;
 
 @Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Peer implements Serializable {
+public class Peer implements Proto {
     @EqualsAndHashCode.Include
     private final Capability capability;
     private final Load load;

@@ -17,17 +17,17 @@
 
 package bisq.social.user.profile;
 
+import bisq.common.encoding.Proto;
 import bisq.identity.Identity;
 import bisq.social.user.ChatUser;
 import bisq.social.user.Entitlement;
 
-import java.io.Serializable;
 import java.util.Set;
 
 /**
  * Local user profile. Not shared over network.
  */
-public record UserProfile(Identity identity, Set<Entitlement> entitlements) implements Serializable {
+public record UserProfile(Identity identity, Set<Entitlement> entitlements) implements Proto {
     public ChatUser chatUser() {
         return new ChatUser(identity.networkId(), entitlements);
     }

@@ -18,8 +18,9 @@
 package bisq.network.p2p.services.data.filter;
 
 
-import java.io.Serializable;
+import bisq.common.encoding.Proto;
+
 import java.util.HashSet;
 
-public record DataFilter(HashSet<FilterEntry> filterEntries) implements Serializable {
+public record DataFilter(HashSet<FilterEntry> filterEntries) implements Proto {
 }

@@ -17,10 +17,9 @@
 
 package bisq.social.chat;
 
+import bisq.common.encoding.Proto;
 import bisq.identity.Identity;
 
-import java.io.Serializable;
-
 // TODO replace this with UserProfile
-public record ChatIdentity(String userName, Identity identity) implements Serializable {
+public record ChatIdentity(String userName, Identity identity) implements Proto {
 }

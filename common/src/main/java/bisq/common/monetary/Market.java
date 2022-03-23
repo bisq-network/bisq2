@@ -17,13 +17,10 @@
 
 package bisq.common.monetary;
 
-import bisq.common.currency.CryptoCurrencyRepository;
-import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.encoding.Proto;
 import lombok.Setter;
 
-import java.io.Serializable;
-
-public record Market(String baseCurrencyCode, String quoteCurrencyCode) implements Serializable {
+public record Market(String baseCurrencyCode, String quoteCurrencyCode) implements Proto {
     @Setter
     private static String QUOTE_SEPARATOR = "/";
 

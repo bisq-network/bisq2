@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.message;
-
-import bisq.common.ObjectSerializer;
+package bisq.common.encoding;
 
 import java.io.Serializable;
 

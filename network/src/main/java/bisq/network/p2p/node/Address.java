@@ -17,17 +17,17 @@
 
 package bisq.network.p2p.node;
 
+import bisq.common.encoding.Proto;
 import bisq.common.util.StringUtils;
 import com.google.common.net.InetAddresses;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.io.Serializable;
 import java.util.StringTokenizer;
 
 @EqualsAndHashCode
 @Getter
-public class Address implements Serializable {
+public class Address implements Proto {
     public static Address localHost(int port) {
         return new Address("127.0.0.1", port);
     }

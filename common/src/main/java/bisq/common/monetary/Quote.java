@@ -18,6 +18,7 @@
 package bisq.common.monetary;
 
 import bisq.common.currency.TradeCurrency;
+import bisq.common.encoding.Proto;
 import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -25,7 +26,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @Slf4j
-public class Quote implements Comparable<Quote>, Serializable {
+public class Quote implements Comparable<Quote>, Proto {
     @Setter
     private static String QUOTE_SEPARATOR = "/";
 

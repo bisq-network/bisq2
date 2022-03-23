@@ -17,13 +17,12 @@
 
 package bisq.settings;
 
+import bisq.common.encoding.Proto;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.Serializable;
-
 @Getter
 @Setter
-public class DisplaySettings implements Serializable {
+public class DisplaySettings implements Proto {
     private boolean useAnimations = true;
 }

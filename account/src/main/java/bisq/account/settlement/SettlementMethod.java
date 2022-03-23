@@ -20,11 +20,11 @@ package bisq.account.settlement;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.common.currency.TradeCurrency;
 import bisq.i18n.Res;
+import bisq.common.encoding.Proto;
 
-import java.io.Serializable;
 import java.util.List;
 
-public interface SettlementMethod extends Serializable {
+public interface SettlementMethod extends Proto {
     String name();
 
     default String getDisplayName(String code) {

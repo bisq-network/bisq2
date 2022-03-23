@@ -17,7 +17,7 @@
 
 package bisq.common.locale;
 
-import java.io.Serializable;
+import bisq.common.encoding.Proto;
 
-public record Country(String code, String name, Region region) implements Serializable {
+public record Country(String code, String name, Region region) implements Proto {
 }

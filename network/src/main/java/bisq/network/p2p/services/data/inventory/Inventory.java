@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
-import bisq.network.p2p.message.Proto;
+import bisq.common.encoding.Proto;
 import bisq.network.p2p.services.data.DataRequest;
 
 import java.util.HashSet;

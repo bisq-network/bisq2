@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data;
 
-import bisq.network.p2p.message.Proto;
+import bisq.common.encoding.Proto;
 import bisq.network.p2p.services.data.storage.MetaData;
 
 public interface NetworkPayload extends Proto {
