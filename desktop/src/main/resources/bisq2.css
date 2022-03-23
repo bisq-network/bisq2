@@ -33,6 +33,57 @@ New css for bisq2.
     -fx-text-fill: -bs-color-green-5;
 }
 
+.chat-message-box {
+    -fx-background-color: -bs-background-color;
+}
+
+.chat-message-box-active {
+    -fx-background-color: derive(-bs-background-color, 15%);
+}
+
+#chat-user-name {
+    -fx-text-fill: -bs-color-green-5;
+    -fx-font-size: 1.0em;
+    -fx-cursor: hand;
+}
+
+#chat-message-text {
+    -fx-fill: -fx-mid-text-color;
+}
+#chat-quoted-message-text {
+    -fx-fill: -bs-color-gray-2;
+}
+
+#chat-quoted-message-vertical-line {
+    -fx-background-color: -bs-color-gray-2;
+}
+
+#chat-quoted-message {
+    -fx-fill: -bs-color-gray-2;
+}
+
+#chat-quoted-message-user-name {
+    -fx-text-fill:  derive(-bs-color-gray-2, 30%);
+}
+
+#chat-message-reactions {
+    -fx-background-color: -bs-content-background-gray;
+}
+
+#chat-message-reactions-separator {
+    -fx-text-fill: -bs-color-gray-dim;
+    -fx-font-weight: bold;
+}
+
+#chat-quoted-message-top-pane {
+    -fx-background-color: -bs-color-gray-5;
+}
+
+#chat-message-edit-text-area {
+    -fx-background-color: -bs-color-gray-6;
+    -fx-text-fill: -bs-color-gray-fafa;
+}
+
 /*
 .jfx-badge .badge-pane {
     -fx-background-color: -bs-red;

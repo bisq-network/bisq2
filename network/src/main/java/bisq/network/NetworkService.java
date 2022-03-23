@@ -52,7 +52,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import static bisq.network.p2p.node.transport.Transport.Type.*;
-import static bisq.network.p2p.services.data.DataService.*;
+import static bisq.network.p2p.services.data.DataService.BroadCastDataResult;
+import static bisq.network.p2p.services.data.DataService.Listener;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -195,6 +196,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> bootstrapToNetwork() {
+        log.info("bootstrapToNetwork");
         String nodeId = Node.DEFAULT;
         return serviceNodesByTransport.bootstrapToNetwork(getDefaultPortByTransport(), nodeId)
                 .whenComplete((result, throwable) -> {
@@ -257,8 +259,8 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> {
-                    AuthenticatedPayload netWorkPayload = new AuthenticatedPayload(data);
-                    return dataService.get().removeNetworkPayload(netWorkPayload, keyPair)
+                    AuthenticatedPayload payload = new AuthenticatedPayload(data);
+                    return dataService.get().removeNetworkPayload(payload, keyPair)
                             .whenComplete((broadCastDataResult, throwable) -> {
                                 broadCastDataResult.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
                                     //todo apply state

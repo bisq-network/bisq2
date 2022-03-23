@@ -22,3 +22,7 @@ test {
     useJUnitPlatform()
     exclude '**/**Integration*'
 }
+
+ext {
+    i2pVersion = '1.7.0'
+}

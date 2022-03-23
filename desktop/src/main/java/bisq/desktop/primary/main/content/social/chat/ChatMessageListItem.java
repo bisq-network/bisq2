@@ -17,32 +17,58 @@
 
 package bisq.desktop.primary.main.content.social.chat;
 
+import bisq.common.data.ByteArray;
+import bisq.common.encoding.Hex;
 import bisq.common.util.StringUtils;
+import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.security.DigestUtil;
 import bisq.social.chat.ChatMessage;
+import bisq.social.chat.QuotedMessage;
+import javafx.scene.image.Image;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 @Slf4j
 @Getter
 @EqualsAndHashCode
 class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredListItem {
+    private static final Map<ByteArray, Image> iconImageCache = new HashMap<>();
+
     private final ChatMessage chatMessage;
     private final String message;
     private final String senderUserName;
+    private final String time;
     private final String date;
+    private final String chatUserId;
+    private final ByteArray pubKeyHashAsByteArray;
+    private final Optional<QuotedMessage> quotedMessage;
 
     public ChatMessageListItem(ChatMessage chatMessage) {
         this.chatMessage = chatMessage;
         message = chatMessage.getText();
+        quotedMessage = chatMessage.getQuotedMessage();
         senderUserName = chatMessage.getSenderUserName();
-        log.error(senderUserName);
-                
+        time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
+        date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));
+        byte[] pubKeyHash = DigestUtil.hash(chatMessage.getSenderNetworkId().getPubKey().publicKey().getEncoded());
+        pubKeyHashAsByteArray = new ByteArray(pubKeyHash);
+        chatUserId = Hex.encode(pubKeyHash);
+    }
 
-        date = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
+    public Image getIconImage() {
+        if (!iconImageCache.containsKey(pubKeyHashAsByteArray)) {
+            iconImageCache.put(pubKeyHashAsByteArray, RoboHash.getImage(pubKeyHashAsByteArray, false));
+        }
+        return iconImageCache.get(pubKeyHashAsByteArray);
     }
 
     @Override

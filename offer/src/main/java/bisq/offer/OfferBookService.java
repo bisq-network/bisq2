@@ -23,12 +23,14 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class OfferBookService {
     @Getter
     private final ObservableSet<Offer> offers = new ObservableSet<>();
@@ -58,6 +60,7 @@ public class OfferBookService {
     }
 
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         offers.addAll(dataService.getAuthenticatedPayloadByStoreName("Offer")
                 .filter(payload -> payload.getData() instanceof Offer)
                 .map(payload -> (Offer) payload.getData())

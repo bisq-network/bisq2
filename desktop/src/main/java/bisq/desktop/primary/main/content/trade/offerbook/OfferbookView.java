@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.offerbook;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.BisqHSpacer;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqLabel;
@@ -68,7 +68,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         configDataTableView();
 
         this.root.getChildren().addAll(Layout.hBoxWith(marketSelection, showAllMarkets),
-                Layout.hBoxWith(directionSelection, new BisqHSpacer(), createOfferButton),
+                Layout.hBoxWith(directionSelection, Spacer.fillHBox(), createOfferButton),
                 headline,
                 tableView);
     }

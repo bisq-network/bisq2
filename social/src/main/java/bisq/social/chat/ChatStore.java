@@ -36,19 +36,23 @@ public class ChatStore implements PersistableStore<ChatStore> {
     @Getter
     private final Map<String, String> userNameByDomainId = new HashMap<>(); //todo remove
     @Getter
-    private final Observable<Channel> selectedChannel = new Observable<>();
+    private final Observable<Channel<? extends ChatMessage>> selectedChannel = new Observable<>();
+    @Getter
+    private final ObservableSet<String> ignoredChatUserIds = new ObservableSet<>();
 
     public ChatStore() {
     }
 
     private ChatStore(Set<PrivateChannel> privateChannels,
                       Set<PublicChannel> publicChannels,
-                      Channel selectedChannel,
-                      Map<String, String> userNameByDomainId) {
+                      Channel<? extends ChatMessage> selectedChannel,
+                      Map<String, String> userNameByDomainId,
+                      Set<String> ignoredChatUserIds) {
         setAll(privateChannels,
                 publicChannels,
                 selectedChannel,
-                userNameByDomainId);
+                userNameByDomainId,
+                ignoredChatUserIds);
     }
 
     @Override
@@ -56,7 +60,8 @@ public class ChatStore implements PersistableStore<ChatStore> {
         setAll(chatStore.privateChannels,
                 chatStore.publicChannels,
                 chatStore.selectedChannel.get(),
-                chatStore.userNameByDomainId);
+                chatStore.userNameByDomainId,
+                chatStore.ignoredChatUserIds);
     }
 
     @Override
@@ -64,13 +69,15 @@ public class ChatStore implements PersistableStore<ChatStore> {
         return new ChatStore(privateChannels,
                 publicChannels,
                 selectedChannel.get(),
-                userNameByDomainId);
+                userNameByDomainId,
+                ignoredChatUserIds);
     }
 
     public void setAll(Set<PrivateChannel> privateChannels,
                        Set<PublicChannel> publicChannels,
-                       Channel selectedChannel,
-                       Map<String, String> userNameByDomainId) {
+                       Channel<? extends ChatMessage> selectedChannel,
+                       Map<String, String> userNameByDomainId,
+                       Set<String> ignoredChatUserIds) {
         this.privateChannels.clear();
         this.privateChannels.addAll(privateChannels);
         this.publicChannels.clear();
@@ -78,6 +85,8 @@ public class ChatStore implements PersistableStore<ChatStore> {
         this.selectedChannel.set(selectedChannel);
         this.userNameByDomainId.clear();
         this.userNameByDomainId.putAll(userNameByDomainId);
+        this.ignoredChatUserIds.clear();
+        this.ignoredChatUserIds.addAll(ignoredChatUserIds);
     }
 
     public Optional<PrivateChannel> findPrivateChannel(String id) {

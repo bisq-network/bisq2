@@ -21,6 +21,7 @@ import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.controls.BisqRadioButton;
 import bisq.i18n.Res;
 import bisq.social.chat.Channel;
+import bisq.social.chat.ChatMessage;
 import bisq.social.chat.NotificationSetting;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -43,7 +44,7 @@ public class NotificationsSettings {
         controller = new Controller();
     }
 
-    public void setChannel(Channel channel) {
+    public void setChannel(Channel<? extends ChatMessage> channel) {
         controller.model.setChannel(channel);
     }
 
@@ -79,13 +80,13 @@ public class NotificationsSettings {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private ObjectProperty<Channel> channel = new SimpleObjectProperty<>();
-        public ObjectProperty<NotificationSetting> notificationSetting = new SimpleObjectProperty<>(NotificationSetting.MENTION);
+        private final ObjectProperty<Channel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
+        private final ObjectProperty<NotificationSetting> notificationSetting = new SimpleObjectProperty<>(NotificationSetting.MENTION);
 
         private Model() {
         }
 
-        private void setChannel(Channel channel) {
+        private void setChannel(Channel<? extends ChatMessage> channel) {
             this.notificationSetting.set(channel.getNotificationSetting().get());
 
             this.channel.set(channel);
@@ -95,11 +96,10 @@ public class NotificationsSettings {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ToggleGroup toggleGroup = new ToggleGroup();
-        ;
         private final ChangeListener<Toggle> toggleListener;
         private final BisqRadioButton all, mention, none;
 
-        private final ChangeListener<Channel> channelChangeListener;
+        private final ChangeListener<Channel<? extends ChatMessage>> channelChangeListener;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);

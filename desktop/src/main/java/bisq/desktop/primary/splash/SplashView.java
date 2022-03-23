@@ -15,14 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.containers;
+package bisq.desktop.primary.splash;
 
+import bisq.desktop.common.view.View;
+import javafx.geometry.Pos;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
 
-import javafx.scene.layout.Region;
+public class SplashView extends View<VBox, SplashModel, SplashController> {
 
-public class BisqVSpacer extends Region {
-    public BisqVSpacer(int distance) {
-        setMinHeight(distance);
-        setMaxHeight(distance);
+    public SplashView(SplashModel model, SplashController controller) {
+        super(new VBox(), model, controller);
+
+        root.getStyleClass().add("content-pane");
+        root.setAlignment(Pos.CENTER);
+
+        ImageView logo = new ImageView();
+        logo.setId("image-splash-logo");
+
+        root.getChildren().addAll(logo);
     }
 }

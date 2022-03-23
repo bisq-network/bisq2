@@ -24,6 +24,8 @@ import javafx.collections.transformation.FilteredList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.function.Predicate;
+
 
 @Slf4j
 public class FilterBox {
@@ -56,15 +58,18 @@ public class FilterBox {
         }
 
         private void onSearch(String filterString) {
-            model.filteredList.setPredicate(item -> item.match(filterString));
+                model.filteredList.setPredicate(item -> model.defaultPredicate.test(item) && item.match(filterString));
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        final FilteredList<? extends FilteredListItem> filteredList;
+        private final FilteredList<? extends FilteredListItem> filteredList;
+        private final Predicate<FilteredListItem> defaultPredicate;
 
         private Model(FilteredList<? extends FilteredListItem> filteredList) {
             this.filteredList = filteredList;
+            //noinspection unchecked
+            defaultPredicate = (Predicate<FilteredListItem>) filteredList.getPredicate();
         }
     }
 

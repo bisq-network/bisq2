@@ -52,6 +52,10 @@ public class StringUtils {
         return value.replaceAll("\\s+", "");
     }
 
+    public static String trimTrailingLinebreak(String value) {
+        return value.substring(0, value.length() - 1);
+    }
+
     public static String abbreviate(String message, int maxChar) {
         if (message.length() <= maxChar) {
             return message;

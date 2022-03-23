@@ -20,8 +20,9 @@ package bisq.desktop.primary;
 import bisq.common.util.OsUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.KeyCodeUtils;
+import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
-import javafx.scene.Parent;
+import bisq.desktop.layout.Layout;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
@@ -50,26 +51,30 @@ public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, Primar
             configCss();
             configSizeAndPosition();
             configKeyEventHandlers();
-            
+
             stage.setOnCloseRequest(event -> {
                 event.consume();
                 controller.onQuit();
             });
             model.getView().addListener((observable, oldValue, newValue) -> {
-                Parent mainViewRoot = newValue.getRoot();
-                AnchorPane.setLeftAnchor(mainViewRoot, 0d);
-                AnchorPane.setRightAnchor(mainViewRoot, 0d);
-                AnchorPane.setTopAnchor(mainViewRoot, 0d);
-                AnchorPane.setBottomAnchor(mainViewRoot, 0d);
-                root.getChildren().setAll(mainViewRoot);
+                Layout.pinToAnchorPane(newValue.getRoot(), 0, 0, 0, 0);
+                root.getChildren().add(newValue.getRoot());
+                if (oldValue != null) {
+                    Transitions.fadeOutAndRemove(oldValue.getRoot());
+                    Transitions.fadeIn(newValue.getRoot());
+                }
             });
-            
-            stage.setScene(scene);
-            stage.show(); // takes about 90 ms
         } catch (Exception exception) {
             exception.printStackTrace();
             controller.onQuit();
         }
+    }
+
+    void showStage() {
+        long ts = System.currentTimeMillis();
+        stage.show();
+        stage.setScene(scene); // Here we trigger onViewAttached in controller
+        log.info("Attaching view to stage took {} ms", System.currentTimeMillis() - ts);
     }
 
     private boolean configCss() {

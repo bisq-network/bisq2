@@ -35,6 +35,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -45,6 +46,7 @@ import java.util.stream.Collectors;
 import static bisq.network.p2p.services.data.DataService.BroadCastDataResult;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
+@Slf4j
 public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("OpenOfferService.dispatcher");
 
@@ -71,6 +73,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
     }
 
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         republishMyOffers();
         return CompletableFuture.completedFuture(true);
     }
@@ -175,9 +178,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
 
     public CompletableFuture<BroadCastDataResult> addToNetwork(Offer offer) {
         return identityService.getOrCreateIdentity(offer.getId())
-                .thenCompose(identity -> {
-                    return networkService.addData(offer, identity.getNodeIdAndKeyPair());
-                });
+                .thenCompose(identity -> networkService.addData(offer, identity.getNodeIdAndKeyPair()));
     }
 
     public CompletableFuture<BroadCastDataResult> removeFromNetwork(Offer offer) {

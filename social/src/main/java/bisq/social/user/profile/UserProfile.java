@@ -28,6 +28,7 @@ import java.util.Set;
 /**
  * Local user profile. Not shared over network.
  */
+//todo use cache for pubKeyHash and userName
 public record UserProfile(Identity identity, Set<Entitlement> entitlements) implements Serializable {
     public boolean hasEntitlementType(Entitlement.Type type) {
         return entitlements.stream().anyMatch(e -> e.entitlementType() == type);

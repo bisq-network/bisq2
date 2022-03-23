@@ -15,15 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.settings;
+package bisq.desktop.primary.splash;
 
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
+@Slf4j
+public class SplashController implements Controller {
+    private final SplashModel model;
+    @Getter
+    private final SplashView view;
 
-@Getter
-@Setter
-public class DisplaySettings implements Serializable {
-    private boolean useAnimations = true;
+    public SplashController(DefaultApplicationService applicationService) {
+        model = new SplashModel();
+        view = new SplashView(model, this);
+    }
+
+    public void onViewAttached() {
+    }
+
+    public void onViewDetached() {
+    }
 }

@@ -86,6 +86,7 @@ public class MarketPriceService {
     }
 
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         getHttpClientAndRequest();
         Scheduler.run(() -> request()
                         .whenComplete((map, throwable) -> {

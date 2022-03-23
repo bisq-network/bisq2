@@ -90,6 +90,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     }
 
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         if (persistableStore.getUserProfiles().isEmpty()) {
             return createDefaultUserProfile();
         } else {

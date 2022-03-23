@@ -24,7 +24,7 @@ import lombok.Getter;
 import java.io.Serializable;
 
 @Getter
-public abstract class Channel implements Serializable {
+public abstract class Channel<T extends ChatMessage> implements Serializable {
     protected final String id;
     protected final ObservableSet<ChatMessage> chatMessages = new ObservableSet<>();
     protected final Observable<NotificationSetting> notificationSetting = new Observable<>(NotificationSetting.MENTION);
@@ -33,8 +33,12 @@ public abstract class Channel implements Serializable {
         this.id = id;
     }
 
-    public void addChatMessage(ChatMessage chatMessage) {
+    public void addChatMessage(T chatMessage) {
         chatMessages.add(chatMessage);
+    }
+
+    public void removeChatMessage(T chatMessage) {
+        chatMessages.remove(chatMessage);
     }
 
     public abstract String getChannelName();

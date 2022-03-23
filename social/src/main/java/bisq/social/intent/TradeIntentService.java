@@ -23,8 +23,8 @@ import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService.BroadCastDataResult;
-import bisq.social.user.ChatUser;
 import bisq.social.chat.ChatService;
+import bisq.social.user.ChatUser;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
@@ -49,6 +49,7 @@ public class TradeIntentService {
     }
 
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         // republishMyTradeIntents();
         return CompletableFuture.completedFuture(true);
     }

@@ -27,13 +27,20 @@ import net.i2p.client.streaming.I2PSocketOptions;
 import net.i2p.data.DataFormatException;
 import net.i2p.data.Destination;
 import net.i2p.data.PrivateKeyFile;
+import net.i2p.router.Router;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -45,6 +52,8 @@ public class I2pClient {
     public final static int DEFAULT_PORT = 7656;
     public final static long DEFAULT_SOCKET_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
     private final static Map<String, I2pClient> I2P_CLIENT_BY_APP = new ConcurrentHashMap<>();
+
+    private Router router;
 
     private final String host;
     private final int port;
@@ -154,6 +163,11 @@ public class I2pClient {
         sessionMap.values().forEach(I2PSocketManager::destroySocketManager);
         sessionMap.clear();
 
+        // If using embedded router, shut it down
+        if (router != null) {
+            router.shutdown(1);
+        }
+
         // Takes < 20 ms per client
         log.info("I2P shutdown completed. Took {} ms.", System.currentTimeMillis() - ts);
     }
@@ -174,6 +188,75 @@ public class I2pClient {
         }
 
         return sessionMap.get(sessionId);
+    }
+
+    private Properties getPropertiesForEmbeddedRouter() throws IOException {
+        Properties p = new Properties();
+        String i2pDirBasePath = dirPath + "/i2p-dir-base";
+        p.put("i2p.dir.base", i2pDirBasePath);
+        Files.createDirectories(Path.of(i2pDirBasePath));
+
+        // Copy reseed certificates
+        String embeddedRouterCertPath = i2pDirBasePath + "/certificates/reseed";
+        Files.createDirectories(Path.of(embeddedRouterCertPath));
+        // Retrieved from https://github.com/i2p/i2p.i2p/tree/master/installer/resources/certificates/reseed
+        // Saved under 'resources/embedded/certificates/reseed/'
+        for (String s : List.of(
+                "creativecowpat_at_mail.i2p.crt",
+                "echelon3_at_mail.i2p.crt",
+                "hankhill19580_at_gmail.com.crt",
+                "hottuna_at_mail.i2p.crt",
+                "igor_at_novg.net.crt",
+                "lazygravy_at_mail.i2p.crt",
+                "rambler_at_mail.i2p.crt",
+                "reseed_at_diva.exchange.crt")) {
+            Files.copy(
+                    getClass().getResourceAsStream("/embedded/certificates/reseed/" + s),
+                    Paths.get(embeddedRouterCertPath , s),
+                    StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        // Contains the I2P data files
+        String i2pDirConfig = dirPath + "/i2p-dir-config";
+        p.put("i2p.dir.config", i2pDirConfig);
+        Files.createDirectories(Path.of(i2pDirConfig));
+
+        return p;
+    }
+
+    private I2PSocketManager startEmbeddedRouter(File privKeyFile) throws IOException {
+        I2PSocketManager manager = null;
+        System.setProperty("I2P_DISABLE_OUTPUT_OVERRIDE", "true");
+
+        Properties p = getPropertiesForEmbeddedRouter();
+
+        router = new Router(p);
+        router.setKillVMOnEnd(false);
+        router.runRouter();
+
+        do {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // Check for RUNNING state (indicating NetDB and tunnels are ready)
+            if (router.isRunning()) {
+                log.info("Embedded router is running, trying to create socket manager ...");
+
+                try(FileInputStream privKeyInputStream = new FileInputStream(privKeyFile)) {
+                    manager = I2PSocketManagerFactory.createManager(privKeyInputStream);
+                }
+            }
+            else {
+                log.info("Embedded router not running yet, checking again in 5 seconds ...");
+            }
+        }
+        while (manager == null);
+        log.info("Socket manager created");
+
+        return manager;
     }
 
     private I2PSocketManager maybeCreateServerSession(String sessionId, int port) throws IOException {
@@ -197,6 +280,11 @@ public class I2pClient {
             I2PSocketManager manager;
             try(FileInputStream privKeyInputStream = new FileInputStream(privKeyFile)) {
                 manager = I2PSocketManagerFactory.createManager(privKeyInputStream);
+            }
+
+            if (manager == null) {
+                log.info("No I2P router found, initializing embedded one ...");
+                manager = startEmbeddedRouter(privKeyFile);
             }
 
             // Set port (which is embedded in the generated destination)

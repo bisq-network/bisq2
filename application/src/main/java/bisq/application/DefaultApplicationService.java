@@ -168,7 +168,7 @@ public class DefaultApplicationService extends ServiceProvider {
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> marketPriceService.initialize())
                 .whenComplete((list, throwable) -> {
-                    // add dummy accounts
+                    log.info("add dummy accounts");
                     if (accountService.getAccounts().isEmpty()) {
                         SepaAccount john_smith = new SepaAccount("SEPA-account-1",
                                 "John Smith",
@@ -186,19 +186,22 @@ public class DefaultApplicationService extends ServiceProvider {
                 })
                 .thenCompose(result -> protocolService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(
-                        userProfileService.initialize(),
+                        userProfileService.initialize()
+                                .thenCompose(res -> chatService.initialize()),
                         openOfferService.initialize(),
                         offerBookService.initialize(),
                         tradeIntentListingsService.initialize(),
                         tradeIntentService.initialize()))
-                .orTimeout(120, TimeUnit.SECONDS)
+                // TODO Needs to increase if using embedded I2P router (i2p internal bootstrap timeouts after 5 mins)
+                .orTimeout(5, TimeUnit.MINUTES)
+                .thenApply(list -> list.stream().allMatch(e -> e))
                 .whenComplete((list, throwable) -> {
-                    if (throwable != null) {
-                        log.error("Error at startup", throwable);
+                    if (throwable == null) {
+                        log.info("All application services initialized");
                     } else {
-                        log.info("Application initialized successfully");
+                        log.error("Error at initializing application services", throwable);
                     }
-                }).thenApply(list -> list.stream().allMatch(e -> e));
+                });
     }
 
     @Override

@@ -20,16 +20,11 @@ package bisq.desktop.primary.main.content.social.chat;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.Notification;
 import bisq.desktop.primary.main.content.social.chat.components.*;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
-import bisq.network.NetworkId;
-import bisq.network.NetworkIdWithKeyPair;
-import bisq.network.NetworkService;
-import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.social.chat.*;
 import bisq.social.user.UserNameGenerator;
 import bisq.social.user.profile.UserProfileService;
@@ -41,12 +36,9 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
-import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static bisq.social.chat.ChannelType.PRIVATE;
-import static bisq.social.chat.ChannelType.PUBLIC;
 
 @Slf4j
 public class ChatController implements Controller {
@@ -55,11 +47,11 @@ public class ChatController implements Controller {
     @Getter
     private final ChatView view;
     private final UserProfileService userProfileService;
-    private final NetworkService networkService;
     private final PublicChannelSelection publicChannelSelection;
     private final PrivateChannelSelection privateChannelSelection;
     private final ChannelInfo channelInfo;
     private final NotificationsSettings notificationsSettings;
+    private final QuotedMessageBlock quotedMessageBlock;
     private Pin chatMessagesPin;
     private Pin selectedChannelPin;
     private Subscription notificationSettingSubscription;
@@ -68,29 +60,28 @@ public class ChatController implements Controller {
     public ChatController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
-        networkService = applicationService.getNetworkService();
 
-        channelInfo = new ChannelInfo();
+        channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
         UserProfileComboBox userProfileDisplay = new UserProfileComboBox(userProfileService);
         publicChannelSelection = new PublicChannelSelection(chatService);
         privateChannelSelection = new PrivateChannelSelection(chatService);
-        model = new ChatModel();
+        quotedMessageBlock = new QuotedMessageBlock();
+        model = new ChatModel(chatService, userProfileService);
         view = new ChatView(model,
                 this,
                 userProfileDisplay.getComboBox(),
                 publicChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 notificationsSettings.getRoot(),
-                channelInfo.getRoot());
+                channelInfo.getRoot(),
+                quotedMessageBlock.getRoot());
 
         model.getSortedChatMessages().setComparator(Comparator.naturalOrder());
     }
 
     @Override
     public void onViewAttached() {
-        chatService.addDummyChannels();
-
         notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
                 value -> chatService.setNotificationSetting(chatService.getPersistableStore().getSelectedChannel().get(), value));
 
@@ -104,8 +95,12 @@ public class ChatController implements Controller {
 
             model.getSelectedChannelAsString().set(channel.getChannelName());
             model.getSelectedChannel().set(channel);
-            if (model.getInfoVisible().get()) {
+            if (model.getChannelInfoVisible().get()) {
                 channelInfo.setChannel(channel);
+                channelInfo.setOnUndoIgnoreChatUser(() -> {
+                    refreshMessages();
+                    channelInfo.setChannel(channel);
+                });
             }
             if (model.getNotificationsVisible().get()) {
                 notificationsSettings.setChannel(channel);
@@ -123,7 +118,6 @@ public class ChatController implements Controller {
             Set<String> myUserNames = userProfileService.getPersistableStore().getUserProfiles().stream()
                     .map(userProfile -> UserNameGenerator.fromHash(userProfile.identity().pubKeyHash()))
                     .collect(Collectors.toSet());
-
             messageListener = c -> {
                 c.next();
                 // At init, we get full list, but we don't want to show notifications in that event.
@@ -178,55 +172,14 @@ public class ChatController implements Controller {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     void onSendMessage(String text) {
-        Channel channel = chatService.getPersistableStore().getSelectedChannel().get();
+        Channel<? extends ChatMessage> channel = chatService.getPersistableStore().getSelectedChannel().get();
         Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
         if (channel instanceof PublicChannel publicChannel) {
-            sendMessageToPublicChannel(text, publicChannel, identity);
+            chatService.publishPublicChatMessage(text, quotedMessageBlock.getQuotedMessage(), publicChannel, identity);
         } else if (channel instanceof PrivateChannel privateChannel) {
-            sendMessageToPrivateChannel(text, privateChannel, identity);
+            chatService.sendPrivateChatMessage(text, quotedMessageBlock.getQuotedMessage(), privateChannel, identity);
         }
-    }
-
-    private void sendMessageToPublicChannel(String text, PublicChannel publicChannel, Identity identity) {
-        log.error("sendMessageToPublicChannel");
-        networkService.addData(new ChatMessage(publicChannel.getId(),
-                        text,
-                        identity.domainId(),
-                        identity.networkId(),
-                        new Date().getTime(),
-                        PUBLIC),
-                identity.getNodeIdAndKeyPair());
-    }
-
-    private void sendMessageToPrivateChannel(String text, PrivateChannel privateChannel, Identity identity) {
-        String channelId = privateChannel.getId();
-        ChatMessage chatMessage = new ChatMessage(channelId,
-                text,
-                identity.domainId(),
-                identity.networkId(),
-                new Date().getTime(),
-                PRIVATE);
-        chatService.addChatMessage(chatMessage, privateChannel);
-        NetworkId receiverNetworkId = privateChannel.getPeer().networkId();
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = identity.getNodeIdAndKeyPair();
-        networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair)
-                .whenComplete((resultMap, throwable2) -> {
-                    if (throwable2 != null) {
-                        UIThread.run(() -> model.setSendMessageError(channelId, throwable2));
-                        return;
-                    }
-                    resultMap.forEach((transportType, res) -> {
-                        ConfidentialMessageService.Result result = resultMap.get(transportType);
-                        result.getMailboxFuture().values().forEach(broadcastFuture -> broadcastFuture
-                                .whenComplete((broadcastResult, throwable3) -> {
-                                    if (throwable3 != null) {
-                                        UIThread.run(() -> model.setSendMessageError(channelId, throwable3));
-                                        return;
-                                    }
-                                    UIThread.run(() -> model.setSendMessageResult(channelId, result, broadcastResult));
-                                }));
-                    });
-                });
+        quotedMessageBlock.close();
     }
 
     public void onToggleFilterBox() {
@@ -237,18 +190,135 @@ public class ChatController implements Controller {
     public void onToggleNotifications() {
         boolean visible = !model.getNotificationsVisible().get();
         model.getNotificationsVisible().set(visible);
-        model.getInfoVisible().set(false);
+        model.getSideBarVisible().set(visible);
+        model.getChannelInfoVisible().set(false);
+        removeChatUserDetails();
         if (visible) {
             notificationsSettings.setChannel(model.getSelectedChannel().get());
         }
     }
 
-    public void onToggleInfo() {
-        boolean visible = !model.getInfoVisible().get();
-        model.getInfoVisible().set(visible);
+    public void onToggleChannelInfo() {
+        boolean visible = !model.getChannelInfoVisible().get();
+        model.getChannelInfoVisible().set(visible);
+        model.getSideBarVisible().set(visible);
         model.getNotificationsVisible().set(false);
+        removeChatUserDetails();
         if (visible) {
             channelInfo.setChannel(model.getSelectedChannel().get());
+            channelInfo.setOnUndoIgnoreChatUser(() -> {
+                refreshMessages();
+                channelInfo.setChannel(model.getSelectedChannel().get());
+            });
         }
+    }
+
+    public void onShowChatUserDetails(ChatMessage chatMessage) {
+        model.getSideBarVisible().set(true);
+        model.getChannelInfoVisible().set(false);
+        model.getNotificationsVisible().set(false);
+
+        ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(),
+                chatMessage.getChatUser());
+        chatUserDetails.setOnSendPrivateMessage(chatUser -> {
+            // todo
+            log.info("onSendPrivateMessage {}", chatUser);
+        });
+        chatUserDetails.setOnIgnoreChatUser(this::refreshMessages);
+        chatUserDetails.setOnMentionUser(chatUser -> mentionUser(chatUser.userName()));
+        model.setChatUserDetails(Optional.of(chatUserDetails));
+        model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
+    }
+
+    public void onUserNameClicked(String userName) {
+        mentionUser(userName);
+    }
+
+    public void onCloseSideBar() {
+        model.getSideBarVisible().set(false);
+        model.getChannelInfoVisible().set(false);
+        model.getNotificationsVisible().set(false);
+        removeChatUserDetails();
+    }
+
+    private void removeChatUserDetails() {
+        model.getChatUserDetails().ifPresent(e -> e.setOnMentionUser(null));
+        model.getChatUserDetails().ifPresent(e -> e.setOnSendPrivateMessage(null));
+        model.getChatUserDetails().ifPresent(e -> e.setOnIgnoreChatUser(null));
+        model.setChatUserDetails(Optional.empty());
+        model.getChatUserDetailsRoot().set(null);
+    }
+
+    private void mentionUser(String userName) {
+        String existingText = model.getTextInput().get();
+        if (!existingText.isEmpty() && !existingText.endsWith(" ")) {
+            existingText += " ";
+        }
+        model.getTextInput().set(existingText + "@" + userName + " ");
+    }
+
+    private void refreshMessages() {
+        chatMessagesPin.unbind();
+        chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem>bind(model.getChatMessages())
+                .map(ChatMessageListItem::new)
+                .to(model.getSelectedChannel().get().getChatMessages());
+    }
+
+    public void onOpenEmojiSelector(ChatMessage chatMessage) {
+
+    }
+
+    public void onReply(ChatMessage chatMessage) {
+        if (!model.isMyMessage(chatMessage)) {
+            quotedMessageBlock.reply(chatMessage);
+        }
+    }
+
+    public void onSendPrivateMessage(ChatMessage chatMessage) {
+        if (!model.isMyMessage(chatMessage)) {
+            // todo
+        }
+    }
+
+    public void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
+        if (!model.isMyMessage(chatMessage)) {
+            return;
+        }
+        if (chatMessage instanceof PublicChatMessage publicChatMessage) {
+            Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
+            if (publicChatMessage.getSenderNetworkId().equals(identity.getNodeIdAndKeyPair().networkId())) {
+                chatService.publishEditedPublicChatMessage(publicChatMessage, editedText, identity)
+                        .whenComplete((r, t) -> {
+                            // todo maybe show spinner while deleting old msg and hide it once done?
+                        });
+            } else {
+                log.warn("To be removed chatMessage has different identity as selected identity");
+            }
+        } else {
+            //todo private message
+        }
+    }
+
+    public void onDeleteMessage(ChatMessage chatMessage) {
+        if (model.isMyMessage(chatMessage)) {
+            if (chatMessage instanceof PublicChatMessage publicChatMessage) {
+                Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
+                if (publicChatMessage.getSenderNetworkId().equals(identity.getNodeIdAndKeyPair().networkId())) {
+                    chatService.deletePublicChatMessage(publicChatMessage, identity);
+                } else {
+                    log.warn("To be removed chatMessage has different identity as selected identity");
+                }
+            } else {
+                //todo delete private message
+            }
+        }
+    }
+
+    public void onOpenMoreOptions(ChatMessage chatMessage) {
+
+    }
+
+    public void onAddEmoji(String emojiId) {
+
     }
 }

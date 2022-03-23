@@ -55,8 +55,8 @@ public enum NavigationTarget {
     ABOUT(SETTINGS),
 
     SOCIAL(CONTENT),
-    TRADE_INTENT(SOCIAL),
     CHAT(SOCIAL),
+    TRADE_INTENT(SOCIAL),
     USER_PROFILE(SOCIAL),
 
     MARKETS(CONTENT),

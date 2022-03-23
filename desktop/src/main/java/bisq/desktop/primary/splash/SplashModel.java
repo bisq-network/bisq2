@@ -15,15 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.settings;
+package bisq.desktop.primary.splash;
 
+import bisq.desktop.common.view.Model;
 import lombok.Getter;
-import lombok.Setter;
-
-import java.io.Serializable;
 
 @Getter
-@Setter
-public class DisplaySettings implements Serializable {
-    private boolean useAnimations = true;
+public class SplashModel implements Model {
 }
