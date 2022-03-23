@@ -19,12 +19,14 @@ package bisq.desktop.primary.main.content.social.chat.components;
 
 import bisq.common.data.ByteArray;
 import bisq.common.monetary.Monetary;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.social.user.ChatUser;
 import bisq.social.user.Entitlement;
+import bisq.social.user.profile.UserProfileService;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
@@ -56,20 +58,27 @@ public class ChatUserIcon extends Pane {
         getChildren().addAll(roboIcon, entitlement);
     }
 
-    public void setChatUser(ChatUser chatUser) {
+    public void setChatUser(ChatUser chatUser, UserProfileService userProfileService) {
         roboIcon.setImage(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash()), true));
 
         if (chatUser.hasEntitlementType(Entitlement.Type.LIQUIDITY_PROVIDER)) {
             entitlement.setId("chat-trust");
-            entitlement.setVisible(true);
-            entitlement.setManaged(true);
 
-            chatUser.findBurnInfo().ifPresent(burnInfo -> {
-                Tooltip.install(entitlement, tooltip);
-                tooltip.setText(Res.get("social.chatUser.liquidityProvider.tooltip",
-                        AmountFormatter.formatAmountWithCode(Monetary.from(burnInfo.totalBsqBurned(), "BSQ")),
-                        DateFormatter.formatDateTime(burnInfo.firstBurnDate())));
-            });
+            // We get asynchronous the verified burnInfo results. It is cached in the userProfileService
+            // So we should get fast results in most cases.
+            userProfileService.findBurnInfoAsync(chatUser.getPubKeyHash(), chatUser.getEntitlements())
+                    .whenComplete((optionalBurnInfo, t) -> {
+                        optionalBurnInfo.ifPresent(burnInfo -> {
+                            UIThread.run(() -> {
+                                entitlement.setVisible(true);
+                                entitlement.setManaged(true);
+                                Tooltip.install(entitlement, tooltip);
+                                tooltip.setText(Res.get("social.chatUser.liquidityProvider.tooltip",
+                                        AmountFormatter.formatAmountWithCode(Monetary.from(burnInfo.totalBsqBurned(), "BSQ")),
+                                        DateFormatter.formatDateTime(burnInfo.firstBurnDate())));
+                            });
+                        });
+                    });
         } else if (chatUser.hasEntitlementType(Entitlement.Type.CHANNEL_ADMIN)) {
             //trustIconImageView.setId("chat-trust"); //todo define icon
             entitlement.setVisible(true);

@@ -18,14 +18,18 @@
 package bisq.social.user;
 
 import bisq.common.data.Pair;
+import bisq.common.util.DateUtils;
 import com.google.gson.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BsqTxValidator {
-
     public static boolean initialSanityChecks(String txId, String jsonTxt) {
         if (jsonTxt == null || jsonTxt.length() == 0) {
             return false;
@@ -73,13 +77,13 @@ public class BsqTxValidator {
         return burntFee.getAsLong();
     }
 
-    public static long getTxDate(String jsonTxt) {
+    public static long getValidatedTxDate(String jsonTxt) {
         JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
-        JsonElement date = json.get("time");
-        if (date == null) {
-            return 0;
-        }
-        return date.getAsLong();
+        JsonElement time = json.get("time");
+        checkNotNull(time);
+        long date = time.getAsLong();
+        checkArgument(new Date(date).after(DateUtils.LAUNCH_DATE));
+        return date;
     }
 
     public static Optional<String> getOpReturnData(String jsonTxt) {

@@ -24,8 +24,10 @@ import bisq.security.DigestUtil;
 import lombok.Getter;
 
 import java.io.Serializable;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Publicly shared chat user data
@@ -78,24 +80,6 @@ public class ChatUser implements Serializable {
             CACHE.put(key, derivedData);
         }
         return CACHE.get(key);
-    }
-
-    public Optional<BurnInfo> findBurnInfo() {
-        if (hasEntitlementType(Entitlement.Type.LIQUIDITY_PROVIDER)) {
-            List<Entitlement.ProofOfBurnProof> list = entitlements.stream()
-                    .filter(e -> e.proof() instanceof Entitlement.ProofOfBurnProof)
-                    .map(e -> (Entitlement.ProofOfBurnProof) e.proof())
-                    .sorted(Comparator.comparingLong(Entitlement.ProofOfBurnProof::date))
-                    .collect(Collectors.toList());
-
-            long totalBsqBurned = list.stream()
-                    .mapToLong(Entitlement.ProofOfBurnProof::burntAmount)
-                    .sum();
-            long firstBurnDate = list.get(0).date();
-            return Optional.of(new BurnInfo(totalBsqBurned, firstBurnDate));
-        } else {
-            return Optional.empty();
-        }
     }
 
     private static record DerivedData(byte[] pubKeyHash, String id, String userName) implements Serializable {

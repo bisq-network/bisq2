@@ -17,9 +17,11 @@
 
 package bisq.social.user.profile;
 
+import bisq.common.data.ByteArray;
 import bisq.common.data.Pair;
 import bisq.common.encoding.Hex;
 import bisq.common.util.CollectionUtil;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -33,22 +35,20 @@ import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.KeyPairService;
 import bisq.security.SignatureUtil;
-import bisq.social.user.BsqTxValidator;
-import bisq.social.user.BtcTxValidator;
-import bisq.social.user.Entitlement;
-import bisq.social.user.UserNameGenerator;
+import bisq.social.user.*;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonSyntaxException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static bisq.security.SignatureUtil.bitcoinSigToDer;
 import static bisq.security.SignatureUtil.formatMessageForSigning;
@@ -57,6 +57,10 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class UserProfileService implements PersistenceClient<UserProfileStore> {
+    private static final Map<ByteArray, Entitlement.ProofOfBurnProof> VERIFIED_PROOF_OF_BURN_PROOFS = new HashMap<>();
+    // For dev testing we use hard coded txId and a pubkeyhash to get real data from Bisq explorer
+    private static final boolean USE_DEV_TEST_POB_VALUES = true;
+
     public static record Config(List<String> btcMempoolProviders,
                                 List<String> bsqMempoolProviders) {
         public static Config from(com.typesafe.config.Config typeSafeConfig) {
@@ -123,70 +127,101 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         persist();
     }
 
-   /* public CompletableFuture<Optional<? extends Entitlement.Proof>> verifyEntitlement(Entitlement.Type entitlementType,
-                                                                                      String proofOfBurnTxId,
-                                                                                      String bondedRoleTxId,
-                                                                                      String bondedRoleSig,
-                                                                                      String invitationCode,
-                                                                                      PublicKey publicKey) {
-        List<CompletableFuture<Optional<Entitlement.Proof>>> futures = new ArrayList<>();
+    public CompletableFuture<Optional<ChatUser.BurnInfo>> findBurnInfoAsync(byte[] pubKeyHash, Set<Entitlement> entitlements) {
+        if (entitlements.stream().noneMatch(e -> e.entitlementType() == Entitlement.Type.LIQUIDITY_PROVIDER)) {
+            return CompletableFuture.completedFuture(Optional.empty());
+        }
+        return CompletableFutureUtils.allOf(entitlements.stream()
+                        .filter(e -> e.proof() instanceof Entitlement.ProofOfBurnProof)
+                        .map(e -> (Entitlement.ProofOfBurnProof) e.proof())
+                        .map(proof -> verifyProofOfBurn(Entitlement.Type.LIQUIDITY_PROVIDER, proof.txId(), pubKeyHash))
+                )
+                .thenApply(list -> {
+                    List<Entitlement.ProofOfBurnProof> proofs = list.stream()
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .sorted(Comparator.comparingLong(Entitlement.ProofOfBurnProof::date))
+                            .collect(Collectors.toList());
+                    if (proofs.isEmpty()) {
+                        return Optional.empty();
+                    } else {
+                        long totalBsqBurned = proofs.stream()
+                                .mapToLong(Entitlement.ProofOfBurnProof::burntAmount)
+                                .sum();
+                        long firstBurnDate = proofs.get(0).date();
+                        return Optional.of(new ChatUser.BurnInfo(totalBsqBurned, firstBurnDate));
+                    }
+                });
+    }
 
-        futures.addAll(entitlementType.getProofTypes().stream()
-                .filter(e -> e == Entitlement.ProofType.PROOF_OF_BURN)
-                .map(e -> verifyProofOfBurn(proofOfBurnTxId, publicKey))
-                .collect(Collectors.toList()));
+    public CompletableFuture<Optional<Entitlement.ProofOfBurnProof>> verifyProofOfBurn(Entitlement.Type type, String proofOfBurnTxId, String pubKeyHash) {
+        return verifyProofOfBurn(type, proofOfBurnTxId, Hex.decode(pubKeyHash));
+    }
 
-        futures.addAll(entitlementType.getProofTypes().stream()
-                .filter(e -> e == Entitlement.ProofType.BONDED_ROLE)
-                .map(e -> verifyBondedRole(bondedRoleTxId, bondedRoleSig, publicKey))
-                .collect(Collectors.toList()));
-
-        futures.addAll(entitlementType.getProofTypes().stream()
-                .filter(e -> e == Entitlement.ProofType.CHANNEL_ADMIN_INVITATION)
-                .map(e -> verifyInvitation(invitationCode, publicKey))
-                .collect(Collectors.toList()));
-
-        return CompletableFutureUtils.allOf(futures)
-                .thenApply(list -> list.stream().filter(e->e.isPresent()).count()==3);
-    }*/
-
-    public CompletableFuture<Optional<Entitlement.Proof>> verifyProofOfBurn(Entitlement.Type type, String proofOfBurnTxId, String pubKeyHash) {
-        return supplyAsync(() -> {
-            try {
-                BaseHttpClient httpClient = getApiHttpClient(config.bsqMempoolProviders());
-                String jsonBsqTx = httpClient.get("tx/" + proofOfBurnTxId, Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
-                Preconditions.checkArgument(BsqTxValidator.initialSanityChecks(proofOfBurnTxId, jsonBsqTx), proofOfBurnTxId + "Bsq tx sanity check failed");
-                checkArgument(BsqTxValidator.isBsqTx(httpClient.getBaseUrl()), proofOfBurnTxId + " is Nnt a valid Bsq tx");
-                checkArgument(BsqTxValidator.isProofOfBurn(jsonBsqTx), proofOfBurnTxId + " is not a proof of burn transaction");
-                long burntAmount = BsqTxValidator.getBurntAmount(jsonBsqTx);
-                checkArgument(burntAmount >= getMinBurnAmount(type), "Insufficient BSQ burn. burntAmount=" + burntAmount);
-                String hashOfPreImage = Hex.encode(DigestUtil.hash(pubKeyHash.getBytes(StandardCharsets.UTF_8)));
-                BsqTxValidator.getOpReturnData(jsonBsqTx).ifPresentOrElse(
-                        opReturnData -> {
-                            byte[] hashFromOpReturnDataAsBytes = Arrays.copyOfRange(Hex.decode(opReturnData), 2, 22);
-                            String hashFromOpReturnData = Hex.encode(hashFromOpReturnDataAsBytes);
-                            checkArgument(hashOfPreImage.equalsIgnoreCase(hashFromOpReturnData), "pubKeyHash does not match opReturn data");
-                        },
-                        () -> {
-                            throw new IllegalArgumentException("no opReturn element found");
-                        });
-                long date= BsqTxValidator.getTxDate(jsonBsqTx);
-                return Optional.of(new Entitlement.ProofOfBurnProof(proofOfBurnTxId, burntAmount, date));
-            } catch (IllegalArgumentException e) {
-                log.warn("check failed: {}", e.getMessage(), e);
-            } catch (IOException e) {
-                if (e.getCause() instanceof HttpException &&
-                        e.getCause().getMessage() != null &&
-                        e.getCause().getMessage().equalsIgnoreCase("Bisq transaction not found")) {
-                    log.error("Tx might be not confirmed yet", e);
-                } else {
-                    log.warn("Mem pool query failed:", e);
+    public CompletableFuture<Optional<Entitlement.ProofOfBurnProof>> verifyProofOfBurn(Entitlement.Type type,
+                                                                                       String _txId,
+                                                                                       byte[] pubKeyHash) {
+        String txId;
+        // We use as preImage in the DAO String.getBytes(Charsets.UTF_8) to get bytes from the input string (not hex 
+        // as hex would be more restrictive for arbitrary inputs)
+        byte[] preImage;
+        if (USE_DEV_TEST_POB_VALUES) {
+            // BSQ proof of burn tx (mainnet): ac57b3d6bdda9976391217e6d0ecbea9b050177fd284c2b199ede383189123c7
+            // pubkeyhash (preimage for POB tx) 6a4e52f31a24300fd2a03766b5ea6e4abf289609
+            // op return hash 9593f12a86fcb6ca72ed621c208b9370ff8f5112 
+            txId = "ac57b3d6bdda9976391217e6d0ecbea9b050177fd284c2b199ede383189123c7";
+            preImage = "6a4e52f31a24300fd2a03766b5ea6e4abf289609".getBytes(Charsets.UTF_8);
+        } else {
+            txId = _txId;
+           
+            preImage = Hex.encode(pubKeyHash).getBytes(Charsets.UTF_8);
+        }
+        
+        ByteArray mapKey = new ByteArray(preImage);
+        if (VERIFIED_PROOF_OF_BURN_PROOFS.containsKey(mapKey)) {
+            return CompletableFuture.completedFuture(Optional.of(VERIFIED_PROOF_OF_BURN_PROOFS.get(mapKey)));
+        } else {
+            return supplyAsync(() -> {
+                try {
+                    BaseHttpClient httpClient = getApiHttpClient(config.bsqMempoolProviders());
+                    String jsonBsqTx = httpClient.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
+                    Preconditions.checkArgument(BsqTxValidator.initialSanityChecks(txId, jsonBsqTx), txId + "Bsq tx sanity check failed");
+                    checkArgument(BsqTxValidator.isBsqTx(httpClient.getBaseUrl()), txId + " is Nnt a valid Bsq tx");
+                    checkArgument(BsqTxValidator.isProofOfBurn(jsonBsqTx), txId + " is not a proof of burn transaction");
+                    long burntAmount = BsqTxValidator.getBurntAmount(jsonBsqTx);
+                    checkArgument(burntAmount >= getMinBurnAmount(type), "Insufficient BSQ burn. burntAmount=" + burntAmount);
+                    String hashOfPreImage = Hex.encode(DigestUtil.hash(preImage));
+                    BsqTxValidator.getOpReturnData(jsonBsqTx).ifPresentOrElse(
+                            opReturnData -> {
+                                // First 2 bytes in opReturn are type and version
+                                byte[] hashFromOpReturnDataAsBytes = Arrays.copyOfRange(Hex.decode(opReturnData), 2, 22);
+                                String hashFromOpReturnData = Hex.encode(hashFromOpReturnDataAsBytes);
+                                checkArgument(hashOfPreImage.equalsIgnoreCase(hashFromOpReturnData),
+                                        "pubKeyHash does not match opReturn data");
+                            },
+                            () -> {
+                                throw new IllegalArgumentException("no opReturn element found");
+                            });
+                    long date = BsqTxValidator.getValidatedTxDate(jsonBsqTx);
+                    Entitlement.ProofOfBurnProof verifiedProof = new Entitlement.ProofOfBurnProof(txId, burntAmount, date);
+                    VERIFIED_PROOF_OF_BURN_PROOFS.put(mapKey, verifiedProof);
+                    return Optional.of(verifiedProof);
+                } catch (IllegalArgumentException e) {
+                    log.warn("check failed: {}", e.getMessage(), e);
+                } catch (IOException e) {
+                    if (e.getCause() instanceof HttpException &&
+                            e.getCause().getMessage() != null &&
+                            e.getCause().getMessage().equalsIgnoreCase("Bisq transaction not found")) {
+                        log.error("Tx might be not confirmed yet", e);
+                    } else {
+                        log.warn("Mem pool query failed:", e);
+                    }
+                } catch (Throwable t) {
+                    t.printStackTrace();
                 }
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
-            return Optional.empty();
-        });
+                return Optional.empty();
+            });
+        }
     }
 
     public CompletableFuture<Optional<Entitlement.Proof>> verifyBondedRole(String txId, String signature, String pubKeyHash) {
@@ -242,7 +277,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     public long getMinBurnAmount(Entitlement.Type type) {
         return switch (type) {
             //todo for dev testing reduced to 6 BSQ
-            case LIQUIDITY_PROVIDER -> 600; // will be 5000, 6 BSQ used for dev testing
+            case LIQUIDITY_PROVIDER -> USE_DEV_TEST_POB_VALUES ? 600 : 5000;
             case CHANNEL_MODERATOR -> 10000;
             default -> 0;
         };

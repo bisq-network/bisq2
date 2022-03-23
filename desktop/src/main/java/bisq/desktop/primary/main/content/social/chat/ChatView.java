@@ -327,7 +327,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             userName.setText(item.getSenderUserName());
                             userName.setOnMouseClicked(e -> controller.onUserNameClicked(item.getSenderUserName()));
 
-                            chatUserIcon.setChatUser(item.getChatUser());
+                            chatUserIcon.setChatUser(item.getChatUser(), model.getUserProfileService());
                             chatUserIcon.setCursor(Cursor.HAND);
                             chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
                             hBox.setOnMouseEntered(e -> {
