@@ -18,22 +18,50 @@
 package bisq.desktop.primary.main.content.wallet.receive;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.BisqGridPane;
 import bisq.i18n.Res;
 import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 
 public class WalletReceiveView extends View<VBox, WalletReceiveModel, WalletReceiveController> {
     public WalletReceiveView(WalletReceiveModel model, WalletReceiveController controller) {
         super(new VBox(), model, controller);
 
+        Button generateNewAddressButton = buildGenerateAddressButton(controller);
+        Button copyButton = buildCopyButton(controller);
+        TextField textField = buildAddressTextField(model);
+
+        var gridPane = new BisqGridPane();
+        gridPane.addColumn(0, textField);
+        gridPane.addColumn(1, copyButton);
+
+        root.getChildren().addAll(generateNewAddressButton, gridPane);
+    }
+
+    private TextField buildAddressTextField(WalletReceiveModel model) {
+        TextField textField = new TextField();
+        textField.setPrefWidth(500);
+        textField.textProperty().bind(model.getAddress());
+        textField.setEditable(false);
+        return textField;
+    }
+
+    private Button buildCopyButton(WalletReceiveController controller) {
+        var copyButton = new Button();
+        var imageView = new ImageView(new Image("images/copy_button.png"));
+        imageView.setFitHeight(15.0);
+        imageView.setFitWidth(15.0);
+        copyButton.setGraphic(imageView);
+        copyButton.setOnAction(event -> controller.copyAddress());
+        return copyButton;
+    }
+
+    private Button buildGenerateAddressButton(WalletReceiveController controller) {
         var generateNewAddressButton = new Button(Res.get("wallet.receive.generateNewAddress"));
         generateNewAddressButton.setOnAction(event -> controller.onGenerateNewAddress());
-
-        ListView<String> listView = new ListView<>();
-        listView.setCellFactory(param -> new WalletReceiveListCell());
-        listView.setItems(model.getListItems());
-
-        root.getChildren().addAll(generateNewAddressButton, listView);
+        return generateNewAddressButton;
     }
 }

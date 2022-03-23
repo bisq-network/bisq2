@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.wallet.receive;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.wallets.WalletService;
 import lombok.Getter;
@@ -37,6 +38,10 @@ public class WalletReceiveController implements Controller {
 
     public void onGenerateNewAddress() {
         walletService.getNewAddress("")
-                .thenAccept(newAddress -> UIThread.run(() -> model.addNewAddress(newAddress)));
+                .thenAccept(newAddress -> UIThread.run(() -> model.setAddress(newAddress)));
+    }
+
+    public void copyAddress() {
+        ClipboardUtil.copyToClipboard(model.getAddress().getValue());
     }
 }

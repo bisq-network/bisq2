@@ -18,17 +18,18 @@
 package bisq.desktop.primary.main.content.wallet.receive;
 
 import bisq.desktop.common.view.Model;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ObservableValue;
 
 public class WalletReceiveModel implements Model {
-    private final ObservableList<String> listItems = FXCollections.observableArrayList();
+    private final StringProperty address = new SimpleStringProperty();
 
-    public void addNewAddress(String address) {
-        listItems.add(address);
+    public ObservableValue<String> getAddress() {
+        return address;
     }
 
-    public ObservableList<String> getListItems() {
-        return listItems;
+    public void setAddress(String newAddress) {
+        address.set(newAddress);
     }
 }
