@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.Proxy;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -33,10 +34,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class ClearNetHttpClient extends BaseHttpClient {
+    private Proxy proxy;
     private HttpURLConnection connection;
 
     public ClearNetHttpClient(String baseUrl, String userAgent) {
         super(baseUrl, userAgent);
+    }
+
+    public ClearNetHttpClient(String baseUrl, String userAgent, Proxy proxy) {
+        super(baseUrl, userAgent);
+        this.proxy = proxy;
     }
 
     @Override
@@ -62,7 +69,14 @@ public class ClearNetHttpClient extends BaseHttpClient {
         String spec = httpMethod == HttpMethod.GET ? baseUrl + param : baseUrl;
         try {
             URL url = new URL(spec);
-            connection = (HttpURLConnection) url.openConnection();
+            if (proxy == null) {
+                connection = (HttpURLConnection) url.openConnection();
+            }
+            else {
+                // Allows I2P connections
+                // Translation across networks happens via an HTTP proxy exposed by the I2P router
+                connection = (HttpURLConnection) url.openConnection(proxy);
+            }
             connection.setRequestMethod(httpMethod.name());
             connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(30));
             connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(30));

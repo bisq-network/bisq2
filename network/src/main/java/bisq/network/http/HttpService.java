@@ -24,6 +24,8 @@ import bisq.network.http.common.TorHttpClient;
 import bisq.network.p2p.node.transport.Transport;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -42,8 +44,11 @@ public class HttpService {
                                 .orElseThrow(() -> new RuntimeException("No socks5ProxyAddress provided and no Tor socksProxy available.")));
                 return new TorHttpClient(url, userAgent, socks5ProxyProvider);
             case I2P:
-                // TODO We need to figure out how to get a proxy from i2p or require tor in any case
-                throw new IllegalArgumentException("I2P providers not supported yet.");
+                // The I2P router exposes a local HTTP proxy on port 4444 for I2P destinations
+                // TODO Check if this works with embedded router
+                return new ClearNetHttpClient(url, userAgent,
+                        new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 4444))
+                );
             case CLEAR:
                 return new ClearNetHttpClient(url, userAgent);
             default:
