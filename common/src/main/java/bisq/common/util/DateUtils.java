@@ -15,8 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common;
+package bisq.common.util;
 
-public interface Disposable {
-    void dispose();
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
+
+public class DateUtils {
+    public final static Date LAUNCH_DATE = DateUtils.getUTCDate(2022, GregorianCalendar.MARCH, 22);
+    public static Date getUTCDate(int year, int month, int dayOfMonth) {
+        GregorianCalendar calendar = new GregorianCalendar(year, month, dayOfMonth);
+        calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return calendar.getTime();
+    }
 }

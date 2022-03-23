@@ -44,7 +44,7 @@ public class TradeIntentListItem implements TableItem {
 
     TradeIntentListItem(TradeIntent tradeIntent) {
         this.tradeIntent = tradeIntent;
-        networkId = tradeIntent.maker().networkId();
+        networkId = tradeIntent.maker().getNetworkId();
         id = tradeIntent.id();
         userName = "TODO";//tradeIntent.maker().userName();
         ask = tradeIntent.ask();

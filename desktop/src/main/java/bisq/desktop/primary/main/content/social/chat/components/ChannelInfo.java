@@ -112,7 +112,7 @@ public class ChannelInfo {
             members.setAll(channel.getChatMessages().stream()
                     .map(ChatMessage::getChatUser)
                     .distinct()
-                    .map((chatUser -> new ChatUserOverview(chatUser, ignoredChatUserIds.contains(chatUser.id()))))
+                    .map((chatUser -> new ChatUserOverview(chatUser, ignoredChatUserIds.contains(chatUser.getId()))))
                     .sorted()
                     .collect(Collectors.toList()));
             if (channel instanceof PublicChannel publicChannel) {

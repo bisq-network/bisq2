@@ -17,14 +17,15 @@
 
 package bisq.persistence;
 
-import java.io.Serializable;
+import bisq.common.encoding.Proto;
+
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * Interface for the outside envelope object persisted to disk.
  */
-public interface PersistenceClient<T extends Serializable> {
+public interface PersistenceClient<T extends Proto> {
     default CompletableFuture<Optional<T>> readPersisted() {
         return getPersistence().readAsync(persisted -> {
             getPersistableStore().applyPersisted(persisted);

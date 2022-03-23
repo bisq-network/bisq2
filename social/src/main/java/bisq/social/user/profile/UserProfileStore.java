@@ -17,10 +17,15 @@
 
 package bisq.social.user.profile;
 
+import bisq.common.data.ByteArray;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.persistence.PersistableStore;
+import bisq.social.user.Entitlement;
 import lombok.Getter;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Persists my user profiles and the selected user profile.
@@ -30,25 +35,30 @@ public class UserProfileStore implements PersistableStore<UserProfileStore> {
     private final Observable<UserProfile> selectedUserProfile = new Observable<>();
     @Getter
     private final ObservableSet<UserProfile> userProfiles;
+    @Getter
+    private final Map<ByteArray, Entitlement.ProofOfBurnProof> verifiedProofOfBurnProofs = new HashMap<>();
 
     public UserProfileStore() {
         userProfiles = new ObservableSet<>();
     }
 
     private UserProfileStore(ObservableSet<UserProfile> userProfiles,
-                             Observable<UserProfile> selectedUserProfile) {
+                             Observable<UserProfile> selectedUserProfile,
+                             Map<ByteArray, Entitlement.ProofOfBurnProof> verifiedProofOfBurnProofs) {
         this.selectedUserProfile.set(selectedUserProfile.get());
         this.userProfiles = new ObservableSet<>(userProfiles);
+        this.verifiedProofOfBurnProofs.putAll(verifiedProofOfBurnProofs);
     }
 
     @Override
     public UserProfileStore getClone() {
-        return new UserProfileStore(userProfiles, selectedUserProfile);
+        return new UserProfileStore(userProfiles, selectedUserProfile, verifiedProofOfBurnProofs);
     }
 
     @Override
     public void applyPersisted(UserProfileStore persisted) {
         userProfiles.addAll(persisted.getUserProfiles());
         selectedUserProfile.set(persisted.getSelectedUserProfile().get());
+        verifiedProofOfBurnProofs.putAll(persisted.getVerifiedProofOfBurnProofs());
     }
 }

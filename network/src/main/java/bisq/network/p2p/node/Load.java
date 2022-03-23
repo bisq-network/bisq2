@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import java.io.Serializable;
+import bisq.common.encoding.Proto;
 
-public record Load(int numConnections) implements Serializable {
+public record Load(int numConnections) implements Proto {
 }

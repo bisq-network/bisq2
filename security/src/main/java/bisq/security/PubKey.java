@@ -17,8 +17,9 @@
 
 package bisq.security;
 
-import java.io.Serializable;
+import bisq.common.encoding.Proto;
+
 import java.security.PublicKey;
 
-public record PubKey(PublicKey publicKey, String keyId) implements Serializable {
+public record PubKey(PublicKey publicKey, String keyId) implements Proto {
 }

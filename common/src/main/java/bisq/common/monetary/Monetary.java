@@ -18,19 +18,19 @@
 package bisq.common.monetary;
 
 import bisq.common.currency.TradeCurrency;
+import bisq.common.encoding.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 
 @EqualsAndHashCode
 @Getter
 @ToString
 @Slf4j
-public abstract class Monetary implements Comparable<Monetary>, Serializable {
+public abstract class Monetary implements Comparable<Monetary>, Proto {
     public static long doubleValueToLong(double value, int precision) {
         double max = BigDecimal.valueOf(Long.MAX_VALUE).movePointLeft(precision).doubleValue();
         if (value > max) {

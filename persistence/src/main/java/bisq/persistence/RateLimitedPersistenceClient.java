@@ -17,10 +17,10 @@
 
 package bisq.persistence;
 
+import bisq.common.encoding.Proto;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -32,7 +32,7 @@ import java.util.concurrent.CompletableFuture;
  * used if data loss is not critical (e.g. network data) and when write frequency is rather high.
  */
 @Slf4j
-public abstract class RateLimitedPersistenceClient<T extends Serializable> implements PersistenceClient<T> {
+public abstract class RateLimitedPersistenceClient<T extends Proto> implements PersistenceClient<T> {
     private volatile long lastWrite;
     @Getter
     private volatile boolean dropped;

@@ -17,6 +17,7 @@
 
 package bisq.network;
 
+import bisq.common.encoding.Proto;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.security.PubKey;
@@ -24,7 +25,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -33,7 +33,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @ToString
 @Getter
-public class NetworkId implements Serializable {
+public class NetworkId implements Proto {
     private final PubKey pubKey;
     private final String nodeId;
     // NetworkId is used in objects which gets hashed, so we need to have a deterministic order in the map. 

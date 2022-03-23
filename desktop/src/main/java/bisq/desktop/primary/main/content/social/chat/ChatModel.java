@@ -81,6 +81,6 @@ public class ChatModel implements Model {
     }
 
      boolean isMyMessage(ChatMessage chatMessage) {
-        return chatMessage.getChatUser().id().equals(userProfileService.getPersistableStore().getSelectedUserProfile().get().id());
+        return chatMessage.getChatUser().getId().equals(userProfileService.getPersistableStore().getSelectedUserProfile().get().chatUser().getId());
     }
 }

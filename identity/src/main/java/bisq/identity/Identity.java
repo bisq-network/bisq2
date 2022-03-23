@@ -17,17 +17,14 @@
 
 package bisq.identity;
 
-import bisq.common.data.ByteArray;
-import bisq.common.encoding.Hex;
+import bisq.common.encoding.Proto;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
-import bisq.security.DigestUtil;
 import bisq.security.PubKey;
 
-import java.io.Serializable;
 import java.security.KeyPair;
 
-public record Identity(String domainId, NetworkId networkId, KeyPair keyPair) implements Serializable {
+public record Identity(String domainId, NetworkId networkId, KeyPair keyPair) implements Proto {
     public NetworkIdWithKeyPair getNodeIdAndKeyPair() {
         return new NetworkIdWithKeyPair(networkId, keyPair);
     }
@@ -38,18 +35,5 @@ public record Identity(String domainId, NetworkId networkId, KeyPair keyPair) im
 
     public PubKey pubKey() {
         return networkId.getPubKey();
-    }
-
-    // Use hash of public key as ID
-    public String id() {
-        return Hex.encode(pubKeyHash());
-    }
-
-    public byte[] pubKeyHash() {
-        return DigestUtil.hash(keyPair.getPublic().getEncoded());
-    }
-
-    public ByteArray pubKeyHashAsByteArray() {
-        return new ByteArray(pubKeyHash());
     }
 }

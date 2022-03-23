@@ -17,9 +17,9 @@
 
 package bisq.network.p2p;
 
+import bisq.common.encoding.Proto;
 import lombok.Getter;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -29,14 +29,14 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @Deprecated
 public class MockNetworkService implements INetworkService {
     public interface Listener {
-        void onDataAdded(Serializable serializable);
+        void onDataAdded(Proto serializable);
 
-        void onDataRemoved(Serializable serializable);
+        void onDataRemoved(Proto serializable);
     }
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Getter
-    private final Map<String, Serializable> map = new HashMap<>();
+    private final Map<String, Proto> map = new HashMap<>();
 
     public MockNetworkService() {
     }
@@ -45,7 +45,7 @@ public class MockNetworkService implements INetworkService {
 
     }
 
-    public void addData(Serializable serializable) {
+    public void addData(Proto serializable) {
         map.put(serializable.toString(), serializable);
         listeners.forEach(e -> e.onDataAdded(serializable));
     }

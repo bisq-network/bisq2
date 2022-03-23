@@ -17,18 +17,17 @@
 
 package bisq.account.accounts;
 
+import bisq.common.encoding.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
-
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class AccountPayload implements Serializable {
+public abstract class AccountPayload implements Proto {
     private final String settlementMethodId;
 
     public AccountPayload(String settlementMethodId) {

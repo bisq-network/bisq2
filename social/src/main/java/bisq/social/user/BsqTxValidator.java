@@ -18,19 +18,18 @@
 package bisq.social.user;
 
 import bisq.common.data.Pair;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
-
+import bisq.common.util.DateUtils;
+import com.google.gson.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BsqTxValidator {
-
     public static boolean initialSanityChecks(String txId, String jsonTxt) {
         if (jsonTxt == null || jsonTxt.length() == 0) {
             return false;
@@ -40,15 +39,15 @@ public class BsqTxValidator {
         if (json.get("id") == null) {
             return false;
         }
-        // txid should match what we requested
+        // txId should match what we requested
         if (!txId.equals(json.get("id").getAsString())) {
             return false;
         }
         return true;
     }
 
-    public static boolean isBsqTx(String url, String txId, String jsonTxt) {
-        return url.matches(".*bisq.*") && initialSanityChecks(txId, jsonTxt);
+    public static boolean isBsqTx(String url) {
+        return url.matches(".*bisq.*");
     }
 
     public static boolean isProofOfBurn(String jsonTxt) {
@@ -76,6 +75,15 @@ public class BsqTxValidator {
             return 0;   // no json element, assume zero burnt amount
         }
         return burntFee.getAsLong();
+    }
+
+    public static long getValidatedTxDate(String jsonTxt) {
+        JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
+        JsonElement time = json.get("time");
+        checkNotNull(time);
+        long date = time.getAsLong();
+        checkArgument(new Date(date).after(DateUtils.LAUNCH_DATE));
+        return date;
     }
 
     public static Optional<String> getOpReturnData(String jsonTxt) {

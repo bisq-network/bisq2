@@ -17,7 +17,7 @@
 
 package bisq.offer;
 
-import bisq.network.p2p.message.Proto;
+import bisq.common.encoding.Proto;
 
 public interface PriceSpec extends Proto {
 }

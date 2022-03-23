@@ -17,32 +17,82 @@
 
 package bisq.social.user;
 
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
+import bisq.common.encoding.Proto;
 import bisq.network.NetworkId;
 import bisq.security.DigestUtil;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * Publicly shared chat user data
+ * We cache pubKey hash, id and generated userName.
+ * ChatUser is part of the ChatMessage so we have many instances from the same chat user and want to avoid 
+ * costs from hashing and the userame generation. We could also try to restructure the domain model to avoid that 
+ * the chat user is part of the message (e.g. use an id and reference to p2p network data for chat user). 
  */
-//todo use cache for pubKeyHash and userName
-public record ChatUser(NetworkId networkId, Set<Entitlement> entitlements) implements Serializable {
+@ToString
+@Slf4j
+public class ChatUser implements Proto {
+    private static final transient Map<ByteArray, DerivedData> CACHE = new HashMap<>();
+
+    @Getter
+    private final NetworkId networkId;
+    @Getter
+    private final Set<Entitlement> entitlements;
+    private final DerivedData derivedData;
+
+    public ChatUser(NetworkId networkId, Set<Entitlement> entitlements) {
+        this.networkId = networkId;
+        this.entitlements = entitlements;
+        derivedData = getDerivedData(networkId.getPubKey().publicKey().getEncoded());
+    }
+
     public ChatUser(NetworkId networkId) {
         this(networkId, new HashSet<>());
     }
 
-    public byte[] pubKeyHash() {
-        return DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded());
+    public boolean hasEntitlementType(Entitlement.Type type) {
+        return entitlements.stream().anyMatch(e -> e.entitlementType() == type);
     }
 
-    public String id() {
-        return Hex.encode(pubKeyHash());
+    // Delegates
+    public String getId() {
+        return derivedData.id();
     }
 
-    public String userName() {
-        return UserNameGenerator.fromHash(pubKeyHash());
+    public String getUserName() {
+        return derivedData.userName;
+    }
+
+    public byte[] getPubKeyHash() {
+        return derivedData.pubKeyHash().getBytes();
+    }   public ByteArray getPubKeyHashAsByteArray() {
+        return derivedData.pubKeyHash();
+    }
+
+    private static DerivedData getDerivedData(byte[] pubKeyBytes) {
+        ByteArray mapKey = new ByteArray(pubKeyBytes);
+        if (!CACHE.containsKey(mapKey)) {
+            byte[] pubKeyHash = DigestUtil.hash(pubKeyBytes);
+            String id = Hex.encode(pubKeyHash);
+            String userName = UserNameGenerator.fromHash(pubKeyHash);
+            DerivedData derivedData = new DerivedData(new ByteArray(pubKeyHash), id, userName);
+            CACHE.put(mapKey, derivedData);
+        }
+        return CACHE.get(mapKey);
+    }
+
+    private static record DerivedData(ByteArray pubKeyHash, String id, String userName) implements Proto {
+    }
+
+    public static record BurnInfo(long totalBsqBurned, long firstBurnDate) implements Proto {
     }
 }

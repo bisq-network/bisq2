@@ -18,9 +18,9 @@
 package bisq.common.data;
 
 import bisq.common.encoding.Hex;
+import bisq.common.encoding.Proto;
 import lombok.Getter;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -31,7 +31,7 @@ import java.util.Arrays;
  */
 @SuppressWarnings("ClassCanBeRecord")
 @Getter
-public class ByteArray implements Serializable {
+public class ByteArray implements Proto {
     private final byte[] bytes;
 
     public ByteArray(byte[] bytes) {

@@ -17,13 +17,12 @@
 
 package bisq.offer;
 
+import bisq.common.encoding.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-
-import java.io.Serializable;
 @EqualsAndHashCode
 @Getter
-public class OpenOffer implements Serializable {
+public class OpenOffer implements Proto {
     private final Offer offer;
 
     public OpenOffer(Offer offer) {

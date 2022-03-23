@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
-import bisq.common.ObjectSerializer;
+import bisq.common.encoding.ObjectSerializer;
 import bisq.common.data.ByteArray;
 import bisq.common.util.OsUtils;
 import bisq.network.p2p.services.data.storage.Result;

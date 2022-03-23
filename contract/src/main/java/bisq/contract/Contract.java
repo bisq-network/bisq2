@@ -18,17 +18,16 @@
 package bisq.contract;
 
 import bisq.account.protocol.SwapProtocolType;
+import bisq.common.encoding.Proto;
 import bisq.common.monetary.Monetary;
 import bisq.network.NetworkId;
 import bisq.offer.Offer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.io.Serializable;
-
 @EqualsAndHashCode
 @Getter
-public class Contract implements Serializable {
+public class Contract implements Proto {
     private final NetworkId takerNetworkId;
     private final SwapProtocolType protocolType;
     private final Offer offer;

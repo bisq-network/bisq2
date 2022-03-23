@@ -84,6 +84,17 @@ New css for bisq2.
     -fx-text-fill: -bs-color-gray-fafa;
 }
 
+#proof-of-burn-tooltip {
+    -fx-background: -bs-color-gray-fafa;
+    -fx-text-fill: -bs-text-color;
+    -fx-background-color: -bs-color-gray-fafa;
+    -fx-background-radius: 6px;
+    -fx-background-insets: 0;
+    -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
+    -fx-effect: dropshadow(three-pass-box, -bs-text-color-transparent, 10, 0, 0, 3);
+    -fx-font-size: 0.85em;
+}
+
 /*
 .jfx-badge .badge-pane {
     -fx-background-color: -bs-red;

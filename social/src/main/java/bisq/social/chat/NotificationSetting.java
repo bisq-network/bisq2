@@ -17,9 +17,9 @@
 
 package bisq.social.chat;
 
-import java.io.Serializable;
+import bisq.common.encoding.Proto;
 
-public enum NotificationSetting implements Serializable {
+public enum NotificationSetting implements Proto {
     ALL,
     MENTION,
     NEVER

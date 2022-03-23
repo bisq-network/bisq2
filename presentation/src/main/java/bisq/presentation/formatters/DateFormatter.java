@@ -24,6 +24,10 @@ import java.util.Date;
 import java.util.TimeZone;
 
 public class DateFormatter {
+    public static String formatDateTime(long date) {
+        return formatDateTime(new Date(date));
+    }
+
     public static String formatDateTime(Date date) {
         return formatDateTime(date, true);
     }

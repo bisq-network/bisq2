@@ -17,8 +17,7 @@
 
 package bisq.social.chat;
 
-import bisq.network.NetworkId;
-import bisq.network.p2p.message.Proto;
+import bisq.common.encoding.Proto;
 import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,55 +32,33 @@ import java.util.Optional;
 public abstract class ChatMessage implements Proto {
     protected final String channelId;
     protected final String text;
-
+    protected  ChatUser chatUser;
     @Nullable
     protected final QuotedMessage quotedMessage;
-    protected final NetworkId senderNetworkId;
     protected final long date;
     protected final ChannelType channelType;
     protected final boolean wasEdited;
 
-    @Nullable
-    protected transient String senderUserName;
-    @Nullable
-    protected transient ChatUser chatUser;
 
     protected ChatMessage(String channelId,
+                          ChatUser chatUser,
                           String text,
                           Optional<QuotedMessage> quotedMessage,
-                          NetworkId senderNetworkId,
                           long date,
                           ChannelType channelType,
                           boolean wasEdited) {
         this.channelId = channelId;
+        this.chatUser = chatUser;
         this.text = text;
         this.quotedMessage = quotedMessage.orElse(null);
-        this.senderNetworkId = senderNetworkId;
         this.date = date;
         this.channelType = channelType;
-
-        //todo we need also entitlements
-        chatUser = new ChatUser(senderNetworkId);
         this.wasEdited = wasEdited;
-        this.senderUserName = chatUser.userName();
+       
     }
 
     @Nullable
     public Optional<QuotedMessage> getQuotedMessage() {
         return Optional.ofNullable(quotedMessage);
-    }
-
-    public ChatUser getChatUser() {
-        if (chatUser == null) {
-            chatUser = new ChatUser(senderNetworkId);
-        }
-        return chatUser;
-    }
-
-    public String getSenderUserName() {
-        if (senderUserName == null) {
-            senderUserName = getChatUser().userName();
-        }
-        return senderUserName;
     }
 }

@@ -17,12 +17,12 @@
 
 package bisq.persistence;
 
-import java.io.Serializable;
+import bisq.common.encoding.Proto;
 
 /**
  * Interface for the outside envelope object persisted to disk.
  */
-public interface PersistableStore<T> extends Serializable {
+public interface PersistableStore<T> extends Proto {
     T getClone();
 
     void applyPersisted(T persisted);

@@ -29,6 +29,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -63,7 +64,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
     @Override
     public int compareTo(ChatUserOverview o) {
-        return controller.model.chatUser.userName().compareTo(o.controller.model.chatUser.userName());
+        return controller.model.chatUser.getUserName().compareTo(o.controller.model.chatUser.getUserName());
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -84,12 +85,12 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
                 return;
             }
 
-            model.id.set(chatUser.id());
-            model.userName.set(chatUser.userName());
-            model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.pubKeyHash()), false));
-            String entitledRoles = chatUser.entitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
+            model.id.set(chatUser.getId());
+            model.userName.set(chatUser.getUserName());
+            model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash()), false));
+            String entitledRoles = chatUser.getEntitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
             model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
-            model.entitlementsVisible.set(!chatUser.entitlements().isEmpty());
+            model.entitlementsVisible.set(!chatUser.getEntitlements().isEmpty());
         }
 
         @Override
@@ -129,7 +130,14 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
             roboIconImageView.setFitWidth(30);
             roboIconImageView.setFitHeight(30);
 
-            root.getChildren().addAll(roboIconImageView, userName);
+            ImageView trust = new ImageView();
+            trust.setId("trust");
+            trust.setX(20);
+            trust.setY(20);
+
+            StackPane icons= new StackPane();
+            icons.getChildren().addAll(roboIconImageView, trust);
+            root.getChildren().addAll(icons, userName);
 
             // todo add tooltip overlay for id and entitlements
             id = new BisqLabel();

@@ -38,16 +38,16 @@ import java.util.Optional;
 @EqualsAndHashCode
 @Slf4j
 public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, AddDataRequest {
-
     public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedPayload payload, KeyPair keyPair)
             throws GeneralSecurityException {
+
         byte[] hash = DigestUtil.hash(payload.serialize());
         byte[] hashOfPublicKey = DigestUtil.hash(keyPair.getPublic().getEncoded());
         int sequenceNumber = store.getSequenceNumber(hash) + 1;
         AuthenticatedData data = new AuthenticatedData(payload, sequenceNumber, hashOfPublicKey, System.currentTimeMillis());
         byte[] serialized = data.serialize();
         byte[] signature = SignatureUtil.sign(serialized, keyPair.getPrivate());
-      /*  log.error("hash={}", Hex.encode(hash));
+         /*  log.error("hash={}", Hex.encode(hash));
         log.error("keyPair.getPublic().getEncoded()={}", Hex.encode(keyPair.getPublic().getEncoded()));
         log.error("hashOfPublicKey={}", Hex.encode(hashOfPublicKey));
         log.error("sequenceNumber={}", sequenceNumber);
@@ -85,11 +85,11 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
 
     public boolean isSignatureInvalid() {
         try {
-            /*log.error("authenticatedData={}", authenticatedData);
+         /*   log.error("authenticatedData={}", authenticatedData);
             log.error("authenticatedData.serialize()={}", Hex.encode(authenticatedData.serialize()));
             log.error("signature={}", Hex.encode(signature));
             log.error("getOwnerPublicKey()={}", Hex.encode(getOwnerPublicKey().getEncoded()));*/
-           
+
             return !SignatureUtil.verify(authenticatedData.serialize(), signature, getOwnerPublicKey());
         } catch (Exception e) {
             log.warn(e.toString(), e);

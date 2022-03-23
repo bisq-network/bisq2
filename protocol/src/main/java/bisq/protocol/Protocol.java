@@ -17,6 +17,7 @@
 
 package bisq.protocol;
 
+import bisq.common.encoding.Proto;
 import bisq.contract.Contract;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
@@ -27,7 +28,6 @@ import bisq.persistence.PersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -35,7 +35,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
-public abstract class Protocol<T extends ProtocolModel> implements MessageListener, Serializable {
+public abstract class Protocol<T extends ProtocolModel> implements MessageListener, Proto {
 
     public interface Listener {
         void onStateChanged(ProtocolModel.State state);

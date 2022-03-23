@@ -17,12 +17,12 @@
 
 package bisq.persistence;
 
+import bisq.common.encoding.Proto;
 import bisq.common.util.CompletableFutureUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -32,25 +32,25 @@ public class PersistenceService {
     @Getter
     private final String baseDir;
     @Getter
-    protected final List<PersistenceClient<? extends Serializable>> clients = new CopyOnWriteArrayList<>();
-    protected final List<Persistence<? extends Serializable>> persistenceInstances = new CopyOnWriteArrayList<>();
+    protected final List<PersistenceClient<? extends Proto>> clients = new CopyOnWriteArrayList<>();
+    protected final List<Persistence<? extends Proto>> persistenceInstances = new CopyOnWriteArrayList<>();
 
     public PersistenceService(String baseDir) {
         this.baseDir = baseDir;
     }
 
-    public <T extends Serializable> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
-                                                                          Serializable serializable) {
+    public <T extends Proto> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
+                                                                          Proto serializable) {
         return getOrCreatePersistence(client, "db", serializable.getClass().getSimpleName());
     }
 
-    public <T extends Serializable> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
+    public <T extends Proto> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
                                                                           String subDir,
-                                                                          Serializable serializable) {
+                                                                          Proto serializable) {
         return getOrCreatePersistence(client, subDir, serializable.getClass().getSimpleName());
     }
 
-    public <T extends Serializable> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
+    public <T extends Proto> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
                                                                           String subDir,
                                                                           String fileName) {
         clients.add(client);

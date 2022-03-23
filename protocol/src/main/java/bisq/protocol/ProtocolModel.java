@@ -17,19 +17,18 @@
 
 package bisq.protocol;
 
+import bisq.common.encoding.Proto;
 import bisq.contract.Contract;
 import bisq.network.p2p.message.Message;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
-
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public abstract class ProtocolModel implements Serializable {
+public abstract class ProtocolModel implements Proto {
     public enum State {
         IDLE,
         PENDING,

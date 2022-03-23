@@ -17,9 +17,9 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
-import bisq.common.ObjectSerializer;
+import bisq.common.encoding.ObjectSerializer;
 import bisq.common.encoding.Hex;
-import bisq.network.p2p.message.Proto;
+import bisq.common.encoding.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 

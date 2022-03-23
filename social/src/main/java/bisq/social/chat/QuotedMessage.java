@@ -1,6 +1,7 @@
 package bisq.social.chat;
 
-import java.io.Serializable;
+import bisq.common.data.ByteArray;
+import bisq.common.encoding.Proto;
 
-public record QuotedMessage(String userName, byte[] pubKeyHash, String message) implements Serializable {
+public record QuotedMessage(String userName, ByteArray pubKeyHash, String message) implements Proto {
 }

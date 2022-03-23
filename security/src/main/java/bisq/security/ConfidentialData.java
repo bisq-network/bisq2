@@ -17,11 +17,11 @@
 
 package bisq.security;
 
-import java.io.Serializable;
+import bisq.common.encoding.Proto;
 
 public record ConfidentialData(byte[] encodedSenderPublicKey,
                                byte[] hmac,
                                byte[] iv,
                                byte[] cypherText,
-                               byte[] signature) implements Serializable {
+                               byte[] signature) implements Proto {
 }

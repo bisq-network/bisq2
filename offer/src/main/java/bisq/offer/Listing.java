@@ -17,20 +17,20 @@
 
 package bisq.offer;
 
+import bisq.account.protocol.SwapProtocolType;
+import bisq.common.encoding.Proto;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkId;
 import bisq.offer.options.ListingOption;
-import bisq.account.protocol.SwapProtocolType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 
 @EqualsAndHashCode
 @Getter
-public abstract class Listing implements Serializable {
+public abstract class Listing implements Proto {
     protected final String id;
     protected final long date;
     protected final NetworkId makerNetworkId;

@@ -17,7 +17,7 @@
 
 package bisq.common.data;
 
-import java.io.Serializable;
+import bisq.common.encoding.Proto;
 
-public record Pair<A, B>(A first, B second) implements Serializable {
+public record Pair<A, B>(A first, B second) implements Proto {
 }

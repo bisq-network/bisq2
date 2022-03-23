@@ -17,7 +17,7 @@
 
 package bisq.offer;
 
-import bisq.network.p2p.message.Proto;
+import bisq.common.encoding.Proto;
 
 // It is always related to the base currency. E.g. BTC-USD market -> BUY means Buy BTC
 public enum Direction implements Proto {
