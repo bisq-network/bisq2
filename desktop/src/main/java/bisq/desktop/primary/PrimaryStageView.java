@@ -77,8 +77,8 @@ public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, Primar
         log.info("Attaching view to stage took {} ms", System.currentTimeMillis() - ts);
     }
 
-    private boolean configCss() {
-        return scene.getStylesheets().setAll(
+    private void configCss() {
+         scene.getStylesheets().setAll(
                 requireNonNull(getClass().getResource("/bisq.css")).toExternalForm(),
                 requireNonNull(getClass().getResource("/bisq2.css")).toExternalForm(),
                 requireNonNull(getClass().getResource("/images.css")).toExternalForm(),

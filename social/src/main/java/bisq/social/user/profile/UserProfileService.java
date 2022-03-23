@@ -24,6 +24,7 @@ import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
+import bisq.network.http.common.HttpException;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -156,20 +157,29 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
             try {
                 BaseHttpClient httpClient = getApiHttpClient(config.bsqMempoolProviders());
                 String jsonBsqTx = httpClient.get("tx/" + proofOfBurnTxId, Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
-                Preconditions.checkArgument(BsqTxValidator.initialSanityChecks(proofOfBurnTxId, jsonBsqTx), "bsq tx sanity checks");
-                checkArgument(BsqTxValidator.isBsqTx(httpClient.getBaseUrl(), proofOfBurnTxId, jsonBsqTx), "isBsqTx");
-                checkArgument(BsqTxValidator.isProofOfBurn(jsonBsqTx), "is proof of burn transaction");
-                checkArgument(BsqTxValidator.getBurntAmount(jsonBsqTx) >= getMinBurnAmount(type), "insufficient burn");
+                Preconditions.checkArgument(BsqTxValidator.initialSanityChecks(proofOfBurnTxId, jsonBsqTx), proofOfBurnTxId + "Bsq tx sanity check failed");
+                checkArgument(BsqTxValidator.isBsqTx(httpClient.getBaseUrl()), proofOfBurnTxId + " is Nnt a valid Bsq tx");
+                checkArgument(BsqTxValidator.isProofOfBurn(jsonBsqTx), proofOfBurnTxId + " is not a proof of burn transaction");
+                long burntAmount = BsqTxValidator.getBurntAmount(jsonBsqTx);
+                checkArgument(burntAmount >= getMinBurnAmount(type), "Insufficient BSQ burn. burntAmount=" + burntAmount);
                 BsqTxValidator.getOpReturnData(jsonBsqTx).ifPresentOrElse(
-                        (opReturn) -> checkArgument(pubKeyHash.equalsIgnoreCase(opReturn), "opReturnMatches"),
+                        opReturn -> checkArgument(pubKeyHash.equalsIgnoreCase(opReturn), "pubKeyHash does not match opReturn data"),
                         () -> {
-                            throw new IllegalArgumentException("no opreturn found");
+                            throw new IllegalArgumentException("no opReturn element found");
                         });
                 return Optional.of(new Entitlement.ProofOfBurnProof(proofOfBurnTxId));
             } catch (IllegalArgumentException e) {
                 log.warn("check failed: {}", e.getMessage(), e);
             } catch (IOException e) {
-                log.warn("mempool query failed:", e);
+                if (e.getCause() instanceof HttpException &&
+                        e.getCause().getMessage() != null &&
+                        e.getCause().getMessage().equalsIgnoreCase("Bisq transaction not found")) {
+                    log.error("Tx might be not confirmed yet", e);
+                } else {
+                    log.warn("Mem pool query failed:", e);
+                }
+            } catch (Throwable t) {
+                t.printStackTrace();
             }
             return Optional.empty();
         });
@@ -187,7 +197,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                 String jsonBtcTx = httpClientBtc.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClientBtc.userAgent)));
                 checkArgument(BsqTxValidator.initialSanityChecks(txId, jsonBsqTx), "bsq tx sanity checks");
                 Preconditions.checkArgument(BtcTxValidator.initialSanityChecks(txId, jsonBtcTx), "btc tx sanity checks");
-                checkArgument(BsqTxValidator.isBsqTx(httpClientBsq.getBaseUrl(), txId, jsonBsqTx), "isBsqTx");
+                checkArgument(BsqTxValidator.isBsqTx(httpClientBsq.getBaseUrl()), "isBsqTx");
                 checkArgument(BsqTxValidator.isLockup(jsonBsqTx), "is lockup transaction");
                 String signingPubkeyAsHex = BtcTxValidator.getFirstInputPubKey(jsonBtcTx);
                 PublicKey signingPubKey = KeyGeneration.generatePublicFromCompressed(Hex.decode(signingPubkeyAsHex));

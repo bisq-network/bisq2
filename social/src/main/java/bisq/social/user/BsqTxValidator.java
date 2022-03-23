@@ -18,12 +18,7 @@
 package bisq.social.user;
 
 import bisq.common.data.Pair;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
-
+import com.google.gson.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -40,15 +35,15 @@ public class BsqTxValidator {
         if (json.get("id") == null) {
             return false;
         }
-        // txid should match what we requested
+        // txId should match what we requested
         if (!txId.equals(json.get("id").getAsString())) {
             return false;
         }
         return true;
     }
 
-    public static boolean isBsqTx(String url, String txId, String jsonTxt) {
-        return url.matches(".*bisq.*") && initialSanityChecks(txId, jsonTxt);
+    public static boolean isBsqTx(String url) {
+        return url.matches(".*bisq.*");
     }
 
     public static boolean isProofOfBurn(String jsonTxt) {
