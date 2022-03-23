@@ -20,29 +20,25 @@ package bisq.desktop.primary.main.content.social.chat;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.StringUtils;
-import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
+import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.security.DigestUtil;
 import bisq.social.chat.ChatMessage;
 import bisq.social.chat.QuotedMessage;
-import javafx.scene.image.Image;
+import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 @Getter
 @EqualsAndHashCode
 class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredListItem {
-    private static final Map<ByteArray, Image> iconImageCache = new HashMap<>();
-
     private final ChatMessage chatMessage;
     private final String message;
     private final String senderUserName;
@@ -51,24 +47,20 @@ class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredLi
     private final String chatUserId;
     private final ByteArray pubKeyHashAsByteArray;
     private final Optional<QuotedMessage> quotedMessage;
+    private final ChatUser chatUser;
 
     public ChatMessageListItem(ChatMessage chatMessage) {
         this.chatMessage = chatMessage;
-        message = chatMessage.getText();
+        String editPostFix = chatMessage.isWasEdited() ? " " + Res.get("social.message.wasEdited") : "";
+        message = chatMessage.getText() + editPostFix;
         quotedMessage = chatMessage.getQuotedMessage();
-        senderUserName = chatMessage.getSenderUserName();
+         chatUser = chatMessage.getChatUser();
+        senderUserName = chatUser.getUserName();
         time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
         date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));
-        byte[] pubKeyHash = DigestUtil.hash(chatMessage.getSenderNetworkId().getPubKey().publicKey().getEncoded());
+        byte[] pubKeyHash = DigestUtil.hash(chatUser.getNetworkId().getPubKey().publicKey().getEncoded());
         pubKeyHashAsByteArray = new ByteArray(pubKeyHash);
         chatUserId = Hex.encode(pubKeyHash);
-    }
-
-    public Image getIconImage() {
-        if (!iconImageCache.containsKey(pubKeyHashAsByteArray)) {
-            iconImageCache.put(pubKeyHashAsByteArray, RoboHash.getImage(pubKeyHashAsByteArray, false));
-        }
-        return iconImageCache.get(pubKeyHashAsByteArray);
     }
 
     @Override

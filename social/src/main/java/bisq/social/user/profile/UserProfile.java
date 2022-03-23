@@ -17,10 +17,9 @@
 
 package bisq.social.user.profile;
 
-import bisq.common.encoding.Hex;
 import bisq.identity.Identity;
+import bisq.social.user.ChatUser;
 import bisq.social.user.Entitlement;
-import bisq.social.user.UserNameGenerator;
 
 import java.io.Serializable;
 import java.util.Set;
@@ -28,21 +27,8 @@ import java.util.Set;
 /**
  * Local user profile. Not shared over network.
  */
-//todo use cache for pubKeyHash and userName
 public record UserProfile(Identity identity, Set<Entitlement> entitlements) implements Serializable {
-    public boolean hasEntitlementType(Entitlement.Type type) {
-        return entitlements.stream().anyMatch(e -> e.entitlementType() == type);
-    }
-
-    public byte[] pubKeyHash() {
-        return identity.pubKeyHash();
-    }
-
-    public String id() {
-        return Hex.encode(pubKeyHash());
-    }
-
-    public String userName() {
-        return UserNameGenerator.fromHash(pubKeyHash());
+    public ChatUser chatUser() {
+        return new ChatUser(identity.networkId(), entitlements);
     }
 }

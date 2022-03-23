@@ -36,6 +36,6 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
     }
 
     public String getChannelName() {
-        return UserNameGenerator.fromHash(DigestUtil.hash(peer.networkId().getPubKey().publicKey().getEncoded()));
+        return UserNameGenerator.fromHash(DigestUtil.hash(peer.getNetworkId().getPubKey().publicKey().getEncoded()));
     }
 }

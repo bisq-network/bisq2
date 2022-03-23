@@ -26,6 +26,7 @@ import bisq.desktop.components.controls.*;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.layout.Layout;
+import bisq.desktop.primary.main.content.social.chat.components.ChatUserIcon;
 import bisq.desktop.primary.main.content.social.chat.components.UserProfileComboBox;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatMessage;
@@ -148,7 +149,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                 if (event.isShiftDown()) {
                     inputField.appendText(System.getProperty("line.separator"));
                 } else if (!inputField.getText().isEmpty()) {
-                    controller.onSendMessage( StringUtils.trimTrailingLinebreak(inputField.getText()));
+                    controller.onSendMessage(StringUtils.trimTrailingLinebreak(inputField.getText()));
                     inputField.clear();
                     inputField.resetAutoAdjustedHeight();
                 }
@@ -211,9 +212,9 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                     private final BisqLabel time = new BisqLabel();
                     private final Text message = new Text();
                     private final Text quotedMessageField = new Text();
-                    private final ImageView icon = new ImageView();
                     private final HBox hBox, reactionsBox, editControlsBox, quotedMessageBox;
                     private final VBox vBox, messageBox;
+                    private final ChatUserIcon chatUserIcon = new ChatUserIcon(30);
                     Tooltip dateTooltip;
                     Subscription widthSubscription;
 
@@ -223,8 +224,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         time.getStyleClass().add("message-header");
                         time.setPadding(new Insets(-6, 0, 0, 0));
                         time.setVisible(false);
-                        icon.setFitWidth(30);
-                        icon.setFitHeight(30);
+
                         message.setId("chat-message-text");
                         VBox.setMargin(message, new Insets(5, 0, 0, 5));
                         //todo emojiButton1, emojiButton2, emojiButton3 will be filled with emoji icons
@@ -273,7 +273,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         VBox.setVgrow(messageBox, Priority.ALWAYS);
                         vBox = Layout.vBoxWith(userName, messageBox);
                         HBox.setHgrow(vBox, Priority.ALWAYS);
-                        hBox = Layout.hBoxWith(Layout.vBoxWith(icon, time), vBox);
+                        hBox = Layout.hBoxWith(Layout.vBoxWith(chatUserIcon, time), vBox);
                     }
 
                     @Override
@@ -327,10 +327,9 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             userName.setText(item.getSenderUserName());
                             userName.setOnMouseClicked(e -> controller.onUserNameClicked(item.getSenderUserName()));
 
-                            icon.setImage(item.getIconImage());
-                            icon.setCursor(Cursor.HAND);
-                            icon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
-
+                            chatUserIcon.setChatUser(item.getChatUser());
+                            chatUserIcon.setCursor(Cursor.HAND);
+                            chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
                             hBox.setOnMouseEntered(e -> {
                                 time.setVisible(true);
                                 reactionsBox.setVisible(true);
@@ -375,10 +374,10 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                 widthSubscription.unsubscribe();
                             }
                             userName.setOnMouseClicked(null);
-                            icon.setOnMouseClicked(null);
+                            chatUserIcon.setOnMouseClicked(null);
                             hBox.setOnMouseEntered(null);
                             hBox.setOnMouseExited(null);
-                            icon.setImage(null);
+                            chatUserIcon.releaseResources();
 
                             emojiButton1.setOnAction(null);
                             emojiButton2.setOnAction(null);
@@ -393,7 +392,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
                             editedMessageField.releaseResources();
                             editedMessageField.setOnKeyPressed(null);
-                            
+
                             setGraphic(null);
                         }
                     }

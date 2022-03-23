@@ -43,13 +43,11 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static bisq.security.SignatureUtil.bitcoinSigToDer;
@@ -162,12 +160,18 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                 checkArgument(BsqTxValidator.isProofOfBurn(jsonBsqTx), proofOfBurnTxId + " is not a proof of burn transaction");
                 long burntAmount = BsqTxValidator.getBurntAmount(jsonBsqTx);
                 checkArgument(burntAmount >= getMinBurnAmount(type), "Insufficient BSQ burn. burntAmount=" + burntAmount);
+                String hashOfPreImage = Hex.encode(DigestUtil.hash(pubKeyHash.getBytes(StandardCharsets.UTF_8)));
                 BsqTxValidator.getOpReturnData(jsonBsqTx).ifPresentOrElse(
-                        opReturn -> checkArgument(pubKeyHash.equalsIgnoreCase(opReturn), "pubKeyHash does not match opReturn data"),
+                        opReturnData -> {
+                            byte[] hashFromOpReturnDataAsBytes = Arrays.copyOfRange(Hex.decode(opReturnData), 2, 22);
+                            String hashFromOpReturnData = Hex.encode(hashFromOpReturnDataAsBytes);
+                            checkArgument(hashOfPreImage.equalsIgnoreCase(hashFromOpReturnData), "pubKeyHash does not match opReturn data");
+                        },
                         () -> {
                             throw new IllegalArgumentException("no opReturn element found");
                         });
-                return Optional.of(new Entitlement.ProofOfBurnProof(proofOfBurnTxId));
+                long date= BsqTxValidator.getTxDate(jsonBsqTx);
+                return Optional.of(new Entitlement.ProofOfBurnProof(proofOfBurnTxId, burntAmount, date));
             } catch (IllegalArgumentException e) {
                 log.warn("check failed: {}", e.getMessage(), e);
             } catch (IOException e) {
@@ -237,7 +241,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     //todo work out concept how to adjust those values
     public long getMinBurnAmount(Entitlement.Type type) {
         return switch (type) {
-            case LIQUIDITY_PROVIDER -> 5000;
+            //todo for dev testing reduced to 6 BSQ
+            case LIQUIDITY_PROVIDER -> 600; // will be 5000, 6 BSQ used for dev testing
             case CHANNEL_MODERATOR -> 10000;
             default -> 0;
         };

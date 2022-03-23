@@ -108,7 +108,9 @@ public class EntitlementSelection {
         public void onViewDetached() {
         }
 
-        private CompletableFuture<Optional<Entitlement.Proof>> onVerifyProofOfBurn(EntitlementItem entitlementItem, String pubKeyHash, String proofOfBurnTxId) {
+        private CompletableFuture<Optional<Entitlement.Proof>> onVerifyProofOfBurn(EntitlementItem entitlementItem,
+                                                                                   String pubKeyHash,
+                                                                                   String proofOfBurnTxId) {
             return userProfileService.verifyProofOfBurn(entitlementItem.getType(), proofOfBurnTxId, pubKeyHash)
                     .whenComplete((proof, throwable) -> {
                         UIThread.run(() -> {
@@ -288,10 +290,13 @@ public class EntitlementSelection {
             headLine(Res.get("social.createUserProfile.entitlement.popup.headline"));
             if (entitlementItem.getType().getProofTypes().contains(Entitlement.ProofType.CHANNEL_ADMIN_INVITATION)) {
                 message(Res.get("social.createUserProfile.entitlement.popup.moderator.message"));
+                actionButtonText(Res.get("social.createUserProfile.table.entitlement.verify"));
             } else if (entitlementItem.getType().getProofTypes().contains(Entitlement.ProofType.PROOF_OF_BURN)) {
                 message(Res.get("social.createUserProfile.entitlement.popup.proofOfBurn.message"));
+                actionButtonText(Res.get("social.createUserProfile.table.entitlement.liquidityProvider.confirmProofOfBurn"));
             } else if (entitlementItem.getType().getProofTypes().contains(Entitlement.ProofType.BONDED_ROLE)) {
                 message(Res.get("social.createUserProfile.entitlement.popup.bondedRole.message"));
+                actionButtonText(Res.get("social.createUserProfile.table.entitlement.verify"));
             }
             actionButtonText(Res.get("social.createUserProfile.table.entitlement.verify"));
             doCloseOnAction(false);
@@ -302,12 +307,17 @@ public class EntitlementSelection {
             super.addContent();
 
             GridPane.setMargin(messageLabel, new Insets(0, 0, 20, 0));
-
-            String pubKeyHash = model.getPubKeyHash();
-
-            gridPane.addTextFieldWithCopyIcon(Res.get("social.createUserProfile.entitlement.popup.pubKeyHash"), pubKeyHash);
             gridPane.addTextFieldWithCopyIcon(Res.get("social.createUserProfile.entitlement.popup.minBurnAmount"), model.minBurnAmount);
-            firstField = gridPane.addTextField("", "3bbb2f597e714257d4a2f573e9ebfff4ab631277186a40875dbbf4140e90b748");
+            
+            // TODO for dev testing we use hard coded pubkey hash
+            // String pubKeyHash = model.getPubKeyHash();
+            String pubKeyHash = "1b2f432d601f1f486b01b0fada6ab9db2819c254";
+            gridPane.addTextFieldWithCopyIcon(Res.get("social.createUserProfile.entitlement.popup.pubKeyHash"), pubKeyHash);
+            // real bsq proof of burn tx: 6cc5943c48b4e4e64c503d6fea2332b71b468354bc99bc736d41cc752debea8f
+            // burned 6 bsq
+            // pubkeyhash (preimage) 1b2f432d601f1f486b01b0fada6ab9db2819c254
+            // hash(pubkeyhash) 3cf77b5f4481f2bd6ceef260af1cec45b4a82d86 
+            firstField = gridPane.addTextField("", "6cc5943c48b4e4e64c503d6fea2332b71b468354bc99bc736d41cc752debea8f");
 
             switch (entitlementItem.getType()) {
                 case LIQUIDITY_PROVIDER -> {
@@ -319,7 +329,6 @@ public class EntitlementSelection {
                                             UIThread.run(() -> {
                                                 if (throwable == null && proof.isPresent()) {
                                                     //todo hide button and show feedback text instead
-                                                    actionButton.setDisable(false);
                                                     actionButton.getStyleClass().add("action-button");
                                                     actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.success").toUpperCase());
                                                 } else {

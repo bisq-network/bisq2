@@ -17,9 +17,9 @@
 
 package bisq.social.chat;
 
-import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -34,15 +34,15 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
     private final MetaData metaData;
 
     public PrivateChatMessage(String channelId,
+                              ChatUser sender,
                               String text,
                               Optional<QuotedMessage> quotedMessage,
-                              NetworkId senderNetworkId,
                               long date,
                               boolean wasEdited) {
         super(channelId,
+                sender,
                 text,
                 quotedMessage,
-                senderNetworkId,
                 date,
                 ChannelType.PRIVATE,
                 wasEdited);

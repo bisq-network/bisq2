@@ -24,9 +24,9 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.Notification;
 import bisq.desktop.primary.main.content.social.chat.components.*;
 import bisq.i18n.Res;
-import bisq.identity.Identity;
 import bisq.social.chat.*;
 import bisq.social.user.UserNameGenerator;
+import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
 import com.google.common.base.Joiner;
 import javafx.collections.ListChangeListener;
@@ -173,11 +173,11 @@ public class ChatController implements Controller {
 
     void onSendMessage(String text) {
         Channel<? extends ChatMessage> channel = chatService.getPersistableStore().getSelectedChannel().get();
-        Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
+        UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
         if (channel instanceof PublicChannel publicChannel) {
-            chatService.publishPublicChatMessage(text, quotedMessageBlock.getQuotedMessage(), publicChannel, identity);
+            chatService.publishPublicChatMessage(text, quotedMessageBlock.getQuotedMessage(), publicChannel, userProfile);
         } else if (channel instanceof PrivateChannel privateChannel) {
-            chatService.sendPrivateChatMessage(text, quotedMessageBlock.getQuotedMessage(), privateChannel, identity);
+            chatService.sendPrivateChatMessage(text, quotedMessageBlock.getQuotedMessage(), privateChannel, userProfile);
         }
         quotedMessageBlock.close();
     }
@@ -218,14 +218,13 @@ public class ChatController implements Controller {
         model.getChannelInfoVisible().set(false);
         model.getNotificationsVisible().set(false);
 
-        ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(),
-                chatMessage.getChatUser());
+        ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(), chatMessage.getChatUser());
         chatUserDetails.setOnSendPrivateMessage(chatUser -> {
             // todo
             log.info("onSendPrivateMessage {}", chatUser);
         });
         chatUserDetails.setOnIgnoreChatUser(this::refreshMessages);
-        chatUserDetails.setOnMentionUser(chatUser -> mentionUser(chatUser.userName()));
+        chatUserDetails.setOnMentionUser(chatUser -> mentionUser(chatUser.getUserName()));
         model.setChatUserDetails(Optional.of(chatUserDetails));
         model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
     }
@@ -285,15 +284,11 @@ public class ChatController implements Controller {
             return;
         }
         if (chatMessage instanceof PublicChatMessage publicChatMessage) {
-            Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
-            if (publicChatMessage.getSenderNetworkId().equals(identity.getNodeIdAndKeyPair().networkId())) {
-                chatService.publishEditedPublicChatMessage(publicChatMessage, editedText, identity)
-                        .whenComplete((r, t) -> {
-                            // todo maybe show spinner while deleting old msg and hide it once done?
-                        });
-            } else {
-                log.warn("To be removed chatMessage has different identity as selected identity");
-            }
+            UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
+            chatService.publishEditedPublicChatMessage(publicChatMessage, editedText, userProfile)
+                    .whenComplete((r, t) -> {
+                        // todo maybe show spinner while deleting old msg and hide it once done?
+                    });
         } else {
             //todo private message
         }
@@ -302,12 +297,8 @@ public class ChatController implements Controller {
     public void onDeleteMessage(ChatMessage chatMessage) {
         if (model.isMyMessage(chatMessage)) {
             if (chatMessage instanceof PublicChatMessage publicChatMessage) {
-                Identity identity = userProfileService.getPersistableStore().getSelectedUserProfile().get().identity();
-                if (publicChatMessage.getSenderNetworkId().equals(identity.getNodeIdAndKeyPair().networkId())) {
-                    chatService.deletePublicChatMessage(publicChatMessage, identity);
-                } else {
-                    log.warn("To be removed chatMessage has different identity as selected identity");
-                }
+                UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
+                    chatService.deletePublicChatMessage(publicChatMessage, userProfile);
             } else {
                 //todo delete private message
             }

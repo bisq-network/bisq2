@@ -73,6 +73,15 @@ public class BsqTxValidator {
         return burntFee.getAsLong();
     }
 
+    public static long getTxDate(String jsonTxt) {
+        JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
+        JsonElement date = json.get("time");
+        if (date == null) {
+            return 0;
+        }
+        return date.getAsLong();
+    }
+
     public static Optional<String> getOpReturnData(String jsonTxt) {
         try {
             Pair<JsonArray, JsonArray> vinAndVout = getVinAndVout(jsonTxt);

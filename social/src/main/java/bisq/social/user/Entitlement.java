@@ -30,7 +30,7 @@ public record Entitlement(Type entitlementType, Proof proof) implements Serializ
     public interface Proof extends Serializable {
     }
 
-    public record ProofOfBurnProof(String txId) implements Proof {
+    public record ProofOfBurnProof(String txId, long burntAmount, long date) implements Proof {
     }
 
     public record BondedRoleProof(String txId, String signature) implements Proof {

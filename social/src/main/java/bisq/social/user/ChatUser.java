@@ -17,32 +17,90 @@
 
 package bisq.social.user;
 
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.network.NetworkId;
 import bisq.security.DigestUtil;
+import lombok.Getter;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Publicly shared chat user data
+ * We cache pubKey hash, id and generated userName.
  */
-//todo use cache for pubKeyHash and userName
-public record ChatUser(NetworkId networkId, Set<Entitlement> entitlements) implements Serializable {
+public class ChatUser implements Serializable {
+    private static final Map<ByteArray, DerivedData> CACHE = new HashMap<>();
+
+    @Getter
+    private final NetworkId networkId;
+    @Getter
+    private final Set<Entitlement> entitlements;
+    private final DerivedData derivedData;
+
+    public ChatUser(NetworkId networkId, Set<Entitlement> entitlements) {
+        this.networkId = networkId;
+        this.entitlements = entitlements;
+        byte[] pubKey = networkId.getPubKey().publicKey().getEncoded();
+        derivedData = getDerivedData(pubKey);
+    }
+
     public ChatUser(NetworkId networkId) {
         this(networkId, new HashSet<>());
     }
 
-    public byte[] pubKeyHash() {
-        return DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded());
+    public boolean hasEntitlementType(Entitlement.Type type) {
+        return entitlements.stream().anyMatch(e -> e.entitlementType() == type);
     }
 
-    public String id() {
-        return Hex.encode(pubKeyHash());
+    // Delegates
+    public String getId() {
+        return derivedData.id();
     }
 
-    public String userName() {
-        return UserNameGenerator.fromHash(pubKeyHash());
+    public String getUserName() {
+        return derivedData.userName;
+    }
+
+    public byte[] getPubKeyHash() {
+        return derivedData.pubKeyHash();
+    }
+
+    private static DerivedData getDerivedData(byte[] pubKey) {
+        ByteArray key = new ByteArray(pubKey);
+        if (!CACHE.containsKey(key)) {
+            byte[] pubKeyHash = DigestUtil.hash(pubKey);
+            String id = Hex.encode(pubKeyHash);
+            String userName = UserNameGenerator.fromHash(pubKeyHash);
+            DerivedData derivedData = new DerivedData(pubKeyHash, id, userName);
+            CACHE.put(key, derivedData);
+        }
+        return CACHE.get(key);
+    }
+
+    public Optional<BurnInfo> findBurnInfo() {
+        if (hasEntitlementType(Entitlement.Type.LIQUIDITY_PROVIDER)) {
+            List<Entitlement.ProofOfBurnProof> list = entitlements.stream()
+                    .filter(e -> e.proof() instanceof Entitlement.ProofOfBurnProof)
+                    .map(e -> (Entitlement.ProofOfBurnProof) e.proof())
+                    .sorted(Comparator.comparingLong(Entitlement.ProofOfBurnProof::date))
+                    .collect(Collectors.toList());
+
+            long totalBsqBurned = list.stream()
+                    .mapToLong(Entitlement.ProofOfBurnProof::burntAmount)
+                    .sum();
+            long firstBurnDate = list.get(0).date();
+            return Optional.of(new BurnInfo(totalBsqBurned, firstBurnDate));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private static record DerivedData(byte[] pubKeyHash, String id, String userName) implements Serializable {
+    }
+
+    public static record BurnInfo(long totalBsqBurned, long firstBurnDate) implements Serializable {
     }
 }
