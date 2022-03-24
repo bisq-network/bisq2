@@ -161,9 +161,7 @@ public class TransportTypeModel implements Model {
             public void onDisconnect(Connection connection, CloseReason closeReason) {
                 UIThread.run(() -> {
                     ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNodeId());
-                    if (!connectionListItems.contains(connectionListItem)) {
-                        connectionListItems.remove(connectionListItem);
-                    }
+                    connectionListItems.remove(connectionListItem);
                     maybeUpdateMyAddress(node);
                 });
             }
