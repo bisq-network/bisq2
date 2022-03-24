@@ -45,7 +45,7 @@ public class HttpService {
                 return new TorHttpClient(url, userAgent, socks5ProxyProvider);
             case I2P:
                 // The I2P router exposes a local HTTP proxy on port 4444 for I2P destinations
-                // TODO Check if this works with embedded router
+                // Note: only works with external I2P router (embedded one doesn't provide this proxy by default)
                 return new ClearNetHttpClient(url, userAgent,
                         new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 4444))
                 );
