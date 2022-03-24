@@ -4,8 +4,7 @@ module bisq.common {
     requires com.google.common;
     requires typesafe.config;
     requires org.slf4j;
-    
-    exports bisq.common;
+
     exports bisq.common.annotations;
     exports bisq.common.currency;
     exports bisq.common.data;
