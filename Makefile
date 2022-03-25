@@ -24,11 +24,11 @@
 #
 #    Launch 2 clearnet seeds and several (n) clearnet desktop clients with:
 #
-#     $ make start-local-clearnet n=4
+#     $ make start-clearnet-full-env n=4
 #
 #    When not specified, n will default to 2, so this will start 2 seeds and 2 clients:
 #
-#     $ make start-local-clearnet
+#     $ make start-clearnet-full-env
 #
 # 2) Local tor scenario
 #
@@ -115,8 +115,8 @@ clean:
 # CLEARNET
 ##########
 
-.start-local-clearnet-seeds: seed-type=clear
-.start-local-clearnet-seeds:
+.start-clearnet-seeds: seed-type=clear
+.start-clearnet-seeds:
 	# Seed 1
 	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed:run \
 		-Dbisq.application.appName=${seed1-appName} \
@@ -134,15 +134,16 @@ clean:
 
 .start-clearnet-clients:
 	for i in $$(seq 1 $n); do \
-		screen -S localtests -X screen -t client-$$i ./gradlew --console=plain desktop:run \
+		screen -S localtests -X screen -t client-$${i}-clear ./gradlew --console=plain desktop:run \
 			-Dbisq.application.appName=bisq_client$${i}_test \
 			-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
 			-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
 			-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001; \
 	done
 
-start-local-clearnet: .init-screen-session .start-local-clearnet-seeds .start-clearnet-clients .reconnect-screen-session
+start-clearnet-seeds: .init-screen-session .start-clearnet-seeds .reconnect-screen-session
 
+start-clearnet-full-env: .init-screen-session .start-clearnet-seeds .start-clearnet-clients .reconnect-screen-session
 
 #####
 # TOR
