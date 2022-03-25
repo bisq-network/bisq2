@@ -62,7 +62,7 @@ class KeepAliveHandler implements Connection.Listener {
     }
 
     @Override
-    public void onMessage(NetworkMessage networkMessage) {
+    public void onNetworkMessage(NetworkMessage networkMessage) {
         if (networkMessage instanceof Pong pong) {
             if (pong.requestNonce() == nonce) {
                 log.info("Node {} received Pong from {} with nonce {}. Connection={}",

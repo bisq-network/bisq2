@@ -361,7 +361,7 @@ public class Node implements Connection.Handler {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection) {
+    public void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection) {
         if (isStopped) {
             return;
         }
@@ -381,7 +381,7 @@ public class Node implements Connection.Handler {
     }
 
     @Override
-    public void onConnectionClosed(Connection connection, CloseReason closeReason) {
+    public void handleConnectionClosed(Connection connection, CloseReason closeReason) {
         Address peerAddress = connection.getPeerAddress();
         log.debug("Node {} got called onConnectionClosed. connection={}, peerAddress={}", this, connection, peerAddress);
         boolean wasRemoved = false;

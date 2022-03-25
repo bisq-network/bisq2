@@ -78,7 +78,7 @@ public class ConnectionListItem implements TableItem {
 
         listener = new Connection.Listener() {
             @Override
-            public void onMessage(NetworkMessage networkMessage) {
+            public void onNetworkMessage(NetworkMessage networkMessage) {
                 UIThread.run(() -> {
                     updateSent();
                     updateReceived();

@@ -47,13 +47,13 @@ import java.util.function.BiConsumer;
 public abstract class Connection {
 
     interface Handler {
-        void onMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection);
+        void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection);
 
-        void onConnectionClosed(Connection connection, CloseReason closeReason);
+        void handleConnectionClosed(Connection connection, CloseReason closeReason);
     }
 
     public interface Listener {
-        void onMessage(NetworkMessage networkMessage);
+        void onNetworkMessage(NetworkMessage networkMessage);
 
         void onConnectionClosed(CloseReason closeReason);
     }
@@ -119,7 +119,7 @@ public abstract class Connection {
                         }
                         log.debug("Received message: {} at: {}", StringUtils.truncate(networkEnvelope.getNetworkMessage().toString(), 200), this);
                         metrics.onReceived(networkEnvelope);
-                        NetworkService.DISPATCHER.submit(() -> handler.onMessage(networkEnvelope.getNetworkMessage(), networkEnvelope.getAuthorizationToken(), this));
+                        NetworkService.DISPATCHER.submit(() -> handler.handleNetworkMessage(networkEnvelope.getNetworkMessage(), networkEnvelope.getAuthorizationToken(), this));
                     }
                 }
             } catch (Exception exception) {
@@ -181,14 +181,14 @@ public abstract class Connection {
             }
         }
         NetworkService.DISPATCHER.submit(() -> {
-            handler.onConnectionClosed(this, closeReason);
+            handler.handleConnectionClosed(this, closeReason);
             listeners.forEach(listener -> listener.onConnectionClosed(closeReason));
             listeners.clear();
         });
     }
 
     void notifyListeners(NetworkMessage networkMessage) {
-        listeners.forEach(listener -> listener.onMessage(networkMessage));
+        listeners.forEach(listener -> listener.onNetworkMessage(networkMessage));
     }
 
     public void addListener(Listener listener) {

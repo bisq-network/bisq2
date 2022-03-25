@@ -76,7 +76,7 @@ class AddressValidationHandler implements Connection.Listener {
     }
 
     @Override
-    public void onMessage(NetworkMessage networkMessage) {
+    public void onNetworkMessage(NetworkMessage networkMessage) {
         if (networkMessage instanceof AddressValidationResponse addressValidationResponse) {
             Objects.requireNonNull(outboundConnection);
             if (addressValidationResponse.requestNonce() == nonce &&

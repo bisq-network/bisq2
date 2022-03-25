@@ -68,7 +68,7 @@ class InventoryHandler implements Connection.Listener {
     }
 
     @Override
-    public void onMessage(NetworkMessage networkMessage) {
+    public void onNetworkMessage(NetworkMessage networkMessage) {
         if (networkMessage instanceof InventoryResponse response) {
             if (response.requestNonce() == nonce) {
                 Map<String, Integer> map = new HashMap<>();
