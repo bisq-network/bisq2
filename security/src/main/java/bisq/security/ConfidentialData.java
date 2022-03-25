@@ -17,11 +17,30 @@
 
 package bisq.security;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
+import com.google.protobuf.ByteString;
 
 public record ConfidentialData(byte[] encodedSenderPublicKey,
                                byte[] hmac,
                                byte[] iv,
                                byte[] cypherText,
-                               byte[] signature) implements Proto {
+                               byte[] signature) implements Proto<bisq.security.protobuf.ConfidentialData> {
+    @Override
+    public bisq.security.protobuf.ConfidentialData toProto() {
+        return bisq.security.protobuf.ConfidentialData.newBuilder()
+                .setEncodedSenderPublicKey(ByteString.copyFrom(encodedSenderPublicKey))
+                .setHmac(ByteString.copyFrom(hmac))
+                .setIv(ByteString.copyFrom(iv))
+                .setCypherText(ByteString.copyFrom(cypherText))
+                .setSignature(ByteString.copyFrom(signature))
+                .build();
+    }
+
+    public static ConfidentialData fromProto(bisq.security.protobuf.ConfidentialData proto) {
+        return new ConfidentialData(proto.getEncodedSenderPublicKey().toByteArray(),
+                proto.getHmac().toByteArray(),
+                proto.getIv().toByteArray(),
+                proto.getCypherText().toByteArray(),
+                proto.getSignature().toByteArray());
+    }
 }
