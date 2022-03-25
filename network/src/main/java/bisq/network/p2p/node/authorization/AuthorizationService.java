@@ -17,19 +17,19 @@
 
 package bisq.network.p2p.node.authorization;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 
 import java.util.concurrent.CompletableFuture;
 
 public interface AuthorizationService {
 
-    boolean isAuthorized(Message authorizedMessage, AuthorizationToken authorizationToken);
+    boolean isAuthorized(NetworkMessage networkMessage, AuthorizationToken authorizationToken);
 
     boolean isAuthorized(AuthorizationToken authorizationToken);
 
-    CompletableFuture<AuthorizationToken> createTokenAsync(Class<? extends Message> message);
+    CompletableFuture<AuthorizationToken> createTokenAsync(Class<? extends NetworkMessage> message);
 
-    AuthorizationToken createToken(Class<? extends Message> message);
+    AuthorizationToken createToken(Class<? extends NetworkMessage> message);
 
     void shutdown();
 }

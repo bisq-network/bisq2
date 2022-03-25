@@ -20,7 +20,7 @@ package bisq.network.p2p.node;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkEnvelope;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.message.Version;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.Getter;
@@ -48,13 +48,13 @@ import java.util.function.BiConsumer;
 public abstract class Connection {
 
     interface Handler {
-        void onMessage(Message message, AuthorizationToken authorizationToken, Connection connection);
+        void onMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection);
 
         void onConnectionClosed(Connection connection, CloseReason closeReason);
     }
 
     public interface Listener {
-        void onMessage(Message message);
+        void onMessage(NetworkMessage networkMessage);
 
         void onConnectionClosed(CloseReason closeReason);
     }
@@ -118,9 +118,9 @@ public abstract class Connection {
                         if (networkEnvelope.getVersion() != Version.VERSION) {
                             throw new ConnectionException("Invalid network version. " + simpleName);
                         }
-                        log.debug("Received message: {} at: {}", StringUtils.truncate(networkEnvelope.getMessage().toString(), 200), this);
-                        metrics.onMessage(networkEnvelope.getMessage());
-                        NetworkService.DISPATCHER.submit(() -> handler.onMessage(networkEnvelope.getMessage(), networkEnvelope.getAuthorizationToken(), this));
+                        log.debug("Received message: {} at: {}", StringUtils.truncate(networkEnvelope.getNetworkMessage().toString(), 200), this);
+                        metrics.onReceived(networkEnvelope);
+                        NetworkService.DISPATCHER.submit(() -> handler.onMessage(networkEnvelope.getNetworkMessage(), networkEnvelope.getAuthorizationToken(), this));
                     }
                 }
             } catch (Exception exception) {
@@ -137,21 +137,21 @@ public abstract class Connection {
         });
     }
 
-    Connection send(Message message, AuthorizationToken authorizationToken) {
+    Connection send(NetworkMessage networkMessage, AuthorizationToken authorizationToken) {
         if (isStopped) {
             log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
-                    StringUtils.truncate(message.toString(), 200), this);
+                    StringUtils.truncate(networkMessage.toString(), 200), this);
             throw new ConnectionClosedException(this);
         }
         try {
-            NetworkEnvelope networkEnvelope = new NetworkEnvelope(Version.VERSION, authorizationToken, message);
+            NetworkEnvelope networkEnvelope = new NetworkEnvelope(Version.VERSION, authorizationToken, networkMessage);
             synchronized (writeLock) {
                 objectOutputStream.writeObject(networkEnvelope);
                 objectOutputStream.flush();
             }
-            metrics.sent(message);
+            metrics.onSent(networkEnvelope);
             log.debug("Sent {} from {}",
-                    StringUtils.truncate(message.toString(), 300), this);
+                    StringUtils.truncate(networkMessage.toString(), 300), this);
             return this;
         } catch (IOException exception) {
             if (!isStopped) {
@@ -188,8 +188,8 @@ public abstract class Connection {
         });
     }
 
-    void notifyListeners(Message message) {
-        listeners.forEach(listener -> listener.onMessage(message));
+    void notifyListeners(NetworkMessage networkMessage) {
+        listeners.forEach(listener -> listener.onMessage(networkMessage));
     }
 
     public void addListener(Listener listener) {

@@ -26,7 +26,7 @@ import bisq.contract.Contract;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.offer.Offer;
 import bisq.offer.OpenOfferService;
@@ -105,8 +105,8 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
     }
 
     @Override
-    public void onMessage(Message message) {
-        if (message instanceof TakeOfferRequest takeOfferRequest) {
+    public void onMessage(NetworkMessage networkMessage) {
+        if (networkMessage instanceof TakeOfferRequest takeOfferRequest) {
             String offerId = takeOfferRequest.getContract().getOffer().getId();
             openOfferService.findOpenOffer(offerId)
                     .ifPresent(openOffer -> identityService.getOrCreateIdentity(offerId)

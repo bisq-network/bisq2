@@ -18,11 +18,11 @@
 package bisq.protocol.messages;
 
 import bisq.common.util.StringUtils;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import lombok.Getter;
 
 @Getter
-public abstract class ProtocolMessage implements Message {
+public abstract class ProtocolMessage implements NetworkMessage {
     private final String messageId;
     private final String offerId;
 

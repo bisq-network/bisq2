@@ -17,14 +17,14 @@
 
 package bisq.network.p2p.services.confidential;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.security.ConfidentialData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @EqualsAndHashCode
 @Getter
-public class ConfidentialMessage implements Message {
+public class ConfidentialMessage implements NetworkMessage {
     private final ConfidentialData confidentialData;
     private final String keyId;
 

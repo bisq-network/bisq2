@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.message;
 
+import bisq.common.encoding.Proto;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -25,14 +26,14 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 @Getter
-public class NetworkEnvelope implements Message {
+public class NetworkEnvelope implements Proto {
     private final int version;
     private final AuthorizationToken authorizationToken;
-    private final Message message;
+    private final NetworkMessage networkMessage;
 
-    public NetworkEnvelope(int version, AuthorizationToken authorizationToken, Message message) {
+    public NetworkEnvelope(int version, AuthorizationToken authorizationToken, NetworkMessage networkMessage) {
         this.version = version;
         this.authorizationToken = authorizationToken;
-        this.message = message;
+        this.networkMessage = networkMessage;
     }
 }

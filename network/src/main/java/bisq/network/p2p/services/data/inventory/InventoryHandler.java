@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -68,8 +68,8 @@ class InventoryHandler implements Connection.Listener {
     }
 
     @Override
-    public void onMessage(Message message) {
-        if (message instanceof InventoryResponse response) {
+    public void onMessage(NetworkMessage networkMessage) {
+        if (networkMessage instanceof InventoryResponse response) {
             if (response.requestNonce() == nonce) {
                 Map<String, Integer> map = new HashMap<>();
                 response.inventory().entries().stream()

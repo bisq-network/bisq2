@@ -17,8 +17,8 @@
 
 package bisq.network.p2p.services.confidential;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 
 public interface MessageListener {
-    void onMessage(Message message);
+    void onMessage(NetworkMessage networkMessage);
 }

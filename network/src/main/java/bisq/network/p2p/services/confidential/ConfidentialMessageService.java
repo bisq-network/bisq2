@@ -21,7 +21,7 @@ import bisq.common.encoding.ObjectSerializer;
 import bisq.common.encoding.Proto;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.NetworkUtils;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.NetworkPayload;
@@ -107,8 +107,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message, Connection connection, String nodeId) {
-        if (message instanceof ConfidentialMessage confidentialMessage) {
+    public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
+        if (networkMessage instanceof ConfidentialMessage confidentialMessage) {
             if (confidentialMessage instanceof RelayMessage) {
                 //todo
                 // RelayMessage relayMessage = (RelayMessage) proto;
@@ -159,7 +159,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Result send(Message message,
+    public Result send(NetworkMessage networkMessage,
                        Address address,
                        PubKey receiverPubKey,
                        KeyPair senderKeyPair,
@@ -167,34 +167,34 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         try {
             nodesById.maybeInitializeServer(senderNodeId, NetworkUtils.findFreeSystemPort());
             Connection connection = nodesById.getConnection(senderNodeId, address);
-            return send(message, connection, receiverPubKey, senderKeyPair, senderNodeId);
+            return send(networkMessage, connection, receiverPubKey, senderKeyPair, senderNodeId);
         } catch (Throwable throwable) {
-            if (message instanceof MailboxMessage mailboxMessage) {
-                ConfidentialMessage confidentialMessage = getConfidentialMessage(message, receiverPubKey, senderKeyPair);
+            if (networkMessage instanceof MailboxMessage mailboxMessage) {
+                ConfidentialMessage confidentialMessage = getConfidentialMessage(networkMessage, receiverPubKey, senderKeyPair);
                 return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
             } else {
-                log.warn("Sending proto failed and proto is not type of MailboxMessage. proto={}", message);
+                log.warn("Sending proto failed and proto is not type of MailboxMessage. proto={}", networkMessage);
                 return new Result(State.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
             }
         }
 
     }
 
-    public Result send(Message message,
+    public Result send(NetworkMessage networkMessage,
                        Connection connection,
                        PubKey receiverPubKey,
                        KeyPair senderKeyPair,
                        String senderNodeId) {
-        ConfidentialMessage confidentialMessage = getConfidentialMessage(message, receiverPubKey, senderKeyPair);
+        ConfidentialMessage confidentialMessage = getConfidentialMessage(networkMessage, receiverPubKey, senderKeyPair);
         try {
             nodesById.maybeInitializeServer(senderNodeId, NetworkUtils.findFreeSystemPort());
             nodesById.send(senderNodeId, confidentialMessage, connection);
             return new Result(State.SENT);
         } catch (Throwable throwable) {
-            if (message instanceof MailboxMessage mailboxMessage) {
+            if (networkMessage instanceof MailboxMessage mailboxMessage) {
                 return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
             } else {
-                log.warn("Sending proto failed and proto is not type of MailboxMessage. proto={}", message);
+                log.warn("Sending proto failed and proto is not type of MailboxMessage. proto={}", networkMessage);
                 return new Result(State.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
             }
         }
@@ -232,9 +232,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         return new Result(State.ADDED_TO_MAILBOX).setMailboxFuture(mailboxFuture);
     }
 
-    private ConfidentialMessage getConfidentialMessage(Message message, PubKey receiverPubKey, KeyPair senderKeyPair) {
+    private ConfidentialMessage getConfidentialMessage(NetworkMessage networkMessage, PubKey receiverPubKey, KeyPair senderKeyPair) {
         try {
-            ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message.serialize(), receiverPubKey.publicKey(), senderKeyPair);
+            ConfidentialData confidentialData = HybridEncryption.encryptAndSign(networkMessage.serialize(), receiverPubKey.publicKey(), senderKeyPair);
             return new ConfidentialMessage(confidentialData, receiverPubKey.keyId());
         } catch (GeneralSecurityException e) {
             log.error("HybridEncryption.encryptAndSign failed at getConfidentialMessage.", e);
@@ -249,8 +249,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
                         byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
                         Proto deserialized = ObjectSerializer.deserialize(decrypted);
-                        if (deserialized instanceof Message decryptedMessage) {
-                            runAsync(() -> listeners.forEach(l -> l.onMessage(decryptedMessage)), DISPATCHER);
+                        if (deserialized instanceof NetworkMessage decryptedNetworkMessage) {
+                            runAsync(() -> listeners.forEach(l -> l.onMessage(decryptedNetworkMessage)), DISPATCHER);
                             return true;
                         } else {
                             log.warn("Deserialized data is not of type Message. deserialized.getClass()={}", deserialized.getClass());

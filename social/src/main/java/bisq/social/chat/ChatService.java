@@ -23,7 +23,7 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
@@ -90,8 +90,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message) {
-        if (message instanceof PrivateChatMessage privateChatMessage) {
+    public void onMessage(NetworkMessage networkMessage) {
+        if (networkMessage instanceof PrivateChatMessage privateChatMessage) {
             String domainId = privateChatMessage.getChannelId();
             //todo outdated userName concept
             String userName = findUserName(domainId).orElse("Maker@" + StringUtils.truncate(domainId, 8));

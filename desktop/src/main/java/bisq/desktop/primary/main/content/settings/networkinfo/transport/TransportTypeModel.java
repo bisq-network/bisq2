@@ -26,7 +26,7 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
 import bisq.network.p2p.ServiceNode;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -84,7 +84,7 @@ public class TransportTypeModel implements Model {
 
         defaultNodeListener = new Node.Listener() {
             @Override
-            public void onMessage(Message message, Connection connection, String nodeId) {
+            public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
             }
 
             @Override
@@ -142,7 +142,7 @@ public class TransportTypeModel implements Model {
     private void addNodeListener(Node node) {
         Node.Listener listener = new Node.Listener() {
             @Override
-            public void onMessage(Message message, Connection connection, String nodeId) {
+            public void onMessage(NetworkMessage message, Connection connection, String nodeId) {
                 UIThread.run(() -> maybeUpdateMyAddress(node));
             }
 

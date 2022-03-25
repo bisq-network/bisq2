@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data;
 
 import bisq.common.timer.Scheduler;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
@@ -101,10 +101,10 @@ public class DataService implements DataNetworkService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message, Connection connection, String nodeId) {
-        if (message instanceof AddDataRequest addDataRequest) {
+    public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
+        if (networkMessage instanceof AddDataRequest addDataRequest) {
             processAddDataRequest(addDataRequest, true);
-        } else if (message instanceof RemoveDataRequest removeDataRequest) {
+        } else if (networkMessage instanceof RemoveDataRequest removeDataRequest) {
             processRemoveDataRequest(removeDataRequest, true);
         }
     }

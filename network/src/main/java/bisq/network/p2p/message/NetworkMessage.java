@@ -22,5 +22,5 @@ import bisq.common.encoding.Proto;
 /**
  * Interface for any object sent over the network
  */
-public interface Message extends Proto {
+public interface NetworkMessage extends Proto {
 }

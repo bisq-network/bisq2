@@ -25,7 +25,7 @@ import bisq.network.http.HttpService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.ServiceNodesByTransport;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.common.encoding.Proto;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
@@ -213,17 +213,17 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     // Send confidential message
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<SendMessageResult> sendMessage(Message message,
+    public CompletableFuture<SendMessageResult> sendMessage(NetworkMessage networkMessage,
                                                             NetworkId receiverNetworkId,
                                                             KeyPair senderKeyPair,
                                                             String senderNodeId) {
-        return supplyAsync(() -> serviceNodesByTransport.confidentialSend(message, receiverNetworkId, senderKeyPair, senderNodeId), NETWORK_IO_POOL);
+        return supplyAsync(() -> serviceNodesByTransport.confidentialSend(networkMessage, receiverNetworkId, senderKeyPair, senderNodeId), NETWORK_IO_POOL);
     }
 
-    public CompletableFuture<SendMessageResult> sendMessage(Message message,
+    public CompletableFuture<SendMessageResult> sendMessage(NetworkMessage networkMessage,
                                                             NetworkId receiverNetworkId,
                                                             NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
-        return supplyAsync(() -> serviceNodesByTransport.confidentialSend(message,
+        return supplyAsync(() -> serviceNodesByTransport.confidentialSend(networkMessage,
                         receiverNetworkId,
                         senderNetworkIdWithKeyPair.keyPair(),
                         senderNetworkIdWithKeyPair.nodeId()),

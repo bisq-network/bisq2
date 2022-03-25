@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup.validateaddress;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.services.peergroup.BanList;
 import lombok.Getter;
@@ -76,8 +76,8 @@ class AddressValidationHandler implements Connection.Listener {
     }
 
     @Override
-    public void onMessage(Message message) {
-        if (message instanceof AddressValidationResponse addressValidationResponse) {
+    public void onMessage(NetworkMessage networkMessage) {
+        if (networkMessage instanceof AddressValidationResponse addressValidationResponse) {
             Objects.requireNonNull(outboundConnection);
             if (addressValidationResponse.requestNonce() == nonce &&
                     outboundConnection.getPeerAddress().equals(addressOfInboundConnection)) {
