@@ -4,6 +4,7 @@ module bisq.common {
     requires com.google.common;
     requires typesafe.config;
     requires org.slf4j;
+    requires com.google.protobuf;
 
     exports bisq.common.annotations;
     exports bisq.common.currency;
@@ -16,4 +17,6 @@ module bisq.common {
     exports bisq.common.threading;
     exports bisq.common.timer;
     exports bisq.common.util;
+    exports bisq.common.proto;
+    exports bisq.common.protobuf;
 }

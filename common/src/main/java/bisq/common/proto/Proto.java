@@ -15,14 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.encoding;
+package bisq.common.proto;
+
+import bisq.common.encoding.ObjectSerializer;
+import com.google.protobuf.Message;
 
 import java.io.Serializable;
 
 /**
- * Interface for any object which gets serialized (network or persistence)
+ * Interface for any object which gets serialized using protobuf
  */
-public interface Proto extends Serializable {
+//todo remove extends Serializable
+public interface Proto<T extends Message> extends Serializable {
+    //todo remove default once all is implemented
+    default T toProto() {
+        return null;
+    }
+
+    //todo remove
     default byte[] serialize() {
         return ObjectSerializer.serialize(this);
     }

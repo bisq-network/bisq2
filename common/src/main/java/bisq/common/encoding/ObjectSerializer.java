@@ -17,6 +17,8 @@
 
 package bisq.common.encoding;
 
+import bisq.common.proto.Proto;
+
 import java.io.*;
 
 public class ObjectSerializer {

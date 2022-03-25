@@ -15,20 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.locale;
+package bisq.common.proto;
 
-import bisq.common.proto.Proto;
+import com.google.protobuf.Message;
+import lombok.extern.slf4j.Slf4j;
 
-public record Region(String code, String name) implements Proto<bisq.common.protobuf.Region> {
-    @Override
-    public bisq.common.protobuf.Region toProto() {
-        return bisq.common.protobuf.Region.newBuilder()
-                .setCode(code)
-                .setCode(name)
-                .build();
-    }
-
-    public static Region fromProto(bisq.common.protobuf.Region proto) {
-        return new Region(proto.getCode(), proto.getName());
+@Slf4j
+public class UnresolvableMessageCaseException extends RuntimeException {
+    public UnresolvableMessageCaseException(Message proto) {
+        super("Message case not found for proto message: \n" + proto.toString());
     }
 }

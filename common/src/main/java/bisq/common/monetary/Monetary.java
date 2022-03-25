@@ -18,7 +18,8 @@
 package bisq.common.monetary;
 
 import bisq.common.currency.TradeCurrency;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableMessageCaseException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,7 +31,7 @@ import java.math.BigDecimal;
 @Getter
 @ToString
 @Slf4j
-public abstract class Monetary implements Comparable<Monetary>, Proto {
+public abstract class Monetary implements Comparable<Monetary>, Proto<bisq.common.protobuf.Monetary> {
     public static long doubleValueToLong(double value, int precision) {
         double max = BigDecimal.valueOf(Long.MAX_VALUE).movePointLeft(precision).doubleValue();
         if (value > max) {
@@ -76,6 +77,31 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
         this(id, doubleValueToLong(value, precision), code, precision, minPrecision);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protobuffer
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public bisq.common.protobuf.Monetary.Builder getMonetaryBuilder() {
+        return bisq.common.protobuf.Monetary.newBuilder()
+                .setId(id)
+                .setValue(value)
+                .setCode(code)
+                .setPrecision(precision)
+                .setMinPrecision(minPrecision);
+    }
+
+    public static Monetary resolveSubTypes(bisq.common.protobuf.Monetary proto) {
+        switch (proto.getMessageCase()) {
+            case COIN -> {
+                return Coin.fromProto(proto);
+            }
+            case FIAT -> {
+                return Fiat.fromProto(proto);
+            }
+        }
+        throw new UnresolvableMessageCaseException(proto);
+    }
+
     abstract public double toDouble(long value);
 
     public double asDouble() {
@@ -86,4 +112,5 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
     public int compareTo(Monetary other) {
         return Long.compare(value, other.getValue());
     }
+
 }

@@ -18,7 +18,7 @@
 package bisq.common.monetary;
 
 import bisq.common.currency.TradeCurrency;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @Slf4j
-public class Quote implements Comparable<Quote>, Proto {
+public class Quote implements Comparable<Quote>, Proto<bisq.common.protobuf.Quote> {
     @Setter
     private static String QUOTE_SEPARATOR = "/";
 
@@ -63,6 +63,25 @@ public class Quote implements Comparable<Quote>, Proto {
         lowPrecision = quoteMonetary.minPrecision;
         market = new Market(baseMonetary.getCode(), quoteMonetary.getCode());
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protobuffer
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public bisq.common.protobuf.Quote toProto() {
+        return bisq.common.protobuf.Quote.newBuilder().setValue(value)
+                .setBaseMonetary(baseMonetary.getMonetaryBuilder())
+                .setQuoteMonetary(quoteMonetary.getMonetaryBuilder())
+                .build();
+    }
+
+    public static Quote fromProto(bisq.common.protobuf.Quote proto) {
+        return new Quote(proto.getValue(),
+                Monetary.resolveSubTypes(proto.getBaseMonetary()),
+                Monetary.resolveSubTypes(proto.getQuoteMonetary()));
+    }
+
 
     /**
      * @param price            Price of a BTC-Fiat quote (e.g. BTC/USD). Bitcoin is base currency

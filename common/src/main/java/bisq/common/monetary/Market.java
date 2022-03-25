@@ -17,17 +17,28 @@
 
 package bisq.common.monetary;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import lombok.Setter;
 
-public record Market(String baseCurrencyCode, String quoteCurrencyCode) implements Proto {
+public record Market(String baseCurrencyCode, String quoteCurrencyCode) implements Proto<bisq.common.protobuf.Market> {
+    @Override
+    public bisq.common.protobuf.Market toProto() {
+        return bisq.common.protobuf.Market.newBuilder()
+                .setBaseCurrencyCode(baseCurrencyCode)
+                .setQuoteCurrencyCode(quoteCurrencyCode)
+                .build();
+    }
+
+    public static Market fromProto(bisq.common.protobuf.Market proto) {
+        return new Market(proto.getBaseCurrencyCode(), proto.getQuoteCurrencyCode());
+    }
+
     @Setter
     private static String QUOTE_SEPARATOR = "/";
-
- 
 
     @Override
     public String toString() {
         return baseCurrencyCode + QUOTE_SEPARATOR + quoteCurrencyCode;
     }
+
 }
