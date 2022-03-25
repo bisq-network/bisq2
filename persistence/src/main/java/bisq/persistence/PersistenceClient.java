@@ -17,7 +17,7 @@
 
 package bisq.persistence;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;

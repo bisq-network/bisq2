@@ -17,7 +17,7 @@
 
 package bisq.social.user;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import lombok.Getter;
 
 import java.util.List;

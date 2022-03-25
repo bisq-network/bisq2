@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node.transport;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.network.p2p.node.Address;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 

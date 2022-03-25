@@ -19,7 +19,7 @@ package bisq.account.accounts;
 
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

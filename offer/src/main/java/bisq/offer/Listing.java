@@ -18,7 +18,7 @@
 package bisq.offer;
 
 import bisq.account.protocol.SwapProtocolType;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkId;
 import bisq.offer.options.ListingOption;

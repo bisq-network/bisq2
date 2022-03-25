@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.filter;
 
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 import java.util.HashSet;
 

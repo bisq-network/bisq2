@@ -20,7 +20,7 @@ package bisq.account.settlement;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.common.currency.TradeCurrency;
 import bisq.i18n.Res;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 import java.util.List;
 

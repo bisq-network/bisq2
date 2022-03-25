@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.storage;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 // Interface for any data which gets distributed to the P2P network. Usually data from outside the network module 
 // like Offer, ChatMessage,...

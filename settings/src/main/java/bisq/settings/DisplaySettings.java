@@ -17,7 +17,7 @@
 
 package bisq.settings;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import lombok.Getter;
 import lombok.Setter;
 

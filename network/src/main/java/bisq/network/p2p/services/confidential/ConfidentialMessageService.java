@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.confidential;
 
 import bisq.common.encoding.ObjectSerializer;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.message.NetworkMessage;

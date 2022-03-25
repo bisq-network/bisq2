@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.Load;

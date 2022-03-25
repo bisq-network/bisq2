@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.common.util.StringUtils;
 import com.google.common.net.InetAddresses;
 import lombok.EqualsAndHashCode;

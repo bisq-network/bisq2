@@ -17,7 +17,7 @@
 
 package bisq.settings;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 import java.util.HashMap;
 import java.util.Optional;

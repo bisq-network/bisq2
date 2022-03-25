@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.message;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

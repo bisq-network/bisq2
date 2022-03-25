@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.network.p2p.node.transport.Transport;
 
 import java.util.Set;

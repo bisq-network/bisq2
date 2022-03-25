@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.message;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 /**
  * Interface for any message sent as payload in NetworkEnvelope

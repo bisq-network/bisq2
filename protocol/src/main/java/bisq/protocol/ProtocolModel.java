@@ -17,7 +17,7 @@
 
 package bisq.protocol;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.contract.Contract;
 import bisq.network.p2p.message.NetworkMessage;
 import lombok.Getter;

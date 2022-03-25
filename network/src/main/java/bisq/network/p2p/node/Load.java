@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 public record Load(int numConnections) implements Proto {
 }

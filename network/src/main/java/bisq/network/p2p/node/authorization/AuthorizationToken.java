@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node.authorization;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import lombok.Data;
 
 @Data

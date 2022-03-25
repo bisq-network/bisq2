@@ -17,7 +17,7 @@
 
 package bisq.network;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.security.PubKey;
 
 import java.security.KeyPair;

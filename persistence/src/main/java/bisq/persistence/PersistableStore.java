@@ -17,7 +17,7 @@
 
 package bisq.persistence;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 /**
  * Interface for the outside envelope object persisted to disk.

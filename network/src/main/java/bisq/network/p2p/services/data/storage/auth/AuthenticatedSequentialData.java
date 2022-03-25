@@ -19,7 +19,7 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
 import bisq.common.encoding.ObjectSerializer;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 

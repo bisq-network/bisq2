@@ -19,7 +19,7 @@ package bisq.social.user;
 
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.network.NetworkId;
 import bisq.security.DigestUtil;
 import lombok.Getter;

@@ -17,7 +17,7 @@
 
 package bisq.social.user.profile;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.identity.Identity;
 import bisq.security.DigestUtil;
 import bisq.social.user.ChatUser;

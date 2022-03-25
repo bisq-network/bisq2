@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.filter;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 public record FilterEntry(byte[] hash, int sequenceNumber) implements Proto {
 }

@@ -17,7 +17,7 @@
 
 package bisq.identity;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.security.PubKey;

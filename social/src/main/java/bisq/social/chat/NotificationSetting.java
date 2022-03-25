@@ -17,7 +17,7 @@
 
 package bisq.social.chat;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 public enum NotificationSetting implements Proto {
     ALL,

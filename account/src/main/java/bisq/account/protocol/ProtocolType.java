@@ -18,7 +18,7 @@
 package bisq.account.protocol;
 
 import bisq.common.monetary.Market;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 import java.util.ArrayList;
 import java.util.List;

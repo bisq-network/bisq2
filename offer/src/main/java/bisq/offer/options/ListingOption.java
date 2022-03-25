@@ -17,7 +17,7 @@
 
 package bisq.offer.options;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 public interface ListingOption extends Proto {
 }

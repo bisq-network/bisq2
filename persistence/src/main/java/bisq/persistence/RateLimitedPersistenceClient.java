@@ -17,7 +17,7 @@
 
 package bisq.persistence;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

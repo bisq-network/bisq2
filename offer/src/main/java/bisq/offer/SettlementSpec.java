@@ -17,7 +17,7 @@
 
 package bisq.offer;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 import javax.annotation.Nullable;
 
