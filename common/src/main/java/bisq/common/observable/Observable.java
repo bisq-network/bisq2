@@ -17,11 +17,12 @@
 
 package bisq.common.observable;
 
+import java.io.Serializable;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 
-public class Observable<T> {
+public class Observable<T> implements Serializable {
     private T value;
     // todo as observers is transient we get null after reading persisted data
     // we will likely not persist it when we impl protobuf serialisation, so the Observable can be considered 
