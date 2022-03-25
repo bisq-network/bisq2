@@ -79,7 +79,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         byte[] hash = DigestUtil.hash(payload.serialize());
         ByteArray byteArray = new ByteArray(hash);
         AuthenticatedDataRequest requestFromMap;
-        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
+        Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (map.size() > MAX_MAP_SIZE) {
                 return new Result(false).maxMapSizeReached();

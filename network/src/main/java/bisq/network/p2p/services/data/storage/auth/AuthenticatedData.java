@@ -30,22 +30,22 @@ public class AuthenticatedData implements Proto {
     public static AuthenticatedData from(AuthenticatedData data, int sequenceNumber) {
         return new AuthenticatedData(data.getPayload(),
                 sequenceNumber,
-                data.getHashOfPublicKey(),
+                data.getPubKeyHash(),
                 data.getCreated());
     }
 
     protected final AuthenticatedPayload payload;
     protected final int sequenceNumber;
     protected final long created;
-    protected final byte[] hashOfPublicKey;
+    protected final byte[] pubKeyHash;
 
     public AuthenticatedData(AuthenticatedPayload payload,
                              int sequenceNumber,
-                             byte[] hashOfPublicKey,
+                             byte[] pubKeyHash,
                              long created) {
         this.payload = payload;
         this.sequenceNumber = sequenceNumber;
-        this.hashOfPublicKey = hashOfPublicKey;
+        this.pubKeyHash = pubKeyHash;
         this.created = created;
     }
 
@@ -67,7 +67,7 @@ public class AuthenticatedData implements Proto {
                 "\r\n     message=" + payload +
                 ",\r\n     sequenceNumber=" + sequenceNumber +
                 ",\r\n     created=" + created +
-                ",\r\n     hashOfPublicKey=" + Hex.encode(hashOfPublicKey) +
+                ",\r\n     pubKeyHash=" + Hex.encode(pubKeyHash) +
                 "\r\n}";
     }
 }

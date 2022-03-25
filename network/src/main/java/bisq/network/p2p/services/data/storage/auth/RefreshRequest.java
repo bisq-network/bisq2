@@ -90,7 +90,7 @@ public class RefreshRequest implements BroadcastMessage {
 
     public boolean isPublicKeyInvalid(AuthenticatedData entryFromMap) {
         try {
-            return !Arrays.equals(entryFromMap.getHashOfPublicKey(), DigestUtil.hash(ownerPublicKeyBytes));
+            return !Arrays.equals(entryFromMap.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }

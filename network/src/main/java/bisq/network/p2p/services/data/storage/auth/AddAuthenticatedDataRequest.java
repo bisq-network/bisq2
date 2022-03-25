@@ -42,14 +42,14 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
             throws GeneralSecurityException {
 
         byte[] hash = DigestUtil.hash(payload.serialize());
-        byte[] hashOfPublicKey = DigestUtil.hash(keyPair.getPublic().getEncoded());
+        byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
         int sequenceNumber = store.getSequenceNumber(hash) + 1;
-        AuthenticatedData data = new AuthenticatedData(payload, sequenceNumber, hashOfPublicKey, System.currentTimeMillis());
+        AuthenticatedData data = new AuthenticatedData(payload, sequenceNumber, pubKeyHash, System.currentTimeMillis());
         byte[] serialized = data.serialize();
         byte[] signature = SignatureUtil.sign(serialized, keyPair.getPrivate());
          /*  log.error("hash={}", Hex.encode(hash));
         log.error("keyPair.getPublic().getEncoded()={}", Hex.encode(keyPair.getPublic().getEncoded()));
-        log.error("hashOfPublicKey={}", Hex.encode(hashOfPublicKey));
+        log.error("pubKeyHash={}", Hex.encode(pubKeyHash));
         log.error("sequenceNumber={}", sequenceNumber);
         log.error("serialized={}", Hex.encode(serialized));
         log.error("signature={}", Hex.encode(signature));
@@ -99,7 +99,7 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
 
     public boolean isPublicKeyInvalid() {
         try {
-            return !Arrays.equals(authenticatedData.getHashOfPublicKey(), DigestUtil.hash(ownerPublicKeyBytes));
+            return !Arrays.equals(authenticatedData.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }
