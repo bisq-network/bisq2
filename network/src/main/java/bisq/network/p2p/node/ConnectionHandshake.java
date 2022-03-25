@@ -20,7 +20,6 @@ package bisq.network.p2p.node;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.message.Version;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.services.peergroup.BanList;
@@ -77,7 +76,7 @@ class ConnectionHandshake {
             Metrics metrics = new Metrics();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             AuthorizationToken token = authorizationService.createToken(Request.class);
-            NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(Version.VERSION, token, new Request(capability, myLoad));
+            NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, new Request(capability, myLoad));
             log.debug("Client sends {}", requestNetworkEnvelope);
             long ts = System.currentTimeMillis();
             objectOutputStream.writeObject(requestNetworkEnvelope);
@@ -90,9 +89,9 @@ class ConnectionHandshake {
                 throw new ConnectionException("Received proto not type of Envelope. " + msg.getClass().getSimpleName());
             }
             log.debug("Client received {}", msg);
-            if (responseNetworkEnvelope.getVersion() != Version.VERSION) {
+            if (responseNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
                 throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
-                        responseNetworkEnvelope.getVersion() + "; Version.VERSION=" + Version.VERSION);
+                        responseNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
             }
             if (!(responseNetworkEnvelope.getNetworkMessage() instanceof Response response)) {
                 throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
@@ -132,9 +131,9 @@ class ConnectionHandshake {
                 throw new ConnectionException("Received proto not type of Envelope. Received data=" + msg.getClass().getSimpleName());
             }
             log.debug("Server received {}", msg);
-            if (requestNetworkEnvelope.getVersion() != Version.VERSION) {
+            if (requestNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
                 throw new ConnectionException("Invalid version. requestEnvelop.version()=" +
-                        requestNetworkEnvelope.getVersion() + "; Version.VERSION=" + Version.VERSION);
+                        requestNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
             }
             if (!(requestNetworkEnvelope.getNetworkMessage() instanceof Request request)) {
                 throw new ConnectionException("RequestEnvelope.message() not type of Request. requestEnvelope=" +
@@ -151,7 +150,7 @@ class ConnectionHandshake {
 
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             AuthorizationToken token = authorizationService.createToken(Response.class);
-            NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(Version.VERSION,token, new Response( capability, myLoad) );
+            NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION,token, new Response( capability, myLoad) );
             objectOutputStream.writeObject(responseNetworkEnvelope);
             objectOutputStream.flush();
             metrics.onSent(responseNetworkEnvelope);

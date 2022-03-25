@@ -21,7 +21,6 @@ import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.message.Version;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -115,7 +114,7 @@ public abstract class Connection {
                         if (!(msg instanceof NetworkEnvelope networkEnvelope)) {
                             throw new ConnectionException("Received message not type of Envelope. " + simpleName);
                         }
-                        if (networkEnvelope.getVersion() != Version.VERSION) {
+                        if (networkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
                             throw new ConnectionException("Invalid network version. " + simpleName);
                         }
                         log.debug("Received message: {} at: {}", StringUtils.truncate(networkEnvelope.getNetworkMessage().toString(), 200), this);
@@ -144,7 +143,7 @@ public abstract class Connection {
             throw new ConnectionClosedException(this);
         }
         try {
-            NetworkEnvelope networkEnvelope = new NetworkEnvelope(Version.VERSION, authorizationToken, networkMessage);
+            NetworkEnvelope networkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, authorizationToken, networkMessage);
             synchronized (writeLock) {
                 objectOutputStream.writeObject(networkEnvelope);
                 objectOutputStream.flush();

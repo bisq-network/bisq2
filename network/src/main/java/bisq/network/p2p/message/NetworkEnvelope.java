@@ -23,10 +23,15 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+/**
+ * Outside data structure to be sent over the wire.
+ */
 @ToString
 @EqualsAndHashCode
 @Getter
 public class NetworkEnvelope implements Proto {
+    public static final int VERSION = 1;
+    
     private final int version;
     private final AuthorizationToken authorizationToken;
     private final NetworkMessage networkMessage;
