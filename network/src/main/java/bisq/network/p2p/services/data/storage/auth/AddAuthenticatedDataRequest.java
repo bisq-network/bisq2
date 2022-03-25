@@ -34,7 +34,11 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Optional;
 
-
+/**
+ * Request for adding authenticated data to the data storage.
+ * A signature of the authenticatedSequentialData is verified with the given public key.
+ * The data gets compared with existing map entries and need to be deterministic.
+ */
 @EqualsAndHashCode
 @Slf4j
 public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, AddDataRequest {
@@ -137,7 +141,7 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
     @Override
     public String toString() {
         return "AddAuthenticatedDataRequest{" +
-                "\r\n     authenticatedData=" + authenticatedSequentialData +
+                "\r\n     authenticatedSequentialData=" + authenticatedSequentialData +
                 ",\r\n     signature=" + Hex.encode(signature) +
                 ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
                 "\r\n}";

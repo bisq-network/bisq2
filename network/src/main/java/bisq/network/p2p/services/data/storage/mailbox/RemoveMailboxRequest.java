@@ -59,8 +59,8 @@ public class RemoveMailboxRequest extends RemoveAuthenticatedDataRequest impleme
     @Override
     public boolean isPublicKeyHashInvalid(AuthenticatedSequentialData entryFromMap) {
         try {
-            MailboxSequentialData mailboxData = (MailboxSequentialData) entryFromMap;
-            return !Arrays.equals(mailboxData.getHashOfReceiversPublicKey(), DigestUtil.hash(ownerPublicKeyBytes));
+            MailboxSequentialData mailboxSequentialData = (MailboxSequentialData) entryFromMap;
+            return !Arrays.equals(mailboxSequentialData.getReceiversPublicKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }

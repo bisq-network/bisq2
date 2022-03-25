@@ -20,33 +20,35 @@ package bisq.network.p2p.services.data.storage.mailbox;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import bisq.security.ConfidentialData;
-import bisq.security.HybridEncryption;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.PublicKey;
-
 // We want to have fine-grained control over mailbox messages.
 // As the data is encrypted we could not use it's TTL, and we would merge all mailbox proto into one storage file.
 // By wrapping the sealed data into that NetworkData we can add the fileName and ttl from the unencrypted NetworkData.
+
+/**
+ * Holds the ConfidentialMessage and metaData providing information about the message type.
+ */
 @EqualsAndHashCode(callSuper = true)
 @ToString
 public class MailboxData extends AuthenticatedData {
-    public static MailboxData createMailboxPayload(MailboxMessage mailboxMessage,
-                                                   KeyPair senderKeyPair,
-                                                   PublicKey receiverPublicKey)
-            throws GeneralSecurityException {
-        ConfidentialData confidentialData = HybridEncryption.encryptAndSign(mailboxMessage.serialize(), receiverPublicKey, senderKeyPair);
-        ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, "DEFAULT");
-        return new MailboxData(confidentialMessage, mailboxMessage.getMetaData());
-    }
+    private final MetaData metaData;
 
     public MailboxData(ConfidentialMessage confidentialMessage, MetaData metaData) {
-        super(confidentialMessage, metaData);
+        super(confidentialMessage);
+        this.metaData = metaData;
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return metaData;
+    }
+
+    @Override
+    public boolean isDataInvalid() {
+        return distributedData.isDataInvalid();
     }
 
     @VisibleForTesting

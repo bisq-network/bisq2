@@ -162,7 +162,7 @@ public class StorageService {
     }
 
     private CompletableFuture<Optional<StorageData>> onAddMailboxRequest(AddMailboxRequest request) {
-        MailboxData mailboxData = request.getMailboxData().getMailboxData();
+        MailboxData mailboxData = request.getMailboxSequentialData().getMailboxData();
         return getOrCreateMailboxDataStore(mailboxData.getMetaData())
                 .thenApply(store -> {
                     Result result = store.add(request);

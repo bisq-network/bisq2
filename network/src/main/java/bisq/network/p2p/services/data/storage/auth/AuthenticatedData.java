@@ -24,26 +24,21 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.concurrent.TimeUnit;
-
+/**
+ * Container for DistributedData. 
+ * todo: not sure if we could prune that wrapper...
+ */
 @ToString
 @EqualsAndHashCode
 public class AuthenticatedData implements StorageData {
     @Getter
     protected final DistributedData distributedData;
-    protected final MetaData metaData;
 
     public AuthenticatedData(DistributedData distributedData) {
-        // 463 is overhead of sig/pubkeys,...
-        // 582 is pubkey+sig+hash
-        this(distributedData, new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, distributedData.getClass().getSimpleName()));
-    }
-
-    public AuthenticatedData(DistributedData distributedData, MetaData metaData) {
         this.distributedData = distributedData;
-        this.metaData = metaData;
     }
 
+    // We delegate the delivery of MetaData to the distributedData.
     @Override
     public MetaData getMetaData() {
         return distributedData.getMetaData();

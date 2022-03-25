@@ -30,7 +30,7 @@ public class MockAuthenticatedTextData extends AuthenticatedData {
     final MetaData metaData;
 
     public MockAuthenticatedTextData(String text) {
-        super(null, null);
+        super(null);
         this.text = text;
         // 463 is overhead of sig/pubkeys,...
         // 582 is pubkey+sig+hash

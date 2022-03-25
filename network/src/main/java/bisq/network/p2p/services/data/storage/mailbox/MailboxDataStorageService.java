@@ -61,7 +61,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
     public Result add(AddMailboxRequest request) {
-        MailboxSequentialData data = request.getMailboxData();
+        MailboxSequentialData data = request.getMailboxSequentialData();
         MailboxData payload = data.getMailboxData();
         byte[] hash = DigestUtil.hash(payload.serialize());
         ByteArray byteArray = new ByteArray(hash);
@@ -138,7 +138,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             // At that point we know requestFromMap is an AddProtectedDataRequest
             AddMailboxRequest addRequest = (AddMailboxRequest) requestFromMap;
             // We have an entry, lets validate if we can remove it
-            dataFromMap = addRequest.getMailboxData();
+            dataFromMap = addRequest.getMailboxSequentialData();
             if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
                 // Sequence number has not increased
                 return new Result(false).sequenceNrInvalid();
@@ -211,7 +211,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         Map<ByteArray, MailboxRequest> pruned = persisted.entrySet().stream()
                 .filter(entry -> now - entry.getValue().getCreated() < MAX_AGE)
                 .filter(entry -> entry.getValue() instanceof RemoveMailboxRequest ||
-                        !((AddMailboxRequest) entry.getValue()).getMailboxData().isExpired())
+                        !((AddMailboxRequest) entry.getValue()).getMailboxSequentialData().isExpired())
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

@@ -30,7 +30,7 @@ public class MockAuthenticatedData extends AuthenticatedData {
     final MetaData metaData;
 
     public MockAuthenticatedData(String offerDummy) {
-        super(null, null);
+        super(null);
         this.offerDummy = offerDummy;
         metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
     }

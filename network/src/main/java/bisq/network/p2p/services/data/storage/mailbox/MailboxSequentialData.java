@@ -28,37 +28,38 @@ import java.security.PublicKey;
 @EqualsAndHashCode(callSuper = true)
 public class MailboxSequentialData extends AuthenticatedSequentialData {
     private final byte[] receiversPubKeyBytes;
-    private final byte[] hashOfReceiversPublicKey;
+    private final byte[] receiversPublicKeyHash;
     transient final private PublicKey receiversPubKey;
 
     public MailboxSequentialData(MailboxData data,
                                  byte[] hashOfSenderPublicKey,
-                                 byte[] hashOfReceiversPublicKey,
+                                 byte[] receiversPublicKeyHash,
                                  PublicKey receiversPubKey) {
         this(data,
                 hashOfSenderPublicKey,
-                hashOfReceiversPublicKey,
+                receiversPublicKeyHash,
                 receiversPubKey,
                 System.currentTimeMillis());
     }
 
     public MailboxSequentialData(MailboxData data,
                                  byte[] hashOfSenderPublicKey,
-                                 byte[] hashOfReceiversPublicKey,
+                                 byte[] receiversPublicKeyHash,
                                  PublicKey receiversPubKey,
                                  long created) {
-        super(data, 1, hashOfSenderPublicKey, created); // We set sequenceNumber to 1 as there will be only one AddMailBoxRequest
+        // We set sequenceNumber to 1 as there will be only one AddMailBoxRequest
+        super(data, 1, hashOfSenderPublicKey, created); 
 
         receiversPubKeyBytes = receiversPubKey.getEncoded();
-        this.hashOfReceiversPublicKey = hashOfReceiversPublicKey;
+        this.receiversPublicKeyHash = receiversPublicKeyHash;
         this.receiversPubKey = receiversPubKey;
     }
 
     @Override
     public String toString() {
-        return "MailboxData{" +
+        return "MailboxSequentialData{" +
                 "\r\n     receiversPubKeyBytes=" + Hex.encode(receiversPubKeyBytes) +
-                ",\r\n     hashOfReceiversPublicKey=" + Hex.encode(hashOfReceiversPublicKey) +
+                ",\r\n     receiversPublicKeyHash=" + Hex.encode(receiversPublicKeyHash) +
                 "\r\n} " + super.toString();
     }
 

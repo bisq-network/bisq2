@@ -23,6 +23,10 @@ import bisq.common.encoding.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+/**
+ * Data which ensures that the sequence of add or remove request is maintained correctly.
+ * The data gets hashed and signed and need to be deterministic.
+ */
 @Getter
 @EqualsAndHashCode
 public class AuthenticatedSequentialData implements Proto {
@@ -64,7 +68,7 @@ public class AuthenticatedSequentialData implements Proto {
     @Override
     public String toString() {
         return "AuthenticatedData{" +
-                "\r\n     message=" + authenticatedData +
+                "\r\n     authenticatedData=" + authenticatedData +
                 ",\r\n     sequenceNumber=" + sequenceNumber +
                 ",\r\n     created=" + created +
                 ",\r\n     pubKeyHash=" + Hex.encode(pubKeyHash) +

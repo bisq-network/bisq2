@@ -186,7 +186,7 @@ public class DataService implements DataNetworkService.Listener {
         return storageService.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
                 .thenApply(store -> {
                     try {
-                        AddMailboxRequest request = AddMailboxRequest.from(store, mailboxPayload, senderKeyPair, receiverPublicKey);
+                        AddMailboxRequest request = AddMailboxRequest.from(mailboxPayload, senderKeyPair, receiverPublicKey);
                         Result result = store.add(request);
                         if (result.isSuccess()) {
                             return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()

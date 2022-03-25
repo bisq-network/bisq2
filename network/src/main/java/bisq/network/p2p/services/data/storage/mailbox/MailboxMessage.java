@@ -21,7 +21,7 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 
 /**
- * Message which will be stored in the mailbox proto in case the receiver was not available.
+ * Message which will be stored in the network as encrypted data in case the receiver was not available.
  */
 public interface MailboxMessage extends NetworkMessage {
     MetaData getMetaData();

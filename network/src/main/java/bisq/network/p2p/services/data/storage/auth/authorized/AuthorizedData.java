@@ -43,7 +43,7 @@ public abstract class AuthorizedData extends AuthenticatedData {
     transient private final PublicKey authorizedPublicKey;
 
     public AuthorizedData(DistributedData distributedData, byte[] signature, PublicKey authorizedPublicKey) {
-        super(distributedData, null); //todo
+        super(distributedData);
         this.signature = signature;
         this.authorizedPublicKey = authorizedPublicKey;
         authorizedPublicKeyBytes = authorizedPublicKey.getEncoded();

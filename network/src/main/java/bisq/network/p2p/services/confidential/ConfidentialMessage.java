@@ -23,7 +23,9 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.ConfidentialData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
+@ToString
 @EqualsAndHashCode
 @Getter
 public class ConfidentialMessage implements NetworkMessage, DistributedData {
@@ -36,20 +38,14 @@ public class ConfidentialMessage implements NetworkMessage, DistributedData {
     }
 
     @Override
-    public String toString() {
-        return "ConfidentialMessage{" +
-                "\r\n     sealed=" + confidentialData +
-                "\r\n     keyId=" + keyId +
-                "\r\n}";
-    }
-
-    @Override
     public MetaData getMetaData() {
-        return null; //todo
+        throw new RuntimeException("Metadata of ConfidentialMessage is not provided as content is encrypted and " +
+                "therefore the content type is unknown. " +
+                "The MailBoxData class must provide instead the meta data");
     }
 
     @Override
     public boolean isDataInvalid() {
-        return false;
+        return confidentialData == null || keyId == null;
     }
 }
