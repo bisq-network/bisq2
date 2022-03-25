@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.data.ByteArray;
+import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.network.p2p.services.data.inventory.InventoryUtil;
 import bisq.network.p2p.services.data.storage.Result;
@@ -26,6 +27,7 @@ import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -54,7 +56,12 @@ public class AuthenticatedDataStorageServiceTest {
         }
     }
 
-    // @Test
+    @BeforeEach
+    public void cleanup() {
+        FileUtils.deleteDirectory(appDirPath);
+    }
+
+    @Test
     public void testGetSubSet() {
         List<AuthenticatedDataRequest> map = new ArrayList<>();
         map.add(new MockDataTransaction(1, 0));
@@ -109,6 +116,50 @@ public class AuthenticatedDataStorageServiceTest {
         result = InventoryUtil.getSubList(map, filterOffset, filterRange, maxItems);
         assertEquals(100, result.size());
     }
+
+    @Test
+    public void testMultipleAddRemoves() throws GeneralSecurityException {
+        MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test" + UUID.randomUUID());
+        PersistenceService persistenceService = new PersistenceService(appDirPath);
+        AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(persistenceService,
+                AUTHENTICATED_DATA_STORE.getStoreName(),
+                data.getMetaData().getFileName());
+        store.readPersisted().join();
+        KeyPair keyPair = KeyGeneration.generateKeyPair();
+
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, data, keyPair);
+        int initialMapSize = store.getPersistableStore().getClone().getMap().size();
+        byte[] hash = DigestUtil.hash(data.serialize());
+        assertEquals(1, addRequest.getSequenceNumber());
+        Result addRequestResult = store.add(addRequest);
+        assertTrue(addRequestResult.isSuccess());
+
+        AddAuthenticatedDataRequest addRequest2 = AddAuthenticatedDataRequest.from(store, data, keyPair);
+        byte[] hash2 = DigestUtil.hash(data.serialize());
+        Result addRequestResult2 = store.add(addRequest2);
+        assertEquals(2, addRequest2.getSequenceNumber());
+        assertTrue(addRequestResult2.isSuccess());  // we got replaced our add request with the updated seq nr
+
+        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = RemoveAuthenticatedDataRequest.from(store, data, keyPair);
+        Result removeRequestResult = store.remove(removeAuthenticatedDataRequest);
+        assertTrue(removeRequestResult.isSuccess());
+        // we got replaced the add request with the remove request and seq nr 3
+        assertEquals(3, removeAuthenticatedDataRequest.getSequenceNumber());
+
+        // Remove with increased seq nr. should 
+        removeAuthenticatedDataRequest = RemoveAuthenticatedDataRequest.from(store, data, keyPair);
+        removeRequestResult = store.remove(removeAuthenticatedDataRequest);
+        assertEquals(4, removeAuthenticatedDataRequest.getSequenceNumber());
+        // We return in that case as data has not been removed (only seq nr updated)
+        assertFalse(removeRequestResult.isSuccess());
+
+        AddAuthenticatedDataRequest addRequest4 = AddAuthenticatedDataRequest.from(store, data, keyPair);
+        Result addRequestResult4 = store.add(addRequest4);
+        // we got replaced the remove request with the add request and seq nr 4
+        assertEquals(5, addRequest4.getSequenceNumber());
+        assertTrue(addRequestResult4.isSuccess());  // we got replaced our add request with the updated seq nr
+    }
+
 
     @Test
     public void testAddAndRemove() throws GeneralSecurityException, IOException {
@@ -192,6 +243,7 @@ public class AuthenticatedDataStorageServiceTest {
         assertEquals(initialMapSize, inventory.entries().size());*/
     }
 
+
     @Test
     public void testGetInv() throws GeneralSecurityException, IOException {
         MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test");
@@ -222,9 +274,9 @@ public class AuthenticatedDataStorageServiceTest {
         // request inventory with first item and same seq num
         // We should get iterations-1 items
         String dataType = data.getMetaData().getFileName();
-     //   Set<FilterItem> filterItems = new HashSet<>();
-      //  filterItems.add(new FilterItem(new ByteArray(hashOfFirst).getBytes(), initialSeqNumFirstItem + 1));
-       // ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
+        //   Set<FilterItem> filterItems = new HashSet<>();
+        //  filterItems.add(new FilterItem(new ByteArray(hashOfFirst).getBytes(), initialSeqNumFirstItem + 1));
+        // ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
         // int maxItems = store.getMaxItems();
       /*  int expectedSize = Math.min(maxItems, store.getMap().size() - 1);
         int expectedTruncated = Math.max(0, store.getMap().size() - maxItems - 1);
