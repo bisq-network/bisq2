@@ -20,7 +20,7 @@ package bisq.social.intent;
 import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

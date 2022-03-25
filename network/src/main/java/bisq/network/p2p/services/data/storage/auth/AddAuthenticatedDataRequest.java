@@ -117,7 +117,7 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
     }
 
     public String getFileName() {
-        return authenticatedData.getPayload().getMetaData().getFileName();
+        return authenticatedData.getAuthenticatedPayload().getMetaData().getFileName();
     }
 
     @Override
@@ -131,7 +131,7 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
     }
 
     public MetaData getMetaData() {
-        return authenticatedData.getPayload().getMetaData();
+        return authenticatedData.getAuthenticatedPayload().getMetaData();
     }
 
     @Override

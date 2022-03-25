@@ -22,7 +22,7 @@ import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.network.NetworkId;
-import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.offer.options.ListingOption;
 import bisq.oracle.marketprice.MarketPrice;

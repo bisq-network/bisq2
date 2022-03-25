@@ -21,6 +21,7 @@ import bisq.common.util.OsUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.MockAuthenticatedPayload;
 import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.security.KeyGeneration;

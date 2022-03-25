@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data;
+package bisq.network.p2p.services.data.storage;
 
 import bisq.common.encoding.Proto;
-import bisq.network.p2p.services.data.storage.MetaData;
 
 public interface NetworkPayload extends Proto {
     MetaData getMetaData();

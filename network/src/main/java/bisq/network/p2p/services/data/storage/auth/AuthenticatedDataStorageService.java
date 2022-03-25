@@ -75,7 +75,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public Result add(AddAuthenticatedDataRequest request) {
         AuthenticatedData data = request.getAuthenticatedData();
-        AuthenticatedPayload payload = data.getPayload();
+        AuthenticatedPayload payload = data.getAuthenticatedPayload();
         byte[] hash = DigestUtil.hash(payload.serialize());
         ByteArray byteArray = new ByteArray(hash);
         AuthenticatedDataRequest requestFromMap;
@@ -162,7 +162,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
             // We have an entry, lets validate if we can remove it
             AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
-            payloadFromMap = dataFromMap.getPayload();
+            payloadFromMap = dataFromMap.getAuthenticatedPayload();
             if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
                 log.warn("SequenceNr has not increased at remove. request={}", request);
                 return new Result(false).sequenceNrInvalid();
@@ -231,7 +231,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             map.put(byteArray, updatedRequest);
         }
         persist();
-        listeners.forEach(listener -> listener.onRefreshed(updatedRequest.getAuthenticatedData().payload));
+        listeners.forEach(listener -> listener.onRefreshed(updatedRequest.getAuthenticatedData().authenticatedPayload));
         return new Result(true);
     }
 

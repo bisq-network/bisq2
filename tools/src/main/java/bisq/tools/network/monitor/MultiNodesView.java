@@ -28,7 +28,7 @@ import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
-import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.NetworkPayload;
 import com.typesafe.config.Config;
 import javafx.application.Application;
 import javafx.application.Platform;

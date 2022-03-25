@@ -63,6 +63,6 @@ public class MailboxData extends AuthenticatedData {
     }
 
     public MailboxPayload getMailboxPayload() {
-        return (MailboxPayload) payload;
+        return (MailboxPayload) authenticatedPayload;
     }
 }

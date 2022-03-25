@@ -24,6 +24,7 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.filter.DataFilter;
+import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
@@ -140,7 +141,6 @@ public class DataService implements DataNetworkService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Add data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
 
     public CompletableFuture<BroadCastDataResult> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
         if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {

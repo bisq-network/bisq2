@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.append;
 
-import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.NetworkPayload;
 
 public interface AppendOnlyPayload extends NetworkPayload {
 }

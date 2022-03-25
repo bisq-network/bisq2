@@ -242,8 +242,8 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
                 .thenCompose(list -> {
-                    AuthenticatedPayload netWorkPayload = new AuthenticatedPayload(data);
-                    return dataService.get().addNetworkPayload(netWorkPayload, keyPair)
+                    AuthenticatedPayload authenticatedPayload = new AuthenticatedPayload(data);
+                    return dataService.get().addNetworkPayload(authenticatedPayload, keyPair)
                             .whenComplete((broadCastResultFutures, throwable) -> {
                                 broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
                                     //todo apply state
@@ -259,8 +259,8 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> {
-                    AuthenticatedPayload payload = new AuthenticatedPayload(data);
-                    return dataService.get().removeNetworkPayload(payload, keyPair)
+                    AuthenticatedPayload authenticatedPayload = new AuthenticatedPayload(data);
+                    return dataService.get().removeNetworkPayload(authenticatedPayload, keyPair)
                             .whenComplete((broadCastDataResult, throwable) -> {
                                 broadCastDataResult.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
                                     //todo apply state

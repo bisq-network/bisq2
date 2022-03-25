@@ -20,7 +20,7 @@ package bisq.network.p2p.services.data.storage.auth.authorized;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.OsUtils;
-import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.network.p2p.services.data.storage.auth.*;
 import bisq.persistence.PersistenceService;
@@ -78,7 +78,7 @@ public class AuthorizedDataStorageServiceTest {
         AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
-        MockAuthorizedPayload payload = (MockAuthorizedPayload) dataFromMap.getPayload();
+        MockAuthorizedPayload payload = (MockAuthorizedPayload) dataFromMap.getAuthenticatedPayload();
         assertEquals(payload.getNetworkPayload(), networkPayload);
 
         // refresh

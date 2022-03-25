@@ -22,7 +22,7 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
-import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.security.DigestUtil;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;

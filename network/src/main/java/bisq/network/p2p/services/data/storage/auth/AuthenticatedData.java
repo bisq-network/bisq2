@@ -28,29 +28,29 @@ import lombok.Getter;
 public class AuthenticatedData implements Proto {
 
     public static AuthenticatedData from(AuthenticatedData data, int sequenceNumber) {
-        return new AuthenticatedData(data.getPayload(),
+        return new AuthenticatedData(data.getAuthenticatedPayload(),
                 sequenceNumber,
                 data.getPubKeyHash(),
                 data.getCreated());
     }
 
-    protected final AuthenticatedPayload payload;
+    protected final AuthenticatedPayload authenticatedPayload;
     protected final int sequenceNumber;
     protected final long created;
     protected final byte[] pubKeyHash;
 
-    public AuthenticatedData(AuthenticatedPayload payload,
+    public AuthenticatedData(AuthenticatedPayload authenticatedPayload,
                              int sequenceNumber,
                              byte[] pubKeyHash,
                              long created) {
-        this.payload = payload;
+        this.authenticatedPayload = authenticatedPayload;
         this.sequenceNumber = sequenceNumber;
         this.pubKeyHash = pubKeyHash;
         this.created = created;
     }
 
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > payload.getMetaData().getTtl();
+        return (System.currentTimeMillis() - created) > authenticatedPayload.getMetaData().getTtl();
     }
 
     public boolean isSequenceNrInvalid(long seqNumberFromMap) {
@@ -64,7 +64,7 @@ public class AuthenticatedData implements Proto {
     @Override
     public String toString() {
         return "AuthenticatedData{" +
-                "\r\n     message=" + payload +
+                "\r\n     message=" + authenticatedPayload +
                 ",\r\n     sequenceNumber=" + sequenceNumber +
                 ",\r\n     created=" + created +
                 ",\r\n     pubKeyHash=" + Hex.encode(pubKeyHash) +

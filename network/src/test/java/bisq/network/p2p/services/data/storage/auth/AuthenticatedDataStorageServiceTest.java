@@ -160,7 +160,6 @@ public class AuthenticatedDataStorageServiceTest {
         assertTrue(addRequestResult4.isSuccess());  // we got replaced our add request with the updated seq nr
     }
 
-
     @Test
     public void testAddAndRemove() throws GeneralSecurityException, IOException {
         MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test" + UUID.randomUUID());
@@ -188,8 +187,8 @@ public class AuthenticatedDataStorageServiceTest {
         AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
-        AuthenticatedPayload payload = addRequest.getAuthenticatedData().getPayload();
-        assertEquals(dataFromMap.getPayload(), payload);
+        AuthenticatedPayload payload = addRequest.getAuthenticatedData().getAuthenticatedPayload();
+        assertEquals(dataFromMap.getAuthenticatedPayload(), payload);
 
         // request inventory with old seqNum
      /*   String dataType = data.getMetaData().getFileName();

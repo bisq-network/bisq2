@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
-import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedPayload;
 import lombok.EqualsAndHashCode;

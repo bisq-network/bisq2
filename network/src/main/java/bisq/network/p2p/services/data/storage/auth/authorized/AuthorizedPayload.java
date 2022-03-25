@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
 import bisq.common.encoding.Hex;
-import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
 import bisq.security.SignatureUtil;
 import lombok.EqualsAndHashCode;

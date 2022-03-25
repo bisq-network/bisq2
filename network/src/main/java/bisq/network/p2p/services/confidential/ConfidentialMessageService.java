@@ -24,7 +24,7 @@ import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
 import bisq.network.p2p.services.relay.RelayMessage;

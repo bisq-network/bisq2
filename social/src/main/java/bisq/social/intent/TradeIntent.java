@@ -1,7 +1,7 @@
 package bisq.social.intent;
 
 
-import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.user.ChatUser;
 

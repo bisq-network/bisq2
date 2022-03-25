@@ -23,7 +23,6 @@ import bisq.common.util.FileUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
-import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.filter.FilterEntry;
@@ -140,7 +139,7 @@ public class StorageService {
         return store.getPersistableStore().getClone().getMap().values().stream()
                 .filter(e -> e instanceof AddAuthenticatedDataRequest)
                 .map(e -> (AddAuthenticatedDataRequest) e)
-                .map(e -> e.getAuthenticatedData().getPayload());
+                .map(e -> e.getAuthenticatedData().getAuthenticatedPayload());
     }
 
 
@@ -179,7 +178,7 @@ public class StorageService {
     }
 
     private CompletableFuture<Optional<NetworkPayload>> onAddAuthenticatedDataRequest(AddAuthenticatedDataRequest request) {
-        AuthenticatedPayload payload = request.getAuthenticatedData().getPayload();
+        AuthenticatedPayload payload = request.getAuthenticatedData().getAuthenticatedPayload();
         return getOrCreateAuthenticatedDataStore(payload.getMetaData())
                 .thenApply(store -> {
                     Result result = store.add(request);
