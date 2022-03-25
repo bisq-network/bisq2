@@ -62,7 +62,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     public Result add(AddMailboxRequest request) {
         MailboxSequentialData data = request.getMailboxData();
-        MailboxData payload = data.getMailboxPayload();
+        MailboxData payload = data.getMailboxData();
         byte[] hash = DigestUtil.hash(payload.serialize());
         ByteArray byteArray = new ByteArray(hash);
         MailboxRequest requestFromMap;
@@ -154,11 +154,11 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             }
 
             map.put(byteArray, request);
-            listeners.forEach(listener -> listener.onRemoved(dataFromMap.getMailboxPayload()));
+            listeners.forEach(listener -> listener.onRemoved(dataFromMap.getMailboxData()));
         }
 
         persist();
-        return new Result(true).removedPayload(dataFromMap.getMailboxPayload());
+        return new Result(true).removedData(dataFromMap.getMailboxData());
     }
 
     @Override

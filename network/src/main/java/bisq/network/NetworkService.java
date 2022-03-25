@@ -26,13 +26,13 @@ import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.common.encoding.Proto;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
@@ -235,15 +235,15 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     // Add/remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadCastDataResult> addData(Proto data, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+    public CompletableFuture<BroadCastDataResult> addAuthenticatedData(DistributedData distributedData, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         String nodeId = ownerNetworkIdWithKeyPair.nodeId();
         PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
                 .thenCompose(list -> {
-                    AuthenticatedData authenticatedData = new AuthenticatedData(data);
-                    return dataService.get().addNetworkPayload(authenticatedData, keyPair)
+                    AuthenticatedData authenticatedData = new AuthenticatedData(distributedData);
+                    return dataService.get().addAuthenticatedData(authenticatedData, keyPair)
                             .whenComplete((broadCastResultFutures, throwable) -> {
                                 broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
                                     //todo apply state
@@ -252,15 +252,15 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                 });
     }
 
-    public CompletableFuture<BroadCastDataResult> removeData(Proto data, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+    public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(DistributedData distributedData, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when removeData is called.");
         String nodeId = ownerNetworkIdWithKeyPair.nodeId();
         PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> {
-                    AuthenticatedData authenticatedData = new AuthenticatedData(data);
-                    return dataService.get().removeNetworkPayload(authenticatedData, keyPair)
+                    AuthenticatedData authenticatedData = new AuthenticatedData(distributedData);
+                    return dataService.get().removeAuthenticatedData(authenticatedData, keyPair)
                             .whenComplete((broadCastDataResult, throwable) -> {
                                 broadCastDataResult.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
                                     //todo apply state

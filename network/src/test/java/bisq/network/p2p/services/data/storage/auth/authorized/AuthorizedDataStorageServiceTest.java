@@ -20,7 +20,7 @@ package bisq.network.p2p.services.data.storage.auth.authorized;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.OsUtils;
-import bisq.network.p2p.services.data.storage.NetworkPayload;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.network.p2p.services.data.storage.auth.*;
 import bisq.persistence.PersistenceService;
@@ -57,9 +57,9 @@ public class AuthorizedDataStorageServiceTest {
         byte[] privateKeyBytes = Hex.decode(privateKeyAsHex);
 
         PrivateKey privateKey = KeyGeneration.generatePrivate(privateKeyBytes);
-        NetworkPayload networkPayload = new MockNetworkPayload("test" + UUID.randomUUID());
-        byte[] signature = SignatureUtil.sign(networkPayload.serialize(), privateKey);
-        MockAuthorizedData authorizedPayload = new MockAuthorizedData(networkPayload, signature, publicKey);
+        DistributedData distributedData = new MockDistributedData("test" + UUID.randomUUID());
+        byte[] signature = SignatureUtil.sign(distributedData.serialize(), privateKey);
+        MockAuthorizedData authorizedPayload = new MockAuthorizedData(distributedData, signature, publicKey);
 
         KeyPair keyPair = KeyGeneration.generateKeyPair();
         PersistenceService persistenceService = new PersistenceService(appDirPath);
@@ -79,7 +79,7 @@ public class AuthorizedDataStorageServiceTest {
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
         MockAuthorizedData payload = (MockAuthorizedData) dataFromMap.getAuthenticatedData();
-        assertEquals(payload.getNetworkPayload(), networkPayload);
+        assertEquals(payload.getDistributedData(), distributedData);
 
         // refresh
         RefreshRequest refreshRequest = RefreshRequest.from(store, authorizedPayload, keyPair);

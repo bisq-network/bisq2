@@ -62,7 +62,7 @@ public class MailboxSequentialData extends AuthenticatedSequentialData {
                 "\r\n} " + super.toString();
     }
 
-    public MailboxData getMailboxPayload() {
+    public MailboxData getMailboxData() {
         return (MailboxData) authenticatedData;
     }
 }

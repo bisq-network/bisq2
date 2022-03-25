@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
 import bisq.common.encoding.Hex;
-import bisq.network.p2p.services.data.storage.NetworkPayload;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.security.SignatureUtil;
 import lombok.EqualsAndHashCode;
@@ -38,14 +38,12 @@ import java.util.Set;
 @ToString
 @Getter
 public abstract class AuthorizedData extends AuthenticatedData {
-    private final NetworkPayload networkPayload;
     private final byte[] signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
 
-    public AuthorizedData(NetworkPayload networkPayload, byte[] signature, PublicKey authorizedPublicKey) {
-        super(null, null); //todo
-        this.networkPayload = networkPayload;
+    public AuthorizedData(DistributedData distributedData, byte[] signature, PublicKey authorizedPublicKey) {
+        super(distributedData, null); //todo
         this.signature = signature;
         this.authorizedPublicKey = authorizedPublicKey;
         authorizedPublicKeyBytes = authorizedPublicKey.getEncoded();
@@ -54,9 +52,9 @@ public abstract class AuthorizedData extends AuthenticatedData {
     @Override
     public boolean isDataInvalid() {
         try {
-            return networkPayload.isDataInvalid() ||
+            return distributedData.isDataInvalid() ||
                     !getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes)) ||
-                    !SignatureUtil.verify(networkPayload.serialize(), signature, authorizedPublicKey);
+                    !SignatureUtil.verify(distributedData.serialize(), signature, authorizedPublicKey);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
             return true;

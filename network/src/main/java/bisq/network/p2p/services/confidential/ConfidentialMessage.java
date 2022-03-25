@@ -18,13 +18,15 @@
 package bisq.network.p2p.services.confidential;
 
 import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.ConfidentialData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @EqualsAndHashCode
 @Getter
-public class ConfidentialMessage implements NetworkMessage {
+public class ConfidentialMessage implements NetworkMessage, DistributedData {
     private final ConfidentialData confidentialData;
     private final String keyId;
 
@@ -39,5 +41,15 @@ public class ConfidentialMessage implements NetworkMessage {
                 "\r\n     sealed=" + confidentialData +
                 "\r\n     keyId=" + keyId +
                 "\r\n}";
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return null; //todo
+    }
+
+    @Override
+    public boolean isDataInvalid() {
+        return false;
     }
 }

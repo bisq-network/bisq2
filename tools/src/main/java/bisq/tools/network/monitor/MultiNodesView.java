@@ -28,7 +28,7 @@ import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
-import bisq.network.p2p.services.data.storage.NetworkPayload;
+import bisq.network.p2p.services.data.storage.StorageData;
 import com.typesafe.config.Config;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -246,12 +246,12 @@ public class MultiNodesView extends Application implements MultiNodesModel.Handl
 
 
     @Override
-    public void onData(Address address, NetworkPayload networkPayload) {
+    public void onData(Address address, StorageData storageData) {
         UIThread.run(() -> Optional.ofNullable(nodeInfoBoxByAddress.get(address)).ifPresent(buttonInfo -> {
             selected.filter(addr -> addr.equals(address))
                     .ifPresent(addr -> updateNodeInfo(address, Transport.Type.from(address)));
             NodeInfoBox nodeInfoBox = nodeInfoBoxByAddress.get(address);
-            nodeInfoBox.onData(networkPayload);
+            nodeInfoBox.onData(storageData);
         }));
     }
 

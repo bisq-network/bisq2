@@ -15,26 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.storage.auth;
+package bisq.network.p2p.services.data.storage.append;
 
-import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.util.concurrent.TimeUnit;
-
 @EqualsAndHashCode
 @Getter
-public class MockNetworkPayload implements NetworkPayload {
+public class MockAppendOnlyData implements AppendOnlyData {
     private final String text;
     final MetaData metaData;
 
-    public MockNetworkPayload(String text) {
+    public MockAppendOnlyData(String text) {
         this.text = text;
-        // 463 is overhead of sig/pubkeys,...
-        // 582 is pubkey+sig+hash
-        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
+        metaData = new MetaData(251, getClass().getSimpleName());
     }
 
     @Override

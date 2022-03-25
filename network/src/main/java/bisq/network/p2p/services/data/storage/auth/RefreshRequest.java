@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
-import bisq.network.p2p.services.data.storage.NetworkPayload;
+import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
@@ -37,12 +37,12 @@ import java.util.Arrays;
 @Slf4j
 public class RefreshRequest implements BroadcastMessage {
 
-    public static RefreshRequest from(AuthenticatedDataStorageService store, NetworkPayload networkPayload, KeyPair keyPair)
+    public static RefreshRequest from(AuthenticatedDataStorageService store, StorageData storageData, KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(networkPayload.serialize());
+        byte[] hash = DigestUtil.hash(storageData.serialize());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
-        return new RefreshRequest(networkPayload.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
+        return new RefreshRequest(storageData.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
     }
 
     protected final MetaData metaData;

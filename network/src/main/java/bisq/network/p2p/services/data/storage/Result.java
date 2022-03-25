@@ -27,7 +27,7 @@ public class Result {
     private final boolean success;
     private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
             dataInvalid, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure;
-    private AuthenticatedData removedPayload;
+    private AuthenticatedData removedData;
 
     public Result(boolean success) {
         this.success = success;
@@ -85,8 +85,8 @@ public class Result {
         return this;
     }
 
-    public Result removedPayload(AuthenticatedData removedPayload) {
-        this.removedPayload = removedPayload;
+    public Result removedData(AuthenticatedData removedData) {
+        this.removedData = removedData;
         return this;
     }
 }

@@ -20,5 +20,5 @@ package bisq.network.p2p.services.data.storage.append;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
 
-public record AddAppendOnlyDataRequest(AppendOnlyPayload payload) implements AddDataRequest, DataRequest {
+public record AddAppendOnlyDataRequest(AppendOnlyData payload) implements AddDataRequest, DataRequest {
 }

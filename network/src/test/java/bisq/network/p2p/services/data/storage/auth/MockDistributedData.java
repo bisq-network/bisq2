@@ -19,38 +19,31 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.StorageData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
 import java.util.concurrent.TimeUnit;
 
-@ToString
 @EqualsAndHashCode
-public class AuthenticatedData implements StorageData {
-    @Getter
-    protected final DistributedData distributedData;
-    protected final MetaData metaData;
+@Getter
+public class MockDistributedData implements DistributedData {
+    private final String text;
+    final MetaData metaData;
 
-    public AuthenticatedData(DistributedData distributedData) {
+    public MockDistributedData(String text) {
+        this.text = text;
         // 463 is overhead of sig/pubkeys,...
         // 582 is pubkey+sig+hash
-        this(distributedData, new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, distributedData.getClass().getSimpleName()));
-    }
-
-    public AuthenticatedData(DistributedData distributedData, MetaData metaData) {
-        this.distributedData = distributedData;
-        this.metaData = metaData;
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
     }
 
     @Override
     public MetaData getMetaData() {
-        return distributedData.getMetaData();
+        return metaData;
     }
 
     @Override
     public boolean isDataInvalid() {
-        return distributedData.isDataInvalid();
+        return false;
     }
 }

@@ -38,13 +38,13 @@ import java.util.Optional;
 @EqualsAndHashCode
 @Slf4j
 public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, AddDataRequest {
-    public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData payload, KeyPair keyPair)
+    public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData authenticatedData, KeyPair keyPair)
             throws GeneralSecurityException {
 
-        byte[] hash = DigestUtil.hash(payload.serialize());
+        byte[] hash = DigestUtil.hash(authenticatedData.serialize());
         byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
         int sequenceNumber = store.getSequenceNumber(hash) + 1;
-        AuthenticatedSequentialData data = new AuthenticatedSequentialData(payload, sequenceNumber, pubKeyHash, System.currentTimeMillis());
+        AuthenticatedSequentialData data = new AuthenticatedSequentialData(authenticatedData, sequenceNumber, pubKeyHash, System.currentTimeMillis());
         byte[] serialized = data.serialize();
         byte[] signature = SignatureUtil.sign(serialized, keyPair.getPrivate());
          /*  log.error("hash={}", Hex.encode(hash));

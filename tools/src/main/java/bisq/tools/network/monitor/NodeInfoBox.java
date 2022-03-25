@@ -22,7 +22,7 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
-import bisq.network.p2p.services.data.storage.NetworkPayload;
+import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.security.DigestUtil;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -61,8 +61,8 @@ public class NodeInfoBox extends VBox {
         return transportType.name() + name + address;
     }
 
-    public void onData(NetworkPayload networkPayload) {
-        byte[] hash = DigestUtil.hash(networkPayload.serialize());
+    public void onData(StorageData storageData) {
+        byte[] hash = DigestUtil.hash(storageData.serialize());
         String id = Hex.encode(hash).substring(0, 8);
         int red = 128 + new BigInteger(hash).mod(BigInteger.valueOf(128)).intValue();
         hash = DigestUtil.hash(hash);

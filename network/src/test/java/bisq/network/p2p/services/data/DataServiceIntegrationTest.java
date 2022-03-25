@@ -21,7 +21,7 @@ import bisq.common.util.OsUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
-import bisq.network.p2p.services.data.storage.NetworkPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.MockAuthenticatedData;
 import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.security.KeyGeneration;
@@ -77,27 +77,19 @@ public class DataServiceIntegrationTest extends DataServiceNodeBase {
         CountDownLatch latch = new CountDownLatch(1);
         dataService_1.addListener(new DataService.Listener() {
             @Override
-            public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
+            public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
                 log.info("onNetworkDataAdded at dataService_1");
                 latch.countDown();
-            }
-
-            @Override
-            public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
             }
         });
         dataService_2.addListener(new DataService.Listener() {
             @Override
-            public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
+            public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
                 log.info("onNetworkDataAdded at dataService_2");
                 latch.countDown();
             }
-
-            @Override
-            public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
-            }
         });
-        DataService.BroadCastDataResult broadcastResultFutures = dataService_0.addNetworkPayload(payload, keyPair).get();
+        DataService.BroadCastDataResult broadcastResultFutures = dataService_0.addAuthenticatedData(payload, keyPair).get();
         broadcastResultFutures.values().forEach(CompletableFuture::join);
 
         assertTrue(latch.await(10, TimeUnit.SECONDS));

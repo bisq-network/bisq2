@@ -111,7 +111,7 @@ public class MailboxStoreTest {
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
 
-        MailboxData payloadFromMap = dataFromMap.getMailboxPayload();
+        MailboxData payloadFromMap = dataFromMap.getMailboxData();
         assertEquals(payloadFromMap, payload);
 
         // request inventory with old seqNum

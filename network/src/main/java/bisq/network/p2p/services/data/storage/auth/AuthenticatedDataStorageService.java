@@ -74,9 +74,9 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     }
 
     public Result add(AddAuthenticatedDataRequest request) {
-        AuthenticatedSequentialData data = request.getAuthenticatedSequentialData();
-        AuthenticatedData payload = data.getAuthenticatedData();
-        byte[] hash = DigestUtil.hash(payload.serialize());
+        AuthenticatedSequentialData authenticatedSequentialData = request.getAuthenticatedSequentialData();
+        AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
+        byte[] hash = DigestUtil.hash(authenticatedData.serialize());
         ByteArray byteArray = new ByteArray(hash);
         AuthenticatedDataRequest requestFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
@@ -90,17 +90,17 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return new Result(false).requestAlreadyReceived();
             }
 
-            if (requestFromMap != null && data.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+            if (requestFromMap != null && authenticatedSequentialData.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                 //log.warn("SequenceNrInvalid. request={}", request);
                 return new Result(false).sequenceNrInvalid();
             }
 
-            if (data.isExpired()) {
+            if (authenticatedSequentialData.isExpired()) {
                 log.warn("Data is expired at add. request={}", request);
                 return new Result(false).expired();
             }
 
-            if (payload.isDataInvalid()) {
+            if (authenticatedData.isDataInvalid()) {
                 log.warn("Data is invalid at add. request={}", request);
                 return new Result(false).dataInvalid();
             }
@@ -126,13 +126,13 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             return new Result(false).payloadAlreadyStored();
         }*/
 
-        listeners.forEach(listener -> listener.onAdded(payload));
+        listeners.forEach(listener -> listener.onAdded(authenticatedData));
         return new Result(true);
     }
 
     public Result remove(RemoveAuthenticatedDataRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
-        AuthenticatedData payloadFromMap;
+        AuthenticatedData authenticatedDataFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             AuthenticatedDataRequest requestFromMap = map.get(byteArray);
@@ -162,7 +162,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
             // We have an entry, lets validate if we can remove it
             AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
-            payloadFromMap = dataFromMap.getAuthenticatedData();
+            authenticatedDataFromMap = dataFromMap.getAuthenticatedData();
             if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
                 log.warn("SequenceNr has not increased at remove. request={}", request);
                 return new Result(false).sequenceNrInvalid();
@@ -181,8 +181,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             map.put(byteArray, request);
         }
         persist();
-        listeners.forEach(listener -> listener.onRemoved(payloadFromMap));
-        return new Result(true).removedPayload(payloadFromMap);
+        listeners.forEach(listener -> listener.onRemoved(authenticatedDataFromMap));
+        return new Result(true).removedData(authenticatedDataFromMap);
     }
 
     public Result refresh(RefreshRequest request) {

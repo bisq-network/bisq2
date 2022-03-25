@@ -24,9 +24,10 @@ import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.NetworkPayload;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.p2p.services.relay.RelayMessage;
 import bisq.security.ConfidentialData;
 import bisq.security.HybridEncryption;
@@ -134,9 +135,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
-        if (networkPayload instanceof MailboxData mailboxPayload) {
-            if (mailboxPayload.getData() instanceof ConfidentialMessage confidentialMessage) {
+    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+        if (authenticatedData instanceof MailboxData mailboxPayload) {
+            if (mailboxPayload.getDistributedData() instanceof ConfidentialMessage confidentialMessage) {
                 processConfidentialMessage(confidentialMessage)
                         .whenComplete((result, throwable) -> {
                             if (throwable == null) {
@@ -151,7 +152,11 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     }
 
     @Override
-    public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
+    public void onAppendOnlyDataAdded(AppendOnlyData appendOnlyData) {
+    }
+
+    @Override
+    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
     }
 
 

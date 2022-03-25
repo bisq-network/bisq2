@@ -27,7 +27,6 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -110,42 +109,39 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
-        if (networkPayload instanceof AuthenticatedData authenticatedData) {
-            if (authenticatedData.getData() instanceof PublicChatMessage publicChatMessage) {
-                if (publicChatMessage.getChannelType() == ChannelType.PUBLIC) {
-                    persistableStore.getPublicChannels().stream()
-                            .filter(publicChannel -> publicChannel.getId().equals(publicChatMessage.getChannelId()))
-                            .findAny()
-                            .ifPresent(publicChannel -> {
-                                synchronized (persistableStore) {
-                                    publicChannel.addChatMessage(publicChatMessage);
-                                }
-                                persist();
-                            });
-                }
+    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+        if (authenticatedData.getDistributedData() instanceof PublicChatMessage publicChatMessage) {
+            if (publicChatMessage.getChannelType() == ChannelType.PUBLIC) {
+                persistableStore.getPublicChannels().stream()
+                        .filter(publicChannel -> publicChannel.getId().equals(publicChatMessage.getChannelId()))
+                        .findAny()
+                        .ifPresent(publicChannel -> {
+                            synchronized (persistableStore) {
+                                publicChannel.addChatMessage(publicChatMessage);
+                            }
+                            persist();
+                        });
             }
         }
     }
 
     @Override
-    public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
-        if (networkPayload instanceof AuthenticatedData authenticatedData) {
-            if (authenticatedData.getData() instanceof PublicChatMessage publicChatMessage) {
-                if (publicChatMessage.getChannelType() == ChannelType.PUBLIC) {
-                    persistableStore.getPublicChannels().stream()
-                            .filter(publicChannel -> publicChannel.getId().equals(publicChatMessage.getChannelId()))
-                            .findAny()
-                            .ifPresent(publicChannel -> {
-                                synchronized (persistableStore) {
-                                    publicChannel.removeChatMessage(publicChatMessage);
-                                }
-                                persist();
-                            });
-                }
+    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+        if (authenticatedData.getDistributedData() instanceof PublicChatMessage publicChatMessage) {
+            if (publicChatMessage.getChannelType() == ChannelType.PUBLIC) {
+                persistableStore.getPublicChannels().stream()
+                        .filter(publicChannel -> publicChannel.getId().equals(publicChatMessage.getChannelId()))
+                        .findAny()
+                        .ifPresent(publicChannel -> {
+                            synchronized (persistableStore) {
+                                publicChannel.removeChatMessage(publicChatMessage);
+                            }
+                            persist();
+                        });
             }
         }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Channels
@@ -218,7 +214,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 quotedMessage,
                 new Date().getTime(),
                 false);
-        networkService.addData(chatMessage,
+        networkService.addAuthenticatedData(chatMessage,
                 userProfile.identity().getNodeIdAndKeyPair());
     }
 
@@ -228,7 +224,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.identity().getNodeIdAndKeyPair();
         checkArgument(originalChatMessage.getChatUser().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
                 "NetworkID must match");
-        return networkService.removeData(originalChatMessage, nodeIdAndKeyPair)
+        return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         ChatMessage newChatMessage = new PublicChatMessage(originalChatMessage.getChannelId(),
@@ -237,7 +233,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                 originalChatMessage.getQuotedMessage(),
                                 originalChatMessage.getDate(),
                                 true);
-                        networkService.addData(newChatMessage, nodeIdAndKeyPair);
+                        networkService.addAuthenticatedData(newChatMessage, nodeIdAndKeyPair);
                     } else {
                         log.error("Error at deleting old message", throwable);
                     }
@@ -248,7 +244,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.identity().getNodeIdAndKeyPair();
         checkArgument(chatMessage.getChatUser().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
                 "NetworkID must match");
-        networkService.removeData(chatMessage, nodeIdAndKeyPair)
+        networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         log.info("Successfully deleted chatMessage {}", chatMessage);

@@ -51,6 +51,6 @@ public class MailboxData extends AuthenticatedData {
 
     @VisibleForTesting
     ConfidentialMessage getConfidentialMessage() {
-        return (ConfidentialMessage) data;
+        return (ConfidentialMessage) distributedData;
     }
 }

@@ -54,4 +54,9 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
     public MetaData getMetaData() {
         return metaData;
     }
+
+    @Override
+    public boolean isDataInvalid() {
+        return false;
+    }
 }
