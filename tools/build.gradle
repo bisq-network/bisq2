@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id 'com.google.protobuf' version '0.8.18'
     id 'org.openjfx.javafxplugin' version '0.0.10'
 }
 
@@ -32,6 +33,7 @@ dependencies {
     implementation project(':application')
     implementation project(':desktop')
 
+    implementation 'com.google.protobuf:protobuf-java'
     implementation 'com.google.guava:guava'
     implementation 'com.typesafe:config'
 

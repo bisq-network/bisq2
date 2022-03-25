@@ -13,7 +13,7 @@ sourceSets.main {
 
 protobuf {
     // Append 'osxArch' property to workaround M1 Mac bug.
-    protoc { artifact = "com.google.protobuf:protoc:3.12.4${osxArch}" }
+    protoc { artifact = "com.google.protobuf:protoc:3.19.4${osxArch}" }
     generateProtoTasks { all() }
     generatedFilesBaseDir = "$projectDir/build/generated/source"
 }
