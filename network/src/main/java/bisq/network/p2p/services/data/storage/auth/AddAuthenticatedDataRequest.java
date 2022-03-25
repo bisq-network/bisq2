@@ -34,22 +34,26 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Optional;
 
-
+/**
+ * Request for adding authenticated data to the data storage.
+ * A signature of the authenticatedSequentialData is verified with the given public key.
+ * The data gets compared with existing map entries and need to be deterministic.
+ */
 @EqualsAndHashCode
 @Slf4j
 public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, AddDataRequest {
-    public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedPayload payload, KeyPair keyPair)
+    public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData authenticatedData, KeyPair keyPair)
             throws GeneralSecurityException {
 
-        byte[] hash = DigestUtil.hash(payload.serialize());
-        byte[] hashOfPublicKey = DigestUtil.hash(keyPair.getPublic().getEncoded());
+        byte[] hash = DigestUtil.hash(authenticatedData.serialize());
+        byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
         int sequenceNumber = store.getSequenceNumber(hash) + 1;
-        AuthenticatedData data = new AuthenticatedData(payload, sequenceNumber, hashOfPublicKey, System.currentTimeMillis());
+        AuthenticatedSequentialData data = new AuthenticatedSequentialData(authenticatedData, sequenceNumber, pubKeyHash, System.currentTimeMillis());
         byte[] serialized = data.serialize();
         byte[] signature = SignatureUtil.sign(serialized, keyPair.getPrivate());
          /*  log.error("hash={}", Hex.encode(hash));
         log.error("keyPair.getPublic().getEncoded()={}", Hex.encode(keyPair.getPublic().getEncoded()));
-        log.error("hashOfPublicKey={}", Hex.encode(hashOfPublicKey));
+        log.error("pubKeyHash={}", Hex.encode(pubKeyHash));
         log.error("sequenceNumber={}", sequenceNumber);
         log.error("serialized={}", Hex.encode(serialized));
         log.error("signature={}", Hex.encode(signature));
@@ -58,7 +62,7 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
     }
 
     @Getter
-    protected final AuthenticatedData authenticatedData;
+    protected final AuthenticatedSequentialData authenticatedSequentialData;
     @Getter
     protected final byte[] signature;         // 256 bytes
     @Getter
@@ -66,18 +70,18 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
     @Nullable
     transient protected PublicKey ownerPublicKey;
 
-    public AddAuthenticatedDataRequest(AuthenticatedData authenticatedData, byte[] signature, PublicKey ownerPublicKey) {
-        this(authenticatedData,
+    public AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData, byte[] signature, PublicKey ownerPublicKey) {
+        this(authenticatedSequentialData,
                 signature,
                 ownerPublicKey.getEncoded(),
                 ownerPublicKey);
     }
 
-    protected AddAuthenticatedDataRequest(AuthenticatedData authenticatedData,
+    protected AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData,
                                           byte[] signature,
                                           byte[] ownerPublicKeyBytes,
                                           PublicKey ownerPublicKey) {
-        this.authenticatedData = authenticatedData;
+        this.authenticatedSequentialData = authenticatedSequentialData;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
         this.ownerPublicKey = ownerPublicKey;
         this.signature = signature;
@@ -90,7 +94,7 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
             log.error("signature={}", Hex.encode(signature));
             log.error("getOwnerPublicKey()={}", Hex.encode(getOwnerPublicKey().getEncoded()));*/
 
-            return !SignatureUtil.verify(authenticatedData.serialize(), signature, getOwnerPublicKey());
+            return !SignatureUtil.verify(authenticatedSequentialData.serialize(), signature, getOwnerPublicKey());
         } catch (Exception e) {
             log.warn(e.toString(), e);
             return true;
@@ -99,7 +103,7 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
 
     public boolean isPublicKeyInvalid() {
         try {
-            return !Arrays.equals(authenticatedData.getHashOfPublicKey(), DigestUtil.hash(ownerPublicKeyBytes));
+            return !Arrays.equals(authenticatedSequentialData.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }
@@ -117,27 +121,27 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
     }
 
     public String getFileName() {
-        return authenticatedData.getPayload().getMetaData().getFileName();
+        return authenticatedSequentialData.getAuthenticatedData().getMetaData().getFileName();
     }
 
     @Override
     public int getSequenceNumber() {
-        return authenticatedData.getSequenceNumber();
+        return authenticatedSequentialData.getSequenceNumber();
     }
 
     @Override
     public long getCreated() {
-        return authenticatedData.getCreated();
+        return authenticatedSequentialData.getCreated();
     }
 
     public MetaData getMetaData() {
-        return authenticatedData.getPayload().getMetaData();
+        return authenticatedSequentialData.getAuthenticatedData().getMetaData();
     }
 
     @Override
     public String toString() {
         return "AddAuthenticatedDataRequest{" +
-                "\r\n     authenticatedData=" + authenticatedData +
+                "\r\n     authenticatedSequentialData=" + authenticatedSequentialData +
                 ",\r\n     signature=" + Hex.encode(signature) +
                 ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
                 "\r\n}";

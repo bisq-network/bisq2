@@ -18,7 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.network.p2p.BaseNetworkTest;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.peergroup.BanList;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -58,14 +58,14 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
             initializeServerLatch.countDown();
             nodesById.addNodeListener(new Node.Listener() {
                 @Override
-                public void onMessage(Message message, Connection connection, String nodeId) {
-                    log.info("Received " + message.toString());
-                    if (message instanceof ClearNetNodesByIdIntegrationTest.Ping) {
+                public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
+                    log.info("Received " + networkMessage.toString());
+                    if (networkMessage instanceof ClearNetNodesByIdIntegrationTest.Ping) {
                         ClearNetNodesByIdIntegrationTest.Pong pong = new ClearNetNodesByIdIntegrationTest.Pong("Pong from " + finalI + " to " + connection.getPeerAddress().getPort());
                         log.info("Send pong " + pong);
                         nodesById.send(nodeId, pong, connection);
                         sendPongLatch.countDown();
-                    } else if (message instanceof ClearNetNodesByIdIntegrationTest.Pong) {
+                    } else if (networkMessage instanceof ClearNetNodesByIdIntegrationTest.Pong) {
                         receivedPongLatch.countDown();
                     }
                 }
@@ -137,7 +137,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
     }
 
     @ToString
-    public static class Ping implements Message {
+    public static class Ping implements NetworkMessage {
         public final String msg;
 
         public Ping(String msg) {
@@ -146,7 +146,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
     }
 
     @ToString
-    public static class Pong implements Message {
+    public static class Pong implements NetworkMessage {
         public final String msg;
 
         public Pong(String msg) {

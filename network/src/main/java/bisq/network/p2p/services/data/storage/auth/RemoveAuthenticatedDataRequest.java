@@ -38,13 +38,13 @@ import java.util.Arrays;
 @Slf4j
 public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest, RemoveDataRequest {
 
-    public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedPayload payload, KeyPair keyPair)
+    public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData authenticatedData, KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(payload.serialize());
+        byte[] hash = DigestUtil.hash(authenticatedData.serialize());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
 
-        return new RemoveAuthenticatedDataRequest(payload.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
+        return new RemoveAuthenticatedDataRequest(authenticatedData.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
     }
 
     protected final MetaData metaData;
@@ -95,9 +95,9 @@ public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest,
         }
     }
 
-    public boolean isPublicKeyHashInvalid(AuthenticatedData entryFromMap) {
+    public boolean isPublicKeyHashInvalid(AuthenticatedSequentialData entryFromMap) {
         try {
-            return !Arrays.equals(entryFromMap.getHashOfPublicKey(), DigestUtil.hash(ownerPublicKeyBytes));
+            return !Arrays.equals(entryFromMap.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }

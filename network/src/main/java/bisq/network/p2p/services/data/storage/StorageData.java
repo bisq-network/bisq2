@@ -15,8 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.message;
+package bisq.network.p2p.services.data.storage;
 
-public class Version {
-    public static final int VERSION = 1;
+import bisq.common.encoding.Proto;
+
+// Interface covering data for storage. Implemented by AppendOnlyData, AuthenticatedData
+public interface StorageData extends Proto {
+    MetaData getMetaData();
+
+    boolean isDataInvalid();
 }

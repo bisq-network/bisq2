@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkEnvelope;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -50,15 +50,15 @@ public class Metrics {
         return System.currentTimeMillis() - created;
     }
 
-    public void sent(Message message) {
+    public void onSent(NetworkEnvelope networkEnvelope) {
         lastUpdate.set(System.currentTimeMillis());
-        sentBytes.addAndGet(message.serialize().length);
+        sentBytes.addAndGet(networkEnvelope.serialize().length);
         numMessagesSent.incrementAndGet();
     }
 
-    public void onMessage(Message message) {
+    public void onReceived(NetworkEnvelope networkEnvelope) {
         lastUpdate.set(System.currentTimeMillis());
-        receivedBytes.addAndGet(message.serialize().length);
+        receivedBytes.addAndGet(networkEnvelope.serialize().length);
         numMessagesReceived.incrementAndGet();
     }
 

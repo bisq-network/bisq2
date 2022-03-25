@@ -17,31 +17,24 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
-import bisq.common.encoding.Proto;
-import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
 import java.util.concurrent.TimeUnit;
 
-@ToString
-@EqualsAndHashCode
-public class AuthenticatedPayload implements NetworkPayload {
-    @Getter
-    protected final Proto data;
-    protected final MetaData metaData;
+@EqualsAndHashCode(callSuper = true)
+@Getter
+public class MockAuthenticatedTextData extends AuthenticatedData {
+    private final String text;
+    final MetaData metaData;
 
-    public AuthenticatedPayload(Proto data) {
+    public MockAuthenticatedTextData(String text) {
+        super(null);
+        this.text = text;
         // 463 is overhead of sig/pubkeys,...
         // 582 is pubkey+sig+hash
-        this(data, new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, data.getClass().getSimpleName()));
-    }
-
-    public AuthenticatedPayload(Proto data, MetaData metaData) {
-        this.data = data;
-        this.metaData = metaData;
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
     }
 
     @Override

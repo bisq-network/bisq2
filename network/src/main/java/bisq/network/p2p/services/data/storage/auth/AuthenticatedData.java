@@ -17,57 +17,35 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
-import bisq.common.encoding.ObjectSerializer;
-import bisq.common.encoding.Hex;
-import bisq.common.encoding.Proto;
+import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorageData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
-@Getter
+/**
+ * Container for DistributedData. 
+ * todo: not sure if we could prune that wrapper...
+ */
+@ToString
 @EqualsAndHashCode
-public class AuthenticatedData implements Proto {
+public class AuthenticatedData implements StorageData {
+    @Getter
+    protected final DistributedData distributedData;
 
-    public static AuthenticatedData from(AuthenticatedData data, int sequenceNumber) {
-        return new AuthenticatedData(data.getPayload(),
-                sequenceNumber,
-                data.getHashOfPublicKey(),
-                data.getCreated());
+    public AuthenticatedData(DistributedData distributedData) {
+        this.distributedData = distributedData;
     }
 
-    protected final AuthenticatedPayload payload;
-    protected final int sequenceNumber;
-    protected final long created;
-    protected final byte[] hashOfPublicKey;
-
-    public AuthenticatedData(AuthenticatedPayload payload,
-                             int sequenceNumber,
-                             byte[] hashOfPublicKey,
-                             long created) {
-        this.payload = payload;
-        this.sequenceNumber = sequenceNumber;
-        this.hashOfPublicKey = hashOfPublicKey;
-        this.created = created;
-    }
-
-    public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > payload.getMetaData().getTtl();
-    }
-
-    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
-        return sequenceNumber <= seqNumberFromMap;
-    }
-
-    public byte[] serialize() {
-        return ObjectSerializer.serialize(this);
+    // We delegate the delivery of MetaData to the distributedData.
+    @Override
+    public MetaData getMetaData() {
+        return distributedData.getMetaData();
     }
 
     @Override
-    public String toString() {
-        return "AuthenticatedData{" +
-                "\r\n     payload=" + payload +
-                ",\r\n     sequenceNumber=" + sequenceNumber +
-                ",\r\n     created=" + created +
-                ",\r\n     hashOfPublicKey=" + Hex.encode(hashOfPublicKey) +
-                "\r\n}";
+    public boolean isDataInvalid() {
+        return distributedData.isDataInvalid();
     }
 }

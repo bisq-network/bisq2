@@ -17,7 +17,7 @@
 
 package bisq.social.chat;
 
-import bisq.common.encoding.Proto;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,7 +29,7 @@ import java.util.Optional;
 @Getter
 @ToString
 @EqualsAndHashCode
-public abstract class ChatMessage implements Proto {
+public abstract class ChatMessage implements DistributedData {
     protected final String channelId;
     protected final String text;
     protected  ChatUser chatUser;

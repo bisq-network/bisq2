@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.relay;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import lombok.EqualsAndHashCode;
@@ -28,7 +28,7 @@ import lombok.Getter;
 public class RelayMessage extends ConfidentialMessage {
     private final Address targetAddress;
 
-    public RelayMessage(Message message, Address targetAddress) {
+    public RelayMessage(NetworkMessage networkMessage, Address targetAddress) {
         super(null, null);
         // super(proto, peersPublicKey);
         this.targetAddress = targetAddress;

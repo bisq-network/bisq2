@@ -37,7 +37,7 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
     private static final int MAX_MAP_SIZE = 10_000_000; // in bytes
 
     public interface Listener {
-        void onAppended(AppendOnlyPayload appendOnlyData);
+        void onAppended(AppendOnlyData appendOnlyData);
     }
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
@@ -53,14 +53,14 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
     }
 
     public Result add(AddAppendOnlyDataRequest addAppendOnlyDataRequest) {
-        AppendOnlyPayload appendOnlyPayload = addAppendOnlyDataRequest.payload();
+        AppendOnlyData appendOnlyData = addAppendOnlyDataRequest.payload();
         ConcurrentHashMap<ByteArray, AddAppendOnlyDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (map.size() > MAX_MAP_SIZE) {
                 return new Result(false).maxMapSizeReached();
             }
 
-            byte[] hash = DigestUtil.hash(appendOnlyPayload.serialize());
+            byte[] hash = DigestUtil.hash(appendOnlyData.serialize());
             ByteArray byteArray = new ByteArray(hash);
             if (map.containsKey(byteArray)) {
                 return new Result(false).payloadAlreadyStored();
@@ -69,7 +69,7 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
             map.put(byteArray, addAppendOnlyDataRequest);
         }
         persist();
-        listeners.forEach(listener -> listener.onAppended(appendOnlyPayload));
+        listeners.forEach(listener -> listener.onAppended(appendOnlyData));
         return new Result(true);
     }
 

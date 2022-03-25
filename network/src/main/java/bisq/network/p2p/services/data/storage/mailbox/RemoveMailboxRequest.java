@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -36,7 +36,7 @@ import java.util.Arrays;
 @Getter
 public class RemoveMailboxRequest extends RemoveAuthenticatedDataRequest implements MailboxRequest {
 
-    public static RemoveMailboxRequest from(MailboxPayload mailboxPayload, KeyPair receiverKeyPair)
+    public static RemoveMailboxRequest from(MailboxData mailboxPayload, KeyPair receiverKeyPair)
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(mailboxPayload.serialize());
         byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
@@ -57,10 +57,10 @@ public class RemoveMailboxRequest extends RemoveAuthenticatedDataRequest impleme
     }
 
     @Override
-    public boolean isPublicKeyHashInvalid(AuthenticatedData entryFromMap) {
+    public boolean isPublicKeyHashInvalid(AuthenticatedSequentialData entryFromMap) {
         try {
-            MailboxData mailboxData = (MailboxData) entryFromMap;
-            return !Arrays.equals(mailboxData.getHashOfReceiversPublicKey(), DigestUtil.hash(ownerPublicKeyBytes));
+            MailboxSequentialData mailboxSequentialData = (MailboxSequentialData) entryFromMap;
+            return !Arrays.equals(mailboxSequentialData.getReceiversPublicKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }

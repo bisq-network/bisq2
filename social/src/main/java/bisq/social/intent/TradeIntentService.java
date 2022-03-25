@@ -82,13 +82,13 @@ public class TradeIntentService {
         return identityService.getOrCreateIdentity(tradeIntent.id())
                 .thenCompose(identity -> {
                     NetworkIdWithKeyPair nodeIdAndKeyPair = identity.getNodeIdAndKeyPair();
-                    return networkService.addData(tradeIntent, nodeIdAndKeyPair);
+                    return networkService.addAuthenticatedData(tradeIntent, nodeIdAndKeyPair);
                 });
     }
 
     public CompletableFuture<BroadCastDataResult> removeFromNetwork(TradeIntent tradeIntent) {
         return identityService.findActiveIdentity(tradeIntent.id())
-                .map(identity -> networkService.removeData(tradeIntent, identity.getNodeIdAndKeyPair()))
+                .map(identity -> networkService.removeAuthenticatedData(tradeIntent, identity.getNodeIdAndKeyPair()))
                 .orElse(CompletableFuture.completedFuture(new BroadCastDataResult()));
     }
 }

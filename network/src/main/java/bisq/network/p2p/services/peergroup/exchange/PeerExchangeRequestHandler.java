@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup.exchange;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -60,8 +60,8 @@ class PeerExchangeRequestHandler implements Connection.Listener {
     }
 
     @Override
-    public void onMessage(Message message) {
-        if (message instanceof PeerExchangeResponse response) {
+    public void onNetworkMessage(NetworkMessage networkMessage) {
+        if (networkMessage instanceof PeerExchangeResponse response) {
             if (response.nonce() == nonce) {
                /* String addresses = StringUtils.truncate(response.peers().stream()
                         .map(peer -> peer.getAddress().toString())

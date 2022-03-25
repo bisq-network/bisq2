@@ -17,20 +17,20 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.concurrent.TimeUnit;
 
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 @Getter
-public class MockAuthenticatedTextPayload extends AuthenticatedPayload {
+public class MockDistributedData implements DistributedData {
     private final String text;
     final MetaData metaData;
 
-    public MockAuthenticatedTextPayload(String text) {
-        super(null, null);
+    public MockDistributedData(String text) {
         this.text = text;
         // 463 is overhead of sig/pubkeys,...
         // 582 is pubkey+sig+hash

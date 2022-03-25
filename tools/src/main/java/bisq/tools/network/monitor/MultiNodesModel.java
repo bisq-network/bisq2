@@ -24,15 +24,16 @@ import bisq.common.util.MathUtils;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
 import bisq.network.p2p.ServiceNode;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorageData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
@@ -62,7 +63,7 @@ public class MultiNodesModel {
 
         void onMessage(Address address);
 
-        void onData(Address address, NetworkPayload networkPayload);
+        void onData(Address address, StorageData storageData);
     }
 
     public record MockMailBoxMessage(String message) implements MailboxMessage {
@@ -193,10 +194,10 @@ public class MultiNodesModel {
             Address receiverAddress = value.get(receiverNetworkId.getNodeId());
             sendMsgListener = new Node.Listener() {
                 @Override
-                public void onMessage(Message message, Connection connection, String nodeId) {
+                public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
                     String newLine = "\n" + getTimestamp() + " " +
                             type.toString().substring(0, 3) + "  onReceived   " +
-                            connection.getPeerAddress() + " --> " + receiverAddress + " " + message.toString();
+                            connection.getPeerAddress() + " --> " + receiverAddress + " " + networkMessage.toString();
                     appendToHistory(receiverAddress, newLine);
                     handler.ifPresent(handler -> handler.onMessage(receiverAddress));
                     receiverNetworkService.removeDefaultNodeListener(sendMsgListener);
@@ -276,7 +277,7 @@ public class MultiNodesModel {
             node.addListener(new Node.Listener() {
 
                 @Override
-                public void onMessage(Message message, Connection connection, String nodeId) {
+                public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
                 }
 
                 @Override
@@ -293,20 +294,20 @@ public class MultiNodesModel {
 
         networkService.addDataServiceListener(new DataService.Listener() {
             @Override
-            public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
-                onNetworkDataChanged(networkService, networkPayload, transportType, true);
+            public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+                onNetworkDataChanged(networkService, authenticatedData, transportType, true);
             }
 
             @Override
-            public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
-                onNetworkDataChanged(networkService, networkPayload, transportType, false);
+            public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+                onNetworkDataChanged(networkService, authenticatedData, transportType, false);
             }
         });
 
     }
 
     private void onNetworkDataChanged(NetworkService networkService,
-                                      NetworkPayload networkPayload,
+                                      StorageData storageData,
                                       Transport.Type transportType,
                                       boolean wasAdded) {
         StringBuilder sb = new StringBuilder("\n");
@@ -315,10 +316,10 @@ public class MultiNodesModel {
                 .append(" ").append(transportType.name(), 0, 3)
                 .append(wasAdded ? " +onDataAdded " : " -onDataRemoved ")
                 .append(address)
-                .append(" networkPayload=").append(networkPayload);
+                .append(" storageData=").append(storageData);
         String newLine = sb.toString();
         appendToHistory(address, newLine);
-        handler.ifPresent(handler -> handler.onData(address, networkPayload));
+        handler.ifPresent(handler -> handler.onData(address, storageData));
     }
 
     private void onConnectionStateChanged(Transport.Type transportType, Connection connection, Node node, Optional<CloseReason> closeReason) {

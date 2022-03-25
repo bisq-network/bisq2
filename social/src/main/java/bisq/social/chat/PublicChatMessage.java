@@ -17,7 +17,6 @@
 
 package bisq.social.chat;
 
-import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
@@ -30,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class PublicChatMessage extends ChatMessage implements NetworkPayload {
+public class PublicChatMessage extends ChatMessage {
     private final MetaData metaData;
 
     public PublicChatMessage(String channelId,

@@ -15,35 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.storage.auth;
+package bisq.network.p2p.message;
 
-import bisq.network.p2p.services.data.NetworkPayload;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.common.encoding.Proto;
+import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
-import java.util.concurrent.TimeUnit;
-
+/**
+ * Outside data structure to be sent over the wire.
+ */
+@ToString
 @EqualsAndHashCode
 @Getter
-public class MockNetworkPayload implements NetworkPayload {
-    private final String text;
-    final MetaData metaData;
+public class NetworkEnvelope implements Proto {
+    public static final int VERSION = 1;
+    
+    private final int version;
+    private final AuthorizationToken authorizationToken;
+    private final NetworkMessage networkMessage;
 
-    public MockNetworkPayload(String text) {
-        this.text = text;
-        // 463 is overhead of sig/pubkeys,...
-        // 582 is pubkey+sig+hash
-        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
-    public boolean isDataInvalid() {
-        return false;
+    public NetworkEnvelope(int version, AuthorizationToken authorizationToken, NetworkMessage networkMessage) {
+        this.version = version;
+        this.authorizationToken = authorizationToken;
+        this.networkMessage = networkMessage;
     }
 }

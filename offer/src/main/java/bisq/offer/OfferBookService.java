@@ -20,8 +20,7 @@ package bisq.offer;
 import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.NetworkPayload;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,17 +41,15 @@ public class OfferBookService {
         dataService = networkService.getDataService().get();
         dataService.addListener(new DataService.Listener() {
             @Override
-            public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
-                if (networkPayload instanceof AuthenticatedPayload payload &&
-                        payload.getData() instanceof Offer offer) {
+            public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+                if (authenticatedData.getDistributedData() instanceof Offer offer) {
                     offers.add(offer);
                 }
             }
 
             @Override
-            public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
-                if (networkPayload instanceof AuthenticatedPayload payload &&
-                        payload.getData() instanceof Offer offer) {
+            public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+                if (authenticatedData.getDistributedData() instanceof Offer offer) {
                     offers.remove(offer);
                 }
             }
@@ -62,8 +59,8 @@ public class OfferBookService {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         offers.addAll(dataService.getAuthenticatedPayloadByStoreName("Offer")
-                .filter(payload -> payload.getData() instanceof Offer)
-                .map(payload -> (Offer) payload.getData())
+                .filter(payload -> payload.getDistributedData() instanceof Offer)
+                .map(payload -> (Offer) payload.getDistributedData())
                 .collect(Collectors.toList()));
         return CompletableFuture.completedFuture(true);
     }

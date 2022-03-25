@@ -17,52 +17,42 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
-import bisq.common.encoding.Hex;
+import bisq.network.p2p.services.confidential.ConfidentialMessage;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.ToString;
 
-import java.security.PublicKey;
+// We want to have fine-grained control over mailbox messages.
+// As the data is encrypted we could not use it's TTL, and we would merge all mailbox proto into one storage file.
+// By wrapping the sealed data into that NetworkData we can add the fileName and ttl from the unencrypted NetworkData.
 
-@Getter
+/**
+ * Holds the ConfidentialMessage and metaData providing information about the message type.
+ */
 @EqualsAndHashCode(callSuper = true)
+@ToString
 public class MailboxData extends AuthenticatedData {
-    private final byte[] receiversPubKeyBytes;
-    private final byte[] hashOfReceiversPublicKey;
-    transient final private PublicKey receiversPubKey;
+    private final MetaData metaData;
 
-    public MailboxData(MailboxPayload data,
-                       byte[] hashOfSenderPublicKey,
-                       byte[] hashOfReceiversPublicKey,
-                       PublicKey receiversPubKey) {
-        this(data,
-                hashOfSenderPublicKey,
-                hashOfReceiversPublicKey,
-                receiversPubKey,
-                System.currentTimeMillis());
-    }
-
-    public MailboxData(MailboxPayload data,
-                       byte[] hashOfSenderPublicKey,
-                       byte[] hashOfReceiversPublicKey,
-                       PublicKey receiversPubKey,
-                       long created) {
-        super(data, 1, hashOfSenderPublicKey, created); // We set sequenceNumber to 1 as there will be only one AddMailBoxRequest
-
-        receiversPubKeyBytes = receiversPubKey.getEncoded();
-        this.hashOfReceiversPublicKey = hashOfReceiversPublicKey;
-        this.receiversPubKey = receiversPubKey;
+    public MailboxData(ConfidentialMessage confidentialMessage, MetaData metaData) {
+        super(confidentialMessage);
+        this.metaData = metaData;
     }
 
     @Override
-    public String toString() {
-        return "MailboxData{" +
-                "\r\n     receiversPubKeyBytes=" + Hex.encode(receiversPubKeyBytes) +
-                ",\r\n     hashOfReceiversPublicKey=" + Hex.encode(hashOfReceiversPublicKey) +
-                "\r\n} " + super.toString();
+    public MetaData getMetaData() {
+        return metaData;
     }
 
-    public MailboxPayload getMailboxPayload() {
-        return (MailboxPayload) payload;
+    @Override
+    public boolean isDataInvalid() {
+        return distributedData.isDataInvalid();
+    }
+
+    @VisibleForTesting
+    ConfidentialMessage getConfidentialMessage() {
+        return (ConfidentialMessage) distributedData;
     }
 }

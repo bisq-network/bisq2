@@ -19,10 +19,9 @@ package bisq.network.p2p.node;
 
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Envelope;
-import bisq.network.p2p.message.Message;
-import bisq.network.p2p.message.Version;
-import bisq.network.p2p.node.authorization.AuthorizedMessage;
+import bisq.network.p2p.message.NetworkEnvelope;
+import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,13 +47,13 @@ import java.util.function.BiConsumer;
 public abstract class Connection {
 
     interface Handler {
-        void onMessage(Message message, Connection connection);
+        void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection);
 
-        void onConnectionClosed(Connection connection, CloseReason closeReason);
+        void handleConnectionClosed(Connection connection, CloseReason closeReason);
     }
 
     public interface Listener {
-        void onMessage(Message message);
+        void onNetworkMessage(NetworkMessage networkMessage);
 
         void onConnectionClosed(CloseReason closeReason);
     }
@@ -112,15 +111,15 @@ public abstract class Connection {
                     Object msg = objectInputStream.readObject();
                     if (isNotStopped()) {
                         String simpleName = msg.getClass().getSimpleName();
-                        if (!(msg instanceof Envelope envelope)) {
+                        if (!(msg instanceof NetworkEnvelope networkEnvelope)) {
                             throw new ConnectionException("Received message not type of Envelope. " + simpleName);
                         }
-                        if (envelope.version() != Version.VERSION) {
+                        if (networkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
                             throw new ConnectionException("Invalid network version. " + simpleName);
                         }
-                        log.debug("Received message: {} at: {}", StringUtils.truncate(envelope.payload().toString(), 200), this);
-                        metrics.onMessage(envelope.payload());
-                        NetworkService.DISPATCHER.submit(() -> handler.onMessage(envelope.payload(), this));
+                        log.debug("Received message: {} at: {}", StringUtils.truncate(networkEnvelope.getNetworkMessage().toString(), 200), this);
+                        metrics.onReceived(networkEnvelope);
+                        NetworkService.DISPATCHER.submit(() -> handler.handleNetworkMessage(networkEnvelope.getNetworkMessage(), networkEnvelope.getAuthorizationToken(), this));
                     }
                 }
             } catch (Exception exception) {
@@ -137,21 +136,21 @@ public abstract class Connection {
         });
     }
 
-    Connection send(AuthorizedMessage message) {
+    Connection send(NetworkMessage networkMessage, AuthorizationToken authorizationToken) {
         if (isStopped) {
             log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
-                    StringUtils.truncate(message.toString(), 200), this);
+                    StringUtils.truncate(networkMessage.toString(), 200), this);
             throw new ConnectionClosedException(this);
         }
         try {
-            Envelope envelope = new Envelope(message, Version.VERSION);
+            NetworkEnvelope networkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, authorizationToken, networkMessage);
             synchronized (writeLock) {
-                objectOutputStream.writeObject(envelope);
+                objectOutputStream.writeObject(networkEnvelope);
                 objectOutputStream.flush();
             }
-            metrics.sent(message);
+            metrics.onSent(networkEnvelope);
             log.debug("Sent {} from {}",
-                    StringUtils.truncate(message.toString(), 300), this);
+                    StringUtils.truncate(networkMessage.toString(), 300), this);
             return this;
         } catch (IOException exception) {
             if (!isStopped) {
@@ -182,14 +181,14 @@ public abstract class Connection {
             }
         }
         NetworkService.DISPATCHER.submit(() -> {
-            handler.onConnectionClosed(this, closeReason);
+            handler.handleConnectionClosed(this, closeReason);
             listeners.forEach(listener -> listener.onConnectionClosed(closeReason));
             listeners.clear();
         });
     }
 
-    void notifyListeners(Message message) {
-        listeners.forEach(listener -> listener.onMessage(message));
+    void notifyListeners(NetworkMessage networkMessage) {
+        listeners.forEach(listener -> listener.onNetworkMessage(networkMessage));
     }
 
     public void addListener(Listener listener) {

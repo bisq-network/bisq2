@@ -19,7 +19,7 @@ package bisq.protocol;
 
 import bisq.common.encoding.Proto;
 import bisq.contract.Contract;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ public abstract class ProtocolModel implements Proto {
 
     protected State state = State.IDLE;
     @Setter
-    protected Class<? extends Message> expectedNextMessageClass;
+    protected Class<? extends NetworkMessage> expectedNextMessageClass;
 
     public ProtocolModel(Contract contract) {
         this.contract = contract;

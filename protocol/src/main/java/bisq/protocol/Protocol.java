@@ -22,7 +22,7 @@ import bisq.contract.Contract;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.persistence.PersistenceClient;
 import lombok.Getter;
@@ -117,9 +117,9 @@ public abstract class Protocol<T extends ProtocolModel> implements MessageListen
     // Tasks
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void verifyExpectedMessage(Message message) {
-        checkArgument(protocolModel.getExpectedNextMessageClass().equals(message.getClass()),
-                "Incorrect response message. Received " + message.getClass().getSimpleName() +
+    protected void verifyExpectedMessage(NetworkMessage networkMessage) {
+        checkArgument(protocolModel.getExpectedNextMessageClass().equals(networkMessage.getClass()),
+                "Incorrect response message. Received " + networkMessage.getClass().getSimpleName() +
                         " but expected " + protocolModel.getExpectedNextMessageClass().getSimpleName());
     }
 
@@ -127,14 +127,14 @@ public abstract class Protocol<T extends ProtocolModel> implements MessageListen
         // throw if peer verification fails
     }
 
-    protected void sendMessage(Message message) {
-        networkService.sendMessage(message, getPeersNetworkId(), myNodeIdAndKeyPair)
+    protected void sendMessage(NetworkMessage networkMessage) {
+        networkService.sendMessage(networkMessage, getPeersNetworkId(), myNodeIdAndKeyPair)
                 .whenComplete((resultMap, throwable) -> {
                     if (throwable == null) {
-                        log.info("Sent successfully {} to {}", message.getClass().getSimpleName(), getPeersNetworkId());
+                        log.info("Sent successfully {} to {}", networkMessage.getClass().getSimpleName(), getPeersNetworkId());
                         persistenceClient.persist();
                     } else {
-                        handleSendMessageError(throwable, message);
+                        handleSendMessageError(throwable, networkMessage);
                     }
                 });
     }
@@ -143,8 +143,8 @@ public abstract class Protocol<T extends ProtocolModel> implements MessageListen
     // Handle errors
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void handleSendMessageError(Throwable exception, Message message) {
-        handleError(exception, "Error at sending " + message);
+    protected void handleSendMessageError(Throwable exception, NetworkMessage networkMessage) {
+        handleError(exception, "Error at sending " + networkMessage);
     }
 
     protected void handleError(Throwable exception) {
@@ -167,7 +167,7 @@ public abstract class Protocol<T extends ProtocolModel> implements MessageListen
     // Delegates
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void setExpectedNextMessageClass(Class<? extends Message> value) {
+    protected void setExpectedNextMessageClass(Class<? extends NetworkMessage> value) {
         protocolModel.setExpectedNextMessageClass(value);
         persistenceClient.persist();
     }

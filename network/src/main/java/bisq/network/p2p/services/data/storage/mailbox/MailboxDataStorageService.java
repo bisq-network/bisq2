@@ -38,9 +38,9 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     private static final int MAX_MAP_SIZE = 10000;
 
     public interface Listener {
-        void onAdded(MailboxPayload mailboxPayload);
+        void onAdded(MailboxData mailboxPayload);
 
-        void onRemoved(MailboxPayload mailboxPayload);
+        void onRemoved(MailboxData mailboxPayload);
     }
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
@@ -61,8 +61,8 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
     public Result add(AddMailboxRequest request) {
-        MailboxData data = request.getMailboxData();
-        MailboxPayload payload = data.getMailboxPayload();
+        MailboxSequentialData data = request.getMailboxSequentialData();
+        MailboxData payload = data.getMailboxData();
         byte[] hash = DigestUtil.hash(payload.serialize());
         ByteArray byteArray = new ByteArray(hash);
         MailboxRequest requestFromMap;
@@ -115,7 +115,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         ByteArray byteArray = new ByteArray(request.getHash());
         ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
         MailboxRequest requestFromMap = map.get(byteArray);
-        MailboxData dataFromMap;
+        MailboxSequentialData dataFromMap;
         synchronized (mapAccessLock) {
             if (requestFromMap == null) {
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
@@ -138,7 +138,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             // At that point we know requestFromMap is an AddProtectedDataRequest
             AddMailboxRequest addRequest = (AddMailboxRequest) requestFromMap;
             // We have an entry, lets validate if we can remove it
-            dataFromMap = addRequest.getMailboxData();
+            dataFromMap = addRequest.getMailboxSequentialData();
             if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
                 // Sequence number has not increased
                 return new Result(false).sequenceNrInvalid();
@@ -154,11 +154,11 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             }
 
             map.put(byteArray, request);
-            listeners.forEach(listener -> listener.onRemoved(dataFromMap.getMailboxPayload()));
+            listeners.forEach(listener -> listener.onRemoved(dataFromMap.getMailboxData()));
         }
 
         persist();
-        return new Result(true).removedPayload(dataFromMap.getMailboxPayload());
+        return new Result(true).removedData(dataFromMap.getMailboxData());
     }
 
     @Override
@@ -197,7 +197,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         }
     }
 
-    boolean canAddMailboxMessage(MailboxPayload mailboxPayload) {
+    boolean canAddMailboxMessage(MailboxData mailboxPayload) {
         byte[] hash = DigestUtil.hash(mailboxPayload.serialize());
         return getSequenceNumber(hash) < Integer.MAX_VALUE;
     }
@@ -211,7 +211,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         Map<ByteArray, MailboxRequest> pruned = persisted.entrySet().stream()
                 .filter(entry -> now - entry.getValue().getCreated() < MAX_AGE)
                 .filter(entry -> entry.getValue() instanceof RemoveMailboxRequest ||
-                        !((AddMailboxRequest) entry.getValue()).getMailboxData().isExpired())
+                        !((AddMailboxRequest) entry.getValue()).getMailboxSequentialData().isExpired())
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

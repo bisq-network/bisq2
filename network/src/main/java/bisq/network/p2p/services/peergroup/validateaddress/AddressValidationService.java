@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup.validateaddress;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.services.peergroup.BanList;
 import lombok.extern.slf4j.Slf4j;
@@ -92,8 +92,8 @@ public class AddressValidationService implements Node.Listener {
     }
 
     @Override
-    public void onMessage(Message message, Connection connection, String nodeId) {
-        if (message instanceof AddressValidationRequest addressValidationRequest) {
+    public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
+        if (networkMessage instanceof AddressValidationRequest addressValidationRequest) {
             Address peerAddress = connection.getPeerAddress();
             if (connection instanceof InboundConnection inboundConnection) {
                 log.debug("Node {} received AddressValidationRequest with nonce {} from {}", node, addressValidationRequest.nonce(), peerAddress);

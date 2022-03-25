@@ -15,30 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.storage.append;
+package bisq.network.p2p.services.data.storage;
 
-import bisq.network.p2p.services.data.storage.MetaData;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import bisq.common.encoding.Proto;
 
-@EqualsAndHashCode
-@Getter
-public class MockAppendOnlyPayload implements AppendOnlyPayload {
-    private final String text;
-    final MetaData metaData;
+// Interface for any data which gets distributed to the P2P network. Usually data from outside the network module 
+// like Offer, ChatMessage,...
+public interface DistributedData extends Proto {
+    MetaData getMetaData();
 
-    public MockAppendOnlyPayload(String text) {
-        this.text = text;
-        metaData = new MetaData(251, getClass().getSimpleName());
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
+    boolean isDataInvalid();
 }
