@@ -36,7 +36,7 @@ import java.util.Arrays;
 @Getter
 public class RemoveMailboxRequest extends RemoveAuthenticatedDataRequest implements MailboxRequest {
 
-    public static RemoveMailboxRequest from(MailboxPayload mailboxPayload, KeyPair receiverKeyPair)
+    public static RemoveMailboxRequest from(MailboxData mailboxPayload, KeyPair receiverKeyPair)
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(mailboxPayload.serialize());
         byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());

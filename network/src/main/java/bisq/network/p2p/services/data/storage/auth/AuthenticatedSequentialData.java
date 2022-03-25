@@ -28,29 +28,29 @@ import lombok.Getter;
 public class AuthenticatedSequentialData implements Proto {
 
     public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber) {
-        return new AuthenticatedSequentialData(data.getAuthenticatedPayload(),
+        return new AuthenticatedSequentialData(data.getAuthenticatedData(),
                 sequenceNumber,
                 data.getPubKeyHash(),
                 data.getCreated());
     }
 
-    protected final AuthenticatedPayload authenticatedPayload;
+    protected final AuthenticatedData authenticatedData;
     protected final int sequenceNumber;
     protected final long created;
     protected final byte[] pubKeyHash;
 
-    public AuthenticatedSequentialData(AuthenticatedPayload authenticatedPayload,
+    public AuthenticatedSequentialData(AuthenticatedData authenticatedData,
                                        int sequenceNumber,
                                        byte[] pubKeyHash,
                                        long created) {
-        this.authenticatedPayload = authenticatedPayload;
+        this.authenticatedData = authenticatedData;
         this.sequenceNumber = sequenceNumber;
         this.pubKeyHash = pubKeyHash;
         this.created = created;
     }
 
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > authenticatedPayload.getMetaData().getTtl();
+        return (System.currentTimeMillis() - created) > authenticatedData.getMetaData().getTtl();
     }
 
     public boolean isSequenceNrInvalid(long seqNumberFromMap) {
@@ -64,7 +64,7 @@ public class AuthenticatedSequentialData implements Proto {
     @Override
     public String toString() {
         return "AuthenticatedData{" +
-                "\r\n     message=" + authenticatedPayload +
+                "\r\n     message=" + authenticatedData +
                 ",\r\n     sequenceNumber=" + sequenceNumber +
                 ",\r\n     created=" + created +
                 ",\r\n     pubKeyHash=" + Hex.encode(pubKeyHash) +

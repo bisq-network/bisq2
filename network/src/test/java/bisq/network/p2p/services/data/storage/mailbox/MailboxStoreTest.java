@@ -56,7 +56,7 @@ public class MailboxStoreTest {
         KeyPair senderKeyPair = KeyGeneration.generateKeyPair();
         KeyPair receiverKeyPair = KeyGeneration.generateKeyPair();
 
-        MailboxPayload payload = MailboxPayload.createMailboxPayload(message, senderKeyPair, receiverKeyPair.getPublic());
+        MailboxData payload = MailboxData.createMailboxPayload(message, senderKeyPair, receiverKeyPair.getPublic());
         Map<ByteArray, MailboxRequest> map = store.getPersistableStore().getClone().getMap();
         int initialMapSize = map.size();
         byte[] hash = DigestUtil.hash(payload.serialize());
@@ -66,7 +66,7 @@ public class MailboxStoreTest {
         CountDownLatch removeLatch = new CountDownLatch(1);
         store.addListener(new MailboxDataStorageService.Listener() {
             @Override
-            public void onAdded(MailboxPayload mailboxPayload) {
+            public void onAdded(MailboxData mailboxPayload) {
                 assertEquals(payload, mailboxPayload);
                 try {
                     ConfidentialData confidentialData = mailboxPayload.getConfidentialMessage().getConfidentialData();
@@ -83,7 +83,7 @@ public class MailboxStoreTest {
             }
 
             @Override
-            public void onRemoved(MailboxPayload mailboxPayload) {
+            public void onRemoved(MailboxData mailboxPayload) {
                 assertEquals(payload, mailboxPayload);
                 try {
                     ConfidentialData confidentialData = mailboxPayload.getConfidentialMessage().getConfidentialData();
@@ -111,7 +111,7 @@ public class MailboxStoreTest {
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
 
-        MailboxPayload payloadFromMap = dataFromMap.getMailboxPayload();
+        MailboxData payloadFromMap = dataFromMap.getMailboxPayload();
         assertEquals(payloadFromMap, payload);
 
         // request inventory with old seqNum

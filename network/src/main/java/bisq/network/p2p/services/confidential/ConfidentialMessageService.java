@@ -26,7 +26,7 @@ import bisq.network.p2p.node.*;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.relay.RelayMessage;
 import bisq.security.ConfidentialData;
 import bisq.security.HybridEncryption;
@@ -135,7 +135,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
     @Override
     public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
-        if (networkPayload instanceof MailboxPayload mailboxPayload) {
+        if (networkPayload instanceof MailboxData mailboxPayload) {
             if (mailboxPayload.getData() instanceof ConfidentialMessage confidentialMessage) {
                 processConfidentialMessage(confidentialMessage)
                         .whenComplete((result, throwable) -> {
@@ -222,7 +222,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             return new Result(State.FAILED).setErrorMsg("We have not stored the mailboxMessage because the dataService is not present.");
         }
 
-        MailboxPayload mailboxPayload = new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
+        MailboxData mailboxPayload = new MailboxData(confidentialMessage, mailboxMessage.getMetaData());
         // We do not wait for the broadcast result as that can take a while. We pack the future into our result, 
         // so clients can react on it as they wish.
         DataService.BroadCastDataResult mailboxFuture = dataService.get().addMailboxPayload(mailboxPayload,

@@ -76,7 +76,7 @@ class InventoryHandler implements Connection.Listener {
                         .filter(e -> e instanceof AddAuthenticatedDataRequest)
                         .map(e -> (AddAuthenticatedDataRequest) e)
                         .map(AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
-                        .map(AuthenticatedSequentialData::getAuthenticatedPayload)
+                        .map(AuthenticatedSequentialData::getAuthenticatedData)
                         .forEach(e -> {
                             String simpleName = e.getData().getClass().getSimpleName();
                             map.putIfAbsent(simpleName, 0);

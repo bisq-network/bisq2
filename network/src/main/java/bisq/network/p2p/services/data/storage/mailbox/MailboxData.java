@@ -19,7 +19,7 @@ package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.security.ConfidentialData;
 import bisq.security.HybridEncryption;
 import com.google.common.annotations.VisibleForTesting;
@@ -35,17 +35,17 @@ import java.security.PublicKey;
 // By wrapping the sealed data into that NetworkData we can add the fileName and ttl from the unencrypted NetworkData.
 @EqualsAndHashCode(callSuper = true)
 @ToString
-public class MailboxPayload extends AuthenticatedPayload {
-    public static MailboxPayload createMailboxPayload(MailboxMessage mailboxMessage,
-                                                      KeyPair senderKeyPair,
-                                                      PublicKey receiverPublicKey)
+public class MailboxData extends AuthenticatedData {
+    public static MailboxData createMailboxPayload(MailboxMessage mailboxMessage,
+                                                   KeyPair senderKeyPair,
+                                                   PublicKey receiverPublicKey)
             throws GeneralSecurityException {
         ConfidentialData confidentialData = HybridEncryption.encryptAndSign(mailboxMessage.serialize(), receiverPublicKey, senderKeyPair);
         ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, "DEFAULT");
-        return new MailboxPayload(confidentialMessage, mailboxMessage.getMetaData());
+        return new MailboxData(confidentialMessage, mailboxMessage.getMetaData());
     }
 
-    public MailboxPayload(ConfidentialMessage confidentialMessage, MetaData metaData) {
+    public MailboxData(ConfidentialMessage confidentialMessage, MetaData metaData) {
         super(confidentialMessage, metaData);
     }
 

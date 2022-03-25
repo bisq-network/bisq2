@@ -47,11 +47,11 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     private static final int MAX_INVENTORY_MAP_SIZE = 1_000_000;*/
 
     public interface Listener {
-        void onAdded(AuthenticatedPayload authenticatedPayload);
+        void onAdded(AuthenticatedData authenticatedData);
 
-        void onRemoved(AuthenticatedPayload authenticatedPayload);
+        void onRemoved(AuthenticatedData authenticatedData);
 
-        default void onRefreshed(AuthenticatedPayload authenticatedPayload) {
+        default void onRefreshed(AuthenticatedData authenticatedData) {
         }
     }
 
@@ -75,7 +75,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public Result add(AddAuthenticatedDataRequest request) {
         AuthenticatedSequentialData data = request.getAuthenticatedSequentialData();
-        AuthenticatedPayload payload = data.getAuthenticatedPayload();
+        AuthenticatedData payload = data.getAuthenticatedData();
         byte[] hash = DigestUtil.hash(payload.serialize());
         ByteArray byteArray = new ByteArray(hash);
         AuthenticatedDataRequest requestFromMap;
@@ -132,7 +132,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public Result remove(RemoveAuthenticatedDataRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
-        AuthenticatedPayload payloadFromMap;
+        AuthenticatedData payloadFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             AuthenticatedDataRequest requestFromMap = map.get(byteArray);
@@ -162,7 +162,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
             // We have an entry, lets validate if we can remove it
             AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
-            payloadFromMap = dataFromMap.getAuthenticatedPayload();
+            payloadFromMap = dataFromMap.getAuthenticatedData();
             if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
                 log.warn("SequenceNr has not increased at remove. request={}", request);
                 return new Result(false).sequenceNrInvalid();
@@ -231,7 +231,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             map.put(byteArray, updatedRequest);
         }
         persist();
-        listeners.forEach(listener -> listener.onRefreshed(updatedRequest.getAuthenticatedSequentialData().authenticatedPayload));
+        listeners.forEach(listener -> listener.onRefreshed(updatedRequest.getAuthenticatedSequentialData().authenticatedData));
         return new Result(true);
     }
 

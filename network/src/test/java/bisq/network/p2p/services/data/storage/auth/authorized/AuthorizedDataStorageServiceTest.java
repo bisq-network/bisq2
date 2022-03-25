@@ -59,7 +59,7 @@ public class AuthorizedDataStorageServiceTest {
         PrivateKey privateKey = KeyGeneration.generatePrivate(privateKeyBytes);
         NetworkPayload networkPayload = new MockNetworkPayload("test" + UUID.randomUUID());
         byte[] signature = SignatureUtil.sign(networkPayload.serialize(), privateKey);
-        MockAuthorizedPayload authorizedPayload = new MockAuthorizedPayload(networkPayload, signature, publicKey);
+        MockAuthorizedData authorizedPayload = new MockAuthorizedData(networkPayload, signature, publicKey);
 
         KeyPair keyPair = KeyGeneration.generateKeyPair();
         PersistenceService persistenceService = new PersistenceService(appDirPath);
@@ -78,7 +78,7 @@ public class AuthorizedDataStorageServiceTest {
         AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
-        MockAuthorizedPayload payload = (MockAuthorizedPayload) dataFromMap.getAuthenticatedPayload();
+        MockAuthorizedData payload = (MockAuthorizedData) dataFromMap.getAuthenticatedData();
         assertEquals(payload.getNetworkPayload(), networkPayload);
 
         // refresh

@@ -28,7 +28,7 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.NetworkPayload;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -111,8 +111,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     @Override
     public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
-        if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
-            if (authenticatedPayload.getData() instanceof PublicChatMessage publicChatMessage) {
+        if (networkPayload instanceof AuthenticatedData authenticatedData) {
+            if (authenticatedData.getData() instanceof PublicChatMessage publicChatMessage) {
                 if (publicChatMessage.getChannelType() == ChannelType.PUBLIC) {
                     persistableStore.getPublicChannels().stream()
                             .filter(publicChannel -> publicChannel.getId().equals(publicChatMessage.getChannelId()))
@@ -130,8 +130,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     @Override
     public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
-        if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
-            if (authenticatedPayload.getData() instanceof PublicChatMessage publicChatMessage) {
+        if (networkPayload instanceof AuthenticatedData authenticatedData) {
+            if (authenticatedData.getData() instanceof PublicChatMessage publicChatMessage) {
                 if (publicChatMessage.getChannelType() == ChannelType.PUBLIC) {
                     persistableStore.getPublicChannels().stream()
                             .filter(publicChannel -> publicChannel.getId().equals(publicChatMessage.getChannelId()))

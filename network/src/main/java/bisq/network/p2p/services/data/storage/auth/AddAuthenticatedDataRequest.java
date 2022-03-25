@@ -38,7 +38,7 @@ import java.util.Optional;
 @EqualsAndHashCode
 @Slf4j
 public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, AddDataRequest {
-    public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedPayload payload, KeyPair keyPair)
+    public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData payload, KeyPair keyPair)
             throws GeneralSecurityException {
 
         byte[] hash = DigestUtil.hash(payload.serialize());
@@ -117,7 +117,7 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
     }
 
     public String getFileName() {
-        return authenticatedSequentialData.getAuthenticatedPayload().getMetaData().getFileName();
+        return authenticatedSequentialData.getAuthenticatedData().getMetaData().getFileName();
     }
 
     @Override
@@ -131,7 +131,7 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
     }
 
     public MetaData getMetaData() {
-        return authenticatedSequentialData.getAuthenticatedPayload().getMetaData();
+        return authenticatedSequentialData.getAuthenticatedData().getMetaData();
     }
 
     @Override

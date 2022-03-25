@@ -32,11 +32,11 @@ import bisq.network.p2p.services.data.storage.append.AppendOnlyDataStorageServic
 import bisq.network.p2p.services.data.storage.append.AppendOnlyPayload;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStorageService;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
@@ -123,23 +123,23 @@ public class StorageService {
     // Get data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Stream<AuthenticatedPayload> getAllAuthenticatedPayload() {
+    public Stream<AuthenticatedData> getAllAuthenticatedPayload() {
         return authenticatedDataStores.values().stream().flatMap(this::getAuthenticatedPayloadStream);
     }
 
-    public Stream<AuthenticatedPayload> getAuthenticatedPayloadStream(String storeName) {
+    public Stream<AuthenticatedData> getAuthenticatedPayloadStream(String storeName) {
         return getAuthenticatedPayloadStream(getStoreByStoreName(storeName));
     }
 
-    public Stream<AuthenticatedPayload> getAuthenticatedPayloadStream(Stream<DataStorageService<? extends DataRequest>> stores) {
+    public Stream<AuthenticatedData> getAuthenticatedPayloadStream(Stream<DataStorageService<? extends DataRequest>> stores) {
         return stores.flatMap(this::getAuthenticatedPayloadStream);
     }
 
-    private Stream<AuthenticatedPayload> getAuthenticatedPayloadStream(DataStorageService<? extends DataRequest> store) {
+    private Stream<AuthenticatedData> getAuthenticatedPayloadStream(DataStorageService<? extends DataRequest> store) {
         return store.getPersistableStore().getClone().getMap().values().stream()
                 .filter(e -> e instanceof AddAuthenticatedDataRequest)
                 .map(e -> (AddAuthenticatedDataRequest) e)
-                .map(e -> e.getAuthenticatedSequentialData().getAuthenticatedPayload());
+                .map(e -> e.getAuthenticatedSequentialData().getAuthenticatedData());
     }
 
 
@@ -162,7 +162,7 @@ public class StorageService {
     }
 
     private CompletableFuture<Optional<NetworkPayload>> onAddMailboxRequest(AddMailboxRequest request) {
-        MailboxPayload payload = request.getMailboxData().getMailboxPayload();
+        MailboxData payload = request.getMailboxData().getMailboxPayload();
         return getOrCreateMailboxDataStore(payload.getMetaData())
                 .thenApply(store -> {
                     Result result = store.add(request);
@@ -178,7 +178,7 @@ public class StorageService {
     }
 
     private CompletableFuture<Optional<NetworkPayload>> onAddAuthenticatedDataRequest(AddAuthenticatedDataRequest request) {
-        AuthenticatedPayload payload = request.getAuthenticatedSequentialData().getAuthenticatedPayload();
+        AuthenticatedData payload = request.getAuthenticatedSequentialData().getAuthenticatedData();
         return getOrCreateAuthenticatedDataStore(payload.getMetaData())
                 .thenApply(store -> {
                     Result result = store.add(request);

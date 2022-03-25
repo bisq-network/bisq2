@@ -119,7 +119,7 @@ public class AuthenticatedSequentialDataStorageServiceTest {
 
     @Test
     public void testMultipleAddRemoves() throws GeneralSecurityException {
-        MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test" + UUID.randomUUID());
+        MockAuthenticatedTextData data = new MockAuthenticatedTextData("test" + UUID.randomUUID());
         PersistenceService persistenceService = new PersistenceService(appDirPath);
         AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(persistenceService,
                 AUTHENTICATED_DATA_STORE.getStoreName(),
@@ -162,7 +162,7 @@ public class AuthenticatedSequentialDataStorageServiceTest {
 
     @Test
     public void testAddAndRemove() throws GeneralSecurityException, IOException {
-        MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test" + UUID.randomUUID());
+        MockAuthenticatedTextData data = new MockAuthenticatedTextData("test" + UUID.randomUUID());
         PersistenceService persistenceService = new PersistenceService(appDirPath);
         AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(persistenceService,
                 AUTHENTICATED_DATA_STORE.getStoreName(),
@@ -187,8 +187,8 @@ public class AuthenticatedSequentialDataStorageServiceTest {
         AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
-        AuthenticatedPayload payload = addRequest.getAuthenticatedSequentialData().getAuthenticatedPayload();
-        assertEquals(dataFromMap.getAuthenticatedPayload(), payload);
+        AuthenticatedData payload = addRequest.getAuthenticatedSequentialData().getAuthenticatedData();
+        assertEquals(dataFromMap.getAuthenticatedData(), payload);
 
         // request inventory with old seqNum
      /*   String dataType = data.getMetaData().getFileName();
@@ -245,7 +245,7 @@ public class AuthenticatedSequentialDataStorageServiceTest {
 
     @Test
     public void testGetInv() throws GeneralSecurityException, IOException {
-        MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test");
+        MockAuthenticatedTextData data = new MockAuthenticatedTextData("test");
         PersistenceService persistenceService = new PersistenceService(appDirPath);
         AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(persistenceService,
                 AUTHENTICATED_DATA_STORE.getStoreName(),
@@ -253,12 +253,12 @@ public class AuthenticatedSequentialDataStorageServiceTest {
         store.readPersisted().join();
         KeyPair keyPair = KeyGeneration.generateKeyPair();
         int initialSeqNumFirstItem = 0;
-        MockAuthenticatedTextPayload first;
+        MockAuthenticatedTextData first;
         byte[] hashOfFirst = new byte[]{};
         int iterations = 10;
         long ts = System.currentTimeMillis();
         for (int i = 0; i < iterations; i++) {
-            data = new MockAuthenticatedTextPayload("test" + UUID.randomUUID());
+            data = new MockAuthenticatedTextData("test" + UUID.randomUUID());
             AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, data, keyPair);
             Result addRequestResult = store.add(addRequest);
             assertTrue(addRequestResult.isSuccess());

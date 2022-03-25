@@ -22,7 +22,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.storage.NetworkPayload;
-import bisq.network.p2p.services.data.storage.auth.MockAuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.MockAuthenticatedData;
 import bisq.network.p2p.services.peergroup.PeerGroup;
 import bisq.security.KeyGeneration;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,7 @@ public class DataServiceIntegrationTest extends DataServiceNodeBase {
         DataService dataServicePerTransport = dataServicePerTransports.get(0);
         int minExpectedConnections = numSeeds + numNodes - 2;
         KeyPair keyPair = KeyGeneration.generateKeyPair();
-        MockAuthenticatedPayload payload = new MockAuthenticatedPayload("Test offer " + UUID.randomUUID());
+        MockAuthenticatedData payload = new MockAuthenticatedData("Test offer " + UUID.randomUUID());
         //todo
         // BroadcastResult result = dataServicePerTransport.addNetworkPayload(message, keyPair).get();
         // log.error("result={}", result.toString());
@@ -67,7 +67,7 @@ public class DataServiceIntegrationTest extends DataServiceNodeBase {
     // We would likely need a more deterministic peerGroup management for tests (e.g. all nodes are connected to each other).
    // @Test
     public void testAddAuthenticatedDataRequest() throws GeneralSecurityException, InterruptedException, ExecutionException {
-        MockAuthenticatedPayload payload = new MockAuthenticatedPayload("Test offer " + UUID.randomUUID());
+        MockAuthenticatedData payload = new MockAuthenticatedData("Test offer " + UUID.randomUUID());
         KeyPair keyPair = KeyGeneration.generateKeyPair();
         List<DataService> dataServices = getBootstrappedDataServices();
         DataService dataService_0 = dataServices.get(0);

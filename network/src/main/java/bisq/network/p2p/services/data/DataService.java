@@ -30,10 +30,10 @@ import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyPayload;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import lombok.Getter;
@@ -129,11 +129,11 @@ public class DataService implements DataNetworkService.Listener {
     // Get data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Stream<AuthenticatedPayload> getAllAuthenticatedPayload() {
+    public Stream<AuthenticatedData> getAllAuthenticatedPayload() {
         return storageService.getAllAuthenticatedPayload();
     }
 
-    public Stream<AuthenticatedPayload> getAuthenticatedPayloadByStoreName(String storeName) {
+    public Stream<AuthenticatedData> getAuthenticatedPayloadByStoreName(String storeName) {
         return storageService.getAuthenticatedPayloadStream(storeName);
     }
 
@@ -143,11 +143,11 @@ public class DataService implements DataNetworkService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<BroadCastDataResult> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
-        if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
-            return storageService.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
+        if (networkPayload instanceof AuthenticatedData authenticatedData) {
+            return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getMetaData())
                     .thenApply(store -> {
                         try {
-                            AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
+                            AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
                             Result result = store.add(request);
                             if (result.isSuccess()) {
                                 listeners.forEach(listener -> listener.onNetworkPayloadAdded(networkPayload));
@@ -183,7 +183,7 @@ public class DataService implements DataNetworkService.Listener {
         }
     }
 
-    public CompletableFuture<BroadCastDataResult> addMailboxPayload(MailboxPayload mailboxPayload,
+    public CompletableFuture<BroadCastDataResult> addMailboxPayload(MailboxData mailboxPayload,
                                                                     KeyPair senderKeyPair,
                                                                     PublicKey receiverPublicKey) {
         return storageService.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
@@ -211,13 +211,13 @@ public class DataService implements DataNetworkService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<BroadCastDataResult> removeNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
-        if (networkPayload instanceof MailboxPayload) {
+        if (networkPayload instanceof MailboxData) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("removeNetworkPayloadAsync called with MailboxPayload"));
-        } else if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
-            return storageService.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
+        } else if (networkPayload instanceof AuthenticatedData authenticatedData) {
+            return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getMetaData())
                     .thenApply(store -> {
                         try {
-                            RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
+                            RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
                             Result result = store.remove(request);
                             if (result.isSuccess()) {
                                 listeners.forEach(listener -> listener.onNetworkPayloadRemoved(networkPayload));
@@ -239,13 +239,13 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeNetworkPayload1(NetworkPayload networkPayload, KeyPair keyPair) {
-        if (networkPayload instanceof MailboxPayload) {
+        if (networkPayload instanceof MailboxData) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("removeNetworkPayloadAsync called with MailboxPayload"));
-        } else if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
-            return storageService.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
+        } else if (networkPayload instanceof AuthenticatedData authenticatedData) {
+            return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getMetaData())
                     .thenApply(store -> {
                         try {
-                            RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
+                            RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
                             Result result = store.remove(request);
                             if (result.isSuccess()) {
                                 listeners.forEach(listener -> listener.onNetworkPayloadRemoved(networkPayload));
@@ -268,7 +268,7 @@ public class DataService implements DataNetworkService.Listener {
     }
 
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeMailboxPayload(MailboxPayload mailboxPayload, KeyPair receiverKeyPair) {
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeMailboxPayload(MailboxData mailboxPayload, KeyPair receiverKeyPair) {
         return storageService.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
                 .thenApply(store -> {
                     try {

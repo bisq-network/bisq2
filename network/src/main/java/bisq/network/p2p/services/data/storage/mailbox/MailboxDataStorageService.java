@@ -38,9 +38,9 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     private static final int MAX_MAP_SIZE = 10000;
 
     public interface Listener {
-        void onAdded(MailboxPayload mailboxPayload);
+        void onAdded(MailboxData mailboxPayload);
 
-        void onRemoved(MailboxPayload mailboxPayload);
+        void onRemoved(MailboxData mailboxPayload);
     }
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
@@ -62,7 +62,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     public Result add(AddMailboxRequest request) {
         MailboxSequentialData data = request.getMailboxData();
-        MailboxPayload payload = data.getMailboxPayload();
+        MailboxData payload = data.getMailboxPayload();
         byte[] hash = DigestUtil.hash(payload.serialize());
         ByteArray byteArray = new ByteArray(hash);
         MailboxRequest requestFromMap;
@@ -197,7 +197,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         }
     }
 
-    boolean canAddMailboxMessage(MailboxPayload mailboxPayload) {
+    boolean canAddMailboxMessage(MailboxData mailboxPayload) {
         byte[] hash = DigestUtil.hash(mailboxPayload.serialize());
         return getSequenceNumber(hash) < Integer.MAX_VALUE;
     }

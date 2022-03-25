@@ -34,7 +34,7 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.StorageService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -242,8 +242,8 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
                 .thenCompose(list -> {
-                    AuthenticatedPayload authenticatedPayload = new AuthenticatedPayload(data);
-                    return dataService.get().addNetworkPayload(authenticatedPayload, keyPair)
+                    AuthenticatedData authenticatedData = new AuthenticatedData(data);
+                    return dataService.get().addNetworkPayload(authenticatedData, keyPair)
                             .whenComplete((broadCastResultFutures, throwable) -> {
                                 broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
                                     //todo apply state
@@ -259,8 +259,8 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> {
-                    AuthenticatedPayload authenticatedPayload = new AuthenticatedPayload(data);
-                    return dataService.get().removeNetworkPayload(authenticatedPayload, keyPair)
+                    AuthenticatedData authenticatedData = new AuthenticatedData(data);
+                    return dataService.get().removeNetworkPayload(authenticatedData, keyPair)
                             .whenComplete((broadCastDataResult, throwable) -> {
                                 broadCastDataResult.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
                                     //todo apply state

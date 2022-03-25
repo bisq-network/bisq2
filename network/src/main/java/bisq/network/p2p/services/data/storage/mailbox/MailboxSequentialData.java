@@ -31,7 +31,7 @@ public class MailboxSequentialData extends AuthenticatedSequentialData {
     private final byte[] hashOfReceiversPublicKey;
     transient final private PublicKey receiversPubKey;
 
-    public MailboxSequentialData(MailboxPayload data,
+    public MailboxSequentialData(MailboxData data,
                                  byte[] hashOfSenderPublicKey,
                                  byte[] hashOfReceiversPublicKey,
                                  PublicKey receiversPubKey) {
@@ -42,7 +42,7 @@ public class MailboxSequentialData extends AuthenticatedSequentialData {
                 System.currentTimeMillis());
     }
 
-    public MailboxSequentialData(MailboxPayload data,
+    public MailboxSequentialData(MailboxData data,
                                  byte[] hashOfSenderPublicKey,
                                  byte[] hashOfReceiversPublicKey,
                                  PublicKey receiversPubKey,
@@ -62,7 +62,7 @@ public class MailboxSequentialData extends AuthenticatedSequentialData {
                 "\r\n} " + super.toString();
     }
 
-    public MailboxPayload getMailboxPayload() {
-        return (MailboxPayload) authenticatedPayload;
+    public MailboxData getMailboxPayload() {
+        return (MailboxData) authenticatedData;
     }
 }

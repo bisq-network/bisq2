@@ -19,7 +19,7 @@ package bisq.network.p2p.services.data.storage.auth.authorized;
 
 import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.storage.NetworkPayload;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.security.SignatureUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,13 +37,13 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Getter
-public abstract class AuthorizedPayload extends AuthenticatedPayload {
+public abstract class AuthorizedData extends AuthenticatedData {
     private final NetworkPayload networkPayload;
     private final byte[] signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
 
-    public AuthorizedPayload(NetworkPayload networkPayload, byte[] signature, PublicKey authorizedPublicKey) {
+    public AuthorizedData(NetworkPayload networkPayload, byte[] signature, PublicKey authorizedPublicKey) {
         super(null, null); //todo
         this.networkPayload = networkPayload;
         this.signature = signature;

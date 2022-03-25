@@ -17,27 +17,24 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
-import bisq.network.p2p.services.data.storage.NetworkPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-import java.security.PublicKey;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class MockAuthorizedPayload extends AuthorizedPayload {
-    private final MetaData metaData;
+public class MockAuthenticatedTextData extends AuthenticatedData {
+    private final String text;
+    final MetaData metaData;
 
-    public MockAuthorizedPayload(NetworkPayload networkPayload, byte[] signature, PublicKey publicKey) {
-        super(networkPayload, signature, publicKey);
-
-        this.metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 10000, this.getClass().getSimpleName());
+    public MockAuthenticatedTextData(String text) {
+        super(null, null);
+        this.text = text;
+        // 463 is overhead of sig/pubkeys,...
+        // 582 is pubkey+sig+hash
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
     }
 
     @Override
@@ -46,7 +43,7 @@ public final class MockAuthorizedPayload extends AuthorizedPayload {
     }
 
     @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        return Set.of("3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63");
+    public boolean isDataInvalid() {
+        return false;
     }
 }

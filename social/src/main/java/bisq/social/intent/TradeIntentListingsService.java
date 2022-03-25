@@ -21,7 +21,7 @@ import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.NetworkPayload;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,7 +44,7 @@ public class TradeIntentListingsService {
         dataService.addListener(new DataService.Listener() {
             @Override
             public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
-                if (networkPayload instanceof AuthenticatedPayload payload &&
+                if (networkPayload instanceof AuthenticatedData payload &&
                         payload.getData() instanceof TradeIntent offer) {
                     tradeIntents.add(offer);
                 }
@@ -52,7 +52,7 @@ public class TradeIntentListingsService {
 
             @Override
             public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
-                if (networkPayload instanceof AuthenticatedPayload payload &&
+                if (networkPayload instanceof AuthenticatedData payload &&
                         payload.getData() instanceof TradeIntent offer) {
                     tradeIntents.remove(offer);
                 }
