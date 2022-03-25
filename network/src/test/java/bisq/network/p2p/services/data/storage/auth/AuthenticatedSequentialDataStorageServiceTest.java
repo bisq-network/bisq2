@@ -42,7 +42,7 @@ import static bisq.network.p2p.services.data.storage.StorageService.StoreType.AU
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
-public class AuthenticatedDataStorageServiceTest {
+public class AuthenticatedSequentialDataStorageServiceTest {
     private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "bisq_StorageTest";
 
     @Getter
@@ -184,10 +184,10 @@ public class AuthenticatedDataStorageServiceTest {
             return;
         }
         AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);
-        AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
+        AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
-        AuthenticatedPayload payload = addRequest.getAuthenticatedData().getAuthenticatedPayload();
+        AuthenticatedPayload payload = addRequest.getAuthenticatedSequentialData().getAuthenticatedPayload();
         assertEquals(dataFromMap.getAuthenticatedPayload(), payload);
 
         // request inventory with old seqNum
@@ -211,7 +211,7 @@ public class AuthenticatedDataStorageServiceTest {
         assertTrue(refreshResult.isSuccess());
 
         addRequestFromMap = (AddAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);
-        dataFromMap = addRequestFromMap.getAuthenticatedData();
+        dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
         assertEquals(initialSeqNum + 2, dataFromMap.getSequenceNumber());
 
         //remove

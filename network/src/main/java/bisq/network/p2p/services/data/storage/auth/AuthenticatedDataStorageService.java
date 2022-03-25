@@ -74,7 +74,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     }
 
     public Result add(AddAuthenticatedDataRequest request) {
-        AuthenticatedData data = request.getAuthenticatedData();
+        AuthenticatedSequentialData data = request.getAuthenticatedSequentialData();
         AuthenticatedPayload payload = data.getAuthenticatedPayload();
         byte[] hash = DigestUtil.hash(payload.serialize());
         ByteArray byteArray = new ByteArray(hash);
@@ -161,7 +161,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     "requestFromMap expected be type of AddProtectedDataRequest");
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
             // We have an entry, lets validate if we can remove it
-            AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
+            AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
             payloadFromMap = dataFromMap.getAuthenticatedPayload();
             if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
                 log.warn("SequenceNr has not increased at remove. request={}", request);
@@ -205,7 +205,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     "requestFromMap expected be type of AddAuthenticatedDataRequest");
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
             // We have an entry, lets validate if we can remove it
-            AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
+            AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
             if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
                 log.warn("SequenceNr is invalid at refresh. request={}", request);
                 // Sequence number has not increased
@@ -223,7 +223,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return new Result(false).signatureInvalid();
             }
 
-            AuthenticatedData updatedData = AuthenticatedData.from(dataFromMap, request.getSequenceNumber());
+            AuthenticatedSequentialData updatedData = AuthenticatedSequentialData.from(dataFromMap, request.getSequenceNumber());
             updatedRequest = new AddAuthenticatedDataRequest(updatedData,
                     addRequestFromMap.getSignature(),
                     addRequestFromMap.getOwnerPublicKey());
@@ -231,7 +231,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             map.put(byteArray, updatedRequest);
         }
         persist();
-        listeners.forEach(listener -> listener.onRefreshed(updatedRequest.getAuthenticatedData().authenticatedPayload));
+        listeners.forEach(listener -> listener.onRefreshed(updatedRequest.getAuthenticatedSequentialData().authenticatedPayload));
         return new Result(true);
     }
 
@@ -274,7 +274,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         Map<ByteArray, AuthenticatedDataRequest> pruned = persisted.entrySet().stream()
                 .filter(entry -> now - entry.getValue().getCreated() < MAX_AGE)
                 .filter(entry -> entry.getValue() instanceof RemoveAuthenticatedDataRequest ||
-                        !((AddAuthenticatedDataRequest) entry.getValue()).getAuthenticatedData().isExpired())
+                        !((AddAuthenticatedDataRequest) entry.getValue()).getAuthenticatedSequentialData().isExpired())
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

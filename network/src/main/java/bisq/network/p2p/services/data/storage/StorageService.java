@@ -139,7 +139,7 @@ public class StorageService {
         return store.getPersistableStore().getClone().getMap().values().stream()
                 .filter(e -> e instanceof AddAuthenticatedDataRequest)
                 .map(e -> (AddAuthenticatedDataRequest) e)
-                .map(e -> e.getAuthenticatedData().getAuthenticatedPayload());
+                .map(e -> e.getAuthenticatedSequentialData().getAuthenticatedPayload());
     }
 
 
@@ -178,7 +178,7 @@ public class StorageService {
     }
 
     private CompletableFuture<Optional<NetworkPayload>> onAddAuthenticatedDataRequest(AddAuthenticatedDataRequest request) {
-        AuthenticatedPayload payload = request.getAuthenticatedData().getAuthenticatedPayload();
+        AuthenticatedPayload payload = request.getAuthenticatedSequentialData().getAuthenticatedPayload();
         return getOrCreateAuthenticatedDataStore(payload.getMetaData())
                 .thenApply(store -> {
                     Result result = store.add(request);
@@ -307,7 +307,7 @@ public class StorageService {
             return new FilterEntry(hash, 0);
         } else if (dataRequest instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
             // AddMailboxRequest extends AddAuthenticatedDataRequest so its covered here as well
-            sequenceNumber = addAuthenticatedDataRequest.getAuthenticatedData().getSequenceNumber();
+            sequenceNumber = addAuthenticatedDataRequest.getAuthenticatedSequentialData().getSequenceNumber();
         } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest) {
             // RemoveMailboxRequest extends RemoveAuthenticatedDataRequest so its covered here as well
             sequenceNumber = removeAuthenticatedDataRequest.getSequenceNumber();

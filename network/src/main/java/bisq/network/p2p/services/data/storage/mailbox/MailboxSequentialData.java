@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.encoding.Hex;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -26,15 +26,15 @@ import java.security.PublicKey;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class MailboxData extends AuthenticatedData {
+public class MailboxSequentialData extends AuthenticatedSequentialData {
     private final byte[] receiversPubKeyBytes;
     private final byte[] hashOfReceiversPublicKey;
     transient final private PublicKey receiversPubKey;
 
-    public MailboxData(MailboxPayload data,
-                       byte[] hashOfSenderPublicKey,
-                       byte[] hashOfReceiversPublicKey,
-                       PublicKey receiversPubKey) {
+    public MailboxSequentialData(MailboxPayload data,
+                                 byte[] hashOfSenderPublicKey,
+                                 byte[] hashOfReceiversPublicKey,
+                                 PublicKey receiversPubKey) {
         this(data,
                 hashOfSenderPublicKey,
                 hashOfReceiversPublicKey,
@@ -42,11 +42,11 @@ public class MailboxData extends AuthenticatedData {
                 System.currentTimeMillis());
     }
 
-    public MailboxData(MailboxPayload data,
-                       byte[] hashOfSenderPublicKey,
-                       byte[] hashOfReceiversPublicKey,
-                       PublicKey receiversPubKey,
-                       long created) {
+    public MailboxSequentialData(MailboxPayload data,
+                                 byte[] hashOfSenderPublicKey,
+                                 byte[] hashOfReceiversPublicKey,
+                                 PublicKey receiversPubKey,
+                                 long created) {
         super(data, 1, hashOfSenderPublicKey, created); // We set sequenceNumber to 1 as there will be only one AddMailBoxRequest
 
         receiversPubKeyBytes = receiversPubKey.getEncoded();

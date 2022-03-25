@@ -46,14 +46,14 @@ public class AddMailboxRequest extends AddAuthenticatedDataRequest implements Ma
         checkArgument(!store.contains(hash), "We expect to not have already an entry for that hash.");
         byte[] hashOfSendersPublicKey = DigestUtil.hash(senderPublicKey.getEncoded());
         byte[] hashOfReceiversPublicKey = DigestUtil.hash(receiverPublicKey.getEncoded());
-        MailboxData entry = new MailboxData(payload, hashOfSendersPublicKey,
+        MailboxSequentialData entry = new MailboxSequentialData(payload, hashOfSendersPublicKey,
                 hashOfReceiversPublicKey, receiverPublicKey);
         byte[] serialized = entry.serialize();
         byte[] signature = SignatureUtil.sign(serialized, senderKeyPair.getPrivate());
         return new AddMailboxRequest(entry, signature, senderPublicKey);
     }
 
-    public AddMailboxRequest(MailboxData mailboxData, byte[] signature, PublicKey senderPublicKey) {
+    public AddMailboxRequest(MailboxSequentialData mailboxData, byte[] signature, PublicKey senderPublicKey) {
         super(mailboxData, signature, senderPublicKey);
     }
 
@@ -62,8 +62,8 @@ public class AddMailboxRequest extends AddAuthenticatedDataRequest implements Ma
         return "AddMailboxDataRequest{} " + super.toString();
     }
 
-    public MailboxData getMailboxData() {
-        return (MailboxData) authenticatedData;
+    public MailboxSequentialData getMailboxData() {
+        return (MailboxSequentialData) authenticatedSequentialData;
     }
 
 

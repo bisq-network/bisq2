@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -57,9 +57,9 @@ public class RemoveMailboxRequest extends RemoveAuthenticatedDataRequest impleme
     }
 
     @Override
-    public boolean isPublicKeyHashInvalid(AuthenticatedData entryFromMap) {
+    public boolean isPublicKeyHashInvalid(AuthenticatedSequentialData entryFromMap) {
         try {
-            MailboxData mailboxData = (MailboxData) entryFromMap;
+            MailboxSequentialData mailboxData = (MailboxSequentialData) entryFromMap;
             return !Arrays.equals(mailboxData.getHashOfReceiversPublicKey(), DigestUtil.hash(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;

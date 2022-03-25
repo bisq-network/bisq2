@@ -61,7 +61,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
     public Result add(AddMailboxRequest request) {
-        MailboxData data = request.getMailboxData();
+        MailboxSequentialData data = request.getMailboxData();
         MailboxPayload payload = data.getMailboxPayload();
         byte[] hash = DigestUtil.hash(payload.serialize());
         ByteArray byteArray = new ByteArray(hash);
@@ -115,7 +115,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         ByteArray byteArray = new ByteArray(request.getHash());
         ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
         MailboxRequest requestFromMap = map.get(byteArray);
-        MailboxData dataFromMap;
+        MailboxSequentialData dataFromMap;
         synchronized (mapAccessLock) {
             if (requestFromMap == null) {
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep

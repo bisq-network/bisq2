@@ -107,7 +107,7 @@ public class MailboxStoreTest {
 
         ByteArray byteArray = new ByteArray(hash);
         AddMailboxRequest addRequestFromMap = (AddMailboxRequest) map.get(byteArray);
-        MailboxData dataFromMap = addRequestFromMap.getMailboxData();
+        MailboxSequentialData dataFromMap = addRequestFromMap.getMailboxData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
 

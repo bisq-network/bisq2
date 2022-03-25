@@ -75,7 +75,7 @@ public class AuthorizedDataStorageServiceTest {
 
         ByteArray byteArray = new ByteArray(hash);
         AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);
-        AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
+        AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
         MockAuthorizedPayload payload = (MockAuthorizedPayload) dataFromMap.getAuthenticatedPayload();
@@ -87,7 +87,7 @@ public class AuthorizedDataStorageServiceTest {
         assertTrue(refreshResult.isSuccess());
 
         addRequestFromMap = (AddAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);
-        dataFromMap = addRequestFromMap.getAuthenticatedData();
+        dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
         assertEquals(initialSeqNum + 2, dataFromMap.getSequenceNumber());
 
         //remove

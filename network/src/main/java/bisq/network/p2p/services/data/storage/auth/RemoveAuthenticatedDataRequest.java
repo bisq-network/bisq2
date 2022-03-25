@@ -95,7 +95,7 @@ public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest,
         }
     }
 
-    public boolean isPublicKeyHashInvalid(AuthenticatedData entryFromMap) {
+    public boolean isPublicKeyHashInvalid(AuthenticatedSequentialData entryFromMap) {
         try {
             return !Arrays.equals(entryFromMap.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
         } catch (Exception e) {

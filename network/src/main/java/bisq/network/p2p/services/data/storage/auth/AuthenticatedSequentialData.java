@@ -25,10 +25,10 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class AuthenticatedData implements Proto {
+public class AuthenticatedSequentialData implements Proto {
 
-    public static AuthenticatedData from(AuthenticatedData data, int sequenceNumber) {
-        return new AuthenticatedData(data.getAuthenticatedPayload(),
+    public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber) {
+        return new AuthenticatedSequentialData(data.getAuthenticatedPayload(),
                 sequenceNumber,
                 data.getPubKeyHash(),
                 data.getCreated());
@@ -39,10 +39,10 @@ public class AuthenticatedData implements Proto {
     protected final long created;
     protected final byte[] pubKeyHash;
 
-    public AuthenticatedData(AuthenticatedPayload authenticatedPayload,
-                             int sequenceNumber,
-                             byte[] pubKeyHash,
-                             long created) {
+    public AuthenticatedSequentialData(AuthenticatedPayload authenticatedPayload,
+                                       int sequenceNumber,
+                                       byte[] pubKeyHash,
+                                       long created) {
         this.authenticatedPayload = authenticatedPayload;
         this.sequenceNumber = sequenceNumber;
         this.pubKeyHash = pubKeyHash;

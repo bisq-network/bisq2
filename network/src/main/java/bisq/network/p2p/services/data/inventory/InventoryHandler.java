@@ -24,7 +24,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,8 +75,8 @@ class InventoryHandler implements Connection.Listener {
                 response.inventory().entries().stream()
                         .filter(e -> e instanceof AddAuthenticatedDataRequest)
                         .map(e -> (AddAuthenticatedDataRequest) e)
-                        .map(AddAuthenticatedDataRequest::getAuthenticatedData)
-                        .map(AuthenticatedData::getAuthenticatedPayload)
+                        .map(AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
+                        .map(AuthenticatedSequentialData::getAuthenticatedPayload)
                         .forEach(e -> {
                             String simpleName = e.getData().getClass().getSimpleName();
                             map.putIfAbsent(simpleName, 0);
