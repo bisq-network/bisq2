@@ -25,12 +25,13 @@ import bisq.i18n.Res;
 import bisq.offer.Offer;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferController> {
+public class CreateOfferView extends View<ScrollPane, CreateOfferModel, CreateOfferController> {
     private final ChangeListener<Offer> offerListener;
     private final BisqButton createOfferButton;
     private final BisqTextArea offerSummary;
@@ -42,9 +43,13 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
                            Pane amountPrice,
                            Pane protocol,
                            Pane settlement) {
-        super(new VBox(), model, controller);
-        root.setSpacing(30);
-        root.setPadding(new Insets(20, 20, 20, 0));
+        super(new ScrollPane(), model, controller);
+
+        // Place content within a VBox, within a ScrollPane, to show scrollbars if window size is too small
+        VBox vBox = new VBox();
+        vBox.setSpacing(30);
+        vBox.setPadding(new Insets(20, 20, 20, 0));
+        root.setContent(vBox);
 
         amountPrice.setPadding(new Insets(0, 0, -5, 0));
 
@@ -61,7 +66,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         publishButton.setOnAction(e -> controller.onPublishOffer());
         publishButton.setVisible(false);
 
-        root.getChildren().addAll(
+        vBox.getChildren().addAll(
                 marketSelection,
                 direction,
                 amountPrice,
