@@ -19,7 +19,7 @@ package bisq.network.p2p.node;
 
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Envelope;
+import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.message.Version;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -112,15 +112,15 @@ public abstract class Connection {
                     Object msg = objectInputStream.readObject();
                     if (isNotStopped()) {
                         String simpleName = msg.getClass().getSimpleName();
-                        if (!(msg instanceof Envelope envelope)) {
+                        if (!(msg instanceof NetworkEnvelope networkEnvelope)) {
                             throw new ConnectionException("Received message not type of Envelope. " + simpleName);
                         }
-                        if (envelope.version() != Version.VERSION) {
+                        if (networkEnvelope.getVersion() != Version.VERSION) {
                             throw new ConnectionException("Invalid network version. " + simpleName);
                         }
-                        log.debug("Received message: {} at: {}", StringUtils.truncate(envelope.message().toString(), 200), this);
-                        metrics.onMessage(envelope.message());
-                        NetworkService.DISPATCHER.submit(() -> handler.onMessage(envelope.message(), envelope.token(), this));
+                        log.debug("Received message: {} at: {}", StringUtils.truncate(networkEnvelope.getMessage().toString(), 200), this);
+                        metrics.onMessage(networkEnvelope.getMessage());
+                        NetworkService.DISPATCHER.submit(() -> handler.onMessage(networkEnvelope.getMessage(), networkEnvelope.getAuthorizationToken(), this));
                     }
                 }
             } catch (Exception exception) {
@@ -144,9 +144,9 @@ public abstract class Connection {
             throw new ConnectionClosedException(this);
         }
         try {
-            Envelope envelope = new Envelope(Version.VERSION, authorizationToken, message);
+            NetworkEnvelope networkEnvelope = new NetworkEnvelope(Version.VERSION, authorizationToken, message);
             synchronized (writeLock) {
-                objectOutputStream.writeObject(envelope);
+                objectOutputStream.writeObject(networkEnvelope);
                 objectOutputStream.flush();
             }
             metrics.sent(message);

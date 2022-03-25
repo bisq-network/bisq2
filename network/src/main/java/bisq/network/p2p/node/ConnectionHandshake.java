@@ -18,7 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.common.util.StringUtils;
-import bisq.network.p2p.message.Envelope;
+import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.message.Version;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -77,34 +77,34 @@ class ConnectionHandshake {
             Metrics metrics = new Metrics();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             AuthorizationToken token = authorizationService.createToken(Request.class);
-            Envelope requestEnvelope = new Envelope(Version.VERSION, token, new Request(capability, myLoad));
-            log.debug("Client sends {}", requestEnvelope);
+            NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(Version.VERSION, token, new Request(capability, myLoad));
+            log.debug("Client sends {}", requestNetworkEnvelope);
             long ts = System.currentTimeMillis();
-            objectOutputStream.writeObject(requestEnvelope);
+            objectOutputStream.writeObject(requestNetworkEnvelope);
             objectOutputStream.flush();
-            metrics.sent(requestEnvelope);
+            metrics.sent(requestNetworkEnvelope);
 
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             Object msg = objectInputStream.readObject();
-            if (!(msg instanceof Envelope responseEnvelope)) {
+            if (!(msg instanceof NetworkEnvelope responseNetworkEnvelope)) {
                 throw new ConnectionException("Received proto not type of Envelope. " + msg.getClass().getSimpleName());
             }
             log.debug("Client received {}", msg);
-            if (responseEnvelope.version() != Version.VERSION) {
+            if (responseNetworkEnvelope.getVersion() != Version.VERSION) {
                 throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
-                        responseEnvelope.version() + "; Version.VERSION=" + Version.VERSION);
+                        responseNetworkEnvelope.getVersion() + "; Version.VERSION=" + Version.VERSION);
             }
-            if (!(responseEnvelope.message() instanceof Response response)) {
+            if (!(responseNetworkEnvelope.getMessage() instanceof Response response)) {
                 throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
-                        responseEnvelope);
+                        responseNetworkEnvelope);
             }
             if (banList.isBanned(response.capability().address())) {
                 throw new ConnectionException("Peers address is in quarantine. response=" + response);
             }
-            if (!authorizationService.isAuthorized(responseEnvelope.token())) {
+            if (!authorizationService.isAuthorized(responseNetworkEnvelope.getAuthorizationToken())) {
                 throw new ConnectionException("Response authorization failed. response=" + response);
             }
-            metrics.onMessage(responseEnvelope);
+            metrics.onMessage(responseNetworkEnvelope);
             metrics.addRtt(System.currentTimeMillis() - ts);
             log.debug("Servers capability {}, load={}", response.capability(), response.load());
             return new Result(response.capability(), response.load(), metrics);
@@ -128,33 +128,33 @@ class ConnectionHandshake {
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
             Object msg = objectInputStream.readObject();
             long ts = System.currentTimeMillis();
-            if (!(msg instanceof Envelope requestEnvelope)) {
+            if (!(msg instanceof NetworkEnvelope requestNetworkEnvelope)) {
                 throw new ConnectionException("Received proto not type of Envelope. Received data=" + msg.getClass().getSimpleName());
             }
             log.debug("Server received {}", msg);
-            if (requestEnvelope.version() != Version.VERSION) {
+            if (requestNetworkEnvelope.getVersion() != Version.VERSION) {
                 throw new ConnectionException("Invalid version. requestEnvelop.version()=" +
-                        requestEnvelope.version() + "; Version.VERSION=" + Version.VERSION);
+                        requestNetworkEnvelope.getVersion() + "; Version.VERSION=" + Version.VERSION);
             }
-            if (!(requestEnvelope.message() instanceof Request request)) {
+            if (!(requestNetworkEnvelope.getMessage() instanceof Request request)) {
                 throw new ConnectionException("RequestEnvelope.message() not type of Request. requestEnvelope=" +
-                        requestEnvelope);
+                        requestNetworkEnvelope);
             }
             if (banList.isBanned(request.capability().address())) {
                 throw new ConnectionException("Peers address is in quarantine. request=" + request);
             }
-            if (!authorizationService.isAuthorized(requestEnvelope.token())) {
+            if (!authorizationService.isAuthorized(requestNetworkEnvelope.getAuthorizationToken())) {
                 throw new ConnectionException("Request authorization failed. request=" + request);
             }
             log.debug("Clients capability {}, load={}", request.capability(), request.load());
-            metrics.onMessage(requestEnvelope);
+            metrics.onMessage(requestNetworkEnvelope);
 
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             AuthorizationToken token = authorizationService.createToken(Response.class);
-            Envelope responseEnvelope = new Envelope(Version.VERSION,token, new Response( capability, myLoad) );
-            objectOutputStream.writeObject(responseEnvelope);
+            NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(Version.VERSION,token, new Response( capability, myLoad) );
+            objectOutputStream.writeObject(responseNetworkEnvelope);
             objectOutputStream.flush();
-            metrics.sent(responseEnvelope);
+            metrics.sent(responseNetworkEnvelope);
             metrics.addRtt(System.currentTimeMillis() - ts);
             return new Result(request.capability(), request.load(), metrics);
         } catch (Exception e) {

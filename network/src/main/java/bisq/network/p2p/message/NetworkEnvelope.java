@@ -18,6 +18,21 @@
 package bisq.network.p2p.message;
 
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record Envelope(int version, AuthorizationToken token, Message message) implements Message {
+@ToString
+@EqualsAndHashCode
+@Getter
+public class NetworkEnvelope implements Message {
+    private final int version;
+    private final AuthorizationToken authorizationToken;
+    private final Message message;
+
+    public NetworkEnvelope(int version, AuthorizationToken authorizationToken, Message message) {
+        this.version = version;
+        this.authorizationToken = authorizationToken;
+        this.message = message;
+    }
 }
