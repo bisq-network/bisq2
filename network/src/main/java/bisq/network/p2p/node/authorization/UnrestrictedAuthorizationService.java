@@ -27,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
 public class UnrestrictedAuthorizationService implements AuthorizationService {
 
     @Override
-    public boolean isAuthorized(AuthorizedMessage authorizedMessage) {
+    public boolean isAuthorized(Message authorizedMessage, AuthorizationToken authorizationToken) {
         return true;
     }
 

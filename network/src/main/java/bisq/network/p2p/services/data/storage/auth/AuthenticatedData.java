@@ -64,7 +64,7 @@ public class AuthenticatedData implements Proto {
     @Override
     public String toString() {
         return "AuthenticatedData{" +
-                "\r\n     payload=" + payload +
+                "\r\n     message=" + payload +
                 ",\r\n     sequenceNumber=" + sequenceNumber +
                 ",\r\n     created=" + created +
                 ",\r\n     hashOfPublicKey=" + Hex.encode(hashOfPublicKey) +

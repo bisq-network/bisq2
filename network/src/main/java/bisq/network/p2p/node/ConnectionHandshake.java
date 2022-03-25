@@ -47,10 +47,10 @@ class ConnectionHandshake {
     private final Capability capability;
     private final AuthorizationService authorizationService;
 
-    private static record Request(AuthorizationToken token, Capability capability, Load load) implements Message {
+    private static record Request( Capability capability, Load load) implements Message {
     }
 
-    private static record Response(AuthorizationToken token, Capability capability, Load load) implements Message {
+    private static record Response(Capability capability, Load load) implements Message {
     }
 
     static record Result(Capability capability, Load load, Metrics metrics) {
@@ -77,7 +77,7 @@ class ConnectionHandshake {
             Metrics metrics = new Metrics();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             AuthorizationToken token = authorizationService.createToken(Request.class);
-            Envelope requestEnvelope = new Envelope(new Request(token, capability, myLoad), Version.VERSION);
+            Envelope requestEnvelope = new Envelope(Version.VERSION, token, new Request(capability, myLoad));
             log.debug("Client sends {}", requestEnvelope);
             long ts = System.currentTimeMillis();
             objectOutputStream.writeObject(requestEnvelope);
@@ -94,14 +94,14 @@ class ConnectionHandshake {
                 throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
                         responseEnvelope.version() + "; Version.VERSION=" + Version.VERSION);
             }
-            if (!(responseEnvelope.payload() instanceof Response response)) {
-                throw new ConnectionException("ResponseEnvelope.payload() not type of Response. responseEnvelope=" +
+            if (!(responseEnvelope.message() instanceof Response response)) {
+                throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
                         responseEnvelope);
             }
             if (banList.isBanned(response.capability().address())) {
                 throw new ConnectionException("Peers address is in quarantine. response=" + response);
             }
-            if (!authorizationService.isAuthorized(response.token())) {
+            if (!authorizationService.isAuthorized(responseEnvelope.token())) {
                 throw new ConnectionException("Response authorization failed. response=" + response);
             }
             metrics.onMessage(responseEnvelope);
@@ -136,14 +136,14 @@ class ConnectionHandshake {
                 throw new ConnectionException("Invalid version. requestEnvelop.version()=" +
                         requestEnvelope.version() + "; Version.VERSION=" + Version.VERSION);
             }
-            if (!(requestEnvelope.payload() instanceof Request request)) {
-                throw new ConnectionException("RequestEnvelope.payload() not type of Request. requestEnvelope=" +
+            if (!(requestEnvelope.message() instanceof Request request)) {
+                throw new ConnectionException("RequestEnvelope.message() not type of Request. requestEnvelope=" +
                         requestEnvelope);
             }
             if (banList.isBanned(request.capability().address())) {
                 throw new ConnectionException("Peers address is in quarantine. request=" + request);
             }
-            if (!authorizationService.isAuthorized(request.token())) {
+            if (!authorizationService.isAuthorized(requestEnvelope.token())) {
                 throw new ConnectionException("Request authorization failed. request=" + request);
             }
             log.debug("Clients capability {}, load={}", request.capability(), request.load());
@@ -151,7 +151,7 @@ class ConnectionHandshake {
 
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             AuthorizationToken token = authorizationService.createToken(Response.class);
-            Envelope responseEnvelope = new Envelope(new Response(token, capability, myLoad), Version.VERSION);
+            Envelope responseEnvelope = new Envelope(Version.VERSION,token, new Response( capability, myLoad) );
             objectOutputStream.writeObject(responseEnvelope);
             objectOutputStream.flush();
             metrics.sent(responseEnvelope);

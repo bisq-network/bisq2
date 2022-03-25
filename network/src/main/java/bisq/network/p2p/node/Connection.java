@@ -22,7 +22,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.Envelope;
 import bisq.network.p2p.message.Message;
 import bisq.network.p2p.message.Version;
-import bisq.network.p2p.node.authorization.AuthorizedMessage;
+import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,7 +48,7 @@ import java.util.function.BiConsumer;
 public abstract class Connection {
 
     interface Handler {
-        void onMessage(Message message, Connection connection);
+        void onMessage(Message message, AuthorizationToken authorizationToken, Connection connection);
 
         void onConnectionClosed(Connection connection, CloseReason closeReason);
     }
@@ -118,9 +118,9 @@ public abstract class Connection {
                         if (envelope.version() != Version.VERSION) {
                             throw new ConnectionException("Invalid network version. " + simpleName);
                         }
-                        log.debug("Received message: {} at: {}", StringUtils.truncate(envelope.payload().toString(), 200), this);
-                        metrics.onMessage(envelope.payload());
-                        NetworkService.DISPATCHER.submit(() -> handler.onMessage(envelope.payload(), this));
+                        log.debug("Received message: {} at: {}", StringUtils.truncate(envelope.message().toString(), 200), this);
+                        metrics.onMessage(envelope.message());
+                        NetworkService.DISPATCHER.submit(() -> handler.onMessage(envelope.message(), envelope.token(), this));
                     }
                 }
             } catch (Exception exception) {
@@ -137,14 +137,14 @@ public abstract class Connection {
         });
     }
 
-    Connection send(AuthorizedMessage message) {
+    Connection send(Message message, AuthorizationToken authorizationToken) {
         if (isStopped) {
             log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
                     StringUtils.truncate(message.toString(), 200), this);
             throw new ConnectionClosedException(this);
         }
         try {
-            Envelope envelope = new Envelope(message, Version.VERSION);
+            Envelope envelope = new Envelope(Version.VERSION, authorizationToken, message);
             synchronized (writeLock) {
                 objectOutputStream.writeObject(envelope);
                 objectOutputStream.flush();

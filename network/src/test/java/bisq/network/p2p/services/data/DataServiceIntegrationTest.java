@@ -55,7 +55,7 @@ public class DataServiceIntegrationTest extends DataServiceNodeBase {
         KeyPair keyPair = KeyGeneration.generateKeyPair();
         MockAuthenticatedPayload payload = new MockAuthenticatedPayload("Test offer " + UUID.randomUUID());
         //todo
-        // BroadcastResult result = dataServicePerTransport.addNetworkPayload(payload, keyPair).get();
+        // BroadcastResult result = dataServicePerTransport.addNetworkPayload(message, keyPair).get();
         // log.error("result={}", result.toString());
         // assertTrue(result.numSuccess() >= minExpectedConnections);
     }

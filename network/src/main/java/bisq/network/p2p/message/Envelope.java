@@ -17,5 +17,7 @@
 
 package bisq.network.p2p.message;
 
-public record Envelope(Message payload, int version) implements Message {
+import bisq.network.p2p.node.authorization.AuthorizationToken;
+
+public record Envelope(int version, AuthorizationToken token, Message message) implements Message {
 }

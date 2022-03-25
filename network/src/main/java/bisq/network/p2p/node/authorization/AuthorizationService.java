@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 
 public interface AuthorizationService {
 
-    boolean isAuthorized(AuthorizedMessage authorizedMessage);
+    boolean isAuthorized(Message authorizedMessage, AuthorizationToken authorizationToken);
 
     boolean isAuthorized(AuthorizationToken authorizationToken);
 
