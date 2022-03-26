@@ -156,23 +156,22 @@ message RemoveAuthenticatedDataRequest {
   uint64 created = 6;
 }
 
-
-message MailboxPayload {
+message MailboxData {
   ConfidentialMessage confidentialMessage = 1;
   MetaData metaData = 2;
 }
 
-message MailboxData {
-  MailboxPayload mailboxPayload = 1;
+message MailboxSequentialData {
+  MailboxData mailboxData = 1;
   uint32 sequenceNumber = 2;
-  bytes hashOfSenderPublicKey = 3;
+  bytes senderPublicKeyHash = 3;
   uint64 created = 4;
   bytes receiversPubKeyBytes = 5;
-  bytes hashOfReceiversPublicKey = 6;
+  bytes receiversPubKeyHash = 6;
 }
 
 message AddMailboxRequest {
-  MailboxData mailboxData = 1;
+  MailboxSequentialData mailboxSequentialData = 1;
   bytes signature = 2;
   bytes senderPublicKeyBytes = 3;
 }

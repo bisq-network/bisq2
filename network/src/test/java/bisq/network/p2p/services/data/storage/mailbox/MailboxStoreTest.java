@@ -70,10 +70,10 @@ public class MailboxStoreTest {
         CountDownLatch removeLatch = new CountDownLatch(1);
         store.addListener(new MailboxDataStorageService.Listener() {
             @Override
-            public void onAdded(MailboxData mailboxPayload) {
-                assertEquals(payload, mailboxPayload);
+            public void onAdded(MailboxData mailboxData) {
+                assertEquals(payload, mailboxData);
                 try {
-                    ConfidentialData confidentialData = mailboxPayload.getConfidentialMessage().getConfidentialData();
+                    ConfidentialData confidentialData = mailboxData.getConfidentialMessage().getConfidentialData();
                     byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiverKeyPair);
                     Object decryptedMessage = ObjectSerializer.deserialize(decrypted);
                     MockMailboxMessage message2 = (MockMailboxMessage) decryptedMessage;
@@ -87,10 +87,10 @@ public class MailboxStoreTest {
             }
 
             @Override
-            public void onRemoved(MailboxData mailboxPayload) {
-                assertEquals(payload, mailboxPayload);
+            public void onRemoved(MailboxData mailboxData) {
+                assertEquals(payload, mailboxData);
                 try {
-                    ConfidentialData confidentialData = mailboxPayload.getConfidentialMessage().getConfidentialData();
+                    ConfidentialData confidentialData = mailboxData.getConfidentialMessage().getConfidentialData();
                     byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiverKeyPair);
                     Object decryptedMessage = ObjectSerializer.deserialize(decrypted);
                     MockMailboxMessage message2 = (MockMailboxMessage) decryptedMessage;

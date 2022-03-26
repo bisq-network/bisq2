@@ -23,6 +23,9 @@ import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.inventory.InventoryRequest;
 import bisq.network.p2p.services.data.inventory.InventoryResponse;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
+import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.network.p2p.services.peergroup.keepalive.Ping;
 import bisq.network.p2p.services.peergroup.keepalive.Pong;
 import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationRequest;
@@ -40,7 +43,7 @@ public interface NetworkMessage extends Proto {
     static NetworkMessage resolve(Any any) {
         return NetworkMessageResolver.resolve(any);
     }
-    
+
     bisq.network.protobuf.NetworkMessage toNetworkMessageProto();
 
     static NetworkMessage resolveNetworkMessage(bisq.network.protobuf.NetworkMessage networkMessage) {
@@ -63,15 +66,15 @@ public interface NetworkMessage extends Proto {
             case ADDAUTHENTICATEDDATAREQUEST -> {
                 return AddAuthenticatedDataRequest.fromProto(networkMessage.getAddAuthenticatedDataRequest());
             }
-           /* case REMOVEAUTHENTICATEDDATAREQUEST -> {
+            case REMOVEAUTHENTICATEDDATAREQUEST -> {
                 return RemoveAuthenticatedDataRequest.fromProto(networkMessage.getRemoveAuthenticatedDataRequest());
             }
             case ADDMAILBOXREQUEST -> {
                 return AddMailboxRequest.fromProto(networkMessage.getAddMailboxRequest());
-            }*/
-          /*  case REMOVEMAILBOXREQUEST -> {
+            }
+            case REMOVEMAILBOXREQUEST -> {
                 return RemoveMailboxRequest.fromProto(networkMessage.getRemoveMailboxRequest());
-            }*/
+            }
             case PEEREXCHANGEREQUEST -> {
                 return Ping.fromProto(networkMessage.getPing());
             }

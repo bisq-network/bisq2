@@ -24,7 +24,6 @@ import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
@@ -136,27 +135,20 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        if (authenticatedData instanceof MailboxData mailboxPayload) {
-            if (mailboxPayload.getDistributedData() instanceof ConfidentialMessage confidentialMessage) {
-                processConfidentialMessage(confidentialMessage)
-                        .whenComplete((result, throwable) -> {
-                            if (throwable == null) {
-                                KeyPair keyPair = keyPairService.getOrCreateKeyPair(confidentialMessage.getKeyId());
-                                dataService.ifPresent(service -> service.removeMailboxPayload(mailboxPayload, keyPair));
-                            } else {
-                                throwable.printStackTrace();
-                            }
-                        });
-            }
-        }
     }
 
     @Override
-    public void onAppendOnlyDataAdded(AppendOnlyData appendOnlyData) {
-    }
-
-    @Override
-    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+    public void onMailboxDataAdded(MailboxData mailboxData) {
+        ConfidentialMessage confidentialMessage = mailboxData.getConfidentialMessage();
+        processConfidentialMessage(confidentialMessage)
+                .whenComplete((result, throwable) -> {
+                    if (throwable == null) {
+                        KeyPair keyPair = keyPairService.getOrCreateKeyPair(confidentialMessage.getKeyId());
+                        dataService.ifPresent(service -> service.removeMailboxData(mailboxData, keyPair));
+                    } else {
+                        throwable.printStackTrace();
+                    }
+                });
     }
 
 
@@ -227,10 +219,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             return new Result(State.FAILED).setErrorMsg("We have not stored the mailboxMessage because the dataService is not present.");
         }
 
-        MailboxData mailboxPayload = new MailboxData(confidentialMessage, mailboxMessage.getMetaData());
+        MailboxData mailboxData = new MailboxData(confidentialMessage, mailboxMessage.getMetaData());
         // We do not wait for the broadcast result as that can take a while. We pack the future into our result, 
         // so clients can react on it as they wish.
-        DataService.BroadCastDataResult mailboxFuture = dataService.get().addMailboxPayload(mailboxPayload,
+        DataService.BroadCastDataResult mailboxFuture = dataService.get().addMailboxData(mailboxData,
                         senderKeyPair,
                         receiverPubKey.publicKey())
                 .join();

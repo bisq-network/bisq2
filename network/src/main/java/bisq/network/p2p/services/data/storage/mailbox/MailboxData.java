@@ -19,9 +19,9 @@ package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import com.google.common.annotations.VisibleForTesting;
+import bisq.network.p2p.services.data.storage.StorageData;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 
 // We want to have fine-grained control over mailbox messages.
@@ -31,14 +31,29 @@ import lombok.ToString;
 /**
  * Holds the ConfidentialMessage and metaData providing information about the message type.
  */
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 @ToString
-public class MailboxData extends AuthenticatedData {
+public class MailboxData implements StorageData {
+    @Getter
+    protected final ConfidentialMessage confidentialMessage;
     private final MetaData metaData;
 
     public MailboxData(ConfidentialMessage confidentialMessage, MetaData metaData) {
-        super(confidentialMessage);
+        this.confidentialMessage = confidentialMessage;
         this.metaData = metaData;
+    }
+
+
+    public bisq.network.protobuf.MailboxData toProto() {
+        return bisq.network.protobuf.MailboxData.newBuilder()
+                .setConfidentialMessage(confidentialMessage.toNetworkMessageProto().getConfidentialMessage())
+                .setMetaData(metaData.toProto())
+                .build();
+    }
+
+    public static MailboxData fromProto(bisq.network.protobuf.MailboxData proto) {
+        return new MailboxData(ConfidentialMessage.fromProto(proto.getConfidentialMessage()),
+                MetaData.fromProto(proto.getMetaData()));
     }
 
     @Override
@@ -48,11 +63,6 @@ public class MailboxData extends AuthenticatedData {
 
     @Override
     public boolean isDataInvalid() {
-        return distributedData.isDataInvalid();
-    }
-
-    @VisibleForTesting
-    ConfidentialMessage getConfidentialMessage() {
-        return (ConfidentialMessage) distributedData;
+        return false;
     }
 }

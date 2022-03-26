@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.services.data.storage;
 
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -27,7 +26,7 @@ public class Result {
     private final boolean success;
     private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
             dataInvalid, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure;
-    private AuthenticatedData removedData;
+    private StorageData removedData;
 
     public Result(boolean success) {
         this.success = success;
@@ -40,7 +39,7 @@ public class Result {
 
     public Result publicKeyHashInvalid() {
         publicKeyHashInvalid = true;
-        isSevereFailure =true;
+        isSevereFailure = true;
         return this;
     }
 
@@ -60,7 +59,8 @@ public class Result {
     }
 
     public Result signatureInvalid() {
-        signatureInvalid = true;   isSevereFailure =true;
+        signatureInvalid = true;
+        isSevereFailure = true;
         return this;
     }
 
@@ -70,7 +70,8 @@ public class Result {
     }
 
     public Result dataInvalid() {
-        dataInvalid = true;   isSevereFailure =true;
+        dataInvalid = true;
+        isSevereFailure = true;
         return this;
     }
 
@@ -85,7 +86,7 @@ public class Result {
         return this;
     }
 
-    public Result removedData(AuthenticatedData removedData) {
+    public Result removedData(StorageData removedData) {
         this.removedData = removedData;
         return this;
     }

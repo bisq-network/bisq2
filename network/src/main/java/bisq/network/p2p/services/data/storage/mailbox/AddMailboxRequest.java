@@ -18,9 +18,11 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.network.p2p.services.data.AddDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
+import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
+import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,11 +30,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.util.Arrays;
+import java.util.Optional;
 
 @Slf4j
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 @Getter
-public class AddMailboxRequest extends AddAuthenticatedDataRequest implements MailboxRequest, AddDataRequest {
+public class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     public static AddMailboxRequest from(MailboxData mailboxData,
                                          KeyPair senderKeyPair,
@@ -44,23 +48,112 @@ public class AddMailboxRequest extends AddAuthenticatedDataRequest implements Ma
         MailboxSequentialData mailboxSequentialData = new MailboxSequentialData(mailboxData,
                 senderPublicKeyHash,
                 receiverPublicKeyHash,
-                receiverPublicKey);
+                receiverPublicKey,
+                1);
         byte[] serialized = mailboxSequentialData.serialize();
         byte[] signature = SignatureUtil.sign(serialized, senderKeyPair.getPrivate());
         return new AddMailboxRequest(mailboxSequentialData, signature, senderPublicKey);
     }
 
-    public AddMailboxRequest(MailboxSequentialData mailboxData, byte[] signature, PublicKey senderPublicKey) {
-        super(mailboxData, signature, senderPublicKey);
+    private final MailboxSequentialData mailboxSequentialData;
+    private final byte[] signature;
+    private final byte[] senderPublicKeyBytes;
+    private final PublicKey senderPublicKey;
+
+    public AddMailboxRequest(MailboxSequentialData mailboxSequentialData,
+                             byte[] signature,
+                             PublicKey senderPublicKey) {
+        this(mailboxSequentialData, signature, senderPublicKey.getEncoded(), senderPublicKey);
     }
+
+    private AddMailboxRequest(MailboxSequentialData mailboxSequentialData,
+                              byte[] signature,
+                              byte[] senderPublicKeyBytes,
+                              PublicKey senderPublicKey) {
+        this.mailboxSequentialData = mailboxSequentialData;
+        this.signature = signature;
+        this.senderPublicKeyBytes = senderPublicKeyBytes;
+        this.senderPublicKey = senderPublicKey;
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+        return getNetworkMessageBuilder().setAddMailboxRequest(
+                        bisq.network.protobuf.AddMailboxRequest.newBuilder()
+                                .setMailboxSequentialData(mailboxSequentialData.toProto())
+                                .setSignature(ByteString.copyFrom(signature))
+                                .setSenderPublicKeyBytes(ByteString.copyFrom(senderPublicKeyBytes)))
+                .build();
+    }
+
+    public static AddMailboxRequest fromProto(bisq.network.protobuf.AddMailboxRequest proto) {
+        byte[] senderPublicKeyBytes = proto.getSenderPublicKeyBytes().toByteArray();
+        try {
+            PublicKey senderPublicKey = KeyGeneration.generatePublic(senderPublicKeyBytes);
+            return new AddMailboxRequest(
+                    MailboxSequentialData.fromProto(proto.getMailboxSequentialData()),
+                    proto.getSignature().toByteArray(),
+                    senderPublicKeyBytes,
+                    senderPublicKey
+            );
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean isSignatureInvalid() {
+        try {
+            return !SignatureUtil.verify(mailboxSequentialData.serialize(), signature, getOwnerPublicKey());
+        } catch (Exception e) {
+            log.warn(e.toString(), e);
+            return true;
+        }
+    }
+
+    public boolean isPublicKeyInvalid() {
+        try {
+            return !Arrays.equals(mailboxSequentialData.getSenderPublicKeyHash(),
+                    DigestUtil.hash(senderPublicKeyBytes));
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    public PublicKey getOwnerPublicKey() {
+        return Optional.ofNullable(senderPublicKey).orElseGet(() -> {
+            try {
+                return KeyGeneration.generatePublic(senderPublicKeyBytes);
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public String getFileName() {
+        return mailboxSequentialData.getMailboxData().getMetaData().getFileName();
+    }
+
+    @Override
+    public int getSequenceNumber() {
+        return mailboxSequentialData.getSequenceNumber();
+    }
+
+    @Override
+    public long getCreated() {
+        return mailboxSequentialData.getCreated();
+    }
+
+    public MetaData getMetaData() {
+        return mailboxSequentialData.getMailboxData().getMetaData();
+    }
+
 
     @Override
     public String toString() {
         return "AddMailboxDataRequest{} " + super.toString();
     }
 
-    public MailboxSequentialData getMailboxSequentialData() {
-        return (MailboxSequentialData) authenticatedSequentialData;
-    }
 
 }

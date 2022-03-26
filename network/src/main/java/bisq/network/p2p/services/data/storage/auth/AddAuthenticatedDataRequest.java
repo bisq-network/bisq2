@@ -116,11 +116,6 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
 
     public boolean isSignatureInvalid() {
         try {
-         /*   log.error("authenticatedData={}", authenticatedData);
-            log.error("authenticatedData.serialize()={}", Hex.encode(authenticatedData.serialize()));
-            log.error("signature={}", Hex.encode(signature));
-            log.error("getOwnerPublicKey()={}", Hex.encode(getOwnerPublicKey().getEncoded()));*/
-
             return !SignatureUtil.verify(authenticatedSequentialData.serialize(), signature, getOwnerPublicKey());
         } catch (Exception e) {
             log.warn(e.toString(), e);
