@@ -19,13 +19,13 @@ package bisq.network.p2p.services.peergroup;
 
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.node.*;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
+import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Stream;
 
@@ -33,7 +33,7 @@ import java.util.stream.Stream;
  * Maintains different collections of peers and connections
  */
 @Slf4j
-public class PeerGroup {
+public class PeerGroup implements PersistenceClient<PersistedPeersStore>  {
 
     @Getter
     public static class Config {
@@ -68,15 +68,17 @@ public class PeerGroup {
     private final BanList banList;
     @Getter
     private final Set<Peer> reportedPeers = new CopyOnWriteArraySet<>();
-    //todo persist
     @Getter
-    private final Set<Peer> persistedPeers = new CopyOnWriteArraySet<>();
+    private final PersistedPeersStore persistableStore = new PersistedPeersStore();
+    @Getter
+    private final Persistence<PersistedPeersStore> persistence;
 
-    public PeerGroup(Node node, Config config, List<Address> seedNodeAddresses, BanList banList) {
+    public PeerGroup(Node node, Config config, List<Address> seedNodeAddresses, BanList banList, PersistenceService persistenceService) {
         this.node = node;
         this.config = config;
         this.seedNodeAddresses = seedNodeAddresses;
         this.banList = banList;
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,14 +87,29 @@ public class PeerGroup {
 
     public void addReportedPeers(Set<Peer> peers) {
         reportedPeers.addAll(peers);
+        addPersistedPeers(peers); // New reported peers are also persisted
     }
 
     public void removeReportedPeers(Collection<Peer> peers) {
         reportedPeers.removeAll(peers);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Persisted peers
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addPersistedPeers(Set<Peer> peers) {
+        persistableStore.addAll(peers);
+        persist();
+    }
+
     public void removePersistedPeers(Collection<Peer> peers) {
-        persistedPeers.removeAll(peers);
+        persistableStore.removeAll(peers);
+        persist();
+    }
+
+    public Set<Peer> getPersistedPeers() {
+        return persistableStore.getPersistedPeers();
     }
 
 

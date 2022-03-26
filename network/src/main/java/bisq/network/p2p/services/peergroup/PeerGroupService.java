@@ -68,7 +68,7 @@ public class PeerGroupService {
     public AtomicReference<PeerGroupService.State> state = new AtomicReference<>(PeerGroupService.State.NEW);
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    public static record Config(PeerGroup.Config peerGroupConfig,
+    public record Config(PeerGroup.Config peerGroupConfig,
                                 PeerExchangeStrategy.Config peerExchangeConfig,
                                 KeepAliveService.Config keepAliveServiceConfig,
                                 long bootstrapTime,
@@ -101,7 +101,7 @@ public class PeerGroupService {
         this.node = node;
         this.banList = banList;
         this.config = config;
-        peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, banList);
+        peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, banList, persistenceService);
         peerExchangeService = new PeerExchangeService(node, new PeerExchangeStrategy(peerGroup, config.peerExchangeConfig()));
         keepAliveService = new KeepAliveService(node, peerGroup, config.keepAliveServiceConfig());
         addressValidationService = new AddressValidationService(node, banList);
