@@ -1,0 +1,130 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+
+package account;
+option java_package = "bisq.account.protobuf";
+option java_multiple_files = true;
+import "common.proto";
+
+// todo move over account domain from bisq1 and adjust it where needed
+
+message SettlementMethod {
+  
+}
+message Account {
+  string id = 1;
+  uint64 creationDate = 2;
+  string accountName = 3;
+  AccountPayload accountPayload = 4;
+  SettlementMethod settlementMethod = 5;
+  repeated common.TradeCurrency tradeCurrencies = 6;
+  common.TradeCurrency selectedTradeCurrency = 7;
+}
+
+
+message AccountPayload {
+  string id = 1;
+  string settlementMethodId = 2;
+  oneof message {
+    AliPayAccountPayload ali_pay_account_payload = 4;
+   /* ChaseQuickPayAccountPayload chase_quick_pay_account_payload = 5;
+    ClearXchangeAccountPayload clear_xchange_account_payload = 6;
+    CountryBasedPaymentAccountPayload country_based_payment_account_payload = 7;
+    CryptoCurrencyAccountPayload crypto_currency_account_payload = 8;
+    FasterPaymentsAccountPayload faster_payments_account_payload = 9;
+    InteracETransferAccountPayload interac_e_transfer_account_payload = 10;
+    OKPayAccountPayload o_k_pay_account_payload = 11 [deprecated = true];
+    PerfectMoneyAccountPayload perfect_money_account_payload = 12;
+    SwishAccountPayload swish_account_payload = 13;
+    USPostalMoneyOrderAccountPayload u_s_postal_money_order_account_payload = 14;
+    UpholdAccountPayload uphold_account_payload = 16;
+    CashAppAccountPayload cash_app_account_payload = 17 [deprecated = true];
+    MoneyBeamAccountPayload money_beam_account_payload = 18;
+    VenmoAccountPayload venmo_account_payload = 19 [deprecated = true];
+    PopmoneyAccountPayload popmoney_account_payload = 20;
+    RevolutAccountPayload revolut_account_payload = 21;
+    WeChatPayAccountPayload we_chat_pay_account_payload = 22;
+    MoneyGramAccountPayload money_gram_account_payload = 23;
+    HalCashAccountPayload hal_cash_account_payload = 24;
+    PromptPayAccountPayload prompt_pay_account_payload = 25;
+    AdvancedCashAccountPayload advanced_cash_account_payload = 26;
+    InstantCryptoCurrencyAccountPayload instant_crypto_currency_account_payload = 27;
+    JapanBankAccountPayload japan_bank_account_payload = 28;
+    TransferwiseAccountPayload Transferwise_account_payload = 29;
+    AustraliaPayidPayload australia_payid_payload = 30;
+    AmazonGiftCardAccountPayload amazon_gift_card_account_payload = 31;
+    CashByMailAccountPayload cash_by_mail_account_payload = 32;
+    CapitualAccountPayload capitual_account_payload = 33;
+    PayseraAccountPayload Paysera_account_payload = 34;
+    PaxumAccountPayload Paxum_account_payload = 35;
+    SwiftAccountPayload swift_account_payload = 36;
+    CelPayAccountPayload cel_pay_account_payload = 37;
+    MoneseAccountPayload monese_account_payload = 38;
+    VerseAccountPayload verse_account_payload = 39;
+    BsqSwapAccountPayload bsq_swap_account_payload = 40;*/
+  }
+  map<string, string> exclude_from_json_data = 15;
+}
+message AliPayAccountPayload {
+  string account_nr = 1;
+}
+
+
+message CountryBasedPaymentAccountPayload {
+  string countryCode = 1;
+  oneof message {
+    BankAccountPayload bank_account_payload = 2;
+   /* CashDepositAccountPayload cash_deposit_account_payload = 3;
+    SepaAccountPayload sepa_account_payload = 4;
+    WesternUnionAccountPayload western_union_account_payload = 5;
+    SepaInstantAccountPayload sepa_instant_account_payload = 6;
+    F2FAccountPayload f2f_account_payload = 7;
+    UpiAccountPayload upi_account_payload = 9;
+    PaytmAccountPayload paytm_account_payload = 10;
+    IfscBasedAccountPayload ifsc_based_account_payload = 11;
+    NequiAccountPayload nequi_account_payload = 12;
+    BizumAccountPayload bizum_account_payload = 13;
+    PixAccountPayload pix_account_payload = 14;
+    SatispayAccountPayload satispay_account_payload = 15;
+    StrikeAccountPayload strike_account_payload = 16;
+    TikkieAccountPayload tikkie_account_payload = 17;
+    TransferwiseUsdAccountPayload transferwise_usd_account_payload = 18;*/
+  }
+}
+
+message BankAccountPayload {
+  string holder_name = 1;
+  string bank_name = 2;
+  string bank_id = 3;
+  string branch_id = 4;
+  string account_nr = 5;
+  string account_type = 6;
+  string holder_tax_id = 7;
+  string email = 8 [deprecated = true];
+  oneof message {
+    NationalBankAccountPayload national_bank_account_payload = 9;
+   /* SameBankAccountPayload same_bank_accont_payload = 10;
+    SpecificBanksAccountPayload specific_banks_account_payload = 11;
+    AchTransferAccountPayload ach_transfer_account_payload = 13;
+    DomesticWireTransferAccountPayload domestic_wire_transfer_account_payload = 14;*/
+  }
+  string national_account_id = 12;
+}
+message NationalBankAccountPayload {
+}

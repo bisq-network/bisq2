@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+// todo move over account domain from bisq1 and adjust it where needed
 
 @Getter
 @Slf4j
