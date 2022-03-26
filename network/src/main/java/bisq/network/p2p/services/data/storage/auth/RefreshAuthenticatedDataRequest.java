@@ -18,12 +18,13 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
-import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.protobuf.NetworkMessage;
+import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.security.DigestUtil;
+import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
+import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,14 +37,19 @@ import java.util.Arrays;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public class RefreshRequest implements BroadcastMessage {
-
-    public static RefreshRequest from(AuthenticatedDataStorageService store, StorageData storageData, KeyPair keyPair)
+public class RefreshAuthenticatedDataRequest implements BroadcastMessage {
+    public static RefreshAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
+                                                       StorageData storageData,
+                                                       KeyPair keyPair)
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(storageData.serialize());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
-        return new RefreshRequest(storageData.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
+        return new RefreshAuthenticatedDataRequest(storageData.getMetaData(),
+                hash,
+                keyPair.getPublic(),
+                newSequenceNumber,
+                signature);
     }
 
     protected final MetaData metaData;
@@ -53,11 +59,11 @@ public class RefreshRequest implements BroadcastMessage {
     protected final int sequenceNumber;
     protected final byte[] signature;         // 47 bytes
 
-    public RefreshRequest(MetaData metaData,
-                          byte[] hash,
-                          PublicKey ownerPublicKey,
-                          int sequenceNumber,
-                          byte[] signature) {
+    public RefreshAuthenticatedDataRequest(MetaData metaData,
+                                           byte[] hash,
+                                           PublicKey ownerPublicKey,
+                                           int sequenceNumber,
+                                           byte[] signature) {
         this(metaData,
                 hash,
                 ownerPublicKey.getEncoded(),
@@ -66,12 +72,12 @@ public class RefreshRequest implements BroadcastMessage {
                 signature);
     }
 
-    protected RefreshRequest(MetaData metaData,
-                             byte[] hash,
-                             byte[] ownerPublicKeyBytes,
-                             PublicKey ownerPublicKey,
-                             int sequenceNumber,
-                             byte[] signature) {
+    protected RefreshAuthenticatedDataRequest(MetaData metaData,
+                                              byte[] hash,
+                                              byte[] ownerPublicKeyBytes,
+                                              PublicKey ownerPublicKey,
+                                              int sequenceNumber,
+                                              byte[] signature) {
         this.metaData = metaData;
         this.hash = hash;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
@@ -80,6 +86,35 @@ public class RefreshRequest implements BroadcastMessage {
         this.signature = signature;
     }
 
+    @Override
+    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+        return getNetworkMessageBuilder().setRefreshAuthenticatedDataRequest(
+                        bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
+                                .setMetaData(metaData.toProto())
+                                .setHash(ByteString.copyFrom(hash))
+                                .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
+                                .setSequenceNumber(sequenceNumber)
+                                .setSignature(ByteString.copyFrom(signature)))
+                .build();
+    }
+
+    public static RefreshAuthenticatedDataRequest fromProto(bisq.network.protobuf.RefreshAuthenticatedDataRequest proto) {
+        byte[] ownerPublicKeyBytes = proto.getOwnerPublicKeyBytes().toByteArray();
+        try {
+            PublicKey ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
+            return new RefreshAuthenticatedDataRequest(
+                    MetaData.fromProto(proto.getMetaData()),
+                    proto.getHash().toByteArray(),
+                    ownerPublicKeyBytes,
+                    ownerPublicKey,
+                    proto.getSequenceNumber(),
+                    proto.getSignature().toByteArray()
+            );
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
 
     public boolean isSignatureInvalid() {
         try {
@@ -103,17 +138,12 @@ public class RefreshRequest implements BroadcastMessage {
 
     @Override
     public String toString() {
-        return "RefreshProtectedDataRequest{" +
+        return "RefreshAuthenticatedDataRequest{" +
                 "\r\n     metaData=" + metaData +
                 ",\r\n     hash=" + Hex.encode(hash) +
                 ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
                 ",\r\n     sequenceNumber=" + sequenceNumber +
                 ",\r\n     signature=" + Hex.encode(signature) +
                 "\r\n}";
-    }
-
-    @Override
-    public NetworkMessage toNetworkMessageProto() {
-        return null;
     }
 }

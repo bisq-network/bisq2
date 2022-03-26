@@ -30,6 +30,7 @@ public interface Proto extends Serializable {
    /* default Message toProto() {
         return null;
     }*/
+   // Message toProto();
 
     //todo remove
     default byte[] serialize() {

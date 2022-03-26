@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -66,7 +65,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         byte[] hash = DigestUtil.hash(mailboxData.serialize());
         ByteArray byteArray = new ByteArray(hash);
         MailboxRequest requestFromMap;
-        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (map.size() > MAX_MAP_SIZE) {
                 return new Result(false).maxMapSizeReached();
@@ -113,7 +112,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     public Result remove(RemoveMailboxRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
-        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         MailboxRequest requestFromMap = map.get(byteArray);
         MailboxSequentialData sequentialSataFromMap;
         synchronized (mapAccessLock) {
@@ -181,7 +180,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     int getSequenceNumber(byte[] hash) {
         ByteArray byteArray = new ByteArray(hash);
         int sequenceNumber = 0;
-        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (map.containsKey(byteArray)) {
                 sequenceNumber = map.get(byteArray).getSequenceNumber();
@@ -191,7 +190,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
     boolean contains(byte[] hash) {
-        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             return map.containsKey(new ByteArray(hash));
         }
@@ -215,7 +214,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             map.clear();
             map.putAll(pruned);

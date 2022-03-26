@@ -32,6 +32,8 @@ import java.util.Set;
 
 /**
  * Data which is signed by an authorized key (e.g. Filter, Alert, DisputeAgent...)
+ * TODO will require prob more work with protobuf support
+ * It should be extended by an external 
  */
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
@@ -43,11 +45,44 @@ public abstract class AuthorizedData extends AuthenticatedData {
     transient private final PublicKey authorizedPublicKey;
 
     public AuthorizedData(DistributedData distributedData, byte[] signature, PublicKey authorizedPublicKey) {
+        this(distributedData, signature, authorizedPublicKey, authorizedPublicKey.getEncoded());
+    }
+
+    private AuthorizedData(DistributedData distributedData,
+                           byte[] signature,
+                           PublicKey authorizedPublicKey,
+                           byte[] authorizedPublicKeyBytes) {
         super(distributedData);
         this.signature = signature;
         this.authorizedPublicKey = authorizedPublicKey;
-        authorizedPublicKeyBytes = authorizedPublicKey.getEncoded();
+        this.authorizedPublicKeyBytes = authorizedPublicKeyBytes;
     }
+
+   /* public bisq.network.protobuf.AuthorizedData toAuthorizedData() {
+        return bisq.network.protobuf.AuthorizedData.newBuilder()
+                .setDistributedData(distributedData.toAny())
+                .setSignature(ByteString.copyFrom(signature))
+                .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes))
+                .build();
+    }*/
+
+    // Need to be implemented in concrete class (external to network)
+   /* public static AuthorizedData fromProto(bisq.network.protobuf.AuthorizedData proto) {
+        byte[] authorizedPublicKeyBytes = proto.getAuthorizedPublicKeyBytes().toByteArray();
+        try {
+            PublicKey authorizedPublicKey = KeyGeneration.generatePublic(authorizedPublicKeyBytes);
+            AuthorizedData authorizedData = new AuthorizedData(
+                    DistributedData.resolve(proto.getDistributedData()),
+                    proto.getSignature().toByteArray(),
+                    authorizedPublicKey,
+                    authorizedPublicKeyBytes
+            );
+            return authorizedData;
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }*/
 
     @Override
     public boolean isDataInvalid() {

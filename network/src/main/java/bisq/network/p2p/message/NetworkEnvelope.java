@@ -22,6 +22,7 @@ import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Outside data structure to be sent over the wire.
@@ -29,6 +30,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 @Getter
+@Slf4j
 public class NetworkEnvelope implements Proto {
     public static final int VERSION = 1;
 
@@ -42,7 +44,6 @@ public class NetworkEnvelope implements Proto {
         this.networkMessage = networkMessage;
     }
 
-
     public bisq.network.protobuf.NetworkEnvelope toProto() {
         return bisq.network.protobuf.NetworkEnvelope.newBuilder()
                 .setVersion(version)
@@ -52,28 +53,8 @@ public class NetworkEnvelope implements Proto {
     }
 
     public static NetworkEnvelope fromProto(bisq.network.protobuf.NetworkEnvelope proto) {
-        return new NetworkEnvelope(proto.getVersion(), 
+        return new NetworkEnvelope(proto.getVersion(),
                 AuthorizationToken.fromProto(proto.getAuthorizationToken()),
-                NetworkMessage.resolveNetworkMessage(proto.getNetworkMessage()));
+                NetworkMessage.resolveNetworkMessage( proto.getNetworkMessage()));
     }
-
-   /* public static NetworkEnvelope resolveSubTypes(bisq.network.protobuf.NetworkEnvelope networkEnvelope) {
-        switch (networkEnvelope.getMessageCase()) {
-            case AUTHORIZEDMESSAGE -> {
-                return AuthorizedMessage.fromProto(networkEnvelope);
-            }
-            case CONNECTIONHANDSHAKEREQUEST -> {
-                return ConnectionHandshake.Request.fromProto(networkEnvelope);
-            }
-            case CONNECTIONHANDSHAKERESPONSE -> {
-                return ConnectionHandshake.Response.fromProto(networkEnvelope);
-            }
-            case MESSAGE_NOT_SET -> {
-                throw new RuntimeException("Could not resolve message case. networkEnvelope.getMessageCase()=" + networkEnvelope.getMessageCase());
-            }
-        }
-        throw new RuntimeException("Could not resolve message case. networkEnvelope.getMessageCase()=" + networkEnvelope.getMessageCase());
-    }*/
-
-
 }

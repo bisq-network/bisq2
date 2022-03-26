@@ -19,10 +19,12 @@ package bisq.network.p2p.message;
 
 import bisq.common.proto.Proto;
 import bisq.network.p2p.node.CloseConnectionMessage;
+import bisq.network.p2p.node.ConnectionHandshake;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.inventory.InventoryRequest;
 import bisq.network.p2p.services.data.inventory.InventoryResponse;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
@@ -48,9 +50,12 @@ public interface NetworkMessage extends Proto {
 
     static NetworkMessage resolveNetworkMessage(bisq.network.protobuf.NetworkMessage networkMessage) {
         switch (networkMessage.getMessageCase()) {
-
-        }
-        switch (networkMessage.getMessageCase()) {
+            case CONNECTIONHANDSHAKEREQUEST -> {
+                return  ConnectionHandshake.Request.fromProto(networkMessage.getConnectionHandshakeRequest());
+            }
+            case CONNECTIONHANDSHAKERESPONSE -> {
+                return  ConnectionHandshake.Response.fromProto(networkMessage.getConnectionHandshakeResponse());
+            }
             case CLOSECONNECTIONMESSAGE -> {
                 return CloseConnectionMessage.fromProto(networkMessage.getCloseConnectionMessage());
             }
@@ -68,6 +73,9 @@ public interface NetworkMessage extends Proto {
             }
             case REMOVEAUTHENTICATEDDATAREQUEST -> {
                 return RemoveAuthenticatedDataRequest.fromProto(networkMessage.getRemoveAuthenticatedDataRequest());
+            }
+            case REFRESHAUTHENTICATEDDATAREQUEST -> {
+                return RefreshAuthenticatedDataRequest.fromProto(networkMessage.getRefreshAuthenticatedDataRequest());
             }
             case ADDMAILBOXREQUEST -> {
                 return AddMailboxRequest.fromProto(networkMessage.getAddMailboxRequest());
@@ -95,6 +103,10 @@ public interface NetworkMessage extends Proto {
             }
             case MESSAGE_NOT_SET -> {
                 throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + networkMessage.getMessageCase());
+            }
+            default -> {
+                //todo
+                NetworkMessageResolver.resolve(Any.pack(networkMessage));
             }
         }
         throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + networkMessage.getMessageCase());

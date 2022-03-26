@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.inventory;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 
 public record InventoryResponse(Inventory inventory, int requestNonce) implements BroadcastMessage {
+    @Override
     public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
         return getNetworkMessageBuilder().setInventoryResponse(
                         bisq.network.protobuf.InventoryResponse.newBuilder()

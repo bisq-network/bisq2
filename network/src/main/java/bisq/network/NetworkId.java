@@ -53,6 +53,7 @@ public class NetworkId implements Proto {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protobuffer
     ///////////////////////////////////////////////////////////////////////////////////////////
+
     public bisq.network.protobuf.NetworkId toProto() {
         List<bisq.network.protobuf.AddressTransportTypeTuple> tuple = addressByNetworkType.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())

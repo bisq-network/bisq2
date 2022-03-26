@@ -82,8 +82,8 @@ public class AuthorizedDataStorageServiceTest {
         assertEquals(payload.getDistributedData(), distributedData);
 
         // refresh
-        RefreshRequest refreshRequest = RefreshRequest.from(store, authorizedPayload, keyPair);
-        Result refreshResult = store.refresh(refreshRequest);
+        RefreshAuthenticatedDataRequest refreshAuthenticatedDataRequest = RefreshAuthenticatedDataRequest.from(store, authorizedPayload, keyPair);
+        Result refreshResult = store.refresh(refreshAuthenticatedDataRequest);
         assertTrue(refreshResult.isSuccess());
 
         addRequestFromMap = (AddAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);

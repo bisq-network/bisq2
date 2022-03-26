@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -111,7 +110,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             if (request.isSignatureInvalid()) {
-               
+
                 log.warn("Signature is invalid at add. request={}", request);
                 return new Result(false).signatureInvalid();
             }
@@ -185,10 +184,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         return new Result(true).removedData(authenticatedDataFromMap);
     }
 
-    public Result refresh(RefreshRequest request) {
+    public Result refresh(RefreshAuthenticatedDataRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
         AddAuthenticatedDataRequest updatedRequest;
-        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
+        Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             AuthenticatedDataRequest requestFromMap = map.get(byteArray);
 
@@ -251,7 +250,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public int getSequenceNumber(byte[] hash) {
         ByteArray byteArray = new ByteArray(hash);
         int sequenceNumber = 0;
-        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
+        Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (map.containsKey(byteArray)) {
                 sequenceNumber = map.get(byteArray).getSequenceNumber();
@@ -278,7 +277,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
+        Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             map.clear();
             map.putAll(pruned);

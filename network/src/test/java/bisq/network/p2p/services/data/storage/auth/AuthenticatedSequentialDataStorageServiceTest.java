@@ -212,8 +212,8 @@ public class AuthenticatedSequentialDataStorageServiceTest {
         assertEquals(initialMapSize, inventory.entries().size());*/
 
         // refresh
-        RefreshRequest refreshRequest = RefreshRequest.from(store, data, keyPair);
-        Result refreshResult = store.refresh(refreshRequest);
+        RefreshAuthenticatedDataRequest refreshAuthenticatedDataRequest = RefreshAuthenticatedDataRequest.from(store, data, keyPair);
+        Result refreshResult = store.refresh(refreshAuthenticatedDataRequest);
         assertTrue(refreshResult.isSuccess());
 
         addRequestFromMap = (AddAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);
@@ -229,7 +229,7 @@ public class AuthenticatedSequentialDataStorageServiceTest {
         assertEquals(initialSeqNum + 3, removeAuthenticatedDataRequestFromMap.getSequenceNumber());
 
         // refresh on removed fails
-        RefreshRequest refreshAfterRemoveRequest = RefreshRequest.from(store, data, keyPair);
+        RefreshAuthenticatedDataRequest refreshAfterRemoveRequest = RefreshAuthenticatedDataRequest.from(store, data, keyPair);
         Result refreshAfterRemoveResult = store.refresh(refreshAfterRemoveRequest);
         assertFalse(refreshAfterRemoveResult.isSuccess());
 

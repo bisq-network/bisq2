@@ -77,6 +77,7 @@ public class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {
         this.created = created;
     }
 
+    @Override
     public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
         return getNetworkMessageBuilder().setRemoveMailboxRequest(
                         bisq.network.protobuf.RemoveMailboxRequest.newBuilder()

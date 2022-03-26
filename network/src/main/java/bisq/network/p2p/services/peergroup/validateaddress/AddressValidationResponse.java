@@ -20,6 +20,7 @@ package bisq.network.p2p.services.peergroup.validateaddress;
 import bisq.network.p2p.message.NetworkMessage;
 
 public record AddressValidationResponse(int requestNonce) implements NetworkMessage {
+    @Override
     public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
         return getNetworkMessageBuilder().setAddressValidationResponse(
                         bisq.network.protobuf.AddressValidationResponse.newBuilder()

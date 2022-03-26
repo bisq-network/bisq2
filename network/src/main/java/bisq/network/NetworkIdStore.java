@@ -23,6 +23,7 @@ import lombok.Getter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+//todo implement proto support after persistence is done
 public class NetworkIdStore implements PersistableStore<NetworkIdStore> {
     @Getter
     private final Map<String, NetworkId> networkIdByNodeId = new ConcurrentHashMap<>();

@@ -25,8 +25,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static bisq.network.p2p.services.data.storage.StorageService.StoreType.APPEND_ONLY_DATA_STORE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,7 +46,7 @@ public class AppendOnlyDataStorageServiceTest {
         AppendOnlyDataStorageService store = new AppendOnlyDataStorageService(persistenceService, APPEND_ONLY_DATA_STORE.getStoreName(),
                 data.getMetaData().getFileName());
         store.readPersisted().join();
-        ConcurrentHashMap<ByteArray, AddAppendOnlyDataRequest> map = store.getPersistableStore().getClone().getMap();
+        Map<ByteArray, AddAppendOnlyDataRequest> map = store.getPersistableStore().getClone().getMap();
         int previous = map.size();
         int iterations = 10;
         for (int i = 0; i < iterations; i++) {

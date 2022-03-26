@@ -5,7 +5,9 @@ option java_multiple_files = true;
 import "security.proto";
 import "google/protobuf/any.proto";
 
-// Data objects
+////////////////////////////////////////////////////////////////////
+// Data
+////////////////////////////////////////////////////////////////////
 
 message Address {
   string host = 1;
@@ -46,9 +48,6 @@ message Inventory {
   uint32 numDropped = 2;
 }
 
-message DataRequest {
-}
- 
 message Peer {
   Capability capability = 1;
   Load load = 2;
@@ -56,9 +55,9 @@ message Peer {
   uint64 created = 4;
 }
 
-// EnvelopeMessages
-
-message AuthorizationToken {}
+////////////////////////////////////////////////////////////////////
+// NetworkMessages
+////////////////////////////////////////////////////////////////////
 
 message ConnectionHandshake {
   message Request {
@@ -71,42 +70,31 @@ message ConnectionHandshake {
   }
 }
 
-
-
-
-
-// NetworkMessage
-
-message NetworkMessage {
-  oneof message {
-    ConnectionHandshake.Request connectionHandshakeRequest = 1;
-    ConnectionHandshake.Response connectionHandshakeResponse = 2;
-    CloseConnectionMessage closeConnectionMessage = 3;
-    ConfidentialMessage confidentialMessage = 4;
-    InventoryRequest inventoryRequest = 5;
-    InventoryResponse inventoryResponse = 6;
-    AddAuthenticatedDataRequest addAuthenticatedDataRequest = 7;
-    RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = 8;
-    AddMailboxRequest  addMailboxRequest = 9;
-    RemoveMailboxRequest removeMailboxRequest = 10;
-    PeerExchangeRequest peerExchangeRequest = 11;
-    PeerExchangeResponse peerExchangeResponse = 12;
-    Ping ping = 13;
-    Pong pong = 14;
-    AddressValidationRequest addressValidationRequest = 15;
-    AddressValidationResponse addressValidationResponse = 16;
-  }
-}
-
-message NetworkEnvelope {
-  uint32 version = 1;
-  AuthorizationToken authorizationToken = 2;
-  NetworkMessage networkMessage = 3;
-}
-
-
 message CloseConnectionMessage {
   string closeReason = 1;
+}
+
+message PeerExchangeRequest {
+  uint32 nonce = 1;
+  repeated Peer peers = 2;
+}
+message PeerExchangeResponse {
+  uint32 nonce = 1;
+  repeated Peer peers = 2;
+}
+
+message AddressValidationRequest {
+  uint32 nonce = 1;
+}
+message AddressValidationResponse {
+  uint32 requestNonce = 1;
+}
+
+message Ping {
+  uint32 nonce = 1;
+}
+message Pong {
+  uint32 requestNonce = 1;
 }
 
 message ConfidentialMessage {
@@ -118,30 +106,25 @@ message InventoryRequest {
   DataFilter dataFilter = 1;
   uint32 nonce = 2;
 }
-
 message InventoryResponse {
   Inventory inventory = 1;
   uint32 requestNonce = 2;
 }
-
 
 message MetaData {
   uint64 ttl = 1;
   uint32 maxSizeInBytes = 2;
   string fileName = 3;
 }
-
 message AuthenticatedData {
   google.protobuf.Any distributedData = 1;
 }
-
 message AuthenticatedSequentialData {
   AuthenticatedData authenticatedData = 1;
   uint32 sequenceNumber = 2;
   bytes pubKeyHash = 3;
   uint64 created = 4;
 }
-
 message AddAuthenticatedDataRequest {
   AuthenticatedSequentialData authenticatedSequentialData = 1;
   bytes signature = 2;
@@ -155,12 +138,25 @@ message RemoveAuthenticatedDataRequest {
   bytes signature = 5;
   uint64 created = 6;
 }
+message RefreshAuthenticatedDataRequest {
+  MetaData metaData = 1;
+  bytes hash = 2;
+  bytes ownerPublicKeyBytes = 3;
+  uint32 sequenceNumber = 4;
+  bytes signature = 5;
+}
+
+// todo AuthorizedData need to be extended from external class (e.g. Filter)
+/*message AuthorizedData {
+  google.protobuf.Any distributedData = 1;
+  bytes signature = 2;
+  bytes authorizedPublicKeyBytes = 3;
+}*/
 
 message MailboxData {
   ConfidentialMessage confidentialMessage = 1;
   MetaData metaData = 2;
 }
-
 message MailboxSequentialData {
   MailboxData mailboxData = 1;
   uint32 sequenceNumber = 2;
@@ -169,13 +165,11 @@ message MailboxSequentialData {
   bytes receiversPubKeyBytes = 5;
   bytes receiversPubKeyHash = 6;
 }
-
 message AddMailboxRequest {
   MailboxSequentialData mailboxSequentialData = 1;
   bytes signature = 2;
   bytes senderPublicKeyBytes = 3;
 }
-
 message RemoveMailboxRequest {
   MetaData metaData = 1;
   bytes hash = 2;
@@ -184,29 +178,64 @@ message RemoveMailboxRequest {
   uint64 created = 5;
 }
 
-message PeerExchangeRequest {
-  uint32 nonce = 1;
-  repeated Peer peers = 2;
+message AddAppendOnlyDataRequest {
+  google.protobuf.Any appendOnlyData = 1;
 }
 
-message PeerExchangeResponse {
-  uint32 nonce = 1;
-  repeated Peer peers = 2;
+
+////////////////////////////////////////////////////////////////////
+// NetworkMessage types
+////////////////////////////////////////////////////////////////////
+
+message NetworkMessage {
+  oneof message {
+    ConnectionHandshake.Request connectionHandshakeRequest = 1;
+    ConnectionHandshake.Response connectionHandshakeResponse = 2;
+
+    CloseConnectionMessage closeConnectionMessage = 3;
+
+    PeerExchangeRequest peerExchangeRequest = 4;
+    PeerExchangeResponse peerExchangeResponse = 5;
+
+    AddressValidationRequest addressValidationRequest = 6;
+    AddressValidationResponse addressValidationResponse = 7;
+
+    Ping ping = 8;
+    Pong pong = 9;
+
+    ConfidentialMessage confidentialMessage = 10;
+
+    InventoryRequest inventoryRequest = 11;
+    InventoryResponse inventoryResponse = 12;
+
+    AddAuthenticatedDataRequest addAuthenticatedDataRequest = 13;
+    RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = 14;
+    RefreshAuthenticatedDataRequest refreshAuthenticatedDataRequest = 15;
+
+    AddMailboxRequest  addMailboxRequest = 16;
+    RemoveMailboxRequest removeMailboxRequest = 17;
+
+    AddAppendOnlyDataRequest AddAppendOnlyDataRequest = 18;
+  }
 }
 
-message Ping {
-  uint32 nonce = 1;
+
+////////////////////////////////////////////////////////////////////
+// NetworkEnvelope
+////////////////////////////////////////////////////////////////////
+
+message AuthorizationToken {}
+
+message NetworkEnvelope {
+  uint32 version = 1;
+  AuthorizationToken authorizationToken = 2;
+  NetworkMessage networkMessage = 3;
 }
 
-message Pong {
-  uint32 requestNonce = 1;
+message DataStore {
+  // TODO
 }
 
-message AddressValidationRequest {
-  uint32 nonce = 1;
+message NetworkIdStore {
+  // TODO
 }
-
-message AddressValidationResponse {
-  uint32 requestNonce = 1;
-}
-   

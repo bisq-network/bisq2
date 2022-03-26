@@ -26,11 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@ToString
+//todo implement proto support after persistence is done
 @Slf4j
+@ToString
 public class DataStore<T> implements PersistableStore<DataStore<T>> {
     @Getter
-    private final ConcurrentHashMap<ByteArray, T> map = new ConcurrentHashMap<>();
+    private final Map<ByteArray, T> map = new ConcurrentHashMap<>();
 
     public DataStore() {
     }

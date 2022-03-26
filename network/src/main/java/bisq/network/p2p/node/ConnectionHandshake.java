@@ -38,7 +38,7 @@ import java.net.SocketException;
  * The server awaits the Request and sends the Response.
  */
 @Slf4j
-class ConnectionHandshake {
+public class ConnectionHandshake {
     @Getter
     private final String id = StringUtils.createUid();
     private final Socket socket;
@@ -56,6 +56,7 @@ class ConnectionHandshake {
             this.load = load;
         }
 
+        @Override
         public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
             return getNetworkMessageBuilder().setConnectionHandshakeRequest(
                             bisq.network.protobuf.ConnectionHandshake.Request.newBuilder()
@@ -64,10 +65,9 @@ class ConnectionHandshake {
                     .build();
         }
 
-        public static Request fromProto(bisq.network.protobuf.NetworkMessage proto) {
-            bisq.network.protobuf.ConnectionHandshake.Request request = proto.getConnectionHandshakeRequest();
-            return new Request(Capability.fromProto(request.getCapability()),
-                    Load.fromProto(request.getLoad()));
+        public static Request fromProto(bisq.network.protobuf.ConnectionHandshake.Request proto) {
+            return new Request(Capability.fromProto(proto.getCapability()),
+                    Load.fromProto(proto.getLoad()));
         }
     }
 
@@ -81,6 +81,7 @@ class ConnectionHandshake {
             this.load = load;
         }
 
+        @Override
         public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
             return getNetworkMessageBuilder().setConnectionHandshakeResponse(
                             bisq.network.protobuf.ConnectionHandshake.Response.newBuilder()
@@ -89,10 +90,9 @@ class ConnectionHandshake {
                     .build();
         }
 
-        public static Response fromProto(bisq.network.protobuf.NetworkMessage proto) {
-            bisq.network.protobuf.ConnectionHandshake.Response request = proto.getConnectionHandshakeResponse();
-            return new Response(Capability.fromProto(request.getCapability()),
-                    Load.fromProto(request.getLoad()));
+        public static Response fromProto(bisq.network.protobuf.ConnectionHandshake.Response proto) {
+            return new Response(Capability.fromProto(proto.getCapability()),
+                    Load.fromProto(proto.getLoad()));
         }
     }
 
@@ -121,19 +121,16 @@ class ConnectionHandshake {
             OutputStream outputStream = socket.getOutputStream();
             AuthorizationToken token = authorizationService.createToken(Request.class);
             NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, new Request(capability, myLoad));
-            log.debug("Client sends {}", requestNetworkEnvelope);
             long ts = System.currentTimeMillis();
-
-            requestNetworkEnvelope.toProto().writeDelimitedTo(outputStream);
+            bisq.network.protobuf.NetworkEnvelope requestProto = requestNetworkEnvelope.toProto();
+            requestProto.writeDelimitedTo(outputStream);
             outputStream.flush();
-
             metrics.onSent(requestNetworkEnvelope);
 
             InputStream inputStream = socket.getInputStream();
             var responseProto = bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
             NetworkEnvelope responseNetworkEnvelope = NetworkEnvelope.fromProto(responseProto);
-
-            log.debug("Client received {}", responseNetworkEnvelope);
+            
             if (responseNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
                 throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
                         responseNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
@@ -172,8 +169,8 @@ class ConnectionHandshake {
             InputStream inputStream = socket.getInputStream();
             var requestProto = bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
             NetworkEnvelope requestNetworkEnvelope = NetworkEnvelope.fromProto(requestProto);
+           
             long ts = System.currentTimeMillis();
-            log.debug("Server received {}", requestNetworkEnvelope);
             if (requestNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
                 throw new ConnectionException("Invalid version. requestEnvelop.version()=" +
                         requestNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
@@ -194,9 +191,10 @@ class ConnectionHandshake {
             OutputStream outputStream = socket.getOutputStream();
             AuthorizationToken token = authorizationService.createToken(Response.class);
             NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, new Response(capability, myLoad));
-
-            responseNetworkEnvelope.toProto().writeDelimitedTo(outputStream);
+            bisq.network.protobuf.NetworkEnvelope responseProto = responseNetworkEnvelope.toProto();
+            responseProto.writeDelimitedTo(outputStream);
             outputStream.flush();
+           
             metrics.onSent(responseNetworkEnvelope);
             metrics.addRtt(System.currentTimeMillis() - ts);
             return new Result(request.getCapability(), request.getLoad(), metrics);

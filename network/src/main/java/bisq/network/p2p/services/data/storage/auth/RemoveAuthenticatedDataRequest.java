@@ -20,7 +20,6 @@ package bisq.network.p2p.services.data.storage.auth;
 import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.protobuf.NetworkMessage;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
@@ -102,7 +101,8 @@ public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest,
         this.created = created;
     }
 
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    @Override
+    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
         return getNetworkMessageBuilder().setRemoveAuthenticatedDataRequest(
                         bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
                                 .setMetaData(metaData.toProto())
@@ -168,10 +168,5 @@ public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest,
                 ",\r\n     signature=" + Hex.encode(signature) +
                 ",\r\n     created=" + created +
                 "\r\n}";
-    }
-
-    @Override
-    public NetworkMessage toNetworkMessageProto() {
-        return null; //todo
     }
 }

@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.node.transport;
 
-import bisq.common.proto.Proto;
 import bisq.network.p2p.node.Address;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
@@ -28,7 +27,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface Transport {
-    enum Type implements Proto {
+    enum Type {
         TOR,
         I2P,
         CLEAR;
