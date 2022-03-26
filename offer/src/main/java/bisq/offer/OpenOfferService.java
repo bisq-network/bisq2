@@ -178,14 +178,14 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
 
     public CompletableFuture<BroadCastDataResult> addToNetwork(Offer offer) {
         return identityService.getOrCreateIdentity(offer.getId())
-                .thenCompose(identity -> networkService.addData(offer, identity.getNodeIdAndKeyPair()));
+                .thenCompose(identity -> networkService.addAuthenticatedData(offer, identity.getNodeIdAndKeyPair()));
     }
 
     public CompletableFuture<BroadCastDataResult> removeFromNetwork(Offer offer) {
         // We do not retire the identity as it might be still used in the chat. For a mature implementation we would
         // need to check if there is any usage still for that identity and if not retire it.
         return identityService.findActiveIdentity(offer.getId())
-                .map(identity -> networkService.removeData(offer, identity.getNodeIdAndKeyPair()))
+                .map(identity -> networkService.removeAuthenticatedData(offer, identity.getNodeIdAndKeyPair()))
                 .orElse(CompletableFuture.completedFuture(new BroadCastDataResult()));
     }
 

@@ -15,24 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.storage.auth;
+package bisq.network.p2p.services.data.storage.append;
 
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.util.concurrent.TimeUnit;
-
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 @Getter
-public class MockAuthenticatedPayload extends AuthenticatedPayload {
-    private final String offerDummy;
+public class MockAppendOnlyData implements AppendOnlyData {
+    private final String text;
     final MetaData metaData;
 
-    public MockAuthenticatedPayload(String offerDummy) {
-        super(null, null);
-        this.offerDummy = offerDummy;
-        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
+    public MockAppendOnlyData(String text) {
+        this.text = text;
+        metaData = new MetaData(251, getClass().getSimpleName());
     }
 
     @Override

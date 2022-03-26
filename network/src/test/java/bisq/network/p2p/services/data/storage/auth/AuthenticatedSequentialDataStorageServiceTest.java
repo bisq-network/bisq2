@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.data.ByteArray;
+import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.network.p2p.services.data.inventory.InventoryUtil;
 import bisq.network.p2p.services.data.storage.Result;
@@ -26,6 +27,7 @@ import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -40,7 +42,7 @@ import static bisq.network.p2p.services.data.storage.StorageService.StoreType.AU
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
-public class AuthenticatedDataStorageServiceTest {
+public class AuthenticatedSequentialDataStorageServiceTest {
     private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "bisq_StorageTest";
 
     @Getter
@@ -54,7 +56,12 @@ public class AuthenticatedDataStorageServiceTest {
         }
     }
 
-    // @Test
+    @BeforeEach
+    public void cleanup() {
+        FileUtils.deleteDirectory(appDirPath);
+    }
+
+    @Test
     public void testGetSubSet() {
         List<AuthenticatedDataRequest> map = new ArrayList<>();
         map.add(new MockDataTransaction(1, 0));
@@ -111,8 +118,51 @@ public class AuthenticatedDataStorageServiceTest {
     }
 
     @Test
+    public void testMultipleAddRemoves() throws GeneralSecurityException {
+        MockAuthenticatedTextData data = new MockAuthenticatedTextData("test" + UUID.randomUUID());
+        PersistenceService persistenceService = new PersistenceService(appDirPath);
+        AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(persistenceService,
+                AUTHENTICATED_DATA_STORE.getStoreName(),
+                data.getMetaData().getFileName());
+        store.readPersisted().join();
+        KeyPair keyPair = KeyGeneration.generateKeyPair();
+
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, data, keyPair);
+        int initialMapSize = store.getPersistableStore().getClone().getMap().size();
+        byte[] hash = DigestUtil.hash(data.serialize());
+        assertEquals(1, addRequest.getSequenceNumber());
+        Result addRequestResult = store.add(addRequest);
+        assertTrue(addRequestResult.isSuccess());
+
+        AddAuthenticatedDataRequest addRequest2 = AddAuthenticatedDataRequest.from(store, data, keyPair);
+        byte[] hash2 = DigestUtil.hash(data.serialize());
+        Result addRequestResult2 = store.add(addRequest2);
+        assertEquals(2, addRequest2.getSequenceNumber());
+        assertTrue(addRequestResult2.isSuccess());  // we got replaced our add request with the updated seq nr
+
+        RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = RemoveAuthenticatedDataRequest.from(store, data, keyPair);
+        Result removeRequestResult = store.remove(removeAuthenticatedDataRequest);
+        assertTrue(removeRequestResult.isSuccess());
+        // we got replaced the add request with the remove request and seq nr 3
+        assertEquals(3, removeAuthenticatedDataRequest.getSequenceNumber());
+
+        // Remove with increased seq nr. should 
+        removeAuthenticatedDataRequest = RemoveAuthenticatedDataRequest.from(store, data, keyPair);
+        removeRequestResult = store.remove(removeAuthenticatedDataRequest);
+        assertEquals(4, removeAuthenticatedDataRequest.getSequenceNumber());
+        // We return in that case as data has not been removed (only seq nr updated)
+        assertFalse(removeRequestResult.isSuccess());
+
+        AddAuthenticatedDataRequest addRequest4 = AddAuthenticatedDataRequest.from(store, data, keyPair);
+        Result addRequestResult4 = store.add(addRequest4);
+        // we got replaced the remove request with the add request and seq nr 4
+        assertEquals(5, addRequest4.getSequenceNumber());
+        assertTrue(addRequestResult4.isSuccess());  // we got replaced our add request with the updated seq nr
+    }
+
+    @Test
     public void testAddAndRemove() throws GeneralSecurityException, IOException {
-        MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test" + UUID.randomUUID());
+        MockAuthenticatedTextData data = new MockAuthenticatedTextData("test" + UUID.randomUUID());
         PersistenceService persistenceService = new PersistenceService(appDirPath);
         AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(persistenceService,
                 AUTHENTICATED_DATA_STORE.getStoreName(),
@@ -134,11 +184,11 @@ public class AuthenticatedDataStorageServiceTest {
             return;
         }
         AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);
-        AuthenticatedData dataFromMap = addRequestFromMap.getAuthenticatedData();
+        AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
-        AuthenticatedPayload payload = addRequest.getAuthenticatedData().getPayload();
-        assertEquals(dataFromMap.getPayload(), payload);
+        AuthenticatedData payload = addRequest.getAuthenticatedSequentialData().getAuthenticatedData();
+        assertEquals(dataFromMap.getAuthenticatedData(), payload);
 
         // request inventory with old seqNum
      /*   String dataType = data.getMetaData().getFileName();
@@ -161,7 +211,7 @@ public class AuthenticatedDataStorageServiceTest {
         assertTrue(refreshResult.isSuccess());
 
         addRequestFromMap = (AddAuthenticatedDataRequest) store.getPersistableStore().getClone().getMap().get(byteArray);
-        dataFromMap = addRequestFromMap.getAuthenticatedData();
+        dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
         assertEquals(initialSeqNum + 2, dataFromMap.getSequenceNumber());
 
         //remove
@@ -192,9 +242,10 @@ public class AuthenticatedDataStorageServiceTest {
         assertEquals(initialMapSize, inventory.entries().size());*/
     }
 
+
     @Test
     public void testGetInv() throws GeneralSecurityException, IOException {
-        MockAuthenticatedTextPayload data = new MockAuthenticatedTextPayload("test");
+        MockAuthenticatedTextData data = new MockAuthenticatedTextData("test");
         PersistenceService persistenceService = new PersistenceService(appDirPath);
         AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(persistenceService,
                 AUTHENTICATED_DATA_STORE.getStoreName(),
@@ -202,12 +253,12 @@ public class AuthenticatedDataStorageServiceTest {
         store.readPersisted().join();
         KeyPair keyPair = KeyGeneration.generateKeyPair();
         int initialSeqNumFirstItem = 0;
-        MockAuthenticatedTextPayload first;
+        MockAuthenticatedTextData first;
         byte[] hashOfFirst = new byte[]{};
         int iterations = 10;
         long ts = System.currentTimeMillis();
         for (int i = 0; i < iterations; i++) {
-            data = new MockAuthenticatedTextPayload("test" + UUID.randomUUID());
+            data = new MockAuthenticatedTextData("test" + UUID.randomUUID());
             AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, data, keyPair);
             Result addRequestResult = store.add(addRequest);
             assertTrue(addRequestResult.isSuccess());
@@ -222,9 +273,9 @@ public class AuthenticatedDataStorageServiceTest {
         // request inventory with first item and same seq num
         // We should get iterations-1 items
         String dataType = data.getMetaData().getFileName();
-     //   Set<FilterItem> filterItems = new HashSet<>();
-      //  filterItems.add(new FilterItem(new ByteArray(hashOfFirst).getBytes(), initialSeqNumFirstItem + 1));
-       // ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
+        //   Set<FilterItem> filterItems = new HashSet<>();
+        //  filterItems.add(new FilterItem(new ByteArray(hashOfFirst).getBytes(), initialSeqNumFirstItem + 1));
+        // ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
         // int maxItems = store.getMaxItems();
       /*  int expectedSize = Math.min(maxItems, store.getMap().size() - 1);
         int expectedTruncated = Math.max(0, store.getMap().size() - maxItems - 1);

@@ -20,8 +20,7 @@ package bisq.social.intent;
 import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.NetworkPayload;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,18 +42,16 @@ public class TradeIntentListingsService {
         dataService = networkService.getDataService().get();
         dataService.addListener(new DataService.Listener() {
             @Override
-            public void onNetworkPayloadAdded(NetworkPayload networkPayload) {
-                if (networkPayload instanceof AuthenticatedPayload payload &&
-                        payload.getData() instanceof TradeIntent offer) {
-                    tradeIntents.add(offer);
+            public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+                if (authenticatedData.getDistributedData() instanceof TradeIntent tradeIntent) {
+                    tradeIntents.add(tradeIntent);
                 }
             }
 
             @Override
-            public void onNetworkPayloadRemoved(NetworkPayload networkPayload) {
-                if (networkPayload instanceof AuthenticatedPayload payload &&
-                        payload.getData() instanceof TradeIntent offer) {
-                    tradeIntents.remove(offer);
+            public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+                if (authenticatedData.getDistributedData() instanceof TradeIntent tradeIntent) {
+                    tradeIntents.remove(tradeIntent);
                 }
             }
         });
@@ -63,8 +60,8 @@ public class TradeIntentListingsService {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         tradeIntents.addAll(dataService.getAuthenticatedPayloadByStoreName("TradeIntent")
-                .filter(payload -> payload.getData() instanceof TradeIntent)
-                .map(payload -> (TradeIntent) payload.getData())
+                .filter(payload -> payload.getDistributedData() instanceof TradeIntent)
+                .map(payload -> (TradeIntent) payload.getDistributedData())
                 .collect(Collectors.toList()));
         return CompletableFuture.completedFuture(true);
     }

@@ -19,7 +19,7 @@ package bisq.network.p2p.services.peergroup.keepalive;
 
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -91,8 +91,8 @@ public class KeepAliveService implements Node.Listener {
     }
 
     @Override
-    public void onMessage(Message message, Connection connection, String nodeId) {
-        if (message instanceof Ping ping) {
+    public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
+        if (networkMessage instanceof Ping ping) {
             log.debug("Node {} received Ping with nonce {} from {}", node, ping.nonce(), connection.getPeerAddress());
             NetworkService.NETWORK_IO_POOL.submit(() -> node.send(new Pong(ping.nonce()), connection));
             log.debug("Node {} sent Pong with nonce {} to {}. Connection={}", node, ping.nonce(), connection.getPeerAddress(), connection.getId());

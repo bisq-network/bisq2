@@ -22,6 +22,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+/**
+ * Meta data for storage properties per DistributedData
+ */
 @EqualsAndHashCode
 @ToString
 @Getter

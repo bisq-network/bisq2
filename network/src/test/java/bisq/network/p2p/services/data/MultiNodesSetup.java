@@ -23,6 +23,7 @@ import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import lombok.Getter;
@@ -49,7 +50,7 @@ public class MultiNodesSetup {
 
         void onMessage(Address address);
 
-        void onData(Address address, NetworkPayload networkPayload);
+        void onData(Address address, StorageData storageData);
     }
 
 

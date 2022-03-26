@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data;
 
 import bisq.common.timer.Scheduler;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
@@ -27,12 +27,12 @@ import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
-import bisq.network.p2p.services.data.storage.append.AppendOnlyPayload;
+import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import lombok.Getter;
@@ -66,9 +66,13 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     public interface Listener {
-        void onNetworkPayloadAdded(NetworkPayload networkPayload);
+        void onAuthenticatedDataAdded(AuthenticatedData authenticatedData);
 
-        void onNetworkPayloadRemoved(NetworkPayload networkPayload);
+        default void onAppendOnlyDataAdded(AppendOnlyData appendOnlyData) {
+        }
+
+        default void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+        }
     }
 
     @Getter
@@ -101,10 +105,10 @@ public class DataService implements DataNetworkService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message, Connection connection, String nodeId) {
-        if (message instanceof AddDataRequest addDataRequest) {
+    public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
+        if (networkMessage instanceof AddDataRequest addDataRequest) {
             processAddDataRequest(addDataRequest, true);
-        } else if (message instanceof RemoveDataRequest removeDataRequest) {
+        } else if (networkMessage instanceof RemoveDataRequest removeDataRequest) {
             processRemoveDataRequest(removeDataRequest, true);
         }
     }
@@ -128,11 +132,11 @@ public class DataService implements DataNetworkService.Listener {
     // Get data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Stream<AuthenticatedPayload> getAllAuthenticatedPayload() {
+    public Stream<AuthenticatedData> getAllAuthenticatedPayload() {
         return storageService.getAllAuthenticatedPayload();
     }
 
-    public Stream<AuthenticatedPayload> getAuthenticatedPayloadByStoreName(String storeName) {
+    public Stream<AuthenticatedData> getAuthenticatedPayloadByStoreName(String storeName) {
         return storageService.getAuthenticatedPayloadStream(storeName);
     }
 
@@ -141,55 +145,48 @@ public class DataService implements DataNetworkService.Listener {
     // Add data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public CompletableFuture<BroadCastDataResult> addNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
-        if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
-            return storageService.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
-                    .thenApply(store -> {
-                        try {
-                            AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
-                            Result result = store.add(request);
-                            if (result.isSuccess()) {
-                                listeners.forEach(listener -> listener.onNetworkPayloadAdded(networkPayload));
-                                return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
-                                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
-                                
-                              /*  return dataNetworkServiceByTransportType.values().stream()
-                                        .map(service -> service.broadcast(request))
-                                        .collect(Collectors.toList());*/
-                            } else {
-                                return new BroadCastDataResult();
-                            }
-                        } catch (GeneralSecurityException e) {
-                            e.printStackTrace();
-                            throw new CompletionException(e);
-                        }
-                    });
-        } else if (networkPayload instanceof AppendOnlyPayload appendOnlyPayload) {
-            return storageService.getOrCreateAppendOnlyDataStore(appendOnlyPayload.getMetaData())
-                    .thenApply(store -> {
-                        AddAppendOnlyDataRequest request = new AddAppendOnlyDataRequest(appendOnlyPayload);
+    public CompletableFuture<BroadCastDataResult> addAuthenticatedData(AuthenticatedData authenticatedData, KeyPair keyPair) {
+        return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getMetaData())
+                .thenApply(store -> {
+                    try {
+                        AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
                         Result result = store.add(request);
                         if (result.isSuccess()) {
-                            listeners.forEach(listener -> listener.onNetworkPayloadAdded(networkPayload));
+                            listeners.forEach(listener -> listener.onAuthenticatedDataAdded(authenticatedData));
                             return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
                                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
                         } else {
                             return new BroadCastDataResult();
                         }
-                    });
-        } else {
-            return CompletableFuture.failedFuture(new IllegalArgumentException(""));
-        }
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                        throw new CompletionException(e);
+                    }
+                });
     }
 
-    public CompletableFuture<BroadCastDataResult> addMailboxPayload(MailboxPayload mailboxPayload,
+    public CompletableFuture<BroadCastDataResult> addAppendOnlyPayload(AppendOnlyData appendOnlyData) {
+        return storageService.getOrCreateAppendOnlyDataStore(appendOnlyData.getMetaData())
+                .thenApply(store -> {
+                    AddAppendOnlyDataRequest request = new AddAppendOnlyDataRequest(appendOnlyData);
+                    Result result = store.add(request);
+                    if (result.isSuccess()) {
+                        listeners.forEach(listener -> listener.onAppendOnlyDataAdded(appendOnlyData));
+                        return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
+                                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
+                    } else {
+                        return new BroadCastDataResult();
+                    }
+                });
+    }
+
+    public CompletableFuture<BroadCastDataResult> addMailboxPayload(MailboxData mailboxPayload,
                                                                     KeyPair senderKeyPair,
                                                                     PublicKey receiverPublicKey) {
         return storageService.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
                 .thenApply(store -> {
                     try {
-                        AddMailboxRequest request = AddMailboxRequest.from(store, mailboxPayload, senderKeyPair, receiverPublicKey);
+                        AddMailboxRequest request = AddMailboxRequest.from(mailboxPayload, senderKeyPair, receiverPublicKey);
                         Result result = store.add(request);
                         if (result.isSuccess()) {
                             return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
@@ -210,72 +207,34 @@ public class DataService implements DataNetworkService.Listener {
     // Remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadCastDataResult> removeNetworkPayload(NetworkPayload networkPayload, KeyPair keyPair) {
-        if (networkPayload instanceof MailboxPayload) {
-            return CompletableFuture.failedFuture(new IllegalArgumentException("removeNetworkPayloadAsync called with MailboxPayload"));
-        } else if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
-            return storageService.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
-                    .thenApply(store -> {
-                        try {
-                            RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
-                            Result result = store.remove(request);
-                            if (result.isSuccess()) {
-                                listeners.forEach(listener -> listener.onNetworkPayloadRemoved(networkPayload));
-                                return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
-                                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
-                            } else {
-                                return new BroadCastDataResult();
-                            }
-                        } catch (GeneralSecurityException e) {
-                            e.printStackTrace();
-                            throw new CompletionException(e);
+    public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(AuthenticatedData authenticatedData, KeyPair keyPair) {
+        return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getMetaData())
+                .thenApply(store -> {
+                    try {
+                        RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
+                        Result result = store.remove(request);
+                        if (result.isSuccess()) {
+                            listeners.forEach(listener -> listener.onAuthenticatedDataRemoved(authenticatedData));
+                            return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
+                                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
+                        } else {
+                            return new BroadCastDataResult();
                         }
-                    });
-        } else if (networkPayload instanceof AppendOnlyPayload) {
-            throw new IllegalArgumentException("AppendOnlyPayload cannot be removed");
-        } else {
-            return CompletableFuture.failedFuture(new IllegalArgumentException("Not supported type of networkPayload"));
-        }
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                        throw new CompletionException(e);
+                    }
+                });
     }
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeNetworkPayload1(NetworkPayload networkPayload, KeyPair keyPair) {
-        if (networkPayload instanceof MailboxPayload) {
-            return CompletableFuture.failedFuture(new IllegalArgumentException("removeNetworkPayloadAsync called with MailboxPayload"));
-        } else if (networkPayload instanceof AuthenticatedPayload authenticatedPayload) {
-            return storageService.getOrCreateAuthenticatedDataStore(authenticatedPayload.getMetaData())
-                    .thenApply(store -> {
-                        try {
-                            RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedPayload, keyPair);
-                            Result result = store.remove(request);
-                            if (result.isSuccess()) {
-                                listeners.forEach(listener -> listener.onNetworkPayloadRemoved(networkPayload));
-                                return dataNetworkServiceByTransportType.values().stream()
-                                        .map(service -> service.broadcast(request))
-                                        .collect(Collectors.toList());
-                            } else {
-                                return new ArrayList<>();
-                            }
-                        } catch (GeneralSecurityException e) {
-                            e.printStackTrace();
-                            throw new CompletionException(e);
-                        }
-                    });
-        } else if (networkPayload instanceof AppendOnlyPayload) {
-            throw new IllegalArgumentException("AppendOnlyPayload cannot be removed");
-        } else {
-            return CompletableFuture.failedFuture(new IllegalArgumentException("Not supported type of networkPayload"));
-        }
-    }
-
-
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeMailboxPayload(MailboxPayload mailboxPayload, KeyPair receiverKeyPair) {
+    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeMailboxPayload(MailboxData mailboxPayload, KeyPair receiverKeyPair) {
         return storageService.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
                 .thenApply(store -> {
                     try {
                         RemoveMailboxRequest request = RemoveMailboxRequest.from(mailboxPayload, receiverKeyPair);
                         Result result = store.remove(request);
                         if (result.isSuccess()) {
-                            listeners.forEach(listener -> listener.onNetworkPayloadRemoved(mailboxPayload));
+                            listeners.forEach(listener -> listener.onAuthenticatedDataRemoved(mailboxPayload));
                             return dataNetworkServiceByTransportType.values().stream()
                                     .map(service -> service.broadcast(request))
                                     .collect(Collectors.toList());
@@ -345,10 +304,14 @@ public class DataService implements DataNetworkService.Listener {
     private void processAddDataRequest(AddDataRequest addDataRequest, boolean allowReBroadcast) {
         storageService.onAddDataRequest(addDataRequest)
                 .whenComplete((optionalData, throwable) -> {
-                    optionalData.ifPresent(networkData -> {
+                    optionalData.ifPresent(storageData -> {
                         // We get called on dispatcher thread with onMessage, and we don't switch thread in 
                         // async calls
-                        listeners.forEach(listener -> listener.onNetworkPayloadAdded(networkData));
+                        if (storageData instanceof AuthenticatedData authenticatedData) {
+                            listeners.forEach(listener -> listener.onAuthenticatedDataAdded(authenticatedData));
+                        } else if (storageData instanceof AppendOnlyData appendOnlyData) {
+                            listeners.forEach(listener -> listener.onAppendOnlyDataAdded(appendOnlyData));
+                        }
                         if (allowReBroadcast) {
                             dataNetworkServiceByTransportType.values().forEach(e -> e.reBroadcast(addDataRequest));
                         }
@@ -359,10 +322,12 @@ public class DataService implements DataNetworkService.Listener {
     private void processRemoveDataRequest(RemoveDataRequest removeDataRequest, boolean allowReBroadcast) {
         storageService.onRemoveDataRequest(removeDataRequest)
                 .whenComplete((optionalData, throwable) -> {
-                    optionalData.ifPresent(networkData -> {
+                    optionalData.ifPresent(storageData -> {
                         // We get called on dispatcher thread with onMessage, and we don't switch thread in 
                         // async calls
-                        listeners.forEach(listener -> listener.onNetworkPayloadRemoved(networkData));
+                        if (storageData instanceof AuthenticatedData authenticatedData) {
+                            listeners.forEach(listener -> listener.onAuthenticatedDataRemoved(authenticatedData));
+                        }
                         if (allowReBroadcast) {
                             dataNetworkServiceByTransportType.values().forEach(e -> e.reBroadcast(removeDataRequest));
                         }

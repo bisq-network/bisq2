@@ -19,7 +19,7 @@ package bisq.protocol.liquidswap;
 
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.persistence.PersistenceClient;
 import bisq.protocol.ProtocolModel;
 import bisq.protocol.ProtocolStore;
@@ -64,10 +64,10 @@ public abstract class LiquidSwapTakerProtocol extends TakerProtocol<TakerProtoco
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message) {
-        if (message instanceof ProtocolMessage protocolMessage) {
+    public void onMessage(NetworkMessage networkMessage) {
+        if (networkMessage instanceof ProtocolMessage protocolMessage) {
             if (protocolMessage.getOfferId().equals(getId())) {
-                if (message instanceof LiquidSwapTakeOfferResponse liquidSwapTakeOfferResponse) {
+                if (networkMessage instanceof LiquidSwapTakeOfferResponse liquidSwapTakeOfferResponse) {
                     onTakeOfferResponse(liquidSwapTakeOfferResponse);
                 }
             }

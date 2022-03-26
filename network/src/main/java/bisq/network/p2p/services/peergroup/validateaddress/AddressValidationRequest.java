@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup.validateaddress;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 
-record AddressValidationRequest(int nonce) implements Message {
+record AddressValidationRequest(int nonce) implements NetworkMessage {
 }

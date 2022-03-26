@@ -19,7 +19,7 @@ package bisq.protocol.liquidswap;
 
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.persistence.PersistenceClient;
 import bisq.protocol.MakerProtocol;
 import bisq.protocol.MakerProtocolModel;
@@ -63,10 +63,10 @@ public abstract class LiquidSwapMakerProtocol extends MakerProtocol<MakerProtoco
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message) {
-        if (message instanceof ProtocolMessage protocolMessage) {
+    public void onMessage(NetworkMessage networkMessage) {
+        if (networkMessage instanceof ProtocolMessage protocolMessage) {
             if (protocolMessage.getOfferId().equals(getId())) {
-                if (message instanceof LiquidSwapFinalizeTxRequest liquidSwapFinalizeTxRequest) {
+                if (networkMessage instanceof LiquidSwapFinalizeTxRequest liquidSwapFinalizeTxRequest) {
                     onLiquidSwapFinalizeTxRequest(liquidSwapFinalizeTxRequest);
                 }
             }

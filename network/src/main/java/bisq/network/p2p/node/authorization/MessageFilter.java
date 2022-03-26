@@ -17,10 +17,7 @@
 
 package bisq.network.p2p.node.authorization;
 
-import bisq.network.p2p.message.Message;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
 
 @Slf4j
 public class MessageFilter {
@@ -29,7 +26,7 @@ public class MessageFilter {
     public MessageFilter(AuthorizationService authorizationService) {
         this.authorizationService = authorizationService;
     }
-
+/*
     public Optional<Message> process(Message message) {
         if (message instanceof AuthorizedMessage authorizedMessage) {
             if (authorizationService.isAuthorized(authorizedMessage)) {
@@ -37,5 +34,5 @@ public class MessageFilter {
             }
         }
         return Optional.empty();
-    }
+    }*/
 }

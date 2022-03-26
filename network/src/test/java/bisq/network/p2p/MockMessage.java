@@ -17,13 +17,13 @@
 
 package bisq.network.p2p;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @EqualsAndHashCode
 @Getter
-public class MockMessage implements Message {
+public class MockMessage implements NetworkMessage {
     private final String msg;
 
     public MockMessage(String msg) {

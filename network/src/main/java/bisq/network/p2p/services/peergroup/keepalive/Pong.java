@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup.keepalive;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 
-record Pong(int requestNonce) implements Message {
+record Pong(int requestNonce) implements NetworkMessage {
 }

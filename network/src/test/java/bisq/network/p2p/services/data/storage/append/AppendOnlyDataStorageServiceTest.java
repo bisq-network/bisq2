@@ -41,7 +41,7 @@ public class AppendOnlyDataStorageServiceTest {
     }
     @Test
     public void testAppend() {
-        MockAppendOnlyPayload data = new MockAppendOnlyPayload("test" + UUID.randomUUID());
+        MockAppendOnlyData data = new MockAppendOnlyData("test" + UUID.randomUUID());
         PersistenceService persistenceService = new PersistenceService(appDirPath);
         AppendOnlyDataStorageService store = new AppendOnlyDataStorageService(persistenceService, APPEND_ONLY_DATA_STORE.getStoreName(),
                 data.getMetaData().getFileName());
@@ -50,7 +50,7 @@ public class AppendOnlyDataStorageServiceTest {
         int previous = map.size();
         int iterations = 10;
         for (int i = 0; i < iterations; i++) {
-            data = new MockAppendOnlyPayload("test" + UUID.randomUUID());
+            data = new MockAppendOnlyData("test" + UUID.randomUUID());
             boolean result = store.add(new AddAppendOnlyDataRequest(data)).isSuccess();
             assertTrue(result);
         }

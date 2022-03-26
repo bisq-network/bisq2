@@ -17,10 +17,10 @@
 
 package bisq.network.p2p.services.peergroup.exchange;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.peergroup.Peer;
 
 import java.util.Set;
 
-record PeerExchangeRequest(int nonce, Set<Peer> peers) implements Message {
+record PeerExchangeRequest(int nonce, Set<Peer> peers) implements NetworkMessage {
 }

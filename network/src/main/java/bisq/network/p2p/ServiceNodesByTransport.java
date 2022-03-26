@@ -22,7 +22,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
 import bisq.network.NetworkService.InitializeServerResult;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.UnrestrictedAuthorizationService;
@@ -126,7 +126,7 @@ public class ServiceNodesByTransport {
                 })).thenApply(list -> true);
     }
 
-    public NetworkService.SendMessageResult confidentialSend(Message message,
+    public NetworkService.SendMessageResult confidentialSend(NetworkMessage networkMessage,
                                                              NetworkId receiverNetworkId,
                                                              KeyPair senderKeyPair,
                                                              String senderNodeId) {
@@ -135,7 +135,7 @@ public class ServiceNodesByTransport {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);
                 try {
-                    ConfidentialMessageService.Result result = serviceNode.confidentialSend(message, address, receiverNetworkId.getPubKey(), senderKeyPair, senderNodeId);
+                    ConfidentialMessageService.Result result = serviceNode.confidentialSend(networkMessage, address, receiverNetworkId.getPubKey(), senderKeyPair, senderNodeId);
                     resultsByType.put(transportType, result);
                 } catch (Throwable throwable) {
                     resultsByType.put(transportType, new ConfidentialMessageService.Result(ConfidentialMessageService.State.FAILED)

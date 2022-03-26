@@ -17,9 +17,9 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
-import bisq.network.p2p.services.data.NetworkPayload;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedPayload;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,11 +31,11 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class MockAuthorizedPayload extends AuthorizedPayload {
+public final class MockAuthorizedData extends AuthorizedData {
     private final MetaData metaData;
 
-    public MockAuthorizedPayload(NetworkPayload networkPayload, byte[] signature, PublicKey publicKey) {
-        super(networkPayload, signature, publicKey);
+    public MockAuthorizedData(DistributedData distributedData, byte[] signature, PublicKey publicKey) {
+        super(distributedData, signature, publicKey);
 
         this.metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 10000, this.getClass().getSimpleName());
     }

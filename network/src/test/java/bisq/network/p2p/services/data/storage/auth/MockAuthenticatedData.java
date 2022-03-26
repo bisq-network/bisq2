@@ -15,23 +15,33 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.protocol.messages;
+package bisq.network.p2p.services.data.storage.auth;
 
-import bisq.common.util.StringUtils;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.services.data.storage.MetaData;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-@Getter
-public abstract class ProtocolMessage implements NetworkMessage {
-    private final String messageId;
-    private final String offerId;
+import java.util.concurrent.TimeUnit;
 
-    public ProtocolMessage(String offerId) {
-        this(StringUtils.createUid(), offerId);
+@EqualsAndHashCode(callSuper = true)
+@Getter
+public class MockAuthenticatedData extends AuthenticatedData {
+    private final String offerDummy;
+    final MetaData metaData;
+
+    public MockAuthenticatedData(String offerDummy) {
+        super(null);
+        this.offerDummy = offerDummy;
+        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
     }
 
-    public ProtocolMessage(String messageId, String offerId) {
-        this.messageId = messageId;
-        this.offerId = offerId;
+    @Override
+    public MetaData getMetaData() {
+        return metaData;
+    }
+
+    @Override
+    public boolean isDataInvalid() {
+        return false;
     }
 }

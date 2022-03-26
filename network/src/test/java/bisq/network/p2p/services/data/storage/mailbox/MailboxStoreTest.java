@@ -17,9 +17,10 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
-import bisq.common.encoding.ObjectSerializer;
 import bisq.common.data.ByteArray;
+import bisq.common.encoding.ObjectSerializer;
 import bisq.common.util.OsUtils;
+import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.storage.Result;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.persistence.PersistenceService;
@@ -45,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class MailboxStoreTest {
     private final String appDirPath = OsUtils.getUserDataDir() + File.separator + "bisq_StorageTest";
 
-   // @Test
+    // @Test
     public void testAddAndRemoveMailboxMsg() throws GeneralSecurityException, IOException, InterruptedException {
         MockMailboxMessage message = new MockMailboxMessage("test" + UUID.randomUUID());
         PersistenceService persistenceService = new PersistenceService(appDirPath);
@@ -56,7 +57,10 @@ public class MailboxStoreTest {
         KeyPair senderKeyPair = KeyGeneration.generateKeyPair();
         KeyPair receiverKeyPair = KeyGeneration.generateKeyPair();
 
-        MailboxPayload payload = MailboxPayload.createMailboxPayload(message, senderKeyPair, receiverKeyPair.getPublic());
+        ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message.serialize(), receiverKeyPair.getPublic(), senderKeyPair);
+        ConfidentialMessage confidentialMessage = new ConfidentialMessage(confidentialData, "DEFAULT");
+        MailboxData payload = new MailboxData(confidentialMessage, message.getMetaData());
+        
         Map<ByteArray, MailboxRequest> map = store.getPersistableStore().getClone().getMap();
         int initialMapSize = map.size();
         byte[] hash = DigestUtil.hash(payload.serialize());
@@ -66,7 +70,7 @@ public class MailboxStoreTest {
         CountDownLatch removeLatch = new CountDownLatch(1);
         store.addListener(new MailboxDataStorageService.Listener() {
             @Override
-            public void onAdded(MailboxPayload mailboxPayload) {
+            public void onAdded(MailboxData mailboxPayload) {
                 assertEquals(payload, mailboxPayload);
                 try {
                     ConfidentialData confidentialData = mailboxPayload.getConfidentialMessage().getConfidentialData();
@@ -83,7 +87,7 @@ public class MailboxStoreTest {
             }
 
             @Override
-            public void onRemoved(MailboxPayload mailboxPayload) {
+            public void onRemoved(MailboxData mailboxPayload) {
                 assertEquals(payload, mailboxPayload);
                 try {
                     ConfidentialData confidentialData = mailboxPayload.getConfidentialMessage().getConfidentialData();
@@ -100,25 +104,25 @@ public class MailboxStoreTest {
             }
         });
 
-        AddMailboxRequest request = AddMailboxRequest.from(store, payload, senderKeyPair, receiverKeyPair.getPublic());
+        AddMailboxRequest request = AddMailboxRequest.from(payload, senderKeyPair, receiverKeyPair.getPublic());
         Result result = store.add(request);
         assertTrue(result.isSuccess());
         addLatch.await(1, TimeUnit.SECONDS);
 
         ByteArray byteArray = new ByteArray(hash);
         AddMailboxRequest addRequestFromMap = (AddMailboxRequest) map.get(byteArray);
-        MailboxData dataFromMap = addRequestFromMap.getMailboxData();
+        MailboxSequentialData dataFromMap = addRequestFromMap.getMailboxSequentialData();
 
         assertEquals(initialSeqNum + 1, dataFromMap.getSequenceNumber());
 
-        MailboxPayload payloadFromMap = dataFromMap.getMailboxPayload();
+        MailboxData payloadFromMap = dataFromMap.getMailboxData();
         assertEquals(payloadFromMap, payload);
 
         // request inventory with old seqNum
         String dataType = payload.getMetaData().getFileName();
-      //  Set<FilterItem> filterItems = new HashSet<>();
-      //  filterItems.add(new FilterItem(byteArray.getBytes(), initialSeqNum));
-       // ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
+        //  Set<FilterItem> filterItems = new HashSet<>();
+        //  filterItems.add(new FilterItem(byteArray.getBytes(), initialSeqNum));
+        // ProtectedDataFilter filter = new ProtectedDataFilter(dataType, filterItems);
         // Inventory inventory = store.getInventoryList(filter);
         // assertEquals(initialMapSize + 1, inventory.getEntries().size());
 
@@ -141,7 +145,7 @@ public class MailboxStoreTest {
         assertFalse(store.canAddMailboxMessage(payload));
         try {
             // calling getAddMailboxDataRequest without the previous canAddMailboxMessage check will throw
-            AddMailboxRequest.from(store, payload, senderKeyPair, receiverKeyPair.getPublic());
+            AddMailboxRequest.from(payload, senderKeyPair, receiverKeyPair.getPublic());
             fail();
         } catch (Exception e) {
             assertTrue(e instanceof IllegalStateException);

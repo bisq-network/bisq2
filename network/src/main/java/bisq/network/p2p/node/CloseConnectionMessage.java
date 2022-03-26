@@ -1,6 +1,6 @@
 package bisq.network.p2p.node;
 
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 
-record CloseConnectionMessage(CloseReason closeReason) implements Message {
+record CloseConnectionMessage(CloseReason closeReason) implements NetworkMessage {
 }

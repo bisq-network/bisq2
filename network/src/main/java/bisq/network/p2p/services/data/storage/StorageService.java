@@ -23,21 +23,20 @@ import bisq.common.util.FileUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
-import bisq.network.p2p.services.data.NetworkPayload;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.filter.FilterEntry;
 import bisq.network.p2p.services.data.inventory.Inventory;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyDataStorageService;
-import bisq.network.p2p.services.data.storage.append.AppendOnlyPayload;
+import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedPayload;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStorageService;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxPayload;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
@@ -124,23 +123,23 @@ public class StorageService {
     // Get data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Stream<AuthenticatedPayload> getAllAuthenticatedPayload() {
+    public Stream<AuthenticatedData> getAllAuthenticatedPayload() {
         return authenticatedDataStores.values().stream().flatMap(this::getAuthenticatedPayloadStream);
     }
 
-    public Stream<AuthenticatedPayload> getAuthenticatedPayloadStream(String storeName) {
+    public Stream<AuthenticatedData> getAuthenticatedPayloadStream(String storeName) {
         return getAuthenticatedPayloadStream(getStoreByStoreName(storeName));
     }
 
-    public Stream<AuthenticatedPayload> getAuthenticatedPayloadStream(Stream<DataStorageService<? extends DataRequest>> stores) {
+    public Stream<AuthenticatedData> getAuthenticatedPayloadStream(Stream<DataStorageService<? extends DataRequest>> stores) {
         return stores.flatMap(this::getAuthenticatedPayloadStream);
     }
 
-    private Stream<AuthenticatedPayload> getAuthenticatedPayloadStream(DataStorageService<? extends DataRequest> store) {
+    private Stream<AuthenticatedData> getAuthenticatedPayloadStream(DataStorageService<? extends DataRequest> store) {
         return store.getPersistableStore().getClone().getMap().values().stream()
                 .filter(e -> e instanceof AddAuthenticatedDataRequest)
                 .map(e -> (AddAuthenticatedDataRequest) e)
-                .map(e -> e.getAuthenticatedData().getPayload());
+                .map(e -> e.getAuthenticatedSequentialData().getAuthenticatedData());
     }
 
 
@@ -148,13 +147,13 @@ public class StorageService {
     // Add data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Optional<NetworkPayload>> onAddDataRequest(AddDataRequest addDataRequest) {
+    public CompletableFuture<Optional<StorageData>> onAddDataRequest(AddDataRequest addDataRequest) {
         if (addDataRequest instanceof AddMailboxRequest addMailboxRequest) {
             return onAddMailboxRequest(addMailboxRequest);
         } else if (addDataRequest instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
             return onAddAuthenticatedDataRequest(addAuthenticatedDataRequest);
         } else if (addDataRequest instanceof AddAppendOnlyDataRequest addAppendOnlyDataRequest) {
-            return onAddAppendOnlyDataRequest(addAppendOnlyDataRequest);
+            return onAddAppendOnlyDataRequest(addAppendOnlyDataRequest); 
         } else {
             return CompletableFuture.failedFuture(
                     new IllegalArgumentException("AddRequest called with invalid addDataRequest: " +
@@ -162,13 +161,13 @@ public class StorageService {
         }
     }
 
-    private CompletableFuture<Optional<NetworkPayload>> onAddMailboxRequest(AddMailboxRequest request) {
-        MailboxPayload payload = request.getMailboxData().getMailboxPayload();
-        return getOrCreateMailboxDataStore(payload.getMetaData())
+    private CompletableFuture<Optional<StorageData>> onAddMailboxRequest(AddMailboxRequest request) {
+        MailboxData mailboxData = request.getMailboxSequentialData().getMailboxData();
+        return getOrCreateMailboxDataStore(mailboxData.getMetaData())
                 .thenApply(store -> {
                     Result result = store.add(request);
                     if (result.isSuccess()) {
-                        return Optional.of(payload);
+                        return Optional.of(mailboxData);
                     } else {
                         if (result.isSevereFailure()) {
                             log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
@@ -178,13 +177,13 @@ public class StorageService {
                 });
     }
 
-    private CompletableFuture<Optional<NetworkPayload>> onAddAuthenticatedDataRequest(AddAuthenticatedDataRequest request) {
-        AuthenticatedPayload payload = request.getAuthenticatedData().getPayload();
-        return getOrCreateAuthenticatedDataStore(payload.getMetaData())
+    private CompletableFuture<Optional<StorageData>> onAddAuthenticatedDataRequest(AddAuthenticatedDataRequest request) {
+        AuthenticatedData authenticatedData = request.getAuthenticatedSequentialData().getAuthenticatedData();
+        return getOrCreateAuthenticatedDataStore(authenticatedData.getMetaData())
                 .thenApply(store -> {
                     Result result = store.add(request);
                     if (result.isSuccess()) {
-                        return Optional.of(payload);
+                        return Optional.of(authenticatedData);
                     } else {
                         if (result.isSevereFailure()) {
                             log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
@@ -194,13 +193,13 @@ public class StorageService {
                 });
     }
 
-    private CompletableFuture<Optional<NetworkPayload>> onAddAppendOnlyDataRequest(AddAppendOnlyDataRequest request) {
-        AppendOnlyPayload payload = request.payload();
-        return getOrCreateAppendOnlyDataStore(payload.getMetaData())
+    private CompletableFuture<Optional<StorageData>> onAddAppendOnlyDataRequest(AddAppendOnlyDataRequest request) {
+        AppendOnlyData appendOnlyData = request.payload();
+        return getOrCreateAppendOnlyDataStore(appendOnlyData.getMetaData())
                 .thenApply(store -> {
                     Result result = store.add(request);
                     if (result.isSuccess()) {
-                        return Optional.of(payload);
+                        return Optional.of(appendOnlyData);
                     } else {
                         if (result.isSevereFailure()) {
                             log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
@@ -215,7 +214,7 @@ public class StorageService {
     // Remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Optional<NetworkPayload>> onRemoveDataRequest(RemoveDataRequest removeDataRequest) {
+    public CompletableFuture<Optional<StorageData>> onRemoveDataRequest(RemoveDataRequest removeDataRequest) {
         if (removeDataRequest instanceof RemoveMailboxRequest removeMailboxRequest) {
             return onRemoveMailboxRequest(removeMailboxRequest);
         } else if (removeDataRequest instanceof RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest) {
@@ -227,12 +226,12 @@ public class StorageService {
         }
     }
 
-    private CompletableFuture<Optional<NetworkPayload>> onRemoveMailboxRequest(RemoveMailboxRequest request) {
+    private CompletableFuture<Optional<StorageData>> onRemoveMailboxRequest(RemoveMailboxRequest request) {
         return getOrCreateMailboxDataStore(request.getMetaData())
                 .thenApply(store -> {
                     Result result = store.remove(request);
                     if (result.isSuccess()) {
-                        return Optional.of(result.getRemovedPayload());
+                        return Optional.of(result.getRemovedData());
                     } else {
                         if (result.isSevereFailure()) {
                             log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
@@ -242,12 +241,12 @@ public class StorageService {
                 });
     }
 
-    private CompletableFuture<Optional<NetworkPayload>> onRemoveAuthenticatedDataRequest(RemoveAuthenticatedDataRequest request) {
+    private CompletableFuture<Optional<StorageData>> onRemoveAuthenticatedDataRequest(RemoveAuthenticatedDataRequest request) {
         return getOrCreateAuthenticatedDataStore(request.getMetaData())
                 .thenApply(store -> {
                     Result result = store.remove(request);
                     if (result.isSuccess()) {
-                        return Optional.of(result.getRemovedPayload());
+                        return Optional.of(result.getRemovedData());
                     } else {
                         if (result.isSevereFailure()) {
                             log.warn("RemoveAuthenticatedDataRequest was not added to store. Result={}", result);
@@ -308,7 +307,7 @@ public class StorageService {
             return new FilterEntry(hash, 0);
         } else if (dataRequest instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
             // AddMailboxRequest extends AddAuthenticatedDataRequest so its covered here as well
-            sequenceNumber = addAuthenticatedDataRequest.getAuthenticatedData().getSequenceNumber();
+            sequenceNumber = addAuthenticatedDataRequest.getAuthenticatedSequentialData().getSequenceNumber();
         } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest) {
             // RemoveMailboxRequest extends RemoveAuthenticatedDataRequest so its covered here as well
             sequenceNumber = removeAuthenticatedDataRequest.getSequenceNumber();

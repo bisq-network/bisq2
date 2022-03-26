@@ -18,13 +18,13 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -68,17 +68,17 @@ class InventoryHandler implements Connection.Listener {
     }
 
     @Override
-    public void onMessage(Message message) {
-        if (message instanceof InventoryResponse response) {
+    public void onNetworkMessage(NetworkMessage networkMessage) {
+        if (networkMessage instanceof InventoryResponse response) {
             if (response.requestNonce() == nonce) {
                 Map<String, Integer> map = new HashMap<>();
                 response.inventory().entries().stream()
                         .filter(e -> e instanceof AddAuthenticatedDataRequest)
                         .map(e -> (AddAuthenticatedDataRequest) e)
-                        .map(AddAuthenticatedDataRequest::getAuthenticatedData)
-                        .map(AuthenticatedData::getPayload)
+                        .map(AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
+                        .map(AuthenticatedSequentialData::getAuthenticatedData)
                         .forEach(e -> {
-                            String simpleName = e.getData().getClass().getSimpleName();
+                            String simpleName = e.getDistributedData().getClass().getSimpleName();
                             map.putIfAbsent(simpleName, 0);
                             map.put(simpleName, map.get(simpleName) + 1);
                         });

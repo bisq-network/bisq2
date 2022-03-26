@@ -21,7 +21,7 @@ package bisq.network.p2p;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -197,17 +197,17 @@ public class ServiceNode {
         setState(State.PEER_GROUP_INITIALIZED);
     }
 
-    public ConfidentialMessageService.Result confidentialSend(Message message,
+    public ConfidentialMessageService.Result confidentialSend(NetworkMessage networkMessage,
                                                               Address address,
                                                               PubKey receiverPubKey,
                                                               KeyPair senderKeyPair,
                                                               String senderNodeId) {
-        return confidentialMessageService.map(service -> service.send(message, address, receiverPubKey, senderKeyPair, senderNodeId))
+        return confidentialMessageService.map(service -> service.send(networkMessage, address, receiverPubKey, senderKeyPair, senderNodeId))
                 .orElseThrow(() -> new RuntimeException("ConfidentialMessageService not present at confidentialSend"));
     }
 
-    public CompletableFuture<Connection> relay(Message message, NetworkId networkId, KeyPair myKeyPair) {
-        return relayService.map(service -> service.relay(message, networkId, myKeyPair))
+    public CompletableFuture<Connection> relay(NetworkMessage networkMessage, NetworkId networkId, KeyPair myKeyPair) {
+        return relayService.map(service -> service.relay(networkMessage, networkId, myKeyPair))
                 .orElseThrow(() -> new RuntimeException("RelayService not present at relay"));
     }
 

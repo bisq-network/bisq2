@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.relay;
 
 import bisq.network.NetworkId;
-import bisq.network.p2p.message.Message;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 
@@ -35,7 +35,7 @@ public class RelayService {
         return CompletableFuture.completedFuture(null);
     }
 
-    public CompletableFuture<Connection> relay(Message message, NetworkId networkId, KeyPair myKeyPair) {
+    public CompletableFuture<Connection> relay(NetworkMessage networkMessage, NetworkId networkId, KeyPair myKeyPair) {
        /*   Set<Connection> connections = getConnectionsWithSupportedNetwork(peerAddress.getNetworkType());
       Connection outboundConnection = CollectionUtil.getRandomElement(connections);
         if (outboundConnection != null) {
