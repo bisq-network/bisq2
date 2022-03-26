@@ -17,25 +17,15 @@
 
 syntax = "proto3";
 
-package security;
-option java_package = "bisq.security.protobuf";
+package identity;
+option java_package = "bisq.identity.protobuf";
 option java_multiple_files = true;
+import "network.proto";
+import "security.proto";
 
-message PubKey {
-  bytes publicKey = 1;
-  string keyId = 2;
-}
 
-message ConfidentialData {
-  bytes encodedSenderPublicKey = 1;
-  bytes hmac = 2;
-  bytes iv = 3;
-  bytes cypherText = 4;
-  bytes signature = 5;
-}
-
-// Used by other modules for serializing java.security.KeyPair
-message KeyPair {
-  bytes privateKey = 1;
-  bytes publicKey = 2;
+message Identity {
+  string domainId = 1;
+  network.NetworkId networkId = 2;
+  security.KeyPair keyPair = 3;
 }
