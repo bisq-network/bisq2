@@ -35,7 +35,6 @@ public final class CryptoCurrency extends TradeCurrency {
     // Protobuffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
     public bisq.common.protobuf.TradeCurrency toProto() {
         return getTradeCurrencyBuilder().setCryptoCurrency(bisq.common.protobuf.CryptoCurrency.newBuilder()).build();
     }

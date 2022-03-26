@@ -23,6 +23,7 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
+import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -82,9 +83,35 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
                                           byte[] ownerPublicKeyBytes,
                                           PublicKey ownerPublicKey) {
         this.authenticatedSequentialData = authenticatedSequentialData;
+        this.signature = signature;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
         this.ownerPublicKey = ownerPublicKey;
-        this.signature = signature;
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+        return getNetworkMessageBuilder().setAddAuthenticatedDataRequest(
+                bisq.network.protobuf.AddAuthenticatedDataRequest.newBuilder()
+                        .setAuthenticatedSequentialData(authenticatedSequentialData.toProto())
+                        .setSignature(ByteString.copyFrom(signature))
+                        .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
+        ).build();
+    }
+
+    public static AddAuthenticatedDataRequest fromProto(bisq.network.protobuf.AddAuthenticatedDataRequest proto) {
+        byte[] ownerPublicKeyBytes = proto.getOwnerPublicKeyBytes().toByteArray();
+        try {
+            PublicKey ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
+            return new AddAuthenticatedDataRequest(
+                    AuthenticatedSequentialData.fromProto(proto.getAuthenticatedSequentialData()),
+                    proto.getSignature().toByteArray(),
+                    ownerPublicKeyBytes,
+                    ownerPublicKey
+            );
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     public boolean isSignatureInvalid() {

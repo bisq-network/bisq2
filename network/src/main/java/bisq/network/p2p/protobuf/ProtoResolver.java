@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tools.network.monitor;
+package bisq.network.p2p.protobuf;
 
-public class MultiNodesMain {
-    public static void main(String[] args) {
-        MultiNodesView.launch(MultiNodesView.class, args);
-    }
+import bisq.common.proto.Proto;
+import com.google.protobuf.Any;
+
+public interface ProtoResolver <T extends Proto> {
+    T resolve(Any proto, String protoMessageName);
 }

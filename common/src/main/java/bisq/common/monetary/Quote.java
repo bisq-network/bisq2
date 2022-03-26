@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @Slf4j
-public class Quote implements Comparable<Quote>, Proto<bisq.common.protobuf.Quote> {
+public class Quote implements Comparable<Quote>, Proto {
     @Setter
     private static String QUOTE_SEPARATOR = "/";
 
@@ -68,7 +68,6 @@ public class Quote implements Comparable<Quote>, Proto<bisq.common.protobuf.Quot
     // Protobuffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
     public bisq.common.protobuf.Quote toProto() {
         return bisq.common.protobuf.Quote.newBuilder().setValue(value)
                 .setBaseMonetary(baseMonetary.getMonetaryBuilder())

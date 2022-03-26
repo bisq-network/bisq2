@@ -18,9 +18,26 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.proto.Proto;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.DataRequest;
 
-import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-public record Inventory(HashSet<? extends DataRequest> entries, int numDropped) implements Proto {
+public record Inventory(Set<? extends DataRequest> entries, int numDropped) implements Proto {
+    public bisq.network.protobuf.Inventory toProto() {
+        return bisq.network.protobuf.Inventory.newBuilder()
+                .addAllEntries(entries.stream().map(e -> e.getNetworkMessageBuilder().build()).collect(Collectors.toList()))
+                .setNumDropped(numDropped)
+                .build();
+    }
+
+    public static Inventory fromProto(bisq.network.protobuf.Inventory proto) {
+        Set<DataRequest> entries = proto.getEntriesList().stream()
+                .map(NetworkMessage::resolveNetworkMessage)
+                .filter(e -> e instanceof DataRequest)
+                .map(e -> (DataRequest) e)
+                .collect(Collectors.toSet());
+        return new Inventory(entries, proto.getNumDropped());
+    }
 }

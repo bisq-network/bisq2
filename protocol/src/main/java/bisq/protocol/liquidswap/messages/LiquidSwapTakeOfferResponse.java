@@ -18,6 +18,7 @@
 package bisq.protocol.liquidswap.messages;
 
 import bisq.contract.Contract;
+import bisq.network.protobuf.NetworkMessage;
 import bisq.protocol.messages.ProtocolMessage;
 
 public class LiquidSwapTakeOfferResponse extends ProtocolMessage {
@@ -26,5 +27,10 @@ public class LiquidSwapTakeOfferResponse extends ProtocolMessage {
     public LiquidSwapTakeOfferResponse(Contract contract) {
         super(contract.getOffer().getId());
         this.contract = contract;
+    }
+
+    @Override
+    public NetworkMessage toNetworkMessageProto() {
+        return null;
     }
 }

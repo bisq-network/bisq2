@@ -21,6 +21,7 @@ import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.protobuf.NetworkMessage;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import lombok.EqualsAndHashCode;
@@ -109,5 +110,10 @@ public class RefreshRequest implements BroadcastMessage {
                 ",\r\n     sequenceNumber=" + sequenceNumber +
                 ",\r\n     signature=" + Hex.encode(signature) +
                 "\r\n}";
+    }
+
+    @Override
+    public NetworkMessage toNetworkMessageProto() {
+        return null;
     }
 }

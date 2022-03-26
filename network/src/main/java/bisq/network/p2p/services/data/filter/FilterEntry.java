@@ -18,6 +18,17 @@
 package bisq.network.p2p.services.data.filter;
 
 import bisq.common.proto.Proto;
+import com.google.protobuf.ByteString;
 
 public record FilterEntry(byte[] hash, int sequenceNumber) implements Proto {
+    public bisq.network.protobuf.FilterEntry toProto() {
+        return bisq.network.protobuf.FilterEntry.newBuilder()
+                .setHash(ByteString.copyFrom(hash))
+                .setSequenceNumber(sequenceNumber)
+                .build();
+    }
+
+    public static FilterEntry fromProto(bisq.network.protobuf.FilterEntry proto) {
+        return new FilterEntry(proto.getHash().toByteArray(), proto.getSequenceNumber());
+    }
 }

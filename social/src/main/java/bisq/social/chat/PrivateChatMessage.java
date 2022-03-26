@@ -19,7 +19,9 @@ package bisq.social.chat;
 
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.network.protobuf.NetworkMessage;
 import bisq.social.user.ChatUser;
+import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -58,5 +60,15 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
     @Override
     public boolean isDataInvalid() {
         return false;
+    }
+
+    @Override
+    public Any toAny() {
+        return null;
+    }
+
+    @Override
+    public NetworkMessage toNetworkMessageProto() {
+        return null;
     }
 }

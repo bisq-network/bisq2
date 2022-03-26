@@ -53,7 +53,7 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
     }
 
     public Result add(AddAppendOnlyDataRequest addAppendOnlyDataRequest) {
-        AppendOnlyData appendOnlyData = addAppendOnlyDataRequest.payload();
+        AppendOnlyData appendOnlyData = addAppendOnlyDataRequest.getAppendOnlyData();
         ConcurrentHashMap<ByteArray, AddAppendOnlyDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (map.size() > MAX_MAP_SIZE) {

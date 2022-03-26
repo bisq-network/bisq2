@@ -17,12 +17,11 @@
 
 package bisq.network;
 
-import bisq.common.proto.Proto;
 import bisq.security.PubKey;
 
 import java.security.KeyPair;
 
-public record NetworkIdWithKeyPair(NetworkId networkId, KeyPair keyPair) implements Proto {
+public record NetworkIdWithKeyPair(NetworkId networkId, KeyPair keyPair) {
     public String nodeId() {
         return networkId.getNodeId();
     }

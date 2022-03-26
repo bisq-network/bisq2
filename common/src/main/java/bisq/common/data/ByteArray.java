@@ -32,7 +32,7 @@ import java.util.Arrays;
  */
 @SuppressWarnings("ClassCanBeRecord")
 @Getter
-public class ByteArray implements Proto<bisq.common.protobuf.ByteArray> {
+public class ByteArray implements Proto {
     private final byte[] bytes;
 
     public ByteArray(byte[] bytes) {
@@ -42,7 +42,7 @@ public class ByteArray implements Proto<bisq.common.protobuf.ByteArray> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protobuffer
     ///////////////////////////////////////////////////////////////////////////////////////////
-    @Override
+   
     public bisq.common.protobuf.ByteArray toProto() {
         return bisq.common.protobuf.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes)).build();
     }

@@ -29,6 +29,7 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
 import bisq.offer.OfferBookService;
+import bisq.offer.OfferService;
 import bisq.offer.OpenOfferService;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
@@ -85,6 +86,7 @@ public class DefaultApplicationService extends ServiceProvider {
     private final TradeIntentService tradeIntentService;
     private final UserProfileService userProfileService;
     private final WalletService walletService;
+    private final OfferService offerService;
 
     public DefaultApplicationService(String[] args) {
         super("Bisq");
@@ -99,8 +101,8 @@ public class DefaultApplicationService extends ServiceProvider {
 
         settingsService = new SettingsService(persistenceService);
 
-
-        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationConfig.baseDir(),
+        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(
+                applicationConfig.baseDir(),
                 getConfig("bisq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
 
@@ -116,6 +118,7 @@ public class DefaultApplicationService extends ServiceProvider {
         tradeIntentService = new TradeIntentService(networkService, identityService, tradeIntentListingsService, chatService);
 
         // add data use case is not available yet at networkService
+        offerService = new OfferService();
         openOfferService = new OpenOfferService(networkService, identityService, persistenceService);
         offerBookService = new OfferBookService(networkService);
 

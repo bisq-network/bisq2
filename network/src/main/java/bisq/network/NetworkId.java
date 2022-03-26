@@ -18,6 +18,7 @@
 package bisq.network;
 
 import bisq.common.proto.Proto;
+import bisq.common.util.ProtobufUtils;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.security.PubKey;
@@ -25,8 +26,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -36,9 +39,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class NetworkId implements Proto {
     private final PubKey pubKey;
     private final String nodeId;
-    // NetworkId is used in objects which gets hashed, so we need to have a deterministic order in the map. 
-    // A treeMap guarantees that. 
-    private final TreeMap<Transport.Type, Address> addressByNetworkType = new TreeMap<>();
+    private final Map<Transport.Type, Address> addressByNetworkType = new HashMap<>();
 
     public NetworkId(Map<Transport.Type, Address> addressByNetworkType, PubKey pubKey, String nodeId) {
         this.pubKey = pubKey;
@@ -46,5 +47,42 @@ public class NetworkId implements Proto {
         checkArgument(!addressByNetworkType.isEmpty(),
                 "We require at least 1 addressByNetworkType for a valid NetworkId");
         this.addressByNetworkType.putAll(addressByNetworkType);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protobuffer
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    public bisq.network.protobuf.NetworkId toProto() {
+        List<bisq.network.protobuf.AddressTransportTypeTuple> tuple = addressByNetworkType.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(e -> new AddressTransportTypeTuple(e.getKey(), e.getValue()).toProto())
+                .collect(Collectors.toList());
+        return bisq.network.protobuf.NetworkId.newBuilder()
+                .addAllAddressNetworkTypeTuple(tuple)
+                .setPubKey(pubKey.toProto())
+                .setNodeId(nodeId)
+                .build();
+    }
+
+    public static NetworkId fromProto(bisq.network.protobuf.NetworkId proto) {
+        Map<Transport.Type, Address> addressByNetworkType = proto.getAddressNetworkTypeTupleList().stream().
+                map(AddressTransportTypeTuple::fromProto)
+                .collect(Collectors.toMap(e -> e.transportType, e -> e.address));
+        return new NetworkId(addressByNetworkType, PubKey.fromProto(proto.getPubKey()), proto.getNodeId());
+    }
+
+    private record AddressTransportTypeTuple(Transport.Type transportType, Address address) implements Proto {
+        public bisq.network.protobuf.AddressTransportTypeTuple toProto() {
+            return bisq.network.protobuf.AddressTransportTypeTuple.newBuilder()
+                    .setTransportType(transportType.name())
+                    .setAddress(address.toProto())
+                    .build();
+        }
+
+        public static AddressTransportTypeTuple fromProto(bisq.network.protobuf.AddressTransportTypeTuple proto) {
+            Transport.Type transportType = ProtobufUtils.enumFromProto(Transport.Type.class, proto.getTransportType());
+            return new AddressTransportTypeTuple(transportType, Address.fromProto(proto.getAddress()));
+        }
     }
 }

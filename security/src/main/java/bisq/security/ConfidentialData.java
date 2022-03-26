@@ -24,8 +24,7 @@ public record ConfidentialData(byte[] encodedSenderPublicKey,
                                byte[] hmac,
                                byte[] iv,
                                byte[] cypherText,
-                               byte[] signature) implements Proto<bisq.security.protobuf.ConfidentialData> {
-    @Override
+                               byte[] signature) implements Proto {
     public bisq.security.protobuf.ConfidentialData toProto() {
         return bisq.security.protobuf.ConfidentialData.newBuilder()
                 .setEncodedSenderPublicKey(ByteString.copyFrom(encodedSenderPublicKey))

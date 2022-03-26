@@ -15,18 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.authorization;
+package bisq.offer;
 
-import bisq.common.proto.Proto;
-import lombok.Data;
+import bisq.network.p2p.message.NetworkMessageResolver;
+import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 
-@Data
-public class AuthorizationToken implements Proto {
-    public bisq.network.protobuf.AuthorizationToken toProto() {
-        return bisq.network.protobuf.AuthorizationToken.newBuilder().build();
-    }
-
-    public static AuthorizationToken fromProto(bisq.network.protobuf.AuthorizationToken proto) {
-        return new AuthorizationToken();
+public class OfferService {
+    public OfferService() {
+        DistributedDataResolver.addResolver("offer", new OfferDistributedDataResolver());
+        NetworkMessageResolver.addResolver("offer", new OfferNetworkMessageResolver());
     }
 }

@@ -18,7 +18,7 @@
 package bisq.common.currency;
 
 import bisq.common.proto.Proto;
-import bisq.common.proto.UnresolvableMessageCaseException;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -26,7 +26,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Getter
-public abstract class TradeCurrency implements Comparable<TradeCurrency>, Proto<bisq.common.protobuf.TradeCurrency> {
+public abstract class TradeCurrency implements Comparable<TradeCurrency>, Proto {
     protected final String code;
     @EqualsAndHashCode.Exclude
     protected final String name;
@@ -72,7 +72,7 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Proto<
                 return FiatCurrency.fromProto(proto);
             }
         }
-        throw new UnresolvableMessageCaseException(proto);
+        throw new UnresolvableProtobufMessageException(proto);
     }
     
 

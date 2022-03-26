@@ -120,7 +120,6 @@ public class Coin extends Monetary {
     // Protobuffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
     public bisq.common.protobuf.Monetary toProto() {
         return getMonetaryBuilder().setCoin(bisq.common.protobuf.Coin.newBuilder()).build();
     }

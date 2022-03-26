@@ -1,4 +1,213 @@
 syntax = "proto3";
-package network.proto;
-option java_package = "bisq.network.proto";
+package network;
+option java_package = "bisq.network.protobuf";
 option java_multiple_files = true;
+import "security.proto";
+import "google/protobuf/any.proto";
+
+// Data objects
+
+message Address {
+  string host = 1;
+  uint32 port = 2;
+}
+
+message AddressTransportTypeTuple {
+  string transportType = 1;
+  Address address = 2;
+}
+
+message NetworkId {
+  repeated AddressTransportTypeTuple addressNetworkTypeTuple = 1;
+  security.PubKey pubKey = 2;
+  string nodeId = 3;
+}
+
+message Capability {
+  Address address = 1;
+  repeated string supportedTransportTypes = 2;
+}
+
+message Load {
+  uint32 numConnections = 1;
+}
+
+message FilterEntry {
+  bytes hash = 1;
+  uint32 sequenceNumber = 2;
+}
+
+message DataFilter {
+  repeated FilterEntry filterEntries = 1;
+}
+
+message Inventory {
+  repeated NetworkMessage entries = 1;
+  uint32 numDropped = 2;
+}
+
+message DataRequest {
+}
+ 
+message Peer {
+  Capability capability = 1;
+  Load load = 2;
+  bool isOutboundConnection = 3;
+  uint64 created = 4;
+}
+
+// EnvelopeMessages
+
+message AuthorizationToken {}
+
+message ConnectionHandshake {
+  message Request {
+    Capability capability = 1;
+    Load load = 2;
+  }
+  message Response {
+    Capability capability = 1;
+    Load load = 2;
+  }
+}
+
+
+
+
+
+// NetworkMessage
+
+message NetworkMessage {
+  oneof message {
+    ConnectionHandshake.Request connectionHandshakeRequest = 1;
+    ConnectionHandshake.Response connectionHandshakeResponse = 2;
+    CloseConnectionMessage closeConnectionMessage = 3;
+    ConfidentialMessage confidentialMessage = 4;
+    InventoryRequest inventoryRequest = 5;
+    InventoryResponse inventoryResponse = 6;
+    AddAuthenticatedDataRequest addAuthenticatedDataRequest = 7;
+    RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = 8;
+    AddMailboxRequest  addMailboxRequest = 9;
+    RemoveMailboxRequest removeMailboxRequest = 10;
+    PeerExchangeRequest peerExchangeRequest = 11;
+    PeerExchangeResponse peerExchangeResponse = 12;
+    Ping ping = 13;
+    Pong pong = 14;
+    AddressValidationRequest addressValidationRequest = 15;
+    AddressValidationResponse addressValidationResponse = 16;
+  }
+}
+
+message NetworkEnvelope {
+  uint32 version = 1;
+  AuthorizationToken authorizationToken = 2;
+  NetworkMessage networkMessage = 3;
+}
+
+
+message CloseConnectionMessage {
+  string closeReason = 1;
+}
+
+message ConfidentialMessage {
+  security.ConfidentialData confidentialData = 1;
+  string keyId = 2;
+}
+
+message InventoryRequest {
+  DataFilter dataFilter = 1;
+  uint32 nonce = 2;
+}
+
+message InventoryResponse {
+  Inventory inventory = 1;
+  uint32 requestNonce = 2;
+}
+
+
+message MetaData {
+  uint64 ttl = 1;
+  uint32 maxSizeInBytes = 2;
+  string fileName = 3;
+}
+
+message AuthenticatedData {
+  google.protobuf.Any distributedData = 1;
+}
+
+message AuthenticatedSequentialData {
+  AuthenticatedData authenticatedData = 1;
+  uint32 sequenceNumber = 2;
+  bytes pubKeyHash = 3;
+  uint64 created = 4;
+}
+
+message AddAuthenticatedDataRequest {
+  AuthenticatedSequentialData authenticatedSequentialData = 1;
+  bytes signature = 2;
+  bytes ownerPublicKeyBytes = 3;
+}
+message RemoveAuthenticatedDataRequest {
+  MetaData metaData = 1;
+  bytes hash = 2;
+  bytes ownerPublicKeyBytes = 3;
+  uint32 sequenceNumber = 4;
+  bytes signature = 5;
+  uint64 created = 6;
+}
+
+
+message MailboxPayload {
+  ConfidentialMessage confidentialMessage = 1;
+  MetaData metaData = 2;
+}
+
+message MailboxData {
+  MailboxPayload mailboxPayload = 1;
+  uint32 sequenceNumber = 2;
+  bytes hashOfSenderPublicKey = 3;
+  uint64 created = 4;
+  bytes receiversPubKeyBytes = 5;
+  bytes hashOfReceiversPublicKey = 6;
+}
+
+message AddMailboxRequest {
+  MailboxData mailboxData = 1;
+  bytes signature = 2;
+  bytes senderPublicKeyBytes = 3;
+}
+
+message RemoveMailboxRequest {
+  MetaData metaData = 1;
+  bytes hash = 2;
+  bytes receiverPublicKeyBytes = 3;
+  bytes signature = 4;
+  uint64 created = 5;
+}
+
+message PeerExchangeRequest {
+  uint32 nonce = 1;
+  repeated Peer peers = 2;
+}
+
+message PeerExchangeResponse {
+  uint32 nonce = 1;
+  repeated Peer peers = 2;
+}
+
+message Ping {
+  uint32 nonce = 1;
+}
+
+message Pong {
+  uint32 requestNonce = 1;
+}
+
+message AddressValidationRequest {
+  uint32 nonce = 1;
+}
+
+message AddressValidationResponse {
+  uint32 requestNonce = 1;
+}
+   

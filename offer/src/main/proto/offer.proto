@@ -1,0 +1,7 @@
+syntax = "proto3";
+package offer;
+option java_package = "bisq.offer.protobuf";
+option java_multiple_files = true;
+
+message Offer {
+}

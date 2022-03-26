@@ -18,7 +18,6 @@
 package bisq.common.proto;
 
 import bisq.common.encoding.ObjectSerializer;
-import com.google.protobuf.Message;
 
 import java.io.Serializable;
 
@@ -26,11 +25,11 @@ import java.io.Serializable;
  * Interface for any object which gets serialized using protobuf
  */
 //todo remove extends Serializable
-public interface Proto<T extends Message> extends Serializable {
+public interface Proto extends Serializable {
     //todo remove default once all is implemented
-    default T toProto() {
+   /* default Message toProto() {
         return null;
-    }
+    }*/
 
     //todo remove
     default byte[] serialize() {

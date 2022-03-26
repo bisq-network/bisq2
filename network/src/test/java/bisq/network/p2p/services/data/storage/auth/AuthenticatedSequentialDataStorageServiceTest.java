@@ -22,6 +22,7 @@ import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.network.p2p.services.data.inventory.InventoryUtil;
 import bisq.network.p2p.services.data.storage.Result;
+import bisq.network.protobuf.NetworkMessage;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
@@ -53,6 +54,11 @@ public class AuthenticatedSequentialDataStorageServiceTest {
         public MockDataTransaction(int sequenceNumber, long created) {
             this.sequenceNumber = sequenceNumber;
             this.created = created;
+        }
+
+        @Override
+        public NetworkMessage toNetworkMessageProto() {
+            return null;
         }
     }
 

@@ -28,8 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -71,8 +71,8 @@ public abstract class Connection {
     private final Socket socket;
     private final Handler handler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
-    private ObjectInputStream objectInputStream;
-    private ObjectOutputStream objectOutputStream;
+    private OutputStream outputStream;
+    private InputStream inputStream;
     @Nullable
     private Future<?> future;
 
@@ -91,35 +91,35 @@ public abstract class Connection {
         this.peersLoad = peersLoad;
         this.handler = handler;
         this.metrics = metrics;
-        // TODO java serialisation is just for dev, will be replaced by custom serialisation
-        // https://github.com/lightningnetwork/lightning-rfc/blob/master/01-messaging.md#type-length-value-format
-        // ObjectOutputStream need to be set before objectInputStream otherwise we get blocked...
-        // https://stackoverflow.com/questions/14110986/new-objectinputstream-blocks/14111047
         try {
-            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            objectInputStream = new ObjectInputStream(socket.getInputStream());
+            outputStream = socket.getOutputStream();
+            inputStream = socket.getInputStream();
         } catch (IOException exception) {
             log.error("Could not create objectOutputStream/objectInputStream for socket " + socket, exception);
             errorHandler.accept(this, exception);
             close(CloseReason.EXCEPTION.exception(exception));
             return;
         }
+
         future = NetworkService.NETWORK_IO_POOL.submit(() -> {
             Thread.currentThread().setName("Connection.read-" + getThreadNameId());
             try {
                 while (isNotStopped()) {
-                    Object msg = objectInputStream.readObject();
+                    var proto = bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
+                    // parsing might need some time wo we check again if connection is still active
                     if (isNotStopped()) {
-                        String simpleName = msg.getClass().getSimpleName();
-                        if (!(msg instanceof NetworkEnvelope networkEnvelope)) {
-                            throw new ConnectionException("Received message not type of Envelope. " + simpleName);
-                        }
+                        NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
                         if (networkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
-                            throw new ConnectionException("Invalid network version. " + simpleName);
+                            throw new ConnectionException("Invalid network version. " +
+                                    networkEnvelope.getClass().getSimpleName());
                         }
-                        log.debug("Received message: {} at: {}", StringUtils.truncate(networkEnvelope.getNetworkMessage().toString(), 200), this);
+                        NetworkMessage networkMessage = networkEnvelope.getNetworkMessage();
+                        log.debug("Received message: {} at: {}",
+                                StringUtils.truncate(networkMessage.toString(), 200), this);
                         metrics.onReceived(networkEnvelope);
-                        NetworkService.DISPATCHER.submit(() -> handler.handleNetworkMessage(networkEnvelope.getNetworkMessage(), networkEnvelope.getAuthorizationToken(), this));
+                        NetworkService.DISPATCHER.submit(() -> handler.handleNetworkMessage(networkMessage,
+                                networkEnvelope.getAuthorizationToken(),
+                                this));
                     }
                 }
             } catch (Exception exception) {
@@ -145,8 +145,8 @@ public abstract class Connection {
         try {
             NetworkEnvelope networkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, authorizationToken, networkMessage);
             synchronized (writeLock) {
-                objectOutputStream.writeObject(networkEnvelope);
-                objectOutputStream.flush();
+                networkEnvelope.toProto().writeDelimitedTo(outputStream);
+                outputStream.flush();
             }
             metrics.onSent(networkEnvelope);
             log.debug("Sent {} from {}",

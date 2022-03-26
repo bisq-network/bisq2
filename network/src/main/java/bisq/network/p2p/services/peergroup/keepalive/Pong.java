@@ -19,5 +19,15 @@ package bisq.network.p2p.services.peergroup.keepalive;
 
 import bisq.network.p2p.message.NetworkMessage;
 
-record Pong(int requestNonce) implements NetworkMessage {
+public record Pong(int requestNonce) implements NetworkMessage {
+    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+        return getNetworkMessageBuilder().setPong(
+                        bisq.network.protobuf.Pong.newBuilder()
+                                .setRequestNonce(requestNonce))
+                .build();
+    }
+
+    public static Pong fromProto(bisq.network.protobuf.Pong proto) {
+        return new Pong(proto.getRequestNonce());
+    }
 }

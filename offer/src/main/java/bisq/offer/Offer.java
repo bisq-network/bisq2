@@ -27,6 +27,7 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.offer.options.ListingOption;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
+import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -109,6 +110,16 @@ public class Offer implements DistributedData {
     @Override
     public boolean isDataInvalid() {
         return false;
+    }
+
+    @Override
+    public Any toAny() {
+        return null;
+    }
+
+    public static Offer fromProto(bisq.offer.protobuf.Offer proto) {
+        //todo
+        return null;
     }
 
     public Optional<SwapProtocolType> findProtocolType() {

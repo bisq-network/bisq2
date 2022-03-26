@@ -15,18 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup.keepalive;
+package bisq.offer;
 
+import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.network.p2p.protobuf.ProtoResolver;
 import bisq.network.p2p.message.NetworkMessage;
+import com.google.protobuf.Any;
+import lombok.extern.slf4j.Slf4j;
 
-public record Ping(int nonce) implements NetworkMessage {
-    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
-        return getNetworkMessageBuilder().setPing(
-                        bisq.network.protobuf.Ping.newBuilder().setNonce(nonce))
-                .build();
-    }
+@Slf4j
+public class OfferNetworkMessageResolver implements ProtoResolver<NetworkMessage> {
+    public NetworkMessage resolve(Any any, String protoMessageName) {
+        //  try {
+        if (protoMessageName.equals("Offer")) {
+            return null;
+        }
+      /*  } catch (InvalidProtocolBufferException e) {
+            throw new UnresolvableProtobufMessageException(e);
+        }*/
 
-    public static Ping fromProto(bisq.network.protobuf.Ping proto) {
-        return new Ping(proto.getNonce());
+        throw new UnresolvableProtobufMessageException(any);
     }
 }

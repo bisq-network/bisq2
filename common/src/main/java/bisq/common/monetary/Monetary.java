@@ -19,7 +19,7 @@ package bisq.common.monetary;
 
 import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.Proto;
-import bisq.common.proto.UnresolvableMessageCaseException;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,7 +31,7 @@ import java.math.BigDecimal;
 @Getter
 @ToString
 @Slf4j
-public abstract class Monetary implements Comparable<Monetary>, Proto<bisq.common.protobuf.Monetary> {
+public abstract class Monetary implements Comparable<Monetary>, Proto {
     public static long doubleValueToLong(double value, int precision) {
         double max = BigDecimal.valueOf(Long.MAX_VALUE).movePointLeft(precision).doubleValue();
         if (value > max) {
@@ -99,7 +99,7 @@ public abstract class Monetary implements Comparable<Monetary>, Proto<bisq.commo
                 return Fiat.fromProto(proto);
             }
         }
-        throw new UnresolvableMessageCaseException(proto);
+        throw new UnresolvableProtobufMessageException(proto);
     }
 
     abstract public double toDouble(long value);

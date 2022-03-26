@@ -4,6 +4,7 @@ package bisq.social.intent;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.user.ChatUser;
+import com.google.protobuf.Any;
 
 import java.util.concurrent.TimeUnit;
 
@@ -17,5 +18,10 @@ public record TradeIntent(String id, ChatUser maker, String ask, String bid, lon
     @Override
     public boolean isDataInvalid() {
         return false;
+    }
+
+    @Override
+    public Any toAny() {
+        return null;
     }
 }

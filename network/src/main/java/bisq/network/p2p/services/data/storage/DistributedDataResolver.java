@@ -15,36 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.storage.append;
+package bisq.network.p2p.services.data.storage;
 
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.protobuf.ProtoResolver;
+import bisq.network.p2p.protobuf.ProtoResolverMap;
 import com.google.protobuf.Any;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 
-@EqualsAndHashCode
-@Getter
-public class MockAppendOnlyData implements AppendOnlyData {
-    private final String text;
-    final MetaData metaData;
+// Interface for any data which gets distributed to the P2P network. Usually data from outside the network module 
+// like Offer, ChatMessage,...
+public class DistributedDataResolver {
+    private static final ProtoResolverMap<DistributedData> protoResolverMap = new ProtoResolverMap<>();
 
-    public MockAppendOnlyData(String text) {
-        this.text = text;
-        metaData = new MetaData(251, getClass().getSimpleName());
+    public static void addResolver(String moduleName, ProtoResolver<DistributedData> resolver) {
+        protoResolverMap.addProtoResolver(moduleName, resolver);
     }
 
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
-    @Override
-    public Any toAny() {
-        return null;
+    static DistributedData resolve(Any any) {
+        return protoResolverMap.resolve(any);
     }
 }

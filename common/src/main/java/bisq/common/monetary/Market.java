@@ -20,8 +20,7 @@ package bisq.common.monetary;
 import bisq.common.proto.Proto;
 import lombok.Setter;
 
-public record Market(String baseCurrencyCode, String quoteCurrencyCode) implements Proto<bisq.common.protobuf.Market> {
-    @Override
+public record Market(String baseCurrencyCode, String quoteCurrencyCode) implements Proto {
     public bisq.common.protobuf.Market toProto() {
         return bisq.common.protobuf.Market.newBuilder()
                 .setBaseCurrencyCode(baseCurrencyCode)

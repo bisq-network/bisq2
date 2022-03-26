@@ -81,7 +81,6 @@ public class Fiat extends Monetary {
     // Protobuffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
     public bisq.common.protobuf.Monetary toProto() {
         return getMonetaryBuilder().setFiat(bisq.common.protobuf.Fiat.newBuilder()).build();
     }

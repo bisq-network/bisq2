@@ -15,18 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.authorization;
+package bisq.common.util;
 
-import bisq.common.proto.Proto;
-import lombok.Data;
-
-@Data
-public class AuthorizationToken implements Proto {
-    public bisq.network.protobuf.AuthorizationToken toProto() {
-        return bisq.network.protobuf.AuthorizationToken.newBuilder().build();
-    }
-
-    public static AuthorizationToken fromProto(bisq.network.protobuf.AuthorizationToken proto) {
-        return new AuthorizationToken();
-    }
+public record ProtoPackageAndMessageName(String protoPackage, String protoMessageName) {
 }

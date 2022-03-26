@@ -23,8 +23,7 @@ import com.google.protobuf.ByteString;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
-public record PubKey(PublicKey publicKey, String keyId) implements Proto<bisq.security.protobuf.PubKey> {
-    @Override
+public record PubKey(PublicKey publicKey, String keyId) implements Proto {
     public bisq.security.protobuf.PubKey toProto() {
         return bisq.security.protobuf.PubKey.newBuilder()
                 .setPublicKey(ByteString.copyFrom(publicKey.getEncoded()))

@@ -20,4 +20,15 @@ package bisq.network.p2p.services.data.inventory;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 
 public record InventoryResponse(Inventory inventory, int requestNonce) implements BroadcastMessage {
+    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+        return getNetworkMessageBuilder().setInventoryResponse(
+                        bisq.network.protobuf.InventoryResponse.newBuilder()
+                                .setInventory(inventory.toProto())
+                                .setRequestNonce(requestNonce))
+                .build();
+    }
+
+    public static InventoryResponse fromProto(bisq.network.protobuf.InventoryResponse proto) {
+        return new InventoryResponse(Inventory.fromProto(proto.getInventory()), proto.getRequestNonce());
+    }
 }

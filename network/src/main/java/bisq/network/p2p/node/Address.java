@@ -50,6 +50,20 @@ public class Address implements Proto {
         this.port = port;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protobuffer
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public bisq.network.protobuf.Address toProto() {
+        return bisq.network.protobuf.Address.newBuilder()
+                .setHost(host)
+                .setPort(port)
+                .build();
+    }
+
+    public static Address fromProto(bisq.network.protobuf.Address proto) {
+        return new Address(proto.getHost(), proto.getPort());
+    }
 
     public boolean isClearNetAddress() {
         //noinspection UnstableApiUsage

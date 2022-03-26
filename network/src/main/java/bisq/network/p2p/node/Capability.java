@@ -18,9 +18,27 @@
 package bisq.network.p2p.node;
 
 import bisq.common.proto.Proto;
+import bisq.common.util.ProtobufUtils;
 import bisq.network.p2p.node.transport.Transport;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public record Capability(Address address, Set<Transport.Type> supportedTransportTypes) implements Proto {
+    public bisq.network.protobuf.Capability toProto() {
+        return bisq.network.protobuf.Capability.newBuilder()
+                .setAddress(address.toProto())
+                .addAllSupportedTransportTypes(supportedTransportTypes.stream()
+                        .sorted(Enum::compareTo)
+                        .map(Enum::name)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    public static Capability fromProto(bisq.network.protobuf.Capability proto) {
+        Set<Transport.Type> supportedTransportTypes = proto.getSupportedTransportTypesList().stream()
+                .map(e -> ProtobufUtils.enumFromProto(Transport.Type.class, e))
+                .collect(Collectors.toSet());
+        return new Capability(Address.fromProto(proto.getAddress()), supportedTransportTypes);
+    }
 }

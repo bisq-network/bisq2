@@ -20,6 +20,7 @@ package bisq.application;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
+import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import lombok.Getter;
@@ -55,9 +56,15 @@ public class NetworkApplicationService extends ServiceProvider {
         persistenceService = new PersistenceService(applicationConfig.baseDir());
         keyPairService = new KeyPairService(persistenceService);
 
-        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationConfig.baseDir(),
-                getConfig("bisq.networkServiceConfig"));
+        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(
+                applicationConfig.baseDir(),
+              getConfig("bisq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
+
+        //todo check if needed
+        //todo resolver registration is done in OfferService
+        //todo if needed find other solution
+        OfferService  offerService = new OfferService();
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {

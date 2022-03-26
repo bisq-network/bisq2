@@ -18,10 +18,17 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.proto.Proto;
+import com.google.protobuf.Any;
 
 // Interface for any data which gets distributed to the P2P network. Usually data from outside the network module 
 // like Offer, ChatMessage,...
 public interface DistributedData extends Proto {
+    static DistributedData resolve(Any any) {
+        return DistributedDataResolver.resolve(any);
+    }
+
+    Any toAny();
+
     MetaData getMetaData();
 
     boolean isDataInvalid();
