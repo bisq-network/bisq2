@@ -81,6 +81,8 @@ public class ChatModel implements Model {
     }
 
      boolean isMyMessage(ChatMessage chatMessage) {
-        return chatMessage.getChatUser().getId().equals(userProfileService.getPersistableStore().getSelectedUserProfile().get().chatUser().getId());
+         String chatId = chatMessage.getChatUser().getId();
+         return userProfileService.getPersistableStore().getUserProfiles().stream()
+                .anyMatch(userprofile -> userprofile.chatUser().getId().equals(chatId));
     }
 }

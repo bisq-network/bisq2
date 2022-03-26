@@ -92,14 +92,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     @Override
     public void onMessage(Message message) {
         if (message instanceof PrivateChatMessage privateChatMessage) {
-            String domainId = privateChatMessage.getChannelId();
-            //todo outdated userName concept
-            String userName = findUserName(domainId).orElse("Maker@" + StringUtils.truncate(domainId, 8));
-            ChatIdentity chatIdentity = getOrCreateChatIdentity(userName, domainId);
             ChatUser chatUser = privateChatMessage.getChatUser();
-            PrivateChannel privateChannel = getOrCreatePrivateChannel(privateChatMessage.getChannelId(),
-                    chatUser,
-                    chatIdentity);
+            PrivateChannel privateChannel = getOrCreatePrivateChannel(privateChatMessage.getChannelId(), chatUser);
             addPrivateChatMessage(privateChatMessage, privateChannel);
         }
     }
@@ -176,8 +170,10 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 .orElse(CompletableFuture.completedFuture(Optional.empty()));
     }
 
-    public PrivateChannel getOrCreatePrivateChannel(String id, ChatUser chatUser, ChatIdentity chatIdentity) {
-        PrivateChannel privateChannel = new PrivateChannel(id, chatUser, chatIdentity);
+    public PrivateChannel getOrCreatePrivateChannel(String id, ChatUser chatUser) {
+        PrivateChannel privateChannel = new PrivateChannel(id, chatUser,
+                PrivateChannel.findSenderProfileFromChannelId(id, chatUser, userProfileService));
+
         Optional<PrivateChannel> previousChannel;
         synchronized (persistableStore) {
             previousChannel = persistableStore.findPrivateChannel(id);
@@ -260,9 +256,9 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public void sendPrivateChatMessage(String text, Optional<QuotedMessage> quotedMessage,
-                                       PrivateChannel privateChannel,
-                                       UserProfile userProfile) {
+                                       PrivateChannel privateChannel) {
         String channelId = privateChannel.getId();
+        UserProfile userProfile = privateChannel.getSenderProfile();
         PrivateChatMessage chatMessage = new PrivateChatMessage(channelId,
                 userProfile.chatUser(),
                 text,

@@ -41,4 +41,8 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
     }
 
     public abstract String getChannelName();
+
+    public ObservableSet<ChatMessage> getChatMessages() {
+        return chatMessages;
+    }
 }
