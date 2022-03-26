@@ -31,11 +31,11 @@ public class Set1Configuration implements Configuration {
     };
 
     private final static String[] FACET_PATH_TEMPLATES = new String[]{
-            "#ROOT#/#COLOR#/01Body/#COLOR#_body-#ITEM#.png",
-            "#ROOT#/#COLOR#/02Face/#COLOR#_face-#ITEM#.png",
-            "#ROOT#/#COLOR#/Mouth/#COLOR#_mouth-#ITEM#.png",
-            "#ROOT#/#COLOR#/Eyes/#COLOR#_eyes-#ITEM#.png",
-            "#ROOT#/#COLOR#/Accessory/#COLOR#_accessory-#ITEM#.png",
+            ROOT + "/#COLOR#/01Body/#COLOR#_body-#ITEM#.png",
+            ROOT + "/#COLOR#/02Face/#COLOR#_face-#ITEM#.png",
+            ROOT + "/#COLOR#/Mouth/#COLOR#_mouth-#ITEM#.png",
+            ROOT + "/#COLOR#/Eyes/#COLOR#_eyes-#ITEM#.png",
+            ROOT + "/#COLOR#/Accessory/#COLOR#_accessory-#ITEM#.png",
     };
 
     @Override
@@ -60,8 +60,7 @@ public class Set1Configuration implements Configuration {
     }
 
     private String generatePath(String facetPathTemplate, String color, int bucketValue) {
-        // TODO: Make more efficient
-        return facetPathTemplate.replace("#ROOT#", ROOT)
+        return facetPathTemplate
                 .replaceAll("#COLOR#", color)
                 .replaceAll("#ITEM#", String.format("%02d", bucketValue + 1));
     }
