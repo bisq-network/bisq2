@@ -62,11 +62,14 @@ public class LeftNavModel implements Model {
                 networkService.getServiceNodesByTransport().findServiceNode(type).ifPresent(serviceNode -> {
                     serviceNode.getPeerGroupService().ifPresent(peerGroupService -> {
                         PeerGroup peerGroup = peerGroupService.getPeerGroup();
+                        // Set numTargetConnections
                         switch (type) {
                             case TOR -> torNumTargetConnections.set(String.valueOf(peerGroup.getTargetNumConnectedPeers()));
                             case I2P -> i2pNumTargetConnections.set(String.valueOf(peerGroup.getTargetNumConnectedPeers()));
                             case CLEAR -> clearNetNumTargetConnections.set(String.valueOf(peerGroup.getTargetNumConnectedPeers()));
                         }
+                        // Set numConnections (peerGroup may already have a non-zero numConnections before this UI code is executed)
+                        onNumConnectionsChanged(type, peerGroup);
 
                         Node defaultNode = serviceNode.getDefaultNode();
                         defaultNode.addListener(new Node.Listener() {
