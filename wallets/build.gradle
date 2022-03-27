@@ -16,13 +16,16 @@ dependencies {
     api platform(project(':platforms:common-platform'))
 
     implementation project(':common')
+    implementation project(':persistence')
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonDatabindVersion")
     implementation("com.github.bisq-network:jsonrpc4j:$jsonrpc4jVersion") {
         exclude(module: 'base64')
         exclude(module: 'httpcore-nio')
     }
+
     implementation libs.google.guava
+    implementation libs.protobuf.java
 
     testImplementation("org.assertj:assertj-core:3.22.0")
 }

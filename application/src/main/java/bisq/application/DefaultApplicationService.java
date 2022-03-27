@@ -165,7 +165,8 @@ public class DefaultApplicationService extends ServiceProvider {
         protocolService = new ProtocolService(networkService, identityService, persistenceService, openOfferService);
 
         Optional<WalletConfig> walletConfig = !isRegtestRun() ? Optional.empty() : createRegtestWalletConfig();
-        walletService = new WalletService(walletConfig);
+        walletService = new WalletService(persistenceService, walletConfig);
+        walletService.tryAutoInitialization();
 
         daoBridgeService = new DaoBridgeService(networkService, identityService, getConfig("bisq.oracle.daoBridge"));
     }
@@ -211,7 +212,8 @@ public class DefaultApplicationService extends ServiceProvider {
                                 .thenCompose(res -> chatService.initialize()),
                         openOfferService.initialize(),
                         offerBookService.initialize(),
-                        tradeIntentService.initialize()))
+                        tradeIntentService.initialize(),
+                        walletService.tryAutoInitialization()))
                 // TODO Needs to increase if using embedded I2P router (i2p internal bootstrap timeouts after 5 mins)
                 .orTimeout(5, TimeUnit.MINUTES)
                 .thenApply(list -> list.stream().allMatch(e -> e))

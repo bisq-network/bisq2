@@ -15,16 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.wallet.receive;
+syntax = "proto3";
 
-import bisq.desktop.common.view.Model;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+package wallets;
+option java_package = "bisq.wallets.protobuf";
+option java_multiple_files = true;
 
-public class WalletReceiveModel implements Model {
-    final ObservableList<String> listItems = FXCollections.observableArrayList();
-
-    public ObservableList<String> getListItems() {
-        return listItems;
-    }
+message WalletStore {
+  repeated string receiveAddresses = 1;
 }

@@ -19,12 +19,17 @@ package bisq.wallets;
 
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
+import bisq.common.observable.ObservableSet;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
+import bisq.persistence.PersistenceService;
 import bisq.wallets.bitcoind.BitcoinWallet;
 import bisq.wallets.elementsd.LiquidWallet;
 import bisq.wallets.exceptions.WalletNotInitializedException;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
 import bisq.wallets.rpc.RpcConfig;
+import bisq.wallets.stores.WalletStore;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,53 +39,62 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class WalletService {
+public class WalletService implements PersistenceClient<WalletStore> {
     private static final String LOCALHOST = "127.0.0.1";
+
+    @Getter
+    private final WalletStore persistableStore = new WalletStore();
+    @Getter
+    private final Persistence<WalletStore> persistence;
 
     private final Optional<WalletConfig> walletConfig;
     @Getter
     private Optional<Wallet> wallet = Optional.empty();
+
     @Getter
     private final Observable<Coin> observableBalanceAsCoin = new Observable<>(Coin.of(0, "BTC"));
 
-    public WalletService(Optional<WalletConfig> walletConfig) {
+    public WalletService(PersistenceService persistenceService,
+                         Optional<WalletConfig> walletConfig) {
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.walletConfig = walletConfig;
     }
 
     public CompletableFuture<Boolean> tryAutoInitialization() {
-        if (walletConfig.isEmpty()) {
-            return CompletableFuture.completedFuture(true);
+        log.info("initialize");
+
+        if (walletConfig.isPresent()) {
+            return initialize(walletConfig.get(), Optional.empty());
         }
-        return initialize(walletConfig.get(), Optional.empty());
+
+        return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> initialize(WalletConfig walletConfig, Optional<String> walletPassphrase) {
-        if (wallet.isPresent()) {
-            return CompletableFuture.completedFuture(true);
+        if (wallet.isEmpty()) {
+            Path walletsDataDir = walletConfig.getWalletsDataDirPath();
+            walletsDataDir.toFile().mkdirs();
+
+            Wallet wallet = switch (walletConfig.getWalletBackend()) {
+                case BITCOIND -> {
+                    var bitcoindWallet = createBitcoinWallet(walletConfig, walletsDataDir);
+                    bitcoindWallet.initialize(walletPassphrase);
+                    yield bitcoindWallet;
+                }
+                case ELEMENTSD -> {
+                    var liquidWallet = createLiquidWallet(walletConfig, walletsDataDir);
+                    liquidWallet.initialize(walletPassphrase);
+                    yield liquidWallet;
+                }
+            };
+
+            this.wallet = Optional.of(wallet);
+            log.info("Successfully created/loaded wallet at {}", walletsDataDir);
+
+            getBalance();
         }
 
-        return CompletableFuture.runAsync(() -> {
-                    Path walletsDataDir = walletConfig.getWalletsDataDirPath();
-                    walletsDataDir.toFile().mkdirs();
-
-                    Wallet wallet = switch (walletConfig.getWalletBackend()) {
-                        case BITCOIND -> {
-                            var bitcoindWallet = createBitcoinWallet(walletConfig, walletsDataDir);
-                            bitcoindWallet.initialize(walletPassphrase);
-                            yield bitcoindWallet;
-                        }
-                        case ELEMENTSD -> {
-                            var liquidWallet = createLiquidWallet(walletConfig, walletsDataDir);
-                            liquidWallet.initialize(walletPassphrase);
-                            yield liquidWallet;
-                        }
-                    };
-
-                    this.wallet = Optional.of(wallet);
-                    log.info("Successfully created wallet at {}", walletsDataDir);
-                })
-                .thenRun(this::getBalance)
-                .thenApply(e -> true);
+        return CompletableFuture.completedFuture(true);
     }
 
     private BitcoinWallet createBitcoinWallet(WalletConfig walletConfig, Path walletsDataDir) {
@@ -116,8 +130,17 @@ public class WalletService {
     public CompletableFuture<String> getNewAddress(String label) {
         return CompletableFuture.supplyAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
-            return wallet.getNewAddress(AddressType.BECH32, label);
+            String receiveAddress = wallet.getNewAddress(AddressType.BECH32, label);
+
+            getReceiveAddresses().add(receiveAddress);
+            persist();
+
+            return receiveAddress;
         });
+    }
+
+    public ObservableSet<String> getReceiveAddresses() {
+        return persistableStore.getReceiveAddresses();
     }
 
     public CompletableFuture<String> signMessage(String address, String message) {
