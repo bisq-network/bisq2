@@ -10,6 +10,7 @@ apply from: '../buildSrc/test-dependencies.gradle'
 ext {
     jsonrpc4jVersion = '1.6.0.bisq.2'
     jacksonDatabindVersion = '2.12.0'
+    jeroMqVersion = '0.5.2'
 }
 
 dependencies {
@@ -26,6 +27,7 @@ dependencies {
 
     implementation libs.google.guava
     implementation libs.protobuf.java
+    implementation("org.zeromq:jeromq:$jeroMqVersion")
 
     testImplementation("org.assertj:assertj-core:3.22.0")
 }

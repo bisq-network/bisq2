@@ -108,13 +108,13 @@ public class BitcoindRegtestSetup
     }
 
     @Override
-    public void mineOneBlock() {
-        mineBlocks(1);
+    public List<String> mineOneBlock() {
+        return mineBlocks(1);
     }
 
-    public void mineBlocks(int numberOfBlocks) {
+    public List<String> mineBlocks(int numberOfBlocks) {
         String minerAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
-        daemon.generateToAddress(numberOfBlocks, minerAddress);
+        return daemon.generateToAddress(numberOfBlocks, minerAddress);
     }
 
     @Override

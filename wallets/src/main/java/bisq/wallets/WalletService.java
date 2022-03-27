@@ -60,17 +60,17 @@ public class WalletService implements PersistenceClient<WalletStore> {
         this.walletConfig = walletConfig;
     }
 
-    public CompletableFuture<Boolean> tryAutoInitialization() {
+    public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
         if (walletConfig.isPresent()) {
-            return initialize(walletConfig.get(), Optional.empty());
+            return loadOrCreateWallet(walletConfig.get(), Optional.empty());
         }
 
         return CompletableFuture.completedFuture(true);
     }
 
-    public CompletableFuture<Boolean> initialize(WalletConfig walletConfig, Optional<String> walletPassphrase) {
+    public CompletableFuture<Boolean> loadOrCreateWallet(WalletConfig walletConfig, Optional<String> walletPassphrase) {
         if (wallet.isEmpty()) {
             Path walletsDataDir = walletConfig.getWalletsDataDirPath();
             walletsDataDir.toFile().mkdirs();
@@ -91,7 +91,7 @@ public class WalletService implements PersistenceClient<WalletStore> {
             this.wallet = Optional.of(wallet);
             log.info("Successfully created/loaded wallet at {}", walletsDataDir);
 
-            getBalance();
+            updateBalance();
         }
 
         return CompletableFuture.completedFuture(true);
@@ -117,13 +117,12 @@ public class WalletService implements PersistenceClient<WalletStore> {
         return walletConfig.isPresent() || wallet.isPresent();
     }
 
-    public CompletableFuture<Long> getBalance() {
-        return CompletableFuture.supplyAsync(() -> {
+    private void updateBalance() {
+        CompletableFuture.runAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
             double walletBalance = wallet.getBalance();
             Coin coin = Coin.of(walletBalance, "BTC");
             observableBalanceAsCoin.set(coin);
-            return coin.getValue();
         });
     }
 

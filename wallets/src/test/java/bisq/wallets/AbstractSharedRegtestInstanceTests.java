@@ -29,7 +29,7 @@ public abstract class AbstractSharedRegtestInstanceTests<T extends BisqProcess, 
     private AbstractRegtestSetup<T, W> regtestSetup;
 
     @BeforeAll
-    public void start() throws IOException {
+    public void start() throws IOException, InterruptedException {
         regtestSetup = createRegtestSetup();
         regtestSetup.start();
     }
