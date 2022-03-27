@@ -93,6 +93,11 @@ public class DefaultApplicationService extends ServiceProvider {
     private final DaoBridgeService daoBridgeService;
     private final AccountAgeWitnessService accountAgeWitnessService;
 
+    /**
+     * Initialization status, updated as each required service bootstraps
+     */
+    private final Observable<String> initStatus = new Observable<>();
+
     public DefaultApplicationService(String[] args) {
         super("Bisq");
 
@@ -146,20 +151,35 @@ public class DefaultApplicationService extends ServiceProvider {
         return persistenceService.readAllPersisted();
     }
 
+    private CompletableFuture<Boolean> setInitStatus(String status) {
+        initStatus.set(status);
+        return CompletableFuture.completedFuture(true);
+    }
+
     /**
      * Initializes all domain objects, services and repositories.
      * We do in parallel as far as possible. If there are dependencies we chain those as sequence.
      */
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return securityService.initialize()
+        return
+                securityService.initialize()
+
+                .thenCompose(result -> setInitStatus("Bootstrapping network..."))
                 .thenCompose(result -> networkService.bootstrapToNetwork())
                 .whenComplete((r, t) -> {
                     log.debug("Network bootstrapped");
                 })
+
+                .thenCompose(result -> setInitStatus("Initializing identity service..."))
                 .thenCompose(result -> identityService.initialize())
+
+                .thenCompose(result -> setInitStatus("Initializing DAO bridge..."))
                 .thenCompose(result -> daoBridgeService.initialize())
+
+                .thenCompose(result -> setInitStatus("Initializing market price service..."))
                 .thenCompose(result -> marketPriceService.initialize())
+
                 .whenComplete((list, throwable) -> {
                     log.info("add dummy accounts");
                     if (accountService.getAccounts().isEmpty()) {
@@ -177,8 +197,13 @@ public class DefaultApplicationService extends ServiceProvider {
                         accountService.addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
                     }
                 })
+
+                .thenCompose(result -> setInitStatus("Initializing account age witness service..."))
                 .thenCompose(result -> accountAgeWitnessService.initialize())
+
+                .thenCompose(result -> setInitStatus("Initializing protocol service..."))
                 .thenCompose(result -> protocolService.initialize())
+
                 .thenCompose(result -> CompletableFutureUtils.allOf(
                         walletService.tryAutoInitialization(),
                         userProfileService.initialize()

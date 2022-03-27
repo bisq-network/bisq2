@@ -18,6 +18,8 @@
 package bisq.desktop.primary.splash;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,9 +30,15 @@ public class SplashController implements Controller {
     @Getter
     private final SplashView view;
 
+    private final Pin pin;
+
     public SplashController(DefaultApplicationService applicationService) {
         model = new SplashModel();
         view = new SplashView(model, this);
+
+        pin = FxBindings
+                .bind(model.getStatus())
+                .to(applicationService.getInitStatus());
     }
 
     @Override
@@ -39,5 +47,6 @@ public class SplashController implements Controller {
 
     @Override
     public void onDeactivate() {
+        pin.unbind();
     }
 }
