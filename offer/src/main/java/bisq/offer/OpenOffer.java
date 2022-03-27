@@ -20,6 +20,7 @@ package bisq.offer;
 import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+
 @EqualsAndHashCode
 @Getter
 public class OpenOffer implements Proto {
@@ -27,5 +28,15 @@ public class OpenOffer implements Proto {
 
     public OpenOffer(Offer offer) {
         this.offer = offer;
+    }
+
+    public bisq.offer.protobuf.OpenOffer toProto() {
+        return bisq.offer.protobuf.OpenOffer.newBuilder()
+                .setOffer(offer.toProto())
+                .build();
+    }
+
+    public static OpenOffer fromProto(bisq.offer.protobuf.OpenOffer proto) {
+        return new OpenOffer(Offer.fromProto(proto.getOffer()));
     }
 }

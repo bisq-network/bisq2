@@ -19,6 +19,16 @@ package bisq.offer.options;
 
 // For some fiat methods is useful to know the makers bank or county of bank.
 public record FiatSettlementOption(String countyCodeOfBank, String bankName) implements ListingOption {
+    public bisq.offer.protobuf.ListingOption toProto() {
+        return getListingOptionBuilder().setFiatSettlementOption(bisq.offer.protobuf.FiatSettlementOption.newBuilder()
+                        .setCountyCodeOfBank(countyCodeOfBank)
+                        .setBankName(bankName))
+                .build();
+    }
+
+    public static FiatSettlementOption fromProto(bisq.offer.protobuf.FiatSettlementOption proto) {
+        return new FiatSettlementOption(proto.getCountyCodeOfBank(), proto.getBankName());
+    }
 }
 
 

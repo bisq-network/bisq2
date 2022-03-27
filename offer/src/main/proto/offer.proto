@@ -2,6 +2,94 @@ syntax = "proto3";
 package offer;
 option java_package = "bisq.offer.protobuf";
 option java_multiple_files = true;
+import "common.proto";
+import "network.proto";
+import "security.proto";
 
+message FixPrice {
+  uint64 value = 1;
+}
+message FloatPrice {
+  double value = 1;
+}
+
+message PriceSpec {
+  oneof message {
+    FixPrice fixPrice = 1;
+    FloatPrice floatPrice = 2;
+  }
+}
+message SettlementSpec {
+  string settlementMethodName = 1;
+  optional string saltedMakerAccountId = 2;
+}
+message DisputeAgent {
+  string type = 1;
+  network.NetworkId networkId = 2;
+}
+message AmountOption {
+  double minAmountAsPercentage = 1;
+}
+message CollateralOptions {
+  uint64 buyerSecurityDeposit = 1;
+  uint64 sellerSecurityDeposit = 2;
+}
+message ContractOptions {
+  uint64 maxTradeLimit = 1;
+  uint64 maxTradePeriod = 2;
+}
+message FeeOption {
+  string feeType = 1;
+  uint32 blockHeightAtFeePayment = 2;
+  string feeTxId = 3;
+}
+message FiatSettlementOption {
+  string countyCodeOfBank = 1;
+  string bankName = 2;
+}
+
+message AccountCreationDateProof {
+  string hashOfAccount = 1;
+  string otsProof = 2;
+}
+message ReputationProof {
+  oneof message {
+    AccountCreationDateProof accountCreationDateProof = 1;
+  }
+}
+message ReputationOption {
+  repeated ReputationProof reputationProofs = 1;
+}
+message SupportOption {
+  repeated DisputeAgent disputeAgents = 1;
+}
+message ListingOption {
+  oneof message {
+    AmountOption amountOption = 1;
+    CollateralOptions collateralOptions = 2;
+    ContractOptions contractOptions = 3;
+    FeeOption feeOption = 4;
+    FiatSettlementOption fiatSettlementOption = 5;
+    ReputationOption reputationOption = 6;
+    SupportOption supportOption = 7;
+
+  }
+}
 message Offer {
+  string id = 1;
+  uint64 date = 2;
+  network.NetworkId makerNetworkId = 3;
+  common.Market market = 4;
+  string direction = 5;
+  uint64 baseAmount = 6;
+  PriceSpec priceSpec = 7;
+  repeated string swapProtocolTypes = 8;
+  repeated SettlementSpec baseSideSettlementSpecs = 9;
+  repeated SettlementSpec quoteSideSettlementSpecs = 10;
+  repeated ListingOption listingOptions = 11;
+  network.MetaData metaData = 12;
+}
+
+message OpenOffer {
+  Offer offer = 1;
 }

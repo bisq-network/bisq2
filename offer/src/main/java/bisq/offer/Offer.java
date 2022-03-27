@@ -36,26 +36,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public class Offer implements DistributedData {
-    private final String id;
-    private final long date;
-    private final NetworkId makerNetworkId;
-    private final PriceSpec priceSpec;
-    private final List<SwapProtocolType> protocolTypes;
-    private final List<SettlementSpec> baseSideSettlementSpecs;
-    private final List<SettlementSpec> quoteSideSettlementSpecs;
-    private final List<ListingOption> listingOptions;
-    private final Market market;
-    private final Direction direction;
-    private final MetaData metaData;
-    private final long baseAmount;
-
-
     public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
     public static final String REFERRAL_ID = "referralId";
     // Only used in payment method F2F
@@ -71,6 +58,19 @@ public class Offer implements DistributedData {
     public static final String XMR_AUTO_CONF = "xmrAutoConf";
     public static final String XMR_AUTO_CONF_ENABLED_VALUE = "1";
 
+    private final String id;
+    private final long date;
+    private final NetworkId makerNetworkId;
+    private final Market market;
+    private final Direction direction;
+    private final long baseAmount;
+    private final PriceSpec priceSpec;
+    private final List<SwapProtocolType> swapProtocolTypes;
+    private final List<SettlementSpec> baseSideSettlementSpecs;
+    private final List<SettlementSpec> quoteSideSettlementSpecs;
+    private final List<ListingOption> listingOptions;
+    private final MetaData metaData;
+
     public Offer(String id,
                  long date,
                  NetworkId makerNetworkId,
@@ -78,10 +78,36 @@ public class Offer implements DistributedData {
                  Direction direction,
                  long baseAmount,
                  PriceSpec priceSpec,
-                 List<SwapProtocolType> protocolTypes,
+                 List<SwapProtocolType> swapProtocolTypes,
                  List<SettlementSpec> baseSideSettlementSpecs,
                  List<SettlementSpec> quoteSideSettlementSpecs,
                  List<ListingOption> listingOptions) {
+        this(id,
+                date,
+                makerNetworkId,
+                market,
+                direction,
+                baseAmount,
+                priceSpec,
+                swapProtocolTypes,
+                baseSideSettlementSpecs,
+                quoteSideSettlementSpecs,
+                listingOptions,
+                new MetaData(TimeUnit.MINUTES.toMillis(5), 100000, Offer.class.getSimpleName()));
+    }
+
+    private Offer(String id,
+                  long date,
+                  NetworkId makerNetworkId,
+                  Market market,
+                  Direction direction,
+                  long baseAmount,
+                  PriceSpec priceSpec,
+                  List<SwapProtocolType> swapProtocolTypes,
+                  List<SettlementSpec> baseSideSettlementSpecs,
+                  List<SettlementSpec> quoteSideSettlementSpecs,
+                  List<ListingOption> listingOptions,
+                  MetaData metaData) {
         this.id = id;
         this.date = date;
         this.makerNetworkId = makerNetworkId;
@@ -89,17 +115,11 @@ public class Offer implements DistributedData {
         this.direction = direction;
         this.baseAmount = baseAmount;
         this.priceSpec = priceSpec;
-        this.protocolTypes = protocolTypes;
+        this.swapProtocolTypes = swapProtocolTypes;
         this.baseSideSettlementSpecs = baseSideSettlementSpecs;
         this.quoteSideSettlementSpecs = quoteSideSettlementSpecs;
         this.listingOptions = listingOptions;
-
-      /*  if (priceOption instanceof FixPriceOption fixPriceOption) {
-            Monetary base = Monetary.from(baseAmount, market.baseCurrencyCode());
-            Quote quote = Quote.fromPrice(fixPriceOption.value(), market);
-            quoteAmount = Quote.toQuoteMonetary(base,quote).getValue();
-        }*/
-        metaData = new MetaData(TimeUnit.MINUTES.toMillis(5), 100000, getClass().getSimpleName());
+        this.metaData = metaData;
     }
 
     @Override
@@ -114,21 +134,60 @@ public class Offer implements DistributedData {
 
     @Override
     public Any toAny() {
-        return null;
+        return Any.pack(toProto());
+    }
+
+    public bisq.offer.protobuf.Offer toProto() {
+        return bisq.offer.protobuf.Offer.newBuilder()
+                .setId(id)
+                .setDate(date)
+                .setMakerNetworkId(makerNetworkId.toProto())
+                .setMarket(market.toProto())
+                .setDirection(direction.name())
+                .setBaseAmount(baseAmount)
+                .setPriceSpec(priceSpec.toProto())
+                .addAllSwapProtocolTypes(swapProtocolTypes.stream().map(Enum::name).collect(Collectors.toList()))
+                .addAllBaseSideSettlementSpecs(baseSideSettlementSpecs.stream().map(SettlementSpec::toProto).collect(Collectors.toList()))
+                .addAllQuoteSideSettlementSpecs(quoteSideSettlementSpecs.stream().map(SettlementSpec::toProto).collect(Collectors.toList()))
+                .addAllListingOptions(listingOptions.stream().map(ListingOption::toProto).collect(Collectors.toList()))
+                .setMetaData(metaData.toProto())
+                .build();
     }
 
     public static Offer fromProto(bisq.offer.protobuf.Offer proto) {
-        //todo
-        return null;
+        List<SwapProtocolType> protocolTypes = proto.getSwapProtocolTypesList().stream()
+                .map(SwapProtocolType::fromProto)
+                .collect(Collectors.toList());
+        List<SettlementSpec> baseSideSettlementSpecs = proto.getBaseSideSettlementSpecsList().stream()
+                .map(SettlementSpec::fromProto)
+                .collect(Collectors.toList());
+        List<SettlementSpec> quoteSideSettlementSpecs = proto.getQuoteSideSettlementSpecsList().stream()
+                .map(SettlementSpec::fromProto)
+                .collect(Collectors.toList());
+        List<ListingOption> listingOptions = proto.getListingOptionsList().stream()
+                .map(ListingOption::fromProto)
+                .collect(Collectors.toList());
+        return new Offer(proto.getId(),
+                proto.getDate(),
+                NetworkId.fromProto(proto.getMakerNetworkId()),
+                Market.fromProto(proto.getMarket()),
+                Direction.fromProto(proto.getDirection()),
+                proto.getBaseAmount(),
+                PriceSpec.fromProto(proto.getPriceSpec()),
+                protocolTypes,
+                baseSideSettlementSpecs,
+                quoteSideSettlementSpecs,
+                listingOptions,
+                MetaData.fromProto(proto.getMetaData()));
     }
 
     public Optional<SwapProtocolType> findProtocolType() {
-        if (protocolTypes.isEmpty()) {
+        if (swapProtocolTypes.isEmpty()) {
             return Optional.empty();
-        } else if (protocolTypes.size() == 1) {
-            return Optional.of(protocolTypes.get(0));
+        } else if (swapProtocolTypes.size() == 1) {
+            return Optional.of(swapProtocolTypes.get(0));
         } else {
-            throw new IllegalStateException("Multiple protocolTypes are not supported yet. protocolTypes=" + protocolTypes);
+            throw new IllegalStateException("Multiple protocolTypes are not supported yet. protocolTypes=" + swapProtocolTypes);
         }
     }
 

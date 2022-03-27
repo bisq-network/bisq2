@@ -20,4 +20,13 @@ package bisq.offer;
 import bisq.common.proto.Proto;
 
 public interface PriceSpec extends Proto {
+    bisq.offer.protobuf.PriceSpec toProto();
+
+    default bisq.offer.protobuf.PriceSpec.Builder getPriceSpecBuilder() {
+        return bisq.offer.protobuf.PriceSpec.newBuilder();
+    }
+
+    static PriceSpec fromProto(bisq.offer.protobuf.PriceSpec proto) {
+        return null;
+    }
 }

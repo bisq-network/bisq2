@@ -18,8 +18,23 @@
 package bisq.offer.options;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 // Provides reputation proofs. E.g.Account age witness hash, signed account age witness,
 // tx nodeId and signature of burned BSQ, or social media account address,...
 public record ReputationOption(Set<ReputationProof> reputationProofs) implements ListingOption {
+    public bisq.offer.protobuf.ListingOption toProto() {
+        return getListingOptionBuilder().setReputationOption(
+                bisq.offer.protobuf.ReputationOption.newBuilder()
+                .addAllReputationProofs(reputationProofs.stream()
+                        .map(ReputationProof::toProto)
+                        .collect(Collectors.toList())))
+                .build();
+    }
+
+    public static ReputationOption fromProto(bisq.offer.protobuf.ReputationOption proto) {
+        return new ReputationOption(proto.getReputationProofsList().stream()
+                .map(ReputationProof::fromProto)
+                .collect(Collectors.toSet()));
+    }
 }

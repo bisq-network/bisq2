@@ -65,7 +65,7 @@ public record Entitlement(Type entitlementType, Proof proof) implements Proto, C
                     return InvitationProof.fromProto(proto.getInvitationProof());
                 }
                 case MESSAGE_NOT_SET -> {
-                    throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + proto.getMessageCase());
+                    throw new RuntimeException("MESSAGE_NOT_SET. networkMessage.getMessageCase()=" + proto.getMessageCase());
                 }
             }
             throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + proto.getMessageCase());

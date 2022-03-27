@@ -108,7 +108,7 @@ public interface NetworkMessage extends Proto {
                 return ExternalNetworkMessage.fromProto(networkMessage.getExternalNetworkMessage());
             }
             case MESSAGE_NOT_SET -> {
-                throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + networkMessage.getMessageCase());
+                throw new RuntimeException("MESSAGE_NOT_SET. networkMessage.getMessageCase()=" + networkMessage.getMessageCase());
             }
            /* default -> {
                 //todo

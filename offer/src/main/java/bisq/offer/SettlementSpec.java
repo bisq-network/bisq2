@@ -19,17 +19,27 @@ package bisq.offer;
 
 import bisq.common.proto.Proto;
 
-import javax.annotation.Nullable;
+import java.util.Optional;
 
 /**
  * @param settlementMethodName Name of SettlementMethod enum
- * @param makerAccountId       Local ID of maker's settlement account.
+ * @param saltedMakerAccountId Salted local ID of maker's settlement account.
  *                             In case maker had multiple accounts for same settlement method they
- *                             can define which account to use for that offer
+ *                             can define which account to use for that offer.
+ *                             We combine the local ID with an offer specific salt, to not leak identity of multiple 
+ *                             offers using the same account. We could use the pubkeyhash of the chosen identity as 
+ *                             salt.
  */
-//todo use salt for makerAccountId to avoid leaking privacy, otherwise observers can derive which offer is the same 
-// maker if same account is used in multiple offer. 
-    //todo move makerAccountId to openOffer
-public record SettlementSpec(String settlementMethodName,
-                            @Nullable String makerAccountId) implements Proto {
+public record SettlementSpec(String settlementMethodName, Optional<String> saltedMakerAccountId) implements Proto {
+    public bisq.offer.protobuf.SettlementSpec toProto() {
+        bisq.offer.protobuf.SettlementSpec.Builder builder = bisq.offer.protobuf.SettlementSpec.newBuilder()
+                .setSettlementMethodName(settlementMethodName);
+        saltedMakerAccountId.ifPresent(builder::setSaltedMakerAccountId);
+        return builder.build();
+    }
+
+    public static SettlementSpec fromProto(bisq.offer.protobuf.SettlementSpec proto) {
+        return new SettlementSpec(proto.getSettlementMethodName(),
+                proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
+    }
 }

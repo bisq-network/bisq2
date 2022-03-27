@@ -18,7 +18,21 @@
 package bisq.offer.options;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 // Information about supported dispute resolution and chosen dispute agent
 public record SupportOption(Set<DisputeAgent> disputeAgents) implements ListingOption {
+    public bisq.offer.protobuf.ListingOption toProto() {
+        return getListingOptionBuilder().setSupportOption(bisq.offer.protobuf.SupportOption.newBuilder()
+                        .addAllDisputeAgents(disputeAgents.stream()
+                                .map(DisputeAgent::toProto)
+                                .collect(Collectors.toList())))
+                .build();
+    }
+
+    public static SupportOption fromProto(bisq.offer.protobuf.SupportOption proto) {
+        return new SupportOption(proto.getDisputeAgentsList().stream()
+                .map(DisputeAgent::fromProto)
+                .collect(Collectors.toSet()));
+    }
 }

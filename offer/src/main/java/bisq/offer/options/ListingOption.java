@@ -20,4 +20,39 @@ package bisq.offer.options;
 import bisq.common.proto.Proto;
 
 public interface ListingOption extends Proto {
+    bisq.offer.protobuf.ListingOption toProto();
+
+    default bisq.offer.protobuf.ListingOption.Builder getListingOptionBuilder() {
+        return bisq.offer.protobuf.ListingOption.newBuilder();
+    }
+
+    static ListingOption fromProto(bisq.offer.protobuf.ListingOption proto) {
+        switch (proto.getMessageCase()) {
+            case AMOUNTOPTION -> {
+                AmountOption.fromProto(proto.getAmountOption());
+            }
+            case COLLATERALOPTIONS -> {
+                CollateralOptions.fromProto(proto.getCollateralOptions());
+            }
+            case CONTRACTOPTIONS -> {
+                ContractOptions.fromProto(proto.getContractOptions());
+            }
+            case FEEOPTION -> {
+                FeeOption.fromProto(proto.getFeeOption());
+            }
+            case FIATSETTLEMENTOPTION -> {
+                FiatSettlementOption.fromProto(proto.getFiatSettlementOption());
+            }
+            case REPUTATIONOPTION -> {
+                ReputationOption.fromProto(proto.getReputationOption());
+            }
+            case SUPPORTOPTION -> {
+                SupportOption.fromProto(proto.getSupportOption());
+            }
+            case MESSAGE_NOT_SET -> {
+                throw new RuntimeException("MESSAGE_NOT_SET. networkMessage.getMessageCase()=" + proto.getMessageCase());
+            }
+        }
+        throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + proto.getMessageCase());
+    }
 }

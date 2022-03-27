@@ -18,4 +18,14 @@
 package bisq.offer;
 
 public record FloatPrice(double value) implements PriceSpec {
+    public static FloatPrice fromProto(bisq.offer.protobuf.FloatPrice proto) {
+        return new FloatPrice(proto.getValue());
+    }
+
+    @Override
+    public bisq.offer.protobuf.PriceSpec toProto() {
+        return getPriceSpecBuilder().setFloatPrice(bisq.offer.protobuf.FloatPrice.newBuilder()
+                        .setValue(value))
+                .build();
+    }
 }

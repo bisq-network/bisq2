@@ -18,11 +18,16 @@
 package bisq.offer;
 
 import bisq.common.proto.Proto;
+import bisq.common.util.ProtobufUtils;
 
 // It is always related to the base currency. E.g. BTC-USD market -> BUY means Buy BTC
 public enum Direction implements Proto {
     BUY,
     SELL;
+
+    public static Direction fromProto(String name) {
+        return ProtobufUtils.enumFromProto(Direction.class, name);
+    }
 
     public boolean isBuy() {
         return this == BUY;

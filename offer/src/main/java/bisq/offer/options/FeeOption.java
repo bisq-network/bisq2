@@ -17,8 +17,23 @@
 
 package bisq.offer.options;
 
+import bisq.common.util.ProtobufUtils;
+
 // Data for verifying fee payment. Open question how we deal with fees...
 public record FeeOption(FeeType feeType, int blockHeightAtFeePayment, String feeTxId) implements ListingOption {
+    public bisq.offer.protobuf.ListingOption toProto() {
+        return getListingOptionBuilder().setFeeOption(bisq.offer.protobuf.FeeOption.newBuilder()
+                        .setFeeType(feeType.name())
+                        .setBlockHeightAtFeePayment(blockHeightAtFeePayment)
+                        .setFeeTxId(feeTxId))
+                .build();
+    }
+
+    public static FeeOption fromProto(bisq.offer.protobuf.FeeOption proto) {
+        return new FeeOption(ProtobufUtils.enumFromProto(FeeType.class, proto.getFeeType()),
+                proto.getBlockHeightAtFeePayment(),
+                proto.getFeeTxId());
+    }
 }
 //  Bisq 1
 //    private String offerFeePaymentTxId;

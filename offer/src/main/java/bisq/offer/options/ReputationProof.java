@@ -18,4 +18,21 @@
 package bisq.offer.options;
 
 public interface ReputationProof {
+    bisq.offer.protobuf.ReputationProof toProto();
+
+    default bisq.offer.protobuf.ReputationProof.Builder getReputationProofBuilder() {
+        return bisq.offer.protobuf.ReputationProof.newBuilder();
+    }
+
+    static ReputationProof fromProto(bisq.offer.protobuf.ReputationProof proto) {
+        switch (proto.getMessageCase()) {
+            case ACCOUNTCREATIONDATEPROOF -> {
+                return AccountCreationDateProof.fromProto(proto.getAccountCreationDateProof());
+            }
+            case MESSAGE_NOT_SET -> {
+                throw new RuntimeException("MESSAGE_NOT_SET. networkMessage.getMessageCase()=" + proto.getMessageCase());
+            }
+        }
+        throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + proto.getMessageCase());
+    }
 }

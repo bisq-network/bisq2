@@ -17,9 +17,22 @@
 
 package bisq.offer.options;
 
+import bisq.common.util.ProtobufUtils;
 import bisq.network.NetworkId;
 
 public record DisputeAgent(Type type, NetworkId networkId) {
+    public bisq.offer.protobuf.DisputeAgent toProto() {
+        return bisq.offer.protobuf.DisputeAgent.newBuilder()
+                .setType(type.name())
+                .setNetworkId(networkId.toProto())
+                .build();
+    }
+
+    public static DisputeAgent fromProto(bisq.offer.protobuf.DisputeAgent proto) {
+        return new DisputeAgent(ProtobufUtils.enumFromProto(Type.class, proto.getType()), 
+                NetworkId.fromProto(proto.getNetworkId()));
+    }
+
     public enum Type {
         MEDIATOR,
         ARBITRATOR

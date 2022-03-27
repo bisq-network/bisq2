@@ -17,9 +17,15 @@
 
 package bisq.offer.options;
 
-public record CollateralOptions() implements ListingOption{
-}
+public record CollateralOptions(long buyerSecurityDeposit, long sellerSecurityDeposit) implements ListingOption {
+    public bisq.offer.protobuf.ListingOption toProto() {
+        return getListingOptionBuilder().setCollateralOptions(bisq.offer.protobuf.CollateralOptions.newBuilder()
+                        .setBuyerSecurityDeposit(buyerSecurityDeposit)
+                        .setSellerSecurityDeposit(sellerSecurityDeposit))
+                .build();
+    }
 
-// Bisq 1
-//   private final long buyerSecurityDeposit;
-//    private final long sellerSecurityDeposit;
+    public static CollateralOptions fromProto(bisq.offer.protobuf.CollateralOptions proto) {
+        return new CollateralOptions(proto.getBuyerSecurityDeposit(), proto.getSellerSecurityDeposit());
+    }
+}

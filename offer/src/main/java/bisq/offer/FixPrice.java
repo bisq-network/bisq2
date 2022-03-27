@@ -18,4 +18,14 @@
 package bisq.offer;
 
 public record FixPrice(long value) implements PriceSpec {
+    public static FixPrice fromProto(bisq.offer.protobuf.FixPrice proto) {
+        return new FixPrice(proto.getValue());
+    }
+
+    @Override
+    public bisq.offer.protobuf.PriceSpec toProto() {
+        return getPriceSpecBuilder().setFixPrice(bisq.offer.protobuf.FixPrice.newBuilder()
+                        .setValue(value))
+                .build();
+    }
 }
