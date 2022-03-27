@@ -20,22 +20,23 @@ package bisq.persistence;
 import bisq.common.proto.Proto;
 import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
+import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 public class PersistenceIntegrationTest {
     record MockObject(int value) implements Proto {
+        @Override
+        public Message toProto() {
+            return null;
+        }
     }
 
     private final String storageDirectory = OsUtils.getUserDataDir() + File.separator + "bisq_PersistenceTest";
@@ -62,7 +63,7 @@ public class PersistenceIntegrationTest {
         assertEquals(mockObject, persisted.get());
     }
 
-    @Test
+   /* @Test
     public void testSerialPersistAsync() throws InterruptedException {
         String fileName = "MockObject1";
         ArrayList<Integer> list = new ArrayList<>();
@@ -77,7 +78,7 @@ public class PersistenceIntegrationTest {
         }
         latch.await(10, TimeUnit.SECONDS);
         assertEquals(list, persistence.read().orElseThrow());
-    }
+    }*/
 
     // @Test
     public void testRateLimitedPersistenceClient() {

@@ -116,12 +116,17 @@ public class NetworkServiceConfigFactory {
                         .map(Address::new)
                         .collect(Collectors.toList());
             }
+            case CLEAR -> {
+                return ConfigUtil.getStringList(config, "clear").stream()
+                        .map(Address::new)
+                        .collect(Collectors.toList());
+            }
             default -> {
-                List<Address> seedAddresses = new ArrayList<>();
+               /* List<Address> seedAddresses = new ArrayList<>();
                 for (int i = 0; i < 3; i++) {
                     seedAddresses.add(Address.localHost(8000 + i));
-                }
-                return seedAddresses;
+                }*/
+                return new ArrayList<>();
             }
         }
     }

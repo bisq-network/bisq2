@@ -22,7 +22,9 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.persistence.PersistableStore;
 import bisq.social.user.Entitlement;
+import com.google.protobuf.Message;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +32,7 @@ import java.util.Map;
 /**
  * Persists my user profiles and the selected user profile.
  */
+@Slf4j
 public class UserProfileStore implements PersistableStore<UserProfileStore> {
     @Getter
     private final Observable<UserProfile> selectedUserProfile = new Observable<>();
@@ -60,5 +63,11 @@ public class UserProfileStore implements PersistableStore<UserProfileStore> {
         userProfiles.addAll(persisted.getUserProfiles());
         selectedUserProfile.set(persisted.getSelectedUserProfile().get());
         verifiedProofOfBurnProofs.putAll(persisted.getVerifiedProofOfBurnProofs());
+    }
+
+    @Override
+    public Message toProto() {
+        log.error("Not impl yet");
+        return null;
     }
 }

@@ -17,14 +17,15 @@
 
 package bisq.social.chat;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 
-public enum NotificationSetting implements Proto {
+public enum NotificationSetting implements ProtoEnum {
     ALL,
     MENTION,
     NEVER;
 
+    @Override
     public bisq.social.protobuf.NotificationSetting toProto() {
         return bisq.social.protobuf.NotificationSetting.valueOf(name());
     }

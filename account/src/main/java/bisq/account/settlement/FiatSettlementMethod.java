@@ -22,6 +22,7 @@ import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
+import com.google.protobuf.ProtocolMessageEnum;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -96,5 +97,10 @@ public enum FiatSettlementMethod implements SettlementMethod {
         List<Country> list = CountryRepository.getCountriesFromCodes(codes);
         list.sort(Comparator.comparing(Country::name));
         return list;
+    }
+
+    @Override
+    public ProtocolMessageEnum toProto() {
+        return null;
     }
 }

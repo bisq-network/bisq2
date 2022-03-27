@@ -15,30 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p;
+package bisq.common.proto;
 
-import bisq.network.p2p.message.NetworkMessage;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import com.google.protobuf.ProtocolMessageEnum;
 
-@EqualsAndHashCode
-@Getter
-public class MockMessage implements NetworkMessage {
-    private final String msg;
-
-    public MockMessage(String msg) {
-        this.msg = msg;
-    }
-
-    @Override
-    public String toString() {
-        return "MockMessage{" +
-                "\r\n     msg='" + msg + '\'' +
-                "\r\n}";
-    }
-
-    @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
-        return null;
-    }
+public interface ProtoEnum   {
+    ProtocolMessageEnum toProto();
 }

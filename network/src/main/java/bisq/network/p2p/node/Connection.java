@@ -36,6 +36,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Represents an inbound or outbound connection to a peer node.
  * Listens for messages from the peer.
@@ -107,6 +109,7 @@ public abstract class Connection {
                 while (isNotStopped()) {
                     var proto = bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
                     // parsing might need some time wo we check again if connection is still active
+                    checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
                     if (isNotStopped()) {
                         NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
                         if (networkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
@@ -145,7 +148,8 @@ public abstract class Connection {
         try {
             NetworkEnvelope networkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, authorizationToken, networkMessage);
             synchronized (writeLock) {
-                networkEnvelope.toProto().writeDelimitedTo(outputStream);
+                bisq.network.protobuf.NetworkEnvelope proto = networkEnvelope.toProto();
+                proto.writeDelimitedTo(outputStream);
                 outputStream.flush();
             }
             metrics.onSent(networkEnvelope);

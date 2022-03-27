@@ -17,14 +17,15 @@
 
 package bisq.offer.spec;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 
 // It is always related to the base currency. E.g. BTC-USD market -> BUY means Buy BTC
-public enum Direction implements Proto {
+public enum Direction implements ProtoEnum {
     BUY,
     SELL;
 
+    @Override
     public bisq.offer.protobuf.Direction toProto() {
         return bisq.offer.protobuf.Direction.valueOf(name());
     }

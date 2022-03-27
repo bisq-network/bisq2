@@ -17,23 +17,15 @@
 
 package bisq.common.proto;
 
-import bisq.common.encoding.ObjectSerializer;
-
-import java.io.Serializable;
+import com.google.protobuf.Message;
 
 /**
  * Interface for any object which gets serialized using protobuf
  */
-//todo remove extends Serializable
-public interface Proto extends Serializable {
-    //todo remove default once all is implemented
-   /* default Message toProto() {
-        return null;
-    }*/
-   // Message toProto();
+public interface Proto {
+    Message toProto();
 
-    //todo remove
     default byte[] serialize() {
-        return ObjectSerializer.serialize(this);
+        return toProto().toByteArray();
     }
 }

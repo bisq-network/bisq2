@@ -57,7 +57,7 @@ public class ConnectionHandshake {
         }
 
         @Override
-        public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+        public bisq.network.protobuf.NetworkMessage toProto() {
             return getNetworkMessageBuilder().setConnectionHandshakeRequest(
                             bisq.network.protobuf.ConnectionHandshake.Request.newBuilder()
                                     .setCapability(capability.toProto())
@@ -82,7 +82,7 @@ public class ConnectionHandshake {
         }
 
         @Override
-        public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+        public bisq.network.protobuf.NetworkMessage toProto() {
             return getNetworkMessageBuilder().setConnectionHandshakeResponse(
                             bisq.network.protobuf.ConnectionHandshake.Response.newBuilder()
                                     .setCapability(capability.toProto())

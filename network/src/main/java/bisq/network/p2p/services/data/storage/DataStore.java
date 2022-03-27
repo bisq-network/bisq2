@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -49,5 +50,11 @@ public class DataStore<T> implements PersistableStore<DataStore<T>> {
     @Override
     public DataStore<T> getClone() {
         return new DataStore<>(map);
+    }
+
+    @Override
+    public Message toProto() {
+        log.error("Not impl yet");
+        return null;
     }
 }

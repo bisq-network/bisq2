@@ -110,9 +110,9 @@ public class ChatUser implements Proto {
         return CACHE.get(mapKey);
     }
 
-    private static record DerivedData(ByteArray pubKeyHash, String id, String userName) implements Proto {
+    private static record DerivedData(ByteArray pubKeyHash, String id, String userName) {
     }
 
-    public static record BurnInfo(long totalBsqBurned, long firstBurnDate) implements Proto {
+    public static record BurnInfo(long totalBsqBurned, long firstBurnDate) {
     }
 }

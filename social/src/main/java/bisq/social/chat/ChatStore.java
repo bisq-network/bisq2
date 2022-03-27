@@ -20,15 +20,17 @@ package bisq.social.chat;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.Message;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@Slf4j
 public class ChatStore implements PersistableStore<ChatStore> {
-
     @Getter
     private final ObservableSet<PrivateChannel> privateChannels = new ObservableSet<>();
     @Getter
@@ -95,5 +97,11 @@ public class ChatStore implements PersistableStore<ChatStore> {
 
     public Optional<PublicChannel> findPublicChannel(String id) {
         return publicChannels.stream().filter(e -> e.getId().equals(id)).findAny();
+    }
+
+    @Override
+    public Message toProto() {
+        log.error("Not impl yet");
+        return null;
     }
 }

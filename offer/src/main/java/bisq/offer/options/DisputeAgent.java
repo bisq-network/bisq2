@@ -17,15 +17,16 @@
 
 package bisq.offer.options;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 import bisq.network.NetworkId;
 
 public record DisputeAgent(Type type, NetworkId networkId) {
-    public enum Type implements Proto {
+    public enum Type implements ProtoEnum {
         MEDIATOR,
         ARBITRATOR;
 
+        @Override
         public bisq.offer.protobuf.DisputeAgent.Type toProto() {
             return bisq.offer.protobuf.DisputeAgent.Type.valueOf(name());
         }

@@ -333,6 +333,7 @@ public class PeerGroupService {
         checkArgument(state.get().ordinal() < newState.ordinal(),
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
+        log.info("New state {}", newState);
         runAsync(() -> listeners.forEach(e -> e.onStateChanged(newState)), NetworkService.DISPATCHER);
     }
 

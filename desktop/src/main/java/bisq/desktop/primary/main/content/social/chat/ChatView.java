@@ -50,7 +50,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
-    private final ListView<ChatMessageListItem> messagesListView;
+    private final ListView<ChatMessageListItem<? extends ChatMessage>> messagesListView;
     private final BisqTextArea inputField;
     private final BisqLabel selectedChannelLabel;
     private final Button searchButton, notificationsButton, infoButton, closeButton;
@@ -60,7 +60,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
     private final BisqInputTextField filterBoxRoot;
     private final Pane notificationsSettings;
     private final Pane channelInfo;
-    private final ListChangeListener<ChatMessageListItem> messagesListener;
+    private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
     private final HBox messagesListAndSideBar;
     private Subscription chatUserOverviewRootSubscription;
     private Pane chatUserOverviewRoot;
@@ -197,11 +197,11 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         chatUserOverviewRootSubscription.unsubscribe();
     }
 
-    private Callback<ListView<ChatMessageListItem>, ListCell<ChatMessageListItem>> getCellFactory() {
+    private Callback<ListView<ChatMessageListItem<? extends ChatMessage>>, ListCell<ChatMessageListItem<? extends ChatMessage>>> getCellFactory() {
         return new Callback<>() {
 
             @Override
-            public ListCell<ChatMessageListItem> call(ListView<ChatMessageListItem> list) {
+            public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                 return new ListCell<>() {
                     private final BisqButton saveEditButton, cancelEditButton;
                     private final BisqTextArea editedMessageField;
@@ -276,7 +276,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                     }
 
                     @Override
-                    public void updateItem(final ChatMessageListItem item, boolean empty) {
+                    public void updateItem(final ChatMessageListItem<? extends ChatMessage> item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             if (item.getQuotedMessage().isPresent()) {
@@ -396,7 +396,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         }
                     }
 
-                    private void onEditMessage(ChatMessageListItem item) {
+                    private void onEditMessage(ChatMessageListItem<? extends ChatMessage> item) {
                         editedMessageField.setPrefWidth(message.getWrappingWidth());
                         editedMessageField.setPrefHeight(message.getLayoutBounds().getHeight());
                         editedMessageField.setText(message.getText());

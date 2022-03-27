@@ -133,7 +133,6 @@ public class DefaultApplicationService extends ServiceProvider {
 
         Optional<WalletConfig> walletConfig = !isRegtestRun() ? Optional.empty() : createRegtestWalletConfig();
         walletService = new WalletService(walletConfig);
-        walletService.tryAutoInitialization();
     }
 
     private boolean isRegtestRun() {
@@ -173,6 +172,9 @@ public class DefaultApplicationService extends ServiceProvider {
     public CompletableFuture<Boolean> initialize() {
         return keyPairService.initialize()
                 .thenCompose(result -> networkService.bootstrapToNetwork())
+                .whenComplete((r, t)->{
+                    log.debug("Network bootstrapped");
+                })
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> marketPriceService.initialize())
                 .whenComplete((list, throwable) -> {
@@ -194,6 +196,7 @@ public class DefaultApplicationService extends ServiceProvider {
                 })
                 .thenCompose(result -> protocolService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(
+                        walletService.tryAutoInitialization(),
                         userProfileService.initialize()
                                 .thenCompose(res -> chatService.initialize()),
                         openOfferService.initialize(),

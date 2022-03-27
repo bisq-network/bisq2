@@ -72,38 +72,29 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
 
 
     @Override
-    public NetworkMessage toNetworkMessageProto() {
+    public NetworkMessage toProto() {
         return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toProto())))
+                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto())))
                 .build();
     }
 
-    private bisq.social.protobuf.PrivateChatMessage toProto() {
-        bisq.social.protobuf.PrivateChatMessage.Builder builder = bisq.social.protobuf.PrivateChatMessage.newBuilder()
-                .setChannelId(channelId)
-                .setChatUser(chatUser.toProto())
-                .setText(text)
-                .setDate(date)
-                .setChannelType(channelType.name())
-                .setWasEdited(wasEdited)
-                .setMetaData(metaData.toProto());
-        quotedMessage.ifPresent(quotedMessage -> builder.setQuotedMessage(quotedMessage.toProto()));
-        return builder.build();
+    bisq.social.protobuf.ChatMessage toChatMessageProto() {
+        return getChatMessageBuilder().setPrivateChatMessage(bisq.social.protobuf.PrivateChatMessage.newBuilder()).build();
     }
 
-    public static PrivateChatMessage fromProto(bisq.social.protobuf.PrivateChatMessage proto) {
-        Optional<QuotedMessage> quotedMessage = proto.hasQuotedMessage() ?
-                Optional.of(QuotedMessage.fromProto(proto.getQuotedMessage())) :
+    public static PrivateChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto,
+                                               bisq.social.protobuf.PrivateChatMessage proto) {
+        Optional<QuotedMessage> quotedMessage = baseProto.hasQuotedMessage() ?
+                Optional.of(QuotedMessage.fromProto(baseProto.getQuotedMessage())) :
                 Optional.empty();
         return new PrivateChatMessage(
-                proto.getChannelId(),
-                ChatUser.fromProto(proto.getChatUser()),
-                proto.getText(),
+                baseProto.getChannelId(),
+                ChatUser.fromProto(baseProto.getChatUser()),
+                baseProto.getText(),
                 quotedMessage,
-                proto.getDate(),
-                proto.getWasEdited(),
-                MetaData.fromProto(proto.getMetaData()));
+                baseProto.getDate(),
+                baseProto.getWasEdited(),
+                MetaData.fromProto(baseProto.getMetaData()));
     }
 
     // Required for MailboxMessage use case

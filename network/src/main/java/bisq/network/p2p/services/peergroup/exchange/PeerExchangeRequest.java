@@ -23,9 +23,9 @@ import bisq.network.p2p.services.peergroup.Peer;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-record PeerExchangeRequest(int nonce, Set<Peer> peers) implements NetworkMessage {
+public record PeerExchangeRequest(int nonce, Set<Peer> peers) implements NetworkMessage {
     @Override
-    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+    public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder().setPeerExchangeRequest(
                         bisq.network.protobuf.PeerExchangeRequest.newBuilder()
                                 .setNonce(nonce)

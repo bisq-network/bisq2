@@ -20,6 +20,7 @@ package bisq.protocol;
 import bisq.common.proto.Proto;
 import bisq.contract.Contract;
 import bisq.network.p2p.message.NetworkMessage;
+import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,11 @@ public abstract class ProtocolModel implements Proto {
         PENDING,
         COMPLETED,
         FAILED
+    }
+
+    @Override
+    public Message toProto() {
+        return null;
     }
 
     protected Contract contract;

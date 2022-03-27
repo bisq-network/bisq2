@@ -44,8 +44,11 @@ public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest,
         byte[] hash = DigestUtil.hash(authenticatedData.serialize());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
-
-        return new RemoveAuthenticatedDataRequest(authenticatedData.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
+        return new RemoveAuthenticatedDataRequest(authenticatedData.getMetaData(),
+                hash,
+                keyPair.getPublic(),
+                newSequenceNumber,
+                signature);
     }
 
     protected final MetaData metaData;
@@ -102,7 +105,7 @@ public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest,
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+    public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder().setRemoveAuthenticatedDataRequest(
                         bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
                                 .setMetaData(metaData.toProto())

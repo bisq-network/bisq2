@@ -21,7 +21,7 @@ import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 
 public record InventoryResponse(Inventory inventory, int requestNonce) implements BroadcastMessage {
     @Override
-    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+    public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder().setInventoryResponse(
                         bisq.network.protobuf.InventoryResponse.newBuilder()
                                 .setInventory(inventory.toProto())

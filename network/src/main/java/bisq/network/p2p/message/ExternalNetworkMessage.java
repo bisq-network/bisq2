@@ -29,7 +29,7 @@ public class ExternalNetworkMessage {
 
     public bisq.network.protobuf.ExternalNetworkMessage toProto() {
         return bisq.network.protobuf.ExternalNetworkMessage.newBuilder()
-                .setAny(Any.pack(networkMessage.toNetworkMessageProto()))
+                .setAny(Any.pack(networkMessage.toProto()))
                 .build();
     }
 

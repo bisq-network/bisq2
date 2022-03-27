@@ -18,13 +18,16 @@
 package bisq.identity;
 
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.Message;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+@Slf4j
 public class IdentityStore implements PersistableStore<IdentityStore> {
     @Getter
     private final Set<Identity> pool = new CopyOnWriteArraySet<>();
@@ -59,5 +62,11 @@ public class IdentityStore implements PersistableStore<IdentityStore> {
 
         retired.clear();
         retired.addAll(persisted.getRetired());
+    }
+
+    @Override
+    public Message toProto() {
+        log.error("Not impl yet");
+        return null;
     }
 }

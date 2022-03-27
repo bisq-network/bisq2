@@ -17,6 +17,7 @@
 
 package bisq.account.accounts;
 
+import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -36,5 +37,10 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
+    }
+
+    @Override
+    public Message toProto() {
+        return null;
     }
 }

@@ -24,11 +24,14 @@ import bisq.network.p2p.node.ConnectionHandshake;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.inventory.InventoryRequest;
 import bisq.network.p2p.services.data.inventory.InventoryResponse;
+import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
+import bisq.network.p2p.services.peergroup.exchange.PeerExchangeRequest;
+import bisq.network.p2p.services.peergroup.exchange.PeerExchangeResponse;
 import bisq.network.p2p.services.peergroup.keepalive.Ping;
 import bisq.network.p2p.services.peergroup.keepalive.Pong;
 import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationRequest;
@@ -47,11 +50,9 @@ public interface NetworkMessage extends Proto {
         return NetworkMessageResolver.resolve(any);
     }
 
-    bisq.network.protobuf.NetworkMessage toNetworkMessageProto();
+    bisq.network.protobuf.NetworkMessage toProto();
 
-    static NetworkMessage resolveNetworkMessage(bisq.network.protobuf.NetworkMessage proto) {
-       /* switch (proto.getMessageCase()) {
-        }*/
+    static NetworkMessage fromProto(bisq.network.protobuf.NetworkMessage proto) {
         switch (proto.getMessageCase()) {
             case CONNECTIONHANDSHAKEREQUEST -> {
                 return ConnectionHandshake.Request.fromProto(proto.getConnectionHandshakeRequest());
@@ -61,6 +62,24 @@ public interface NetworkMessage extends Proto {
             }
             case CLOSECONNECTIONMESSAGE -> {
                 return CloseConnectionMessage.fromProto(proto.getCloseConnectionMessage());
+            }
+            case PEEREXCHANGEREQUEST -> {
+                return PeerExchangeRequest.fromProto(proto.getPeerExchangeRequest());
+            }
+            case PEEREXCHANGERESPONSE -> {
+                return PeerExchangeResponse.fromProto(proto.getPeerExchangeResponse());
+            }
+            case ADDRESSVALIDATIONREQUEST -> {
+                return AddressValidationRequest.fromProto(proto.getAddressValidationRequest());
+            }
+            case ADDRESSVALIDATIONRESPONSE -> {
+                return AddressValidationResponse.fromProto(proto.getAddressValidationResponse());
+            }
+            case PING -> {
+                return Ping.fromProto(proto.getPing());
+            }
+            case PONG -> {
+                return Pong.fromProto(proto.getPong());
             }
             case CONFIDENTIALMESSAGE -> {
                 return ConfidentialMessage.fromProto(proto.getConfidentialMessage());
@@ -86,23 +105,8 @@ public interface NetworkMessage extends Proto {
             case REMOVEMAILBOXREQUEST -> {
                 return RemoveMailboxRequest.fromProto(proto.getRemoveMailboxRequest());
             }
-            case PEEREXCHANGEREQUEST -> {
-                return Ping.fromProto(proto.getPing());
-            }
-            case PEEREXCHANGERESPONSE -> {
-                return Ping.fromProto(proto.getPing());
-            }
-            case PING -> {
-                return Ping.fromProto(proto.getPing());
-            }
-            case PONG -> {
-                return Pong.fromProto(proto.getPong());
-            }
-            case ADDRESSVALIDATIONREQUEST -> {
-                return AddressValidationRequest.fromProto(proto.getAddressValidationRequest());
-            }
-            case ADDRESSVALIDATIONRESPONSE -> {
-                return AddressValidationResponse.fromProto(proto.getAddressValidationResponse());
+            case ADDAPPENDONLYDATAREQUEST -> {
+                return AddAppendOnlyDataRequest.fromProto(proto.getAddAppendOnlyDataRequest());
             }
             case EXTERNALNETWORKMESSAGE -> {
                 // Externally defined messages
@@ -111,11 +115,9 @@ public interface NetworkMessage extends Proto {
             case MESSAGE_NOT_SET -> {
                 throw new UnresolvableProtobufMessageException(proto);
             }
-           /* default -> {
-                //todo
-                return  NetworkMessageResolver.resolve(Any.pack(proto));
-            }*/
         }
+       /* switch (proto.getMessageCase()) {
+        }*/
         throw new UnresolvableProtobufMessageException(proto);
     }
 }

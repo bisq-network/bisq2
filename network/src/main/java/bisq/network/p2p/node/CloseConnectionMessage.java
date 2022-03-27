@@ -17,7 +17,7 @@ public class CloseConnectionMessage implements NetworkMessage {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+    public bisq.network.protobuf.NetworkMessage toProto() {
         var builder = bisq.network.protobuf.CloseConnectionMessage.newBuilder()
                 .setCloseReason(closeReason.name());
         return getNetworkMessageBuilder().setCloseConnectionMessage(builder).build();

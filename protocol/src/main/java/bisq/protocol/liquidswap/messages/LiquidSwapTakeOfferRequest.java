@@ -33,7 +33,7 @@ public class LiquidSwapTakeOfferRequest extends TakeOfferRequest {
     }
 
     @Override
-    public NetworkMessage toNetworkMessageProto() {
+    public NetworkMessage toProto() {
         return null;
     }
 }

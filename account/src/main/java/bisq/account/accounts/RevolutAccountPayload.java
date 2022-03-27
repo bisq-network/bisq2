@@ -17,6 +17,7 @@
 
 package bisq.account.accounts;
 
+import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -32,5 +33,10 @@ public final class RevolutAccountPayload extends AccountPayload {
     public RevolutAccountPayload(String settlementMethodId, String email) {
         super(settlementMethodId);
         this.email = email;
+    }
+
+    @Override
+    public Message toProto() {
+        return null;
     }
 }

@@ -28,6 +28,7 @@ public class OfferNetworkMessageResolver implements ProtoResolver<NetworkMessage
     public NetworkMessage resolve(Any any, String protoMessageName) {
         //  try {
         if (protoMessageName.equals("Offer")) {
+            log.error("Not impl yet");
             return null;
         }
       /*  } catch (InvalidProtocolBufferException e) {

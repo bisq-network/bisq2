@@ -20,13 +20,16 @@ package bisq.settings;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.MarketRepository;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Getter
 public class SettingsStore implements PersistableStore<SettingsStore> {
     private final Cookie cookie;
@@ -71,5 +74,11 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
         markets.clear();
         markets.addAll(persisted.getMarkets());
         selectedMarket = persisted.getSelectedMarket();
+    }
+
+    @Override
+    public Message toProto() {
+        log.error("Not impl yet");
+        return null;
     }
 }

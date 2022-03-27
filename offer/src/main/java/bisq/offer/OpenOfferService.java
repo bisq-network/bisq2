@@ -134,7 +134,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
                         .collect(Collectors.toList());
             } else {
                 baseSideSettlementSpecs = selectedBaseSideSettlementMethods.stream()
-                        .map(e -> new SettlementSpec(e.name(), null))
+                        .map(e -> new SettlementSpec(e.name(), Optional.empty()))
                         .collect(Collectors.toList());
             }
             List<SettlementSpec> quoteSideSettlementSpecs;
@@ -144,7 +144,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
                         .collect(Collectors.toList());
             } else {
                 quoteSideSettlementSpecs = selectedQuoteSideSettlementMethods.stream()
-                        .map(e -> new SettlementSpec(e.name(), null))
+                        .map(e -> new SettlementSpec(e.name(), Optional.empty()))
                         .collect(Collectors.toList());
             }
 

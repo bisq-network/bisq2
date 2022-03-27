@@ -17,6 +17,7 @@
 
 package bisq.social.chat;
 
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
@@ -54,5 +55,33 @@ public abstract class ChatMessage {
         this.channelType = channelType;
         this.wasEdited = wasEdited;
         this.metaData = metaData;
+    }
+
+    bisq.social.protobuf.ChatMessage.Builder getChatMessageBuilder() {
+        bisq.social.protobuf.ChatMessage.Builder builder = bisq.social.protobuf.ChatMessage.newBuilder()
+                .setChannelId(channelId)
+                .setChatUser(chatUser.toProto())
+                .setText(text)
+                .setDate(date)
+                .setChannelType(channelType.name())
+                .setWasEdited(wasEdited)
+                .setMetaData(metaData.toProto());
+        quotedMessage.ifPresent(quotedMessage -> builder.setQuotedMessage(quotedMessage.toProto()));
+        return builder;
+    }
+
+    public static ChatMessage fromProto(bisq.social.protobuf.ChatMessage proto) {
+        switch (proto.getMessageCase()) {
+            case PRIVATECHATMESSAGE -> {
+                return PrivateChatMessage.fromProto(proto, proto.getPrivateChatMessage());
+            }
+            case PUBLICCHATMESSAGE -> {
+                return PublicChatMessage.fromProto(proto, proto.getPublicChatMessage());
+            }
+            case MESSAGE_NOT_SET -> {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

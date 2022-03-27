@@ -18,13 +18,16 @@
 package bisq.security;
 
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.Message;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 public class KeyPairStore implements PersistableStore<KeyPairStore> {
 
     @Getter
@@ -54,5 +57,11 @@ public class KeyPairStore implements PersistableStore<KeyPairStore> {
 
     public void put(String keyId, KeyPair keyPair) {
         keyPairsById.put(keyId, keyPair);
+    }
+
+    @Override
+    public Message toProto() {
+        log.error("Not impl yet");
+        return null;
     }
 }

@@ -34,7 +34,7 @@ public record Inventory(Set<? extends DataRequest> entries, int numDropped) impl
 
     public static Inventory fromProto(bisq.network.protobuf.Inventory proto) {
         Set<DataRequest> entries = proto.getEntriesList().stream()
-                .map(NetworkMessage::resolveNetworkMessage)
+                .map(NetworkMessage::fromProto)
                 .filter(e -> e instanceof DataRequest)
                 .map(e -> (DataRequest) e)
                 .collect(Collectors.toSet());

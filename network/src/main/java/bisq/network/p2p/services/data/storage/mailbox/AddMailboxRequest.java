@@ -77,7 +77,7 @@ public class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+    public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder().setAddMailboxRequest(
                         bisq.network.protobuf.AddMailboxRequest.newBuilder()
                                 .setMailboxSequentialData(mailboxSequentialData.toProto())

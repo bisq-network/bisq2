@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.append;
 
 import bisq.network.p2p.services.data.storage.MetaData;
 import com.google.protobuf.Any;
+import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -45,6 +46,11 @@ public class MockAppendOnlyData implements AppendOnlyData {
 
     @Override
     public Any toAny() {
+        return null;
+    }
+
+    @Override
+    public Message toProto() {
         return null;
     }
 }

@@ -17,8 +17,6 @@
 
 package bisq.network.p2p.services.confidential;
 
-import bisq.common.encoding.ObjectSerializer;
-import bisq.common.proto.Proto;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.message.NetworkMessage;
@@ -244,15 +242,11 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                 .map(receiversKeyPair -> supplyAsync(() -> {
                     try {
                         ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
-                        byte[] decrypted = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
-                        Proto deserialized = ObjectSerializer.deserialize(decrypted);
-                        if (deserialized instanceof NetworkMessage decryptedNetworkMessage) {
-                            runAsync(() -> listeners.forEach(l -> l.onMessage(decryptedNetworkMessage)), DISPATCHER);
-                            return true;
-                        } else {
-                            log.warn("Deserialized data is not of type Message. deserialized.getClass()={}", deserialized.getClass());
-                            throw new IllegalArgumentException("Deserialized data is not of type Message.");
-                        }
+                        byte[] decryptedBytes = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
+                        bisq.network.protobuf.NetworkMessage decryptedProto = bisq.network.protobuf.NetworkMessage.parseFrom(decryptedBytes);
+                        NetworkMessage decryptedNetworkMessage = NetworkMessage.fromProto(decryptedProto);
+                        runAsync(() -> listeners.forEach(l -> l.onMessage(decryptedNetworkMessage)), DISPATCHER);
+                        return true;
                     } catch (Exception e) {
                         e.printStackTrace();
                         throw new RuntimeException(e);

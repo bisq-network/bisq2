@@ -29,7 +29,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
- * PublicChatMessage is added as public data to the distributed network storage. 
+ * PublicChatMessage is added as public data to the distributed network storage.
  */
 @Getter
 @ToString(callSuper = true)
@@ -66,38 +66,32 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
                 wasEdited,
                 metaData);
     }
+
     @Override
     public Any toAny() {
         return Any.pack(toProto());
     }
 
-    private bisq.social.protobuf.PublicChatMessage toProto() {
-        bisq.social.protobuf.PublicChatMessage.Builder builder = bisq.social.protobuf.PublicChatMessage.newBuilder()
-                .setChannelId(channelId)
-                .setChatUser(chatUser.toProto())
-                .setText(text)
-                .setDate(date)
-                .setChannelType(channelType.name())
-                .setWasEdited(wasEdited)
-                .setMetaData(metaData.toProto());
-        quotedMessage.ifPresent(quotedMessage -> builder.setQuotedMessage(quotedMessage.toProto()));
-        return builder.build();
+
+    public   bisq.social.protobuf.ChatMessage toProto() {
+        return getChatMessageBuilder().setPublicChatMessage(bisq.social.protobuf.PublicChatMessage.newBuilder()).build();
     }
 
-    public static PublicChatMessage fromProto(bisq.social.protobuf.PublicChatMessage proto) {
-        Optional<QuotedMessage> quotedMessage = proto.hasQuotedMessage() ?
-                Optional.of(QuotedMessage.fromProto(proto.getQuotedMessage())) :
+    public static PublicChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto,
+                                              bisq.social.protobuf.PublicChatMessage proto) {
+        Optional<QuotedMessage> quotedMessage = baseProto.hasQuotedMessage() ?
+                Optional.of(QuotedMessage.fromProto(baseProto.getQuotedMessage())) :
                 Optional.empty();
         return new PublicChatMessage(
-                proto.getChannelId(),
-                ChatUser.fromProto(proto.getChatUser()),
-                proto.getText(),
+                baseProto.getChannelId(),
+                ChatUser.fromProto(baseProto.getChatUser()),
+                baseProto.getText(),
                 quotedMessage,
-                proto.getDate(),
-                proto.getWasEdited(),
-                MetaData.fromProto(proto.getMetaData()));
+                baseProto.getDate(),
+                baseProto.getWasEdited(),
+                MetaData.fromProto(baseProto.getMetaData()));
     }
-  
+
     @Override
     public MetaData getMetaData() {
         return metaData;

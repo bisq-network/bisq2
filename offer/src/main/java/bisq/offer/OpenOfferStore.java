@@ -19,10 +19,12 @@ package bisq.offer;
 
 import bisq.common.observable.ObservableSet;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.Message;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
-
+@Slf4j
 public class OpenOfferStore implements PersistableStore<OpenOfferStore> {
     @Getter
     private final ObservableSet<OpenOffer> openOffers = new ObservableSet<>();
@@ -51,5 +53,11 @@ public class OpenOfferStore implements PersistableStore<OpenOfferStore> {
 
     public void remove(OpenOffer openOffer) {
         openOffers.remove(openOffer);
+    }
+
+    @Override
+    public Message toProto() {
+        log.error("Not impl yet");
+        return null;
     }
 }

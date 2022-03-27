@@ -20,6 +20,7 @@ package bisq.account;
 import bisq.account.accounts.Account;
 import bisq.account.settlement.SettlementMethod;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -49,5 +50,10 @@ public class AccountStore implements PersistableStore<AccountStore> {
     public void applyPersisted(AccountStore persisted) {
         accounts.clear();
         accounts.addAll(persisted.accounts);
+    }
+
+    @Override
+    public Message toProto() {
+        return null;
     }
 }

@@ -35,7 +35,11 @@ public class AddAppendOnlyDataRequest implements AddDataRequest, DataRequest {
     }
 
     @Override
-    public NetworkMessage toNetworkMessageProto() {
-        return null; //todo
+    public NetworkMessage toProto() {
+        throw new RuntimeException("AddAppendOnlyDataRequest protobuf support not implemented yet");
+    }
+
+    public static AddAppendOnlyDataRequest fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest proto) {
+           throw new RuntimeException("AddAppendOnlyDataRequest protobuf support not implemented yet");
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.persistence;
 
+import bisq.common.proto.Proto;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.FileUtils;
 import lombok.Getter;
@@ -30,7 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 @Slf4j
-public class Persistence<T extends Serializable> {
+public class Persistence<T extends Proto> {
     public static final ExecutorService PERSISTENCE_IO_POOL = ExecutorFactory.newFixedThreadPool("Persistence-io-pool");
 
     private final String directory;
@@ -56,6 +57,10 @@ public class Persistence<T extends Serializable> {
     }
 
     public Optional<T> read() {
+        //todo
+        if (true) {
+            return Optional.empty();
+        }
         File storageFile = new File(storagePath);
         if (!storageFile.exists()) {
             return Optional.empty();
@@ -92,6 +97,10 @@ public class Persistence<T extends Serializable> {
     }
 
     public boolean persist(T serializable) {
+        //todo
+        if (true) {
+            return true;
+        }
         synchronized (lock) {
             boolean success = false;
             File tempFile = null;
@@ -117,17 +126,16 @@ public class Persistence<T extends Serializable> {
                 FileUtils.renameFile(tempFile, storageFile);
                 //log.debug("Persisted {}", serializable);
                 success = true;
-            } catch(IOException ex) {
-                log.error("Error at read for " + storagePath+ " msg: "+ex.getMessage(), ex);
+            } catch (IOException ex) {
+                log.error("Error at read for " + storagePath + " msg: " + ex.getMessage(), ex);
                 try {
                     if (storageFile != null) {
                         FileUtils.backupCorruptedFile(directory, storageFile, fileName, "corruptedFilesAtWrite");
                     }
                 } catch (IOException e) {
-                    log.error("FileUtils.backupCorruptedFile failed: "+e.getMessage(),e);
+                    log.error("FileUtils.backupCorruptedFile failed: " + e.getMessage(), e);
                 }
-            }
-            finally {
+            } finally {
                 // close all and cleanup in case of Exception
                 // tempfile depends on objectOutputStream which depends on fileOutputstream, close in reverse order
                 try {
@@ -137,7 +145,7 @@ public class Persistence<T extends Serializable> {
                         fileOutputStream.close();
                     }
                 } catch (IOException ioe) {
-                    log.error("Error closing stream "+ioe.getMessage(), ioe); // swallow
+                    log.error("Error closing stream " + ioe.getMessage(), ioe); // swallow
                 }
                 if (tempFile != null) {
                     FileUtils.releaseTempFile(tempFile);

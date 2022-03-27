@@ -145,7 +145,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         }
 
         @Override
-        public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+        public bisq.network.protobuf.NetworkMessage toProto() {
             return null;
         }
     }
@@ -159,7 +159,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         }
 
         @Override
-        public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+        public bisq.network.protobuf.NetworkMessage toProto() {
             return null;
         }
     }

@@ -25,6 +25,7 @@ import "network.proto";
 import "security.proto";
 import "identity.proto";
 
+
 message ProofOfBurnProof {
   string txId = 1;
   uint64 burntAmount = 2;
@@ -45,6 +46,17 @@ message Proof {
   }
 }
 message Entitlement {
+  enum Type {
+    LIQUIDITY_PROVIDER = 0;
+    CHANNEL_ADMIN = 1;
+    CHANNEL_MODERATOR = 2;
+    MEDIATOR = 3;
+  }
+  enum ProofType {
+    PROOF_OF_BURN = 0;
+    BONDED_ROLE = 1;
+    CHANNEL_ADMIN_INVITATION = 2;
+  }
   string entitlementType = 1;
   Proof proof = 2;
 }
@@ -60,16 +72,11 @@ message QuotedMessage {
 }
 
 message PrivateChatMessage {
-  string channelId = 1;
-  string text = 2;
-  ChatUser chatUser = 3;
-  optional QuotedMessage quotedMessage = 4;
-  uint64 date = 5;
-  string channelType = 6;
-  bool wasEdited = 7;
-  network.MetaData metaData = 8;
 }
 message PublicChatMessage {
+
+}
+message ChatMessage {
   string channelId = 1;
   string text = 2;
   ChatUser chatUser = 3;
@@ -78,11 +85,9 @@ message PublicChatMessage {
   string channelType = 6;
   bool wasEdited = 7;
   network.MetaData metaData = 8;
-}
-message ChatMessage {
   oneof message {
-    PrivateChatMessage privateChatMessage = 1;
-    PublicChatMessage publicChatMessage = 2;
+    PrivateChatMessage privateChatMessage = 20;
+    PublicChatMessage publicChatMessage = 21;
   }
 }
 
@@ -101,22 +106,20 @@ message UserProfile {
   repeated Entitlement entitlements = 2;
 }
 
-message PrivateChannel{
+message PrivateChannel {
   ChatUser peer = 1;
+  UserProfile myProfile = 2;
 }
-message PublicChannel{
+message PublicChannel {
   string channelName = 1;
   string description = 2;
   ChatUser channelAdmin = 3;
-  repeated  ChatUser channelModerators = 4;
+  repeated ChatUser channelModerators = 4;
 }
-
-
-message Channel{
+message Channel {
   string id = 1;
-  repeated ChatMessage chatMessages = 2;
-  repeated NotificationSetting notificationSetting = 3;
-
+  NotificationSetting notificationSetting = 2;
+  repeated ChatMessage chatMessages = 3;
   oneof message{
     PrivateChannel privateChannel = 10;
     PublicChannel publicChannel = 11;

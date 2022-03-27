@@ -23,6 +23,7 @@ import bisq.persistence.PersistenceClient;
 import bisq.protocol.MakerProtocolModel;
 import bisq.protocol.ProtocolStore;
 import bisq.protocol.SellerProtocol;
+import com.google.protobuf.Message;
 
 public class LiquidSwapMakerAsSellerProtocol extends LiquidSwapMakerProtocol implements SellerProtocol {
 
@@ -34,5 +35,10 @@ public class LiquidSwapMakerAsSellerProtocol extends LiquidSwapMakerProtocol imp
                 persistenceClient,
                 protocolModel,
                 myNodeIdAndKeyPair);
+    }
+
+    @Override
+    public Message toProto() {
+        return null;
     }
 }

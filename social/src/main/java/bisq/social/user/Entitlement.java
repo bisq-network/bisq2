@@ -18,6 +18,7 @@
 package bisq.social.user;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.ProtobufUtils;
 import lombok.Getter;
@@ -118,7 +119,7 @@ public record Entitlement(Type entitlementType, Proof proof) implements Proto, C
         }
     }
 
-    public enum Type implements Proto {
+    public enum Type implements ProtoEnum {
         LIQUIDITY_PROVIDER(ProofType.PROOF_OF_BURN),
         CHANNEL_ADMIN(ProofType.BONDED_ROLE),
         CHANNEL_MODERATOR(ProofType.CHANNEL_ADMIN_INVITATION, ProofType.PROOF_OF_BURN),
@@ -130,11 +131,29 @@ public record Entitlement(Type entitlementType, Proof proof) implements Proto, C
         Type(ProofType... proofTypes) {
             this.proofTypes = List.of(proofTypes);
         }
+
+        @Override
+        public bisq.social.protobuf.Entitlement.Type toProto() {
+            return bisq.social.protobuf.Entitlement.Type.valueOf(name());
+        }
+
+        public static Entitlement.Type fromProto(bisq.social.protobuf.Entitlement.Type proto) {
+            return ProtobufUtils.enumFromProto(Entitlement.Type.class, proto.name());
+        }
     }
 
-    public enum ProofType implements Proto {
+    public enum ProofType implements ProtoEnum {
         PROOF_OF_BURN,
         BONDED_ROLE,
-        CHANNEL_ADMIN_INVITATION
+        CHANNEL_ADMIN_INVITATION;
+
+        @Override
+        public bisq.social.protobuf.Entitlement.ProofType toProto() {
+            return bisq.social.protobuf.Entitlement.ProofType.valueOf(name());
+        }
+
+        public static Entitlement.ProofType fromProto(bisq.social.protobuf.Entitlement.ProofType proto) {
+            return ProtobufUtils.enumFromProto(Entitlement.ProofType.class, proto.name());
+        }
     }
 }

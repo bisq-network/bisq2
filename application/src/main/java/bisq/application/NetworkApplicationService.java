@@ -68,7 +68,9 @@ public class NetworkApplicationService extends ServiceProvider {
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
-        return persistenceService.readAllPersisted();
+        return CompletableFuture.completedFuture(true);
+        //todo reactivate once persistence is up to date
+        //  return persistenceService.readAllPersisted();
     }
 
     /**

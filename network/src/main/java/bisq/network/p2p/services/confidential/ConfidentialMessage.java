@@ -40,11 +40,11 @@ public class ConfidentialMessage implements NetworkMessage, DistributedData {
 
     @Override
     public Any toAny() {
-        return Any.pack(toNetworkMessageProto());
+        return Any.pack(toProto());
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+    public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder().setConfidentialMessage(
                 bisq.network.protobuf.ConfidentialMessage.newBuilder()
                         .setConfidentialData(confidentialData.toProto())

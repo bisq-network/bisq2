@@ -18,13 +18,16 @@
 package bisq.contract;
 
 import bisq.account.protocol.SwapProtocolType;
-import bisq.common.proto.Proto;
 import bisq.common.monetary.Monetary;
+import bisq.common.proto.Proto;
 import bisq.network.NetworkId;
 import bisq.offer.Offer;
+import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @EqualsAndHashCode
 @Getter
 public class Contract implements Proto {
@@ -51,5 +54,11 @@ public class Contract implements Proto {
         this.quoteSideAmount = quoteSideAmount;
         this.baseSideSettlementMethod = baseSideSettlementMethod;
         this.quoteSideSettlementMethod = quoteSideSettlementMethod;
+    }
+
+    @Override
+    public Message toProto() {
+        log.error("Not impl yet");
+        return null;
     }
 }

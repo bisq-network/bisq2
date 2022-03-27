@@ -18,6 +18,7 @@
 package bisq.offer.spec;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 
 public interface PriceSpec extends Proto {
     bisq.offer.protobuf.PriceSpec toProto();
@@ -27,6 +28,17 @@ public interface PriceSpec extends Proto {
     }
 
     static PriceSpec fromProto(bisq.offer.protobuf.PriceSpec proto) {
-        return null;
+        switch (proto.getMessageCase()) {
+            case FIXPRICE -> {
+                return FixPrice.fromProto(proto.getFixPrice());
+            }
+            case FLOATPRICE -> {
+                return FloatPrice.fromProto(proto.getFloatPrice());
+            }
+            case MESSAGE_NOT_SET -> {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

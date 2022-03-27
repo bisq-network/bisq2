@@ -41,7 +41,7 @@ public class MockMailboxMessage implements MailboxMessage {
     }
 
     @Override
-    public NetworkMessage toNetworkMessageProto() {
+    public NetworkMessage toProto() {
         return null;
     }
 }

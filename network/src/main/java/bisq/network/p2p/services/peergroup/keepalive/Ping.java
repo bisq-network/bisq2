@@ -21,7 +21,7 @@ import bisq.network.p2p.message.NetworkMessage;
 
 public record Ping(int nonce) implements NetworkMessage {
     @Override
-    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+    public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder().setPing(
                         bisq.network.protobuf.Ping.newBuilder().setNonce(nonce))
                 .build();

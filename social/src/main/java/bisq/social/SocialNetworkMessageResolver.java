@@ -20,6 +20,7 @@ package bisq.social;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.protobuf.ProtoResolver;
+import bisq.social.chat.ChatMessage;
 import bisq.social.chat.PrivateChatMessage;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -29,8 +30,14 @@ import lombok.extern.slf4j.Slf4j;
 public class SocialNetworkMessageResolver implements ProtoResolver<NetworkMessage> {
     public NetworkMessage resolve(Any any, String protoMessageName) {
         try {
-            if (protoMessageName.equals("PrivateChatMessage")) {
-                return PrivateChatMessage.fromProto(any.unpack(bisq.social.protobuf.PrivateChatMessage.class));
+            if (protoMessageName.equals("ChatMessage")) {
+                bisq.social.protobuf.ChatMessage protoChatMessage = any.unpack(bisq.social.protobuf.ChatMessage.class);
+                if (protoChatMessage.hasPrivateChatMessage()) {
+                    return (PrivateChatMessage) ChatMessage.fromProto(protoChatMessage);
+                } else {
+                    throw new RuntimeException("ChatMessage has to be type of PrivateChatMessage at " +
+                            "SocialNetworkMessageResolver. protoChatMessage=" + protoChatMessage);
+                }
             }
         } catch (InvalidProtocolBufferException e) {
             throw new UnresolvableProtobufMessageException(e);

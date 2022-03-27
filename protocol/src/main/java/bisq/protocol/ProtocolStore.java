@@ -18,6 +18,7 @@
 package bisq.protocol;
 
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,6 +53,11 @@ public class ProtocolStore implements PersistableStore<ProtocolStore> {
         if (!protocolModelByOfferId.containsKey(protocolId)) {
             protocolModelByOfferId.put(protocolId, protocolModel);
         }
+    }
+
+    @Override
+    public Message toProto() {
+        return null;
     }
 
   /*  public void remove(Protocol<? extends ProtocolStore<?>> protocol) {

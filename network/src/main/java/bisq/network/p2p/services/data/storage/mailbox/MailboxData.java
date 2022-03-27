@@ -46,7 +46,7 @@ public class MailboxData implements StorageData {
 
     public bisq.network.protobuf.MailboxData toProto() {
         return bisq.network.protobuf.MailboxData.newBuilder()
-                .setConfidentialMessage(confidentialMessage.toNetworkMessageProto().getConfidentialMessage())
+                .setConfidentialMessage(confidentialMessage.toProto().getConfidentialMessage())
                 .setMetaData(metaData.toProto())
                 .build();
     }

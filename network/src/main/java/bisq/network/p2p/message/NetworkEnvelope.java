@@ -48,13 +48,13 @@ public class NetworkEnvelope implements Proto {
         return bisq.network.protobuf.NetworkEnvelope.newBuilder()
                 .setVersion(version)
                 .setAuthorizationToken(authorizationToken.toProto())
-                .setNetworkMessage(networkMessage.toNetworkMessageProto())
+                .setNetworkMessage(networkMessage.toProto())
                 .build();
     }
 
     public static NetworkEnvelope fromProto(bisq.network.protobuf.NetworkEnvelope proto) {
         return new NetworkEnvelope(proto.getVersion(),
                 AuthorizationToken.fromProto(proto.getAuthorizationToken()),
-                NetworkMessage.resolveNetworkMessage( proto.getNetworkMessage()));
+                NetworkMessage.fromProto( proto.getNetworkMessage()));
     }
 }

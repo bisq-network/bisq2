@@ -30,7 +30,7 @@ public class LiquidSwapFinalizeTxRequest extends ProtocolMessage {
     }
 
     @Override
-    public NetworkMessage toNetworkMessageProto() {
+    public NetworkMessage toProto() {
         return null;
     }
 }

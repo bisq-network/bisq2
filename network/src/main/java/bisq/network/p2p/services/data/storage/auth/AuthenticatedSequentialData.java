@@ -18,7 +18,6 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
-import bisq.common.encoding.ObjectSerializer;
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
@@ -76,10 +75,6 @@ public class AuthenticatedSequentialData implements Proto {
 
     public boolean isSequenceNrInvalid(long seqNumberFromMap) {
         return sequenceNumber <= seqNumberFromMap;
-    }
-
-    public byte[] serialize() {
-        return ObjectSerializer.serialize(this);
     }
 
     @Override

@@ -21,7 +21,7 @@ import bisq.network.p2p.message.NetworkMessage;
 
 public record AddressValidationResponse(int requestNonce) implements NetworkMessage {
     @Override
-    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+    public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder().setAddressValidationResponse(
                         bisq.network.protobuf.AddressValidationResponse.newBuilder()
                                 .setRequestNonce(requestNonce))

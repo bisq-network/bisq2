@@ -17,14 +17,16 @@
 
 package bisq.offer.options;
 
+import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 
 // Data for verifying fee payment. Open question how we deal with fees...
 public record FeeOption(FeeType feeType, int blockHeightAtFeePayment, String feeTxId) implements OfferOption {
-    public enum FeeType {
+    public enum FeeType implements ProtoEnum {
         BTC,
         BSQ;
 
+        @Override
         public bisq.offer.protobuf.FeeOption.FeeType toProto() {
             return bisq.offer.protobuf.FeeOption.FeeType.valueOf(name());
         }

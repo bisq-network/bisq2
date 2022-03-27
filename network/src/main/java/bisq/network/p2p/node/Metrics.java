@@ -52,13 +52,13 @@ public class Metrics {
 
     public void onSent(NetworkEnvelope networkEnvelope) {
         lastUpdate.set(System.currentTimeMillis());
-        sentBytes.addAndGet(networkEnvelope.serialize().length);
+        sentBytes.addAndGet(networkEnvelope.toProto().getSerializedSize());
         numMessagesSent.incrementAndGet();
     }
 
     public void onReceived(NetworkEnvelope networkEnvelope) {
         lastUpdate.set(System.currentTimeMillis());
-        receivedBytes.addAndGet(networkEnvelope.serialize().length);
+        receivedBytes.addAndGet(networkEnvelope.toProto().getSerializedSize());
         numMessagesReceived.incrementAndGet();
     }
 

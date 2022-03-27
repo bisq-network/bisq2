@@ -87,7 +87,7 @@ public class RefreshAuthenticatedDataRequest implements BroadcastMessage {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toNetworkMessageProto() {
+    public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder().setRefreshAuthenticatedDataRequest(
                         bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
                                 .setMetaData(metaData.toProto())

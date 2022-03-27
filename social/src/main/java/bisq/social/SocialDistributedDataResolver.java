@@ -20,6 +20,7 @@ package bisq.social;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.protobuf.ProtoResolver;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.social.chat.ChatMessage;
 import bisq.social.chat.PublicChatMessage;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -29,8 +30,14 @@ import lombok.extern.slf4j.Slf4j;
 public class SocialDistributedDataResolver implements ProtoResolver<DistributedData> {
     public DistributedData resolve(Any any, String protoMessageName) {
         try {
-            if (protoMessageName.equals("PublicChatMessage")) {
-                return PublicChatMessage.fromProto(any.unpack(bisq.social.protobuf.PublicChatMessage.class));
+            if (protoMessageName.equals("ChatMessage")) {
+                bisq.social.protobuf.ChatMessage protoChatMessage = any.unpack(bisq.social.protobuf.ChatMessage.class);
+                if (protoChatMessage.hasPublicChatMessage()) {
+                    return (PublicChatMessage) ChatMessage.fromProto(protoChatMessage);
+                } else {
+                    throw new RuntimeException("ChatMessage has to be type of PublicChatMessage at " +
+                            "SocialDistributedDataResolver. protoChatMessage=" + protoChatMessage);
+                }
             }
         } catch (InvalidProtocolBufferException e) {
             throw new UnresolvableProtobufMessageException(e);

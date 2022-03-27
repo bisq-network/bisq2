@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.storage.auth;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import com.google.protobuf.Any;
+import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -50,6 +51,11 @@ public class MockDistributedData implements DistributedData {
 
     @Override
     public Any toAny() {
+        return null;
+    }
+
+    @Override
+    public Message toProto() {
         return null;
     }
 }
