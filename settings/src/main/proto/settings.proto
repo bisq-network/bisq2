@@ -21,8 +21,15 @@ package settings;
 option java_package = "bisq.settings.protobuf";
 option java_multiple_files = true;
 
+enum CookieKey {
+  STAGE_X = 0;
+  STAGE_Y = 1;
+  STAGE_W = 2;
+  STAGE_H = 3;
+  NAVIGATION_TARGET = 4;
+}
 message CookieMapEntry {
-  string key = 1;
+  CookieKey cookieKey = 1;
   string value = 2;
 }
 message Cookie {

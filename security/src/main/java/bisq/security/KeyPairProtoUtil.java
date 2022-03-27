@@ -28,7 +28,7 @@ import java.security.PublicKey;
  * We use java KeyPair class for persistence.
  * This class adds support for protobuf serialisation.
  */
-public class KeyPairProto {
+public class KeyPairProtoUtil {
     public static bisq.security.protobuf.KeyPair toProto(java.security.KeyPair keyPair) {
         return KeyPair.newBuilder()
                 .setPrivateKey(ByteString.copyFrom(keyPair.getPrivate().getEncoded()))

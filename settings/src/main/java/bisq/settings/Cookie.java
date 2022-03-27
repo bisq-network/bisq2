@@ -18,7 +18,6 @@
 package bisq.settings;
 
 import bisq.common.proto.Proto;
-import bisq.common.util.ProtobufUtils;
 import bisq.settings.protobuf.CookieMapEntry;
 import lombok.Getter;
 
@@ -46,7 +45,7 @@ public class Cookie implements Proto {
         return bisq.settings.protobuf.Cookie.newBuilder()
                 .addAllCookieMapEntries(map.entrySet().stream()
                         .map(e -> CookieMapEntry.newBuilder()
-                                .setKey(e.getKey().name())
+                                .setCookieKey(e.getKey().toProto())
                                 .setValue(e.getValue()).build())
                         .collect(Collectors.toList()))
                 .build();
@@ -55,7 +54,7 @@ public class Cookie implements Proto {
     public static Cookie fromProto(bisq.settings.protobuf.Cookie proto) {
         return new Cookie(proto.getCookieMapEntriesList().stream()
                 .collect(Collectors.toMap(
-                        e -> ProtobufUtils.enumFromProto(CookieKey.class, e.getKey()),
+                        e -> CookieKey.fromProto(e.getCookieKey()),
                         CookieMapEntry::getValue)));
     }
 

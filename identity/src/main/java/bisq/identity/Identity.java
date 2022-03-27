@@ -20,7 +20,7 @@ package bisq.identity;
 import bisq.common.proto.Proto;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
-import bisq.security.KeyPairProto;
+import bisq.security.KeyPairProtoUtil;
 import bisq.security.PubKey;
 
 import java.security.KeyPair;
@@ -30,14 +30,14 @@ public record Identity(String domainId, NetworkId networkId, KeyPair keyPair) im
         return bisq.identity.protobuf.Identity.newBuilder()
                 .setDomainId(domainId)
                 .setNetworkId(networkId.toProto())
-                .setKeyPair(KeyPairProto.toProto(keyPair))
+                .setKeyPair(KeyPairProtoUtil.toProto(keyPair))
                 .build();
     }
 
     public static Identity fromProto(bisq.identity.protobuf.Identity proto) {
         return new Identity(proto.getDomainId(),
                 NetworkId.fromProto(proto.getNetworkId()),
-                KeyPairProto.fromProto(proto.getKeyPair()));
+                KeyPairProtoUtil.fromProto(proto.getKeyPair()));
     }
 
     public NetworkIdWithKeyPair getNodeIdAndKeyPair() {
