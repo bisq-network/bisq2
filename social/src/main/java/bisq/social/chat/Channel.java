@@ -20,10 +20,13 @@ package bisq.social.chat;
 import bisq.common.encoding.Proto;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class Channel<T extends ChatMessage> implements Proto {
+    @EqualsAndHashCode.Include
     protected final String id;
     protected final ObservableSet<ChatMessage> chatMessages = new ObservableSet<>();
     protected final Observable<NotificationSetting> notificationSetting = new Observable<>(NotificationSetting.MENTION);
