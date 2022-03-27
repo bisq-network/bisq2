@@ -53,8 +53,7 @@ public class PrivateChannelSelection extends ChannelSelection {
             @Override
             public void onViewAttached() {
                 super.onViewAttached();
-                channelsPin = FxBindings.<PrivateChannel, ChannelSelection.ListItem> bind(model.channels)
-                        .map(ChannelSelection.ListItem::new)
+                channelsPin = FxBindings.<PrivateChannel, Channel> bind(model.channels)
                         .to(this.chatService.getPersistableStore().getPrivateChannels());
             }
         };

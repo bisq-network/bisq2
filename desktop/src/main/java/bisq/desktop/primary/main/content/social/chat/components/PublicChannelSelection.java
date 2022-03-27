@@ -21,6 +21,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
+import bisq.social.chat.Channel;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.PrivateChannel;
 import bisq.social.chat.PublicChannel;
@@ -51,12 +52,11 @@ public class PublicChannelSelection extends ChannelSelection {
             @Override
             public void onViewAttached() {
                 super.onViewAttached();
-                channelsPin = FxBindings.<PublicChannel, ChannelSelection.ListItem> bind(model.channels)
-                        .map(ChannelSelection.ListItem::new)
+                channelsPin = FxBindings.<PublicChannel, Channel> bind(model.channels)
                         .to(this.chatService.getPersistableStore().getPublicChannels());
 
                 if (!model.channels.isEmpty()) {
-                    chatService.selectChannel(model.channels.get(0).channel);
+                    chatService.selectChannel(model.channels.get(0));
                 }
             }
         };

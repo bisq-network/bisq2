@@ -11,11 +11,13 @@ import bisq.social.chat.ChatStore;
 import bisq.social.chat.PrivateChannel;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MultipleSelectionModel;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -54,16 +56,11 @@ public abstract class ChannelSelection {
         @Override
         public void onViewAttached() {
             selectedChannelPin = FxBindings.subscribe(chatService.getPersistableStore().getSelectedChannel(),
-                    channel -> {
-                        model.selectedChannel.set(model.channels.stream()
-                            .filter(mych -> mych.id.equals(channel.getId()))
+                    channel -> model.selectedChannel.set(model.channels.stream()
+                            .filter(mych -> mych.equals(channel))
                             .findAny()
-                            .orElse(null));
-                // TODO
-//                        if (channel instanceof PrivateChannel privateChannel) {
-//                            model.selectedChannel.set(new ChannelSelection.ListItem(privateChannel));
-//                        }
-                    });
+                            .orElse(null))
+                     );
         }
 
         @Override
@@ -72,16 +69,16 @@ public abstract class ChannelSelection {
             channelsPin.unbind();
         }
 
-        protected void onSelected(ChannelSelection.ListItem selectedItem) {
-            if (selectedItem == null) return;
-            chatService.selectChannel(selectedItem.channel);
+        protected void onSelected(Channel ch) {
+            if (ch == null) return;
+            chatService.selectChannel(ch);
         }
     }
 
 
     protected static class Model implements bisq.desktop.common.view.Model {
-        ObjectProperty<ChannelSelection.ListItem> selectedChannel = new SimpleObjectProperty<>();
-        ObservableList<ChannelSelection.ListItem> channels = FXCollections.observableArrayList();
+        ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
+        ObservableList<Channel> channels = FXCollections.observableArrayList();
 
         protected Model() {
         }
@@ -90,7 +87,7 @@ public abstract class ChannelSelection {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, ChannelSelection.Model, ChannelSelection.Controller> {
-        protected final ListView<ChannelSelection.ListItem> listView;
+        protected final ListView<Channel> listView;
         protected Subscription subscription;
 
         protected View(ChannelSelection.Model model, ChannelSelection.Controller controller, String headlineText) {
@@ -106,15 +103,15 @@ public abstract class ChannelSelection {
             listView.setFocusTraversable(false);
             listView.setCellFactory(new Callback<>() {
                 @Override
-                public ListCell<ChannelSelection.ListItem> call(ListView<ChannelSelection.ListItem> list) {
+                public ListCell<Channel> call(ListView<Channel> list) {
                     return new ListCell<>() {
                         final BisqLabel label = new BisqLabel();
 
                         @Override
-                        public void updateItem(final ChannelSelection.ListItem item, boolean empty) {
+                        public void updateItem(final Channel item, boolean empty) {
                             super.updateItem(item, empty);
                             if (item != null && !empty) {
-                                label.setText(item.channelName);
+                                label.setText(item.getChannelName());
                                 setGraphic(label);
                             } else {
                                 setGraphic(null);
@@ -129,25 +126,18 @@ public abstract class ChannelSelection {
         @Override
         public void onViewAttached() {
             subscription = EasyBind.subscribe(listView.getSelectionModel().selectedItemProperty(), controller::onSelected);
-        }
+            // cant bind that sucker bidirectional
+            // see https://stackoverflow.com/questions/32782065/binding-a-javafx-listviews-selection-index-to-an-integer-property#32782145
+            model.selectedChannel.addListener((channelObserever, oldValue, newValue)->{
+                if (oldValue.equals(newValue)) return; // abort endless loop of event triggering
+                int posSelectedChannel = listView.getItems().indexOf(newValue);
+                listView.getSelectionModel().clearAndSelect(posSelectedChannel);
+            });
+         }
 
         @Override
         protected void onViewDetached() {
             subscription.unsubscribe();
-        }
-    }
-
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    public static class ListItem {
-        protected final Channel channel;
-        protected final String channelName;
-        @EqualsAndHashCode.Include
-        protected final String id;
-
-        protected ListItem(Channel channel) {
-            this.channel = channel;
-            channelName = channel.getChannelName();
-            id = channel.getId();
         }
     }
 }
