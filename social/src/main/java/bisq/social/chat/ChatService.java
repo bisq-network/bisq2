@@ -291,36 +291,9 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         persist();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // ChatIdentity
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public Optional<ChatIdentity> findChatIdentity(String domainId) {
-        if (persistableStore.getUserNameByDomainId().containsKey(domainId)) {
-            String userName = persistableStore.getUserNameByDomainId().get(domainId);
-            Identity identity = identityService.getOrCreateIdentity(domainId).join();
-            return Optional.of(new ChatIdentity(userName, identity));
-        } else {
-            return Optional.empty();
-        }
-    }
-
     public Optional<String> findUserName(String domainId) {
         //todo add mapping strategy
         return Optional.ofNullable(persistableStore.getUserNameByDomainId().get(domainId));
-    }
-
-    public ChatIdentity getOrCreateChatIdentity(String userName, String domainId) {
-        synchronized (persistableStore) {
-            if (persistableStore.getUserNameByDomainId().containsKey(domainId)) {
-                checkArgument(persistableStore.getUserNameByDomainId().get(domainId).equals(userName));
-            } else {
-                persistableStore.getUserNameByDomainId().put(domainId, userName);
-            }
-        }
-        persist();
-        Identity identity = identityService.getOrCreateIdentity(domainId).join(); //todo
-        return new ChatIdentity(userName, identity);
     }
 
 
