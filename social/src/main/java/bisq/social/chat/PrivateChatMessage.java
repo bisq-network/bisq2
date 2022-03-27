@@ -19,6 +19,7 @@ package bisq.social.chat;
 
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
 import bisq.social.user.ChatUser;
 import com.google.protobuf.Any;
@@ -29,46 +30,85 @@ import lombok.ToString;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * PrivateChatMessage is sent as direct message to peer and in case peer is not online it can be stores as
+ * mailbox message.
+ */
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
-    private final MetaData metaData;
-
     public PrivateChatMessage(String channelId,
                               ChatUser sender,
                               String text,
                               Optional<QuotedMessage> quotedMessage,
                               long date,
                               boolean wasEdited) {
+        this(channelId,
+                sender,
+                text,
+                quotedMessage,
+                date,
+                wasEdited,
+                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PrivateChatMessage.class.getSimpleName()));
+    }
+
+    private PrivateChatMessage(String channelId,
+                               ChatUser sender,
+                               String text,
+                               Optional<QuotedMessage> quotedMessage,
+                               long date,
+                               boolean wasEdited,
+                               MetaData metaData) {
         super(channelId,
                 sender,
                 text,
                 quotedMessage,
                 date,
                 ChannelType.PRIVATE,
-                wasEdited);
-
-        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
+                wasEdited,
+                metaData);
     }
 
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
-    @Override
-    public Any toAny() {
-        return null;
-    }
 
     @Override
     public NetworkMessage toNetworkMessageProto() {
-        return null;
+        return getNetworkMessageBuilder()
+                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
+                        .setAny(Any.pack(toProto())))
+                .build();
+    }
+
+    private bisq.social.protobuf.PrivateChatMessage toProto() {
+        bisq.social.protobuf.PrivateChatMessage.Builder builder = bisq.social.protobuf.PrivateChatMessage.newBuilder()
+                .setChannelId(channelId)
+                .setChatUser(chatUser.toProto())
+                .setText(text)
+                .setDate(date)
+                .setChannelType(channelType.name())
+                .setWasEdited(wasEdited)
+                .setMetaData(metaData.toProto());
+        quotedMessage.ifPresent(quotedMessage -> builder.setQuotedMessage(quotedMessage.toProto()));
+        return builder.build();
+    }
+
+    public static PrivateChatMessage fromProto(bisq.social.protobuf.PrivateChatMessage proto) {
+        Optional<QuotedMessage> quotedMessage = proto.hasQuotedMessage() ?
+                Optional.of(QuotedMessage.fromProto(proto.getQuotedMessage())) :
+                Optional.empty();
+        return new PrivateChatMessage(
+                proto.getChannelId(),
+                ChatUser.fromProto(proto.getChatUser()),
+                proto.getText(),
+                quotedMessage,
+                proto.getDate(),
+                proto.getWasEdited(),
+                MetaData.fromProto(proto.getMetaData()));
+    }
+
+    // Required for MailboxMessage use case
+    @Override
+    public MetaData getMetaData() {
+        return metaData;
     }
 }

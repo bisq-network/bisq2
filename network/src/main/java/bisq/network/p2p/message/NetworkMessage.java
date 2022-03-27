@@ -49,12 +49,14 @@ public interface NetworkMessage extends Proto {
     bisq.network.protobuf.NetworkMessage toNetworkMessageProto();
 
     static NetworkMessage resolveNetworkMessage(bisq.network.protobuf.NetworkMessage networkMessage) {
+       /* switch (networkMessage.getMessageCase()) {
+        }*/
         switch (networkMessage.getMessageCase()) {
             case CONNECTIONHANDSHAKEREQUEST -> {
-                return  ConnectionHandshake.Request.fromProto(networkMessage.getConnectionHandshakeRequest());
+                return ConnectionHandshake.Request.fromProto(networkMessage.getConnectionHandshakeRequest());
             }
             case CONNECTIONHANDSHAKERESPONSE -> {
-                return  ConnectionHandshake.Response.fromProto(networkMessage.getConnectionHandshakeResponse());
+                return ConnectionHandshake.Response.fromProto(networkMessage.getConnectionHandshakeResponse());
             }
             case CLOSECONNECTIONMESSAGE -> {
                 return CloseConnectionMessage.fromProto(networkMessage.getCloseConnectionMessage());
@@ -101,13 +103,17 @@ public interface NetworkMessage extends Proto {
             case ADDRESSVALIDATIONRESPONSE -> {
                 return AddressValidationResponse.fromProto(networkMessage.getAddressValidationResponse());
             }
+            case EXTERNALNETWORKMESSAGE -> {
+                // Externally defined messages
+                return ExternalNetworkMessage.fromProto(networkMessage.getExternalNetworkMessage());
+            }
             case MESSAGE_NOT_SET -> {
                 throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + networkMessage.getMessageCase());
             }
-            default -> {
+           /* default -> {
                 //todo
-                NetworkMessageResolver.resolve(Any.pack(networkMessage));
-            }
+                return  NetworkMessageResolver.resolve(Any.pack(networkMessage));
+            }*/
         }
         throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + networkMessage.getMessageCase());
     }

@@ -182,6 +182,9 @@ message AddAppendOnlyDataRequest {
   google.protobuf.Any appendOnlyData = 1;
 }
 
+message ExternalNetworkMessage {
+  google.protobuf.Any any = 1;
+}
 
 ////////////////////////////////////////////////////////////////////
 // NetworkMessage types
@@ -216,6 +219,9 @@ message NetworkMessage {
     RemoveMailboxRequest removeMailboxRequest = 17;
 
     AddAppendOnlyDataRequest AddAppendOnlyDataRequest = 18;
+
+    // Wrapper for messages defined in other modules
+    ExternalNetworkMessage externalNetworkMessage = 19;
   }
 }
 

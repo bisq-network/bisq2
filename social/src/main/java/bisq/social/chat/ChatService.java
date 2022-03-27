@@ -223,7 +223,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
-                        ChatMessage newChatMessage = new PublicChatMessage(originalChatMessage.getChannelId(),
+                        PublicChatMessage newChatMessage = new PublicChatMessage(originalChatMessage.getChannelId(),
                                 userProfile.chatUser(),
                                 editedText,
                                 originalChatMessage.getQuotedMessage(),

@@ -260,7 +260,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
 
     public CompletableFuture<Optional<Entitlement.Proof>> verifyModerator(String invitationCode, PublicKey publicKey) {
         //todo
-        return CompletableFuture.completedFuture(Optional.of(new Entitlement.ChannelAdminInvitationProof(invitationCode)));
+        return CompletableFuture.completedFuture(Optional.of(new Entitlement.InvitationProof(invitationCode)));
     }
 
     private CompletableFuture<Boolean> createDefaultUserProfile() {

@@ -20,3 +20,60 @@ syntax = "proto3";
 package social;
 option java_package = "bisq.social.protobuf";
 option java_multiple_files = true;
+import "common.proto";
+import "network.proto";
+import "security.proto";
+
+message ProofOfBurnProof {
+  string txId = 1;
+  uint64 burntAmount = 2;
+  uint64 date = 3;
+}
+message BondedRoleProof {
+  string txId = 1;
+  string signature = 2;
+}
+message InvitationProof {
+  string invitationCode = 1;
+}
+message Proof {
+  oneof message {
+    ProofOfBurnProof proofOfBurnProof = 1;
+    BondedRoleProof bondedRoleProof = 2;
+    InvitationProof invitationProof = 3;
+  }
+}
+message Entitlement {
+  string entitlementType = 1;
+  Proof proof = 2;
+}
+message ChatUser {
+  network.NetworkId networkId = 1;
+  repeated Entitlement entitlements = 2;
+
+}
+message QuotedMessage {
+  string userName = 1;
+  common.ByteArray pubKeyHash = 2;
+  string message = 3;
+}
+message PrivateChatMessage {
+  string channelId = 1;
+  string text = 2;
+  ChatUser chatUser = 3;
+  QuotedMessage quotedMessage = 4;
+  uint64 date = 5;
+  string channelType = 6;
+  bool wasEdited = 7;
+  network.MetaData metaData = 8;
+}
+message PublicChatMessage {
+  string channelId = 1;
+  string text = 2;
+  ChatUser chatUser = 3;
+  QuotedMessage quotedMessage = 4;
+  uint64 date = 5;
+  string channelType = 6;
+  bool wasEdited = 7;
+  network.MetaData metaData = 8;
+}

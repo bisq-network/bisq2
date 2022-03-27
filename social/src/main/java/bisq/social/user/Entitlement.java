@@ -18,25 +18,103 @@
 package bisq.social.user;
 
 import bisq.common.proto.Proto;
+import bisq.common.util.ProtobufUtils;
 import lombok.Getter;
+import lombok.NonNull;
 
 import java.util.List;
 
 /**
- * Entitlement of a user profile. Requires some proof for verifying that the associated Entitlement to a user profile 
- * is valid. 
+ * Entitlement of a user profile. Requires some proof for verifying that the associated Entitlement to a user profile
+ * is valid.
  */
-public record Entitlement(Type entitlementType, Proof proof) implements Proto {
+public record Entitlement(Type entitlementType, Proof proof) implements Proto, Comparable<Entitlement> {
+    public bisq.social.protobuf.Entitlement toProto() {
+        return bisq.social.protobuf.Entitlement.newBuilder()
+                .setEntitlementType(entitlementType.name())
+                .setProof(proof.toProto())
+                .build();
+    }
+
+    public static Entitlement fromProto(bisq.social.protobuf.Entitlement proto) {
+        return new Entitlement(ProtobufUtils.enumFromProto(Type.class, proto.getEntitlementType()),
+                Proof.fromProto(proto.getProof()));
+    }
+
+    @Override
+    public int compareTo(@NonNull Entitlement o) {
+        return entitlementType.compareTo(o.entitlementType);
+    }
+
     public interface Proof extends Proto {
+        default bisq.social.protobuf.Proof.Builder toProofBuilder() {
+            return bisq.social.protobuf.Proof.newBuilder();
+        }
+
+        bisq.social.protobuf.Proof toProto();
+
+        static Proof fromProto(bisq.social.protobuf.Proof proto) {
+            switch (proto.getMessageCase()) {
+                case PROOFOFBURNPROOF -> {
+                    return ProofOfBurnProof.fromProto(proto.getProofOfBurnProof());
+                }
+                case BONDEDROLEPROOF -> {
+                    return BondedRoleProof.fromProto(proto.getBondedRoleProof());
+                }
+                case INVITATIONPROOF -> {
+                    return InvitationProof.fromProto(proto.getInvitationProof());
+                }
+                case MESSAGE_NOT_SET -> {
+                    throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + proto.getMessageCase());
+                }
+            }
+            throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + proto.getMessageCase());
+        }
     }
 
     public record ProofOfBurnProof(String txId, long burntAmount, long date) implements Proof {
+        @Override
+        public bisq.social.protobuf.Proof toProto() {
+            return toProofBuilder().setProofOfBurnProof(
+                            bisq.social.protobuf.ProofOfBurnProof.newBuilder()
+                                    .setTxId(txId)
+                                    .setBurntAmount(burntAmount)
+                                    .setDate(date))
+                    .build();
+        }
+
+        public static ProofOfBurnProof fromProto(bisq.social.protobuf.ProofOfBurnProof proto) {
+            return new ProofOfBurnProof(proto.getTxId(), proto.getBurntAmount(), proto.getDate());
+        }
     }
 
     public record BondedRoleProof(String txId, String signature) implements Proof {
+        @Override
+        public bisq.social.protobuf.Proof toProto() {
+            return toProofBuilder().setBondedRoleProof(
+                            bisq.social.protobuf.BondedRoleProof.newBuilder()
+                                    .setTxId(txId)
+                                    .setSignature(signature))
+                    .build();
+        }
+
+        public static BondedRoleProof fromProto(bisq.social.protobuf.BondedRoleProof proto) {
+            return new BondedRoleProof(proto.getTxId(), proto.getSignature());
+        }
     }
 
-    public record ChannelAdminInvitationProof(String invitationCode) implements Proof {
+    public record InvitationProof(String invitationCode) implements Proof {
+        @Override
+        public bisq.social.protobuf.Proof toProto() {
+            return toProofBuilder().setInvitationProof(
+                            bisq.social.protobuf.InvitationProof.newBuilder()
+                                    .setInvitationCode(invitationCode))
+                    .build();
+        }
+
+        public static InvitationProof fromProto(bisq.social.protobuf.InvitationProof proto) {
+            return new InvitationProof(proto.getInvitationCode());
+        }
     }
 
     public enum Type implements Proto {

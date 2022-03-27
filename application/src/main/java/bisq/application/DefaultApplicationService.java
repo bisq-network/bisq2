@@ -37,6 +37,7 @@ import bisq.persistence.PersistenceService;
 import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.settings.SettingsService;
+import bisq.social.SocialService;
 import bisq.social.chat.ChatService;
 import bisq.social.intent.TradeIntentListingsService;
 import bisq.social.intent.TradeIntentService;
@@ -87,6 +88,7 @@ public class DefaultApplicationService extends ServiceProvider {
     private final UserProfileService userProfileService;
     private final WalletService walletService;
     private final OfferService offerService;
+    private final SocialService socialService;
 
     public DefaultApplicationService(String[] args) {
         super("Bisq");
@@ -111,6 +113,7 @@ public class DefaultApplicationService extends ServiceProvider {
 
         accountService = new AccountService(persistenceService);
 
+        socialService = new SocialService();
         UserProfileService.Config userProfileServiceConfig = UserProfileService.Config.from(getConfig("bisq.userProfileServiceConfig"));
         userProfileService = new UserProfileService(persistenceService, userProfileServiceConfig, keyPairService, identityService, networkService);
         chatService = new ChatService(persistenceService, identityService, networkService, userProfileService);
@@ -157,7 +160,9 @@ public class DefaultApplicationService extends ServiceProvider {
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
-        return persistenceService.readAllPersisted();
+        return  CompletableFuture.completedFuture(true);
+        //todo reactivate once persistence is up to date
+       // return persistenceService.readAllPersisted();
     }
 
     /**

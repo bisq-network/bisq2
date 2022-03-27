@@ -30,13 +30,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Publicly shared chat user data
  * We cache pubKey hash, id and generated userName.
- * ChatUser is part of the ChatMessage so we have many instances from the same chat user and want to avoid 
- * costs from hashing and the userame generation. We could also try to restructure the domain model to avoid that 
- * the chat user is part of the message (e.g. use an id and reference to p2p network data for chat user). 
+ * ChatUser is part of the ChatMessage so we have many instances from the same chat user and want to avoid
+ * costs from hashing and the userame generation. We could also try to restructure the domain model to avoid that
+ * the chat user is part of the message (e.g. use an id and reference to p2p network data for chat user).
  */
 @ToString
 @Slf4j
@@ -47,7 +48,7 @@ public class ChatUser implements Proto {
     private final NetworkId networkId;
     @Getter
     private final Set<Entitlement> entitlements;
-    private final DerivedData derivedData;
+    private transient final DerivedData derivedData;
 
     public ChatUser(NetworkId networkId, Set<Entitlement> entitlements) {
         this.networkId = networkId;
@@ -57,6 +58,23 @@ public class ChatUser implements Proto {
 
     public ChatUser(NetworkId networkId) {
         this(networkId, new HashSet<>());
+    }
+
+    public bisq.social.protobuf.ChatUser toProto() {
+        return bisq.social.protobuf.ChatUser.newBuilder()
+                .setNetworkId(networkId.toProto())
+                .addAllEntitlements(entitlements.stream()
+                        .sorted()
+                        .map(Entitlement::toProto)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    public static ChatUser fromProto(bisq.social.protobuf.ChatUser proto) {
+        Set<Entitlement> set = proto.getEntitlementsList().stream()
+                .map(Entitlement::fromProto)
+                .collect(Collectors.toSet());
+        return new ChatUser(NetworkId.fromProto(proto.getNetworkId()), set);
     }
 
     public boolean hasEntitlementType(Entitlement.Type type) {
@@ -74,7 +92,9 @@ public class ChatUser implements Proto {
 
     public byte[] getPubKeyHash() {
         return derivedData.pubKeyHash().getBytes();
-    }   public ByteArray getPubKeyHashAsByteArray() {
+    }
+
+    public ByteArray getPubKeyHashAsByteArray() {
         return derivedData.pubKeyHash();
     }
 

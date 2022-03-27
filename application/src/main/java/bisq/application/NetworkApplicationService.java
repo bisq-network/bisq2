@@ -23,6 +23,7 @@ import bisq.network.NetworkServiceConfigFactory;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
+import bisq.social.SocialService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,13 +59,12 @@ public class NetworkApplicationService extends ServiceProvider {
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(
                 applicationConfig.baseDir(),
-              getConfig("bisq.networkServiceConfig"));
+                getConfig("bisq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
 
-        //todo check if needed
-        //todo resolver registration is done in OfferService
-        //todo if needed find other solution
-        OfferService  offerService = new OfferService();
+        //todo would be better if we dont need to get those dependencies in
+        OfferService offerService = new OfferService();
+        SocialService socialService = new SocialService();
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {

@@ -17,28 +17,26 @@
 
 package bisq.social.chat;
 
-import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Getter
 @ToString
 @EqualsAndHashCode
-public abstract class ChatMessage implements DistributedData {
+public abstract class ChatMessage {
     protected final String channelId;
     protected final String text;
-    protected  ChatUser chatUser;
-    @Nullable
-    protected final QuotedMessage quotedMessage;
+    protected ChatUser chatUser;
+    protected final Optional<QuotedMessage> quotedMessage;
     protected final long date;
     protected final ChannelType channelType;
     protected final boolean wasEdited;
-
+    protected final MetaData metaData;
 
     protected ChatMessage(String channelId,
                           ChatUser chatUser,
@@ -46,19 +44,15 @@ public abstract class ChatMessage implements DistributedData {
                           Optional<QuotedMessage> quotedMessage,
                           long date,
                           ChannelType channelType,
-                          boolean wasEdited) {
+                          boolean wasEdited,
+                          MetaData metaData) {
         this.channelId = channelId;
         this.chatUser = chatUser;
         this.text = text;
-        this.quotedMessage = quotedMessage.orElse(null);
+        this.quotedMessage = quotedMessage;
         this.date = date;
         this.channelType = channelType;
         this.wasEdited = wasEdited;
-       
-    }
-
-    @Nullable
-    public Optional<QuotedMessage> getQuotedMessage() {
-        return Optional.ofNullable(quotedMessage);
+        this.metaData = metaData;
     }
 }
