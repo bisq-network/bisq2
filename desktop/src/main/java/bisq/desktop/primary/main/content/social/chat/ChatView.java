@@ -345,7 +345,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             emojiButton2.setOnAction(e -> controller.onAddEmoji((String) emojiButton2.getUserData()));
                             openEmojiSelectorButton.setOnAction(e -> controller.onOpenEmojiSelector(chatMessage));
                             replyButton.setOnAction(e -> controller.onReply(chatMessage));
-                            pmButton.setOnAction(e -> controller.onSendPrivateMessage(chatMessage));
+                            pmButton.setOnAction(e -> controller.addPrivateChannel(chatMessage));
                             editButton.setOnAction(e -> onEditMessage(item));
                             deleteButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
                             moreOptionsButton.setOnAction(e -> controller.onOpenMoreOptions(chatMessage));

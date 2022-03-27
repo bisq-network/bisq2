@@ -25,7 +25,7 @@ import bisq.desktop.overlay.Notification;
 import bisq.desktop.primary.main.content.social.chat.components.*;
 import bisq.i18n.Res;
 import bisq.social.chat.*;
-import bisq.social.user.UserNameGenerator;
+import bisq.social.user.ChatUser;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
 import com.google.common.base.Joiner;
@@ -116,7 +116,7 @@ public class ChatController implements Controller {
             // settings tab then in the notifications component).
             // We look up all our usernames, not only the selected one
             Set<String> myUserNames = userProfileService.getPersistableStore().getUserProfiles().stream()
-                    .map(userProfile -> UserNameGenerator.fromHash(userProfile.chatUser().getPubKeyHash()))
+                    .map(userProfile -> userProfile.chatUser().getUserName()) // UserNameGenerator.fromHash(userProfile.chatUser().getPubKeyHash()))
                     .collect(Collectors.toSet());
             messageListener = c -> {
                 c.next();
@@ -177,7 +177,7 @@ public class ChatController implements Controller {
         if (channel instanceof PublicChannel publicChannel) {
             chatService.publishPublicChatMessage(text, quotedMessageBlock.getQuotedMessage(), publicChannel, userProfile);
         } else if (channel instanceof PrivateChannel privateChannel) {
-            chatService.sendPrivateChatMessage(text, quotedMessageBlock.getQuotedMessage(), privateChannel, userProfile);
+            chatService.sendPrivateChatMessage(text, quotedMessageBlock.getQuotedMessage(), privateChannel);
         }
         quotedMessageBlock.close();
     }
@@ -273,10 +273,19 @@ public class ChatController implements Controller {
         }
     }
 
-    public void onSendPrivateMessage(ChatMessage chatMessage) {
-        if (!model.isMyMessage(chatMessage)) {
-            // todo
+    /**
+     * open a private channel to specified user. Automatically select it so user is ready to type the message to send.
+     * @param chatMessage
+     */
+    public void addPrivateChannel(ChatMessage chatMessage) {
+        if (model.isMyMessage(chatMessage)) {
+            return; // should never happen as the button for opening the channel should not appear
+            // but kept here for double safety
         }
+        ChatUser peerUser = chatMessage.getChatUser();
+        String channelId = PrivateChannel.createChannelId(peerUser, userProfileService.getPersistableStore().getSelectedUserProfile().get());
+        PrivateChannel channel = chatService.getOrCreatePrivateChannel(channelId, peerUser);
+        chatService.selectChannel(channel);
     }
 
     public void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
