@@ -65,7 +65,7 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
 
     @Override
     public void applyPersisted(SettingsStore persisted) {
-        cookie.putAll(persisted.getCookie());
+        cookie.putAll(persisted.getCookie().getMap());
         displaySettings = persisted.getDisplaySettings();
         dontShowAgainMap.putAll(persisted.getDontShowAgainMap());
         markets.clear();
