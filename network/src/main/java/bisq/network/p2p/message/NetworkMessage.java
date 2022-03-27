@@ -18,6 +18,7 @@
 package bisq.network.p2p.message;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.CloseConnectionMessage;
 import bisq.network.p2p.node.ConnectionHandshake;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
@@ -48,73 +49,73 @@ public interface NetworkMessage extends Proto {
 
     bisq.network.protobuf.NetworkMessage toNetworkMessageProto();
 
-    static NetworkMessage resolveNetworkMessage(bisq.network.protobuf.NetworkMessage networkMessage) {
-       /* switch (networkMessage.getMessageCase()) {
+    static NetworkMessage resolveNetworkMessage(bisq.network.protobuf.NetworkMessage proto) {
+       /* switch (proto.getMessageCase()) {
         }*/
-        switch (networkMessage.getMessageCase()) {
+        switch (proto.getMessageCase()) {
             case CONNECTIONHANDSHAKEREQUEST -> {
-                return ConnectionHandshake.Request.fromProto(networkMessage.getConnectionHandshakeRequest());
+                return ConnectionHandshake.Request.fromProto(proto.getConnectionHandshakeRequest());
             }
             case CONNECTIONHANDSHAKERESPONSE -> {
-                return ConnectionHandshake.Response.fromProto(networkMessage.getConnectionHandshakeResponse());
+                return ConnectionHandshake.Response.fromProto(proto.getConnectionHandshakeResponse());
             }
             case CLOSECONNECTIONMESSAGE -> {
-                return CloseConnectionMessage.fromProto(networkMessage.getCloseConnectionMessage());
+                return CloseConnectionMessage.fromProto(proto.getCloseConnectionMessage());
             }
             case CONFIDENTIALMESSAGE -> {
-                return ConfidentialMessage.fromProto(networkMessage.getConfidentialMessage());
+                return ConfidentialMessage.fromProto(proto.getConfidentialMessage());
             }
             case INVENTORYREQUEST -> {
-                return InventoryRequest.fromProto(networkMessage.getInventoryRequest());
+                return InventoryRequest.fromProto(proto.getInventoryRequest());
             }
             case INVENTORYRESPONSE -> {
-                return InventoryResponse.fromProto(networkMessage.getInventoryResponse());
+                return InventoryResponse.fromProto(proto.getInventoryResponse());
             }
             case ADDAUTHENTICATEDDATAREQUEST -> {
-                return AddAuthenticatedDataRequest.fromProto(networkMessage.getAddAuthenticatedDataRequest());
+                return AddAuthenticatedDataRequest.fromProto(proto.getAddAuthenticatedDataRequest());
             }
             case REMOVEAUTHENTICATEDDATAREQUEST -> {
-                return RemoveAuthenticatedDataRequest.fromProto(networkMessage.getRemoveAuthenticatedDataRequest());
+                return RemoveAuthenticatedDataRequest.fromProto(proto.getRemoveAuthenticatedDataRequest());
             }
             case REFRESHAUTHENTICATEDDATAREQUEST -> {
-                return RefreshAuthenticatedDataRequest.fromProto(networkMessage.getRefreshAuthenticatedDataRequest());
+                return RefreshAuthenticatedDataRequest.fromProto(proto.getRefreshAuthenticatedDataRequest());
             }
             case ADDMAILBOXREQUEST -> {
-                return AddMailboxRequest.fromProto(networkMessage.getAddMailboxRequest());
+                return AddMailboxRequest.fromProto(proto.getAddMailboxRequest());
             }
             case REMOVEMAILBOXREQUEST -> {
-                return RemoveMailboxRequest.fromProto(networkMessage.getRemoveMailboxRequest());
+                return RemoveMailboxRequest.fromProto(proto.getRemoveMailboxRequest());
             }
             case PEEREXCHANGEREQUEST -> {
-                return Ping.fromProto(networkMessage.getPing());
+                return Ping.fromProto(proto.getPing());
             }
             case PEEREXCHANGERESPONSE -> {
-                return Ping.fromProto(networkMessage.getPing());
+                return Ping.fromProto(proto.getPing());
             }
             case PING -> {
-                return Ping.fromProto(networkMessage.getPing());
+                return Ping.fromProto(proto.getPing());
             }
             case PONG -> {
-                return Pong.fromProto(networkMessage.getPong());
+                return Pong.fromProto(proto.getPong());
             }
             case ADDRESSVALIDATIONREQUEST -> {
-                return AddressValidationRequest.fromProto(networkMessage.getAddressValidationRequest());
+                return AddressValidationRequest.fromProto(proto.getAddressValidationRequest());
             }
             case ADDRESSVALIDATIONRESPONSE -> {
-                return AddressValidationResponse.fromProto(networkMessage.getAddressValidationResponse());
+                return AddressValidationResponse.fromProto(proto.getAddressValidationResponse());
             }
             case EXTERNALNETWORKMESSAGE -> {
                 // Externally defined messages
-                return ExternalNetworkMessage.fromProto(networkMessage.getExternalNetworkMessage());
+                return ExternalNetworkMessage.fromProto(proto.getExternalNetworkMessage());
             }
             case MESSAGE_NOT_SET -> {
-                throw new RuntimeException("MESSAGE_NOT_SET. networkMessage.getMessageCase()=" + networkMessage.getMessageCase());
+                throw new UnresolvableProtobufMessageException(proto);
             }
            /* default -> {
                 //todo
-                return  NetworkMessageResolver.resolve(Any.pack(networkMessage));
+                return  NetworkMessageResolver.resolve(Any.pack(proto));
             }*/
         }
-        throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + networkMessage.getMessageCase());
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

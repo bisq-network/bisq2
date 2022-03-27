@@ -18,6 +18,7 @@
 package bisq.offer.options;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 
 public interface OfferOption extends Proto {
     bisq.offer.protobuf.OfferOption toProto();
@@ -50,9 +51,9 @@ public interface OfferOption extends Proto {
                 SupportOption.fromProto(proto.getSupportOption());
             }
             case MESSAGE_NOT_SET -> {
-                throw new RuntimeException("MESSAGE_NOT_SET. networkMessage.getMessageCase()=" + proto.getMessageCase());
+                throw new UnresolvableProtobufMessageException(proto);
             }
         }
-        throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + proto.getMessageCase());
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

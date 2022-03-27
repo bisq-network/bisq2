@@ -90,13 +90,16 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
                 .setMinPrecision(minPrecision);
     }
 
-    public static Monetary resolveSubTypes(bisq.common.protobuf.Monetary proto) {
+    public static Monetary fromProto(bisq.common.protobuf.Monetary proto) {
         switch (proto.getMessageCase()) {
             case COIN -> {
-                return Coin.fromProto(proto);
+                return Coin.fromProto(proto, proto.getCoin());
             }
             case FIAT -> {
-                return Fiat.fromProto(proto);
+                return Fiat.fromProto(proto, proto.getFiat());
+            }
+            case MESSAGE_NOT_SET -> {
+                throw new UnresolvableProtobufMessageException(proto);
             }
         }
         throw new UnresolvableProtobufMessageException(proto);

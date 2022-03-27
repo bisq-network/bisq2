@@ -18,6 +18,7 @@
 package bisq.social.user;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.ProtobufUtils;
 import lombok.Getter;
 import lombok.NonNull;
@@ -47,7 +48,7 @@ public record Entitlement(Type entitlementType, Proof proof) implements Proto, C
     }
 
     public interface Proof extends Proto {
-        default bisq.social.protobuf.Proof.Builder toProofBuilder() {
+        default bisq.social.protobuf.Proof.Builder getProofBuilder() {
             return bisq.social.protobuf.Proof.newBuilder();
         }
 
@@ -65,17 +66,17 @@ public record Entitlement(Type entitlementType, Proof proof) implements Proto, C
                     return InvitationProof.fromProto(proto.getInvitationProof());
                 }
                 case MESSAGE_NOT_SET -> {
-                    throw new RuntimeException("MESSAGE_NOT_SET. networkMessage.getMessageCase()=" + proto.getMessageCase());
+                    throw new UnresolvableProtobufMessageException(proto);
                 }
             }
-            throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + proto.getMessageCase());
+            throw new UnresolvableProtobufMessageException(proto);
         }
     }
 
     public record ProofOfBurnProof(String txId, long burntAmount, long date) implements Proof {
         @Override
         public bisq.social.protobuf.Proof toProto() {
-            return toProofBuilder().setProofOfBurnProof(
+            return getProofBuilder().setProofOfBurnProof(
                             bisq.social.protobuf.ProofOfBurnProof.newBuilder()
                                     .setTxId(txId)
                                     .setBurntAmount(burntAmount)
@@ -91,7 +92,7 @@ public record Entitlement(Type entitlementType, Proof proof) implements Proto, C
     public record BondedRoleProof(String txId, String signature) implements Proof {
         @Override
         public bisq.social.protobuf.Proof toProto() {
-            return toProofBuilder().setBondedRoleProof(
+            return getProofBuilder().setBondedRoleProof(
                             bisq.social.protobuf.BondedRoleProof.newBuilder()
                                     .setTxId(txId)
                                     .setSignature(signature))
@@ -106,7 +107,7 @@ public record Entitlement(Type entitlementType, Proof proof) implements Proto, C
     public record InvitationProof(String invitationCode) implements Proof {
         @Override
         public bisq.social.protobuf.Proof toProto() {
-            return toProofBuilder().setInvitationProof(
+            return getProofBuilder().setInvitationProof(
                             bisq.social.protobuf.InvitationProof.newBuilder()
                                     .setInvitationCode(invitationCode))
                     .build();

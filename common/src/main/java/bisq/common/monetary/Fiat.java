@@ -85,8 +85,8 @@ public class Fiat extends Monetary {
         return getMonetaryBuilder().setFiat(bisq.common.protobuf.Fiat.newBuilder()).build();
     }
 
-    public static Fiat fromProto(bisq.common.protobuf.Monetary proto) {
-        return new Fiat(proto.getId(), proto.getValue(), proto.getCode(), proto.getPrecision(), proto.getMinPrecision());
+    public static Fiat fromProto(bisq.common.protobuf.Monetary baseProto, bisq.common.protobuf.Fiat proto) {
+        return new Fiat(baseProto.getId(), baseProto.getValue(), baseProto.getCode(), baseProto.getPrecision(), baseProto.getMinPrecision());
     }
 
 

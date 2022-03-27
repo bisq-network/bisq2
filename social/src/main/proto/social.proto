@@ -23,6 +23,7 @@ option java_multiple_files = true;
 import "common.proto";
 import "network.proto";
 import "security.proto";
+import "identity.proto";
 
 message ProofOfBurnProof {
   string txId = 1;
@@ -57,11 +58,12 @@ message QuotedMessage {
   common.ByteArray pubKeyHash = 2;
   string message = 3;
 }
+
 message PrivateChatMessage {
   string channelId = 1;
   string text = 2;
   ChatUser chatUser = 3;
-  QuotedMessage quotedMessage = 4;
+  optional QuotedMessage quotedMessage = 4;
   uint64 date = 5;
   string channelType = 6;
   bool wasEdited = 7;
@@ -76,4 +78,47 @@ message PublicChatMessage {
   string channelType = 6;
   bool wasEdited = 7;
   network.MetaData metaData = 8;
+}
+message ChatMessage {
+  oneof message {
+    PrivateChatMessage privateChatMessage = 1;
+    PublicChatMessage publicChatMessage = 2;
+  }
+}
+
+enum ChannelType{
+  PUBLIC = 0;
+  PRIVATE = 1;
+}
+enum NotificationSetting{
+  ALL = 0;
+  MENTION = 1;
+  NEVER = 2;
+}
+
+message UserProfile {
+  identity.Identity identity = 1;
+  repeated Entitlement entitlements = 2;
+}
+
+message PrivateChannel{
+  ChatUser peer = 1;
+}
+message PublicChannel{
+  string channelName = 1;
+  string description = 2;
+  ChatUser channelAdmin = 3;
+  repeated  ChatUser channelModerators = 4;
+}
+
+
+message Channel{
+  string id = 1;
+  repeated ChatMessage chatMessages = 2;
+  repeated NotificationSetting notificationSetting = 3;
+
+  oneof message{
+    PrivateChannel privateChannel = 10;
+    PublicChannel publicChannel = 11;
+  }
 }

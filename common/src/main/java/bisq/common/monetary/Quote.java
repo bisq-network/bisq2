@@ -77,8 +77,8 @@ public class Quote implements Comparable<Quote>, Proto {
 
     public static Quote fromProto(bisq.common.protobuf.Quote proto) {
         return new Quote(proto.getValue(),
-                Monetary.resolveSubTypes(proto.getBaseMonetary()),
-                Monetary.resolveSubTypes(proto.getQuoteMonetary()));
+                Monetary.fromProto(proto.getBaseMonetary()),
+                Monetary.fromProto(proto.getQuoteMonetary()));
     }
 
 

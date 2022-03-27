@@ -68,6 +68,7 @@ message Monetary {
   string code = 3;
   int32 precision = 4;
   int32 minPrecision = 5;
+  
   oneof message {
     Coin coin = 10;
     Fiat fiat = 11;

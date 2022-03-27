@@ -39,8 +39,8 @@ public final class CryptoCurrency extends TradeCurrency {
         return getTradeCurrencyBuilder().setCryptoCurrency(bisq.common.protobuf.CryptoCurrency.newBuilder()).build();
     }
 
-    public static CryptoCurrency fromProto(bisq.common.protobuf.TradeCurrency proto) {
-        return new CryptoCurrency(proto.getCode(), proto.getName());
+    public static CryptoCurrency fromProto(bisq.common.protobuf.TradeCurrency baseProto, bisq.common.protobuf.CryptoCurrency proto) {
+        return new CryptoCurrency(baseProto.getCode(), baseProto.getName());
     }
 
 

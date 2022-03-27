@@ -124,8 +124,8 @@ public class Coin extends Monetary {
         return getMonetaryBuilder().setCoin(bisq.common.protobuf.Coin.newBuilder()).build();
     }
 
-    public static Coin fromProto(bisq.common.protobuf.Monetary proto) {
-        return new Coin(proto.getId(), proto.getValue(), proto.getCode(), proto.getPrecision(), proto.getMinPrecision());
+    public static Coin fromProto(bisq.common.protobuf.Monetary baseProto, bisq.common.protobuf.Coin proto) {
+        return new Coin(baseProto.getId(), baseProto.getValue(), baseProto.getCode(), baseProto.getPrecision(), baseProto.getMinPrecision());
     }
 
 

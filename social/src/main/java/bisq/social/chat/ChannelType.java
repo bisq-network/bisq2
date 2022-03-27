@@ -18,8 +18,17 @@
 package bisq.social.chat;
 
 import bisq.common.proto.Proto;
+import bisq.common.util.ProtobufUtils;
 
 public enum ChannelType implements Proto {
     PUBLIC,
-    PRIVATE
+    PRIVATE;
+
+    public bisq.social.protobuf.ChannelType toProto() {
+        return bisq.social.protobuf.ChannelType.valueOf(name());
+    }
+
+    public static ChannelType fromProto(bisq.social.protobuf.ChannelType proto) {
+        return ProtobufUtils.enumFromProto(ChannelType.class, proto.name());
+    }
 }

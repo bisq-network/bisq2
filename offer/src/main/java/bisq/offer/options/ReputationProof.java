@@ -17,6 +17,8 @@
 
 package bisq.offer.options;
 
+import bisq.common.proto.UnresolvableProtobufMessageException;
+
 public interface ReputationProof {
     bisq.offer.protobuf.ReputationProof toProto();
 
@@ -30,9 +32,9 @@ public interface ReputationProof {
                 return AccountCreationDateProof.fromProto(proto.getAccountCreationDateProof());
             }
             case MESSAGE_NOT_SET -> {
-                throw new RuntimeException("MESSAGE_NOT_SET. networkMessage.getMessageCase()=" + proto.getMessageCase());
+                throw new UnresolvableProtobufMessageException(proto);
             }
         }
-        throw new RuntimeException("Could not resolve message case. networkMessage.getMessageCase()=" + proto.getMessageCase());
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }
