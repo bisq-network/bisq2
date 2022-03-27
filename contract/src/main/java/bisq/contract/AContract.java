@@ -18,14 +18,14 @@
 package bisq.contract;
 
 import bisq.account.protocol.ProtocolType;
-import bisq.offer.Listing;
+import bisq.offer.Offer;
 import lombok.Getter;
 
 /**
  * Defines the terms of the financial interaction with the counterparty/parties.
  */
 @Getter
-public abstract class AContract<T extends Listing> {
+public abstract class AContract<T extends Offer> {
     protected final T listing;
     protected final ProtocolType protocolType;
     protected final Party maker;

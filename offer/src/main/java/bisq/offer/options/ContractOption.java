@@ -17,15 +17,15 @@
 
 package bisq.offer.options;
 
-public record ContractOptions(long maxTradeLimit, long maxTradePeriod) implements ListingOption {
-    public bisq.offer.protobuf.ListingOption toProto() {
-        return getListingOptionBuilder().setContractOptions(bisq.offer.protobuf.ContractOptions.newBuilder()
+public record ContractOption(long maxTradeLimit, long maxTradePeriod) implements OfferOption {
+    public bisq.offer.protobuf.OfferOption toProto() {
+        return getOfferOptionBuilder().setContractOption(bisq.offer.protobuf.ContractOption.newBuilder()
                         .setMaxTradeLimit(maxTradeLimit)
                         .setMaxTradePeriod(maxTradePeriod))
                 .build();
     }
 
-    public static ContractOptions fromProto(bisq.offer.protobuf.ContractOptions proto) {
-        return new ContractOptions(proto.getMaxTradeLimit(), proto.getMaxTradePeriod());
+    public static ContractOption fromProto(bisq.offer.protobuf.ContractOption proto) {
+        return new ContractOption(proto.getMaxTradeLimit(), proto.getMaxTradePeriod());
     }
 }

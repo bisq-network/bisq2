@@ -21,9 +21,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 // Information about supported dispute resolution and chosen dispute agent
-public record SupportOption(Set<DisputeAgent> disputeAgents) implements ListingOption {
-    public bisq.offer.protobuf.ListingOption toProto() {
-        return getListingOptionBuilder().setSupportOption(bisq.offer.protobuf.SupportOption.newBuilder()
+public record SupportOption(Set<DisputeAgent> disputeAgents) implements OfferOption {
+    public bisq.offer.protobuf.OfferOption toProto() {
+        return getOfferOptionBuilder().setSupportOption(bisq.offer.protobuf.SupportOption.newBuilder()
                         .addAllDisputeAgents(disputeAgents.stream()
                                 .map(DisputeAgent::toProto)
                                 .collect(Collectors.toList())))

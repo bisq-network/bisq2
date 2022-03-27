@@ -22,9 +22,9 @@ import java.util.stream.Collectors;
 
 // Provides reputation proofs. E.g.Account age witness hash, signed account age witness,
 // tx nodeId and signature of burned BSQ, or social media account address,...
-public record ReputationOption(Set<ReputationProof> reputationProofs) implements ListingOption {
-    public bisq.offer.protobuf.ListingOption toProto() {
-        return getListingOptionBuilder().setReputationOption(
+public record ReputationOption(Set<ReputationProof> reputationProofs) implements OfferOption {
+    public bisq.offer.protobuf.OfferOption toProto() {
+        return getOfferOptionBuilder().setReputationOption(
                 bisq.offer.protobuf.ReputationOption.newBuilder()
                 .addAllReputationProofs(reputationProofs.stream()
                         .map(ReputationProof::toProto)

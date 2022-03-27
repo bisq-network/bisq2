@@ -15,17 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer;
+package bisq.offer.options;
 
-public record FixPrice(long value) implements PriceSpec {
-    public static FixPrice fromProto(bisq.offer.protobuf.FixPrice proto) {
-        return new FixPrice(proto.getValue());
+public record CollateralOption(long buyerSecurityDeposit, long sellerSecurityDeposit) implements OfferOption {
+    public bisq.offer.protobuf.OfferOption toProto() {
+        return getOfferOptionBuilder().setCollateralOption(bisq.offer.protobuf.CollateralOption.newBuilder()
+                        .setBuyerSecurityDeposit(buyerSecurityDeposit)
+                        .setSellerSecurityDeposit(sellerSecurityDeposit))
+                .build();
     }
 
-    @Override
-    public bisq.offer.protobuf.PriceSpec toProto() {
-        return getPriceSpecBuilder().setFixPrice(bisq.offer.protobuf.FixPrice.newBuilder()
-                        .setValue(value))
-                .build();
+    public static CollateralOption fromProto(bisq.offer.protobuf.CollateralOption proto) {
+        return new CollateralOption(proto.getBuyerSecurityDeposit(), proto.getSellerSecurityDeposit());
     }
 }

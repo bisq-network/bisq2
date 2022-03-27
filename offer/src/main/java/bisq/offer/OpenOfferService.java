@@ -30,7 +30,10 @@ import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
-import bisq.offer.options.ListingOption;
+import bisq.offer.options.OfferOption;
+import bisq.offer.spec.Direction;
+import bisq.offer.spec.FixPrice;
+import bisq.offer.spec.SettlementSpec;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -145,7 +148,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
                         .collect(Collectors.toList());
             }
 
-            List<ListingOption> listingOptions = new ArrayList<>();
+            List<OfferOption> offerOptions = new ArrayList<>();
 
             return new Offer(offerId,
                     new Date().getTime(),
@@ -157,7 +160,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
                     protocolTypes,
                     baseSideSettlementSpecs,
                     quoteSideSettlementSpecs,
-                    listingOptions
+                    offerOptions
             );
         });
     }

@@ -25,7 +25,7 @@ import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.trade.components.*;
-import bisq.offer.Direction;
+import bisq.offer.spec.Direction;
 import bisq.offer.OpenOfferService;
 import javafx.collections.SetChangeListener;
 import lombok.Getter;

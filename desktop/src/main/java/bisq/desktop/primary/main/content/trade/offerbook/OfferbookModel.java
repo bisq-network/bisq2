@@ -23,7 +23,7 @@ import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
-import bisq.offer.Direction;
+import bisq.offer.spec.Direction;
 import bisq.offer.Offer;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.security.KeyPairService;

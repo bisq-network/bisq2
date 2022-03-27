@@ -15,9 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.options;
+package bisq.offer.spec;
 
-public enum FeeType {
-    BTC,
-    BSQ
+import bisq.common.proto.Proto;
+
+public interface PriceSpec extends Proto {
+    bisq.offer.protobuf.PriceSpec toProto();
+
+    default bisq.offer.protobuf.PriceSpec.Builder getPriceSpecBuilder() {
+        return bisq.offer.protobuf.PriceSpec.newBuilder();
+    }
+
+    static PriceSpec fromProto(bisq.offer.protobuf.PriceSpec proto) {
+        return null;
+    }
 }

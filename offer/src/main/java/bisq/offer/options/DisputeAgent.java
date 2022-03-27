@@ -17,24 +17,33 @@
 
 package bisq.offer.options;
 
+import bisq.common.proto.Proto;
 import bisq.common.util.ProtobufUtils;
 import bisq.network.NetworkId;
 
 public record DisputeAgent(Type type, NetworkId networkId) {
+    public enum Type implements Proto {
+        MEDIATOR,
+        ARBITRATOR;
+
+        public bisq.offer.protobuf.DisputeAgent.Type toProto() {
+            return bisq.offer.protobuf.DisputeAgent.Type.valueOf(name());
+        }
+
+        public static DisputeAgent.Type fromProto(bisq.offer.protobuf.DisputeAgent.Type proto) {
+            return ProtobufUtils.enumFromProto(Type.class, proto.name());
+        }
+    }
+
     public bisq.offer.protobuf.DisputeAgent toProto() {
         return bisq.offer.protobuf.DisputeAgent.newBuilder()
-                .setType(type.name())
+                .setType(type.toProto())
                 .setNetworkId(networkId.toProto())
                 .build();
     }
 
     public static DisputeAgent fromProto(bisq.offer.protobuf.DisputeAgent proto) {
-        return new DisputeAgent(ProtobufUtils.enumFromProto(Type.class, proto.getType()), 
+        return new DisputeAgent(Type.fromProto(proto.getType()),
                 NetworkId.fromProto(proto.getNetworkId()));
-    }
-
-    public enum Type {
-        MEDIATOR,
-        ARBITRATOR
     }
 }

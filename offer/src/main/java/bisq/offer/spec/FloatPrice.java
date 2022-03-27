@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer;
+package bisq.offer.spec;
 
 public record FloatPrice(double value) implements PriceSpec {
     public static FloatPrice fromProto(bisq.offer.protobuf.FloatPrice proto) {

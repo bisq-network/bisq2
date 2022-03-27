@@ -6,43 +6,55 @@ import "common.proto";
 import "network.proto";
 import "security.proto";
 
+// specs
+enum Direction {
+  BUY = 0;
+  SELL = 1;
+}
+
 message FixPrice {
   uint64 value = 1;
 }
 message FloatPrice {
   double value = 1;
 }
-
 message PriceSpec {
   oneof message {
     FixPrice fixPrice = 1;
     FloatPrice floatPrice = 2;
   }
 }
+
 message SettlementSpec {
   string settlementMethodName = 1;
   optional string saltedMakerAccountId = 2;
 }
-message DisputeAgent {
-  string type = 1;
-  network.NetworkId networkId = 2;
-}
+
+// options
 message AmountOption {
   double minAmountAsPercentage = 1;
 }
-message CollateralOptions {
+
+message CollateralOption {
   uint64 buyerSecurityDeposit = 1;
   uint64 sellerSecurityDeposit = 2;
 }
-message ContractOptions {
+
+message ContractOption {
   uint64 maxTradeLimit = 1;
   uint64 maxTradePeriod = 2;
 }
+
 message FeeOption {
-  string feeType = 1;
-  uint32 blockHeightAtFeePayment = 2;
-  string feeTxId = 3;
+  enum FeeType {
+    BTC = 0;
+    BSQ = 1;
+  }
+  FeeType feeType = 10;
+  uint32 blockHeightAtFeePayment = 11;
+  string feeTxId = 12;
 }
+
 message FiatSettlementOption {
   string countyCodeOfBank = 1;
   string bankName = 2;
@@ -60,33 +72,43 @@ message ReputationProof {
 message ReputationOption {
   repeated ReputationProof reputationProofs = 1;
 }
+
+message DisputeAgent {
+  enum Type {
+    MEDIATOR = 0;
+    ARBITRATOR = 1;
+  }
+  Type type = 10;
+  network.NetworkId networkId = 11;
+}
 message SupportOption {
   repeated DisputeAgent disputeAgents = 1;
 }
-message ListingOption {
+
+message OfferOption {
   oneof message {
     AmountOption amountOption = 1;
-    CollateralOptions collateralOptions = 2;
-    ContractOptions contractOptions = 3;
+    CollateralOption collateralOption = 2;
+    ContractOption contractOption = 3;
     FeeOption feeOption = 4;
     FiatSettlementOption fiatSettlementOption = 5;
     ReputationOption reputationOption = 6;
     SupportOption supportOption = 7;
-
   }
 }
+
 message Offer {
   string id = 1;
   uint64 date = 2;
   network.NetworkId makerNetworkId = 3;
   common.Market market = 4;
-  string direction = 5;
+  Direction direction = 5;
   uint64 baseAmount = 6;
   PriceSpec priceSpec = 7;
   repeated string swapProtocolTypes = 8;
   repeated SettlementSpec baseSideSettlementSpecs = 9;
   repeated SettlementSpec quoteSideSettlementSpecs = 10;
-  repeated ListingOption listingOptions = 11;
+  repeated OfferOption offerOptions = 11;
   network.MetaData metaData = 12;
 }
 

@@ -21,7 +21,7 @@ import bisq.common.monetary.Market;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
+import bisq.offer.spec.Direction;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.image.ImageView;

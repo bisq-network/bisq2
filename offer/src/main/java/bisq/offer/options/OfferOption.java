@@ -19,23 +19,23 @@ package bisq.offer.options;
 
 import bisq.common.proto.Proto;
 
-public interface ListingOption extends Proto {
-    bisq.offer.protobuf.ListingOption toProto();
+public interface OfferOption extends Proto {
+    bisq.offer.protobuf.OfferOption toProto();
 
-    default bisq.offer.protobuf.ListingOption.Builder getListingOptionBuilder() {
-        return bisq.offer.protobuf.ListingOption.newBuilder();
+    default bisq.offer.protobuf.OfferOption.Builder getOfferOptionBuilder() {
+        return bisq.offer.protobuf.OfferOption.newBuilder();
     }
 
-    static ListingOption fromProto(bisq.offer.protobuf.ListingOption proto) {
+    static OfferOption fromProto(bisq.offer.protobuf.OfferOption proto) {
         switch (proto.getMessageCase()) {
             case AMOUNTOPTION -> {
                 AmountOption.fromProto(proto.getAmountOption());
             }
-            case COLLATERALOPTIONS -> {
-                CollateralOptions.fromProto(proto.getCollateralOptions());
+            case COLLATERALOPTION -> {
+                CollateralOption.fromProto(proto.getCollateralOption());
             }
-            case CONTRACTOPTIONS -> {
-                ContractOptions.fromProto(proto.getContractOptions());
+            case CONTRACTOPTION -> {
+                ContractOption.fromProto(proto.getContractOption());
             }
             case FEEOPTION -> {
                 FeeOption.fromProto(proto.getFeeOption());

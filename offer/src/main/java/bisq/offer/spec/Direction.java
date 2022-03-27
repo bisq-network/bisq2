@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer;
+package bisq.offer.spec;
 
 import bisq.common.proto.Proto;
 import bisq.common.util.ProtobufUtils;
@@ -25,8 +25,12 @@ public enum Direction implements Proto {
     BUY,
     SELL;
 
-    public static Direction fromProto(String name) {
-        return ProtobufUtils.enumFromProto(Direction.class, name);
+    public bisq.offer.protobuf.Direction toProto() {
+        return bisq.offer.protobuf.Direction.valueOf(name());
+    }
+
+    public static Direction fromProto(bisq.offer.protobuf.Direction proto) {
+        return ProtobufUtils.enumFromProto(Direction.class, proto.name());
     }
 
     public boolean isBuy() {

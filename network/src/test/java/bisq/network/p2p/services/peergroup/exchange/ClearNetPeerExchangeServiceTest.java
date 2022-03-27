@@ -19,14 +19,13 @@ package bisq.network.p2p.services.peergroup.exchange;
 
 import bisq.network.p2p.node.transport.Transport;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.ExecutionException;
 
 @Slf4j
 public class ClearNetPeerExchangeServiceTest extends BasePeerExchangeServiceTest {
 
-    @Test
+  //  @Test
     void test_peerExchange() throws InterruptedException, ExecutionException {
         super.test_peerExchange(getConfig(Transport.Type.CLEAR));
     }

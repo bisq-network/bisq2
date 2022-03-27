@@ -17,9 +17,9 @@
 
 package bisq.offer.options;
 
-public record AmountOption(double minAmountAsPercentage) implements ListingOption {
-    public bisq.offer.protobuf.ListingOption toProto() {
-        return getListingOptionBuilder().setAmountOption(bisq.offer.protobuf.AmountOption.newBuilder()
+public record AmountOption(double minAmountAsPercentage) implements OfferOption {
+    public bisq.offer.protobuf.OfferOption toProto() {
+        return getOfferOptionBuilder().setAmountOption(bisq.offer.protobuf.AmountOption.newBuilder()
                         .setMinAmountAsPercentage(minAmountAsPercentage))
                 .build();
     }

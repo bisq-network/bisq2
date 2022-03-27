@@ -24,7 +24,8 @@ import bisq.common.monetary.Quote;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.offer.options.ListingOption;
+import bisq.offer.options.OfferOption;
+import bisq.offer.spec.*;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import com.google.protobuf.Any;
@@ -68,7 +69,7 @@ public class Offer implements DistributedData {
     private final List<SwapProtocolType> swapProtocolTypes;
     private final List<SettlementSpec> baseSideSettlementSpecs;
     private final List<SettlementSpec> quoteSideSettlementSpecs;
-    private final List<ListingOption> listingOptions;
+    private final List<OfferOption> offerOptions;
     private final MetaData metaData;
 
     public Offer(String id,
@@ -81,7 +82,7 @@ public class Offer implements DistributedData {
                  List<SwapProtocolType> swapProtocolTypes,
                  List<SettlementSpec> baseSideSettlementSpecs,
                  List<SettlementSpec> quoteSideSettlementSpecs,
-                 List<ListingOption> listingOptions) {
+                 List<OfferOption> offerOptions) {
         this(id,
                 date,
                 makerNetworkId,
@@ -92,7 +93,7 @@ public class Offer implements DistributedData {
                 swapProtocolTypes,
                 baseSideSettlementSpecs,
                 quoteSideSettlementSpecs,
-                listingOptions,
+                offerOptions,
                 new MetaData(TimeUnit.MINUTES.toMillis(5), 100000, Offer.class.getSimpleName()));
     }
 
@@ -106,7 +107,7 @@ public class Offer implements DistributedData {
                   List<SwapProtocolType> swapProtocolTypes,
                   List<SettlementSpec> baseSideSettlementSpecs,
                   List<SettlementSpec> quoteSideSettlementSpecs,
-                  List<ListingOption> listingOptions,
+                  List<OfferOption> offerOptions,
                   MetaData metaData) {
         this.id = id;
         this.date = date;
@@ -118,7 +119,7 @@ public class Offer implements DistributedData {
         this.swapProtocolTypes = swapProtocolTypes;
         this.baseSideSettlementSpecs = baseSideSettlementSpecs;
         this.quoteSideSettlementSpecs = quoteSideSettlementSpecs;
-        this.listingOptions = listingOptions;
+        this.offerOptions = offerOptions;
         this.metaData = metaData;
     }
 
@@ -143,13 +144,13 @@ public class Offer implements DistributedData {
                 .setDate(date)
                 .setMakerNetworkId(makerNetworkId.toProto())
                 .setMarket(market.toProto())
-                .setDirection(direction.name())
+                .setDirection(direction.toProto())
                 .setBaseAmount(baseAmount)
                 .setPriceSpec(priceSpec.toProto())
                 .addAllSwapProtocolTypes(swapProtocolTypes.stream().map(Enum::name).collect(Collectors.toList()))
                 .addAllBaseSideSettlementSpecs(baseSideSettlementSpecs.stream().map(SettlementSpec::toProto).collect(Collectors.toList()))
                 .addAllQuoteSideSettlementSpecs(quoteSideSettlementSpecs.stream().map(SettlementSpec::toProto).collect(Collectors.toList()))
-                .addAllListingOptions(listingOptions.stream().map(ListingOption::toProto).collect(Collectors.toList()))
+                .addAllOfferOptions(offerOptions.stream().map(OfferOption::toProto).collect(Collectors.toList()))
                 .setMetaData(metaData.toProto())
                 .build();
     }
@@ -164,8 +165,8 @@ public class Offer implements DistributedData {
         List<SettlementSpec> quoteSideSettlementSpecs = proto.getQuoteSideSettlementSpecsList().stream()
                 .map(SettlementSpec::fromProto)
                 .collect(Collectors.toList());
-        List<ListingOption> listingOptions = proto.getListingOptionsList().stream()
-                .map(ListingOption::fromProto)
+        List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
+                .map(OfferOption::fromProto)
                 .collect(Collectors.toList());
         return new Offer(proto.getId(),
                 proto.getDate(),
@@ -177,7 +178,7 @@ public class Offer implements DistributedData {
                 protocolTypes,
                 baseSideSettlementSpecs,
                 quoteSideSettlementSpecs,
-                listingOptions,
+                offerOptions,
                 MetaData.fromProto(proto.getMetaData()));
     }
 

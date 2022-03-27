@@ -15,18 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer;
+package bisq.offer.spec;
 
-import bisq.common.proto.Proto;
-
-public interface PriceSpec extends Proto {
-    bisq.offer.protobuf.PriceSpec toProto();
-
-    default bisq.offer.protobuf.PriceSpec.Builder getPriceSpecBuilder() {
-        return bisq.offer.protobuf.PriceSpec.newBuilder();
+public record FixPrice(long value) implements PriceSpec {
+    public static FixPrice fromProto(bisq.offer.protobuf.FixPrice proto) {
+        return new FixPrice(proto.getValue());
     }
 
-    static PriceSpec fromProto(bisq.offer.protobuf.PriceSpec proto) {
-        return null;
+    @Override
+    public bisq.offer.protobuf.PriceSpec toProto() {
+        return getPriceSpecBuilder().setFixPrice(bisq.offer.protobuf.FixPrice.newBuilder()
+                        .setValue(value))
+                .build();
     }
 }
