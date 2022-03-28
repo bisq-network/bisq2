@@ -18,11 +18,24 @@
 package bisq.security;
 
 import bisq.persistence.PersistableStoreResolver;
+import bisq.persistence.PersistenceService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class SecurityService {
-    public SecurityService( ) {
+    @Getter
+    private final KeyPairService keyPairService;
+
+    public SecurityService(PersistenceService persistenceService) {
         PersistableStoreResolver.addResolver(new SecurityPersistableStoreResolver());
+        keyPairService = new KeyPairService(persistenceService);
+    }
+
+    public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
+        return keyPairService.initialize();
     }
 }

@@ -72,7 +72,6 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 @Getter
 @Slf4j
 public class DefaultApplicationService extends ServiceProvider {
-    private final KeyPairService keyPairService;
     private final NetworkService networkService;
     private final OpenOfferService openOfferService;
     private final IdentityService identityService;
@@ -101,14 +100,14 @@ public class DefaultApplicationService extends ServiceProvider {
         Res.initialize(locale);
 
         persistenceService = new PersistenceService(applicationConfig.baseDir());
-        securityService = new SecurityService();
-        keyPairService = new KeyPairService(persistenceService);
+        securityService = new SecurityService(persistenceService);
 
         settingsService = new SettingsService(persistenceService);
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(
                 applicationConfig.baseDir(),
                 getConfig("bisq.networkServiceConfig"));
+        KeyPairService keyPairService = securityService.getKeyPairService();
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
 
         IdentityService.Config identityServiceConfig = IdentityService.Config.from(getConfig("bisq.identityServiceConfig"));
@@ -171,7 +170,7 @@ public class DefaultApplicationService extends ServiceProvider {
      */
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return keyPairService.initialize()
+        return securityService.initialize()
                 .thenCompose(result -> networkService.bootstrapToNetwork())
                 .whenComplete((r, t)->{
                     log.debug("Network bootstrapped");

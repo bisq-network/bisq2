@@ -40,14 +40,12 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
     @Getter
     private final Persistence<KeyPairStore> persistence;
 
-
     public KeyPairService(PersistenceService persistenceService) {
         PersistableStoreResolver.addResolver(new SecurityPersistableStoreResolver());
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
         return getOrCreateKeyPairAsync(DEFAULT).thenApply(r -> true);
     }
 
