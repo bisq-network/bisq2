@@ -17,14 +17,10 @@
 
 package bisq.social;
 
-import bisq.network.p2p.message.NetworkMessageResolver;
-import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.persistence.PersistableStoreResolver;
 
 public class SocialService {
     public SocialService() {
         PersistableStoreResolver.addResolver(new SocialPersistableStoreResolver());
-        DistributedDataResolver.addResolver(new SocialDistributedDataResolver());
-        NetworkMessageResolver.addResolver(new SocialNetworkMessageResolver());
     }
 }

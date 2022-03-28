@@ -20,8 +20,14 @@ package bisq.application;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
+import bisq.network.p2p.message.NetworkMessageResolver;
+import bisq.network.p2p.services.data.storage.DistributedDataResolver;
+import bisq.offer.OfferDistributedDataResolver;
+import bisq.offer.OfferNetworkMessageResolver;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
+import bisq.social.SocialDistributedDataResolver;
+import bisq.social.SocialNetworkMessageResolver;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,9 +66,13 @@ public class NetworkApplicationService extends ServiceProvider {
                 getConfig("bisq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, persistenceService, securityService.getKeyPairService());
 
-        //todo would be better if we dont need to get those dependencies in
-      //  OfferService offerService = new OfferService();
-       // SocialService socialService = new SocialService();
+        // Support for resolving networkMessages and distributedData from offer module
+        DistributedDataResolver.addResolver( new OfferDistributedDataResolver());
+        NetworkMessageResolver.addResolver( new OfferNetworkMessageResolver());
+
+        // Support for resolving networkMessages and distributedData from social module
+        DistributedDataResolver.addResolver(new SocialDistributedDataResolver());
+        NetworkMessageResolver.addResolver(new SocialNetworkMessageResolver());
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {

@@ -28,9 +28,9 @@ import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
-import bisq.offer.OfferBookService;
-import bisq.offer.OfferService;
-import bisq.offer.OpenOfferService;
+import bisq.network.p2p.message.NetworkMessageResolver;
+import bisq.network.p2p.services.data.storage.DistributedDataResolver;
+import bisq.offer.*;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
 import bisq.persistence.PersistenceService;
@@ -38,6 +38,8 @@ import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
+import bisq.social.SocialDistributedDataResolver;
+import bisq.social.SocialNetworkMessageResolver;
 import bisq.social.SocialService;
 import bisq.social.chat.ChatService;
 import bisq.social.intent.TradeIntentListingsService;
@@ -135,33 +137,18 @@ public class DefaultApplicationService extends ServiceProvider {
 
         Optional<WalletConfig> walletConfig = !isRegtestRun() ? Optional.empty() : createRegtestWalletConfig();
         walletService = new WalletService(walletConfig);
-    }
 
-    private boolean isRegtestRun() {
-        return applicationConfig.isBitcoindRegtest() || applicationConfig.isElementsdRegtest();
-    }
+        // Support for resolving networkMessages and distributedData from offer module
+        DistributedDataResolver.addResolver(new OfferDistributedDataResolver());
+        NetworkMessageResolver.addResolver(new OfferNetworkMessageResolver());
 
-    private Optional<WalletConfig> createRegtestWalletConfig() {
-        String walletsDataDir = applicationConfig.baseDir() + File.separator + "wallets";
-        Path walletsDataDirPath = FileSystems.getDefault().getPath(walletsDataDir);
-
-        WalletBackend walletBackend = applicationConfig.isBitcoindRegtest() ?
-                WalletBackend.BITCOIND : WalletBackend.ELEMENTSD;
-
-        var walletConfig = WalletConfig.builder()
-                .walletBackend(walletBackend)
-                .networkType(NetworkType.REGTEST)
-                .hostname(Optional.empty())
-                .port(Optional.empty())
-                .user("bisq")
-                .password("bisq")
-                .walletsDataDirPath(walletsDataDirPath)
-                .build();
-        return Optional.of(walletConfig);
+        // Support for resolving networkMessages and distributedData from social module
+        DistributedDataResolver.addResolver(new SocialDistributedDataResolver());
+        NetworkMessageResolver.addResolver(new SocialNetworkMessageResolver());
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
-       return persistenceService.readAllPersisted();
+        return persistenceService.readAllPersisted();
     }
 
     /**
@@ -172,7 +159,7 @@ public class DefaultApplicationService extends ServiceProvider {
     public CompletableFuture<Boolean> initialize() {
         return securityService.initialize()
                 .thenCompose(result -> networkService.bootstrapToNetwork())
-                .whenComplete((r, t)->{
+                .whenComplete((r, t) -> {
                     log.debug("Network bootstrapped");
                 })
                 .thenCompose(result -> identityService.initialize())
@@ -235,4 +222,32 @@ public class DefaultApplicationService extends ServiceProvider {
                         .thenRun(walletService::shutdown)
                 , ExecutorFactory.newSingleThreadExecutor("Shutdown"));
     }
+
+    public KeyPairService getKeyPairService() {
+        return securityService.getKeyPairService();
+    }
+
+    private boolean isRegtestRun() {
+        return applicationConfig.isBitcoindRegtest() || applicationConfig.isElementsdRegtest();
+    }
+
+    private Optional<WalletConfig> createRegtestWalletConfig() {
+        String walletsDataDir = applicationConfig.baseDir() + File.separator + "wallets";
+        Path walletsDataDirPath = FileSystems.getDefault().getPath(walletsDataDir);
+
+        WalletBackend walletBackend = applicationConfig.isBitcoindRegtest() ?
+                WalletBackend.BITCOIND : WalletBackend.ELEMENTSD;
+
+        var walletConfig = WalletConfig.builder()
+                .walletBackend(walletBackend)
+                .networkType(NetworkType.REGTEST)
+                .hostname(Optional.empty())
+                .port(Optional.empty())
+                .user("bisq")
+                .password("bisq")
+                .walletsDataDirPath(walletsDataDirPath)
+                .build();
+        return Optional.of(walletConfig);
+    }
+
 }

@@ -52,10 +52,10 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
     public static Channel<? extends ChatMessage> fromProto(bisq.social.protobuf.Channel proto) {
         switch (proto.getMessageCase()) {
             case PRIVATECHANNEL -> {
-                PrivateChannel.fromProto(proto, proto.getPrivateChannel());
+                return PrivateChannel.fromProto(proto, proto.getPrivateChannel());
             }
             case PUBLICCHANNEL -> {
-                PublicChannel.fromProto(proto, proto.getPublicChannel());
+                return PublicChannel.fromProto(proto, proto.getPublicChannel());
             }
             case MESSAGE_NOT_SET -> {
                 throw new UnresolvableProtobufMessageException(proto);

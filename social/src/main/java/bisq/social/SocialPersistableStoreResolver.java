@@ -20,15 +20,18 @@ package bisq.social;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import bisq.security.KeyPairStore;
+import bisq.social.chat.ChatStore;
+import bisq.social.user.profile.UserProfileStore;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 public class SocialPersistableStoreResolver implements ProtoResolver<PersistableStore<?>> {
     public PersistableStore<?> resolve(Any any, String protoMessageName) {
         try {
-            if (protoMessageName.equals("KeyPairStore")) {
-                return KeyPairStore.fromProto(any.unpack(bisq.security.protobuf.KeyPairStore.class));
+            if (protoMessageName.equals("ChatStore")) {
+                return ChatStore.fromProto(any.unpack(bisq.social.protobuf.ChatStore.class));
+            } else if (protoMessageName.equals("UserProfileStore")) {
+                return UserProfileStore.fromProto(any.unpack(bisq.social.protobuf.UserProfileStore.class));
             }
         } catch (InvalidProtocolBufferException e) {
             throw new UnresolvableProtobufMessageException(e);
