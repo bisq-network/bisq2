@@ -104,7 +104,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         }
     }
 
-    public PeerGroupService(PersistenceService persistenceService, Node node, BanList banList, Config config, List<Address> seedNodeAddresses) {
+    public PeerGroupService(PersistenceService persistenceService, Node node, BanList banList, Config config, Set<Address> seedNodeAddresses) {
         this.node = node;
         this.banList = banList;
         this.config = config;

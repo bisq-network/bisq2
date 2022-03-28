@@ -26,7 +26,9 @@ import bisq.network.p2p.services.peergroup.PeerGroupStore;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +43,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
         int numNodes = 2;
         PeerGroupStore peerGroupStore = new PeerGroupStore();
         BanList banList = new BanList();
-        List<Address> seedNodeAddresses = new ArrayList<>();
+        Set<Address> seedNodeAddresses = new HashSet<>();
         for (int i = 0; i < numSeeds; i++) {
             int port = 1000 + i;
             Address address = Address.localHost(port);

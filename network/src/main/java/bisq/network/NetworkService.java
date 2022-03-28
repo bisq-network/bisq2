@@ -90,7 +90,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                                 ServiceNode.Config serviceNodeConfig,
                                 Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
                                 Map<Transport.Type, Integer> defaultNodePortByTransportType,
-                                Map<Transport.Type, List<Address>> seedAddressesByTransport,
+                                Map<Transport.Type, Set<Address>> seedAddressesByTransport,
                                 Optional<String> socks5ProxyAddress) {
     }
 

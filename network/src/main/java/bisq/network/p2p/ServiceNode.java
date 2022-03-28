@@ -112,7 +112,7 @@ public class ServiceNode {
                        Optional<DataService> dataService,
                        KeyPairService keyPairService,
                        PersistenceService persistenceService,
-                       List<Address> seedNodeAddresses) {
+                       Set<Address> seedNodeAddresses) {
         BanList banList = new BanList();
         nodesById = new NodesById(banList, nodeConfig);
         defaultNode = nodesById.getDefaultNode();
