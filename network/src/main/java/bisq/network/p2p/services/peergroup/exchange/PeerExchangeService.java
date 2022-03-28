@@ -77,12 +77,14 @@ public class PeerExchangeService implements Node.Listener {
         }
         log.info("Node {} starts peer exchange with: {}", node,
                 StringUtils.truncate(candidates.stream()
-                        .map(Address::toString)
-                        .collect(Collectors.toList()).toString()));
+                        .map(Address::toString).toList().toString()));
         List<CompletableFuture<Boolean>> allFutures = candidates.stream()
                 .map(this::doPeerExchangeAsync)
                 .collect(Collectors.toList());
-        return CompletableFutureUtils.allOf(allFutures)
+
+        // When ALL futures complete (successfully or not),
+        // then consider peer exchange complete and decide whether it should be re-done, in case of too few peers
+        CompletableFutureUtils.allOf(allFutures)
                 .thenApply(resultList -> {
                     int numSuccess = (int) resultList.stream().filter(e -> e).count();
                     log.info("Node {} completed peer exchange to {} candidates. {} requests successfully completed.",
@@ -98,6 +100,14 @@ public class PeerExchangeService implements Node.Listener {
                     } else {
                         scheduler.ifPresent(Scheduler::stop);
                     }
+                    return null;
+                });
+
+        // Complete when the first future completes (the first peer exchange succeeds), or when all futures fail
+        // This helps the initialization phase (and subsequent peer exchanges) complete as soon peers have been exchanged with at least one peer
+        return CompletableFutureUtils.anyOfBooleanMatchingFilterOrAll(true, allFutures)
+                .thenApply(result -> {
+                    log.info("Node {} completed peer exchange to at least one candidate", node);
                     return null;
                 });
     }
