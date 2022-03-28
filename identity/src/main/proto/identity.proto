@@ -23,9 +23,14 @@ option java_multiple_files = true;
 import "network.proto";
 import "security.proto";
 
-
 message Identity {
   string domainId = 1;
   network.NetworkId networkId = 2;
   security.KeyPair keyPair = 3;
+}
+
+message IdentityStore {
+  map<string, Identity> activeIdentityByDomainId = 1;
+  repeated Identity pool = 2;
+  repeated Identity retired = 3;
 }

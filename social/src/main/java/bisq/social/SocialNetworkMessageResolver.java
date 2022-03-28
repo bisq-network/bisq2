@@ -19,7 +19,7 @@ package bisq.social;
 
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.protobuf.ProtoResolver;
+import bisq.common.proto.ProtoResolver;
 import bisq.social.chat.ChatMessage;
 import bisq.social.chat.PrivateChatMessage;
 import com.google.protobuf.Any;

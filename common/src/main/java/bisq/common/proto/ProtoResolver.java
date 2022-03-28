@@ -15,7 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.util;
+package bisq.common.proto;
 
-public record ProtoPackageAndMessageName(String protoPackage, String protoMessageName) {
+import com.google.protobuf.Any;
+
+public interface ProtoResolver<T extends Proto> {
+    T resolve(Any any, String protoMessageName);
+
+    static String getModuleName(ProtoResolver<?> resolver) {
+        return resolver.getClass().getName().split("\\.")[1];
+    }
 }

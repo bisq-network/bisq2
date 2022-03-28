@@ -20,7 +20,6 @@ package bisq.account.accounts;
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.locale.Country;
-import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -32,7 +31,7 @@ import java.util.List;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class CountryBasedAccount<T extends SettlementMethod> extends Account<T> {
+public abstract class CountryBasedAccount<T extends SettlementMethod> extends Account<T> {
     protected final Country country;
 
     public CountryBasedAccount(String accountName,
@@ -42,10 +41,5 @@ public class CountryBasedAccount<T extends SettlementMethod> extends Account<T> 
                                Country country) {
         super(accountName, settlementMethod, payload, tradeCurrencies);
         this.country = country;
-    }
-
-    @Override
-    public Message toProto() {
-        return null;
     }
 }

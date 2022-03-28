@@ -18,7 +18,7 @@
 package bisq.social;
 
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.network.p2p.protobuf.ProtoResolver;
+import bisq.common.proto.ProtoResolver;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.social.chat.ChatMessage;
 import bisq.social.chat.PublicChatMessage;

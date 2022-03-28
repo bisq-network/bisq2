@@ -21,6 +21,7 @@ package bisq.account;
 import bisq.account.accounts.Account;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
+import bisq.persistence.PersistableStoreResolver;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -39,6 +40,7 @@ public class AccountService implements PersistenceClient<AccountStore> {
     private final Persistence<AccountStore> persistence;
 
     public AccountService(PersistenceService persistenceService) {
+        PersistableStoreResolver.addResolver( new AccountPersistableStoreResolver());
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 

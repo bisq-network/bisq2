@@ -125,3 +125,16 @@ message Channel {
     PublicChannel publicChannel = 11;
   }
 }
+
+message UserProfileStore{
+  repeated UserProfile userProfiles = 1;
+  UserProfile selectedUserProfile = 2;
+  map<string, Proof> verifiedProofOfBurnProofs = 3;
+}
+
+message ChatStore {
+  repeated Channel privateChannels = 1;
+  repeated Channel publicChannels = 2;
+  Channel selectedChannel = 3;
+  repeated string ignoredChatUserIds = 4;
+}

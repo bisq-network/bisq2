@@ -18,12 +18,12 @@
 package bisq.network;
 
 import bisq.persistence.PersistableStore;
-import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 //todo implement proto support after persistence is done
@@ -39,6 +39,19 @@ public class NetworkIdStore implements PersistableStore<NetworkIdStore> {
     }
 
     @Override
+    public bisq.network.protobuf.NetworkIdStore toProto() {
+        return bisq.network.protobuf.NetworkIdStore.newBuilder()
+                .putAllNetworkIdByNodeId(networkIdByNodeId.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toProto())))
+                .build();
+    }
+
+    public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkIdStore proto) {
+        return new NetworkIdStore(proto.getNetworkIdByNodeIdMap().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> NetworkId.fromProto(e.getValue()))));
+    }
+
+    @Override
     public void applyPersisted(NetworkIdStore persisted) {
         networkIdByNodeId.clear();
         networkIdByNodeId.putAll(persisted.getNetworkIdByNodeId());
@@ -47,11 +60,5 @@ public class NetworkIdStore implements PersistableStore<NetworkIdStore> {
     @Override
     public NetworkIdStore getClone() {
         return new NetworkIdStore(networkIdByNodeId);
-    }
-
-    @Override
-    public Message toProto() {
-        log.error("Not impl yet");
-        return null;
     }
 }

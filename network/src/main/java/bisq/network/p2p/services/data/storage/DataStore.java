@@ -18,19 +18,23 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
+import bisq.common.data.Pair;
+import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.PersistableStore;
-import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 //todo implement proto support after persistence is done
 @Slf4j
 @ToString
-public class DataStore<T> implements PersistableStore<DataStore<T>> {
+public class DataStore<T extends DataRequest> implements PersistableStore<DataStore<T>> {
     @Getter
     private final Map<ByteArray, T> map = new ConcurrentHashMap<>();
 
@@ -39,6 +43,30 @@ public class DataStore<T> implements PersistableStore<DataStore<T>> {
 
     public DataStore(Map<ByteArray, T> map) {
         this.map.putAll(map);
+    }
+
+    //todo add DataStore resolver
+    // DataStore has no protobuf message defined. We get resolved the message in NetworkMessage and NetworkMessage is 
+    // the only subtype common to all DataStore objects.
+    @Override
+    public bisq.network.protobuf.DataStore toProto() {
+        // Protobuf map do not support bytes as key
+        List<bisq.network.protobuf.DataStore.MapEntry> mapEntries = map.entrySet().stream()
+                .map(e -> bisq.network.protobuf.DataStore.MapEntry.newBuilder()
+                        .setKey(e.getKey().toProto())
+                        .setValue(e.getValue().toProto())
+                        .build())
+                .collect(Collectors.toList());
+        return bisq.network.protobuf.DataStore.newBuilder()
+                .addAllMapEntries(mapEntries)
+                .build();
+    }
+
+    public static PersistableStore<?> fromProto(bisq.network.protobuf.DataStore proto) {
+        return new DataStore<>(proto.getMapEntriesList().stream()
+                .map(e -> new Pair<>(new ByteArray(e.getKey().toByteArray()), NetworkMessage.fromProto(e.getValue())))
+                .filter(p -> p.second() instanceof DataRequest)
+                .collect(Collectors.toMap(Pair::first, e -> (DataRequest) e.second())));
     }
 
     @Override
@@ -50,11 +78,5 @@ public class DataStore<T> implements PersistableStore<DataStore<T>> {
     @Override
     public DataStore<T> getClone() {
         return new DataStore<>(map);
-    }
-
-    @Override
-    public Message toProto() {
-        log.error("Not impl yet");
-        return null;
     }
 }

@@ -18,7 +18,6 @@
 package bisq.account.accounts;
 
 import bisq.account.settlement.FiatSettlementMethod;
-import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -38,7 +37,7 @@ public final class RevolutAccount extends Account<FiatSettlementMethod> {
     }
 
     @Override
-    public Message toProto() {
+    public bisq.account.protobuf.Account toProto() {
         return null;
     }
 }

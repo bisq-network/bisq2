@@ -17,14 +17,18 @@
 
 package bisq.network.p2p.services.data.storage;
 
-import bisq.network.p2p.protobuf.ProtoResolver;
-import bisq.network.p2p.protobuf.ProtoResolverMap;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtoResolverMap;
 import com.google.protobuf.Any;
 
 // Interface for any data which gets distributed to the P2P network. Usually data from outside the network module 
 // like Offer, ChatMessage,...
 public class DistributedDataResolver {
     private static final ProtoResolverMap<DistributedData> protoResolverMap = new ProtoResolverMap<>();
+
+    public static void addResolver( ProtoResolver<DistributedData> resolver) {
+        addResolver(ProtoResolver.getModuleName(resolver), resolver);
+    }
 
     public static void addResolver(String moduleName, ProtoResolver<DistributedData> resolver) {
         protoResolverMap.addProtoResolver(moduleName, resolver);

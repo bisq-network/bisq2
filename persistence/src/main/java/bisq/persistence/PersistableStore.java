@@ -18,11 +18,20 @@
 package bisq.persistence;
 
 import bisq.common.proto.Proto;
+import com.google.protobuf.Any;
 
 /**
  * Interface for the outside envelope object persisted to disk.
  */
 public interface PersistableStore<T> extends Proto {
+    static PersistableStore<?> fromAny(Any anyProto) {
+        return PersistableStoreResolver.resolve(anyProto);
+    }
+
+    default Any toAny() {
+        return Any.pack(toProto());
+    }
+
     T getClone();
 
     void applyPersisted(T persisted);

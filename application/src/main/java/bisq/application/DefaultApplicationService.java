@@ -36,6 +36,7 @@ import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
 import bisq.persistence.PersistenceService;
 import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
+import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.social.SocialService;
 import bisq.social.chat.ChatService;
@@ -89,6 +90,7 @@ public class DefaultApplicationService extends ServiceProvider {
     private final WalletService walletService;
     private final OfferService offerService;
     private final SocialService socialService;
+    private final SecurityService securityService;
 
     public DefaultApplicationService(String[] args) {
         super("Bisq");
@@ -99,6 +101,7 @@ public class DefaultApplicationService extends ServiceProvider {
         Res.initialize(locale);
 
         persistenceService = new PersistenceService(applicationConfig.baseDir());
+        securityService = new SecurityService();
         keyPairService = new KeyPairService(persistenceService);
 
         settingsService = new SettingsService(persistenceService);
@@ -159,9 +162,7 @@ public class DefaultApplicationService extends ServiceProvider {
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
-        return  CompletableFuture.completedFuture(true);
-        //todo reactivate once persistence is up to date
-       // return persistenceService.readAllPersisted();
+       return persistenceService.readAllPersisted();
     }
 
     /**

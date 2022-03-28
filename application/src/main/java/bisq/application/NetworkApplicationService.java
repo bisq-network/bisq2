@@ -23,6 +23,7 @@ import bisq.network.NetworkServiceConfigFactory;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
+import bisq.security.SecurityService;
 import bisq.social.SocialService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -49,12 +50,14 @@ public class NetworkApplicationService extends ServiceProvider {
     private final NetworkService networkService;
     private final ApplicationConfig applicationConfig;
     private final PersistenceService persistenceService;
+    private final SecurityService securityService;
 
     public NetworkApplicationService(String[] args) {
         super("Seed");
         this.applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
 
         persistenceService = new PersistenceService(applicationConfig.baseDir());
+        securityService = new SecurityService();
         keyPairService = new KeyPairService(persistenceService);
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(
@@ -68,9 +71,7 @@ public class NetworkApplicationService extends ServiceProvider {
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
-        return CompletableFuture.completedFuture(true);
-        //todo reactivate once persistence is up to date
-        //  return persistenceService.readAllPersisted();
+        return persistenceService.readAllPersisted();
     }
 
     /**

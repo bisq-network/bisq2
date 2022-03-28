@@ -19,7 +19,6 @@ package bisq.account.accounts;
 
 import bisq.account.settlement.FiatSettlementMethod;
 import bisq.common.locale.Country;
-import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -45,7 +44,11 @@ public final class SepaAccount extends CountryBasedAccount<FiatSettlementMethod>
     }
 
     @Override
-    public Message toProto() {
+    public bisq.account.protobuf.Account toProto() {
+        return null;
+    }
+
+    public static SepaAccount fromProto(bisq.account.protobuf.SepaAccount account) {
         return null;
     }
 }

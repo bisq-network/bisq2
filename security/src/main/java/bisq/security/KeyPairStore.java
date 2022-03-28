@@ -18,7 +18,6 @@
 package bisq.security;
 
 import bisq.persistence.PersistableStore;
-import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,10 +25,10 @@ import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class KeyPairStore implements PersistableStore<KeyPairStore> {
-
     @Getter
     private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
 
@@ -46,6 +45,18 @@ public class KeyPairStore implements PersistableStore<KeyPairStore> {
     }
 
     @Override
+    public bisq.security.protobuf.KeyPairStore toProto() {
+        return bisq.security.protobuf.KeyPairStore.newBuilder().putAllKeyPairsById(keyPairsById.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> KeyPairProtoUtil.toProto(entry.getValue()))))
+                .build();
+    }
+
+    public static KeyPairStore fromProto(bisq.security.protobuf.KeyPairStore proto) {
+        return new KeyPairStore(proto.getKeyPairsByIdMap().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> KeyPairProtoUtil.fromProto(e.getValue()))));
+    }
+
+    @Override
     public void applyPersisted(KeyPairStore persisted) {
         keyPairsById.clear();
         keyPairsById.putAll(persisted.getKeyPairsById());
@@ -57,11 +68,5 @@ public class KeyPairStore implements PersistableStore<KeyPairStore> {
 
     public void put(String keyId, KeyPair keyPair) {
         keyPairsById.put(keyId, keyPair);
-    }
-
-    @Override
-    public Message toProto() {
-        log.error("Not impl yet");
-        return null;
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.settings;
 
+import bisq.persistence.PersistableStoreResolver;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -29,9 +30,10 @@ public class SettingsService implements PersistenceClient<SettingsStore> {
     private final SettingsStore persistableStore = new SettingsStore();
     @Getter
     private final Persistence<SettingsStore> persistence;
-    
+
 
     public SettingsService(PersistenceService persistenceService) {
+        PersistableStoreResolver.addResolver(new SettingsPersistableStoreResolver());
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 

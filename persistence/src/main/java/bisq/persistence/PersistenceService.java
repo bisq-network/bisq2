@@ -39,25 +39,47 @@ public class PersistenceService {
         this.baseDir = baseDir;
     }
 
-    public <T extends Proto> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
-                                                                          Proto serializable) {
+    public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
+                                                                                 Proto serializable) {
         return getOrCreatePersistence(client, "db", serializable.getClass().getSimpleName());
     }
 
-    public <T extends Proto> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
-                                                                          String subDir,
-                                                                          Proto serializable) {
+    public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
+                                                                                 String subDir,
+                                                                                 Proto serializable) {
         return getOrCreatePersistence(client, subDir, serializable.getClass().getSimpleName());
     }
 
-    public <T extends Proto> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
-                                                                          String subDir,
-                                                                          String fileName) {
+    public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
+                                                                                 String subDir,
+                                                                                 String fileName) {
         clients.add(client);
         Persistence<T> persistence = new Persistence<>(baseDir + File.separator + subDir, fileName);
         persistenceInstances.add(persistence);
         return persistence;
     }
+
+   /* public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence2(PersistenceClient<T> client,
+                                                                                  PersistableStore<T> persistableStore) {
+        String fileName = persistableStore.getClass().getSimpleName();
+        String moduleName = persistableStore.getClass().getName().split("\\.")[1];
+
+        PersistableStoreResolver.addResolver(new ProtoResolver<PersistableStore<?>>() {
+            @Override
+            public PersistableStore<?> resolve(Any any, String protoMessageName) {
+                if (protoMessageName.equals(fileName)) {
+                    return persistableStore.getResolver().resolve(any, protoMessageName);
+                }
+
+                throw new UnresolvableProtobufMessageException(any);
+            }
+        });
+        PersistableStoreResolver.addResolver(moduleName, persistableStore.getResolver());
+        clients.add(client);
+        Persistence<T> persistence = new Persistence<>(baseDir + File.separator + "db", fileName);
+        persistenceInstances.add(persistence);
+        return persistence;
+    }*/
 
     public CompletableFuture<Boolean> readAllPersisted() {
         return CompletableFutureUtils.allOf(clients.stream()

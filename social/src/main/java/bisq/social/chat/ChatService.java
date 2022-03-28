@@ -290,11 +290,6 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         persist();
     }
 
-    public Optional<String> findUserName(String domainId) {
-        //todo add mapping strategy
-        return Optional.ofNullable(persistableStore.getUserNameByDomainId().get(domainId));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // ChatUser

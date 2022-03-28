@@ -19,11 +19,12 @@ package bisq.offer;
 
 import bisq.common.observable.ObservableSet;
 import bisq.persistence.PersistableStore;
-import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
+import java.util.stream.Collectors;
+
 @Slf4j
 public class OpenOfferStore implements PersistableStore<OpenOfferStore> {
     @Getter
@@ -34,6 +35,17 @@ public class OpenOfferStore implements PersistableStore<OpenOfferStore> {
 
     private OpenOfferStore(Set<OpenOffer> openOffers) {
         this.openOffers.addAll(openOffers);
+    }
+
+    @Override
+    public bisq.offer.protobuf.OpenOfferStore toProto() {
+        return bisq.offer.protobuf.OpenOfferStore.newBuilder()
+                .addAllOpenOffers(openOffers.stream().map(OpenOffer::toProto).collect(Collectors.toSet()))
+                .build();
+    }
+
+    public static OpenOfferStore fromProto(bisq.offer.protobuf.OpenOfferStore proto) {
+        return new OpenOfferStore(proto.getOpenOffersList().stream().map(OpenOffer::fromProto).collect(Collectors.toSet()));
     }
 
     @Override
@@ -53,11 +65,5 @@ public class OpenOfferStore implements PersistableStore<OpenOfferStore> {
 
     public void remove(OpenOffer openOffer) {
         openOffers.remove(openOffer);
-    }
-
-    @Override
-    public Message toProto() {
-        log.error("Not impl yet");
-        return null;
     }
 }

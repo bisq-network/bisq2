@@ -15,13 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-syntax = "proto3";
+package bisq.security;
 
-package persistence;
-option java_package = "bisq.persistence.protobuf";
-option java_multiple_files = true;
-import "google/protobuf/any.proto";
+import bisq.persistence.PersistableStoreResolver;
+import lombok.extern.slf4j.Slf4j;
 
-message PersistableStore {
-  google.protobuf.Any any = 1;
+@Slf4j
+public class SecurityService {
+    public SecurityService( ) {
+        PersistableStoreResolver.addResolver(new SecurityPersistableStoreResolver());
+    }
 }

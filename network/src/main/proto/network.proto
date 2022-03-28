@@ -2,6 +2,7 @@ syntax = "proto3";
 package network;
 option java_package = "bisq.network.protobuf";
 option java_multiple_files = true;
+import "common.proto";
 import "security.proto";
 import "google/protobuf/any.proto";
 
@@ -239,9 +240,13 @@ message NetworkEnvelope {
 }
 
 message DataStore {
-  // TODO
+  message MapEntry {
+    common.ByteArray key = 1;
+    NetworkMessage value = 2; // Real lower bound type is DataRequest but we have no protobuf message for that
+  }
+  repeated MapEntry mapEntries = 1;
 }
 
 message NetworkIdStore {
-  // TODO
+  map<string, NetworkId> networkIdByNodeId = 1;
 }

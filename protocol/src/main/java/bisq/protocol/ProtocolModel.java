@@ -20,7 +20,6 @@ package bisq.protocol;
 import bisq.common.proto.Proto;
 import bisq.contract.Contract;
 import bisq.network.p2p.message.NetworkMessage;
-import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +29,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public abstract class ProtocolModel implements Proto {
+
+
     public enum State {
         IDLE,
         PENDING,
@@ -37,8 +38,14 @@ public abstract class ProtocolModel implements Proto {
         FAILED
     }
 
+    //todo impl in subclasses, make abstract
     @Override
-    public Message toProto() {
+    public bisq.protocol.protobuf.ProtocolModel toProto() {
+        return null;
+    }
+
+    //todo
+    public static ProtocolModel fromProto(bisq.protocol.protobuf.ProtocolModel proto) {
         return null;
     }
 

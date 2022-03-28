@@ -15,11 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.protobuf;
+package bisq.common.proto;
 
-import bisq.common.proto.Proto;
-import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.util.ProtoPackageAndMessageName;
 import bisq.common.util.ProtobufUtils;
 import com.google.protobuf.Any;
 
@@ -35,13 +32,13 @@ public class ProtoResolverMap<T extends Proto> {
         map.put(moduleName, resolver);
     }
 
-    public T resolve(Any any) {
-        ProtoPackageAndMessageName protoPackageAndMessageName = ProtobufUtils.getProtoPackageAndMessageName(any);
+    public T resolve(Any anyProto) {
+        ProtoPackageAndMessageName protoPackageAndMessageName = ProtobufUtils.getProtoPackageAndMessageName(anyProto);
         // We do not use reflection for security reasons
         String protoPackage = protoPackageAndMessageName.protoPackage();
         String protoMessageName = protoPackageAndMessageName.protoMessageName();
         return Optional.ofNullable(map.get(protoPackage))
-                .map(resolver -> resolver.resolve(any, protoMessageName))
-                .orElseThrow(() -> new UnresolvableProtobufMessageException(any));
+                .map(resolver -> resolver.resolve(anyProto, protoMessageName))
+                .orElseThrow(() -> new UnresolvableProtobufMessageException(anyProto));
     }
 }

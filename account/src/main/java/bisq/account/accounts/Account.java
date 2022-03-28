@@ -64,6 +64,21 @@ public abstract class Account<T extends SettlementMethod> implements Proto {
         this.tradeCurrencies = tradeCurrencies;
     }
 
+
+    //todo
+    public static Account<?> fromProto(bisq.account.protobuf.Account account) {
+        switch (account.getMessageCase()) {
+            case SEPAACCOUNT -> {
+                return SepaAccount.fromProto(account.getSepaAccount());
+            }
+            case MESSAGE_NOT_SET -> {
+            }
+        }
+        return null;
+    }
+
+    abstract public bisq.account.protobuf.Account toProto();
+
     public Set<String> getTradeCurrencyCodes() {
         return tradeCurrencies.stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
     }

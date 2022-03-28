@@ -20,13 +20,13 @@ package bisq.account;
 import bisq.account.accounts.Account;
 import bisq.account.settlement.SettlementMethod;
 import bisq.persistence.PersistableStore;
-import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 @Getter
 @EqualsAndHashCode
@@ -42,6 +42,17 @@ public class AccountStore implements PersistableStore<AccountStore> {
     }
 
     @Override
+    public bisq.account.protobuf.AccountStore toProto() {
+        return bisq.account.protobuf.AccountStore.newBuilder()
+                .addAllAccounts(accounts.stream().map(e->e.toProto()).collect(Collectors.toSet()))
+                .build();
+    }
+
+    public static PersistableStore<?> fromProto(bisq.account.protobuf.AccountStore proto) {
+        return new AccountStore(proto.getAccountsList().stream().map(Account::fromProto).collect(Collectors.toList()));
+    }
+
+    @Override
     public AccountStore getClone() {
         return new AccountStore(accounts);
     }
@@ -52,8 +63,4 @@ public class AccountStore implements PersistableStore<AccountStore> {
         accounts.addAll(persisted.accounts);
     }
 
-    @Override
-    public Message toProto() {
-        return null;
-    }
 }

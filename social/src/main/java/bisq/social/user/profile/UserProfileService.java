@@ -17,7 +17,6 @@
 
 package bisq.social.user.profile;
 
-import bisq.common.data.ByteArray;
 import bisq.common.data.Pair;
 import bisq.common.encoding.Hex;
 import bisq.common.util.CollectionUtil;
@@ -164,21 +163,22 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         // We use as preImage in the DAO String.getBytes(Charsets.UTF_8) to get bytes from the input string (not hex 
         // as hex would be more restrictive for arbitrary inputs)
         byte[] preImage;
+        String pubKeyHashAsHex;
         if (USE_DEV_TEST_POB_VALUES) {
             // BSQ proof of burn tx (mainnet): ac57b3d6bdda9976391217e6d0ecbea9b050177fd284c2b199ede383189123c7
             // pubkeyhash (preimage for POB tx) 6a4e52f31a24300fd2a03766b5ea6e4abf289609
             // op return hash 9593f12a86fcb6ca72ed621c208b9370ff8f5112 
             txId = "ac57b3d6bdda9976391217e6d0ecbea9b050177fd284c2b199ede383189123c7";
-            preImage = "6a4e52f31a24300fd2a03766b5ea6e4abf289609".getBytes(Charsets.UTF_8);
+            pubKeyHashAsHex = "6a4e52f31a24300fd2a03766b5ea6e4abf289609";
         } else {
             txId = _txId;
-            preImage = Hex.encode(pubKeyHash).getBytes(Charsets.UTF_8);
+            pubKeyHashAsHex = Hex.encode(pubKeyHash);
         }
-        
-        ByteArray mapKey = new ByteArray(pubKeyHash);
-        Map<ByteArray, Entitlement.ProofOfBurnProof> verifiedProofOfBurnProofs = persistableStore.getVerifiedProofOfBurnProofs();
-        if (verifiedProofOfBurnProofs.containsKey(mapKey)) {
-            return CompletableFuture.completedFuture(Optional.of(verifiedProofOfBurnProofs.get(mapKey)));
+        preImage = pubKeyHashAsHex.getBytes(Charsets.UTF_8);
+
+        Map<String, Entitlement.ProofOfBurnProof> verifiedProofOfBurnProofs = persistableStore.getVerifiedProofOfBurnProofs();
+        if (verifiedProofOfBurnProofs.containsKey(pubKeyHashAsHex)) {
+            return CompletableFuture.completedFuture(Optional.of(verifiedProofOfBurnProofs.get(pubKeyHashAsHex)));
         } else {
             return supplyAsync(() -> {
                 try {
@@ -203,7 +203,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                             });
                     long date = BsqTxValidator.getValidatedTxDate(jsonBsqTx);
                     Entitlement.ProofOfBurnProof verifiedProof = new Entitlement.ProofOfBurnProof(txId, burntAmount, date);
-                    verifiedProofOfBurnProofs.put(mapKey, verifiedProof);
+                    verifiedProofOfBurnProofs.put(pubKeyHashAsHex, verifiedProof);
                     persist();
                     return Optional.of(verifiedProof);
                 } catch (IllegalArgumentException e) {

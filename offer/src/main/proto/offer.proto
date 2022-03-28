@@ -115,3 +115,7 @@ message Offer {
 message OpenOffer {
   Offer offer = 1;
 }
+message OpenOfferStore {
+  repeated OpenOffer openOffers = 1;
+}
+    

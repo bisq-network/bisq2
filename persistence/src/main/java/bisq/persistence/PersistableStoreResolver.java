@@ -17,30 +17,22 @@
 
 package bisq.persistence;
 
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtoResolverMap;
+import com.google.protobuf.Any;
 
-/**
- * Interface for the outside envelope object persisted to disk.
- */
-public interface PersistenceClient<T extends PersistableStore<T>> {
-    default CompletableFuture<Optional<T>> readPersisted() {
-        return getPersistence().readAsync(persisted -> {
-            getPersistableStore().applyPersisted(persisted);
-            onPersistedApplied(persisted);
-        });
+public class PersistableStoreResolver {
+    private static final ProtoResolverMap<PersistableStore<?>> protoResolverMap = new ProtoResolverMap<>();
+
+    public static void addResolver(ProtoResolver<PersistableStore<?>> resolver) {
+        addResolver(ProtoResolver.getModuleName(resolver), resolver);
     }
 
-    default void onPersistedApplied(T persisted) {
+    public static void addResolver(String moduleName, ProtoResolver<PersistableStore<?>> resolver) {
+        protoResolverMap.addProtoResolver(moduleName, resolver);
     }
 
-    Persistence<T> getPersistence();
-
-    PersistableStore<T> getPersistableStore();
-
-    default CompletableFuture<Boolean> persist() {
-        return getPersistence().persistAsync(getPersistableStore().getClone());
+    static PersistableStore<?> resolve(Any anyProto) {
+        return protoResolverMap.resolve(anyProto);
     }
-
-
 }

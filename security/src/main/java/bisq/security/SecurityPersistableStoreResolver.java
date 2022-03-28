@@ -15,21 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer;
+package bisq.security;
 
-import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.proto.ProtoResolver;
-import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.persistence.PersistableStore;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class OfferDistributedDataResolver implements ProtoResolver<DistributedData> {
-    public DistributedData resolve(Any any, String protoMessageName) {
+public class SecurityPersistableStoreResolver implements ProtoResolver<PersistableStore<?>> {
+    public PersistableStore<?> resolve(Any any, String protoMessageName) {
         try {
-            if (protoMessageName.equals("Offer")) {
-                return Offer.fromProto(any.unpack(bisq.offer.protobuf.Offer.class));
+            if (protoMessageName.equals("KeyPairStore")) {
+                return KeyPairStore.fromProto(any.unpack(bisq.security.protobuf.KeyPairStore.class));
             }
         } catch (InvalidProtocolBufferException e) {
             throw new UnresolvableProtobufMessageException(e);

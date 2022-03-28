@@ -20,14 +20,13 @@ package bisq.social.chat;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.persistence.PersistableStore;
-import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ChatStore implements PersistableStore<ChatStore> {
@@ -35,8 +34,6 @@ public class ChatStore implements PersistableStore<ChatStore> {
     private final ObservableSet<PrivateChannel> privateChannels = new ObservableSet<>();
     @Getter
     private final ObservableSet<PublicChannel> publicChannels = new ObservableSet<>();
-    @Getter
-    private final Map<String, String> userNameByDomainId = new HashMap<>(); //todo remove
     @Getter
     private final Observable<Channel<? extends ChatMessage>> selectedChannel = new Observable<>();
     @Getter
@@ -48,13 +45,33 @@ public class ChatStore implements PersistableStore<ChatStore> {
     private ChatStore(Set<PrivateChannel> privateChannels,
                       Set<PublicChannel> publicChannels,
                       Channel<? extends ChatMessage> selectedChannel,
-                      Map<String, String> userNameByDomainId,
                       Set<String> ignoredChatUserIds) {
         setAll(privateChannels,
                 publicChannels,
                 selectedChannel,
-                userNameByDomainId,
                 ignoredChatUserIds);
+    }
+
+    @Override
+    public bisq.social.protobuf.ChatStore toProto() {
+        return bisq.social.protobuf.ChatStore.newBuilder()
+                .addAllPrivateChannels(privateChannels.stream().map(PrivateChannel::toProto).collect(Collectors.toSet()))
+                .addAllPublicChannels(publicChannels.stream().map(PublicChannel::toProto).collect(Collectors.toSet()))
+                .setSelectedChannel(selectedChannel.get().toProto())
+                .addAllIgnoredChatUserIds(ignoredChatUserIds)
+                .build();
+    }
+
+    public static ChatStore fromProto(bisq.social.protobuf.ChatStore proto) {
+        return new ChatStore(proto.getPrivateChannelsList().stream()
+                .map(e -> (PrivateChannel) PrivateChannel.fromProto(e))
+                .collect(Collectors.toSet()),
+                proto.getPublicChannelsList().stream()
+                        .map(e -> (PublicChannel) PublicChannel.fromProto(e))
+                        .collect(Collectors.toSet()),
+                Channel.fromProto(proto.getSelectedChannel()),
+                new HashSet<>(proto.getIgnoredChatUserIdsList())
+        );
     }
 
     @Override
@@ -62,7 +79,6 @@ public class ChatStore implements PersistableStore<ChatStore> {
         setAll(chatStore.privateChannels,
                 chatStore.publicChannels,
                 chatStore.selectedChannel.get(),
-                chatStore.userNameByDomainId,
                 chatStore.ignoredChatUserIds);
     }
 
@@ -71,22 +87,18 @@ public class ChatStore implements PersistableStore<ChatStore> {
         return new ChatStore(privateChannels,
                 publicChannels,
                 selectedChannel.get(),
-                userNameByDomainId,
                 ignoredChatUserIds);
     }
 
     public void setAll(Set<PrivateChannel> privateChannels,
                        Set<PublicChannel> publicChannels,
                        Channel<? extends ChatMessage> selectedChannel,
-                       Map<String, String> userNameByDomainId,
                        Set<String> ignoredChatUserIds) {
         this.privateChannels.clear();
         this.privateChannels.addAll(privateChannels);
         this.publicChannels.clear();
         this.publicChannels.addAll(publicChannels);
         this.selectedChannel.set(selectedChannel);
-        this.userNameByDomainId.clear();
-        this.userNameByDomainId.putAll(userNameByDomainId);
         this.ignoredChatUserIds.clear();
         this.ignoredChatUserIds.addAll(ignoredChatUserIds);
     }
@@ -97,11 +109,5 @@ public class ChatStore implements PersistableStore<ChatStore> {
 
     public Optional<PublicChannel> findPublicChannel(String id) {
         return publicChannels.stream().filter(e -> e.getId().equals(id)).findAny();
-    }
-
-    @Override
-    public Message toProto() {
-        log.error("Not impl yet");
-        return null;
     }
 }

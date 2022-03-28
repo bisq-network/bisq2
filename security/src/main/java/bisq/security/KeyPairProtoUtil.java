@@ -39,7 +39,7 @@ public class KeyPairProtoUtil {
     public static java.security.KeyPair fromProto(bisq.security.protobuf.KeyPair keyPair) {
         try {
             PrivateKey privateKey = KeyGeneration.generatePrivate(keyPair.getPrivateKey().toByteArray());
-            PublicKey publicKey = KeyGeneration.generatePublic(keyPair.getPrivateKey().toByteArray());
+            PublicKey publicKey = KeyGeneration.generatePublic(keyPair.getPublicKey().toByteArray());
             return new java.security.KeyPair(publicKey, privateKey);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();

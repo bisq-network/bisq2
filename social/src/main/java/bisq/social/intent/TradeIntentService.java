@@ -58,7 +58,6 @@ public class TradeIntentService {
         String tradeIntentId = StringUtils.createUid();
         return identityService.getOrCreateIdentity(tradeIntentId).thenApply(identity -> {
             NetworkId makerNetworkId = identity.networkId();
-            String userName = chatService.findUserName(tradeIntentId).orElse("Maker@" + StringUtils.truncate(tradeIntentId));
             ChatUser maker = new ChatUser(makerNetworkId);
             return new TradeIntent(tradeIntentId, maker, ask, bid, new Date().getTime());
         });

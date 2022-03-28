@@ -17,6 +17,7 @@
 
 package bisq.security;
 
+import bisq.persistence.PersistableStoreResolver;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -30,6 +31,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+
 @Slf4j
 public class KeyPairService implements PersistenceClient<KeyPairStore> {
     public static final String DEFAULT = "default";
@@ -40,6 +42,7 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
 
 
     public KeyPairService(PersistenceService persistenceService) {
+        PersistableStoreResolver.addResolver(new SecurityPersistableStoreResolver());
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 

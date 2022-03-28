@@ -20,4 +20,8 @@ package bisq.network.p2p.services.data;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 
 public interface DataRequest extends BroadcastMessage {
+    default DataRequest fromProto(bisq.network.protobuf.NetworkMessage proto){
+        
+        return null;
+    }
 }

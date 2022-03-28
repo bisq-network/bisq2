@@ -21,6 +21,7 @@ package bisq.identity;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
+import bisq.persistence.PersistableStoreResolver;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -63,6 +64,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
                            KeyPairService keyPairService,
                            NetworkService networkService,
                            Config config) {
+        PersistableStoreResolver.addResolver( new IdentityPersistableStoreResolver());
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.keyPairService = keyPairService;
         this.networkService = networkService;

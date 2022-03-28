@@ -18,7 +18,7 @@
 package bisq.offer;
 
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.network.p2p.protobuf.ProtoResolver;
+import bisq.common.proto.ProtoResolver;
 import bisq.network.p2p.message.NetworkMessage;
 import com.google.protobuf.Any;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OfferNetworkMessageResolver implements ProtoResolver<NetworkMessage> {
     public NetworkMessage resolve(Any any, String protoMessageName) {
         //  try {
-        if (protoMessageName.equals("Offer")) {
+        if (protoMessageName.equals("TradeMessage...")) {
             log.error("Not impl yet");
             return null;
         }

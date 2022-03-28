@@ -36,6 +36,7 @@ import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.persistence.PersistableStoreResolver;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -44,7 +45,6 @@ import bisq.security.PubKey;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.security.KeyPair;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -133,7 +133,8 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
 
         defaultNodePortByTransportType = config.defaultNodePortByTransportType();
 
-        persistence = persistenceService.getOrCreatePersistence(this, "db" + File.separator + "network", persistableStore);
+        PersistableStoreResolver.addResolver( new NetworkPersistableStoreResolver());
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     public CompletableFuture<Void> shutdown() {

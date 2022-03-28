@@ -39,3 +39,7 @@ message KeyPair {
   bytes privateKey = 1;
   bytes publicKey = 2;
 }
+
+message KeyPairStore {
+  map<string, KeyPair > keyPairsById = 1;
+}

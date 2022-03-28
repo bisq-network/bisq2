@@ -18,8 +18,8 @@
 package bisq.protocol;
 
 import bisq.account.protocol.SwapProtocolType;
-import bisq.common.observable.ObservableSet;
 import bisq.common.monetary.Monetary;
+import bisq.common.observable.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.Contract;
@@ -30,6 +30,7 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.offer.Offer;
 import bisq.offer.OpenOfferService;
+import bisq.persistence.PersistableStoreResolver;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -66,7 +67,8 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
         this.identityService = identityService;
         this.persistenceService = persistenceService;
         this.openOfferService = openOfferService;
-
+        
+        PersistableStoreResolver.addResolver(new ProtocolPersistableStoreResolver());
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         networkService.addMessageListener(this);
     }

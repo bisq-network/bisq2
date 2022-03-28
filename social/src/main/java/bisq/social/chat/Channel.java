@@ -47,7 +47,9 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
 
     protected abstract bisq.social.protobuf.ChatMessage getChatMessageProto(T e);
 
-    public static Channel<? extends ChatMessage> toProto(bisq.social.protobuf.Channel proto) {
+    abstract public bisq.social.protobuf.Channel toProto();
+
+    public static Channel<? extends ChatMessage> fromProto(bisq.social.protobuf.Channel proto) {
         switch (proto.getMessageCase()) {
             case PRIVATECHANNEL -> {
                 PrivateChannel.fromProto(proto, proto.getPrivateChannel());

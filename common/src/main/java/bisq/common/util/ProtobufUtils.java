@@ -17,6 +17,7 @@
 
 package bisq.common.util;
 
+import bisq.common.proto.ProtoPackageAndMessageName;
 import com.google.common.base.Enums;
 import com.google.protobuf.Any;
 import lombok.extern.slf4j.Slf4j;

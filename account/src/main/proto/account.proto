@@ -25,7 +25,7 @@ import "common.proto";
 // todo move over account domain from bisq1 and adjust it where needed
 
 message SettlementMethod {
-  
+
 }
 message Account {
   string id = 1;
@@ -35,6 +35,10 @@ message Account {
   SettlementMethod settlementMethod = 5;
   repeated common.TradeCurrency tradeCurrencies = 6;
   common.TradeCurrency selectedTradeCurrency = 7;
+  
+  oneof message {
+    SepaAccount sepaAccount = 20;
+  }
 }
 
 
@@ -43,41 +47,41 @@ message AccountPayload {
   string settlementMethodId = 2;
   oneof message {
     AliPayAccountPayload ali_pay_account_payload = 4;
-   /* ChaseQuickPayAccountPayload chase_quick_pay_account_payload = 5;
-    ClearXchangeAccountPayload clear_xchange_account_payload = 6;
-    CountryBasedPaymentAccountPayload country_based_payment_account_payload = 7;
-    CryptoCurrencyAccountPayload crypto_currency_account_payload = 8;
-    FasterPaymentsAccountPayload faster_payments_account_payload = 9;
-    InteracETransferAccountPayload interac_e_transfer_account_payload = 10;
-    OKPayAccountPayload o_k_pay_account_payload = 11 [deprecated = true];
-    PerfectMoneyAccountPayload perfect_money_account_payload = 12;
-    SwishAccountPayload swish_account_payload = 13;
-    USPostalMoneyOrderAccountPayload u_s_postal_money_order_account_payload = 14;
-    UpholdAccountPayload uphold_account_payload = 16;
-    CashAppAccountPayload cash_app_account_payload = 17 [deprecated = true];
-    MoneyBeamAccountPayload money_beam_account_payload = 18;
-    VenmoAccountPayload venmo_account_payload = 19 [deprecated = true];
-    PopmoneyAccountPayload popmoney_account_payload = 20;
-    RevolutAccountPayload revolut_account_payload = 21;
-    WeChatPayAccountPayload we_chat_pay_account_payload = 22;
-    MoneyGramAccountPayload money_gram_account_payload = 23;
-    HalCashAccountPayload hal_cash_account_payload = 24;
-    PromptPayAccountPayload prompt_pay_account_payload = 25;
-    AdvancedCashAccountPayload advanced_cash_account_payload = 26;
-    InstantCryptoCurrencyAccountPayload instant_crypto_currency_account_payload = 27;
-    JapanBankAccountPayload japan_bank_account_payload = 28;
-    TransferwiseAccountPayload Transferwise_account_payload = 29;
-    AustraliaPayidPayload australia_payid_payload = 30;
-    AmazonGiftCardAccountPayload amazon_gift_card_account_payload = 31;
-    CashByMailAccountPayload cash_by_mail_account_payload = 32;
-    CapitualAccountPayload capitual_account_payload = 33;
-    PayseraAccountPayload Paysera_account_payload = 34;
-    PaxumAccountPayload Paxum_account_payload = 35;
-    SwiftAccountPayload swift_account_payload = 36;
-    CelPayAccountPayload cel_pay_account_payload = 37;
-    MoneseAccountPayload monese_account_payload = 38;
-    VerseAccountPayload verse_account_payload = 39;
-    BsqSwapAccountPayload bsq_swap_account_payload = 40;*/
+    /* ChaseQuickPayAccountPayload chase_quick_pay_account_payload = 5;
+     ClearXchangeAccountPayload clear_xchange_account_payload = 6;
+     CountryBasedPaymentAccountPayload country_based_payment_account_payload = 7;
+     CryptoCurrencyAccountPayload crypto_currency_account_payload = 8;
+     FasterPaymentsAccountPayload faster_payments_account_payload = 9;
+     InteracETransferAccountPayload interac_e_transfer_account_payload = 10;
+     OKPayAccountPayload o_k_pay_account_payload = 11 [deprecated = true];
+     PerfectMoneyAccountPayload perfect_money_account_payload = 12;
+     SwishAccountPayload swish_account_payload = 13;
+     USPostalMoneyOrderAccountPayload u_s_postal_money_order_account_payload = 14;
+     UpholdAccountPayload uphold_account_payload = 16;
+     CashAppAccountPayload cash_app_account_payload = 17 [deprecated = true];
+     MoneyBeamAccountPayload money_beam_account_payload = 18;
+     VenmoAccountPayload venmo_account_payload = 19 [deprecated = true];
+     PopmoneyAccountPayload popmoney_account_payload = 20;
+     RevolutAccountPayload revolut_account_payload = 21;
+     WeChatPayAccountPayload we_chat_pay_account_payload = 22;
+     MoneyGramAccountPayload money_gram_account_payload = 23;
+     HalCashAccountPayload hal_cash_account_payload = 24;
+     PromptPayAccountPayload prompt_pay_account_payload = 25;
+     AdvancedCashAccountPayload advanced_cash_account_payload = 26;
+     InstantCryptoCurrencyAccountPayload instant_crypto_currency_account_payload = 27;
+     JapanBankAccountPayload japan_bank_account_payload = 28;
+     TransferwiseAccountPayload Transferwise_account_payload = 29;
+     AustraliaPayidPayload australia_payid_payload = 30;
+     AmazonGiftCardAccountPayload amazon_gift_card_account_payload = 31;
+     CashByMailAccountPayload cash_by_mail_account_payload = 32;
+     CapitualAccountPayload capitual_account_payload = 33;
+     PayseraAccountPayload Paysera_account_payload = 34;
+     PaxumAccountPayload Paxum_account_payload = 35;
+     SwiftAccountPayload swift_account_payload = 36;
+     CelPayAccountPayload cel_pay_account_payload = 37;
+     MoneseAccountPayload monese_account_payload = 38;
+     VerseAccountPayload verse_account_payload = 39;
+     BsqSwapAccountPayload bsq_swap_account_payload = 40;*/
   }
   map<string, string> exclude_from_json_data = 15;
 }
@@ -90,21 +94,21 @@ message CountryBasedPaymentAccountPayload {
   string countryCode = 1;
   oneof message {
     BankAccountPayload bank_account_payload = 2;
-   /* CashDepositAccountPayload cash_deposit_account_payload = 3;
-    SepaAccountPayload sepa_account_payload = 4;
-    WesternUnionAccountPayload western_union_account_payload = 5;
-    SepaInstantAccountPayload sepa_instant_account_payload = 6;
-    F2FAccountPayload f2f_account_payload = 7;
-    UpiAccountPayload upi_account_payload = 9;
-    PaytmAccountPayload paytm_account_payload = 10;
-    IfscBasedAccountPayload ifsc_based_account_payload = 11;
-    NequiAccountPayload nequi_account_payload = 12;
-    BizumAccountPayload bizum_account_payload = 13;
-    PixAccountPayload pix_account_payload = 14;
-    SatispayAccountPayload satispay_account_payload = 15;
-    StrikeAccountPayload strike_account_payload = 16;
-    TikkieAccountPayload tikkie_account_payload = 17;
-    TransferwiseUsdAccountPayload transferwise_usd_account_payload = 18;*/
+    /* CashDepositAccountPayload cash_deposit_account_payload = 3;
+     SepaAccountPayload sepa_account_payload = 4;
+     WesternUnionAccountPayload western_union_account_payload = 5;
+     SepaInstantAccountPayload sepa_instant_account_payload = 6;
+     F2FAccountPayload f2f_account_payload = 7;
+     UpiAccountPayload upi_account_payload = 9;
+     PaytmAccountPayload paytm_account_payload = 10;
+     IfscBasedAccountPayload ifsc_based_account_payload = 11;
+     NequiAccountPayload nequi_account_payload = 12;
+     BizumAccountPayload bizum_account_payload = 13;
+     PixAccountPayload pix_account_payload = 14;
+     SatispayAccountPayload satispay_account_payload = 15;
+     StrikeAccountPayload strike_account_payload = 16;
+     TikkieAccountPayload tikkie_account_payload = 17;
+     TransferwiseUsdAccountPayload transferwise_usd_account_payload = 18;*/
   }
 }
 
@@ -119,12 +123,19 @@ message BankAccountPayload {
   string email = 8 [deprecated = true];
   oneof message {
     NationalBankAccountPayload national_bank_account_payload = 9;
-   /* SameBankAccountPayload same_bank_accont_payload = 10;
-    SpecificBanksAccountPayload specific_banks_account_payload = 11;
-    AchTransferAccountPayload ach_transfer_account_payload = 13;
-    DomesticWireTransferAccountPayload domestic_wire_transfer_account_payload = 14;*/
+    /* SameBankAccountPayload same_bank_accont_payload = 10;
+     SpecificBanksAccountPayload specific_banks_account_payload = 11;
+     AchTransferAccountPayload ach_transfer_account_payload = 13;
+     DomesticWireTransferAccountPayload domestic_wire_transfer_account_payload = 14;*/
   }
   string national_account_id = 12;
 }
 message NationalBankAccountPayload {
+}
+
+message SepaAccount {
+  
+}
+message AccountStore {
+  repeated Account accounts = 1;
 }
