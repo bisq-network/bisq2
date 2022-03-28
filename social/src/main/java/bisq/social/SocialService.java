@@ -17,10 +17,7 @@
 
 package bisq.social;
 
-import bisq.persistence.PersistableStoreResolver;
-
 public class SocialService {
     public SocialService() {
-        PersistableStoreResolver.addResolver(new SocialPersistableStoreResolver());
     }
 }

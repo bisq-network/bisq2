@@ -20,9 +20,11 @@ package bisq.common.proto;
 import com.google.protobuf.Any;
 
 public interface ProtoResolver<T extends Proto> {
-    T resolve(Any any, String protoMessageName);
+    T resolve(Any any);
 
-    static String getModuleName(ProtoResolver<?> resolver) {
-        return resolver.getClass().getName().split("\\.")[1];
+    static String getProtoType(ProtoResolver<?> resolver) {
+        // As resolver is a static method reference SimpleName is something like: PublicChatMessage$$Lambda$31/0x0000000800c8b720
+        String className = resolver.getClass().getSimpleName().split("\\$")[0];
+        return resolver.getClass().getName().split("\\.")[1] + "." + className;
     }
 }

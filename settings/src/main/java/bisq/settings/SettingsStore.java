@@ -19,7 +19,10 @@ package bisq.settings;
 
 import bisq.common.monetary.Market;
 import bisq.common.monetary.MarketRepository;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -75,6 +78,17 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
                 proto.getMarketsList().stream().map(Market::fromProto).collect(Collectors.toList()),
                 Market.fromProto(proto.getSelectedMarket()));
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.settings.protobuf.SettingsStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     @Override

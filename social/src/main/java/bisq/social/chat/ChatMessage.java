@@ -73,10 +73,10 @@ public abstract class ChatMessage {
     public static ChatMessage fromProto(bisq.social.protobuf.ChatMessage proto) {
         switch (proto.getMessageCase()) {
             case PRIVATECHATMESSAGE -> {
-                return PrivateChatMessage.fromProto(proto, proto.getPrivateChatMessage());
+                return PrivateChatMessage.fromProto(proto);
             }
             case PUBLICCHATMESSAGE -> {
-                return PublicChatMessage.fromProto(proto, proto.getPublicChatMessage());
+                return PublicChatMessage.fromProto(proto);
             }
             case MESSAGE_NOT_SET -> {
                 throw new UnresolvableProtobufMessageException(proto);

@@ -17,7 +17,6 @@
 
 package bisq.security;
 
-import bisq.persistence.PersistableStoreResolver;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,6 @@ public class SecurityService {
     private final KeyPairService keyPairService;
 
     public SecurityService(PersistenceService persistenceService) {
-        PersistableStoreResolver.addResolver(new SecurityPersistableStoreResolver());
         keyPairService = new KeyPairService(persistenceService);
     }
 

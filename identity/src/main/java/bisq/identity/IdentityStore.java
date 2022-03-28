@@ -17,7 +17,10 @@
 
 package bisq.identity;
 
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,6 +65,17 @@ public class IdentityStore implements PersistableStore<IdentityStore> {
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> Identity.fromProto(e.getValue()))),
                 proto.getPoolList().stream().map(Identity::fromProto).collect(Collectors.toSet()),
                 proto.getRetiredList().stream().map(Identity::fromProto).collect(Collectors.toSet()));
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.identity.protobuf.IdentityStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     @Override

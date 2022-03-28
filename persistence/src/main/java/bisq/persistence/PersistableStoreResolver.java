@@ -25,14 +25,10 @@ public class PersistableStoreResolver {
     private static final ProtoResolverMap<PersistableStore<?>> protoResolverMap = new ProtoResolverMap<>();
 
     public static void addResolver(ProtoResolver<PersistableStore<?>> resolver) {
-        addResolver(ProtoResolver.getModuleName(resolver), resolver);
+        protoResolverMap.addProtoResolver(ProtoResolver.getProtoType(resolver), resolver);
     }
 
-    public static void addResolver(String moduleName, ProtoResolver<PersistableStore<?>> resolver) {
-        protoResolverMap.addProtoResolver(moduleName, resolver);
-    }
-
-    static PersistableStore<?> resolve(Any anyProto) {
-        return protoResolverMap.resolve(anyProto);
+    static PersistableStore<?> fromAny(Any anyProto) {
+        return protoResolverMap.fromAny(anyProto);
     }
 }

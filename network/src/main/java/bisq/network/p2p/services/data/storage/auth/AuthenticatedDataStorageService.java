@@ -61,7 +61,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         super(persistenceService, storeName, fileName);
     }
 
-
     @Override
     public void onPersistedApplied(DataStore<AuthenticatedDataRequest> persisted) {
         maybePruneMap(persisted.getMap());

@@ -17,7 +17,10 @@
 
 package bisq.network;
 
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,6 +52,17 @@ public class NetworkIdStore implements PersistableStore<NetworkIdStore> {
     public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkIdStore proto) {
         return new NetworkIdStore(proto.getNetworkIdByNodeIdMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> NetworkId.fromProto(e.getValue()))));
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.network.protobuf.NetworkIdStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     @Override

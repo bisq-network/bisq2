@@ -30,7 +30,10 @@ import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
 import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
-import bisq.offer.*;
+import bisq.offer.Offer;
+import bisq.offer.OfferBookService;
+import bisq.offer.OfferService;
+import bisq.offer.OpenOfferService;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
 import bisq.persistence.PersistenceService;
@@ -38,10 +41,10 @@ import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
-import bisq.social.SocialDistributedDataResolver;
-import bisq.social.SocialNetworkMessageResolver;
 import bisq.social.SocialService;
 import bisq.social.chat.ChatService;
+import bisq.social.chat.PrivateChatMessage;
+import bisq.social.chat.PublicChatMessage;
 import bisq.social.intent.TradeIntentListingsService;
 import bisq.social.intent.TradeIntentService;
 import bisq.social.user.profile.UserProfileService;
@@ -102,6 +105,10 @@ public class DefaultApplicationService extends ServiceProvider {
         Res.initialize(locale);
 
         persistenceService = new PersistenceService(applicationConfig.baseDir());
+        DistributedDataResolver.addResolver("social.ChatMessage", PublicChatMessage.getResolver());
+        DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
+        NetworkMessageResolver.addResolver("social.ChatMessage", PrivateChatMessage.getResolver());
+
         securityService = new SecurityService(persistenceService);
 
         settingsService = new SettingsService(persistenceService);
@@ -137,14 +144,6 @@ public class DefaultApplicationService extends ServiceProvider {
 
         Optional<WalletConfig> walletConfig = !isRegtestRun() ? Optional.empty() : createRegtestWalletConfig();
         walletService = new WalletService(walletConfig);
-
-        // Support for resolving networkMessages and distributedData from offer module
-        DistributedDataResolver.addResolver(new OfferDistributedDataResolver());
-        NetworkMessageResolver.addResolver(new OfferNetworkMessageResolver());
-
-        // Support for resolving networkMessages and distributedData from social module
-        DistributedDataResolver.addResolver(new SocialDistributedDataResolver());
-        NetworkMessageResolver.addResolver(new SocialNetworkMessageResolver());
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {

@@ -22,14 +22,9 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.CloseConnectionMessage;
 import bisq.network.p2p.node.ConnectionHandshake;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
+import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.inventory.InventoryRequest;
 import bisq.network.p2p.services.data.inventory.InventoryResponse;
-import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
-import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeRequest;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeResponse;
 import bisq.network.p2p.services.peergroup.keepalive.Ping;
@@ -47,10 +42,10 @@ public interface NetworkMessage extends Proto {
     }
 
     static NetworkMessage resolve(Any any) {
-        return NetworkMessageResolver.resolve(any);
+        return NetworkMessageResolver.fromAny(any);
     }
 
-    bisq.network.protobuf.NetworkMessage toProto();
+     bisq.network.protobuf.NetworkMessage toProto();
 
     static NetworkMessage fromProto(bisq.network.protobuf.NetworkMessage proto) {
         switch (proto.getMessageCase()) {
@@ -90,23 +85,8 @@ public interface NetworkMessage extends Proto {
             case INVENTORYRESPONSE -> {
                 return InventoryResponse.fromProto(proto.getInventoryResponse());
             }
-            case ADDAUTHENTICATEDDATAREQUEST -> {
-                return AddAuthenticatedDataRequest.fromProto(proto.getAddAuthenticatedDataRequest());
-            }
-            case REMOVEAUTHENTICATEDDATAREQUEST -> {
-                return RemoveAuthenticatedDataRequest.fromProto(proto.getRemoveAuthenticatedDataRequest());
-            }
-            case REFRESHAUTHENTICATEDDATAREQUEST -> {
-                return RefreshAuthenticatedDataRequest.fromProto(proto.getRefreshAuthenticatedDataRequest());
-            }
-            case ADDMAILBOXREQUEST -> {
-                return AddMailboxRequest.fromProto(proto.getAddMailboxRequest());
-            }
-            case REMOVEMAILBOXREQUEST -> {
-                return RemoveMailboxRequest.fromProto(proto.getRemoveMailboxRequest());
-            }
-            case ADDAPPENDONLYDATAREQUEST -> {
-                return AddAppendOnlyDataRequest.fromProto(proto.getAddAppendOnlyDataRequest());
+            case DATAREQUEST -> {
+                return DataRequest.fromProto(proto.getDataRequest());
             }
             case EXTERNALNETWORKMESSAGE -> {
                 // Externally defined messages

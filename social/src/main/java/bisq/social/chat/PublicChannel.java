@@ -77,7 +77,7 @@ public class PublicChannel extends Channel<PublicChatMessage> {
                 proto.getChannelModeratorsList().stream().map(ChatUser::fromProto).collect(Collectors.toSet()),
                 NotificationSetting.fromProto(baseProto.getNotificationSetting()),
                 baseProto.getChatMessagesList().stream()
-                        .map(e -> PublicChatMessage.fromProto(e, e.getPublicChatMessage()))
+                        .map(PublicChatMessage::fromProto)
                         .collect(Collectors.toSet()));
     }
 

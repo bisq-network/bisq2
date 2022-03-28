@@ -19,9 +19,12 @@ package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
 import bisq.common.data.Pair;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -67,6 +70,17 @@ public class DataStore<T extends DataRequest> implements PersistableStore<DataSt
                 .map(e -> new Pair<>(new ByteArray(e.getKey().toByteArray()), NetworkMessage.fromProto(e.getValue())))
                 .filter(p -> p.second() instanceof DataRequest)
                 .collect(Collectors.toMap(Pair::first, e -> (DataRequest) e.second())));
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.network.protobuf.DataStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     @Override

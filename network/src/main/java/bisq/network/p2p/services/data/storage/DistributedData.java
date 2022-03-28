@@ -24,7 +24,7 @@ import com.google.protobuf.Any;
 // like Offer, ChatMessage,...
 public interface DistributedData extends Proto {
     static DistributedData resolve(Any any) {
-        return DistributedDataResolver.resolve(any);
+        return DistributedDataResolver.fromAny(any);
     }
 
     Any toAny();

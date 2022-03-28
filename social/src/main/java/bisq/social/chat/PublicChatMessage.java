@@ -17,10 +17,13 @@
 
 package bisq.social.chat;
 
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.user.ChatUser;
 import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -73,12 +76,11 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
     }
 
 
-    public   bisq.social.protobuf.ChatMessage toProto() {
+    public bisq.social.protobuf.ChatMessage toProto() {
         return getChatMessageBuilder().setPublicChatMessage(bisq.social.protobuf.PublicChatMessage.newBuilder()).build();
     }
 
-    public static PublicChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto,
-                                              bisq.social.protobuf.PublicChatMessage proto) {
+    public static PublicChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
         Optional<QuotedMessage> quotedMessage = baseProto.hasQuotedMessage() ?
                 Optional.of(QuotedMessage.fromProto(baseProto.getQuotedMessage())) :
                 Optional.empty();
@@ -90,6 +92,16 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 MetaData.fromProto(baseProto.getMetaData()));
+    }
+
+    public static ProtoResolver<DistributedData> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.social.protobuf.ChatMessage.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     @Override

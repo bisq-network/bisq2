@@ -17,7 +17,6 @@
 
 package bisq.security;
 
-import bisq.persistence.PersistableStoreResolver;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -41,7 +40,6 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
     private final Persistence<KeyPairStore> persistence;
 
     public KeyPairService(PersistenceService persistenceService) {
-        PersistableStoreResolver.addResolver(new SecurityPersistableStoreResolver());
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 

@@ -36,7 +36,6 @@ import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
-import bisq.persistence.PersistableStoreResolver;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -133,7 +132,6 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
 
         defaultNodePortByTransportType = config.defaultNodePortByTransportType();
 
-        PersistableStoreResolver.addResolver( new NetworkPersistableStoreResolver());
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 

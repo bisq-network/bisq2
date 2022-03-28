@@ -19,26 +19,24 @@ package bisq.common.proto;
 
 import bisq.common.util.ProtobufUtils;
 import com.google.protobuf.Any;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-
+@Slf4j
 public class ProtoResolverMap<T extends Proto> {
     private final Map<String, ProtoResolver<T>> map = new HashMap<>();
-            
-    public void addProtoResolver(String moduleName, ProtoResolver<T> resolver) {
-        map.put(moduleName, resolver);
+
+    public void addProtoResolver(String protoTypeName, ProtoResolver<T> resolver) {
+        map.put(protoTypeName, resolver);
     }
 
-    public T resolve(Any anyProto) {
-        ProtoPackageAndMessageName protoPackageAndMessageName = ProtobufUtils.getProtoPackageAndMessageName(anyProto);
-        // We do not use reflection for security reasons
-        String protoPackage = protoPackageAndMessageName.protoPackage();
-        String protoMessageName = protoPackageAndMessageName.protoMessageName();
-        return Optional.ofNullable(map.get(protoPackage))
-                .map(resolver -> resolver.resolve(anyProto, protoMessageName))
+    public T fromAny(Any anyProto) {
+        String protoTypeName = ProtobufUtils.getProtoType(anyProto);
+        return Optional.ofNullable(map.get(protoTypeName))
+                .map(resolver -> resolver.resolve(anyProto))
                 .orElseThrow(() -> new UnresolvableProtobufMessageException(anyProto));
     }
 }

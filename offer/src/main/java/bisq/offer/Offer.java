@@ -21,6 +21,8 @@ import bisq.account.protocol.SwapProtocolType;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -29,6 +31,7 @@ import bisq.offer.spec.*;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -180,6 +183,16 @@ public class Offer implements DistributedData {
                 quoteSideSettlementSpecs,
                 offerOptions,
                 MetaData.fromProto(proto.getMetaData()));
+    }
+
+    public static ProtoResolver<DistributedData> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.offer.protobuf.Offer.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     public Optional<SwapProtocolType> findProtocolType() {

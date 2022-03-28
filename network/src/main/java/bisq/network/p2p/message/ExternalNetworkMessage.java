@@ -34,6 +34,6 @@ public class ExternalNetworkMessage {
     }
 
     public static NetworkMessage fromProto(bisq.network.protobuf.ExternalNetworkMessage externalNetworkMessage) {
-        return NetworkMessageResolver.resolve(externalNetworkMessage.getAny());
+        return NetworkMessageResolver.fromAny(externalNetworkMessage.getAny());
     }
 }

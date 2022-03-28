@@ -106,14 +106,14 @@ public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest,
 
     @Override
     public bisq.network.protobuf.NetworkMessage toProto() {
-        return getNetworkMessageBuilder().setRemoveAuthenticatedDataRequest(
+        return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRemoveAuthenticatedDataRequest(
                         bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
                                 .setMetaData(metaData.toProto())
                                 .setHash(ByteString.copyFrom(hash))
                                 .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
                                 .setSequenceNumber(sequenceNumber)
                                 .setSignature(ByteString.copyFrom(signature))
-                                .setCreated(created))
+                                .setCreated(created)))
                 .build();
     }
 

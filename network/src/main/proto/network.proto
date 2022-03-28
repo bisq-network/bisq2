@@ -188,6 +188,23 @@ message ExternalNetworkMessage {
 }
 
 ////////////////////////////////////////////////////////////////////
+// DataRequest types
+////////////////////////////////////////////////////////////////////
+
+message DataRequest {
+  oneof message {
+    AddAuthenticatedDataRequest addAuthenticatedDataRequest = 1;
+    RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = 2;
+    RefreshAuthenticatedDataRequest refreshAuthenticatedDataRequest = 3;
+
+    AddMailboxRequest  addMailboxRequest = 4;
+    RemoveMailboxRequest removeMailboxRequest = 5;
+
+    AddAppendOnlyDataRequest AddAppendOnlyDataRequest = 6;
+  }
+}
+
+////////////////////////////////////////////////////////////////////
 // NetworkMessage types
 ////////////////////////////////////////////////////////////////////
 
@@ -212,17 +229,10 @@ message NetworkMessage {
     InventoryRequest inventoryRequest = 11;
     InventoryResponse inventoryResponse = 12;
 
-    AddAuthenticatedDataRequest addAuthenticatedDataRequest = 13;
-    RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = 14;
-    RefreshAuthenticatedDataRequest refreshAuthenticatedDataRequest = 15;
+    DataRequest dataRequest = 13;
 
-    AddMailboxRequest  addMailboxRequest = 16;
-    RemoveMailboxRequest removeMailboxRequest = 17;
-
-    AddAppendOnlyDataRequest AddAppendOnlyDataRequest = 18;
-
-    // Wrapper for messages defined in other modules
-    ExternalNetworkMessage externalNetworkMessage = 19;
+    // Wrapper for NetworkMessages defined in other modules like PrivateChatMessage which are wrapped in an Any blob
+    ExternalNetworkMessage externalNetworkMessage = 14;
   }
 }
 

@@ -17,12 +17,15 @@
 
 package bisq.social.chat;
 
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
 import bisq.social.user.ChatUser;
 import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -70,7 +73,6 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
                 metaData);
     }
 
-
     @Override
     public NetworkMessage toProto() {
         return getNetworkMessageBuilder()
@@ -82,8 +84,7 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
         return getChatMessageBuilder().setPrivateChatMessage(bisq.social.protobuf.PrivateChatMessage.newBuilder()).build();
     }
 
-    public static PrivateChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto,
-                                               bisq.social.protobuf.PrivateChatMessage proto) {
+    public static PrivateChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
         Optional<QuotedMessage> quotedMessage = baseProto.hasQuotedMessage() ?
                 Optional.of(QuotedMessage.fromProto(baseProto.getQuotedMessage())) :
                 Optional.empty();
@@ -95,6 +96,16 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 MetaData.fromProto(baseProto.getMetaData()));
+    }
+
+    public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.social.protobuf.ChatMessage.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     // Required for MailboxMessage use case

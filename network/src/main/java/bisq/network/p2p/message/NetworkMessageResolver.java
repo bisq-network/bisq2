@@ -24,15 +24,11 @@ import com.google.protobuf.Any;
 public class NetworkMessageResolver {
     private static final ProtoResolverMap<NetworkMessage> protoResolverMap = new ProtoResolverMap<>();
 
-    public static void addResolver(ProtoResolver<NetworkMessage> resolver) {
-        addResolver(ProtoResolver.getModuleName(resolver), resolver);
+    public static void addResolver(String protoTypeName, ProtoResolver<NetworkMessage> resolver) {
+        protoResolverMap.addProtoResolver(protoTypeName, resolver);
     }
 
-    public static void addResolver(String moduleName, ProtoResolver<NetworkMessage> resolver) {
-        protoResolverMap.addProtoResolver(moduleName, resolver);
-    }
-
-    static NetworkMessage resolve(Any any) {
-        return protoResolverMap.resolve(any);
+    static NetworkMessage fromAny(Any any) {
+        return protoResolverMap.fromAny(any);
     }
 }

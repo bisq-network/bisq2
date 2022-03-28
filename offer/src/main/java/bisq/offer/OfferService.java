@@ -17,10 +17,7 @@
 
 package bisq.offer;
 
-import bisq.persistence.PersistableStoreResolver;
-
 public class OfferService {
     public OfferService() {
-        PersistableStoreResolver.addResolver(new OfferPersistableStoreResolver());
     }
 }

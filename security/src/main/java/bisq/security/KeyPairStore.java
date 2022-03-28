@@ -17,7 +17,10 @@
 
 package bisq.security;
 
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,6 +57,17 @@ public class KeyPairStore implements PersistableStore<KeyPairStore> {
     public static KeyPairStore fromProto(bisq.security.protobuf.KeyPairStore proto) {
         return new KeyPairStore(proto.getKeyPairsByIdMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> KeyPairProtoUtil.fromProto(e.getValue()))));
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.security.protobuf.KeyPairStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     @Override

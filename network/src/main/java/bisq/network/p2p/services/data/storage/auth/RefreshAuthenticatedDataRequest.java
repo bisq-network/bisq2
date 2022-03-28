@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
-import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
+import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.security.DigestUtil;
@@ -37,7 +37,7 @@ import java.util.Arrays;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public class RefreshAuthenticatedDataRequest implements BroadcastMessage {
+public class RefreshAuthenticatedDataRequest implements DataRequest {
     public static RefreshAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
                                                        StorageData storageData,
                                                        KeyPair keyPair)
@@ -88,13 +88,13 @@ public class RefreshAuthenticatedDataRequest implements BroadcastMessage {
 
     @Override
     public bisq.network.protobuf.NetworkMessage toProto() {
-        return getNetworkMessageBuilder().setRefreshAuthenticatedDataRequest(
+        return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRefreshAuthenticatedDataRequest(
                         bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
                                 .setMetaData(metaData.toProto())
                                 .setHash(ByteString.copyFrom(hash))
                                 .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
                                 .setSequenceNumber(sequenceNumber)
-                                .setSignature(ByteString.copyFrom(signature)))
+                                .setSignature(ByteString.copyFrom(signature))))
                 .build();
     }
 

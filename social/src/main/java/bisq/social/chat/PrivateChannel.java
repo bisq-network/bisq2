@@ -64,7 +64,7 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
                 UserProfile.fromProto(proto.getMyProfile()),
                 NotificationSetting.fromProto(baseProto.getNotificationSetting()),
                 baseProto.getChatMessagesList().stream()
-                        .map(e -> PrivateChatMessage.fromProto(e, e.getPrivateChatMessage()))
+                        .map(PrivateChatMessage::fromProto)
                         .collect(Collectors.toSet()));
     }
 

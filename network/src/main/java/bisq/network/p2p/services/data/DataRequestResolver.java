@@ -15,24 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.security;
+package bisq.network.p2p.services.data;
 
 import bisq.common.proto.ProtoResolver;
-import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.persistence.PersistableStore;
+import bisq.common.proto.ProtoResolverMap;
 import com.google.protobuf.Any;
-import com.google.protobuf.InvalidProtocolBufferException;
 
-public class SecurityPersistableStoreResolver implements ProtoResolver<PersistableStore<?>> {
-    public PersistableStore<?> resolve(Any any, String protoMessageName) {
-        try {
-            if (protoMessageName.equals("KeyPairStore")) {
-                return KeyPairStore.fromProto(any.unpack(bisq.security.protobuf.KeyPairStore.class));
-            }
-        } catch (InvalidProtocolBufferException e) {
-            throw new UnresolvableProtobufMessageException(e);
-        }
+public class DataRequestResolver {
+    private static final ProtoResolverMap<DataRequest> protoResolverMap = new ProtoResolverMap<>();
 
-        throw new UnresolvableProtobufMessageException(any);
+    public static void addResolver(String protoTypeName, ProtoResolver<DataRequest> resolver) {
+        protoResolverMap.addProtoResolver(protoTypeName, resolver);
+    }
+
+    static DataRequest fromAny(Any any) {
+        return protoResolverMap.fromAny(any);
     }
 }

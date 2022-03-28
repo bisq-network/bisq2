@@ -19,7 +19,10 @@ package bisq.social.chat;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,6 +75,17 @@ public class ChatStore implements PersistableStore<ChatStore> {
                 Channel.fromProto(proto.getSelectedChannel()),
                 new HashSet<>(proto.getIgnoredChatUserIdsList())
         );
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.social.protobuf.ChatStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     @Override

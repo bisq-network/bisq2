@@ -79,13 +79,13 @@ public class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {
 
     @Override
     public bisq.network.protobuf.NetworkMessage toProto() {
-        return getNetworkMessageBuilder().setRemoveMailboxRequest(
+        return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRemoveMailboxRequest(
                         bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
                                 .setMetaData(metaData.toProto())
                                 .setHash(ByteString.copyFrom(hash))
                                 .setReceiverPublicKeyBytes(ByteString.copyFrom(receiverPublicKeyBytes))
                                 .setSignature(ByteString.copyFrom(signature))
-                                .setCreated(created))
+                                .setCreated(created)))
                 .build();
     }
 

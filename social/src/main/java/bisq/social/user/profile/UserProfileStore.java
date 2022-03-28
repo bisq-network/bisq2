@@ -19,8 +19,11 @@ package bisq.social.user.profile;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import bisq.social.user.Entitlement;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -71,6 +74,17 @@ public class UserProfileStore implements PersistableStore<UserProfileStore> {
                 proto.getVerifiedProofOfBurnProofsMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
                                 e -> (Entitlement.ProofOfBurnProof) Entitlement.Proof.fromProto(e.getValue()))));
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return  any -> {
+            try {
+                return fromProto(any.unpack(bisq.social.protobuf.UserProfileStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     @Override

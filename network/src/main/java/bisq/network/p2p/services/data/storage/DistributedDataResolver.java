@@ -26,15 +26,11 @@ import com.google.protobuf.Any;
 public class DistributedDataResolver {
     private static final ProtoResolverMap<DistributedData> protoResolverMap = new ProtoResolverMap<>();
 
-    public static void addResolver( ProtoResolver<DistributedData> resolver) {
-        addResolver(ProtoResolver.getModuleName(resolver), resolver);
+    public static void addResolver(String protoTypeName, ProtoResolver<DistributedData> resolver) {
+        protoResolverMap.addProtoResolver(protoTypeName, resolver);
     }
 
-    public static void addResolver(String moduleName, ProtoResolver<DistributedData> resolver) {
-        protoResolverMap.addProtoResolver(moduleName, resolver);
-    }
-
-    static DistributedData resolve(Any any) {
-        return protoResolverMap.resolve(any);
+    static DistributedData fromAny(Any any) {
+        return protoResolverMap.fromAny(any);
     }
 }

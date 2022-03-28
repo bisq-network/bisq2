@@ -78,11 +78,11 @@ public class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     @Override
     public bisq.network.protobuf.NetworkMessage toProto() {
-        return getNetworkMessageBuilder().setAddMailboxRequest(
+        return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setAddMailboxRequest(
                         bisq.network.protobuf.AddMailboxRequest.newBuilder()
                                 .setMailboxSequentialData(mailboxSequentialData.toProto())
                                 .setSignature(ByteString.copyFrom(signature))
-                                .setSenderPublicKeyBytes(ByteString.copyFrom(senderPublicKeyBytes)))
+                                .setSenderPublicKeyBytes(ByteString.copyFrom(senderPublicKeyBytes))))
                 .build();
     }
 

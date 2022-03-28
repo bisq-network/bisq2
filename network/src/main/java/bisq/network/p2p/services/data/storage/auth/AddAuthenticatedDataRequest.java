@@ -90,11 +90,11 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
 
     @Override
     public bisq.network.protobuf.NetworkMessage toProto() {
-        return getNetworkMessageBuilder().setAddAuthenticatedDataRequest(
+        return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setAddAuthenticatedDataRequest(
                 bisq.network.protobuf.AddAuthenticatedDataRequest.newBuilder()
                         .setAuthenticatedSequentialData(authenticatedSequentialData.toProto())
                         .setSignature(ByteString.copyFrom(signature))
-                        .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
+                        .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes)))
         ).build();
     }
 

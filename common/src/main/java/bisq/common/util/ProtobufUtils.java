@@ -38,6 +38,7 @@ public class ProtobufUtils {
         return result;
     }
 
+    //todo remove
     public static ProtoPackageAndMessageName getProtoPackageAndMessageName(Any any) {
         // Convention:
         // We use the module name as proto package name and the java class name as the proto message name.
@@ -48,5 +49,9 @@ public class ProtobufUtils {
         // For the generated java package structure we use:
         // bisq.[protoPackage].protobuf.[protoMessageName]
         return new ProtoPackageAndMessageName(protoPackage, protoMessageName);
+    }
+
+    public static String getProtoType(Any any) {
+        return any.getTypeUrl().split("/")[1];
     }
 }

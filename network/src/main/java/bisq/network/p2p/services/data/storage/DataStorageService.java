@@ -34,13 +34,13 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     @Getter
     private final String fileName;
     @Getter
-    private final String subDirectory;
+    protected final String subDirectory;
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
         super();
         this.fileName = fileName;
         subDirectory = SUB_PATH + File.separator + storeName;
-        persistence = persistenceService.getOrCreatePersistence(this, subDirectory, fileName);
+        persistence = persistenceService.getOrCreatePersistence(this, subDirectory, fileName, persistableStore); 
     }
 
   /*  public Inventory getInventory(DataFilter dataFilter) {
