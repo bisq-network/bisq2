@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 @Slf4j
 public class CompletableFutureUtils {
     /**
@@ -78,7 +79,7 @@ public class CompletableFutureUtils {
      * <br/>
      * b) ALL CompletableFutures complete
      * <br/><br/>
-     *
+     * <p>
      * Useful in situations such as
      * <br/>
      * "complete when any boolean future in the list completes with true, else complete when all complete with false"
@@ -86,7 +87,6 @@ public class CompletableFutureUtils {
      * @param filter
      * @param list
      * @return
-     *
      * @see "https://stackoverflow.com/a/58999999"
      */
     @SafeVarargs

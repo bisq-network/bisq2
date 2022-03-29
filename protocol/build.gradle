@@ -13,7 +13,7 @@ apply from: '../buildSrc/logging-dependencies.gradle'
 apply from: '../buildSrc/test-dependencies.gradle'
 apply from: '../buildSrc/lombok-dependencies.gradle'
 
-    dependencies {
+dependencies {
     api platform(project(':platforms:common-platform'))
 
     implementation project(':common')

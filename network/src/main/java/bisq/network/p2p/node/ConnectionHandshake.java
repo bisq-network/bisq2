@@ -130,7 +130,7 @@ public class ConnectionHandshake {
             InputStream inputStream = socket.getInputStream();
             var responseProto = bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
             NetworkEnvelope responseNetworkEnvelope = NetworkEnvelope.fromProto(responseProto);
-            
+
             if (responseNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
                 throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
                         responseNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
@@ -169,7 +169,7 @@ public class ConnectionHandshake {
             InputStream inputStream = socket.getInputStream();
             var requestProto = bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
             NetworkEnvelope requestNetworkEnvelope = NetworkEnvelope.fromProto(requestProto);
-           
+
             long ts = System.currentTimeMillis();
             if (requestNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
                 throw new ConnectionException("Invalid version. requestEnvelop.version()=" +
@@ -194,7 +194,7 @@ public class ConnectionHandshake {
             bisq.network.protobuf.NetworkEnvelope responseProto = responseNetworkEnvelope.toProto();
             responseProto.writeDelimitedTo(outputStream);
             outputStream.flush();
-           
+
             metrics.onSent(responseNetworkEnvelope);
             metrics.addRtt(System.currentTimeMillis() - ts);
             return new Result(request.getCapability(), request.getLoad(), metrics);

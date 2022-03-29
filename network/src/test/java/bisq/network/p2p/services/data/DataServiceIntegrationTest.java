@@ -65,7 +65,7 @@ public class DataServiceIntegrationTest extends DataServiceNodeBase {
     // TODO with getBootstrappedDataServices(); we don't get a deterministic set up nodes connected to each other.
     // Mostly the small test network is well enough connected that the test succeeds, but not always.
     // We would likely need a more deterministic peerGroup management for tests (e.g. all nodes are connected to each other).
-   // @Test
+    // @Test
     public void testAddAuthenticatedDataRequest() throws GeneralSecurityException, InterruptedException, ExecutionException {
         MockAuthenticatedData payload = new MockAuthenticatedData("Test offer " + UUID.randomUUID());
         KeyPair keyPair = KeyGeneration.generateKeyPair();

@@ -38,7 +38,8 @@ public class AppendOnlyDataStorageServiceTest {
     public void setup() {
         FileUtils.deleteDirectory(new File(appDirPath));
     }
-  //  @Test
+
+    //  @Test
     public void testAppend() {
         MockAppendOnlyData data = new MockAppendOnlyData("test" + UUID.randomUUID());
         PersistenceService persistenceService = new PersistenceService(appDirPath);

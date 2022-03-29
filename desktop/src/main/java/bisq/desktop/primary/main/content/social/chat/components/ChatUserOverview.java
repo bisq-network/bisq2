@@ -135,7 +135,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
             trust.setX(20);
             trust.setY(20);
 
-            StackPane icons= new StackPane();
+            StackPane icons = new StackPane();
             icons.getChildren().addAll(roboIconImageView, trust);
             root.getChildren().addAll(icons, userName);
 

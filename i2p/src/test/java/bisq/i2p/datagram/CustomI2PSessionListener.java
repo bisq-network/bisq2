@@ -32,7 +32,8 @@ public class CustomI2PSessionListener implements I2PSessionListener {
     }
 
     @Override
-    public void reportAbuse(I2PSession session, int severity) {}
+    public void reportAbuse(I2PSession session, int severity) {
+    }
 
     @Override
     public void disconnected(I2PSession session) {

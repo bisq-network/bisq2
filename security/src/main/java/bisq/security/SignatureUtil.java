@@ -17,9 +17,8 @@
 
 package bisq.security;
 
-import bisq.common.encoding.Hex;
 import bisq.common.encoding.Base64;
-
+import bisq.common.encoding.Hex;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.ByteArrayOutputStream;
@@ -52,11 +51,11 @@ public class SignatureUtil {
 
     // input: a base-64 bitcoin sig
     // output a DER signature
-    public static byte [] bitcoinSigToDer(String bitcoinSig) {
+    public static byte[] bitcoinSigToDer(String bitcoinSig) {
         String sigHex = Hex.encode(Base64.decode(bitcoinSig));
-        String r = Integer.parseInt(sigHex.substring(2, 4), 16 ) > 127 ?
+        String r = Integer.parseInt(sigHex.substring(2, 4), 16) > 127 ?
                 "00" + sigHex.substring(2, 66) : sigHex.substring(2, 66);
-        String s = Integer.parseInt(sigHex.substring(66, 68), 16 ) > 127 ?
+        String s = Integer.parseInt(sigHex.substring(66, 68), 16) > 127 ?
                 "00" + sigHex.substring(66) : sigHex.substring(66);
         String result = "02" + String.format("%02X", r.length() / 2) + r +
                 "02" + String.format("%02X", s.length() / 2) + s;

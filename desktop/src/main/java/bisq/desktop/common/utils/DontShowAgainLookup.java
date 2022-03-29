@@ -23,7 +23,7 @@ public class DontShowAgainLookup {
 
     private static SettingsService settingsService;
 
-    public static void setPreferences( SettingsService settingsService) {
+    public static void setPreferences(SettingsService settingsService) {
         DontShowAgainLookup.settingsService = settingsService;
     }
 

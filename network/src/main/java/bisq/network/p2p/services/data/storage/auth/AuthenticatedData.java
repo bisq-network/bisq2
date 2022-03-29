@@ -25,7 +25,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
- * Container for DistributedData. 
+ * Container for DistributedData.
  * We use Any for wrapping the external implementation of the distributedData instance (e.g. Offer).
  */
 @ToString

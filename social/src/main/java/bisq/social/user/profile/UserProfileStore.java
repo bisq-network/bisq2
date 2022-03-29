@@ -78,7 +78,7 @@ public class UserProfileStore implements PersistableStore<UserProfileStore> {
 
     @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
-        return  any -> {
+        return any -> {
             try {
                 return fromProto(any.unpack(bisq.social.protobuf.UserProfileStore.class));
             } catch (InvalidProtocolBufferException e) {

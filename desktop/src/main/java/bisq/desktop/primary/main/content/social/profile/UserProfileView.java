@@ -50,7 +50,7 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
                 userProfile,
                 showCreateUserProfileButton,
                 channelAdmin,
-               createUserProfile);
+                createUserProfile);
     }
 
     @Override

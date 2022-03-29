@@ -105,7 +105,7 @@ public class NotificationsSettings {
             super(new VBox(), model, controller);
 
             root.setSpacing(5);
-            
+
             BisqLabel headline = new BisqLabel(Res.get("social.channel.notifications"));
             headline.getStyleClass().add("channel-settings-headline");
             headline.setPadding(new Insets(0, 40, 0, 0));

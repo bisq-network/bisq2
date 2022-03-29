@@ -63,10 +63,10 @@ public class CompletableFutureUtilsTest {
 
         // Completes when C completes (C = first future that completes with true)
         CompletableFutureUtils.anyOfBooleanMatchingFilterOrAll(
-                    expectedValue,
-                    createCompletableFutureBool(1000, "A", false),
-                    createCompletableFutureBool(2000, "B", false),
-                    createCompletableFutureBool(3000, "C", true)
+                        expectedValue,
+                        createCompletableFutureBool(1000, "A", false),
+                        createCompletableFutureBool(2000, "B", false),
+                        createCompletableFutureBool(3000, "C", true)
                 )
                 .thenApply(res -> {
                     log.info("CompletableFutureUtils.anyOfBooleanFiltered(A, B, C) completed: {}", res);

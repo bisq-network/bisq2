@@ -36,7 +36,7 @@ public class Res {
         defaultBundle = ResourceBundle.getBundle("default", locale, new UTF8Control());
     }
 
-  
+
     public static String get(String key, Object... arguments) {
         return MessageFormat.format(get(key), arguments);
     }

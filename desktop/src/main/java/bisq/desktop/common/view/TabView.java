@@ -43,7 +43,7 @@ public abstract class TabView<R extends TabPane, M extends NavigationModel, C ex
             if (newValue != null) {
                 NavigationTargetTab tab = getTabFromTarget(model.getNavigationTarget());
                 tab.setContent(newValue.getRoot());
-                
+
                 // Remove collection temporarily to avoid that the tabChangeListener gets called from the selection call
                 root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
                 root.getSelectionModel().select(tab);

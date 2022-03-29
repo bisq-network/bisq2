@@ -33,7 +33,7 @@ import java.util.Set;
 /**
  * Data which is signed by an authorized key (e.g. Filter, Alert, DisputeAgent...)
  * TODO will require prob more work with protobuf support
- * It should be extended by an external 
+ * It should be extended by an external
  */
 @Slf4j
 @EqualsAndHashCode(callSuper = true)

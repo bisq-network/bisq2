@@ -70,7 +70,7 @@ public class WalletController extends TabController {
         if (!isWalletReady()) {
             return Optional.empty();
         }
-        
+
         switch (navigationTarget) {
             case WALLET_TRANSACTIONS -> {
                 return Optional.of(new WalletTransactionsController(applicationService));

@@ -16,6 +16,7 @@
  */
 
 package bisq.network.p2p.services.peergroup;
+
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;

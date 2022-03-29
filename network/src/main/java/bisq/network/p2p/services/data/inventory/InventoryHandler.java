@@ -87,7 +87,7 @@ class InventoryHandler implements Connection.Listener {
                 log.info("\n##########################################################################################\n" +
                         "## INVENTORY\n" +
                         "##########################################################################################\n" +
-                        map.entrySet().stream().map(e ->  e.getValue() + " " + e.getKey() + "(s)").collect(Collectors.joining("\n")) +
+                        map.entrySet().stream().map(e -> e.getValue() + " " + e.getKey() + "(s)").collect(Collectors.joining("\n")) +
                         "\n##########################################################################################");
                 removeListeners();
                 connection.getMetrics().addRtt(ts = System.currentTimeMillis() - ts);

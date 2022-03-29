@@ -17,5 +17,5 @@
 
 package bisq.protocol;
 
-public interface BuyerProtocol{
+public interface BuyerProtocol {
 }

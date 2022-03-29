@@ -41,11 +41,13 @@ public class BisqLabel extends Label {
     public void setFixWidth(int value) {
         setMinWidth(value);
         setMaxWidth(value);
-    }  public void setFixHeight(int value) {
+    }
+
+    public void setFixHeight(int value) {
         setMinHeight(value);
         setMaxHeight(value);
     }
-    
+
     private static class BisqLabelSkin extends LabelSkin {
 
         public BisqLabelSkin(Label label) {

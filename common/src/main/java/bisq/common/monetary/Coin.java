@@ -123,8 +123,8 @@ public class Coin extends Monetary {
     public static Coin fromProto(bisq.common.protobuf.Monetary baseProto) {
         return new Coin(baseProto.getId(),
                 baseProto.getValue(),
-                baseProto.getCode(), 
-                baseProto.getPrecision(), 
+                baseProto.getCode(),
+                baseProto.getPrecision(),
                 baseProto.getMinPrecision());
     }
 

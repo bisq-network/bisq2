@@ -1,15 +1,14 @@
 package bisq.i2p.streaming;
 
-import java.io.*;
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
-
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.I2PException;
+import net.i2p.client.I2PSession;
 import net.i2p.client.streaming.*;
 import net.i2p.util.I2PThread;
 
-import net.i2p.client.I2PSession;
+import java.io.*;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 
 // Requires the i2p router to be running locally
 @Slf4j
@@ -44,10 +43,10 @@ public class EchoServer {
         }
 
         public void run() {
-            while(true) {
+            while (true) {
                 try {
                     I2PSocket sock = this.socket.accept();
-                    if(sock != null) {
+                    if (sock != null) {
                         log.info("Received incoming connection");
 
                         //Receive from clients
@@ -55,7 +54,7 @@ public class EchoServer {
                         //Send to clients
                         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()));
                         String line = br.readLine();
-                        if(line != null) {
+                        if (line != null) {
                             System.out.println("Received from client: " + line);
                             bw.write(line + '\n');
                             log.info("Wrote to buffer");

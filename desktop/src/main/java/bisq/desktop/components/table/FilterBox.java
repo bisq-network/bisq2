@@ -58,7 +58,7 @@ public class FilterBox {
         }
 
         private void onSearch(String filterString) {
-                model.filteredList.setPredicate(item -> model.defaultPredicate.test(item) && item.match(filterString));
+            model.filteredList.setPredicate(item -> model.defaultPredicate.test(item) && item.match(filterString));
         }
     }
 

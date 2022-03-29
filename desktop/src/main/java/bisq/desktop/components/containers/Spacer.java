@@ -29,6 +29,7 @@ public class Spacer {
         HBox.setHgrow(region, Priority.ALWAYS);
         return region;
     }
+
     public static Region fillVBox() {
         Region region = new Region();
         VBox.setVgrow(region, Priority.ALWAYS);

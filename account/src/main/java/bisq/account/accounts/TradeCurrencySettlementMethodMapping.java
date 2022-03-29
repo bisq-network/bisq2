@@ -18,6 +18,6 @@
 package bisq.account.accounts;
 
 public class TradeCurrencySettlementMethodMapping {
-   
+
 
 }

@@ -35,6 +35,6 @@ public class PendingTradesModel implements Model {
     final SortedList<PendingTradeListItem> sortedItems = new SortedList<>(filteredItems);
 
     public PendingTradesModel() {
-    
+
     }
 }

@@ -13,12 +13,12 @@ public class Set2Configuration implements Configuration {
     private static final int NOSES_COUNT = 10;
 
     private final static byte[] BUCKET_SIZES = new byte[]{
-            FACE_COLORS_COUNT, 
-            BODY_COLORS_COUNT, 
-            FACES_COUNT, 
-            BODIES_COUNT, 
-            EYES_COUNT, 
-            MOUTHS_COUNT, 
+            FACE_COLORS_COUNT,
+            BODY_COLORS_COUNT,
+            FACES_COUNT,
+            BODIES_COUNT,
+            EYES_COUNT,
+            MOUTHS_COUNT,
             NOSES_COUNT
     };
 
@@ -35,9 +35,9 @@ public class Set2Configuration implements Configuration {
     @Override
     public String[] convertToFacetParts(byte[] bucketValues) {
         if (bucketValues.length != BUCKET_SIZES.length) throw new IllegalArgumentException();
-        
+
         String[] paths = new String[FACET_PATH_TEMPLATES.length];
-        
+
         for (int i = 0; i < FACET_PATH_TEMPLATES.length; i++) {
             int bucketValue = bucketValues[i] + 1;
             String facetPathTemplate = FACET_PATH_TEMPLATES[i];
@@ -46,7 +46,7 @@ public class Set2Configuration implements Configuration {
         }
         return paths;
     }
-    
+
 
     @Override
     public byte[] getBucketSizes() {

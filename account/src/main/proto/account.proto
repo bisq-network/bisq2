@@ -25,7 +25,7 @@ import "common.proto";
 // todo move over account domain from bisq1 and adjust it where needed
 
 message SettlementMethod {
- //todo
+  //todo
 }
 message Account {
   string id = 1;
@@ -35,7 +35,7 @@ message Account {
   SettlementMethod settlementMethod = 5;
   repeated common.TradeCurrency tradeCurrencies = 6;
   common.TradeCurrency selectedTradeCurrency = 7;
-  
+
   oneof message {
     SepaAccount sepaAccount = 20;
   }
@@ -136,7 +136,7 @@ message NationalBankAccountPayload {
 }
 
 message SepaAccount {
-  
+
 }
 message AccountStore {
   repeated Account accounts = 1;

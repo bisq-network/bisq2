@@ -17,7 +17,6 @@
 
 package bisq.social.chat;
 
-import bisq.social.protobuf.ChatMessage;
 import bisq.social.user.ChatUser;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;

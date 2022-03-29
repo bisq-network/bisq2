@@ -121,7 +121,7 @@ public class Persistence<T extends PersistableStore<T>> {
                 // close is needed on WinOS otherwise renameFile will fail
                 fileOutputStream.close();
                 fileOutputStream = null;
-                
+
                 // Atomic rename
                 FileUtils.renameFile(tempFile, storageFile);
                 //log.debug("Persisted {}", persistableStore);

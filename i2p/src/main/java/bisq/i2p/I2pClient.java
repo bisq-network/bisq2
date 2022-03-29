@@ -213,7 +213,7 @@ public class I2pClient {
                 "reseed_at_diva.exchange.crt")) {
             Files.copy(
                     getClass().getResourceAsStream("/embedded/certificates/reseed/" + s),
-                    Paths.get(embeddedRouterCertPath , s),
+                    Paths.get(embeddedRouterCertPath, s),
                     StandardCopyOption.REPLACE_EXISTING);
         }
 
@@ -246,11 +246,10 @@ public class I2pClient {
             if (router.isRunning()) {
                 log.info("Embedded router is running, trying to create socket manager ...");
 
-                try(FileInputStream privKeyInputStream = new FileInputStream(privKeyFile)) {
+                try (FileInputStream privKeyInputStream = new FileInputStream(privKeyFile)) {
                     manager = I2PSocketManagerFactory.createManager(privKeyInputStream);
                 }
-            }
-            else {
+            } else {
                 log.info("Embedded router not running yet, checking again in 5 seconds ...");
             }
         }
@@ -282,7 +281,7 @@ public class I2pClient {
                 // Create a I2PSocketManager based on the locally persisted private key
                 // This allows the server to preserve its identity and be reachable at the same destination
                 I2PSocketManager manager;
-                try(FileInputStream privKeyInputStream = new FileInputStream(privKeyFile)) {
+                try (FileInputStream privKeyInputStream = new FileInputStream(privKeyFile)) {
                     manager = I2PSocketManagerFactory.createManager(privKeyInputStream); // Blocking while router builds tunnels
                 }
 

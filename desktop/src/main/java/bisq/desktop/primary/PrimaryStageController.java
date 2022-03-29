@@ -43,7 +43,7 @@ public class PrimaryStageController implements Controller {
     private final Runnable onStageReadyHandler;
     private MainController mainController;
 
-    public PrimaryStageController(DefaultApplicationService applicationService, 
+    public PrimaryStageController(DefaultApplicationService applicationService,
                                   JavaFXApplication.Data applicationData,
                                   Runnable onStageReadyHandler) {
         this.applicationService = applicationService;
@@ -60,7 +60,7 @@ public class PrimaryStageController implements Controller {
                 applicationService.getApplicationConfig().baseDir(),
                 applicationService.getSettingsService().getDisplaySettings(),
                 this::shutdown);
-        
+
         // Here we start to attach the view hierarchy to the stage.
         view.showStage();
     }
