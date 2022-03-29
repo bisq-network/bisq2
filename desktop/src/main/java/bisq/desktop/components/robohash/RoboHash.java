@@ -46,8 +46,10 @@ public class RoboHash {
     }
 
     private static Image imageForHandle(Handle handle, Configuration configuration) {
+        long t0 = System.currentTimeMillis();
         byte[] bucketValues = handle.bucketValues();
         String[] paths = configuration.convertToFacetParts(bucketValues);
+        log.debug("Generated paths for RoboHash image in {} ms", System.currentTimeMillis() - t0); // typically <1ms
         return ImageUtil.composeImage(paths, configuration.width(), configuration.height());
     }
 }

@@ -23,13 +23,13 @@ public class Set2Configuration implements Configuration {
     };
 
     private final static String[] FACET_PATH_TEMPLATES = new String[]{
-            "#ROOT#/01FaceColors/final#ITEM#.png",
-            "#ROOT#/02BodyColors/final#ITEM#.png",
-            "#ROOT#/03Faces/final#ITEM#.png",
-            "#ROOT#/04Body/final#ITEM#.png",
-            "#ROOT#/Eyes/final#ITEM#.png",
-            "#ROOT#/Mouth/final#ITEM#.png",
-            "#ROOT#/Nose/final#ITEM#.png",
+            ROOT + "/01FaceColors/final#ITEM#.png",
+            ROOT + "/02BodyColors/final#ITEM#.png",
+            ROOT + "/03Faces/final#ITEM#.png",
+            ROOT + "/04Body/final#ITEM#.png",
+            ROOT + "/Eyes/final#ITEM#.png",
+            ROOT + "/Mouth/final#ITEM#.png",
+            ROOT + "/Nose/final#ITEM#.png",
     };
 
     @Override
@@ -42,7 +42,6 @@ public class Set2Configuration implements Configuration {
             int bucketValue = bucketValues[i] + 1;
             String facetPathTemplate = FACET_PATH_TEMPLATES[i];
             paths[i] = facetPathTemplate
-                    .replace("#ROOT#", ROOT)
                     .replaceAll("#ITEM#", String.valueOf(bucketValue));
         }
         return paths;
