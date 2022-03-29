@@ -90,9 +90,11 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     @Override
     public void onMessage(NetworkMessage networkMessage) {
         if (networkMessage instanceof PrivateChatMessage privateChatMessage) {
-            ChatUser chatUser = privateChatMessage.getChatUser();
-            PrivateChannel privateChannel = getOrCreatePrivateChannel(privateChatMessage.getChannelId(), chatUser);
-            addPrivateChatMessage(privateChatMessage, privateChannel);
+            if (!isMyMessage(privateChatMessage)) {
+                ChatUser peer = privateChatMessage.getAuthor();
+                PrivateChannel privateChannel = getOrCreatePrivateChannel(privateChatMessage.getChannelId(), peer);
+                addPrivateChatMessage(privateChatMessage, privateChannel);
+            }
         }
     }
 
@@ -117,7 +119,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
             }
         }
     }
-   
+
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof PublicChatMessage publicChatMessage) {
@@ -165,9 +167,10 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 .orElse(CompletableFuture.completedFuture(Optional.empty()));
     }
 
-    public PrivateChannel getOrCreatePrivateChannel(String id, ChatUser chatUser) {
-        PrivateChannel privateChannel = new PrivateChannel(id, chatUser,
-                PrivateChannel.findMyProfileFromChannelId(id, chatUser, userProfileService));
+    public PrivateChannel getOrCreatePrivateChannel(String id, ChatUser peer) {
+        PrivateChannel privateChannel = new PrivateChannel(id,
+                peer,
+                PrivateChannel.findMyProfileFromChannelId(id, peer, userProfileService));
 
         Optional<PrivateChannel> previousChannel;
         synchronized (persistableStore) {
@@ -217,8 +220,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                                                                              String editedText,
                                                                                              UserProfile userProfile) {
         NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.identity().getNodeIdAndKeyPair();
-        checkArgument(originalChatMessage.getChatUser().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
-                "NetworkID must match");
+        checkArgument(originalChatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
+                "NetworkId must match");
         return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
@@ -237,8 +240,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public void deletePublicChatMessage(PublicChatMessage chatMessage, UserProfile userProfile) {
         NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.identity().getNodeIdAndKeyPair();
-        checkArgument(chatMessage.getChatUser().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
-                "NetworkID must match");
+        checkArgument(chatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
+                "NetworkId must match");
         networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
@@ -308,6 +311,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public void undoIgnoreChatUser(ChatUser chatUser) {
         persistableStore.getIgnoredChatUserIds().remove(chatUser.getId());
         persist();
+    }
+
+    public boolean isMyMessage(ChatMessage chatMessage) {
+        String chatId = chatMessage.getAuthor().getId();
+        return userProfileService.getPersistableStore().getUserProfiles().stream()
+                .anyMatch(userprofile -> userprofile.chatUser().getId().equals(chatId));
     }
 
     private void addDummyChannels() {

@@ -323,10 +323,10 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             dateTooltip.setShowDelay(Duration.millis(100));
                             Tooltip.install(time, dateTooltip);
 
-                            userName.setText(item.getSenderUserName());
-                            userName.setOnMouseClicked(e -> controller.onUserNameClicked(item.getSenderUserName()));
+                            userName.setText(item.getAuthorUserName());
+                            userName.setOnMouseClicked(e -> controller.onUserNameClicked(item.getAuthorUserName()));
 
-                            chatUserIcon.setChatUser(item.getChatUser(), model.getUserProfileService());
+                            chatUserIcon.setChatUser(item.getAuthor(), model.getUserProfileService());
                             chatUserIcon.setCursor(Cursor.HAND);
                             chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
                             hBox.setOnMouseEntered(e -> {
@@ -345,7 +345,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             emojiButton2.setOnAction(e -> controller.onAddEmoji((String) emojiButton2.getUserData()));
                             openEmojiSelectorButton.setOnAction(e -> controller.onOpenEmojiSelector(chatMessage));
                             replyButton.setOnAction(e -> controller.onReply(chatMessage));
-                            pmButton.setOnAction(e -> controller.addPrivateChannel(chatMessage));
+                            pmButton.setOnAction(e -> controller.onOpenPrivateChannel(chatMessage));
                             editButton.setOnAction(e -> onEditMessage(item));
                             deleteButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
                             moreOptionsButton.setOnAction(e -> controller.onOpenMoreOptions(chatMessage));

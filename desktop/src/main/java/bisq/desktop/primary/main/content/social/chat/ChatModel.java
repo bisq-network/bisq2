@@ -80,9 +80,7 @@ public class ChatModel implements Model {
         log.error("Send message resulted in an error: channelId={}, error={}", channelId, throwable.toString());  //todo
     }
 
-     boolean isMyMessage(ChatMessage chatMessage) {
-         String chatId = chatMessage.getChatUser().getId();
-         return userProfileService.getPersistableStore().getUserProfiles().stream()
-                .anyMatch(userprofile -> userprofile.chatUser().getId().equals(chatId));
+    boolean isMyMessage(ChatMessage chatMessage) {
+        return chatService.isMyMessage(chatMessage);
     }
 }

@@ -23,16 +23,17 @@ import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public abstract class ChatMessage {
     protected final String channelId;
     protected final String text;
-    protected ChatUser chatUser;
+    protected ChatUser author;
     protected final Optional<QuotedMessage> quotedMessage;
     protected final long date;
     protected final ChannelType channelType;
@@ -40,7 +41,7 @@ public abstract class ChatMessage {
     protected final MetaData metaData;
 
     protected ChatMessage(String channelId,
-                          ChatUser chatUser,
+                          ChatUser author,
                           String text,
                           Optional<QuotedMessage> quotedMessage,
                           long date,
@@ -48,7 +49,7 @@ public abstract class ChatMessage {
                           boolean wasEdited,
                           MetaData metaData) {
         this.channelId = channelId;
-        this.chatUser = chatUser;
+        this.author = author;
         this.text = text;
         this.quotedMessage = quotedMessage;
         this.date = date;
@@ -60,7 +61,7 @@ public abstract class ChatMessage {
     bisq.social.protobuf.ChatMessage.Builder getChatMessageBuilder() {
         bisq.social.protobuf.ChatMessage.Builder builder = bisq.social.protobuf.ChatMessage.newBuilder()
                 .setChannelId(channelId)
-                .setChatUser(chatUser.toProto())
+                .setAuthor(author.toProto())
                 .setText(text)
                 .setDate(date)
                 .setChannelType(channelType.toProto())

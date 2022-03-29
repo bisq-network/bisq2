@@ -135,7 +135,7 @@ public class ChatController implements Controller {
                 if (channel.getNotificationSetting().get() == NotificationSetting.ALL) {
                     String messages = Joiner.on("\n").join(
                             c.getAddedSubList().stream()
-                                    .map(item -> item.getSenderUserName() + ": " + item.getChatMessage().getText())
+                                    .map(item -> item.getAuthorUserName() + ": " + item.getChatMessage().getText())
                                     .collect(Collectors.toSet()));
                     if (!messages.isEmpty()) {
                         new Notification().headLine(messages).autoClose().hideCloseButton().show();
@@ -149,9 +149,9 @@ public class ChatController implements Controller {
                     String messages = Joiner.on("\n").join(
                             c.getAddedSubList().stream()
                                     .filter(item -> myUserNames.stream().anyMatch(myUserName -> item.getMessage().contains("@" + myUserName)))
-                                    .filter(item -> !myUserNames.contains(item.getSenderUserName()))
+                                    .filter(item -> !myUserNames.contains(item.getAuthorUserName()))
                                     .map(item -> Res.get("social.notification.getMentioned",
-                                            item.getSenderUserName(),
+                                            item.getAuthorUserName(),
                                             item.getChatMessage().getText()))
                                     .collect(Collectors.toSet()));
                     if (!messages.isEmpty()) {
@@ -226,7 +226,7 @@ public class ChatController implements Controller {
         model.getChannelInfoVisible().set(false);
         model.getNotificationsVisible().set(false);
 
-        ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(), chatMessage.getChatUser());
+        ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(), chatMessage.getAuthor());
         chatUserDetails.setOnSendPrivateMessage(chatUser -> {
             // todo
             log.info("onSendPrivateMessage {}", chatUser);
@@ -276,7 +276,7 @@ public class ChatController implements Controller {
     }
 
     public void onReply(ChatMessage chatMessage) {
-        if (!model.isMyMessage(chatMessage)) {
+        if (!chatService.isMyMessage(chatMessage)) {
             quotedMessageBlock.reply(chatMessage);
         }
     }
@@ -286,19 +286,19 @@ public class ChatController implements Controller {
      *
      * @param chatMessage
      */
-    public void addPrivateChannel(ChatMessage chatMessage) {
-        if (model.isMyMessage(chatMessage)) {
+    public void onOpenPrivateChannel(ChatMessage chatMessage) {
+        if (chatService.isMyMessage(chatMessage)) {
             return; // should never happen as the button for opening the channel should not appear
             // but kept here for double safety
         }
-        ChatUser peerUser = chatMessage.getChatUser();
-        String channelId = PrivateChannel.createChannelId(peerUser, userProfileService.getPersistableStore().getSelectedUserProfile().get());
-        PrivateChannel channel = chatService.getOrCreatePrivateChannel(channelId, peerUser);
+        ChatUser peer = chatMessage.getAuthor();
+        String channelId = PrivateChannel.createChannelId(peer, userProfileService.getPersistableStore().getSelectedUserProfile().get());
+        PrivateChannel channel = chatService.getOrCreatePrivateChannel(channelId, peer);
         chatService.selectChannel(channel);
     }
 
     public void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
-        if (!model.isMyMessage(chatMessage)) {
+        if (!chatService.isMyMessage(chatMessage)) {
             return;
         }
         if (chatMessage instanceof PublicChatMessage publicChatMessage) {
@@ -313,7 +313,7 @@ public class ChatController implements Controller {
     }
 
     public void onDeleteMessage(ChatMessage chatMessage) {
-        if (model.isMyMessage(chatMessage)) {
+        if (chatService.isMyMessage(chatMessage)) {
             if (chatMessage instanceof PublicChatMessage publicChatMessage) {
                 UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
                 chatService.deletePublicChatMessage(publicChatMessage, userProfile);

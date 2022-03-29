@@ -141,8 +141,15 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         processConfidentialMessage(confidentialMessage)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
-                        KeyPair keyPair = keyPairService.getOrCreateKeyPair(confidentialMessage.getKeyId());
-                        dataService.ifPresent(service -> service.removeMailboxData(mailboxData, keyPair));
+                        if (result) {
+                            dataService.ifPresent(service -> {
+                                // If we are successful the msg must be for us, so we have the key
+                                KeyPair myKeyPair = keyPairService.findKeyPair(confidentialMessage.getReceiverKeyId()).orElseThrow();
+                                service.removeMailboxData(mailboxData, myKeyPair);
+                            });
+                        } else {
+                            log.debug("We are not the receiver of that mailbox message");
+                        }
                     } else {
                         throwable.printStackTrace();
                     }
@@ -175,11 +182,11 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
     }
 
-    public Result send(NetworkMessage networkMessage,
-                       Connection connection,
-                       PubKey receiverPubKey,
-                       KeyPair senderKeyPair,
-                       String senderNodeId) {
+    private Result send(NetworkMessage networkMessage,
+                        Connection connection,
+                        PubKey receiverPubKey,
+                        KeyPair senderKeyPair,
+                        String senderNodeId) {
         ConfidentialMessage confidentialMessage = getConfidentialMessage(networkMessage, receiverPubKey, senderKeyPair);
         try {
             nodesById.maybeInitializeServer(senderNodeId, NetworkUtils.findFreeSystemPort());
@@ -238,7 +245,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     }
 
     private CompletableFuture<Boolean> processConfidentialMessage(ConfidentialMessage confidentialMessage) {
-        return keyPairService.findKeyPair(confidentialMessage.getKeyId())
+        return keyPairService.findKeyPair(confidentialMessage.getReceiverKeyId())
                 .map(receiversKeyPair -> supplyAsync(() -> {
                     try {
                         ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
@@ -252,6 +259,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         throw new RuntimeException(e);
                     }
                 }, ExecutorFactory.WORKER_POOL))
-                .orElse(CompletableFuture.completedFuture(true)); // Not our message
+                .orElse(CompletableFuture.completedFuture(false)); // We don't have a key for that receiverKeyId
     }
 }

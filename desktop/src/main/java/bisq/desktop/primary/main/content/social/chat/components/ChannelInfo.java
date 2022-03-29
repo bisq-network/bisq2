@@ -110,7 +110,7 @@ public class ChannelInfo {
             channelName = channel.getChannelName();
             Set<String> ignoredChatUserIds = new HashSet<>(chatService.getPersistableStore().getIgnoredChatUserIds());
             members.setAll(channel.getChatMessages().stream()
-                    .map(ChatMessage::getChatUser)
+                    .map(ChatMessage::getAuthor)
                     .distinct()
                     .map((chatUser -> new ChatUserOverview(chatUser, ignoredChatUserIds.contains(chatUser.getId()))))
                     .sorted()

@@ -50,14 +50,14 @@ public class ChatUser implements Proto {
     private final Set<Entitlement> entitlements;
     private transient final DerivedData derivedData;
 
+    public ChatUser(NetworkId networkId) {
+        this(networkId, new HashSet<>());
+    }
+
     public ChatUser(NetworkId networkId, Set<Entitlement> entitlements) {
         this.networkId = networkId;
         this.entitlements = entitlements;
         derivedData = getDerivedData(networkId.getPubKey().publicKey().getEncoded());
-    }
-
-    public ChatUser(NetworkId networkId) {
-        this(networkId, new HashSet<>());
     }
 
     public bisq.social.protobuf.ChatUser toProto() {
