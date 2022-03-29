@@ -64,13 +64,13 @@ public class PeerGroup {
     private final Node node;
     private final Config config;
     @Getter
-    private final List<Address> seedNodeAddresses;
+    private final Set<Address> seedNodeAddresses;
     private final BanList banList;
     private final PeerGroupStore peerGroupStore;
     @Getter
     private final Set<Peer> reportedPeers = new CopyOnWriteArraySet<>();
 
-    public PeerGroup(Node node, Config config, List<Address> seedNodeAddresses, BanList banList, PeerGroupStore peerGroupStore) {
+    public PeerGroup(Node node, Config config, Set<Address> seedNodeAddresses, BanList banList, PeerGroupStore peerGroupStore) {
         this.node = node;
         this.config = config;
         this.seedNodeAddresses = seedNodeAddresses;

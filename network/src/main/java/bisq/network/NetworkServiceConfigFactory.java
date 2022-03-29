@@ -57,7 +57,7 @@ public class NetworkServiceConfigFactory {
 
         Config seedConfig = typesafeConfig.getConfig("seedAddressByTransportType");
         // Only read seed addresses for explicitly supported address types
-        Map<Transport.Type, List<Address>> seedAddressesByTransport = supportedTransportTypes.stream()
+        Map<Transport.Type, Set<Address>> seedAddressesByTransport = supportedTransportTypes.stream()
                 .collect(toMap(
                         supportedTransportType -> supportedTransportType,
                         supportedTransportType -> getSeedAddresses(supportedTransportType, seedConfig)));
@@ -105,29 +105,29 @@ public class NetworkServiceConfigFactory {
                 Optional.empty());
     }
 
-    public static List<Address> getSeedAddresses(Transport.Type transportType, Config config) {
+    public static Set<Address> getSeedAddresses(Transport.Type transportType, Config config) {
         switch (transportType) {
             case TOR -> {
                 return ConfigUtil.getStringList(config, "tor").stream()
                         .map(Address::new)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toSet());
             }
             case I2P -> {
                 return ConfigUtil.getStringList(config, "i2p").stream()
                         .map(Address::new)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toSet());
             }
             case CLEAR -> {
                 return ConfigUtil.getStringList(config, "clear").stream()
                         .map(Address::new)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toSet());
             }
             default -> {
                /* List<Address> seedAddresses = new ArrayList<>();
                 for (int i = 0; i < 3; i++) {
                     seedAddresses.add(Address.localHost(8000 + i));
                 }*/
-                return new ArrayList<>();
+                return new HashSet<>();
             }
         }
     }

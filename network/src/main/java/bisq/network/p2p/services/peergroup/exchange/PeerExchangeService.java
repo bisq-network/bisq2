@@ -78,7 +78,7 @@ public class PeerExchangeService implements Node.Listener {
         return doPeerExchange(peerExchangeStrategy.getAddressesForFurtherPeerExchange());
     }
 
-    private CompletableFuture<Void> doPeerExchange(List<Address> candidates) {
+    private CompletableFuture<Void> doPeerExchange(Set<Address> candidates) {
         if (candidates.isEmpty() || isStopped) {
             return CompletableFuture.completedFuture(null);
         }

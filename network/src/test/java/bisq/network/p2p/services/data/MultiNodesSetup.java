@@ -66,7 +66,7 @@ public class MultiNodesSetup {
     @Getter
     private final Map<Address, NetworkService> networkServicesByAddress = new ConcurrentHashMap<>();
     private final Map<Address, String> logHistoryByAddress = new ConcurrentHashMap<>();
-    private final Map<Transport.Type, List<Address>> seedAddressesByTransport;
+    private final Map<Transport.Type, Set<Address>> seedAddressesByTransport;
 
 
     public MultiNodesSetup(NetworkService.Config networkServiceConfig, Set<Transport.Type> supportedTransportTypes,
@@ -164,9 +164,9 @@ public class MultiNodesSetup {
                                                         int numSeeds,
                                                         Set<Transport.Type> supportedTransportTypes) {
 
-        Map<Transport.Type, List<Address>> seeds = networkServiceConfig.seedAddressesByTransport().entrySet().stream()
+        Map<Transport.Type, Set<Address>> seeds = networkServiceConfig.seedAddressesByTransport().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> e.getValue().stream().limit(numSeeds).collect(Collectors.toList())));
+                        e -> e.getValue().stream().limit(numSeeds).collect(Collectors.toSet())));
         return new NetworkService.Config(networkServiceConfig.baseDir(),
                 networkServiceConfig.transportConfig(),
                 supportedTransportTypes,
