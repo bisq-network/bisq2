@@ -1,0 +1,16 @@
+# Version Catalogs documentation: https://docs.gradle.org/7.4.1/userguide/platforms.html
+
+[versions]
+i2p = '1.7.0'
+protobuf = '0.8.18'
+
+[libraries]
+i2p-streaming = { module = 'net.i2p.client:streaming', version.ref = 'i2p' }
+i2p-core = { module = 'net.i2p:i2p', version.ref = 'i2p' }
+i2p-router = { module = 'net.i2p:router', version.ref = 'i2p' }
+
+[bundles]
+i2p = ['i2p-core', 'i2p-router', 'i2p-streaming']
+
+[plugins]
+protobuf = { id = 'com.google.protobuf', version.ref = 'protobuf' }
