@@ -66,17 +66,16 @@ public class PeerGroup {
     @Getter
     private final List<Address> seedNodeAddresses;
     private final BanList banList;
+    private final PeerGroupStore peerGroupStore;
     @Getter
     private final Set<Peer> reportedPeers = new CopyOnWriteArraySet<>();
-    //todo persist
-    @Getter
-    private final Set<Peer> persistedPeers = new CopyOnWriteArraySet<>();
 
-    public PeerGroup(Node node, Config config, List<Address> seedNodeAddresses, BanList banList) {
+    public PeerGroup(Node node, Config config, List<Address> seedNodeAddresses, BanList banList, PeerGroupStore peerGroupStore) {
         this.node = node;
         this.config = config;
         this.seedNodeAddresses = seedNodeAddresses;
         this.banList = banList;
+        this.peerGroupStore = peerGroupStore;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,10 +88,6 @@ public class PeerGroup {
 
     public void removeReportedPeers(Collection<Peer> peers) {
         reportedPeers.removeAll(peers);
-    }
-
-    public void removePersistedPeers(Collection<Peer> peers) {
-        persistedPeers.removeAll(peers);
     }
 
 

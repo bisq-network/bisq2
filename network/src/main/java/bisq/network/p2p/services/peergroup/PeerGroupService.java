@@ -27,6 +27,8 @@ import bisq.network.p2p.services.peergroup.exchange.PeerExchangeService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationService;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +44,7 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.*;
 
 @Slf4j
-public class PeerGroupService {
+public class PeerGroupService implements PersistenceClient<PeerGroupStore>, PersistedPeersHandler {
     public enum State {
         NEW,
         STARTING,
@@ -64,9 +66,14 @@ public class PeerGroupService {
     private final KeepAliveService keepAliveService;
     private final AddressValidationService addressValidationService;
     private Optional<Scheduler> scheduler = Optional.empty();
+
+    @Getter
+    private final PeerGroupStore persistableStore = new PeerGroupStore();
     @Getter
     public AtomicReference<PeerGroupService.State> state = new AtomicReference<>(PeerGroupService.State.NEW);
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    @Getter
+    private final Persistence<PeerGroupStore> persistence;
 
     public static record Config(PeerGroup.Config peerGroupConfig,
                                 PeerExchangeStrategy.Config peerExchangeConfig,
@@ -101,10 +108,14 @@ public class PeerGroupService {
         this.node = node;
         this.banList = banList;
         this.config = config;
-        peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, banList);
-        peerExchangeService = new PeerExchangeService(node, new PeerExchangeStrategy(peerGroup, config.peerExchangeConfig()));
+        peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, banList, persistableStore);
+        PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup,
+                config.peerExchangeConfig(),
+                persistableStore);
+        peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy, this);
         keepAliveService = new KeepAliveService(node, peerGroup, config.keepAliveServiceConfig());
         addressValidationService = new AddressValidationService(node, banList);
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     public void start() {
@@ -118,6 +129,15 @@ public class PeerGroupService {
                 .name("PeerGroupService.scheduler-" + node));
         keepAliveService.initialize();
         setState(State.RUNNING);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // PersistedPeersHandler
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addPersistedPeers(Set<Peer> peers) {
+        persistableStore.getPersistedPeers().addAll(peers);
+        persist();
     }
 
     private void runBlockingTasks() {
@@ -245,7 +265,6 @@ public class PeerGroupService {
 
     }
 
-
     private void maybeCloseExceedingConnections() {
         log.debug("Node {} called maybeCloseExceedingConnections", node);
         Comparator<Connection> comparator = peerGroup.getConnectionAgeComparator().reversed();
@@ -311,13 +330,15 @@ public class PeerGroupService {
     }
 
     private void maybeRemovePersistedPeers() {
-        List<Peer> persistedPeers = new ArrayList<>(peerGroup.getPersistedPeers());
+        List<Peer> persistedPeers = new ArrayList<>(persistableStore.getPersistedPeers());
         int exceeding = persistedPeers.size() - config.maxPersisted();
         if (exceeding > 0) {
             persistedPeers.sort(Comparator.comparing(Peer::getDate));
             List<Peer> candidates = persistedPeers.subList(0, Math.min(exceeding, persistedPeers.size()));
             log.info("Remove {} persisted peers: {}", candidates.size(), candidates);
-            peerGroup.removePersistedPeers(candidates);
+
+            persistableStore.getPersistedPeers().removeAll(candidates);
+            persist();
         }
     }
 
@@ -337,6 +358,11 @@ public class PeerGroupService {
         runAsync(() -> listeners.forEach(e -> e.onStateChanged(newState)), NetworkService.DISPATCHER);
     }
 
+
+    public PeerGroupStore getPeerGroupStore() {
+        return persistableStore;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -354,4 +380,5 @@ public class PeerGroupService {
     private int getMissingOutboundConnections() {
         return peerGroup.getMinOutboundConnections() - (int) peerGroup.getOutboundConnections().count();
     }
+
 }

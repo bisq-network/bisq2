@@ -263,7 +263,7 @@ message NetworkEnvelope {
 message DataStore {
   message MapEntry {
     common.ByteArray key = 1;
-    DataRequest value = 2; 
+    DataRequest value = 2;
   }
   repeated MapEntry mapEntries = 1;
 }
@@ -271,3 +271,8 @@ message DataStore {
 message NetworkIdStore {
   map<string, NetworkId> networkIdByNodeId = 1;
 }
+
+message PeerGroupStore {
+  repeated Peer persistedPeers = 1;
+}
+    
