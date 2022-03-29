@@ -117,7 +117,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
             }
         }
     }
-
+   
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof PublicChatMessage publicChatMessage) {

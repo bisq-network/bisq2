@@ -105,8 +105,11 @@ public class DefaultApplicationService extends ServiceProvider {
         Res.initialize(locale);
 
         persistenceService = new PersistenceService(applicationConfig.baseDir());
+        // Register resolvers for distributedData 
         DistributedDataResolver.addResolver("social.ChatMessage", PublicChatMessage.getResolver());
         DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
+
+        // Register resolvers for networkMessages 
         NetworkMessageResolver.addResolver("social.ChatMessage", PrivateChatMessage.getResolver());
 
         securityService = new SecurityService(persistenceService);

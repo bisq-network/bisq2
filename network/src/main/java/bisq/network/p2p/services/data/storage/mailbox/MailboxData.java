@@ -43,7 +43,6 @@ public class MailboxData implements StorageData {
         this.metaData = metaData;
     }
 
-
     public bisq.network.protobuf.MailboxData toProto() {
         return bisq.network.protobuf.MailboxData.newBuilder()
                 .setConfidentialMessage(confidentialMessage.toProto().getConfidentialMessage())
