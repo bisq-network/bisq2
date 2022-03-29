@@ -36,7 +36,7 @@ public class ProtoResolverMap<T extends Proto> {
     public T fromAny(Any anyProto) {
         String protoTypeName = ProtobufUtils.getProtoType(anyProto);
         return Optional.ofNullable(map.get(protoTypeName))
-                .map(resolver -> resolver.resolve(anyProto))
+                .map(resolver -> resolver.fromAny(anyProto))
                 .orElseThrow(() -> new UnresolvableProtobufMessageException(anyProto));
     }
 }
