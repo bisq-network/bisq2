@@ -20,6 +20,7 @@ package bisq.network.p2p.services.peergroup.exchange;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.services.peergroup.Peer;
 import bisq.network.p2p.services.peergroup.PeerGroup;
+import bisq.network.p2p.services.peergroup.PeerGroupStore;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,11 +63,13 @@ public class PeerExchangeStrategy {
 
     private final PeerGroup peerGroup;
     private final Config config;
+    private final PeerGroupStore peerGroupStore;
     private final Set<Address> usedAddresses = new CopyOnWriteArraySet<>();
 
-    public PeerExchangeStrategy(PeerGroup peerGroup, Config config) {
+    public PeerExchangeStrategy(PeerGroup peerGroup, Config config, PeerGroupStore peerGroupStore) {
         this.peerGroup = peerGroup;
         this.config = config;
+        this.peerGroupStore = peerGroupStore;
     }
 
     List<Address> getAddressesForInitialPeerExchange() {
@@ -203,7 +206,7 @@ public class PeerExchangeStrategy {
     }
 
     private Set<Address> getPersisted() {
-        return peerGroup.getPersistedPeers().stream()
+        return peerGroupStore.getPersistedPeers().stream()
                 .filter(peerGroup::isNotInQuarantine)
                 .sorted(Comparator.comparing(Peer::getDate))
                 .map(Peer::getAddress)

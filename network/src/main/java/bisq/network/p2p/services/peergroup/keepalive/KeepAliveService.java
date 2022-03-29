@@ -115,5 +115,4 @@ public class KeepAliveService implements Node.Listener {
     private boolean isRequired(Connection connection) {
         return System.currentTimeMillis() - connection.getMetrics().getLastUpdate().get() > config.maxIdleTime();
     }
-
 }

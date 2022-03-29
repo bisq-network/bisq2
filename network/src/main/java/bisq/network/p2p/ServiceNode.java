@@ -133,7 +133,9 @@ public class ServiceNode {
             }
 
             if (services.contains(Service.MONITOR)) {
-                monitorService = Optional.of(new MonitorService(defaultNode, peerGroupService));
+                monitorService = Optional.of(new MonitorService(defaultNode,
+                        peerGroupService.getPeerGroup(), 
+                        peerGroupService.getPeerGroupStore()));
             }
         }
 
