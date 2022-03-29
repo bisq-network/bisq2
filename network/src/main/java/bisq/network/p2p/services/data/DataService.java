@@ -41,7 +41,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,6 +75,12 @@ public class DataService implements DataNetworkService.Listener {
         }
 
         default void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+        }
+
+        default void onMailboxDataAdded(MailboxData mailboxData) {
+        }
+
+        default void onMailboxDataRemoved(MailboxData mailboxData) {
         }
     }
 
@@ -180,15 +189,16 @@ public class DataService implements DataNetworkService.Listener {
                 });
     }
 
-    public CompletableFuture<BroadCastDataResult> addMailboxPayload(MailboxData mailboxPayload,
-                                                                    KeyPair senderKeyPair,
-                                                                    PublicKey receiverPublicKey) {
-        return storageService.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
+    public CompletableFuture<BroadCastDataResult> addMailboxData(MailboxData mailboxData,
+                                                                 KeyPair senderKeyPair,
+                                                                 PublicKey receiverPublicKey) {
+        return storageService.getOrCreateMailboxDataStore(mailboxData.getMetaData())
                 .thenApply(store -> {
                     try {
-                        AddMailboxRequest request = AddMailboxRequest.from(mailboxPayload, senderKeyPair, receiverPublicKey);
+                        AddMailboxRequest request = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverPublicKey);
                         Result result = store.add(request);
                         if (result.isSuccess()) {
+                            listeners.forEach(listener -> listener.onMailboxDataAdded(mailboxData));
                             return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
                                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
                         } else {
@@ -207,7 +217,8 @@ public class DataService implements DataNetworkService.Listener {
     // Remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(AuthenticatedData authenticatedData, KeyPair keyPair) {
+    public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(AuthenticatedData authenticatedData,
+                                                                          KeyPair keyPair) {
         return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getMetaData())
                 .thenApply(store -> {
                     try {
@@ -227,19 +238,18 @@ public class DataService implements DataNetworkService.Listener {
                 });
     }
 
-    public CompletableFuture<List<CompletableFuture<BroadcastResult>>> removeMailboxPayload(MailboxData mailboxPayload, KeyPair receiverKeyPair) {
-        return storageService.getOrCreateMailboxDataStore(mailboxPayload.getMetaData())
+    public CompletableFuture<BroadCastDataResult> removeMailboxData(MailboxData mailboxData, KeyPair keyPair) {
+        return storageService.getOrCreateMailboxDataStore(mailboxData.getMetaData())
                 .thenApply(store -> {
                     try {
-                        RemoveMailboxRequest request = RemoveMailboxRequest.from(mailboxPayload, receiverKeyPair);
+                        RemoveMailboxRequest request = RemoveMailboxRequest.from(mailboxData, keyPair);
                         Result result = store.remove(request);
                         if (result.isSuccess()) {
-                            listeners.forEach(listener -> listener.onAuthenticatedDataRemoved(mailboxPayload));
-                            return dataNetworkServiceByTransportType.values().stream()
-                                    .map(service -> service.broadcast(request))
-                                    .collect(Collectors.toList());
+                            listeners.forEach(listener -> listener.onMailboxDataRemoved(mailboxData));
+                            return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
+                                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
                         } else {
-                            return new ArrayList<>();
+                            return new BroadCastDataResult();
                         }
                     } catch (GeneralSecurityException e) {
                         e.printStackTrace();

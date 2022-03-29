@@ -17,7 +17,44 @@
 
 package bisq.network.p2p.services.data;
 
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
+import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
+import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 
 public interface DataRequest extends BroadcastMessage {
+    default bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder() {
+        return bisq.network.protobuf.DataRequest.newBuilder();
+    }
+
+    static DataRequest fromProto(bisq.network.protobuf.DataRequest proto) {
+        switch (proto.getMessageCase()) {
+            case ADDAUTHENTICATEDDATAREQUEST -> {
+                return AddAuthenticatedDataRequest.fromProto(proto.getAddAuthenticatedDataRequest());
+            }
+            case REMOVEAUTHENTICATEDDATAREQUEST -> {
+                return RemoveAuthenticatedDataRequest.fromProto(proto.getRemoveAuthenticatedDataRequest());
+            }
+            case REFRESHAUTHENTICATEDDATAREQUEST -> {
+                return RefreshAuthenticatedDataRequest.fromProto(proto.getRefreshAuthenticatedDataRequest());
+            }
+            case ADDMAILBOXREQUEST -> {
+                return AddMailboxRequest.fromProto(proto.getAddMailboxRequest());
+            }
+            case REMOVEMAILBOXREQUEST -> {
+                return RemoveMailboxRequest.fromProto(proto.getRemoveMailboxRequest());
+            }
+            case ADDAPPENDONLYDATAREQUEST -> {
+                return AddAppendOnlyDataRequest.fromProto(proto.getAddAppendOnlyDataRequest());
+            }
+            case MESSAGE_NOT_SET -> {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
+    }
 }

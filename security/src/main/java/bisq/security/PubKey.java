@@ -17,9 +17,26 @@
 
 package bisq.security;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
+import com.google.protobuf.ByteString;
 
+import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
 public record PubKey(PublicKey publicKey, String keyId) implements Proto {
+    public bisq.security.protobuf.PubKey toProto() {
+        return bisq.security.protobuf.PubKey.newBuilder()
+                .setPublicKey(ByteString.copyFrom(publicKey.getEncoded()))
+                .setKeyId(keyId)
+                .build();
+    }
+
+    public static PubKey fromProto(bisq.security.protobuf.PubKey proto) {
+        try {
+            PublicKey publicKey = KeyGeneration.generatePublic(proto.getPublicKey().toByteArray());
+            return new PubKey(publicKey, proto.getKeyId());
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

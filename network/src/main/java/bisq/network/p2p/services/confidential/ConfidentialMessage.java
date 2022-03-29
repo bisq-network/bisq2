@@ -38,6 +38,20 @@ public class ConfidentialMessage implements NetworkMessage, DistributedData {
     }
 
     @Override
+    public bisq.network.protobuf.NetworkMessage toProto() {
+        return getNetworkMessageBuilder().setConfidentialMessage(
+                bisq.network.protobuf.ConfidentialMessage.newBuilder()
+                        .setConfidentialData(confidentialData.toProto())
+                        .setKeyId(keyId)
+        ).build();
+    }
+
+    public static ConfidentialMessage fromProto(bisq.network.protobuf.ConfidentialMessage proto) {
+        return new ConfidentialMessage(ConfidentialData.fromProto(proto.getConfidentialData()),
+                proto.getKeyId());
+    }
+
+    @Override
     public MetaData getMetaData() {
         throw new RuntimeException("Metadata of ConfidentialMessage is not provided as content is encrypted and " +
                 "therefore the content type is unknown. " +

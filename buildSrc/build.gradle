@@ -1,6 +1,6 @@
 plugins {
     id "org.gradle.kotlin.kotlin-dsl" version "2.1.7"
-    id 'com.google.protobuf' version '0.8.16'
+    id 'com.google.protobuf' version '0.8.18'
     id 'signing'
     id 'maven-publish'
 }

@@ -19,7 +19,7 @@ package bisq.account.accounts;
 
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+// todo move over account domain from bisq1 and adjust it where needed
 
 @Getter
 @Slf4j
@@ -62,6 +63,21 @@ public abstract class Account<T extends SettlementMethod> implements Proto {
         this.settlementMethod = settlementMethod;
         this.tradeCurrencies = tradeCurrencies;
     }
+
+
+    //todo
+    public static Account<?> fromProto(bisq.account.protobuf.Account account) {
+        switch (account.getMessageCase()) {
+            case SEPAACCOUNT -> {
+                return SepaAccount.fromProto(account.getSepaAccount());
+            }
+            case MESSAGE_NOT_SET -> {
+            }
+        }
+        return null;
+    }
+
+    abstract public bisq.account.protobuf.Account toProto();
 
     public Set<String> getTradeCurrencyCodes() {
         return tradeCurrencies.stream().map(TradeCurrency::getCode).collect(Collectors.toSet());

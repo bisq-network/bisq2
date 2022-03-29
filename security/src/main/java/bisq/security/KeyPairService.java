@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+
 @Slf4j
 public class KeyPairService implements PersistenceClient<KeyPairStore> {
     public static final String DEFAULT = "default";
@@ -38,13 +39,11 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
     @Getter
     private final Persistence<KeyPairStore> persistence;
 
-
     public KeyPairService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
         return getOrCreateKeyPairAsync(DEFAULT).thenApply(r -> true);
     }
 

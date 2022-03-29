@@ -18,9 +18,23 @@
 package bisq.network.p2p.services.data.filter;
 
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
-import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-public record DataFilter(HashSet<FilterEntry> filterEntries) implements Proto {
+public record DataFilter(Set<FilterEntry> filterEntries) implements Proto {
+    public bisq.network.protobuf.DataFilter toProto() {
+        return bisq.network.protobuf.DataFilter.newBuilder()
+                .addAllFilterEntries(filterEntries.stream()
+                        .map(FilterEntry::toProto)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    public static DataFilter fromProto(bisq.network.protobuf.DataFilter proto) {
+        return new DataFilter(proto.getFilterEntriesList().stream()
+                .map(FilterEntry::fromProto)
+                .collect(Collectors.toSet()));
+    }
 }

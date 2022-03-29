@@ -18,7 +18,6 @@
 package bisq.social.chat;
 
 import bisq.common.util.StringUtils;
-import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
@@ -118,7 +117,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
             }
         }
     }
-
+   
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof PublicChatMessage publicChatMessage) {
@@ -168,7 +167,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public PrivateChannel getOrCreatePrivateChannel(String id, ChatUser chatUser) {
         PrivateChannel privateChannel = new PrivateChannel(id, chatUser,
-                PrivateChannel.findSenderProfileFromChannelId(id, chatUser, userProfileService));
+                PrivateChannel.findMyProfileFromChannelId(id, chatUser, userProfileService));
 
         Optional<PrivateChannel> previousChannel;
         synchronized (persistableStore) {
@@ -223,7 +222,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
-                        ChatMessage newChatMessage = new PublicChatMessage(originalChatMessage.getChannelId(),
+                        PublicChatMessage newChatMessage = new PublicChatMessage(originalChatMessage.getChannelId(),
                                 userProfile.chatUser(),
                                 editedText,
                                 originalChatMessage.getQuotedMessage(),
@@ -254,7 +253,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public void sendPrivateChatMessage(String text, Optional<QuotedMessage> quotedMessage,
                                        PrivateChannel privateChannel) {
         String channelId = privateChannel.getId();
-        UserProfile userProfile = privateChannel.getSenderProfile();
+        UserProfile userProfile = privateChannel.getMyProfile();
         PrivateChatMessage chatMessage = new PrivateChatMessage(channelId,
                 userProfile.chatUser(),
                 text,
@@ -289,11 +288,6 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
             privateChannel.addChatMessage(chatMessage);
         }
         persist();
-    }
-
-    public Optional<String> findUserName(String domainId) {
-        //todo add mapping strategy
-        return Optional.ofNullable(persistableStore.getUserNameByDomainId().get(domainId));
     }
 
 

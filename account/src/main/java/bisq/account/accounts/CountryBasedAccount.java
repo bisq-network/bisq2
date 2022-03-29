@@ -31,7 +31,7 @@ import java.util.List;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public  class CountryBasedAccount<T extends SettlementMethod> extends Account<T> {
+public abstract class CountryBasedAccount<T extends SettlementMethod> extends Account<T> {
     protected final Country country;
 
     public CountryBasedAccount(String accountName,

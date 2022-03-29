@@ -49,6 +49,19 @@ public final class FiatCurrency extends TradeCurrency {
         this.currency = currency;
     }
 
+    private FiatCurrency(String code, String name) {
+        super(code, name);
+        this.currency = Currency.getInstance(code);
+    }
+
+    public bisq.common.protobuf.TradeCurrency toProto() {
+        return getTradeCurrencyBuilder().setFiatCurrency(bisq.common.protobuf.FiatCurrency.newBuilder()).build();
+    }
+
+    public static FiatCurrency fromProto(bisq.common.protobuf.TradeCurrency baseProto,bisq.common.protobuf.FiatCurrency proto) {
+        return new FiatCurrency(baseProto.getCode(), baseProto.getName());
+    }
+
     @Override
     public String getDisplayPrefix() {
         return PREFIX;

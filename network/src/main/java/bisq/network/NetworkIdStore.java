@@ -17,12 +17,18 @@
 
 package bisq.network;
 
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
+@Slf4j
 public class NetworkIdStore implements PersistableStore<NetworkIdStore> {
     @Getter
     private final Map<String, NetworkId> networkIdByNodeId = new ConcurrentHashMap<>();
@@ -32,6 +38,30 @@ public class NetworkIdStore implements PersistableStore<NetworkIdStore> {
 
     public NetworkIdStore(Map<String, NetworkId> networkIdByNodeId) {
         this.networkIdByNodeId.putAll(networkIdByNodeId);
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkIdStore toProto() {
+        return bisq.network.protobuf.NetworkIdStore.newBuilder()
+                .putAllNetworkIdByNodeId(networkIdByNodeId.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toProto())))
+                .build();
+    }
+
+    public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkIdStore proto) {
+        return new NetworkIdStore(proto.getNetworkIdByNodeIdMap().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> NetworkId.fromProto(e.getValue()))));
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.network.protobuf.NetworkIdStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     @Override

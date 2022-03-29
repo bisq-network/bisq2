@@ -21,7 +21,7 @@ import bisq.common.currency.TradeCurrency;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
-import bisq.offer.SettlementSpec;
+import bisq.offer.spec.SettlementSpec;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.QuoteFormatter;

@@ -19,10 +19,14 @@ package bisq.persistence;
 
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.FileUtils;
+import com.google.protobuf.Any;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -30,7 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 @Slf4j
-public class Persistence<T extends Serializable> {
+public class Persistence<T extends PersistableStore<T>> {
     public static final ExecutorService PERSISTENCE_IO_POOL = ExecutorFactory.newFixedThreadPool("Persistence-io-pool");
 
     private final String directory;
@@ -60,15 +64,15 @@ public class Persistence<T extends Serializable> {
         if (!storageFile.exists()) {
             return Optional.empty();
         }
-        try (FileInputStream fileInputStream = new FileInputStream(storagePath);
-             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
-            Object object;
+        try (FileInputStream fileInputStream = new FileInputStream(storagePath)) {
+            PersistableStore<?> persistableStore;
             synchronized (lock) {
-                object = objectInputStream.readObject();
-                log.debug("read {}", object);
+                // The data we get is of type Any
+                Any any = Any.parseDelimitedFrom(fileInputStream);
+                persistableStore = PersistableStore.fromAny(any);
             }
             //noinspection unchecked
-            return Optional.of((T) object);
+            return (Optional) Optional.of(persistableStore);
         } catch (Throwable exception) {
             log.error("Error at read for " + storagePath, exception);
             try {
@@ -91,11 +95,10 @@ public class Persistence<T extends Serializable> {
         }, PERSISTENCE_IO_POOL);
     }
 
-    public boolean persist(T serializable) {
+    public boolean persist(T persistableStore) {
         synchronized (lock) {
             boolean success = false;
             File tempFile = null;
-            ObjectOutputStream objectOutputStream = null;
             FileOutputStream fileOutputStream = null;
             File storageFile = null;
             try {
@@ -106,38 +109,39 @@ public class Persistence<T extends Serializable> {
                 FileUtils.deleteOnExit(tempFile);
                 storageFile = new File(storagePath);
                 fileOutputStream = new FileOutputStream(tempFile);
-                objectOutputStream = new ObjectOutputStream(fileOutputStream);
-                objectOutputStream.writeObject(serializable);
-                objectOutputStream.flush(); // this will flush fileOutputStream as well
+
+                // We use an Any container (byte blob) as we do not have the dependencies to the 
+                // external PersistableStore implementations (at deserialization we would have an issue otherwise as
+                // it requires static access).
+                Any any = persistableStore.toAny();
+                any.writeDelimitedTo(fileOutputStream);
+                fileOutputStream.flush();
                 fileOutputStream.getFD().sync();
 
-                objectOutputStream.close(); // this will close fileOutputStream as well
-                // close is needed on WinOS otherwise the rename will fail
+                // close is needed on WinOS otherwise renameFile will fail
+                fileOutputStream.close();
+                fileOutputStream = null;
+                
                 // Atomic rename
                 FileUtils.renameFile(tempFile, storageFile);
-                //log.debug("Persisted {}", serializable);
+                //log.debug("Persisted {}", persistableStore);
                 success = true;
-            } catch(IOException ex) {
-                log.error("Error at read for " + storagePath+ " msg: "+ex.getMessage(), ex);
+            } catch (IOException ex) {
+                log.error("Error at read for " + storagePath + " msg: " + ex.getMessage(), ex);
                 try {
                     if (storageFile != null) {
                         FileUtils.backupCorruptedFile(directory, storageFile, fileName, "corruptedFilesAtWrite");
                     }
                 } catch (IOException e) {
-                    log.error("FileUtils.backupCorruptedFile failed: "+e.getMessage(),e);
+                    log.error("FileUtils.backupCorruptedFile failed: " + e.getMessage(), e);
                 }
-            }
-            finally {
-                // close all and cleanup in case of Exception
-                // tempfile depends on objectOutputStream which depends on fileOutputstream, close in reverse order
+            } finally {
                 try {
-                    if (objectOutputStream != null) {
-                        objectOutputStream.close(); // will close fileOutputStream first.
-                    } else if (fileOutputStream != null) {
+                    if (fileOutputStream != null) {
                         fileOutputStream.close();
                     }
                 } catch (IOException ioe) {
-                    log.error("Error closing stream "+ioe.getMessage(), ioe); // swallow
+                    log.error("Error closing stream " + ioe.getMessage(), ioe); // swallow
                 }
                 if (tempFile != null) {
                     FileUtils.releaseTempFile(tempFile);

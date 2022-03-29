@@ -17,7 +17,17 @@
 
 package bisq.common.locale;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 public record Region(String code, String name) implements Proto {
+    public bisq.common.protobuf.Region toProto() {
+        return bisq.common.protobuf.Region.newBuilder()
+                .setCode(code)
+                .setCode(name)
+                .build();
+    }
+
+    public static Region fromProto(bisq.common.protobuf.Region proto) {
+        return new Region(proto.getCode(), proto.getName());
+    }
 }

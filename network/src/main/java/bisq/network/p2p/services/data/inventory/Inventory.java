@@ -17,10 +17,28 @@
 
 package bisq.network.p2p.services.data.inventory;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.network.p2p.services.data.DataRequest;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-public record Inventory(HashSet<? extends DataRequest> entries, int numDropped) implements Proto {
+@Slf4j
+public record Inventory(Set<? extends DataRequest> entries, int numDropped) implements Proto {
+    public bisq.network.protobuf.Inventory toProto() {
+        return bisq.network.protobuf.Inventory.newBuilder()
+                .addAllEntries(entries.stream().map(e -> e.toProto().getDataRequest()).collect(Collectors.toList()))
+                .setNumDropped(numDropped)
+                .build();
+    }
+
+    public static Inventory fromProto(bisq.network.protobuf.Inventory proto) {
+        List<bisq.network.protobuf.DataRequest> entriesList = proto.getEntriesList();
+        Set<DataRequest> entries = entriesList.stream()
+                .map(DataRequest::fromProto)
+                .collect(Collectors.toSet());
+        return new Inventory(entries, proto.getNumDropped());
+    }
 }

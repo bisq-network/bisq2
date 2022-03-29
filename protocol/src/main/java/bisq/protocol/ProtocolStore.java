@@ -17,23 +17,52 @@
 
 package bisq.protocol;
 
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ProtocolStore implements PersistableStore<ProtocolStore> {
     @Getter
     private final Map<String, ProtocolModel> protocolModelByOfferId = new ConcurrentHashMap<>();
-  
+
     public ProtocolStore() {
     }
 
     private ProtocolStore(Map<String, ProtocolModel> protocolModelByOfferId) {
         this.protocolModelByOfferId.putAll(protocolModelByOfferId);
+    }
+
+    @Override
+    public bisq.protocol.protobuf.ProtocolStore toProto() {
+        return bisq.protocol.protobuf.ProtocolStore.newBuilder()
+                .putAllProtocolModelByOfferId(protocolModelByOfferId.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toProto())))
+                .build();
+    }
+
+    public static ProtocolStore fromProto(bisq.protocol.protobuf.ProtocolStore proto) {
+        return new ProtocolStore(proto.getProtocolModelByOfferIdMap().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        e -> ProtocolModel.fromProto(e.getValue()))));
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.protocol.protobuf.ProtocolStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     @Override
@@ -47,18 +76,10 @@ public class ProtocolStore implements PersistableStore<ProtocolStore> {
         protocolModelByOfferId.putAll(persisted.getProtocolModelByOfferId());
     }
 
-    public void add( ProtocolModel protocolModel) {
+    public void add(ProtocolModel protocolModel) {
         String protocolId = protocolModel.getId();
         if (!protocolModelByOfferId.containsKey(protocolId)) {
             protocolModelByOfferId.put(protocolId, protocolModel);
         }
     }
-
-  /*  public void remove(Protocol<? extends ProtocolStore<?>> protocol) {
-        String protocolId = protocol.getId();
-        if (!protocolStoreByOfferId.containsKey(protocolId)) return;
-
-        protocolsByOfferId.remove(protocolId);
-        protocolStoreByOfferId.remove(protocolId);
-    }*/
 }

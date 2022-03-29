@@ -19,14 +19,20 @@ package bisq.settings;
 
 import bisq.common.monetary.Market;
 import bisq.common.monetary.MarketRepository;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Getter
 public class SettingsStore implements PersistableStore<SettingsStore> {
     private final Cookie cookie;
@@ -55,6 +61,37 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
     }
 
     @Override
+    public bisq.settings.protobuf.SettingsStore toProto() {
+        return bisq.settings.protobuf.SettingsStore.newBuilder()
+                .setCookie(cookie.toProto())
+                .setDisplaySettings(displaySettings.toProto())
+                .putAllDontShowAgainMap(dontShowAgainMap)
+                .addAllMarkets(markets.stream().map(Market::toProto).collect(Collectors.toList()))
+                .setSelectedMarket(selectedMarket.toProto())
+                .build();
+    }
+
+    public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {
+        return new SettingsStore(Cookie.fromProto(proto.getCookie()),
+                DisplaySettings.fromProto((proto.getDisplaySettings())),
+                proto.getDontShowAgainMapMap().entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
+                proto.getMarketsList().stream().map(Market::fromProto).collect(Collectors.toList()),
+                Market.fromProto(proto.getSelectedMarket()));
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.settings.protobuf.SettingsStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
+    }
+
+    @Override
     public SettingsStore getClone() {
         return new SettingsStore(cookie,
                 displaySettings,
@@ -65,7 +102,7 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
 
     @Override
     public void applyPersisted(SettingsStore persisted) {
-        cookie.putAll(persisted.getCookie());
+        cookie.putAll(persisted.getCookie().getMap());
         displaySettings = persisted.getDisplaySettings();
         dontShowAgainMap.putAll(persisted.getDontShowAgainMap());
         markets.clear();

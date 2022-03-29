@@ -30,7 +30,10 @@ import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
-import bisq.offer.options.ListingOption;
+import bisq.offer.options.OfferOption;
+import bisq.offer.spec.Direction;
+import bisq.offer.spec.FixPrice;
+import bisq.offer.spec.SettlementSpec;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -127,25 +130,25 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
             List<SettlementSpec> baseSideSettlementSpecs;
             if (!selectedBaseSideAccounts.isEmpty()) {
                 baseSideSettlementSpecs = selectedBaseSideAccounts.stream()
-                        .map(e -> new SettlementSpec(e.getSettlementMethod().name(), e.getId()))
+                        .map(e -> new SettlementSpec(e.getSettlementMethod().name(), Optional.of(e.getId())))
                         .collect(Collectors.toList());
             } else {
                 baseSideSettlementSpecs = selectedBaseSideSettlementMethods.stream()
-                        .map(e -> new SettlementSpec(e.name(), null))
+                        .map(e -> new SettlementSpec(e.name(), Optional.empty()))
                         .collect(Collectors.toList());
             }
             List<SettlementSpec> quoteSideSettlementSpecs;
             if (!selectedBaseSideAccounts.isEmpty()) {
                 quoteSideSettlementSpecs = selectedQuoteSideAccounts.stream()
-                        .map(e -> new SettlementSpec(e.getSettlementMethod().name(), e.getId()))
+                        .map(e -> new SettlementSpec(e.getSettlementMethod().name(), Optional.of(e.getId())))
                         .collect(Collectors.toList());
             } else {
                 quoteSideSettlementSpecs = selectedQuoteSideSettlementMethods.stream()
-                        .map(e -> new SettlementSpec(e.name(), null))
+                        .map(e -> new SettlementSpec(e.name(), Optional.empty()))
                         .collect(Collectors.toList());
             }
 
-            List<ListingOption> listingOptions = new ArrayList<>();
+            List<OfferOption> offerOptions = new ArrayList<>();
 
             return new Offer(offerId,
                     new Date().getTime(),
@@ -157,7 +160,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
                     protocolTypes,
                     baseSideSettlementSpecs,
                     quoteSideSettlementSpecs,
-                    listingOptions
+                    offerOptions
             );
         });
     }

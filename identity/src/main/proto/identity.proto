@@ -1,0 +1,36 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+
+package identity;
+option java_package = "bisq.identity.protobuf";
+option java_multiple_files = true;
+import "network.proto";
+import "security.proto";
+
+message Identity {
+  string domainId = 1;
+  network.NetworkId networkId = 2;
+  security.KeyPair keyPair = 3;
+}
+
+message IdentityStore {
+  map<string, Identity> activeIdentityByDomainId = 1;
+  repeated Identity pool = 2;
+  repeated Identity retired = 3;
+}

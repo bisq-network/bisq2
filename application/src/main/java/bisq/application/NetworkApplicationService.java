@@ -20,8 +20,13 @@ package bisq.application;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
+import bisq.network.p2p.message.NetworkMessageResolver;
+import bisq.network.p2p.services.data.storage.DistributedDataResolver;
+import bisq.offer.Offer;
 import bisq.persistence.PersistenceService;
-import bisq.security.KeyPairService;
+import bisq.security.SecurityService;
+import bisq.social.chat.PrivateChatMessage;
+import bisq.social.chat.PublicChatMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,21 +48,29 @@ import static bisq.common.util.OsUtils.EXIT_SUCCESS;
 @Getter
 @Slf4j
 public class NetworkApplicationService extends ServiceProvider {
-    private final KeyPairService keyPairService;
     private final NetworkService networkService;
     private final ApplicationConfig applicationConfig;
     private final PersistenceService persistenceService;
+    private final SecurityService securityService;
 
     public NetworkApplicationService(String[] args) {
         super("Seed");
         this.applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
 
         persistenceService = new PersistenceService(applicationConfig.baseDir());
-        keyPairService = new KeyPairService(persistenceService);
+        // Register resolvers for distributedData 
+        DistributedDataResolver.addResolver("social.ChatMessage", PublicChatMessage.getResolver());
+        DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
 
-        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationConfig.baseDir(),
+        // Register resolvers for networkMessages 
+        NetworkMessageResolver.addResolver("social.ChatMessage", PrivateChatMessage.getResolver());
+
+        securityService = new SecurityService(persistenceService);
+
+        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(
+                applicationConfig.baseDir(),
                 getConfig("bisq.networkServiceConfig"));
-        networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
+        networkService = new NetworkService(networkServiceConfig, persistenceService, securityService.getKeyPairService());
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
@@ -71,7 +84,7 @@ public class NetworkApplicationService extends ServiceProvider {
     public CompletableFuture<Boolean> initialize() {
         List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
         // Assuming identityRepository depends on keyPairRepository being initialized... 
-        allFutures.add(keyPairService.initialize());
+        allFutures.add(securityService.initialize());
         allFutures.add(networkService.bootstrapToNetwork());
         // Once all have successfully completed our initialize is complete as well
         return CompletableFutureUtils.allOf(allFutures)

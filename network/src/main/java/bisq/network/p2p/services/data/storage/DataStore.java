@@ -18,25 +18,61 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
-@ToString
 @Slf4j
-public class DataStore<T> implements PersistableStore<DataStore<T>> {
+@ToString
+public class DataStore<T extends DataRequest> implements PersistableStore<DataStore<T>> {
     @Getter
-    private final ConcurrentHashMap<ByteArray, T> map = new ConcurrentHashMap<>();
+    private final Map<ByteArray, T> map = new ConcurrentHashMap<>();
 
     public DataStore() {
     }
 
     public DataStore(Map<ByteArray, T> map) {
         this.map.putAll(map);
+    }
+
+    @Override
+    public bisq.network.protobuf.DataStore toProto() {
+        // Protobuf map do not support bytes as key
+        List<bisq.network.protobuf.DataStore.MapEntry> mapEntries = map.entrySet().stream()
+                .map(e -> bisq.network.protobuf.DataStore.MapEntry.newBuilder()
+                        .setKey(e.getKey().toProto())
+                        .setValue(e.getValue().toProto().getDataRequest())
+                        .build())
+                .collect(Collectors.toList());
+        return bisq.network.protobuf.DataStore.newBuilder()
+                .addAllMapEntries(mapEntries)
+                .build();
+    }
+
+    public static PersistableStore<?> fromProto(bisq.network.protobuf.DataStore proto) {
+        return new DataStore<>(proto.getMapEntriesList().stream()
+                .collect(Collectors.toMap(e -> new ByteArray(e.getKey().toByteArray()), e -> DataRequest.fromProto(e.getValue()))));
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.network.protobuf.DataStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     @Override

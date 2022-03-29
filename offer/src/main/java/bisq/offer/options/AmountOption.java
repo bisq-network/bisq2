@@ -17,7 +17,14 @@
 
 package bisq.offer.options;
 
-public record AmountOption(double minAmountAsPercentage) implements ListingOption {
+public record AmountOption(double minAmountAsPercentage) implements OfferOption {
+    public bisq.offer.protobuf.OfferOption toProto() {
+        return getOfferOptionBuilder().setAmountOption(bisq.offer.protobuf.AmountOption.newBuilder()
+                        .setMinAmountAsPercentage(minAmountAsPercentage))
+                .build();
+    }
+
+    public static AmountOption fromProto(bisq.offer.protobuf.AmountOption proto) {
+        return new AmountOption(proto.getMinAmountAsPercentage());
+    }
 }
-// Bisq 1 
-// min Amount

@@ -19,4 +19,15 @@ package bisq.offer.options;
 
 // Notarizing account creation date with Open time stamp
 public record AccountCreationDateProof(String hashOfAccount, String otsProof) implements ReputationProof {
+    public bisq.offer.protobuf.ReputationProof toProto() {
+        return getReputationProofBuilder().setAccountCreationDateProof(
+                        bisq.offer.protobuf.AccountCreationDateProof.newBuilder()
+                                .setHashOfAccount(hashOfAccount)
+                                .setOtsProof(otsProof))
+                .build();
+    }
+
+    public static AccountCreationDateProof fromProto(bisq.offer.protobuf.AccountCreationDateProof proto) {
+        return new AccountCreationDateProof(proto.getHashOfAccount(), proto.getOtsProof());
+    }
 }

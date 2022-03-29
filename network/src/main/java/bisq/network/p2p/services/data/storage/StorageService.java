@@ -194,7 +194,7 @@ public class StorageService {
     }
 
     private CompletableFuture<Optional<StorageData>> onAddAppendOnlyDataRequest(AddAppendOnlyDataRequest request) {
-        AppendOnlyData appendOnlyData = request.payload();
+        AppendOnlyData appendOnlyData = request.getAppendOnlyData();
         return getOrCreateAppendOnlyDataStore(appendOnlyData.getMetaData())
                 .thenApply(store -> {
                     Result result = store.add(request);

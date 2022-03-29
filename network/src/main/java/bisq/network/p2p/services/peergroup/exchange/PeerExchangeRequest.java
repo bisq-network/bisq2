@@ -21,6 +21,20 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.peergroup.Peer;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
-record PeerExchangeRequest(int nonce, Set<Peer> peers) implements NetworkMessage {
+public record PeerExchangeRequest(int nonce, Set<Peer> peers) implements NetworkMessage {
+    @Override
+    public bisq.network.protobuf.NetworkMessage toProto() {
+        return getNetworkMessageBuilder().setPeerExchangeRequest(
+                        bisq.network.protobuf.PeerExchangeRequest.newBuilder()
+                                .setNonce(nonce)
+                                .addAllPeers(peers.stream().map(Peer::toProto).collect(Collectors.toSet())))
+                .build();
+    }
+
+    public static PeerExchangeRequest fromProto(bisq.network.protobuf.PeerExchangeRequest proto) {
+        return new PeerExchangeRequest(proto.getNonce(),
+                proto.getPeersList().stream().map(Peer::fromProto).collect(Collectors.toSet()));
+    }
 }

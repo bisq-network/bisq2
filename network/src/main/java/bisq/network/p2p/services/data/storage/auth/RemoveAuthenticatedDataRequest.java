@@ -23,6 +23,7 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
+import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -43,8 +44,11 @@ public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest,
         byte[] hash = DigestUtil.hash(authenticatedData.serialize());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
-
-        return new RemoveAuthenticatedDataRequest(authenticatedData.getMetaData(), hash, keyPair.getPublic(), newSequenceNumber, signature);
+        return new RemoveAuthenticatedDataRequest(authenticatedData.getMetaData(),
+                hash,
+                keyPair.getPublic(),
+                newSequenceNumber,
+                signature);
     }
 
     protected final MetaData metaData;
@@ -75,13 +79,61 @@ public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest,
                                              PublicKey ownerPublicKey,
                                              int sequenceNumber,
                                              byte[] signature) {
+        this(metaData,
+                hash,
+                ownerPublicKeyBytes,
+                ownerPublicKey,
+                sequenceNumber,
+                signature,
+                System.currentTimeMillis());
+    }
+
+    protected RemoveAuthenticatedDataRequest(MetaData metaData,
+                                             byte[] hash,
+                                             byte[] ownerPublicKeyBytes,
+                                             PublicKey ownerPublicKey,
+                                             int sequenceNumber,
+                                             byte[] signature,
+                                             long created) {
         this.metaData = metaData;
         this.hash = hash;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
         this.ownerPublicKey = ownerPublicKey;
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
-        created = System.currentTimeMillis();
+        this.created = created;
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkMessage toProto() {
+        return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRemoveAuthenticatedDataRequest(
+                        bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
+                                .setMetaData(metaData.toProto())
+                                .setHash(ByteString.copyFrom(hash))
+                                .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
+                                .setSequenceNumber(sequenceNumber)
+                                .setSignature(ByteString.copyFrom(signature))
+                                .setCreated(created)))
+                .build();
+    }
+
+    public static RemoveAuthenticatedDataRequest fromProto(bisq.network.protobuf.RemoveAuthenticatedDataRequest proto) {
+        byte[] ownerPublicKeyBytes = proto.getOwnerPublicKeyBytes().toByteArray();
+        try {
+            PublicKey ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
+            return new RemoveAuthenticatedDataRequest(
+                    MetaData.fromProto(proto.getMetaData()),
+                    proto.getHash().toByteArray(),
+                    ownerPublicKeyBytes,
+                    ownerPublicKey,
+                    proto.getSequenceNumber(),
+                    proto.getSignature().toByteArray(),
+                    proto.getCreated()
+            );
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     public boolean isSignatureInvalid() {

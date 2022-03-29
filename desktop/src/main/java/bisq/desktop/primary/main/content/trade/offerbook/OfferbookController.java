@@ -32,7 +32,7 @@ import bisq.desktop.primary.main.content.trade.components.MarketSelection;
 import bisq.desktop.primary.main.content.trade.create.CreateOfferController;
 import bisq.desktop.primary.main.content.trade.take.TakeOfferController;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
+import bisq.offer.spec.Direction;
 import bisq.offer.Offer;
 import bisq.offer.OfferBookService;
 import bisq.offer.OpenOfferService;

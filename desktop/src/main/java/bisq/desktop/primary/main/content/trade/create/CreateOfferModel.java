@@ -24,7 +24,7 @@ import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Model;
-import bisq.offer.Direction;
+import bisq.offer.spec.Direction;
 import bisq.offer.Offer;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;

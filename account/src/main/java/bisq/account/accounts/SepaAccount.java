@@ -42,4 +42,13 @@ public final class SepaAccount extends CountryBasedAccount<FiatSettlementMethod>
                 FiatSettlementMethod.getTradeCurrencies(METHOD),
                 country);
     }
+
+    @Override
+    public bisq.account.protobuf.Account toProto() {
+        return null;
+    }
+
+    public static SepaAccount fromProto(bisq.account.protobuf.SepaAccount account) {
+        return null;
+    }
 }

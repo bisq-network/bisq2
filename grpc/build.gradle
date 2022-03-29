@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'com.google.protobuf' version '0.8.16'
+    id 'com.google.protobuf' version '0.8.18'
 }
 
 repositories {
@@ -43,7 +43,7 @@ sourceSets.main {
 protobuf {
     protoc {
         // Append 'osxArch' property to workaround M1 Mac bug.
-        artifact = "com.google.protobuf:protoc:3.12.4${osxArch}"
+        artifact = "com.google.protobuf:protoc:3.19.4${osxArch}"
     }
     plugins {
         grpc {

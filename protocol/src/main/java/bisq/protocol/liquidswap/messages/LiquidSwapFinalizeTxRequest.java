@@ -17,6 +17,7 @@
 
 package bisq.protocol.liquidswap.messages;
 
+import bisq.network.protobuf.NetworkMessage;
 import bisq.protocol.messages.ProtocolMessage;
 import lombok.Getter;
 
@@ -26,5 +27,11 @@ public class LiquidSwapFinalizeTxRequest extends ProtocolMessage {
 
     public LiquidSwapFinalizeTxRequest(String offerId) {
         super(offerId);
+    }
+
+    @Override
+    public NetworkMessage toProto() {
+        //todo
+        return null;
     }
 }

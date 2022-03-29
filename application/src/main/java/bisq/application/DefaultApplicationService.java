@@ -28,15 +28,23 @@ import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
+import bisq.network.p2p.message.NetworkMessageResolver;
+import bisq.network.p2p.services.data.storage.DistributedDataResolver;
+import bisq.offer.Offer;
 import bisq.offer.OfferBookService;
+import bisq.offer.OfferService;
 import bisq.offer.OpenOfferService;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
 import bisq.persistence.PersistenceService;
 import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
+import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
+import bisq.social.SocialService;
 import bisq.social.chat.ChatService;
+import bisq.social.chat.PrivateChatMessage;
+import bisq.social.chat.PublicChatMessage;
 import bisq.social.intent.TradeIntentListingsService;
 import bisq.social.intent.TradeIntentService;
 import bisq.social.user.profile.UserProfileService;
@@ -69,7 +77,6 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 @Getter
 @Slf4j
 public class DefaultApplicationService extends ServiceProvider {
-    private final KeyPairService keyPairService;
     private final NetworkService networkService;
     private final OpenOfferService openOfferService;
     private final IdentityService identityService;
@@ -85,6 +92,9 @@ public class DefaultApplicationService extends ServiceProvider {
     private final TradeIntentService tradeIntentService;
     private final UserProfileService userProfileService;
     private final WalletService walletService;
+    private final OfferService offerService;
+    private final SocialService socialService;
+    private final SecurityService securityService;
 
     public DefaultApplicationService(String[] args) {
         super("Bisq");
@@ -95,13 +105,20 @@ public class DefaultApplicationService extends ServiceProvider {
         Res.initialize(locale);
 
         persistenceService = new PersistenceService(applicationConfig.baseDir());
-        keyPairService = new KeyPairService(persistenceService);
+        // Register resolvers for distributedData 
+        DistributedDataResolver.addResolver("social.ChatMessage", PublicChatMessage.getResolver());
+        DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
+
+        // Register resolvers for networkMessages 
+        NetworkMessageResolver.addResolver("social.ChatMessage", PrivateChatMessage.getResolver());
+
+        securityService = new SecurityService(persistenceService);
 
         settingsService = new SettingsService(persistenceService);
 
-
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationConfig.baseDir(),
                 getConfig("bisq.networkServiceConfig"));
+        KeyPairService keyPairService = securityService.getKeyPairService();
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
 
         IdentityService.Config identityServiceConfig = IdentityService.Config.from(getConfig("bisq.identityServiceConfig"));
@@ -109,6 +126,7 @@ public class DefaultApplicationService extends ServiceProvider {
 
         accountService = new AccountService(persistenceService);
 
+        socialService = new SocialService();
         UserProfileService.Config userProfileServiceConfig = UserProfileService.Config.from(getConfig("bisq.userProfileServiceConfig"));
         userProfileService = new UserProfileService(persistenceService, userProfileServiceConfig, keyPairService, identityService, networkService);
         chatService = new ChatService(persistenceService, identityService, networkService, userProfileService);
@@ -116,6 +134,7 @@ public class DefaultApplicationService extends ServiceProvider {
         tradeIntentService = new TradeIntentService(networkService, identityService, tradeIntentListingsService, chatService);
 
         // add data use case is not available yet at networkService
+        offerService = new OfferService();
         openOfferService = new OpenOfferService(networkService, identityService, persistenceService);
         offerBookService = new OfferBookService(networkService);
 
@@ -127,30 +146,6 @@ public class DefaultApplicationService extends ServiceProvider {
 
         Optional<WalletConfig> walletConfig = !isRegtestRun() ? Optional.empty() : createRegtestWalletConfig();
         walletService = new WalletService(walletConfig);
-        walletService.tryAutoInitialization();
-    }
-
-    private boolean isRegtestRun() {
-        return applicationConfig.isBitcoindRegtest() || applicationConfig.isElementsdRegtest();
-    }
-
-    private Optional<WalletConfig> createRegtestWalletConfig() {
-        String walletsDataDir = applicationConfig.baseDir() + File.separator + "wallets";
-        Path walletsDataDirPath = FileSystems.getDefault().getPath(walletsDataDir);
-
-        WalletBackend walletBackend = applicationConfig.isBitcoindRegtest() ?
-                WalletBackend.BITCOIND : WalletBackend.ELEMENTSD;
-
-        var walletConfig = WalletConfig.builder()
-                .walletBackend(walletBackend)
-                .networkType(NetworkType.REGTEST)
-                .hostname(Optional.empty())
-                .port(Optional.empty())
-                .user("bisq")
-                .password("bisq")
-                .walletsDataDirPath(walletsDataDirPath)
-                .build();
-        return Optional.of(walletConfig);
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
@@ -163,8 +158,11 @@ public class DefaultApplicationService extends ServiceProvider {
      */
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return keyPairService.initialize()
+        return securityService.initialize()
                 .thenCompose(result -> networkService.bootstrapToNetwork())
+                .whenComplete((r, t) -> {
+                    log.debug("Network bootstrapped");
+                })
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> marketPriceService.initialize())
                 .whenComplete((list, throwable) -> {
@@ -186,6 +184,7 @@ public class DefaultApplicationService extends ServiceProvider {
                 })
                 .thenCompose(result -> protocolService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(
+                        walletService.tryAutoInitialization(),
                         userProfileService.initialize()
                                 .thenCompose(res -> chatService.initialize()),
                         openOfferService.initialize(),
@@ -223,5 +222,33 @@ public class DefaultApplicationService extends ServiceProvider {
                         })
                         .thenRun(walletService::shutdown)
                 , ExecutorFactory.newSingleThreadExecutor("Shutdown"));
+    }
+
+    public KeyPairService getKeyPairService() {
+        return securityService.getKeyPairService();
+    }
+
+    //todo move to wallet domain
+    private boolean isRegtestRun() {
+        return applicationConfig.isBitcoindRegtest() || applicationConfig.isElementsdRegtest();
+    }
+
+    private Optional<WalletConfig> createRegtestWalletConfig() {
+        String walletsDataDir = applicationConfig.baseDir() + File.separator + "wallets";
+        Path walletsDataDirPath = FileSystems.getDefault().getPath(walletsDataDir);
+
+        WalletBackend walletBackend = applicationConfig.isBitcoindRegtest() ?
+                WalletBackend.BITCOIND : WalletBackend.ELEMENTSD;
+
+        var walletConfig = WalletConfig.builder()
+                .walletBackend(walletBackend)
+                .networkType(NetworkType.REGTEST)
+                .hostname(Optional.empty())
+                .port(Optional.empty())
+                .user("bisq")
+                .password("bisq")
+                .walletsDataDirPath(walletsDataDirPath)
+                .build();
+        return Optional.of(walletConfig);
     }
 }

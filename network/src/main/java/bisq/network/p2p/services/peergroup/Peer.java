@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.Load;
@@ -38,10 +38,30 @@ public class Peer implements Proto {
     private final long created;
 
     public Peer(Capability capability, Load load, boolean isOutboundConnection) {
+        this(capability, load, isOutboundConnection, System.currentTimeMillis());
+    }
+
+    public Peer(Capability capability, Load load, boolean isOutboundConnection, long created) {
         this.capability = capability;
         this.load = load;
         this.isOutboundConnection = isOutboundConnection;
-        this.created = System.currentTimeMillis();
+        this.created = created;
+    }
+
+    public bisq.network.protobuf.Peer toProto() {
+        return bisq.network.protobuf.Peer.newBuilder()
+                .setCapability(capability.toProto())
+                .setLoad(load.toProto())
+                .setIsOutboundConnection(isOutboundConnection)
+                .setCreated(created)
+                .build();
+    }
+
+    public static Peer fromProto(bisq.network.protobuf.Peer proto) {
+        return new Peer(Capability.fromProto(proto.getCapability()),
+                Load.fromProto(proto.getLoad()),
+                proto.getIsOutboundConnection(),
+                proto.getCreated());
     }
 
     public Date getDate() {

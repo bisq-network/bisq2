@@ -19,12 +19,12 @@ package bisq.account.settlement;
 
 import bisq.account.protocol.SwapProtocolType;
 import bisq.common.currency.TradeCurrency;
+import bisq.common.proto.ProtoEnum;
 import bisq.i18n.Res;
-import bisq.common.encoding.Proto;
 
 import java.util.List;
 
-public interface SettlementMethod extends Proto {
+public interface SettlementMethod extends ProtoEnum {
     String name();
 
     default String getDisplayName(String code) {

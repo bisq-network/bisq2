@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

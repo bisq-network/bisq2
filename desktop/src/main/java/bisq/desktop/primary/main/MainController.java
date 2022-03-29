@@ -55,7 +55,7 @@ public class MainController implements Controller, Navigation.Listener {
     }
 
     public void onViewAttached() {
-        String persisted = settingsService.getPersistableStore().getCookie().get(CookieKey.NAVIGATION_TARGET);
+        String persisted = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
         if (persisted != null) {
             Navigation.navigateTo(NavigationTarget.valueOf(persisted));
         } else {

@@ -17,7 +17,7 @@
 
 package bisq.persistence;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.common.util.CompletableFutureUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -39,20 +39,23 @@ public class PersistenceService {
         this.baseDir = baseDir;
     }
 
-    public <T extends Proto> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
-                                                                          Proto serializable) {
-        return getOrCreatePersistence(client, "db", serializable.getClass().getSimpleName());
+    public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
+                                                                                 PersistableStore<T> persistableStore) {
+        return getOrCreatePersistence(client, "db", persistableStore.getClass().getSimpleName(), persistableStore);
     }
 
-    public <T extends Proto> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
-                                                                          String subDir,
-                                                                          Proto serializable) {
-        return getOrCreatePersistence(client, subDir, serializable.getClass().getSimpleName());
+    public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
+                                                                                 String subDir,
+                                                                                 PersistableStore<T> persistableStore) {
+        return getOrCreatePersistence(client, subDir, persistableStore.getClass().getSimpleName(), persistableStore);
     }
 
-    public <T extends Proto> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
-                                                                          String subDir,
-                                                                          String fileName) {
+    public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
+                                                                                 String subDir,
+                                                                                 String fileName,
+                                                                                 PersistableStore<T> persistableStore) {
+
+        PersistableStoreResolver.addResolver(persistableStore.getResolver());
         clients.add(client);
         Persistence<T> persistence = new Persistence<>(baseDir + File.separator + subDir, fileName);
         persistenceInstances.add(persistence);

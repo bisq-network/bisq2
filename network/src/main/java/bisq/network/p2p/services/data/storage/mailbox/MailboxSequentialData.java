@@ -17,53 +17,107 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
-import bisq.common.encoding.Hex;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
+import bisq.common.proto.Proto;
+import bisq.security.KeyGeneration;
+import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
+import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
 @Getter
-@EqualsAndHashCode(callSuper = true)
-public class MailboxSequentialData extends AuthenticatedSequentialData {
-    private final byte[] receiversPubKeyBytes;
+@ToString
+@EqualsAndHashCode
+public class MailboxSequentialData implements Proto {
+    private final MailboxData mailboxData;
+    private final byte[] senderPublicKeyHash;
     private final byte[] receiversPublicKeyHash;
-    transient final private PublicKey receiversPubKey;
+    private final byte[] receiversPubKeyBytes;
+    private final long created;
+    private final int sequenceNumber;
+    private transient final PublicKey receiversPubKey;
 
-    public MailboxSequentialData(MailboxData data,
-                                 byte[] hashOfSenderPublicKey,
-                                 byte[] receiversPublicKeyHash,
-                                 PublicKey receiversPubKey) {
-        this(data,
-                hashOfSenderPublicKey,
-                receiversPublicKeyHash,
-                receiversPubKey,
-                System.currentTimeMillis());
-    }
-
-    public MailboxSequentialData(MailboxData data,
-                                 byte[] hashOfSenderPublicKey,
+    public MailboxSequentialData(MailboxData mailboxData,
+                                 byte[] senderPublicKeyHash,
                                  byte[] receiversPublicKeyHash,
                                  PublicKey receiversPubKey,
-                                 long created) {
-        // We set sequenceNumber to 1 as there will be only one AddMailBoxRequest
-        super(data, 1, hashOfSenderPublicKey, created); 
+                                 int sequenceNumber) {
+        this(mailboxData,
+                senderPublicKeyHash,
+                receiversPublicKeyHash,
+                receiversPubKey,
+                System.currentTimeMillis(),
+                sequenceNumber);
+    }
 
-        receiversPubKeyBytes = receiversPubKey.getEncoded();
+    public MailboxSequentialData(MailboxData mailboxData,
+                                 byte[] senderPublicKeyHash,
+                                 byte[] receiversPublicKeyHash,
+                                 PublicKey receiversPubKey,
+                                 long created,
+                                 int sequenceNumber) {
+        this(mailboxData,
+                senderPublicKeyHash,
+                receiversPublicKeyHash,
+                receiversPubKey,
+                receiversPubKey.getEncoded(),
+                created,
+                sequenceNumber);
+    }
+
+    public MailboxSequentialData(MailboxData mailboxData,
+                                 byte[] senderPublicKeyHash,
+                                 byte[] receiversPublicKeyHash,
+                                 PublicKey receiversPubKey,
+                                 byte[] receiversPubKeyBytes,
+                                 long created,
+                                 int sequenceNumber) {
+        this.mailboxData = mailboxData;
+        this.senderPublicKeyHash = senderPublicKeyHash;
         this.receiversPublicKeyHash = receiversPublicKeyHash;
         this.receiversPubKey = receiversPubKey;
+        this.receiversPubKeyBytes = receiversPubKeyBytes;
+        this.created = created;
+        this.sequenceNumber = sequenceNumber;
     }
 
-    @Override
-    public String toString() {
-        return "MailboxSequentialData{" +
-                "\r\n     receiversPubKeyBytes=" + Hex.encode(receiversPubKeyBytes) +
-                ",\r\n     receiversPublicKeyHash=" + Hex.encode(receiversPublicKeyHash) +
-                "\r\n} " + super.toString();
+    public bisq.network.protobuf.MailboxSequentialData toProto() {
+        return bisq.network.protobuf.MailboxSequentialData.newBuilder()
+                .setMailboxData(mailboxData.toProto())
+                .setSenderPublicKeyHash(ByteString.copyFrom(senderPublicKeyHash))
+                .setReceiversPubKeyHash(ByteString.copyFrom(receiversPublicKeyHash))
+                .setReceiversPubKeyBytes(ByteString.copyFrom(receiversPubKeyBytes))
+                .setCreated(created)
+                .setSequenceNumber(sequenceNumber)
+                .build();
     }
 
-    public MailboxData getMailboxData() {
-        return (MailboxData) authenticatedData;
+    public static MailboxSequentialData fromProto(bisq.network.protobuf.MailboxSequentialData proto) {
+        byte[] receiversPubKeyBytes = proto.getReceiversPubKeyBytes().toByteArray();
+        try {
+            PublicKey receiversPubKey = KeyGeneration.generatePublic(receiversPubKeyBytes);
+            return new MailboxSequentialData(
+                    MailboxData.fromProto(proto.getMailboxData()),
+                    proto.getSenderPublicKeyHash().toByteArray(),
+                    proto.getReceiversPubKeyHash().toByteArray(),
+                    receiversPubKey,
+                    receiversPubKeyBytes,
+                    proto.getCreated(),
+                    proto.getSequenceNumber()
+            );
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
+        return sequenceNumber <= seqNumberFromMap;
+    }
+
+    public boolean isExpired() {
+        return (System.currentTimeMillis() - created) > mailboxData.getMetaData().getTtl();
     }
 }

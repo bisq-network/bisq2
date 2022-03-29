@@ -44,7 +44,6 @@ import bisq.security.PubKey;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.security.KeyPair;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -133,7 +132,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
 
         defaultNodePortByTransportType = config.defaultNodePortByTransportType();
 
-        persistence = persistenceService.getOrCreatePersistence(this, "db" + File.separator + "network", persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     public CompletableFuture<Void> shutdown() {

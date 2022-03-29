@@ -1,0 +1,82 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+
+package common;
+option java_package = "bisq.common.protobuf";
+option java_multiple_files = true;
+
+message ByteArray {
+  bytes bytes = 1;
+}
+
+message Country {
+  string code = 1;
+  string name = 2;
+  Region region = 3;
+}
+
+message Region {
+  string code = 1;
+  string name = 2;
+}
+
+message CryptoCurrency {
+}
+
+message FiatCurrency {
+}
+
+message TradeCurrency {
+  string code = 1;
+  string name = 2;
+  oneof message {
+    CryptoCurrency cryptoCurrency = 10;
+    FiatCurrency fiatCurrency = 11;
+  }
+}
+
+message Market {
+  string baseCurrencyCode = 1;
+  string quoteCurrencyCode = 2;
+}
+
+message Coin {
+}
+
+message Fiat {
+}
+
+message Monetary {
+  string id = 1;
+  int64 value = 2;
+  string code = 3;
+  int32 precision = 4;
+  int32 minPrecision = 5;
+  
+  oneof message {
+    Coin coin = 10;
+    Fiat fiat = 11;
+  }
+}
+
+message Quote {
+  int64 value = 1;
+  Monetary baseMonetary = 2;
+  Monetary quoteMonetary = 3;
+}

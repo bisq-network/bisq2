@@ -18,11 +18,17 @@
 package bisq.offer;
 
 import bisq.common.observable.ObservableSet;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
+@Slf4j
 public class OpenOfferStore implements PersistableStore<OpenOfferStore> {
     @Getter
     private final ObservableSet<OpenOffer> openOffers = new ObservableSet<>();
@@ -32,6 +38,28 @@ public class OpenOfferStore implements PersistableStore<OpenOfferStore> {
 
     private OpenOfferStore(Set<OpenOffer> openOffers) {
         this.openOffers.addAll(openOffers);
+    }
+
+    @Override
+    public bisq.offer.protobuf.OpenOfferStore toProto() {
+        return bisq.offer.protobuf.OpenOfferStore.newBuilder()
+                .addAllOpenOffers(openOffers.stream().map(OpenOffer::toProto).collect(Collectors.toSet()))
+                .build();
+    }
+
+    public static OpenOfferStore fromProto(bisq.offer.protobuf.OpenOfferStore proto) {
+        return new OpenOfferStore(proto.getOpenOffersList().stream().map(OpenOffer::fromProto).collect(Collectors.toSet()));
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.offer.protobuf.OpenOfferStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     @Override

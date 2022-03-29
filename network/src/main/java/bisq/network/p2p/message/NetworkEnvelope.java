@@ -17,11 +17,12 @@
 
 package bisq.network.p2p.message;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Outside data structure to be sent over the wire.
@@ -29,9 +30,10 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 @Getter
+@Slf4j
 public class NetworkEnvelope implements Proto {
     public static final int VERSION = 1;
-    
+
     private final int version;
     private final AuthorizationToken authorizationToken;
     private final NetworkMessage networkMessage;
@@ -40,5 +42,19 @@ public class NetworkEnvelope implements Proto {
         this.version = version;
         this.authorizationToken = authorizationToken;
         this.networkMessage = networkMessage;
+    }
+
+    public bisq.network.protobuf.NetworkEnvelope toProto() {
+        return bisq.network.protobuf.NetworkEnvelope.newBuilder()
+                .setVersion(version)
+                .setAuthorizationToken(authorizationToken.toProto())
+                .setNetworkMessage(networkMessage.toProto())
+                .build();
+    }
+
+    public static NetworkEnvelope fromProto(bisq.network.protobuf.NetworkEnvelope proto) {
+        return new NetworkEnvelope(proto.getVersion(),
+                AuthorizationToken.fromProto(proto.getAuthorizationToken()),
+                NetworkMessage.fromProto( proto.getNetworkMessage()));
     }
 }

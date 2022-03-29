@@ -17,7 +17,8 @@
 
 package bisq.common.currency;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -50,6 +51,28 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Proto 
         this.code = code;
         this.name = name;
     }
+
+    public bisq.common.protobuf.TradeCurrency.Builder getTradeCurrencyBuilder() {
+        return bisq.common.protobuf.TradeCurrency.newBuilder()
+                .setCode(code)
+                .setCode(name);
+    }
+
+    public static TradeCurrency fromProto(bisq.common.protobuf.TradeCurrency proto) {
+        switch (proto.getMessageCase()) {
+            case CRYPTOCURRENCY -> {
+                return CryptoCurrency.fromProto(proto, proto.getCryptoCurrency());
+            }
+            case FIATCURRENCY -> {
+                return FiatCurrency.fromProto(proto, proto.getFiatCurrency());
+            }
+            case MESSAGE_NOT_SET -> {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
+    }
+
 
     public String getDisplayPrefix() {
         return "";

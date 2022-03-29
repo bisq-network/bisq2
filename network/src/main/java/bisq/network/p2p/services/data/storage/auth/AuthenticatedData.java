@@ -26,7 +26,7 @@ import lombok.ToString;
 
 /**
  * Container for DistributedData. 
- * todo: not sure if we could prune that wrapper...
+ * We use Any for wrapping the external implementation of the distributedData instance (e.g. Offer).
  */
 @ToString
 @EqualsAndHashCode
@@ -36,6 +36,16 @@ public class AuthenticatedData implements StorageData {
 
     public AuthenticatedData(DistributedData distributedData) {
         this.distributedData = distributedData;
+    }
+
+    public bisq.network.protobuf.AuthenticatedData toProto() {
+        return bisq.network.protobuf.AuthenticatedData.newBuilder()
+                .setDistributedData(distributedData.toAny())
+                .build();
+    }
+
+    public static AuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
+        return new AuthenticatedData(DistributedData.fromAny(proto.getDistributedData()));
     }
 
     // We delegate the delivery of MetaData to the distributedData.

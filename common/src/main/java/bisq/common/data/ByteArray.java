@@ -18,7 +18,8 @@
 package bisq.common.data;
 
 import bisq.common.encoding.Hex;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
+import com.google.protobuf.ByteString;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -36,6 +37,14 @@ public class ByteArray implements Proto {
 
     public ByteArray(byte[] bytes) {
         this.bytes = bytes;
+    }
+
+    public bisq.common.protobuf.ByteArray toProto() {
+        return bisq.common.protobuf.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes)).build();
+    }
+
+    public static ByteArray fromProto(bisq.common.protobuf.ByteArray proto) {
+        return new ByteArray(proto.getBytes().toByteArray());
     }
 
     @Override

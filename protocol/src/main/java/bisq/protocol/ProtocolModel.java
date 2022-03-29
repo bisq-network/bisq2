@@ -17,7 +17,7 @@
 
 package bisq.protocol;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.contract.Contract;
 import bisq.network.p2p.message.NetworkMessage;
 import lombok.Getter;
@@ -29,11 +29,24 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public abstract class ProtocolModel implements Proto {
+
     public enum State {
         IDLE,
         PENDING,
         COMPLETED,
         FAILED
+    }
+
+    //todo impl in subclasses, make abstract
+    @Override
+    public bisq.protocol.protobuf.ProtocolModel toProto() {
+        //todo
+        return null;
+    }
+
+    //todo
+    public static ProtocolModel fromProto(bisq.protocol.protobuf.ProtocolModel proto) {
+        return null;
     }
 
     protected Contract contract;

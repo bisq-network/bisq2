@@ -24,7 +24,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
+import bisq.offer.spec.Direction;
 import bisq.oracle.marketprice.MarketPriceService;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import javafx.beans.property.ReadOnlyObjectProperty;

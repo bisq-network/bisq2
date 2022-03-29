@@ -38,8 +38,8 @@ import java.util.Optional;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredListItem {
-    private final ChatMessage chatMessage;
+class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>>, FilteredListItem {
+    private final T chatMessage;
     private final String message;
     private final String senderUserName;
     private final String time;
@@ -49,7 +49,7 @@ class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredLi
     private final Optional<QuotedMessage> quotedMessage;
     private final ChatUser chatUser;
 
-    public ChatMessageListItem(ChatMessage chatMessage) {
+    public ChatMessageListItem(T chatMessage) {
         this.chatMessage = chatMessage;
         String editPostFix = chatMessage.isWasEdited() ? " " + Res.get("social.message.wasEdited") : "";
         message = chatMessage.getText() + editPostFix;

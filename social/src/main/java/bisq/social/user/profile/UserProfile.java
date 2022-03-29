@@ -17,7 +17,7 @@
 
 package bisq.social.user.profile;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.identity.Identity;
 import bisq.security.DigestUtil;
 import bisq.social.user.ChatUser;
@@ -25,6 +25,7 @@ import bisq.social.user.Entitlement;
 import bisq.social.user.UserNameGenerator;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Local user profile. Not shared over network.
@@ -34,6 +35,18 @@ public record UserProfile(Identity identity, Set<Entitlement> entitlements) impl
         return new ChatUser(identity.networkId(), entitlements);
     }
 
+    public bisq.social.protobuf.UserProfile toProto() {
+        return bisq.social.protobuf.UserProfile.newBuilder()
+                .setIdentity(identity.toProto())
+                .addAllEntitlements(entitlements.stream().map(Entitlement::toProto).collect(Collectors.toList()))
+                .build();
+    }
+
+    public static UserProfile fromProto(bisq.social.protobuf.UserProfile proto) {
+        return new UserProfile(Identity.fromProto(proto.getIdentity()),
+                proto.getEntitlementsList().stream().map(Entitlement::fromProto).collect(Collectors.toSet()));
+    }
+    
     public String userName() {
         return UserNameGenerator.fromHash(DigestUtil.hash(identity.networkId().getPubKey().publicKey().getEncoded()));
     }

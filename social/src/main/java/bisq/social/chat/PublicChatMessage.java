@@ -17,8 +17,12 @@
 
 package bisq.social.chat;
 
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.user.ChatUser;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -26,27 +30,74 @@ import lombok.ToString;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * PublicChatMessage is added as public data to the distributed network storage.
+ */
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class PublicChatMessage extends ChatMessage {
-    private final MetaData metaData;
-
+public class PublicChatMessage extends ChatMessage implements DistributedData {
     public PublicChatMessage(String channelId,
                              ChatUser sender,
                              String text,
                              Optional<QuotedMessage> quotedMessage,
                              long date,
                              boolean wasEdited) {
-        super(channelId,
+        this(channelId,
                 sender,
                 text,
                 quotedMessage,
                 date,
                 ChannelType.PUBLIC,
-                wasEdited);
+                wasEdited,
+                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PublicChatMessage.class.getSimpleName()));
+    }
 
-        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 100000, getClass().getSimpleName());
+    private PublicChatMessage(String channelId,
+                              ChatUser sender,
+                              String text,
+                              Optional<QuotedMessage> quotedMessage,
+                              long date,
+                              ChannelType channelType,
+                              boolean wasEdited,
+                              MetaData metaData) {
+        super(channelId,
+                sender,
+                text,
+                quotedMessage,
+                date,
+                channelType,
+                wasEdited,
+                metaData);
+    }
+
+    public bisq.social.protobuf.ChatMessage toProto() {
+        return getChatMessageBuilder().setPublicChatMessage(bisq.social.protobuf.PublicChatMessage.newBuilder()).build();
+    }
+
+    public static PublicChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
+        Optional<QuotedMessage> quotedMessage = baseProto.hasQuotedMessage() ?
+                Optional.of(QuotedMessage.fromProto(baseProto.getQuotedMessage())) :
+                Optional.empty();
+        return new PublicChatMessage(
+                baseProto.getChannelId(),
+                ChatUser.fromProto(baseProto.getChatUser()),
+                baseProto.getText(),
+                quotedMessage,
+                baseProto.getDate(),
+                ChannelType.fromProto(baseProto.getChannelType()),
+                baseProto.getWasEdited(),
+                MetaData.fromProto(baseProto.getMetaData()));
+    }
+
+    public static ProtoResolver<DistributedData> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.social.protobuf.ChatMessage.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     @Override

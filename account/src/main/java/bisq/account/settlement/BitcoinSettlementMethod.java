@@ -18,6 +18,7 @@
 package bisq.account.settlement;
 
 import bisq.account.protocol.SwapProtocolType;
+import com.google.protobuf.ProtocolMessageEnum;
 
 import java.util.List;
 
@@ -40,5 +41,10 @@ public enum BitcoinSettlementMethod implements SettlementMethod {
             case BSQ_BOND -> List.of(BitcoinSettlementMethod.values());
             case REPUTATION -> List.of(BitcoinSettlementMethod.values());
         };
+    }
+
+    @Override
+    public ProtocolMessageEnum toProto() {
+        return null;
     }
 }

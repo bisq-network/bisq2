@@ -17,48 +17,85 @@
 
 package bisq.social.user.profile;
 
-import bisq.common.data.ByteArray;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import bisq.social.user.Entitlement;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Persists my user profiles and the selected user profile.
  */
+@Slf4j
 public class UserProfileStore implements PersistableStore<UserProfileStore> {
     @Getter
     private final Observable<UserProfile> selectedUserProfile = new Observable<>();
     @Getter
     private final ObservableSet<UserProfile> userProfiles;
     @Getter
-    private final Map<ByteArray, Entitlement.ProofOfBurnProof> verifiedProofOfBurnProofs = new HashMap<>();
+    private final Map<String, Entitlement.ProofOfBurnProof> verifiedProofOfBurnProofs = new HashMap<>();
 
     public UserProfileStore() {
         userProfiles = new ObservableSet<>();
     }
 
-    private UserProfileStore(ObservableSet<UserProfile> userProfiles,
-                             Observable<UserProfile> selectedUserProfile,
-                             Map<ByteArray, Entitlement.ProofOfBurnProof> verifiedProofOfBurnProofs) {
-        this.selectedUserProfile.set(selectedUserProfile.get());
+    private UserProfileStore(UserProfile selectedUserProfile,
+                             Set<UserProfile> userProfiles,
+                             Map<String, Entitlement.ProofOfBurnProof> verifiedProofOfBurnProofs) {
+        this.selectedUserProfile.set(selectedUserProfile);
         this.userProfiles = new ObservableSet<>(userProfiles);
         this.verifiedProofOfBurnProofs.putAll(verifiedProofOfBurnProofs);
     }
 
     @Override
+    public bisq.social.protobuf.UserProfileStore toProto() {
+        return bisq.social.protobuf.UserProfileStore.newBuilder()
+                .setSelectedUserProfile(selectedUserProfile.get().toProto())
+                .addAllUserProfiles(userProfiles.stream().map(UserProfile::toProto).collect(Collectors.toSet()))
+                .putAllVerifiedProofOfBurnProofs(verifiedProofOfBurnProofs.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto())))
+                .build();
+    }
+
+    public static UserProfileStore fromProto(bisq.social.protobuf.UserProfileStore proto) {
+        return new UserProfileStore(UserProfile.fromProto(proto.getSelectedUserProfile()),
+                proto.getUserProfilesList().stream()
+                        .map(e -> UserProfile.fromProto(proto.getSelectedUserProfile()))
+                        .collect(Collectors.toSet()),
+                proto.getVerifiedProofOfBurnProofsMap().entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e -> (Entitlement.ProofOfBurnProof) Entitlement.Proof.fromProto(e.getValue()))));
+    }
+
+    @Override
+    public ProtoResolver<PersistableStore<?>> getResolver() {
+        return  any -> {
+            try {
+                return fromProto(any.unpack(bisq.social.protobuf.UserProfileStore.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
+    }
+
+    @Override
     public UserProfileStore getClone() {
-        return new UserProfileStore(userProfiles, selectedUserProfile, verifiedProofOfBurnProofs);
+        return new UserProfileStore(selectedUserProfile.get(), userProfiles, verifiedProofOfBurnProofs);
     }
 
     @Override
     public void applyPersisted(UserProfileStore persisted) {
-        userProfiles.addAll(persisted.getUserProfiles());
         selectedUserProfile.set(persisted.getSelectedUserProfile().get());
+        userProfiles.addAll(persisted.getUserProfiles());
         verifiedProofOfBurnProofs.putAll(persisted.getVerifiedProofOfBurnProofs());
     }
 }

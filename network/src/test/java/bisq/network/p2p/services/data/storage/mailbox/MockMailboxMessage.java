@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.protobuf.NetworkMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -37,5 +38,10 @@ public class MockMailboxMessage implements MailboxMessage {
     @Override
     public MetaData getMetaData() {
         return metaData;
+    }
+
+    @Override
+    public NetworkMessage toProto() {
+        return null;
     }
 }

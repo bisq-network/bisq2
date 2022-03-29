@@ -17,7 +17,14 @@
 
 package bisq.network.p2p.node;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 public record Load(int numConnections) implements Proto {
+    public bisq.network.protobuf.Load toProto() {
+        return bisq.network.protobuf.Load.newBuilder().setNumConnections(numConnections).build();
+    }
+
+    public static Load fromProto(bisq.network.protobuf.Load proto) {
+        return new Load(proto.getNumConnections());
+    }
 }

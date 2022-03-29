@@ -17,10 +17,20 @@
 
 package bisq.social.chat;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.ProtoEnum;
+import bisq.common.util.ProtobufUtils;
 
-public enum NotificationSetting implements Proto {
+public enum NotificationSetting implements ProtoEnum {
     ALL,
     MENTION,
-    NEVER
+    NEVER;
+
+    @Override
+    public bisq.social.protobuf.NotificationSetting toProto() {
+        return bisq.social.protobuf.NotificationSetting.valueOf(name());
+    }
+
+    public static NotificationSetting fromProto(bisq.social.protobuf.NotificationSetting proto) {
+        return ProtobufUtils.enumFromProto(NotificationSetting.class, proto.name());
+    }
 }

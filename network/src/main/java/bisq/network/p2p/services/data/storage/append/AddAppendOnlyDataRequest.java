@@ -19,6 +19,26 @@ package bisq.network.p2p.services.data.storage.append;
 
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record AddAppendOnlyDataRequest(AppendOnlyData payload) implements AddDataRequest, DataRequest {
+@Getter
+@ToString
+@EqualsAndHashCode
+public class AddAppendOnlyDataRequest implements AddDataRequest, DataRequest {
+    private final AppendOnlyData appendOnlyData;
+
+    public AddAppendOnlyDataRequest(AppendOnlyData appendOnlyData) {
+        this.appendOnlyData = appendOnlyData;
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkMessage toProto() {
+        throw new RuntimeException("AddAppendOnlyDataRequest protobuf support not implemented yet");
+    }
+
+    public static AddAppendOnlyDataRequest fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest proto) {
+        throw new RuntimeException("AddAppendOnlyDataRequest protobuf support not implemented yet");
+    }
 }

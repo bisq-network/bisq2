@@ -17,5 +17,24 @@
 
 package bisq.offer.options;
 
+import bisq.common.proto.UnresolvableProtobufMessageException;
+
 public interface ReputationProof {
+    bisq.offer.protobuf.ReputationProof toProto();
+
+    default bisq.offer.protobuf.ReputationProof.Builder getReputationProofBuilder() {
+        return bisq.offer.protobuf.ReputationProof.newBuilder();
+    }
+
+    static ReputationProof fromProto(bisq.offer.protobuf.ReputationProof proto) {
+        switch (proto.getMessageCase()) {
+            case ACCOUNTCREATIONDATEPROOF -> {
+                return AccountCreationDateProof.fromProto(proto.getAccountCreationDateProof());
+            }
+            case MESSAGE_NOT_SET -> {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
+    }
 }

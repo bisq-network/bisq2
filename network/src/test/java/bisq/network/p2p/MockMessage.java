@@ -36,4 +36,9 @@ public class MockMessage implements NetworkMessage {
                 "\r\n     msg='" + msg + '\'' +
                 "\r\n}";
     }
+
+    @Override
+    public bisq.network.protobuf.NetworkMessage toProto() {
+        return null;
+    }
 }
