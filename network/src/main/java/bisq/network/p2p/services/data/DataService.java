@@ -319,6 +319,8 @@ public class DataService implements DataNetworkService.Listener {
                         // async calls
                         if (storageData instanceof AuthenticatedData authenticatedData) {
                             listeners.forEach(listener -> listener.onAuthenticatedDataAdded(authenticatedData));
+                        } else if (storageData instanceof MailboxData mailboxData) {
+                            listeners.forEach(listener -> listener.onMailboxDataAdded(mailboxData));
                         } else if (storageData instanceof AppendOnlyData appendOnlyData) {
                             listeners.forEach(listener -> listener.onAppendOnlyDataAdded(appendOnlyData));
                         }

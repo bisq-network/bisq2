@@ -24,17 +24,19 @@ import bisq.security.ConfidentialData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @ToString
 @EqualsAndHashCode
 @Getter
 public class ConfidentialMessage implements NetworkMessage, DistributedData {
     private final ConfidentialData confidentialData;
-    private final String keyId;
+    private final String receiverKeyId;
 
-    public ConfidentialMessage(ConfidentialData confidentialData, String keyId) {
+    public ConfidentialMessage(ConfidentialData confidentialData, String receiverKeyId) {
         this.confidentialData = confidentialData;
-        this.keyId = keyId;
+        this.receiverKeyId = receiverKeyId;
     }
 
     @Override
@@ -42,13 +44,13 @@ public class ConfidentialMessage implements NetworkMessage, DistributedData {
         return getNetworkMessageBuilder().setConfidentialMessage(
                 bisq.network.protobuf.ConfidentialMessage.newBuilder()
                         .setConfidentialData(confidentialData.toProto())
-                        .setKeyId(keyId)
+                        .setReceiverKeyId(receiverKeyId)
         ).build();
     }
 
     public static ConfidentialMessage fromProto(bisq.network.protobuf.ConfidentialMessage proto) {
         return new ConfidentialMessage(ConfidentialData.fromProto(proto.getConfidentialData()),
-                proto.getKeyId());
+                proto.getReceiverKeyId());
     }
 
     @Override
@@ -60,6 +62,6 @@ public class ConfidentialMessage implements NetworkMessage, DistributedData {
 
     @Override
     public boolean isDataInvalid() {
-        return confidentialData == null || keyId == null;
+        return confidentialData == null || receiverKeyId == null;
     }
 }

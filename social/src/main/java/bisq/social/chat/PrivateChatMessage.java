@@ -92,7 +92,7 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
                 Optional.empty();
         return new PrivateChatMessage(
                 baseProto.getChannelId(),
-                ChatUser.fromProto(baseProto.getChatUser()),
+                ChatUser.fromProto(baseProto.getAuthor()),
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),

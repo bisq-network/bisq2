@@ -83,7 +83,7 @@ message PublicChatMessage {
 message ChatMessage {
   string channelId = 1;
   string text = 2;
-  ChatUser chatUser = 3;
+  ChatUser author = 3;
   QuotedMessage quotedMessage = 4;
   uint64 date = 5;
   ChannelType channelType = 6;

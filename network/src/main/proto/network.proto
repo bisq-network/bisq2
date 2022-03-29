@@ -100,7 +100,7 @@ message Pong {
 
 message ConfidentialMessage {
   security.ConfidentialData confidentialData = 1;
-  string keyId = 2;
+  string receiverKeyId = 2;
 }
 
 message InventoryRequest {

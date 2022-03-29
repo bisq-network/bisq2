@@ -81,7 +81,7 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
                 Optional.empty();
         return new PublicChatMessage(
                 baseProto.getChannelId(),
-                ChatUser.fromProto(baseProto.getChatUser()),
+                ChatUser.fromProto(baseProto.getAuthor()),
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),

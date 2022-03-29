@@ -36,14 +36,13 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
 
     public PrivateChannel(String id, ChatUser peer, UserProfile myProfile) {
         this(id, peer, myProfile, NotificationSetting.ALL, new HashSet<>());
-
     }
 
-    public PrivateChannel(String id,
-                          ChatUser peer,
-                          UserProfile myProfile,
-                          NotificationSetting notificationSetting,
-                          Set<PrivateChatMessage> chatMessages) {
+    private PrivateChannel(String id,
+                           ChatUser peer,
+                           UserProfile myProfile,
+                           NotificationSetting notificationSetting,
+                           Set<PrivateChatMessage> chatMessages) {
         super(id, notificationSetting, chatMessages);
         this.peer = peer;
         this.myProfile = myProfile;
