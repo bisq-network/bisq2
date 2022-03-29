@@ -32,6 +32,4 @@ public enum ChannelType implements ProtoEnum {
     public static ChannelType fromProto(bisq.social.protobuf.ChannelType proto) {
         return ProtobufUtils.enumFromProto(ChannelType.class, proto.name());
     }
-
-
 }

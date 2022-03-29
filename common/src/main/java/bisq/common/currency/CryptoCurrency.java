@@ -31,10 +31,6 @@ public final class CryptoCurrency extends TradeCurrency {
         super(code, name);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protobuffer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public bisq.common.protobuf.TradeCurrency toProto() {
         return getTradeCurrencyBuilder().setCryptoCurrency(bisq.common.protobuf.CryptoCurrency.newBuilder()).build();
     }
@@ -42,7 +38,6 @@ public final class CryptoCurrency extends TradeCurrency {
     public static CryptoCurrency fromProto(bisq.common.protobuf.TradeCurrency baseProto, bisq.common.protobuf.CryptoCurrency proto) {
         return new CryptoCurrency(baseProto.getCode(), baseProto.getName());
     }
-
 
     @Override
     public String getDisplayPrefix() {
@@ -52,5 +47,4 @@ public final class CryptoCurrency extends TradeCurrency {
     public boolean isFiat() {
         return false;
     }
-
 }

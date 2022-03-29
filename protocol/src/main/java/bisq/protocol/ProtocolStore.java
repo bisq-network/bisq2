@@ -40,7 +40,6 @@ public class ProtocolStore implements PersistableStore<ProtocolStore> {
         this.protocolModelByOfferId.putAll(protocolModelByOfferId);
     }
 
-
     @Override
     public bisq.protocol.protobuf.ProtocolStore toProto() {
         return bisq.protocol.protobuf.ProtocolStore.newBuilder()

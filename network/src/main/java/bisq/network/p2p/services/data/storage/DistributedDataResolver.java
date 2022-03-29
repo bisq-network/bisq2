@@ -21,8 +21,6 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.ProtoResolverMap;
 import com.google.protobuf.Any;
 
-// Interface for any data which gets distributed to the P2P network. Usually data from outside the network module 
-// like Offer, ChatMessage,...
 public class DistributedDataResolver {
     private static final ProtoResolverMap<DistributedData> protoResolverMap = new ProtoResolverMap<>();
 

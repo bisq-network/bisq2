@@ -77,8 +77,8 @@ public class FileUtils {
         deleteFile(file);
     }
 
-    public static void deleteDirectory(String dir) {
-        deleteDirectory(new File(dir));
+    public static void deleteDirectory(String dirPath) {
+        deleteDirectory(new File(dirPath));
     }
 
     public static void deleteDirectory(File dir) {

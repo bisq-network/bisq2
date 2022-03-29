@@ -18,25 +18,26 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.proto.Proto;
-import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.DataRequest;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 public record Inventory(Set<? extends DataRequest> entries, int numDropped) implements Proto {
     public bisq.network.protobuf.Inventory toProto() {
         return bisq.network.protobuf.Inventory.newBuilder()
-                .addAllEntries(entries.stream().map(e -> e.getNetworkMessageBuilder().build()).collect(Collectors.toList()))
+                .addAllEntries(entries.stream().map(e -> e.toProto().getDataRequest()).collect(Collectors.toList()))
                 .setNumDropped(numDropped)
                 .build();
     }
 
     public static Inventory fromProto(bisq.network.protobuf.Inventory proto) {
-        Set<DataRequest> entries = proto.getEntriesList().stream()
-                .map(NetworkMessage::fromProto)
-                .filter(e -> e instanceof DataRequest)
-                .map(e -> (DataRequest) e)
+        List<bisq.network.protobuf.DataRequest> entriesList = proto.getEntriesList();
+        Set<DataRequest> entries = entriesList.stream()
+                .map(DataRequest::fromProto)
                 .collect(Collectors.toSet());
         return new Inventory(entries, proto.getNumDropped());
     }

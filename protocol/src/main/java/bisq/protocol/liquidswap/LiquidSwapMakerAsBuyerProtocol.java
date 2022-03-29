@@ -39,6 +39,7 @@ public class LiquidSwapMakerAsBuyerProtocol extends LiquidSwapMakerProtocol impl
 
     @Override
     public Message toProto() {
+        //todo
         return null;
     }
 }

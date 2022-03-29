@@ -30,7 +30,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 public abstract class ProtocolModel implements Proto {
 
-
     public enum State {
         IDLE,
         PENDING,
@@ -41,6 +40,7 @@ public abstract class ProtocolModel implements Proto {
     //todo impl in subclasses, make abstract
     @Override
     public bisq.protocol.protobuf.ProtocolModel toProto() {
+        //todo
         return null;
     }
 

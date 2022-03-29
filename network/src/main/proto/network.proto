@@ -45,7 +45,7 @@ message DataFilter {
 }
 
 message Inventory {
-  repeated NetworkMessage entries = 1;
+  repeated DataRequest entries = 1;
   uint32 numDropped = 2;
 }
 
@@ -111,6 +111,48 @@ message InventoryResponse {
   Inventory inventory = 1;
   uint32 requestNonce = 2;
 }
+
+message ExternalNetworkMessage {
+  google.protobuf.Any any = 1;
+}
+
+
+////////////////////////////////////////////////////////////////////
+// NetworkMessage types
+////////////////////////////////////////////////////////////////////
+
+message NetworkMessage {
+  oneof message {
+    ConnectionHandshake.Request connectionHandshakeRequest = 1;
+    ConnectionHandshake.Response connectionHandshakeResponse = 2;
+
+    CloseConnectionMessage closeConnectionMessage = 3;
+
+    PeerExchangeRequest peerExchangeRequest = 4;
+    PeerExchangeResponse peerExchangeResponse = 5;
+
+    AddressValidationRequest addressValidationRequest = 6;
+    AddressValidationResponse addressValidationResponse = 7;
+
+    Ping ping = 8;
+    Pong pong = 9;
+
+    ConfidentialMessage confidentialMessage = 10;
+
+    InventoryRequest inventoryRequest = 11;
+    InventoryResponse inventoryResponse = 12;
+
+    DataRequest dataRequest = 13;
+
+    // Wrapper for NetworkMessages defined in other modules like PrivateChatMessage which are wrapped in an Any blob
+    ExternalNetworkMessage externalNetworkMessage = 14;
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////
+// DataRequests
+////////////////////////////////////////////////////////////////////
 
 message MetaData {
   uint64 ttl = 1;
@@ -183,10 +225,6 @@ message AddAppendOnlyDataRequest {
   google.protobuf.Any appendOnlyData = 1;
 }
 
-message ExternalNetworkMessage {
-  google.protobuf.Any any = 1;
-}
-
 ////////////////////////////////////////////////////////////////////
 // DataRequest types
 ////////////////////////////////////////////////////////////////////
@@ -204,38 +242,6 @@ message DataRequest {
   }
 }
 
-////////////////////////////////////////////////////////////////////
-// NetworkMessage types
-////////////////////////////////////////////////////////////////////
-
-message NetworkMessage {
-  oneof message {
-    ConnectionHandshake.Request connectionHandshakeRequest = 1;
-    ConnectionHandshake.Response connectionHandshakeResponse = 2;
-
-    CloseConnectionMessage closeConnectionMessage = 3;
-
-    PeerExchangeRequest peerExchangeRequest = 4;
-    PeerExchangeResponse peerExchangeResponse = 5;
-
-    AddressValidationRequest addressValidationRequest = 6;
-    AddressValidationResponse addressValidationResponse = 7;
-
-    Ping ping = 8;
-    Pong pong = 9;
-
-    ConfidentialMessage confidentialMessage = 10;
-
-    InventoryRequest inventoryRequest = 11;
-    InventoryResponse inventoryResponse = 12;
-
-    DataRequest dataRequest = 13;
-
-    // Wrapper for NetworkMessages defined in other modules like PrivateChatMessage which are wrapped in an Any blob
-    ExternalNetworkMessage externalNetworkMessage = 14;
-  }
-}
-
 
 ////////////////////////////////////////////////////////////////////
 // NetworkEnvelope
@@ -249,10 +255,15 @@ message NetworkEnvelope {
   NetworkMessage networkMessage = 3;
 }
 
+
+////////////////////////////////////////////////////////////////////
+// Stores
+////////////////////////////////////////////////////////////////////
+
 message DataStore {
   message MapEntry {
     common.ByteArray key = 1;
-    NetworkMessage value = 2; // Real lower bound type is DataRequest but we have no protobuf message for that
+    DataRequest value = 2; 
   }
   repeated MapEntry mapEntries = 1;
 }

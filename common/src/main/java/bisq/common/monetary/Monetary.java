@@ -77,10 +77,6 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
         this(id, doubleValueToLong(value, precision), code, precision, minPrecision);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protobuffer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public bisq.common.protobuf.Monetary.Builder getMonetaryBuilder() {
         return bisq.common.protobuf.Monetary.newBuilder()
                 .setId(id)
@@ -93,10 +89,10 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
     public static Monetary fromProto(bisq.common.protobuf.Monetary proto) {
         switch (proto.getMessageCase()) {
             case COIN -> {
-                return Coin.fromProto(proto, proto.getCoin());
+                return Coin.fromProto(proto);
             }
             case FIAT -> {
-                return Fiat.fromProto(proto, proto.getFiat());
+                return Fiat.fromProto(proto);
             }
             case MESSAGE_NOT_SET -> {
                 throw new UnresolvableProtobufMessageException(proto);
@@ -115,5 +111,4 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
     public int compareTo(Monetary other) {
         return Long.compare(value, other.getValue());
     }
-
 }

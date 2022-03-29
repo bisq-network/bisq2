@@ -55,4 +55,3 @@ public class MetaData implements Proto {
         return new MetaData(proto.getTtl(), proto.getMaxSizeInBytes(), proto.getFileName());
     }
 }
-

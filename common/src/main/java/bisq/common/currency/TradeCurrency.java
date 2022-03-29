@@ -52,11 +52,6 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Proto 
         this.name = name;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protobuffer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public bisq.common.protobuf.TradeCurrency.Builder getTradeCurrencyBuilder() {
         return bisq.common.protobuf.TradeCurrency.newBuilder()
                 .setCode(code)

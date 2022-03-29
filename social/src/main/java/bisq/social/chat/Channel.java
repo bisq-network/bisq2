@@ -45,6 +45,8 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
                 .addAllChatMessages(chatMessages.stream().map(this::getChatMessageProto).collect(Collectors.toList()));
     }
 
+    // As protobuf classes do not support inheritance we need to delegate it to our subclasses to provide the
+    // concrete implementation for the ChatMessage.
     protected abstract bisq.social.protobuf.ChatMessage getChatMessageProto(T e);
 
     abstract public bisq.social.protobuf.Channel toProto();

@@ -18,10 +18,8 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
-import bisq.common.data.Pair;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -34,7 +32,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-//todo implement proto support after persistence is done
 @Slf4j
 @ToString
 public class DataStore<T extends DataRequest> implements PersistableStore<DataStore<T>> {
@@ -48,16 +45,13 @@ public class DataStore<T extends DataRequest> implements PersistableStore<DataSt
         this.map.putAll(map);
     }
 
-    //todo add DataStore resolver
-    // DataStore has no protobuf message defined. We get resolved the message in NetworkMessage and NetworkMessage is 
-    // the only subtype common to all DataStore objects.
     @Override
     public bisq.network.protobuf.DataStore toProto() {
         // Protobuf map do not support bytes as key
         List<bisq.network.protobuf.DataStore.MapEntry> mapEntries = map.entrySet().stream()
                 .map(e -> bisq.network.protobuf.DataStore.MapEntry.newBuilder()
                         .setKey(e.getKey().toProto())
-                        .setValue(e.getValue().toProto())
+                        .setValue(e.getValue().toProto().getDataRequest())
                         .build())
                 .collect(Collectors.toList());
         return bisq.network.protobuf.DataStore.newBuilder()
@@ -67,9 +61,7 @@ public class DataStore<T extends DataRequest> implements PersistableStore<DataSt
 
     public static PersistableStore<?> fromProto(bisq.network.protobuf.DataStore proto) {
         return new DataStore<>(proto.getMapEntriesList().stream()
-                .map(e -> new Pair<>(new ByteArray(e.getKey().toByteArray()), NetworkMessage.fromProto(e.getValue())))
-                .filter(p -> p.second() instanceof DataRequest)
-                .collect(Collectors.toMap(Pair::first, e -> (DataRequest) e.second())));
+                .collect(Collectors.toMap(e -> new ByteArray(e.getKey().toByteArray()), e -> DataRequest.fromProto(e.getValue()))));
     }
 
     @Override

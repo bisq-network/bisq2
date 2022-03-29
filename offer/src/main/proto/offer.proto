@@ -97,6 +97,7 @@ message OfferOption {
   }
 }
 
+// Offer
 message Offer {
   string id = 1;
   uint64 date = 2;

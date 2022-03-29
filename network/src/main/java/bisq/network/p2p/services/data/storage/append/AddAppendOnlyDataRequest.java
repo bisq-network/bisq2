@@ -39,6 +39,6 @@ public class AddAppendOnlyDataRequest implements AddDataRequest, DataRequest {
     }
 
     public static AddAppendOnlyDataRequest fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest proto) {
-           throw new RuntimeException("AddAppendOnlyDataRequest protobuf support not implemented yet");
+        throw new RuntimeException("AddAppendOnlyDataRequest protobuf support not implemented yet");
     }
 }

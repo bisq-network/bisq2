@@ -25,7 +25,7 @@ import "common.proto";
 // todo move over account domain from bisq1 and adjust it where needed
 
 message SettlementMethod {
-
+ //todo
 }
 message Account {
   string id = 1;
@@ -47,6 +47,7 @@ message AccountPayload {
   string settlementMethodId = 2;
   oneof message {
     AliPayAccountPayload ali_pay_account_payload = 4;
+    //todo
     /* ChaseQuickPayAccountPayload chase_quick_pay_account_payload = 5;
      ClearXchangeAccountPayload clear_xchange_account_payload = 6;
      CountryBasedPaymentAccountPayload country_based_payment_account_payload = 7;
@@ -94,6 +95,7 @@ message CountryBasedPaymentAccountPayload {
   string countryCode = 1;
   oneof message {
     BankAccountPayload bank_account_payload = 2;
+    //todo
     /* CashDepositAccountPayload cash_deposit_account_payload = 3;
      SepaAccountPayload sepa_account_payload = 4;
      WesternUnionAccountPayload western_union_account_payload = 5;

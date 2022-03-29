@@ -34,7 +34,7 @@ message ConfidentialData {
   bytes signature = 5;
 }
 
-// Used by other modules for serializing java.security.KeyPair
+// Protobuf wrapper for java.security.KeyPair used by other modules
 message KeyPair {
   bytes privateKey = 1;
   bytes publicKey = 2;

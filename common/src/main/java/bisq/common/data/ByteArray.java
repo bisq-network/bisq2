@@ -39,10 +39,6 @@ public class ByteArray implements Proto {
         this.bytes = bytes;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protobuffer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-   
     public bisq.common.protobuf.ByteArray toProto() {
         return bisq.common.protobuf.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes)).build();
     }
@@ -50,7 +46,7 @@ public class ByteArray implements Proto {
     public static ByteArray fromProto(bisq.common.protobuf.ByteArray proto) {
         return new ByteArray(proto.getBytes().toByteArray());
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

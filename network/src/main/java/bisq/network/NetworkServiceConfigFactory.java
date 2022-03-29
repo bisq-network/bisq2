@@ -36,8 +36,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class NetworkServiceConfigFactory {
-    public static NetworkService.Config getConfig(String baseDir, 
-                                                  Config typesafeConfig) {
+    public static NetworkService.Config getConfig(String baseDir, Config typesafeConfig) {
         Set<Transport.Type> supportedTransportTypes = new HashSet<>(typesafeConfig.getEnumList(Transport.Type.class,
                 "supportedTransportTypes"));
 

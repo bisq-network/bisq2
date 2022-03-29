@@ -111,14 +111,17 @@ public class Persistence<T extends PersistableStore<T>> {
                 fileOutputStream = new FileOutputStream(tempFile);
 
                 // We use an Any container (byte blob) as we do not have the dependencies to the 
-                // external PersistableStore implementations (at deserialization we would have an issue otherwise).
+                // external PersistableStore implementations (at deserialization we would have an issue otherwise as
+                // it requires static access).
                 Any any = persistableStore.toAny();
                 any.writeDelimitedTo(fileOutputStream);
                 fileOutputStream.flush();
                 fileOutputStream.getFD().sync();
 
+                // close is needed on WinOS otherwise renameFile will fail
                 fileOutputStream.close();
-                // close is needed on WinOS otherwise renaming will fail
+                fileOutputStream = null;
+                
                 // Atomic rename
                 FileUtils.renameFile(tempFile, storageFile);
                 //log.debug("Persisted {}", persistableStore);
@@ -133,8 +136,6 @@ public class Persistence<T extends PersistableStore<T>> {
                     log.error("FileUtils.backupCorruptedFile failed: " + e.getMessage(), e);
                 }
             } finally {
-                // close all and cleanup in case of Exception
-                // tempfile depends on objectOutputStream which depends on fileOutputstream, close in reverse order
                 try {
                     if (fileOutputStream != null) {
                         fileOutputStream.close();

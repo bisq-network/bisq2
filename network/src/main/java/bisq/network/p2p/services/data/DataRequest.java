@@ -25,15 +25,10 @@ import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataReque
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
-import com.google.protobuf.Any;
 
 public interface DataRequest extends BroadcastMessage {
     default bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder() {
         return bisq.network.protobuf.DataRequest.newBuilder();
-    }
-
-    static DataRequest resolve(Any any) {
-        return DataRequestResolver.fromAny(any);
     }
 
     static DataRequest fromProto(bisq.network.protobuf.DataRequest proto) {

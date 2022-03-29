@@ -74,7 +74,6 @@ public abstract class Connection {
     private final Handler handler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private OutputStream outputStream;
-    private InputStream inputStream;
     @Nullable
     private Future<?> future;
 
@@ -93,6 +92,8 @@ public abstract class Connection {
         this.peersLoad = peersLoad;
         this.handler = handler;
         this.metrics = metrics;
+
+        InputStream inputStream;
         try {
             outputStream = socket.getOutputStream();
             inputStream = socket.getInputStream();
@@ -149,6 +150,7 @@ public abstract class Connection {
             NetworkEnvelope networkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, authorizationToken, networkMessage);
             synchronized (writeLock) {
                 bisq.network.protobuf.NetworkEnvelope proto = networkEnvelope.toProto();
+                checkNotNull(proto, "Proto from networkEnvelope.toProto() must not be null");
                 proto.writeDelimitedTo(outputStream);
                 outputStream.flush();
             }

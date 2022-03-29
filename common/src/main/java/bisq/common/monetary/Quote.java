@@ -64,10 +64,6 @@ public class Quote implements Comparable<Quote>, Proto {
         market = new Market(baseMonetary.getCode(), quoteMonetary.getCode());
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protobuffer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public bisq.common.protobuf.Quote toProto() {
         return bisq.common.protobuf.Quote.newBuilder().setValue(value)
                 .setBaseMonetary(baseMonetary.getMonetaryBuilder())
@@ -80,7 +76,6 @@ public class Quote implements Comparable<Quote>, Proto {
                 Monetary.fromProto(proto.getBaseMonetary()),
                 Monetary.fromProto(proto.getQuoteMonetary()));
     }
-
 
     /**
      * @param price            Price of a BTC-Fiat quote (e.g. BTC/USD). Bitcoin is base currency

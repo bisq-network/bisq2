@@ -30,7 +30,6 @@ public class SettingsService implements PersistenceClient<SettingsStore> {
     @Getter
     private final Persistence<SettingsStore> persistence;
 
-
     public SettingsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
@@ -44,5 +43,4 @@ public class SettingsService implements PersistenceClient<SettingsStore> {
         persistableStore.getDontShowAgainMap().put(key, dontShowAgain);
         persist();
     }
-
 }

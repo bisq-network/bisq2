@@ -116,18 +116,17 @@ public class Coin extends Monetary {
         super(id, value, code, precision, minPrecision);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protobuffer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public bisq.common.protobuf.Monetary toProto() {
         return getMonetaryBuilder().setCoin(bisq.common.protobuf.Coin.newBuilder()).build();
     }
 
-    public static Coin fromProto(bisq.common.protobuf.Monetary baseProto, bisq.common.protobuf.Coin proto) {
-        return new Coin(baseProto.getId(), baseProto.getValue(), baseProto.getCode(), baseProto.getPrecision(), baseProto.getMinPrecision());
+    public static Coin fromProto(bisq.common.protobuf.Monetary baseProto) {
+        return new Coin(baseProto.getId(),
+                baseProto.getValue(),
+                baseProto.getCode(), 
+                baseProto.getPrecision(), 
+                baseProto.getMinPrecision());
     }
-
 
     public Coin add(Coin value) {
         checkArgument(value.code.equals(this.code));

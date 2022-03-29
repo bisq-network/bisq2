@@ -31,7 +31,6 @@ import bisq.network.p2p.services.peergroup.keepalive.Ping;
 import bisq.network.p2p.services.peergroup.keepalive.Pong;
 import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationRequest;
 import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationResponse;
-import com.google.protobuf.Any;
 
 /**
  * Interface for any message sent as payload in NetworkEnvelope
@@ -41,11 +40,7 @@ public interface NetworkMessage extends Proto {
         return bisq.network.protobuf.NetworkMessage.newBuilder();
     }
 
-    static NetworkMessage resolve(Any any) {
-        return NetworkMessageResolver.fromAny(any);
-    }
-
-     bisq.network.protobuf.NetworkMessage toProto();
+    bisq.network.protobuf.NetworkMessage toProto();
 
     static NetworkMessage fromProto(bisq.network.protobuf.NetworkMessage proto) {
         switch (proto.getMessageCase()) {

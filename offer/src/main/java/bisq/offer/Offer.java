@@ -30,7 +30,6 @@ import bisq.offer.options.OfferOption;
 import bisq.offer.spec.*;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
-import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -134,11 +133,6 @@ public class Offer implements DistributedData {
     @Override
     public boolean isDataInvalid() {
         return false;
-    }
-
-    @Override
-    public Any toAny() {
-        return Any.pack(toProto());
     }
 
     public bisq.offer.protobuf.Offer toProto() {

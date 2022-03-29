@@ -18,7 +18,9 @@
 package bisq.common.proto;
 
 import com.google.protobuf.ProtocolMessageEnum;
-
+/**
+ * Interface for any enum which gets serialized using protobuf
+ */
 public interface ProtoEnum   {
     ProtocolMessageEnum toProto();
 }

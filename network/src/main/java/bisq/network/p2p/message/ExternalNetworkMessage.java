@@ -19,7 +19,8 @@ package bisq.network.p2p.message;
 
 import com.google.protobuf.Any;
 
-// Wrapper for NetworkMessages which are not part of the network module (e.g. PrivateChatMessage)
+// Wrapper for NetworkMessages which are not part of the network module (e.g. PrivateChatMessage).
+// We wrap them into an Any binary blob.
 public class ExternalNetworkMessage {
     private final NetworkMessage networkMessage;
 

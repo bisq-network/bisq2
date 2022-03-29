@@ -63,7 +63,7 @@ public abstract class ChatMessage {
                 .setChatUser(chatUser.toProto())
                 .setText(text)
                 .setDate(date)
-                .setChannelType(channelType.name())
+                .setChannelType(channelType.toProto())
                 .setWasEdited(wasEdited)
                 .setMetaData(metaData.toProto());
         quotedMessage.ifPresent(quotedMessage -> builder.setQuotedMessage(quotedMessage.toProto()));

@@ -22,7 +22,6 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.user.ChatUser;
-import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -49,6 +48,7 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
                 text,
                 quotedMessage,
                 date,
+                ChannelType.PUBLIC,
                 wasEdited,
                 new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PublicChatMessage.class.getSimpleName()));
     }
@@ -58,6 +58,7 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
                               String text,
                               Optional<QuotedMessage> quotedMessage,
                               long date,
+                              ChannelType channelType,
                               boolean wasEdited,
                               MetaData metaData) {
         super(channelId,
@@ -65,16 +66,10 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
                 text,
                 quotedMessage,
                 date,
-                ChannelType.PUBLIC,
+                channelType,
                 wasEdited,
                 metaData);
     }
-
-    @Override
-    public Any toAny() {
-        return Any.pack(toProto());
-    }
-
 
     public bisq.social.protobuf.ChatMessage toProto() {
         return getChatMessageBuilder().setPublicChatMessage(bisq.social.protobuf.PublicChatMessage.newBuilder()).build();
@@ -90,6 +85,7 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),
+                ChannelType.fromProto(baseProto.getChannelType()),
                 baseProto.getWasEdited(),
                 MetaData.fromProto(baseProto.getMetaData()));
     }

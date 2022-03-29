@@ -69,6 +69,8 @@ public enum CloseReason implements ProtoEnum {
     @Override
     public ProtocolMessageEnum toProto() {
         log.error("Not impl yet");
+        
+        
         return null;
     }
 }

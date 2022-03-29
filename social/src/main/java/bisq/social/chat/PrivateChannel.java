@@ -102,6 +102,7 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
     }
 
     public String getChannelName() {
+        //todo maybe we show only peer and show our profile in some graphical element (e.g. icon only with tooltip)
         return peer.getUserName() + " - " + myProfile.userName();
     }
 }

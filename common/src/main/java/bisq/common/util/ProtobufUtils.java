@@ -17,7 +17,6 @@
 
 package bisq.common.util;
 
-import bisq.common.proto.ProtoPackageAndMessageName;
 import com.google.common.base.Enums;
 import com.google.protobuf.Any;
 import lombok.extern.slf4j.Slf4j;
@@ -36,19 +35,6 @@ public class ProtobufUtils {
             return result;
         }
         return result;
-    }
-
-    //todo remove
-    public static ProtoPackageAndMessageName getProtoPackageAndMessageName(Any any) {
-        // Convention:
-        // We use the module name as proto package name and the java class name as the proto message name.
-        // E.g. protoFQN = "offer.Offer"
-        String protoFQN = any.getTypeUrl().split("/")[1];
-        String protoPackage = protoFQN.split("\\.")[0];
-        String protoMessageName = protoFQN.split("\\.")[1];
-        // For the generated java package structure we use:
-        // bisq.[protoPackage].protobuf.[protoMessageName]
-        return new ProtoPackageAndMessageName(protoPackage, protoMessageName);
     }
 
     public static String getProtoType(Any any) {

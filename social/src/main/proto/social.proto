@@ -60,10 +60,10 @@ message Entitlement {
   string entitlementType = 1;
   Proof proof = 2;
 }
+
 message ChatUser {
   network.NetworkId networkId = 1;
   repeated Entitlement entitlements = 2;
-
 }
 message QuotedMessage {
   string userName = 1;
@@ -71,10 +71,14 @@ message QuotedMessage {
   string message = 3;
 }
 
+enum ChannelType {
+  PUBLIC = 0;
+  PRIVATE = 1;
+}
+
 message PrivateChatMessage {
 }
 message PublicChatMessage {
-
 }
 message ChatMessage {
   string channelId = 1;
@@ -82,7 +86,7 @@ message ChatMessage {
   ChatUser chatUser = 3;
   QuotedMessage quotedMessage = 4;
   uint64 date = 5;
-  string channelType = 6;
+  ChannelType channelType = 6;
   bool wasEdited = 7;
   network.MetaData metaData = 8;
   oneof message {
@@ -91,11 +95,7 @@ message ChatMessage {
   }
 }
 
-enum ChannelType{
-  PUBLIC = 0;
-  PRIVATE = 1;
-}
-enum NotificationSetting{
+enum NotificationSetting {
   ALL = 0;
   MENTION = 1;
   NEVER = 2;
@@ -106,6 +106,7 @@ message UserProfile {
   repeated Entitlement entitlements = 2;
 }
 
+// Channels
 message PrivateChannel {
   ChatUser peer = 1;
   UserProfile myProfile = 2;
@@ -126,7 +127,8 @@ message Channel {
   }
 }
 
-message UserProfileStore{
+// Stores
+message UserProfileStore {
   repeated UserProfile userProfiles = 1;
   UserProfile selectedUserProfile = 2;
   map<string, Proof> verifiedProofOfBurnProofs = 3;

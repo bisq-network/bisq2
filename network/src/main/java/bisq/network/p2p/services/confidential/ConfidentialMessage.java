@@ -21,7 +21,6 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.ConfidentialData;
-import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -36,11 +35,6 @@ public class ConfidentialMessage implements NetworkMessage, DistributedData {
     public ConfidentialMessage(ConfidentialData confidentialData, String keyId) {
         this.confidentialData = confidentialData;
         this.keyId = keyId;
-    }
-
-    @Override
-    public Any toAny() {
-        return Any.pack(toProto());
     }
 
     @Override

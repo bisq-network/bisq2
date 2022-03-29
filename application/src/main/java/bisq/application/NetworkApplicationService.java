@@ -58,8 +58,11 @@ public class NetworkApplicationService extends ServiceProvider {
         this.applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
 
         persistenceService = new PersistenceService(applicationConfig.baseDir());
+        // Register resolvers for distributedData 
         DistributedDataResolver.addResolver("social.ChatMessage", PublicChatMessage.getResolver());
         DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
+
+        // Register resolvers for networkMessages 
         NetworkMessageResolver.addResolver("social.ChatMessage", PrivateChatMessage.getResolver());
 
         securityService = new SecurityService(persistenceService);

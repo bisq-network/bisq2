@@ -34,6 +34,7 @@ public class LiquidSwapTakeOfferRequest extends TakeOfferRequest {
 
     @Override
     public NetworkMessage toProto() {
+        //todo
         return null;
     }
 }

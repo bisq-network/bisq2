@@ -116,8 +116,7 @@ public class DefaultApplicationService extends ServiceProvider {
 
         settingsService = new SettingsService(persistenceService);
 
-        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(
-                applicationConfig.baseDir(),
+        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationConfig.baseDir(),
                 getConfig("bisq.networkServiceConfig"));
         KeyPairService keyPairService = securityService.getKeyPairService();
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
@@ -229,6 +228,7 @@ public class DefaultApplicationService extends ServiceProvider {
         return securityService.getKeyPairService();
     }
 
+    //todo move to wallet domain
     private boolean isRegtestRun() {
         return applicationConfig.isBitcoindRegtest() || applicationConfig.isElementsdRegtest();
     }
@@ -251,5 +251,4 @@ public class DefaultApplicationService extends ServiceProvider {
                 .build();
         return Optional.of(walletConfig);
     }
-
 }

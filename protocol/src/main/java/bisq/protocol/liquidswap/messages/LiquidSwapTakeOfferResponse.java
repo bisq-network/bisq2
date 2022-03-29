@@ -31,6 +31,7 @@ public class LiquidSwapTakeOfferResponse extends ProtocolMessage {
 
     @Override
     public NetworkMessage toProto() {
+        //todo
         return null;
     }
 }

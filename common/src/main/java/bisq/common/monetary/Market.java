@@ -39,5 +39,4 @@ public record Market(String baseCurrencyCode, String quoteCurrencyCode) implemen
     public String toString() {
         return baseCurrencyCode + QUOTE_SEPARATOR + quoteCurrencyCode;
     }
-
 }

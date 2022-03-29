@@ -30,7 +30,6 @@ import lombok.Getter;
 @Getter
 @EqualsAndHashCode
 public class AuthenticatedSequentialData implements Proto {
-
     public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber) {
         return new AuthenticatedSequentialData(data.getAuthenticatedData(),
                 sequenceNumber,

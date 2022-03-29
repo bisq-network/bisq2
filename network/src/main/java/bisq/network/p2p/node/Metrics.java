@@ -29,7 +29,6 @@ import java.util.concurrent.atomic.AtomicLong;
 @Getter
 @ToString
 public class Metrics {
-
     private final long created;
     private final AtomicLong lastUpdate = new AtomicLong();
     private final AtomicLong sentBytes = new AtomicLong();

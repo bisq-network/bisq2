@@ -29,7 +29,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
-//todo implement proto support after persistence is done
 public class NetworkIdStore implements PersistableStore<NetworkIdStore> {
     @Getter
     private final Map<String, NetworkId> networkIdByNodeId = new ConcurrentHashMap<>();
