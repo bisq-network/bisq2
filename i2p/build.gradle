@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'com.google.protobuf' version '0.8.18'
+    alias(libs.plugins.protobuf)
 }
 
 repositories {
@@ -26,9 +26,7 @@ dependencies {
         exclude group: 'org.apache.httpcomponents', module: 'httpclient'
     }
 
-    implementation "net.i2p.client:streaming:${i2pVersion}"
-    implementation "net.i2p:i2p:${i2pVersion}"
-    implementation "net.i2p:router:${i2pVersion}"
+    implementation libs.bundles.i2p
 }
 
 test {
