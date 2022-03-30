@@ -27,7 +27,7 @@ dependencies {
     implementation 'io.grpc:grpc-services'
     implementation 'io.grpc:grpc-stub'
     implementation 'org.codehaus.mojo:animal-sniffer-annotations'
-    implementation 'com.google.guava:guava'
+    implementation libs.guava
 }
 
 ext {

@@ -32,7 +32,7 @@ dependencies {
     implementation project(':application')
     implementation project(':desktop')
 
-    implementation 'com.google.guava:guava'
+    implementation libs.guava
     implementation 'com.typesafe:config'
 
     implementation 'com.jfoenix:jfoenix:9.0.10'

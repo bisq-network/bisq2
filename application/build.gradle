@@ -34,7 +34,7 @@ dependencies {
     implementation project(':wallets')
 
     implementation 'com.google.protobuf:protobuf-java'
-    implementation 'com.google.guava:guava'
+    implementation libs.guava
     implementation 'com.typesafe:config'
 }
 
