@@ -2,7 +2,6 @@ syntax = "proto3";
 package oracle;
 option java_package = "bisq.oracle.protobuf";
 option java_multiple_files = true;
-import "google/protobuf/any.proto";
 
 message DaoBridgeData {
   string txId = 1;

@@ -22,6 +22,11 @@ option java_package = "bisq.account.protobuf";
 option java_multiple_files = true;
 import "common.proto";
 
+message AccountAgeWitnessData {
+  bytes hash = 1;
+  uint64 date = 2;
+}
+
 // todo move over account domain from bisq1 and adjust it where needed
 
 message SettlementMethod {

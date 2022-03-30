@@ -18,6 +18,7 @@
 package bisq.application;
 
 import bisq.account.AccountService;
+import bisq.account.accountage.AccountAgeWitnessService;
 import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.SepaAccount;
 import bisq.common.locale.CountryRepository;
@@ -28,13 +29,9 @@ import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
-import bisq.network.p2p.message.NetworkMessageResolver;
-import bisq.network.p2p.services.data.storage.DistributedDataResolver;
-import bisq.offer.Offer;
 import bisq.offer.OfferBookService;
 import bisq.offer.OfferService;
 import bisq.offer.OpenOfferService;
-import bisq.oracle.daobridge.DaoBridgeData;
 import bisq.oracle.daobridge.DaoBridgeService;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
@@ -45,8 +42,6 @@ import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.social.SocialService;
 import bisq.social.chat.ChatService;
-import bisq.social.chat.PrivateChatMessage;
-import bisq.social.chat.PublicChatMessage;
 import bisq.social.intent.TradeIntentListingsService;
 import bisq.social.intent.TradeIntentService;
 import bisq.social.user.profile.UserProfileService;
@@ -98,9 +93,11 @@ public class DefaultApplicationService extends ServiceProvider {
     private final SocialService socialService;
     private final SecurityService securityService;
     private final DaoBridgeService daoBridgeService;
+    private final AccountAgeWitnessService accountAgeWitnessService;
 
     public DefaultApplicationService(String[] args) {
         super("Bisq");
+
         this.applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
 
         Locale locale = applicationConfig.getLocale();
@@ -108,13 +105,6 @@ public class DefaultApplicationService extends ServiceProvider {
         Res.initialize(locale);
 
         persistenceService = new PersistenceService(applicationConfig.baseDir());
-        // Register resolvers for distributedData 
-        DistributedDataResolver.addResolver("social.ChatMessage", PublicChatMessage.getResolver());
-        DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
-        DistributedDataResolver.addResolver("oracle.DaoBridgeData", DaoBridgeData.getResolver());
-
-        // Register resolvers for networkMessages 
-        NetworkMessageResolver.addResolver("social.ChatMessage", PrivateChatMessage.getResolver());
 
         securityService = new SecurityService(persistenceService);
 
@@ -129,6 +119,7 @@ public class DefaultApplicationService extends ServiceProvider {
         identityService = new IdentityService(persistenceService, keyPairService, networkService, identityServiceConfig);
 
         accountService = new AccountService(persistenceService);
+        accountAgeWitnessService = new AccountAgeWitnessService(networkService, identityService);
 
         socialService = new SocialService();
         UserProfileService.Config userProfileServiceConfig = UserProfileService.Config.from(getConfig("bisq.userProfileServiceConfig"));
@@ -189,6 +180,7 @@ public class DefaultApplicationService extends ServiceProvider {
                         accountService.addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
                     }
                 })
+                .thenCompose(result -> accountAgeWitnessService.initialize())
                 .thenCompose(result -> protocolService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(
                         walletService.tryAutoInitialization(),

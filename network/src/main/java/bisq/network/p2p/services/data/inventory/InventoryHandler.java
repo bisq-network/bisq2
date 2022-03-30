@@ -23,6 +23,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.filter.DataFilter;
+import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import lombok.Getter;
@@ -54,7 +55,7 @@ class InventoryHandler implements Connection.Listener {
     }
 
     CompletableFuture<Inventory> request(DataFilter dataFilter) {
-        log.info("Node {} send GetInventoryRequest to {} with dataFilter {} and nonce {}. Connection={}",
+        log.debug("Node {} send GetInventoryRequest to {} with dataFilter {} and nonce {}. Connection={}",
                 node, connection.getPeerAddress(), dataFilter, nonce, connection.getId());
         ts = System.currentTimeMillis();
         supplyAsync(() -> node.send(new InventoryRequest(dataFilter, nonce), connection), NetworkService.NETWORK_IO_POOL)
@@ -82,12 +83,21 @@ class InventoryHandler implements Connection.Listener {
                             map.putIfAbsent(simpleName, 0);
                             map.put(simpleName, map.get(simpleName) + 1);
                         });
+                response.inventory().entries().stream()
+                        .filter(e -> e instanceof AddAppendOnlyDataRequest)
+                        .map(e -> (AddAppendOnlyDataRequest) e)
+                        .map(AddAppendOnlyDataRequest::getAppendOnlyData)
+                        .forEach(e -> {
+                            String simpleName = e.getClass().getSimpleName();
+                            map.putIfAbsent(simpleName, 0);
+                            map.put(simpleName, map.get(simpleName) + 1);
+                        });
                 log.info("Node {} received GetInventoryResponse from {} with inventory {} and nonce {}. Connection={}",
                         node, connection.getPeerAddress(), response.inventory(), response.requestNonce(), connection.getId());
                 log.info("\n##########################################################################################\n" +
                         "## INVENTORY\n" +
                         "##########################################################################################\n" +
-                        map.entrySet().stream().map(e -> e.getValue() + " " + e.getKey() + "(s)").collect(Collectors.joining("\n")) +
+                        map.entrySet().stream().map(e -> e.getValue() + " " + e.getKey()).collect(Collectors.joining("\n")) +
                         "\n##########################################################################################");
                 removeListeners();
                 connection.getMetrics().addRtt(ts = System.currentTimeMillis() - ts);

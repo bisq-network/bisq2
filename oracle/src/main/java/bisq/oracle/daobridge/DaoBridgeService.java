@@ -75,7 +75,7 @@ public class DaoBridgeService implements DataService.Listener {
             PrivateKey authorizedPrivateKey = KeyGeneration.generatePrivate(Hex.decode(authorizedPrivateKeyAsHex));
             PublicKey authorizedPublicKey = KeyGeneration.generatePublic(Hex.decode(authorizedPublicKeyAsHex));
             DaoBridgeData daoBridgeData = new DaoBridgeData("test tx id");
-            return identityService.getOrCreateIdentity("DaoBridgeAuthorizedData")
+            return identityService.getOrCreateIdentity(IdentityService.DEFAULT)
                     .thenCompose(identity -> networkService.publishAuthorizedData(daoBridgeData,
                             identity.getNodeIdAndKeyPair(),
                             authorizedPrivateKey,

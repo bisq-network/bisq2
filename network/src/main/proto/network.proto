@@ -241,7 +241,7 @@ message DataRequest {
     AddMailboxRequest  addMailboxRequest = 4;
     RemoveMailboxRequest removeMailboxRequest = 5;
 
-    AddAppendOnlyDataRequest AddAppendOnlyDataRequest = 6;
+    AddAppendOnlyDataRequest addAppendOnlyDataRequest = 6;
   }
 }
 
