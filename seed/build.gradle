@@ -29,7 +29,7 @@ dependencies {
 
     implementation project(':application')
 
-    implementation 'com.google.guava:guava'
+    implementation libs.guava
     implementation 'com.typesafe:config'
 }
 test {

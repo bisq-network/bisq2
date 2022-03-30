@@ -18,7 +18,7 @@ dependencies {
     implementation project(':common')
 
     implementation 'com.google.protobuf:protobuf-java'
-    implementation 'com.google.guava:guava'
+    implementation libs.guava
 
     // Exclude httpclient transitive dependency because it may override
     // I2P-specific impl of some Apache classes like org.apache.http.util.Args

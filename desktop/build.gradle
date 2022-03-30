@@ -71,7 +71,7 @@ dependencies {
     implementation project(':wallets')
 
     implementation 'com.google.protobuf:protobuf-java'
-    implementation 'com.google.guava:guava'
+    implementation libs.guava
 
     implementation 'com.jfoenix:jfoenix:9.0.10'
     implementation 'de.jensd:fontawesomefx:8.0.0'

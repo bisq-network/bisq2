@@ -19,7 +19,7 @@ dependencies {
     implementation project(':persistence')
 
     implementation 'com.google.protobuf:protobuf-java'
-    implementation 'com.google.guava:guava'
+    implementation libs.guava
     implementation 'org.bouncycastle:bcprov-jdk16:1.46'
 }
 test {
