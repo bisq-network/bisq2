@@ -164,12 +164,12 @@ message AuthorizedData {
   bytes authorizedPublicKeyBytes = 2;
   repeated string authorizedPublicKeys = 3;
 }
-message AuthenticatedDataImpl {
+message DefaultAuthenticatedData {
 }
 message AuthenticatedData {
   google.protobuf.Any distributedData = 1;
   oneof message {
-    AuthenticatedDataImpl authenticatedDataImpl = 10;
+    DefaultAuthenticatedData defaultAuthenticatedData = 10;
     AuthorizedData authorizedData = 11;
   }
 }

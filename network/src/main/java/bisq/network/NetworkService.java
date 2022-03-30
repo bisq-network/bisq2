@@ -34,7 +34,7 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataImpl;
+import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.Persistence;
@@ -249,7 +249,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
                 .thenCompose(list -> {
-                    AuthenticatedDataImpl authenticatedData = new AuthenticatedDataImpl(distributedData);
+                    DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
                     return dataService.get().addAuthenticatedData(authenticatedData, keyPair)
                             .whenComplete((broadCastResultFutures, throwable) -> {
                                 broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
@@ -266,7 +266,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> {
-                    AuthenticatedDataImpl authenticatedData = new AuthenticatedDataImpl(distributedData);
+                    DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
                     return dataService.get().removeAuthenticatedData(authenticatedData, keyPair)
                             .whenComplete((broadCastDataResult, throwable) -> {
                                 broadCastDataResult.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {

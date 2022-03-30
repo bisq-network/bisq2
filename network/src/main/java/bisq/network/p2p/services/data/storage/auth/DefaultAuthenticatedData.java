@@ -25,19 +25,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class AuthenticatedDataImpl extends AuthenticatedData {
-    public AuthenticatedDataImpl(DistributedData distributedData) {
+public class DefaultAuthenticatedData extends AuthenticatedData {
+    public DefaultAuthenticatedData(DistributedData distributedData) {
         super(distributedData);
     }
 
     public bisq.network.protobuf.AuthenticatedData toProto() {
-        return getAuthenticatedDataBuilder().setAuthenticatedDataImpl(
-                        bisq.network.protobuf.AuthenticatedDataImpl.newBuilder())
+        return getAuthenticatedDataBuilder().setDefaultAuthenticatedData(
+                        bisq.network.protobuf.DefaultAuthenticatedData.newBuilder())
                 .build();
     }
 
-    public static AuthenticatedDataImpl fromProto(bisq.network.protobuf.AuthenticatedData proto) {
-        return new AuthenticatedDataImpl(DistributedData.fromAny(proto.getDistributedData()));
+    public static DefaultAuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
+        return new DefaultAuthenticatedData(DistributedData.fromAny(proto.getDistributedData()));
     }
 
     @Override
