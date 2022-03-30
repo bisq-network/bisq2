@@ -34,6 +34,7 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
+import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -301,6 +302,20 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                         return CompletableFuture.failedFuture(e);
                     }
                 });
+    }
+
+    public CompletableFuture<BroadCastDataResult> publishAppendOnlyData(AppendOnlyData appendOnlyData,
+                                                                        NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+        checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
+        String nodeId = ownerNetworkIdWithKeyPair.nodeId();
+        PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
+        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
+                .thenCompose(list -> dataService.get().addAppendOnlyData(appendOnlyData)
+                        .whenComplete((broadCastResultFutures, throwable) -> {
+                            broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
+                                //todo apply state
+                            }));
+                        }));
     }
 
 

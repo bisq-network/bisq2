@@ -19,6 +19,7 @@ dependencies {
     implementation project(':common')
     implementation project(':i18n')
     implementation project(':persistence')
+    implementation project(':security')
     implementation project(':identity')
     implementation project(':network')
 

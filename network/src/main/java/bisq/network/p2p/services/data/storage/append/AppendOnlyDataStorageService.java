@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
- * Appends AppendOnlyData to a map using the hash of the AppendOnlyData as key.
+ * Adds AppendOnlyData to the map using the hash of the AppendOnlyData as key.
  * If key already exists we return. If map size exceeds MAX_MAP_SIZE we ignore new data.
  */
 @Slf4j

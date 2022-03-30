@@ -69,7 +69,8 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     public interface Listener {
-        void onAuthenticatedDataAdded(AuthenticatedData authenticatedData);
+        default void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+        }
 
         default void onAppendOnlyDataAdded(AppendOnlyData appendOnlyData) {
         }
@@ -174,7 +175,7 @@ public class DataService implements DataNetworkService.Listener {
                 });
     }
 
-    public CompletableFuture<BroadCastDataResult> addAppendOnlyPayload(AppendOnlyData appendOnlyData) {
+    public CompletableFuture<BroadCastDataResult> addAppendOnlyData(AppendOnlyData appendOnlyData) {
         return storageService.getOrCreateAppendOnlyDataStore(appendOnlyData.getMetaData())
                 .thenApply(store -> {
                     AddAppendOnlyDataRequest request = new AddAppendOnlyDataRequest(appendOnlyData);

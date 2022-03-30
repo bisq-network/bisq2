@@ -18,6 +18,7 @@
 package bisq.application;
 
 import bisq.account.AccountService;
+import bisq.account.accountage.AccountAgeWitnessService;
 import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.SepaAccount;
 import bisq.common.locale.CountryRepository;
@@ -92,10 +93,11 @@ public class DefaultApplicationService extends ServiceProvider {
     private final SocialService socialService;
     private final SecurityService securityService;
     private final DaoBridgeService daoBridgeService;
+    private final AccountAgeWitnessService accountAgeWitnessService;
 
     public DefaultApplicationService(String[] args) {
         super("Bisq");
-       
+
         this.applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
 
         Locale locale = applicationConfig.getLocale();
@@ -117,6 +119,7 @@ public class DefaultApplicationService extends ServiceProvider {
         identityService = new IdentityService(persistenceService, keyPairService, networkService, identityServiceConfig);
 
         accountService = new AccountService(persistenceService);
+        accountAgeWitnessService = new AccountAgeWitnessService(networkService, identityService);
 
         socialService = new SocialService();
         UserProfileService.Config userProfileServiceConfig = UserProfileService.Config.from(getConfig("bisq.userProfileServiceConfig"));
@@ -177,6 +180,7 @@ public class DefaultApplicationService extends ServiceProvider {
                         accountService.addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
                     }
                 })
+                .thenCompose(result -> accountAgeWitnessService.initialize())
                 .thenCompose(result -> protocolService.initialize())
                 .thenCompose(result -> CompletableFutureUtils.allOf(
                         walletService.tryAutoInitialization(),
