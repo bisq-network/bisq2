@@ -15,18 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.util;
+package bisq.network.p2p.services.data.storage.auth.authorized;
 
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.TimeZone;
+import bisq.network.p2p.services.data.storage.DistributedData;
 
-public class DateUtils {
-    public final static Date LAUNCH_DATE = DateUtils.getUTCDate(2022, GregorianCalendar.MARCH, 22);
+import java.util.Set;
 
-    public static Date getUTCDate(int year, int month, int dayOfMonth) {
-        GregorianCalendar calendar = new GregorianCalendar(year, month, dayOfMonth);
-        calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return calendar.getTime();
-    }
+public interface AuthorizedDistributedData extends DistributedData {
+    // The key need to be provided as static (hard coded) set not as instance fields as that would not be secure.
+    Set<String> getAuthorizedPublicKeys();
 }

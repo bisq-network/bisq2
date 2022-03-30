@@ -16,7 +16,7 @@ public class GetOffersHandler extends AbstractHandler implements Handler {
     @Override
     public void handle(Context ctx) {
         DefaultApplicationService applicationService = ctx.get(DefaultApplicationService.class);
-       // List<OfferPresentation> offers = applicationService.getOfferPresentationService().getOfferEntities();
-      //  ctx.render(toJson("offers", offers));
+        // List<OfferPresentation> offers = applicationService.getOfferPresentationService().getOfferEntities();
+        //  ctx.render(toJson("offers", offers));
     }
 }

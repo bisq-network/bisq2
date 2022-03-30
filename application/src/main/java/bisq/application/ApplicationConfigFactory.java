@@ -23,7 +23,6 @@ import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.util.Optional;
 
 @Slf4j
 public class ApplicationConfigFactory {

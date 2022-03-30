@@ -17,14 +17,22 @@
 
 package bisq.network.p2p.services.data.storage;
 
+import bisq.common.data.ByteArray;
+import bisq.common.timer.Scheduler;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+@Slf4j
 public abstract class DataStorageService<T extends DataRequest> extends RateLimitedPersistenceClient<DataStore<T>> {
     public static final String SUB_PATH = "db" + File.separator + "network";
     @Getter
@@ -35,12 +43,24 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     private final String fileName;
     @Getter
     protected final String subDirectory;
+    private final Scheduler scheduler;
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
         super();
         this.fileName = fileName;
         subDirectory = SUB_PATH + File.separator + storeName;
-        persistence = persistenceService.getOrCreatePersistence(this, subDirectory, fileName, persistableStore); 
+        persistence = persistenceService.getOrCreatePersistence(this, subDirectory, fileName, persistableStore);
+        scheduler = Scheduler.run(this::pruneExpired).periodically(1, TimeUnit.HOURS);
+    }
+
+    private void pruneExpired() {
+        Set<Map.Entry<ByteArray, T>> expiredEntries = persistableStore.getMap().entrySet().stream()
+                .filter(entry -> entry.getValue().isExpired())
+                .collect(Collectors.toSet());
+        if (!expiredEntries.isEmpty()) {
+            log.info("We remove {} expired entries from our map", expiredEntries.size());
+        }
+        expiredEntries.forEach(e -> persistableStore.getMap().remove(e.getKey()));
     }
 
   /*  public Inventory getInventory(DataFilter dataFilter) {
@@ -52,5 +72,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         return new Inventory(result, mapClone.size() - result.size());
     }*/
 
-    abstract public void shutdown();
+    public void shutdown() {
+        scheduler.stop();
+    }
 }

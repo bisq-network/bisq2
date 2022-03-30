@@ -106,7 +106,7 @@ public class UserNameGeneratorTest {
         assertEquals("2450", fromHash(BigInteger.valueOf(14000), adverbs, adjectives, nouns));
         assertEquals("2460", fromHash(BigInteger.valueOf(15000), adverbs, adjectives, nouns));
 
-         //larger inputs
+        //larger inputs
         adverbs = List.of("1", "2");
         adjectives = List.of("3", "4");
         nouns = List.of("5", "6");
@@ -121,7 +121,7 @@ public class UserNameGeneratorTest {
 
         adverbs = List.of("1", "2", "3");
         adjectives = List.of("3", "4", "5");
-        nouns = List.of("5", "6", "7", "8", "9","10", "11");
+        nouns = List.of("5", "6", "7", "8", "9", "10", "11");
         BigInteger input = new BigInteger("test".getBytes(StandardCharsets.UTF_8));
         assertEquals("356748", fromHash(input, adverbs, adjectives, nouns));
 

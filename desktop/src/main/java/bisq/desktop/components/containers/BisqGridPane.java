@@ -48,7 +48,7 @@ public class BisqGridPane extends GridPane {
         label.setLayoutY(-8);
         label.setPadding(new Insets(0, 7, 0, 5));
         label.getStyleClass().add("titled-group-bg-label-active");
-       // GridPane.setMargin(label, new Insets(0, 0, 15, 0));
+        // GridPane.setMargin(label, new Insets(0, 0, 15, 0));
         GridPane.setRowIndex(label, getRowCount());
         GridPane.setColumnIndex(label, 0);
         GridPane.setColumnSpan(label, getColumnCount());
@@ -125,7 +125,7 @@ public class BisqGridPane extends GridPane {
         GridPane.setRowIndex(textField, getRowCount());
         GridPane.setColumnIndex(textField, 0);
         GridPane.setColumnSpan(textField, getColumnCount());
-       // GridPane.setMargin(textField, new Insets(0, 0, 15, 0));
+        // GridPane.setMargin(textField, new Insets(0, 0, 15, 0));
         getChildren().addAll(textField);
         return textField;
     }
@@ -142,7 +142,7 @@ public class BisqGridPane extends GridPane {
         textArea.setPromptText(labelText);
         GridPane.setRowIndex(textArea, getRowCount());
         GridPane.setColumnIndex(textArea, 1);
-       // GridPane.setMargin(textArea, new Insets(0, 0, 15, 0));
+        // GridPane.setMargin(textArea, new Insets(0, 0, 15, 0));
         getChildren().addAll(textArea);
         return textArea;
     }
@@ -152,7 +152,7 @@ public class BisqGridPane extends GridPane {
         GridPane.setRowIndex(button, getRowCount());
         GridPane.setColumnIndex(button, 0);
         getChildren().add(button);
-       // GridPane.setMargin(button, new Insets(0, 0, 15, 0));
+        // GridPane.setMargin(button, new Insets(0, 0, 15, 0));
         return button;
     }
 
@@ -173,7 +173,7 @@ public class BisqGridPane extends GridPane {
         GridPane.setRowIndex(hBox, getRowCount());
         GridPane.setColumnIndex(hBox, 0);
         getChildren().add(hBox);
-       // GridPane.setMargin(hBox, new Insets(0, 0, 15, 0));
+        // GridPane.setMargin(hBox, new Insets(0, 0, 15, 0));
         return new Pair<>(button, label);
     }
 
@@ -196,7 +196,7 @@ public class BisqGridPane extends GridPane {
         GridPane.setRowIndex(comboBox, getRowCount());
         GridPane.setColumnIndex(comboBox, 0);
         getChildren().add(comboBox);
-       // GridPane.setMargin(comboBox, new Insets(0, 0, 15, 0));
+        // GridPane.setMargin(comboBox, new Insets(0, 0, 15, 0));
         return comboBox;
     }
 }

@@ -27,7 +27,7 @@ public class TorNodesByIdIntegrationTest extends BaseNodesByIdTest {
         super.test_messageRoundTrip(getConfig(Transport.Type.TOR));
     }
 
-   // @Test
+    // @Test
     void test_initializeServer() throws InterruptedException {
         super.test_initializeServer(getConfig(Transport.Type.TOR));
     }

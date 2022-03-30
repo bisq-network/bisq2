@@ -53,7 +53,7 @@ public class PeerExchangeService implements Node.Listener {
 
     private final Node node;
     private final PeerExchangeStrategy peerExchangeStrategy;
-    
+
     // todo if persisted peer needs to be written from that class we can use the addPersistedPeerHandler to delegate it 
     // to the PeerGroupService. We do not want a dependency from PeerExchangeService to PeerGroupService as 
     // PeerExchangeService got created by PeerGroupService

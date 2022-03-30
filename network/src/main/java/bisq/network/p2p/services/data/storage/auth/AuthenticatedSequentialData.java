@@ -22,11 +22,13 @@ import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Data which ensures that the sequence of add or remove request is maintained correctly.
  * The data gets hashed and signed and need to be deterministic.
  */
+@Slf4j
 @Getter
 @EqualsAndHashCode
 public class AuthenticatedSequentialData implements Proto {

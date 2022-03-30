@@ -17,7 +17,6 @@
 
 package bisq.social.chat;
 
-import bisq.social.protobuf.ChatMessage;
 import bisq.social.user.ChatUser;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
@@ -68,7 +67,7 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
     }
 
     @Override
-    protected ChatMessage getChatMessageProto(PrivateChatMessage chatMessage) {
+    protected bisq.social.protobuf.ChatMessage getChatMessageProto(PrivateChatMessage chatMessage) {
         return chatMessage.toChatMessageProto();
     }
 

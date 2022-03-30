@@ -148,7 +148,12 @@ public class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     public MetaData getMetaData() {
         return mailboxSequentialData.getMailboxData().getMetaData();
     }
-    
+
+    @Override
+    public boolean isExpired() {
+        return mailboxSequentialData.isExpired();
+    }
+
     @Override
     public String toString() {
         return "AddMailboxDataRequest{} " + super.toString();

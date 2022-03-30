@@ -46,7 +46,7 @@ public record UserProfile(Identity identity, Set<Entitlement> entitlements) impl
         return new UserProfile(Identity.fromProto(proto.getIdentity()),
                 proto.getEntitlementsList().stream().map(Entitlement::fromProto).collect(Collectors.toSet()));
     }
-    
+
     public String userName() {
         return UserNameGenerator.fromHash(DigestUtil.hash(identity.networkId().getPubKey().publicKey().getEncoded()));
     }

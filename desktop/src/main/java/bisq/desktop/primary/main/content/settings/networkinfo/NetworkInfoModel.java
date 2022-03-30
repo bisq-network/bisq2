@@ -58,7 +58,7 @@ public class NetworkInfoModel extends NavigationModel {
         if (persistedNavigationTarget.getParent().filter(parent -> parent == NavigationTarget.NETWORK_INFO).isPresent()) {
             navigationTarget = persistedNavigationTarget;
         }
-        
+
         supportedTransportTypes = networkService.getSupportedTransportTypes();
         supportedNavigationTarget = supportedTransportTypes.stream()
                 .map(this::getNavigationTargetFromTransportType)

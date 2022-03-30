@@ -71,8 +71,7 @@ public class ClearNetHttpClient extends BaseHttpClient {
             URL url = new URL(spec);
             if (proxy == null) {
                 connection = (HttpURLConnection) url.openConnection();
-            }
-            else {
+            } else {
                 // Allows I2P connections
                 // Translation across networks happens via an HTTP proxy exposed by the I2P router
                 connection = (HttpURLConnection) url.openConnection(proxy);

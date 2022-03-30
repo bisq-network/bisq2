@@ -52,7 +52,7 @@ protobuf {
         artifact = "com.google.protobuf:protoc:3.19.4${osxArch}"
     }
     generateProtoTasks {
-        all()*.plugins { }
+        all()*.plugins {}
     }
     generatedFilesBaseDir = "$projectDir/build/generated/source"
 }

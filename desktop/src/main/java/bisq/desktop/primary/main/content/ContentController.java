@@ -42,7 +42,7 @@ public class ContentController extends NavigationController {
 
     public ContentController(DefaultApplicationService applicationService) {
         super(NavigationTarget.CONTENT);
-        
+
         this.applicationService = applicationService;
         model = new ContentModel();
         view = new ContentView(model, this);

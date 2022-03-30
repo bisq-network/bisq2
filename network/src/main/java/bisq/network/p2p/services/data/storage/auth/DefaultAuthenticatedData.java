@@ -18,38 +18,30 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
-import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
-
-@EqualsAndHashCode
-@Getter
-public class MockDistributedData implements DistributedData {
-    private final String text;
-    final MetaData metaData;
-
-    public MockDistributedData(String text) {
-        this.text = text;
-        // 463 is overhead of sig/pubkeys,...
-        // 582 is pubkey+sig+hash
-        metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 251 + 463, getClass().getSimpleName());
+@Slf4j
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class DefaultAuthenticatedData extends AuthenticatedData {
+    public DefaultAuthenticatedData(DistributedData distributedData) {
+        super(distributedData);
     }
 
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
+    public bisq.network.protobuf.AuthenticatedData toProto() {
+        return getAuthenticatedDataBuilder().setDefaultAuthenticatedData(
+                        bisq.network.protobuf.DefaultAuthenticatedData.newBuilder())
+                .build();
+    }
+
+    public static DefaultAuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
+        return new DefaultAuthenticatedData(DistributedData.fromAny(proto.getDistributedData()));
     }
 
     @Override
     public boolean isDataInvalid() {
-        return false;
-    }
-
-    @Override
-    public Message toProto() {
-        return null;
+        return distributedData.isDataInvalid();
     }
 }

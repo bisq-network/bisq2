@@ -26,8 +26,8 @@ import java.util.Optional;
  * @param saltedMakerAccountId Salted local ID of maker's settlement account.
  *                             In case maker had multiple accounts for same settlement method they
  *                             can define which account to use for that offer.
- *                             We combine the local ID with an offer specific salt, to not leak identity of multiple 
- *                             offers using the same account. We could use the pubkeyhash of the chosen identity as 
+ *                             We combine the local ID with an offer specific salt, to not leak identity of multiple
+ *                             offers using the same account. We could use the pubkeyhash of the chosen identity as
  *                             salt.
  */
 public record SettlementSpec(String settlementMethodName, Optional<String> saltedMakerAccountId) implements Proto {

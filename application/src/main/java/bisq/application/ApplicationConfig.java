@@ -21,7 +21,6 @@ import bisq.common.locale.LocaleRepository;
 import bisq.common.options.PropertiesReader;
 
 import java.util.Locale;
-import java.util.Optional;
 import java.util.Properties;
 
 public record ApplicationConfig(String baseDir,

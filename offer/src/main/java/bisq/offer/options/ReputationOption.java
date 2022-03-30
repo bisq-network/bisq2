@@ -25,10 +25,10 @@ import java.util.stream.Collectors;
 public record ReputationOption(Set<ReputationProof> reputationProofs) implements OfferOption {
     public bisq.offer.protobuf.OfferOption toProto() {
         return getOfferOptionBuilder().setReputationOption(
-                bisq.offer.protobuf.ReputationOption.newBuilder()
-                .addAllReputationProofs(reputationProofs.stream()
-                        .map(ReputationProof::toProto)
-                        .collect(Collectors.toList())))
+                        bisq.offer.protobuf.ReputationOption.newBuilder()
+                                .addAllReputationProofs(reputationProofs.stream()
+                                        .map(ReputationProof::toProto)
+                                        .collect(Collectors.toList())))
                 .build();
     }
 

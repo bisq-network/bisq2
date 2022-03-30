@@ -20,7 +20,9 @@ package bisq.network.p2p.services.data.storage.auth.authorized;
 import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
+import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,73 +30,80 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
-import java.util.Set;
 
 /**
- * Data which is signed by an authorized key (e.g. Filter, Alert, DisputeAgent...)
- * TODO will require prob more work with protobuf support
- * It should be extended by an external 
+ * Used for verifying if data publisher is authorized to publish this data (e.g. DaoBridgeData, Filter, Alert, DisputeAgent...).
+ * We use the provided signature and pubkey and check if the pubKey is in the set of provided authorized puKeys from 
+ * the authorizedDistributedData object, which will return a hard coded set of pubKeys.
  */
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Getter
-public abstract class AuthorizedData extends AuthenticatedData {
+public class AuthorizedData extends AuthenticatedData {
     private final byte[] signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
 
-    public AuthorizedData(DistributedData distributedData, byte[] signature, PublicKey authorizedPublicKey) {
-        this(distributedData, signature, authorizedPublicKey, authorizedPublicKey.getEncoded());
+    public AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                          byte[] signature,
+                          PublicKey authorizedPublicKey) {
+        this(authorizedDistributedData, signature, authorizedPublicKey, authorizedPublicKey.getEncoded());
     }
 
-    private AuthorizedData(DistributedData distributedData,
+    private AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
                            byte[] signature,
                            PublicKey authorizedPublicKey,
                            byte[] authorizedPublicKeyBytes) {
-        super(distributedData);
+        super(authorizedDistributedData);
         this.signature = signature;
         this.authorizedPublicKey = authorizedPublicKey;
         this.authorizedPublicKeyBytes = authorizedPublicKeyBytes;
     }
 
-   /* public bisq.network.protobuf.AuthorizedData toAuthorizedData() {
-        return bisq.network.protobuf.AuthorizedData.newBuilder()
-                .setDistributedData(distributedData.toAny())
-                .setSignature(ByteString.copyFrom(signature))
-                .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes))
+    public bisq.network.protobuf.AuthenticatedData toProto() {
+        return getAuthenticatedDataBuilder().setAuthorizedData(
+                        bisq.network.protobuf.AuthorizedData.newBuilder()
+                                .setSignature(ByteString.copyFrom(signature))
+                                .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)))
                 .build();
-    }*/
+    }
 
-    // Need to be implemented in concrete class (external to network)
-   /* public static AuthorizedData fromProto(bisq.network.protobuf.AuthorizedData proto) {
-        byte[] authorizedPublicKeyBytes = proto.getAuthorizedPublicKeyBytes().toByteArray();
+    public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
+        bisq.network.protobuf.AuthorizedData authorizedDataProto = proto.getAuthorizedData();
+        byte[] authorizedPublicKeyBytes = authorizedDataProto.getAuthorizedPublicKeyBytes().toByteArray();
         try {
             PublicKey authorizedPublicKey = KeyGeneration.generatePublic(authorizedPublicKeyBytes);
-            AuthorizedData authorizedData = new AuthorizedData(
-                    DistributedData.resolve(proto.getDistributedData()),
-                    proto.getSignature().toByteArray(),
-                    authorizedPublicKey,
-                    authorizedPublicKeyBytes
-            );
-            return authorizedData;
+            DistributedData distributedData = DistributedData.fromAny(proto.getDistributedData());
+            if (distributedData instanceof AuthorizedDistributedData authorizedDistributedData) {
+                return new AuthorizedData(authorizedDistributedData,
+                        authorizedDataProto.getSignature().toByteArray(),
+                        authorizedPublicKey,
+                        authorizedPublicKeyBytes
+                );
+            } else {
+                throw new RuntimeException("DistributedData must be type of AuthorizedDistributedData");
+            }
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
-    }*/
+    }
+
+    public AuthorizedDistributedData getAuthorizedDistributedData() {
+        return (AuthorizedDistributedData) distributedData;
+    }
 
     @Override
     public boolean isDataInvalid() {
         try {
-            return distributedData.isDataInvalid() ||
-                    !getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes)) ||
+            AuthorizedDistributedData authorizedDistributedData = getAuthorizedDistributedData();
+            return authorizedDistributedData.isDataInvalid() ||
+                    !authorizedDistributedData.getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes)) ||
                     !SignatureUtil.verify(distributedData.serialize(), signature, authorizedPublicKey);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
             return true;
         }
     }
-
-    public abstract Set<String> getAuthorizedPublicKeys();
 }

@@ -17,8 +17,8 @@
 
 package bisq.grpc;
 
-import bisq.application.DefaultApplicationService;
 import bisq.application.ApplicationVersion;
+import bisq.application.DefaultApplicationService;
 import bisq.grpc.proto.GetVersionGrpc;
 import bisq.grpc.proto.GetVersionReply;
 import bisq.grpc.proto.GetVersionRequest;

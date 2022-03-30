@@ -72,6 +72,7 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
 
     protected void onViewAttached() {
     }
+
     protected void onViewDetached() {
     }
 }

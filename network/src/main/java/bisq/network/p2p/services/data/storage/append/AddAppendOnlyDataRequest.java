@@ -23,6 +23,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+// TODO protobuf support not impl yet
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -40,5 +41,10 @@ public class AddAppendOnlyDataRequest implements AddDataRequest, DataRequest {
 
     public static AddAppendOnlyDataRequest fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest proto) {
         throw new RuntimeException("AddAppendOnlyDataRequest protobuf support not implemented yet");
+    }
+
+    @Override
+    public boolean isExpired() {
+        return false; //todo
     }
 }

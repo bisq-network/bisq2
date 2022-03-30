@@ -25,7 +25,7 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class ClearNetPeerExchangeServiceTest extends BasePeerExchangeServiceTest {
 
-  //  @Test
+    //  @Test
     void test_peerExchange() throws InterruptedException, ExecutionException {
         super.test_peerExchange(getConfig(Transport.Type.CLEAR));
     }

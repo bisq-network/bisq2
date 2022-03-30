@@ -159,8 +159,18 @@ message MetaData {
   uint32 maxSizeInBytes = 2;
   string fileName = 3;
 }
+message AuthorizedData {
+  bytes signature = 1;
+  bytes authorizedPublicKeyBytes = 2;
+}
+message DefaultAuthenticatedData {
+}
 message AuthenticatedData {
   google.protobuf.Any distributedData = 1;
+  oneof message {
+    DefaultAuthenticatedData defaultAuthenticatedData = 10;
+    AuthorizedData authorizedData = 11;
+  }
 }
 message AuthenticatedSequentialData {
   AuthenticatedData authenticatedData = 1;
@@ -188,13 +198,6 @@ message RefreshAuthenticatedDataRequest {
   uint32 sequenceNumber = 4;
   bytes signature = 5;
 }
-
-// todo AuthorizedData need to be extended from external class (e.g. Filter)
-/*message AuthorizedData {
-  google.protobuf.Any distributedData = 1;
-  bytes signature = 2;
-  bytes authorizedPublicKeyBytes = 3;
-}*/
 
 message MailboxData {
   ConfidentialMessage confidentialMessage = 1;

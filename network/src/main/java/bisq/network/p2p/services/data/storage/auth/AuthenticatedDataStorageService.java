@@ -36,7 +36,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AuthenticatedDataStorageService extends DataStorageService<AuthenticatedDataRequest> {
-    private static final long MAX_AGE = TimeUnit.DAYS.toMillis(10);
+    // Maybe we need to customize that per data type or derive it from metaData
+    private static final long PRUNE_MAX_AGE = TimeUnit.DAYS.toMillis(365);
     private static final int MAX_MAP_SIZE = 10000;
  /*
     // Max size of serialized NetworkData or MailboxMessage. Used to limit response map.
@@ -269,7 +270,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         // Sort by created date
         // Limit to MAX_MAP_SIZE
         Map<ByteArray, AuthenticatedDataRequest> pruned = persisted.entrySet().stream()
-                .filter(entry -> now - entry.getValue().getCreated() < MAX_AGE)
+                .filter(entry -> now - entry.getValue().getCreated() < PRUNE_MAX_AGE)
                 .filter(entry -> entry.getValue() instanceof RemoveAuthenticatedDataRequest ||
                         !((AddAuthenticatedDataRequest) entry.getValue()).getAuthenticatedSequentialData().isExpired())
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))

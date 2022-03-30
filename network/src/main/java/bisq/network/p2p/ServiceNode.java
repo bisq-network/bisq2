@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -134,7 +133,7 @@ public class ServiceNode {
 
             if (services.contains(Service.MONITOR)) {
                 monitorService = Optional.of(new MonitorService(defaultNode,
-                        peerGroupService.getPeerGroup(), 
+                        peerGroupService.getPeerGroup(),
                         peerGroupService.getPeerGroupStore()));
             }
         }

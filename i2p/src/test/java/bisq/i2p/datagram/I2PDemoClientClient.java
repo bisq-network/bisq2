@@ -22,7 +22,7 @@ public class I2PDemoClientClient {
 
     /**
      * From https://geti2p.net/en/get-involved/develop/applications :
-     *
+     * <p>
      * "An application that needs a simple request and response can get rid of any state and drop the latency incurred by
      * the startup and teardown handshakes by using (best effort) datagrams without having to worry about MTU detection
      * or fragmentation of messages."

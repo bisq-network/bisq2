@@ -78,7 +78,7 @@ public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, Primar
     }
 
     private void configCss() {
-         scene.getStylesheets().setAll(
+        scene.getStylesheets().setAll(
                 requireNonNull(getClass().getResource("/bisq.css")).toExternalForm(),
                 requireNonNull(getClass().getResource("/bisq2.css")).toExternalForm(),
                 requireNonNull(getClass().getResource("/images.css")).toExternalForm(),

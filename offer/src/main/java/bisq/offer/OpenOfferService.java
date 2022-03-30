@@ -181,7 +181,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
 
     public CompletableFuture<BroadCastDataResult> addToNetwork(Offer offer) {
         return identityService.getOrCreateIdentity(offer.getId())
-                .thenCompose(identity -> networkService.addAuthenticatedData(offer, identity.getNodeIdAndKeyPair()));
+                .thenCompose(identity -> networkService.publishAuthenticatedData(offer, identity.getNodeIdAndKeyPair()));
     }
 
     public CompletableFuture<BroadCastDataResult> removeFromNetwork(Offer offer) {

@@ -23,7 +23,10 @@ import bisq.wallets.bitcoind.rpc.calls.BitcoindSignMessageRpcCall;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindVerifyMessageRpcCall;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindWalletPassphraseRpcCall;
 import bisq.wallets.elementsd.rpc.calls.*;
-import bisq.wallets.elementsd.rpc.responses.*;
+import bisq.wallets.elementsd.rpc.responses.ElementsdGetPeginAddressResponse;
+import bisq.wallets.elementsd.rpc.responses.ElementsdIssueAssetResponse;
+import bisq.wallets.elementsd.rpc.responses.ElementsdListTransactionsResponseEntry;
+import bisq.wallets.elementsd.rpc.responses.ElementsdListUnspentResponseEntry;
 import bisq.wallets.rpc.RpcClient;
 
 import java.util.Arrays;

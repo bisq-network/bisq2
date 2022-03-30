@@ -66,7 +66,7 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
         this.identityService = identityService;
         this.persistenceService = persistenceService;
         this.openOfferService = openOfferService;
-        
+
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         networkService.addMessageListener(this);
     }

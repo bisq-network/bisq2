@@ -35,7 +35,7 @@ public enum FiatSettlementMethod implements SettlementMethod {
     REVOLUT,
     BANK,
     OTHER;
-    
+
     public static List<FiatSettlementMethod> getSettlementMethods(SwapProtocolType protocolType) {
         return switch (protocolType) {
             case BTC_XMR_SWAP -> throw new IllegalArgumentException("No fiat support for that protocolType");

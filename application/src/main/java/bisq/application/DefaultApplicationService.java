@@ -34,6 +34,8 @@ import bisq.offer.Offer;
 import bisq.offer.OfferBookService;
 import bisq.offer.OfferService;
 import bisq.offer.OpenOfferService;
+import bisq.oracle.daobridge.DaoBridgeData;
+import bisq.oracle.daobridge.DaoBridgeService;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
 import bisq.persistence.PersistenceService;
@@ -95,6 +97,7 @@ public class DefaultApplicationService extends ServiceProvider {
     private final OfferService offerService;
     private final SocialService socialService;
     private final SecurityService securityService;
+    private final DaoBridgeService daoBridgeService;
 
     public DefaultApplicationService(String[] args) {
         super("Bisq");
@@ -108,6 +111,7 @@ public class DefaultApplicationService extends ServiceProvider {
         // Register resolvers for distributedData 
         DistributedDataResolver.addResolver("social.ChatMessage", PublicChatMessage.getResolver());
         DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
+        DistributedDataResolver.addResolver("oracle.DaoBridgeData", DaoBridgeData.getResolver());
 
         // Register resolvers for networkMessages 
         NetworkMessageResolver.addResolver("social.ChatMessage", PrivateChatMessage.getResolver());
@@ -146,6 +150,8 @@ public class DefaultApplicationService extends ServiceProvider {
 
         Optional<WalletConfig> walletConfig = !isRegtestRun() ? Optional.empty() : createRegtestWalletConfig();
         walletService = new WalletService(walletConfig);
+
+        daoBridgeService = new DaoBridgeService(networkService, identityService, getConfig("bisq.oracle.daoBridge"));
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
@@ -164,6 +170,7 @@ public class DefaultApplicationService extends ServiceProvider {
                     log.debug("Network bootstrapped");
                 })
                 .thenCompose(result -> identityService.initialize())
+                .thenCompose(result -> daoBridgeService.initialize())
                 .thenCompose(result -> marketPriceService.initialize())
                 .whenComplete((list, throwable) -> {
                     log.info("add dummy accounts");

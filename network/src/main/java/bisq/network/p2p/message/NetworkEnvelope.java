@@ -55,6 +55,6 @@ public class NetworkEnvelope implements Proto {
     public static NetworkEnvelope fromProto(bisq.network.protobuf.NetworkEnvelope proto) {
         return new NetworkEnvelope(proto.getVersion(),
                 AuthorizationToken.fromProto(proto.getAuthorizationToken()),
-                NetworkMessage.fromProto( proto.getNetworkMessage()));
+                NetworkMessage.fromProto(proto.getNetworkMessage()));
     }
 }
