@@ -17,7 +17,6 @@
 
 package bisq.social.chat;
 
-import bisq.common.encoding.Proto;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import lombok.EqualsAndHashCode;
