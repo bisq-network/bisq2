@@ -321,7 +321,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     private void addDummyChannels() {
         UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
-        if (userProfile == null) {
+        if (userProfile == null || !persistableStore.getPublicChannels().isEmpty()) {
             return;
         }
         ChatUser dummyChannelAdmin = new ChatUser(userProfile.identity().networkId());

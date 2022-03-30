@@ -10,6 +10,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -20,6 +21,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import java.util.Comparator;
 
 public abstract class ChannelSelection {
     protected final ChannelSelection.Controller controller;
@@ -73,8 +76,10 @@ public abstract class ChannelSelection {
     protected static class Model implements bisq.desktop.common.view.Model {
         ObjectProperty<Channel<?>> selectedChannel = new SimpleObjectProperty<>();
         ObservableList<Channel<?>> channels = FXCollections.observableArrayList();
+        SortedList<Channel<?>> sortedList = new SortedList<>(channels);
 
         protected Model() {
+            sortedList.sort(Comparator.comparing(Channel::getChannelName));
         }
     }
 
@@ -94,7 +99,7 @@ public abstract class ChannelSelection {
             headline.setStyle("-fx-text-fill: -bs-color-green-5; -fx-font-size: 1.4em");
 
             listView = new ListView<>();
-            listView.setItems(model.channels);
+            listView.setItems(model.sortedList);
             listView.setFocusTraversable(false);
             listView.setCellFactory(new Callback<>() {
                 @Override
