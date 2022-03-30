@@ -17,8 +17,10 @@
 
 package bisq.social.chat;
 
+import bisq.common.encoding.Proto;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
+import lombok.EqualsAndHashCode;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.Getter;
@@ -27,7 +29,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class Channel<T extends ChatMessage> implements Proto {
+    @EqualsAndHashCode.Include
     protected final String id;
     protected final Observable<NotificationSetting> notificationSetting = new Observable<>();
     protected final ObservableSet<T> chatMessages = new ObservableSet<>();

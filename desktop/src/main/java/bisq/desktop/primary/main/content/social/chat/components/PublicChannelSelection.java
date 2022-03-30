@@ -21,7 +21,9 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
+import bisq.social.chat.Channel;
 import bisq.social.chat.ChatService;
+import bisq.social.chat.PrivateChannel;
 import bisq.social.chat.PublicChannel;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -41,130 +43,22 @@ import org.fxmisc.easybind.Subscription;
 
 
 @Slf4j
-public class PublicChannelSelection {
-    private final Controller controller;
+public class PublicChannelSelection extends ChannelSelection {
 
     public PublicChannelSelection(ChatService chatService) {
-        controller = new Controller(chatService);
-    }
+        super();
+        controller = new ChannelSelection.Controller(chatService, Res.get("social.publicChannels")) {
 
-    public Pane getRoot() {
-        return controller.view.getRoot();
-    }
+            @Override
+            public void onViewAttached() {
+                super.onViewAttached();
+                channelsPin = FxBindings.<PublicChannel, Channel> bind(model.channels)
+                        .to(this.chatService.getPersistableStore().getPublicChannels());
 
-    private static class Controller implements bisq.desktop.common.view.Controller {
-        private final Model model;
-        @Getter
-        private final View view;
-        private final ChatService chatService;
-        private Pin selectedChannelPin;
-        private Pin channelsPin;
-
-        private Controller(ChatService chatService) {
-            this.chatService = chatService;
-
-            model = new Model();
-            view = new View(model, this);
-        }
-
-        @Override
-        public void onViewAttached() {
-            selectedChannelPin = FxBindings.subscribe(chatService.getPersistableStore().getSelectedChannel(),
-                    channel -> {
-                        if (channel instanceof PublicChannel publicChannel) {
-                            model.selectedChannel.set(new ListItem(publicChannel));
-                        }
-                    });
-            channelsPin = FxBindings.<PublicChannel, ListItem>bind(model.channels)
-                    .map(ListItem::new)
-                    .to(chatService.getPersistableStore().getPublicChannels());
-
-            if (!model.channels.isEmpty()) {
-                chatService.selectChannel(model.channels.get(0).channel);
-            }
-        }
-
-        @Override
-        public void onViewDetached() {
-            selectedChannelPin.unbind();
-            channelsPin.unbind();
-        }
-
-        private void onSelected(ListItem selectedItem) {
-            if (selectedItem == null) return;
-            chatService.selectChannel(selectedItem.channel);
-        }
-    }
-
-    private static class Model implements bisq.desktop.common.view.Model {
-        ObjectProperty<ListItem> selectedChannel = new SimpleObjectProperty<>();
-        ObservableList<ListItem> channels = FXCollections.observableArrayList();
-
-        private Model() {
-        }
-    }
-
-
-    @Slf4j
-    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final ListView<ListItem> listView;
-        private Subscription subscription;
-
-        private View(Model model, Controller controller) {
-            super(new VBox(), model, controller);
-            root.setSpacing(10);
-
-            BisqLabel headline = new BisqLabel(Res.get("social.publicChannels"));
-            headline.setPadding(new Insets(0, 0, 0, 10));
-            headline.setStyle("-fx-text-fill: -bs-color-green-5; -fx-font-size: 1.4em");
-
-            listView = new ListView<>();
-            listView.setItems(model.channels);
-            listView.setFocusTraversable(false);
-            listView.setCellFactory(new Callback<>() {
-                @Override
-                public ListCell<ListItem> call(ListView<ListItem> list) {
-                    return new ListCell<>() {
-                        final BisqLabel label = new BisqLabel();
-
-                        @Override
-                        public void updateItem(final ListItem item, boolean empty) {
-                            super.updateItem(item, empty);
-                            if (item != null && !empty) {
-                                label.setText(item.channelName);
-                                setGraphic(label);
-                            } else {
-                                setGraphic(null);
-                            }
-                        }
-                    };
+                if (!model.channels.isEmpty()) {
+                    chatService.selectChannel(model.channels.get(0));
                 }
-            });
-            root.getChildren().addAll(headline, listView);
-        }
-
-        @Override
-        public void onViewAttached() {
-            subscription = EasyBind.subscribe(listView.getSelectionModel().selectedItemProperty(), controller::onSelected);
-        }
-
-        @Override
-        protected void onViewDetached() {
-            subscription.unsubscribe();
-        }
-    }
-
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    public static class ListItem {
-        private final PublicChannel channel;
-        private final String channelName;
-        @EqualsAndHashCode.Include
-        private final String id;
-
-        private ListItem(PublicChannel channel) {
-            this.channel = channel;
-            channelName = channel.getChannelName();
-            id = channel.getId();
-        }
+            }
+        };
     }
 }
