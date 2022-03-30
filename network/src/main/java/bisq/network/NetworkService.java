@@ -34,17 +34,22 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataImpl;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
+import bisq.security.SignatureUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -244,7 +249,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
                 .thenCompose(list -> {
-                    AuthenticatedData authenticatedData = new AuthenticatedData(distributedData);
+                    AuthenticatedDataImpl authenticatedData = new AuthenticatedDataImpl(distributedData);
                     return dataService.get().addAuthenticatedData(authenticatedData, keyPair)
                             .whenComplete((broadCastResultFutures, throwable) -> {
                                 broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
@@ -261,13 +266,40 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> {
-                    AuthenticatedData authenticatedData = new AuthenticatedData(distributedData);
+                    AuthenticatedDataImpl authenticatedData = new AuthenticatedDataImpl(distributedData);
                     return dataService.get().removeAuthenticatedData(authenticatedData, keyPair)
                             .whenComplete((broadCastDataResult, throwable) -> {
                                 broadCastDataResult.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
                                     //todo apply state
                                 }));
                             });
+                });
+    }
+
+    public CompletableFuture<BroadCastDataResult> addAuthorizedData(DistributedData distributedData,
+                                                                    NetworkIdWithKeyPair ownerNetworkIdWithKeyPair,
+                                                                    PrivateKey authorizedPrivateKey,
+                                                                    PublicKey authorizedPublicKey,
+                                                                    Set<String> authorizedPublicKeys) {
+        checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
+        String nodeId = ownerNetworkIdWithKeyPair.nodeId();
+        PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
+        KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
+        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
+                .thenCompose(list -> {
+                    try {
+                        byte[] signature = SignatureUtil.sign(distributedData.serialize(), authorizedPrivateKey);
+                        AuthorizedData authorizedData = new AuthorizedData(distributedData, signature, authorizedPublicKey, authorizedPublicKeys);
+                        return dataService.get().addAuthenticatedData(authorizedData, keyPair)
+                                .whenComplete((broadCastResultFutures, throwable) -> {
+                                    broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
+                                        //todo apply state
+                                    }));
+                                });
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                        return CompletableFuture.failedFuture(e);
+                    }
                 });
     }
 

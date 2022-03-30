@@ -17,20 +17,24 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorageData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * Container for DistributedData.
+ * Base class for AuthenticatedData or AuthorizedData. Holds DistributedData.
  * We use Any for wrapping the external implementation of the distributedData instance (e.g. Offer).
  */
+@Slf4j
 @ToString
 @EqualsAndHashCode
-public class AuthenticatedData implements StorageData {
+public abstract class AuthenticatedData implements StorageData {
     @Getter
     protected final DistributedData distributedData;
 
@@ -38,24 +42,32 @@ public class AuthenticatedData implements StorageData {
         this.distributedData = distributedData;
     }
 
-    public bisq.network.protobuf.AuthenticatedData toProto() {
+    abstract public bisq.network.protobuf.AuthenticatedData toProto();
+
+    public bisq.network.protobuf.AuthenticatedData.Builder getAuthenticatedDataBuilder() {
         return bisq.network.protobuf.AuthenticatedData.newBuilder()
-                .setDistributedData(distributedData.toAny())
-                .build();
+                .setDistributedData(distributedData.toAny());
     }
 
     public static AuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
-        return new AuthenticatedData(DistributedData.fromAny(proto.getDistributedData()));
+        switch (proto.getMessageCase()) {
+            case AUTHENTICATEDDATAIMPL -> {
+                return AuthenticatedDataImpl.fromProto(proto);
+            }
+            case AUTHORIZEDDATA -> {
+                return AuthorizedData.fromProto(proto);
+            }
+            case MESSAGE_NOT_SET -> {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
+
 
     // We delegate the delivery of MetaData to the distributedData.
     @Override
     public MetaData getMetaData() {
         return distributedData.getMetaData();
-    }
-
-    @Override
-    public boolean isDataInvalid() {
-        return distributedData.isDataInvalid();
     }
 }

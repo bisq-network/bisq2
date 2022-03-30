@@ -23,6 +23,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+// TODO protobuf support not impl yet
 @Getter
 @ToString
 @EqualsAndHashCode

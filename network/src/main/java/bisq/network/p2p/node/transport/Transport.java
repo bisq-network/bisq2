@@ -17,9 +17,7 @@
 
 package bisq.network.p2p.node.transport;
 
-import bisq.common.proto.ProtoEnum;
 import bisq.network.p2p.node.Address;
-import com.google.protobuf.ProtocolMessageEnum;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import java.io.IOException;
@@ -29,7 +27,10 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface Transport {
-    enum Type implements ProtoEnum {
+    /**
+     * We do not use a protobuf enum for Type as it is used as key in a protobuf map and that does not support enums.
+     */
+    enum Type {
         TOR,
         I2P,
         CLEAR;
@@ -44,14 +45,6 @@ public interface Transport {
             } else {
                 throw new IllegalArgumentException("Could not resolve transportType from address " + address);
             }
-        }
-
-        @Override
-        public ProtocolMessageEnum toProto() {
-            // TODO Not impl yet
-
-
-            return null;
         }
     }
 

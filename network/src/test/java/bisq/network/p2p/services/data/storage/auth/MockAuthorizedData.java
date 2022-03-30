@@ -35,7 +35,7 @@ public final class MockAuthorizedData extends AuthorizedData {
     private final MetaData metaData;
 
     public MockAuthorizedData(DistributedData distributedData, byte[] signature, PublicKey publicKey) {
-        super(distributedData, signature, publicKey);
+        super(distributedData, signature, publicKey, null);
 
         this.metaData = new MetaData(TimeUnit.DAYS.toMillis(10), 10000, this.getClass().getSimpleName());
     }
@@ -48,5 +48,10 @@ public final class MockAuthorizedData extends AuthorizedData {
     @Override
     public Set<String> getAuthorizedPublicKeys() {
         return Set.of("3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63");
+    }
+
+    @Override
+    public byte[] serialize() {
+        return super.serialize();
     }
 }

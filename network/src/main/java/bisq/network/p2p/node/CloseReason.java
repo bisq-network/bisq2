@@ -17,16 +17,18 @@
 
 package bisq.network.p2p.node;
 
-import bisq.common.proto.ProtoEnum;
-import com.google.protobuf.ProtocolMessageEnum;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+/**
+ * We do not use a protobuf enum for CloseReason as it might easily change its entries and with protobuf it becomes 
+ * more restrictive to handle updates.
+ */
 @Slf4j
 @Getter
-public enum CloseReason implements ProtoEnum {
+public enum CloseReason {
     SHUTDOWN(true),
     CLOSE_MSG_RECEIVED(true),
     CLOSE_MSG_SENT(true),
@@ -64,13 +66,5 @@ public enum CloseReason implements ProtoEnum {
         return "Reason: " + name() + graceful +
                 details.map(e -> ", details: " + e).orElse("") +
                 exception.map(e -> ", exception: " + e).orElse("") + "]";
-    }
-
-    @Override
-    public ProtocolMessageEnum toProto() {
-        log.error("Not impl yet");
-
-
-        return null;
     }
 }

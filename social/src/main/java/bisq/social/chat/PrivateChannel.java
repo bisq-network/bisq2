@@ -67,7 +67,7 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
     }
 
     @Override
-    protected ChatMessage getChatMessageProto(PrivateChatMessage chatMessage) {
+    protected bisq.social.protobuf.ChatMessage getChatMessageProto(PrivateChatMessage chatMessage) {
         return chatMessage.toChatMessageProto();
     }
 

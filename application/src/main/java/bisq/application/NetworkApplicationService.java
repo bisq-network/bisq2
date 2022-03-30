@@ -23,6 +23,7 @@ import bisq.network.NetworkServiceConfigFactory;
 import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.Offer;
+import bisq.oracle.daobridge.DaoBridgeData;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.social.chat.PrivateChatMessage;
@@ -61,6 +62,7 @@ public class NetworkApplicationService extends ServiceProvider {
         // Register resolvers for distributedData 
         DistributedDataResolver.addResolver("social.ChatMessage", PublicChatMessage.getResolver());
         DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
+        DistributedDataResolver.addResolver("oracle.DaoBridgeData", DaoBridgeData.getResolver());
 
         // Register resolvers for networkMessages 
         NetworkMessageResolver.addResolver("social.ChatMessage", PrivateChatMessage.getResolver());

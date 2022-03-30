@@ -19,11 +19,14 @@ dependencies {
 
     implementation project(':common')
     implementation project(':persistence')
+    implementation project(':security')
+    implementation project(':identity')
     implementation project(':network')
 
     implementation 'com.google.protobuf:protobuf-java'
     implementation 'com.google.guava:guava'
     implementation 'com.google.code.gson:gson'
+    implementation 'com.typesafe:config'
 }
 
 test {
