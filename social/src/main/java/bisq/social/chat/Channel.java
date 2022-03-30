@@ -17,12 +17,11 @@
 
 package bisq.social.chat;
 
-import bisq.common.encoding.Proto;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
-import lombok.EqualsAndHashCode;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.Set;

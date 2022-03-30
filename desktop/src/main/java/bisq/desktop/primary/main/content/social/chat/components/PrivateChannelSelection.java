@@ -17,45 +17,23 @@
 
 package bisq.desktop.primary.main.content.social.chat.components;
 
-import bisq.common.observable.ObservableSet;
-import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
 import bisq.social.chat.Channel;
 import bisq.social.chat.ChatService;
-import bisq.social.chat.ChatStore;
 import bisq.social.chat.PrivateChannel;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
-import javafx.util.Callback;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-
 
 @Slf4j
 public class PrivateChannelSelection extends ChannelSelection {
-
     public PrivateChannelSelection(ChatService chatService) {
-        super();
-        controller = new Controller(chatService, Res.get("social.privateChannels")) {
-
+        super(new Controller(chatService, Res.get("social.privateChannels")) {
             @Override
             public void onViewAttached() {
                 super.onViewAttached();
-                channelsPin = FxBindings.<PrivateChannel, Channel> bind(model.channels)
-                        .to(this.chatService.getPersistableStore().getPrivateChannels());
+                channelsPin = FxBindings.<PrivateChannel, Channel<?>>bind(model.channels)
+                        .to(chatService.getPersistableStore().getPrivateChannels());
             }
-        };
+        });
     }
 }
