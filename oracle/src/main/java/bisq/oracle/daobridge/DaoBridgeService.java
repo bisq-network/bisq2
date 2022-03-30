@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -43,11 +42,6 @@ import java.util.concurrent.CompletableFuture;
  */
 @Slf4j
 public class DaoBridgeService implements DataService.Listener {
-    // Contains all authorized pub keys
-    public static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of(
-            "3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63"
-    );
-
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final Config daoBridgeConfig;
@@ -82,11 +76,10 @@ public class DaoBridgeService implements DataService.Listener {
             PublicKey authorizedPublicKey = KeyGeneration.generatePublic(Hex.decode(authorizedPublicKeyAsHex));
             DaoBridgeData daoBridgeData = new DaoBridgeData("test tx id");
             return identityService.getOrCreateIdentity("DaoBridgeAuthorizedData")
-                    .thenCompose(identity -> networkService.addAuthorizedData(daoBridgeData,
+                    .thenCompose(identity -> networkService.publishAuthorizedData(daoBridgeData,
                             identity.getNodeIdAndKeyPair(),
                             authorizedPrivateKey,
-                            authorizedPublicKey,
-                            AUTHORIZED_PUBLIC_KEYS))
+                            authorizedPublicKey))
                     .thenApply(broadCastDataResult -> true);
         } catch (Throwable e) {
             e.printStackTrace();

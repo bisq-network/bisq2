@@ -212,7 +212,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 quotedMessage,
                 new Date().getTime(),
                 false);
-        networkService.addAuthenticatedData(chatMessage,
+        networkService.publishAuthenticatedData(chatMessage,
                 userProfile.identity().getNodeIdAndKeyPair());
     }
 
@@ -231,7 +231,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                 originalChatMessage.getQuotedMessage(),
                                 originalChatMessage.getDate(),
                                 true);
-                        networkService.addAuthenticatedData(newChatMessage, nodeIdAndKeyPair);
+                        networkService.publishAuthenticatedData(newChatMessage, nodeIdAndKeyPair);
                     } else {
                         log.error("Error at deleting old message", throwable);
                     }

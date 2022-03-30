@@ -159,6 +159,10 @@ public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest,
         return sequenceNumber <= seqNumberFromMap;
     }
 
+    @Override
+    public boolean isExpired() {
+        return (System.currentTimeMillis() - created) > metaData.getTtl();
+    }
 
     @Override
     public String toString() {

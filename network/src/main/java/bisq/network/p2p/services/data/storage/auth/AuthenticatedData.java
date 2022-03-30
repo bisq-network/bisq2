@@ -64,7 +64,6 @@ public abstract class AuthenticatedData implements StorageData {
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-
     // We delegate the delivery of MetaData to the distributedData.
     @Override
     public MetaData getMetaData() {

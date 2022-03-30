@@ -162,7 +162,6 @@ message MetaData {
 message AuthorizedData {
   bytes signature = 1;
   bytes authorizedPublicKeyBytes = 2;
-  repeated string authorizedPublicKeys = 3;
 }
 message DefaultAuthenticatedData {
 }

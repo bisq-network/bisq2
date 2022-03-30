@@ -136,4 +136,9 @@ public class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {
     public int getSequenceNumber() {
         return Integer.MAX_VALUE;
     }
+
+    @Override
+    public boolean isExpired() {
+        return (System.currentTimeMillis() - created) > metaData.getTtl();
+    }
 }

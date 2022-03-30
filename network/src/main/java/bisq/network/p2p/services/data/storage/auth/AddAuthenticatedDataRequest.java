@@ -161,6 +161,11 @@ public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, Ad
     }
 
     @Override
+    public boolean isExpired() {
+        return authenticatedSequentialData.isExpired();
+    }
+
+    @Override
     public String toString() {
         return "AddAuthenticatedDataRequest{" +
                 "\r\n     authenticatedSequentialData=" + authenticatedSequentialData +

@@ -137,6 +137,13 @@ public class RefreshAuthenticatedDataRequest implements DataRequest {
     }
 
     @Override
+    public boolean isExpired() {
+        // Not used as we do not persist RefreshAuthenticatedDataRequest but use it to recreate a new 
+        // AddAuthenticatedDataRequest with the updated sequenceNumber
+        return false;
+    }
+
+    @Override
     public String toString() {
         return "RefreshAuthenticatedDataRequest{" +
                 "\r\n     metaData=" + metaData +

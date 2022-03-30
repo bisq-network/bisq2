@@ -36,6 +36,7 @@ import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -242,7 +243,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     // Add/remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadCastDataResult> addAuthenticatedData(DistributedData distributedData, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+    public CompletableFuture<BroadCastDataResult> publishAuthenticatedData(DistributedData distributedData, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         String nodeId = ownerNetworkIdWithKeyPair.nodeId();
         PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
@@ -276,11 +277,10 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                 });
     }
 
-    public CompletableFuture<BroadCastDataResult> addAuthorizedData(DistributedData distributedData,
-                                                                    NetworkIdWithKeyPair ownerNetworkIdWithKeyPair,
-                                                                    PrivateKey authorizedPrivateKey,
-                                                                    PublicKey authorizedPublicKey,
-                                                                    Set<String> authorizedPublicKeys) {
+    public CompletableFuture<BroadCastDataResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                        NetworkIdWithKeyPair ownerNetworkIdWithKeyPair,
+                                                                        PrivateKey authorizedPrivateKey,
+                                                                        PublicKey authorizedPublicKey) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         String nodeId = ownerNetworkIdWithKeyPair.nodeId();
         PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
@@ -288,8 +288,8 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
                 .thenCompose(list -> {
                     try {
-                        byte[] signature = SignatureUtil.sign(distributedData.serialize(), authorizedPrivateKey);
-                        AuthorizedData authorizedData = new AuthorizedData(distributedData, signature, authorizedPublicKey, authorizedPublicKeys);
+                        byte[] signature = SignatureUtil.sign(authorizedDistributedData.serialize(), authorizedPrivateKey);
+                        AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, signature, authorizedPublicKey);
                         return dataService.get().addAuthenticatedData(authorizedData, keyPair)
                                 .whenComplete((broadCastResultFutures, throwable) -> {
                                     broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {

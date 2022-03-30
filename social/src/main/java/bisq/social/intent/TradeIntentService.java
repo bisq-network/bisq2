@@ -81,7 +81,7 @@ public class TradeIntentService {
         return identityService.getOrCreateIdentity(tradeIntent.id())
                 .thenCompose(identity -> {
                     NetworkIdWithKeyPair nodeIdAndKeyPair = identity.getNodeIdAndKeyPair();
-                    return networkService.addAuthenticatedData(tradeIntent, nodeIdAndKeyPair);
+                    return networkService.publishAuthenticatedData(tradeIntent, nodeIdAndKeyPair);
                 });
     }
 
