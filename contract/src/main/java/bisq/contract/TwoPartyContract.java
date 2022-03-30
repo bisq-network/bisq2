@@ -17,12 +17,12 @@
 
 package bisq.contract;
 
-import bisq.offer.Listing;
 import bisq.account.protocol.SwapProtocolType;
+import bisq.offer.Offer;
 import lombok.Getter;
 
 @Getter
-public class TwoPartyContract<T extends Listing> extends AContract<T> {
+public class TwoPartyContract<T extends Offer> extends AContract<T> {
     private final Party taker;
 
     public TwoPartyContract(T listing, SwapProtocolType protocolType, Party taker) {

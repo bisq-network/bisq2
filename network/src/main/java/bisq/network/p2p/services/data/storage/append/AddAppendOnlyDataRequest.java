@@ -18,7 +18,41 @@
 package bisq.network.p2p.services.data.storage.append;
 
 import bisq.network.p2p.services.data.AddDataRequest;
-import bisq.network.p2p.services.data.DataRequest;
+import bisq.network.p2p.services.data.storage.DistributedData;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-public record AddAppendOnlyDataRequest(AppendOnlyData payload) implements AddDataRequest, DataRequest {
+@Slf4j
+@Getter
+@ToString
+@EqualsAndHashCode
+public class AddAppendOnlyDataRequest implements AddDataRequest {
+    private final AppendOnlyData appendOnlyData;
+
+    public AddAppendOnlyDataRequest(AppendOnlyData appendOnlyData) {
+        this.appendOnlyData = appendOnlyData;
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkMessage toProto() {
+        return getNetworkMessageBuilder()
+                .setDataRequest(getDataRequestBuilder()
+                        .setAddAppendOnlyDataRequest(
+                                bisq.network.protobuf.AddAppendOnlyDataRequest.newBuilder()
+                                        .setAppendOnlyData(appendOnlyData.toAny())
+                        )
+                ).build();
+    }
+
+    public static AddAppendOnlyDataRequest fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest proto) {
+        return new AddAppendOnlyDataRequest((AppendOnlyData) DistributedData.fromAny(proto.getAppendOnlyData()));
+    }
+
+    @Override
+    public boolean isExpired() {
+        // AppendOnlyData never expires
+        return false;
+    }
 }

@@ -17,7 +17,7 @@
 
 package bisq.settings;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,4 +25,19 @@ import lombok.Setter;
 @Setter
 public class DisplaySettings implements Proto {
     private boolean useAnimations = true;
+
+    public DisplaySettings() {
+    }
+
+    public bisq.settings.protobuf.DisplaySettings toProto() {
+        return bisq.settings.protobuf.DisplaySettings.newBuilder()
+                .setUseAnimations(useAnimations)
+                .build();
+    }
+
+    public static DisplaySettings fromProto(bisq.settings.protobuf.DisplaySettings proto) {
+        DisplaySettings displaySettings = new DisplaySettings();
+        displaySettings.setUseAnimations(proto.getUseAnimations());
+        return displaySettings;
+    }
 }

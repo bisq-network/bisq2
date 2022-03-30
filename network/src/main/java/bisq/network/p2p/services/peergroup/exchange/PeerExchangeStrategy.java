@@ -20,6 +20,7 @@ package bisq.network.p2p.services.peergroup.exchange;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.services.peergroup.Peer;
 import bisq.network.p2p.services.peergroup.PeerGroup;
+import bisq.network.p2p.services.peergroup.PeerGroupStore;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,15 +63,17 @@ public class PeerExchangeStrategy {
 
     private final PeerGroup peerGroup;
     private final Config config;
+    private final PeerGroupStore peerGroupStore;
     private final Set<Address> usedAddresses = new CopyOnWriteArraySet<>();
 
-    public PeerExchangeStrategy(PeerGroup peerGroup, Config config) {
+    public PeerExchangeStrategy(PeerGroup peerGroup, Config config, PeerGroupStore peerGroupStore) {
         this.peerGroup = peerGroup;
         this.config = config;
+        this.peerGroupStore = peerGroupStore;
     }
 
-    List<Address> getAddressesForInitialPeerExchange() {
-        List<Address> candidates = getCandidates(getPriorityListForInitialPeerExchange());
+    Set<Address> getAddressesForInitialPeerExchange() {
+        Set<Address> candidates = getCandidates(getPriorityListForInitialPeerExchange());
         if (candidates.isEmpty()) {
             // It can be that we don't have peers anymore which we have not already connected in the past.
             // We reset the usedAddresses and try again. It is likely that some peers have different peers to 
@@ -85,8 +88,8 @@ public class PeerExchangeStrategy {
 
     // After bootstrap, we might want to add more connections and use the peer exchange protocol for that.
     // We do not want to use seed nodes or already existing connections in that case.
-    List<Address> getAddressesForFurtherPeerExchange() {
-        List<Address> candidates = getCandidates(getPriorityListForFurtherPeerExchange());
+    Set<Address> getAddressesForFurtherPeerExchange() {
+        Set<Address> candidates = getCandidates(getPriorityListForFurtherPeerExchange());
         if (candidates.isEmpty()) {
             // It can be that we don't have peers anymore which we have not already connected in the past.
             // We reset the usedAddresses and try again. It is likely that some peers have different peers to 
@@ -162,9 +165,9 @@ public class PeerExchangeStrategy {
                 isDateValid(peer);
     }
 
-    private List<Address> getPriorityListForInitialPeerExchange() {
-        List<Address> seeds = getSeeds();
-        List<Address> priorityList = new ArrayList<>(seeds);
+    private Set<Address> getPriorityListForInitialPeerExchange() {
+        Set<Address> seeds = getSeeds();
+        Set<Address> priorityList = new HashSet<>(seeds);
         Set<Address> reported = getReported();
         priorityList.addAll(reported);
         priorityList.addAll(getPersisted());
@@ -177,18 +180,18 @@ public class PeerExchangeStrategy {
         return priorityList;
     }
 
-    private List<Address> getPriorityListForFurtherPeerExchange() {
-        List<Address> priorityList = new ArrayList<>(getReported());
+    private Set<Address> getPriorityListForFurtherPeerExchange() {
+        Set<Address> priorityList = new HashSet<>(getReported());
         priorityList.addAll(getPersisted());
         return priorityList;
     }
 
-    private List<Address> getSeeds() {
+    private Set<Address> getSeeds() {
         return getShuffled(peerGroup.getSeedNodeAddresses()).stream()
                 .filter(peerGroup::notMyself)
                 .filter(this::isNotUsed)
                 .limit(config.getNumSeeNodesAtBoostrap())
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
     private Set<Address> getReported() {
@@ -203,7 +206,7 @@ public class PeerExchangeStrategy {
     }
 
     private Set<Address> getPersisted() {
-        return peerGroup.getPersistedPeers().stream()
+        return peerGroupStore.getPersistedPeers().stream()
                 .filter(peerGroup::isNotInQuarantine)
                 .sorted(Comparator.comparing(Peer::getDate))
                 .map(Peer::getAddress)
@@ -223,11 +226,10 @@ public class PeerExchangeStrategy {
                 .collect(Collectors.toSet());
     }
 
-    private List<Address> getCandidates(List<Address> priorityList) {
+    private Set<Address> getCandidates(Set<Address> priorityList) {
         return priorityList.stream()
-                .distinct()
                 .limit(getLimit())
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
     private int getLimit() {

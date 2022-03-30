@@ -17,14 +17,29 @@
 
 package bisq.identity;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
+import bisq.security.KeyPairProtoUtil;
 import bisq.security.PubKey;
 
 import java.security.KeyPair;
 
 public record Identity(String domainId, NetworkId networkId, KeyPair keyPair) implements Proto {
+    public bisq.identity.protobuf.Identity toProto() {
+        return bisq.identity.protobuf.Identity.newBuilder()
+                .setDomainId(domainId)
+                .setNetworkId(networkId.toProto())
+                .setKeyPair(KeyPairProtoUtil.toProto(keyPair))
+                .build();
+    }
+
+    public static Identity fromProto(bisq.identity.protobuf.Identity proto) {
+        return new Identity(proto.getDomainId(),
+                NetworkId.fromProto(proto.getNetworkId()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair()));
+    }
+
     public NetworkIdWithKeyPair getNodeIdAndKeyPair() {
         return new NetworkIdWithKeyPair(networkId, keyPair);
     }

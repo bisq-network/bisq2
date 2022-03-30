@@ -17,11 +17,12 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
-import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.security.DigestUtil;
+import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
+import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,15 +33,21 @@ import java.security.PublicKey;
 import java.util.Arrays;
 
 @Slf4j
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 @Getter
-public class RemoveMailboxRequest extends RemoveAuthenticatedDataRequest implements MailboxRequest {
+public class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {
+    private final MetaData metaData;
+    private final byte[] hash;
+    private final byte[] receiverPublicKeyBytes;
+    private final byte[] signature;
+    private final long created;
+    private transient PublicKey receiverPublicKey;
 
-    public static RemoveMailboxRequest from(MailboxData mailboxPayload, KeyPair receiverKeyPair)
+    public static RemoveMailboxRequest from(MailboxData mailboxData, KeyPair receiverKeyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(mailboxPayload.serialize());
+        byte[] hash = DigestUtil.hash(mailboxData.serialize());
         byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
-        return new RemoveMailboxRequest(mailboxPayload.getMetaData(), hash, receiverKeyPair.getPublic(),  signature);
+        return new RemoveMailboxRequest(mailboxData.getMetaData(), hash, receiverKeyPair.getPublic(), signature);
     }
 
     // Receiver is owner for remove request
@@ -48,26 +55,90 @@ public class RemoveMailboxRequest extends RemoveAuthenticatedDataRequest impleme
                                 byte[] hash,
                                 PublicKey receiverPublicKey,
                                 byte[] signature) {
-        super(metaData,
+        this(metaData,
                 hash,
                 receiverPublicKey.getEncoded(),
                 receiverPublicKey,
-                Integer.MAX_VALUE,  // Use max value for sequence number so that no other addData call is permitted.
-                signature);
+                signature,
+                System.currentTimeMillis());
+    }
+
+    private RemoveMailboxRequest(MetaData metaData,
+                                 byte[] hash,
+                                 byte[] receiverPublicKeyBytes,
+                                 PublicKey receiverPublicKey,
+                                 byte[] signature,
+                                 long created) {
+        this.metaData = metaData;
+        this.hash = hash;
+        this.receiverPublicKeyBytes = receiverPublicKeyBytes;
+        this.receiverPublicKey = receiverPublicKey;
+        this.signature = signature;
+        this.created = created;
     }
 
     @Override
-    public boolean isPublicKeyHashInvalid(AuthenticatedSequentialData entryFromMap) {
+    public bisq.network.protobuf.NetworkMessage toProto() {
+        return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRemoveMailboxRequest(
+                        bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
+                                .setMetaData(metaData.toProto())
+                                .setHash(ByteString.copyFrom(hash))
+                                .setReceiverPublicKeyBytes(ByteString.copyFrom(receiverPublicKeyBytes))
+                                .setSignature(ByteString.copyFrom(signature))
+                                .setCreated(created)))
+                .build();
+    }
+
+    public static RemoveMailboxRequest fromProto(bisq.network.protobuf.RemoveMailboxRequest proto) {
+        byte[] receiverPublicKeyBytes = proto.getReceiverPublicKeyBytes().toByteArray();
         try {
-            MailboxSequentialData mailboxSequentialData = (MailboxSequentialData) entryFromMap;
-            return !Arrays.equals(mailboxSequentialData.getReceiversPublicKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
+            PublicKey receiverPublicKey = KeyGeneration.generatePublic(receiverPublicKeyBytes);
+            return new RemoveMailboxRequest(
+                    MetaData.fromProto(proto.getMetaData()),
+                    proto.getHash().toByteArray(),
+                    receiverPublicKeyBytes,
+                    receiverPublicKey,
+                    proto.getSignature().toByteArray(),
+                    proto.getCreated()
+            );
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean isPublicKeyHashInvalid(MailboxSequentialData mailboxSequentialData) {
+        try {
+            return !Arrays.equals(mailboxSequentialData.getReceiversPublicKeyHash(),
+                    DigestUtil.hash(receiverPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }
     }
 
+    public boolean isSignatureInvalid() {
+        try {
+            if (receiverPublicKey == null) {
+                receiverPublicKey = KeyGeneration.generatePublic(receiverPublicKeyBytes);
+            }
+            return !SignatureUtil.verify(hash, signature, receiverPublicKey);
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
+        // Use max value for sequence number so that no other addData call is permitted.
+        return Integer.MAX_VALUE <= seqNumberFromMap;
+    }
+
     @Override
-    public String toString() {
-        return "RemoveMailboxDataRequest{} " + super.toString();
+    public int getSequenceNumber() {
+        return Integer.MAX_VALUE;
+    }
+
+    @Override
+    public boolean isExpired() {
+        return (System.currentTimeMillis() - created) > metaData.getTtl();
     }
 }

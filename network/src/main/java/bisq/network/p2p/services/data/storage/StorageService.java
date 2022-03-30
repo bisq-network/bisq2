@@ -28,15 +28,15 @@ import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.filter.FilterEntry;
 import bisq.network.p2p.services.data.inventory.Inventory;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
-import bisq.network.p2p.services.data.storage.append.AppendOnlyDataStorageService;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
+import bisq.network.p2p.services.data.storage.append.AppendOnlyDataStorageService;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStorageService;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStorageService;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
@@ -153,7 +153,7 @@ public class StorageService {
         } else if (addDataRequest instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
             return onAddAuthenticatedDataRequest(addAuthenticatedDataRequest);
         } else if (addDataRequest instanceof AddAppendOnlyDataRequest addAppendOnlyDataRequest) {
-            return onAddAppendOnlyDataRequest(addAppendOnlyDataRequest); 
+            return onAddAppendOnlyDataRequest(addAppendOnlyDataRequest);
         } else {
             return CompletableFuture.failedFuture(
                     new IllegalArgumentException("AddRequest called with invalid addDataRequest: " +
@@ -194,7 +194,7 @@ public class StorageService {
     }
 
     private CompletableFuture<Optional<StorageData>> onAddAppendOnlyDataRequest(AddAppendOnlyDataRequest request) {
-        AppendOnlyData appendOnlyData = request.payload();
+        AppendOnlyData appendOnlyData = request.getAppendOnlyData();
         return getOrCreateAppendOnlyDataStore(appendOnlyData.getMetaData())
                 .thenApply(store -> {
                     Result result = store.add(request);

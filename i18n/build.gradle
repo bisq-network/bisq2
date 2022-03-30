@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    alias(libs.plugins.protobuf)
 }
 
 repositories {
@@ -14,7 +15,8 @@ apply from: '../buildSrc/lombok-dependencies.gradle'
 dependencies {
     api platform(project(':platforms:common-platform'))
 
-    implementation 'com.google.guava:guava'
+    implementation 'com.google.protobuf:protobuf-java'
+    implementation libs.guava
 }
 
 test {

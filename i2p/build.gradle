@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    alias(libs.plugins.protobuf)
 }
 
 repositories {
@@ -16,17 +17,16 @@ dependencies {
 
     implementation project(':common')
 
-    implementation 'com.google.guava:guava'
+    implementation 'com.google.protobuf:protobuf-java'
+    implementation libs.guava
 
     // Exclude httpclient transitive dependency because it may override
     // I2P-specific impl of some Apache classes like org.apache.http.util.Args
-    implementation ('org.apache.httpcomponents:httpcore:4.4.13'){
+    implementation('org.apache.httpcomponents:httpcore:4.4.13') {
         exclude group: 'org.apache.httpcomponents', module: 'httpclient'
     }
 
-    implementation "net.i2p.client:streaming:${i2pVersion}"
-    implementation "net.i2p:i2p:${i2pVersion}"
-    implementation "net.i2p:router:${i2pVersion}"
+    implementation libs.bundles.i2p
 }
 
 test {

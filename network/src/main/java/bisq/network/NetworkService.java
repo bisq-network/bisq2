@@ -34,19 +34,28 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
+import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
+import bisq.security.SignatureUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.util.*;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -91,7 +100,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                                 ServiceNode.Config serviceNodeConfig,
                                 Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
                                 Map<Transport.Type, Integer> defaultNodePortByTransportType,
-                                Map<Transport.Type, List<Address>> seedAddressesByTransport,
+                                Map<Transport.Type, Set<Address>> seedAddressesByTransport,
                                 Optional<String> socks5ProxyAddress) {
     }
 
@@ -133,7 +142,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
 
         defaultNodePortByTransportType = config.defaultNodePortByTransportType();
 
-        persistence = persistenceService.getOrCreatePersistence(this, "db" + File.separator + "network", persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     public CompletableFuture<Void> shutdown() {
@@ -235,14 +244,14 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     // Add/remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadCastDataResult> addAuthenticatedData(DistributedData distributedData, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+    public CompletableFuture<BroadCastDataResult> publishAuthenticatedData(DistributedData distributedData, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         String nodeId = ownerNetworkIdWithKeyPair.nodeId();
         PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
                 .thenCompose(list -> {
-                    AuthenticatedData authenticatedData = new AuthenticatedData(distributedData);
+                    DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
                     return dataService.get().addAuthenticatedData(authenticatedData, keyPair)
                             .whenComplete((broadCastResultFutures, throwable) -> {
                                 broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
@@ -259,7 +268,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> {
-                    AuthenticatedData authenticatedData = new AuthenticatedData(distributedData);
+                    DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
                     return dataService.get().removeAuthenticatedData(authenticatedData, keyPair)
                             .whenComplete((broadCastDataResult, throwable) -> {
                                 broadCastDataResult.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
@@ -267,6 +276,46 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                                 }));
                             });
                 });
+    }
+
+    public CompletableFuture<BroadCastDataResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                        NetworkIdWithKeyPair ownerNetworkIdWithKeyPair,
+                                                                        PrivateKey authorizedPrivateKey,
+                                                                        PublicKey authorizedPublicKey) {
+        checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
+        String nodeId = ownerNetworkIdWithKeyPair.nodeId();
+        PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
+        KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
+        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
+                .thenCompose(list -> {
+                    try {
+                        byte[] signature = SignatureUtil.sign(authorizedDistributedData.serialize(), authorizedPrivateKey);
+                        AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, signature, authorizedPublicKey);
+                        return dataService.get().addAuthenticatedData(authorizedData, keyPair)
+                                .whenComplete((broadCastResultFutures, throwable) -> {
+                                    broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
+                                        //todo apply state
+                                    }));
+                                });
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                        return CompletableFuture.failedFuture(e);
+                    }
+                });
+    }
+
+    public CompletableFuture<BroadCastDataResult> publishAppendOnlyData(AppendOnlyData appendOnlyData,
+                                                                        NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+        checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
+        String nodeId = ownerNetworkIdWithKeyPair.nodeId();
+        PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
+        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
+                .thenCompose(list -> dataService.get().addAppendOnlyData(appendOnlyData)
+                        .whenComplete((broadCastResultFutures, throwable) -> {
+                            broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
+                                //todo apply state
+                            }));
+                        }));
     }
 
 

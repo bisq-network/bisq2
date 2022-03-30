@@ -17,48 +17,73 @@
 
 package bisq.social.chat;
 
-import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
-public abstract class ChatMessage implements DistributedData {
+public abstract class ChatMessage {
     protected final String channelId;
     protected final String text;
-    protected  ChatUser chatUser;
-    @Nullable
-    protected final QuotedMessage quotedMessage;
+    protected ChatUser author;
+    protected final Optional<QuotedMessage> quotedMessage;
     protected final long date;
     protected final ChannelType channelType;
     protected final boolean wasEdited;
-
+    protected final MetaData metaData;
 
     protected ChatMessage(String channelId,
-                          ChatUser chatUser,
+                          ChatUser author,
                           String text,
                           Optional<QuotedMessage> quotedMessage,
                           long date,
                           ChannelType channelType,
-                          boolean wasEdited) {
+                          boolean wasEdited,
+                          MetaData metaData) {
         this.channelId = channelId;
-        this.chatUser = chatUser;
+        this.author = author;
         this.text = text;
-        this.quotedMessage = quotedMessage.orElse(null);
+        this.quotedMessage = quotedMessage;
         this.date = date;
         this.channelType = channelType;
         this.wasEdited = wasEdited;
-       
+        this.metaData = metaData;
     }
 
-    @Nullable
-    public Optional<QuotedMessage> getQuotedMessage() {
-        return Optional.ofNullable(quotedMessage);
+    bisq.social.protobuf.ChatMessage.Builder getChatMessageBuilder() {
+        bisq.social.protobuf.ChatMessage.Builder builder = bisq.social.protobuf.ChatMessage.newBuilder()
+                .setChannelId(channelId)
+                .setAuthor(author.toProto())
+                .setText(text)
+                .setDate(date)
+                .setChannelType(channelType.toProto())
+                .setWasEdited(wasEdited)
+                .setMetaData(metaData.toProto());
+        quotedMessage.ifPresent(quotedMessage -> builder.setQuotedMessage(quotedMessage.toProto()));
+        return builder;
+    }
+
+    public static ChatMessage fromProto(bisq.social.protobuf.ChatMessage proto) {
+        switch (proto.getMessageCase()) {
+            case PRIVATECHATMESSAGE -> {
+                return PrivateChatMessage.fromProto(proto);
+            }
+            case PUBLICCHATMESSAGE -> {
+                return PublicChatMessage.fromProto(proto);
+            }
+            case MESSAGE_NOT_SET -> {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

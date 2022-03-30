@@ -47,38 +47,40 @@ public class WalletService {
         this.walletConfig = walletConfig;
     }
 
-    public CompletableFuture<Void> tryAutoInitialization() {
+    public CompletableFuture<Boolean> tryAutoInitialization() {
         if (walletConfig.isEmpty()) {
-            return CompletableFuture.completedFuture(null);
+            return CompletableFuture.completedFuture(true);
         }
         return initialize(walletConfig.get(), Optional.empty());
     }
 
-    public CompletableFuture<Void> initialize(WalletConfig walletConfig, Optional<String> walletPassphrase) {
+    public CompletableFuture<Boolean> initialize(WalletConfig walletConfig, Optional<String> walletPassphrase) {
         if (wallet.isPresent()) {
-            return CompletableFuture.completedFuture(null);
+            return CompletableFuture.completedFuture(true);
         }
 
         return CompletableFuture.runAsync(() -> {
-            Path walletsDataDir = walletConfig.getWalletsDataDirPath();
-            walletsDataDir.toFile().mkdirs();
+                    Path walletsDataDir = walletConfig.getWalletsDataDirPath();
+                    walletsDataDir.toFile().mkdirs();
 
-            Wallet wallet = switch (walletConfig.getWalletBackend()) {
-                case BITCOIND -> {
-                    var bitcoindWallet = createBitcoinWallet(walletConfig, walletsDataDir);
-                    bitcoindWallet.initialize(walletPassphrase);
-                    yield bitcoindWallet;
-                }
-                case ELEMENTSD -> {
-                    var liquidWallet = createLiquidWallet(walletConfig, walletsDataDir);
-                    liquidWallet.initialize(walletPassphrase);
-                    yield liquidWallet;
-                }
-            };
+                    Wallet wallet = switch (walletConfig.getWalletBackend()) {
+                        case BITCOIND -> {
+                            var bitcoindWallet = createBitcoinWallet(walletConfig, walletsDataDir);
+                            bitcoindWallet.initialize(walletPassphrase);
+                            yield bitcoindWallet;
+                        }
+                        case ELEMENTSD -> {
+                            var liquidWallet = createLiquidWallet(walletConfig, walletsDataDir);
+                            liquidWallet.initialize(walletPassphrase);
+                            yield liquidWallet;
+                        }
+                    };
 
-            this.wallet = Optional.of(wallet);
-            log.info("Successfully created wallet at {}", walletsDataDir);
-        }).thenRun(this::getBalance);
+                    this.wallet = Optional.of(wallet);
+                    log.info("Successfully created wallet at {}", walletsDataDir);
+                })
+                .thenRun(this::getBalance)
+                .thenApply(e -> true);
     }
 
     private BitcoinWallet createBitcoinWallet(WalletConfig walletConfig, Path walletsDataDir) {

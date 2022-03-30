@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    alias(libs.plugins.protobuf)
 }
 
 repositories {
@@ -32,11 +33,31 @@ dependencies {
     implementation project(':presentation')
     implementation project(':wallets')
 
-    implementation 'com.google.guava:guava'
+    implementation 'com.google.protobuf:protobuf-java'
+    implementation libs.guava
     implementation 'com.typesafe:config'
 }
 
 test {
     useJUnitPlatform()
     exclude '**/**Integration*'
+}
+
+ext {
+    generatedProtoSrcDir = 'build/generated/source/main/java'
+}
+
+sourceSets.main {
+    java.srcDirs += [generatedProtoSrcDir]
+}
+
+protobuf {
+    protoc {
+        // Append 'osxArch' property to workaround M1 Mac bug.
+        artifact = "com.google.protobuf:protoc:3.19.4${osxArch}"
+    }
+    generateProtoTasks {
+        all()*.plugins {}
+    }
+    generatedFilesBaseDir = "$projectDir/build/generated/source"
 }

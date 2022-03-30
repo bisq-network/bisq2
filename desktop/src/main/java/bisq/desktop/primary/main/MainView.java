@@ -35,7 +35,7 @@ public class MainView extends View<VBox, MainModel, MainController> {
         super(new VBox(), model, controller);
 
         root.getStyleClass().add("content-pane");
-       
+
         HBox leftNavAndContentBox = new HBox();
         HBox.setHgrow(contentView.getRoot(), Priority.ALWAYS);
         leftNavAndContentBox.getChildren().addAll(leftNavView.getRoot(), contentView.getRoot());

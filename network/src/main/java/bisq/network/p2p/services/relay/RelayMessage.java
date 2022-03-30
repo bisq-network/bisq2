@@ -23,6 +23,7 @@ import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+//todo proto support not impl yet as class itself and use case is not completed
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public class RelayMessage extends ConfidentialMessage {

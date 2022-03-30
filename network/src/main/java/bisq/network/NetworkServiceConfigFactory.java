@@ -31,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toMap;
+
 /**
  * Parses the program arguments which are relevant for that domain and stores it in the options field.
  */
@@ -54,11 +56,11 @@ public class NetworkServiceConfigFactory {
                 ServiceNode.Service.MONITOR));
 
         Config seedConfig = typesafeConfig.getConfig("seedAddressByTransportType");
-        Map<Transport.Type, List<Address>> seedAddressesByTransport = Map.of(
-                Transport.Type.TOR, getSeedAddresses(Transport.Type.TOR, seedConfig),
-                Transport.Type.I2P, getSeedAddresses(Transport.Type.I2P, seedConfig),
-                Transport.Type.CLEAR, getSeedAddresses(Transport.Type.CLEAR, seedConfig)
-        );
+        // Only read seed addresses for explicitly supported address types
+        Map<Transport.Type, Set<Address>> seedAddressesByTransport = supportedTransportTypes.stream()
+                .collect(toMap(
+                        supportedTransportType -> supportedTransportType,
+                        supportedTransportType -> getSeedAddresses(supportedTransportType, seedConfig)));
 
         PeerGroup.Config peerGroupConfig = PeerGroup.Config.from(typesafeConfig.getConfig("peerGroupConfig"));
         PeerExchangeStrategy.Config peerExchangeStrategyConfig = PeerExchangeStrategy.Config.from(typesafeConfig.getConfig("peerExchangeStrategyConfig"));
@@ -103,24 +105,29 @@ public class NetworkServiceConfigFactory {
                 Optional.empty());
     }
 
-    public static List<Address> getSeedAddresses(Transport.Type transportType, Config config) {
+    public static Set<Address> getSeedAddresses(Transport.Type transportType, Config config) {
         switch (transportType) {
             case TOR -> {
                 return ConfigUtil.getStringList(config, "tor").stream()
                         .map(Address::new)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toSet());
             }
             case I2P -> {
                 return ConfigUtil.getStringList(config, "i2p").stream()
                         .map(Address::new)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toSet());
+            }
+            case CLEAR -> {
+                return ConfigUtil.getStringList(config, "clear").stream()
+                        .map(Address::new)
+                        .collect(Collectors.toSet());
             }
             default -> {
-                List<Address> seedAddresses = new ArrayList<>();
+               /* List<Address> seedAddresses = new ArrayList<>();
                 for (int i = 0; i < 3; i++) {
                     seedAddresses.add(Address.localHost(8000 + i));
-                }
-                return seedAddresses;
+                }*/
+                return new HashSet<>();
             }
         }
     }

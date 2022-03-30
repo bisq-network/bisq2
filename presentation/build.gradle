@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    alias(libs.plugins.protobuf)
 }
 
 repositories {
@@ -22,7 +23,7 @@ dependencies {
     implementation project(':offer')
     implementation project(':oracle')
 
-    implementation 'com.google.guava:guava'
+    implementation libs.guava
 }
 
 test {

@@ -15,14 +15,7 @@ repositories {
 apply from: 'buildSrc/bisq-version.gradle'
 apply from: 'buildSrc/os-arch.gradle'
 
-dependencies {
-}
-
 test {
     useJUnitPlatform()
     exclude '**/**Integration*'
-}
-
-ext {
-    i2pVersion = '1.7.0'
 }

@@ -18,7 +18,8 @@
 package bisq.common.monetary;
 
 import bisq.common.currency.TradeCurrency;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -74,6 +75,30 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
 
     protected Monetary(String id, double value, String code, int precision, int minPrecision) {
         this(id, doubleValueToLong(value, precision), code, precision, minPrecision);
+    }
+
+    public bisq.common.protobuf.Monetary.Builder getMonetaryBuilder() {
+        return bisq.common.protobuf.Monetary.newBuilder()
+                .setId(id)
+                .setValue(value)
+                .setCode(code)
+                .setPrecision(precision)
+                .setMinPrecision(minPrecision);
+    }
+
+    public static Monetary fromProto(bisq.common.protobuf.Monetary proto) {
+        switch (proto.getMessageCase()) {
+            case COIN -> {
+                return Coin.fromProto(proto);
+            }
+            case FIAT -> {
+                return Fiat.fromProto(proto);
+            }
+            case MESSAGE_NOT_SET -> {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 
     abstract public double toDouble(long value);

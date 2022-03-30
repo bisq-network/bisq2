@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -37,7 +36,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AuthenticatedDataStorageService extends DataStorageService<AuthenticatedDataRequest> {
-    private static final long MAX_AGE = TimeUnit.DAYS.toMillis(10);
+    // Maybe we need to customize that per data type or derive it from metaData
+    private static final long PRUNE_MAX_AGE = TimeUnit.DAYS.toMillis(365);
     private static final int MAX_MAP_SIZE = 10000;
  /*
     // Max size of serialized NetworkData or MailboxMessage. Used to limit response map.
@@ -61,7 +61,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public AuthenticatedDataStorageService(PersistenceService persistenceService, String storeName, String fileName) {
         super(persistenceService, storeName, fileName);
     }
-
 
     @Override
     public void onPersistedApplied(DataStore<AuthenticatedDataRequest> persisted) {
@@ -111,7 +110,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             if (request.isSignatureInvalid()) {
-               
                 log.warn("Signature is invalid at add. request={}", request);
                 return new Result(false).signatureInvalid();
             }
@@ -185,10 +183,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         return new Result(true).removedData(authenticatedDataFromMap);
     }
 
-    public Result refresh(RefreshRequest request) {
+    public Result refresh(RefreshAuthenticatedDataRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
         AddAuthenticatedDataRequest updatedRequest;
-        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
+        Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             AuthenticatedDataRequest requestFromMap = map.get(byteArray);
 
@@ -251,7 +249,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public int getSequenceNumber(byte[] hash) {
         ByteArray byteArray = new ByteArray(hash);
         int sequenceNumber = 0;
-        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
+        Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (map.containsKey(byteArray)) {
                 sequenceNumber = map.get(byteArray).getSequenceNumber();
@@ -272,13 +270,13 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         // Sort by created date
         // Limit to MAX_MAP_SIZE
         Map<ByteArray, AuthenticatedDataRequest> pruned = persisted.entrySet().stream()
-                .filter(entry -> now - entry.getValue().getCreated() < MAX_AGE)
+                .filter(entry -> now - entry.getValue().getCreated() < PRUNE_MAX_AGE)
                 .filter(entry -> entry.getValue() instanceof RemoveAuthenticatedDataRequest ||
                         !((AddAuthenticatedDataRequest) entry.getValue()).getAuthenticatedSequentialData().isExpired())
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        ConcurrentHashMap<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
+        Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             map.clear();
             map.putAll(pruned);

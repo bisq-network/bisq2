@@ -17,7 +17,5 @@
 
 package bisq.common.data;
 
-import bisq.common.encoding.Proto;
-
-public record Pair<A, B>(A first, B second) implements Proto {
+public record Pair<A, B>(A first, B second) {
 }

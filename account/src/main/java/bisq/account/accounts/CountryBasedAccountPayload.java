@@ -17,6 +17,7 @@
 
 package bisq.account.accounts;
 
+import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -33,5 +34,10 @@ public class CountryBasedAccountPayload extends AccountPayload {
         super(settlementMethodId);
         this.countryCode = countryCode;
 
+    }
+
+    @Override
+    public Message toProto() {
+        return null;
     }
 }

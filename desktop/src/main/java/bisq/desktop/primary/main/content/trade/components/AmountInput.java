@@ -23,7 +23,7 @@ import bisq.desktop.common.utils.validation.MonetaryValidator;
 import bisq.desktop.components.controls.BisqInputTextField;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
+import bisq.offer.spec.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
 import javafx.beans.property.*;

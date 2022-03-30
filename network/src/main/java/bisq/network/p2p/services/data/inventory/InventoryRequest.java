@@ -21,4 +21,16 @@ import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.filter.DataFilter;
 
 public record InventoryRequest(DataFilter dataFilter, int nonce) implements BroadcastMessage {
+    @Override
+    public bisq.network.protobuf.NetworkMessage toProto() {
+        return getNetworkMessageBuilder().setInventoryRequest(
+                        bisq.network.protobuf.InventoryRequest.newBuilder()
+                                .setDataFilter(dataFilter.toProto())
+                                .setNonce(nonce))
+                .build();
+    }
+
+    public static InventoryRequest fromProto(bisq.network.protobuf.InventoryRequest proto) {
+        return new InventoryRequest(DataFilter.fromProto(proto.getDataFilter()), proto.getNonce());
+    }
 }

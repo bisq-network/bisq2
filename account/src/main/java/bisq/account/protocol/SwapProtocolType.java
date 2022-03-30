@@ -17,6 +17,9 @@
 
 package bisq.account.protocol;
 
+import bisq.common.util.ProtobufUtils;
+import com.google.protobuf.ProtocolMessageEnum;
+
 // Versioning is handled by adding new entries. That way we could support multiple versions of the same protocol 
 // if needed.
 public enum SwapProtocolType implements ProtocolType {
@@ -26,5 +29,14 @@ public enum SwapProtocolType implements ProtocolType {
     LN_SWAP,
     MULTISIG,
     BSQ_BOND,
-    REPUTATION
+    REPUTATION;
+
+    public static SwapProtocolType fromProto(String name) {
+        return ProtobufUtils.enumFromProto(SwapProtocolType.class, name);
+    }
+
+    @Override
+    public ProtocolMessageEnum toProto() {
+        return null;
+    }
 }

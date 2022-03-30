@@ -38,27 +38,27 @@ import java.util.Optional;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredListItem {
-    private final ChatMessage chatMessage;
+class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>>, FilteredListItem {
+    private final T chatMessage;
     private final String message;
-    private final String senderUserName;
+    private final String authorUserName;
     private final String time;
     private final String date;
     private final String chatUserId;
     private final ByteArray pubKeyHashAsByteArray;
     private final Optional<QuotedMessage> quotedMessage;
-    private final ChatUser chatUser;
+    private final ChatUser author;
 
-    public ChatMessageListItem(ChatMessage chatMessage) {
+    public ChatMessageListItem(T chatMessage) {
         this.chatMessage = chatMessage;
         String editPostFix = chatMessage.isWasEdited() ? " " + Res.get("social.message.wasEdited") : "";
         message = chatMessage.getText() + editPostFix;
         quotedMessage = chatMessage.getQuotedMessage();
-        chatUser = chatMessage.getChatUser();
-        senderUserName = chatUser.getUserName();
+        author = chatMessage.getAuthor();
+        authorUserName = author.getUserName();
         time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
         date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));
-        byte[] pubKeyHash = DigestUtil.hash(chatUser.getNetworkId().getPubKey().publicKey().getEncoded());
+        byte[] pubKeyHash = DigestUtil.hash(author.getNetworkId().getPubKey().publicKey().getEncoded());
         pubKeyHashAsByteArray = new ByteArray(pubKeyHash);
         chatUserId = Hex.encode(pubKeyHash);
     }
@@ -73,7 +73,7 @@ class ChatMessageListItem implements Comparable<ChatMessageListItem>, FilteredLi
         return filterString == null ||
                 filterString.isEmpty() ||
                 StringUtils.containsIgnoreCase(message, filterString) ||
-                StringUtils.containsIgnoreCase(senderUserName, filterString) ||
+                StringUtils.containsIgnoreCase(authorUserName, filterString) ||
                 StringUtils.containsIgnoreCase(date, filterString);
     }
 }

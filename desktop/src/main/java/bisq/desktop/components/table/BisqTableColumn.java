@@ -325,7 +325,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                             S previousItem;
 
                             private final BisqInputTextField inputTextField = new BisqInputTextField();
-                           
+
                             @Override
                             public void updateItem(final S item, boolean empty) {
                                 super.updateItem(item, empty);

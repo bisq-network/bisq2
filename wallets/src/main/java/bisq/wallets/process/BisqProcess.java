@@ -18,7 +18,6 @@
 package bisq.wallets.process;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 
 public interface BisqProcess {
     void start() throws IOException;

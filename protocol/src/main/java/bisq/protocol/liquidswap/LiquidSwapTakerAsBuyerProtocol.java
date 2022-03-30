@@ -23,6 +23,7 @@ import bisq.persistence.PersistenceClient;
 import bisq.protocol.BuyerProtocol;
 import bisq.protocol.ProtocolStore;
 import bisq.protocol.TakerProtocolModel;
+import com.google.protobuf.Message;
 
 public class LiquidSwapTakerAsBuyerProtocol extends LiquidSwapTakerProtocol implements BuyerProtocol {
     public LiquidSwapTakerAsBuyerProtocol(NetworkService networkService,
@@ -33,5 +34,11 @@ public class LiquidSwapTakerAsBuyerProtocol extends LiquidSwapTakerProtocol impl
                 persistenceClient,
                 protocolModel,
                 myNodeIdAndKeyPair);
+    }
+
+    @Override
+    public Message toProto() {
+        //todo
+        return null;
     }
 }

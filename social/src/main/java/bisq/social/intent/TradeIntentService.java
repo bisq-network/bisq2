@@ -58,7 +58,6 @@ public class TradeIntentService {
         String tradeIntentId = StringUtils.createUid();
         return identityService.getOrCreateIdentity(tradeIntentId).thenApply(identity -> {
             NetworkId makerNetworkId = identity.networkId();
-            String userName = chatService.findUserName(tradeIntentId).orElse("Maker@" + StringUtils.truncate(tradeIntentId));
             ChatUser maker = new ChatUser(makerNetworkId);
             return new TradeIntent(tradeIntentId, maker, ask, bid, new Date().getTime());
         });
@@ -82,7 +81,7 @@ public class TradeIntentService {
         return identityService.getOrCreateIdentity(tradeIntent.id())
                 .thenCompose(identity -> {
                     NetworkIdWithKeyPair nodeIdAndKeyPair = identity.getNodeIdAndKeyPair();
-                    return networkService.addAuthenticatedData(tradeIntent, nodeIdAndKeyPair);
+                    return networkService.publishAuthenticatedData(tradeIntent, nodeIdAndKeyPair);
                 });
     }
 

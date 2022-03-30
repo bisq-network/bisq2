@@ -17,9 +17,16 @@
 
 package bisq.network.p2p.node.authorization;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import lombok.Data;
 
 @Data
 public class AuthorizationToken implements Proto {
+    public bisq.network.protobuf.AuthorizationToken toProto() {
+        return bisq.network.protobuf.AuthorizationToken.newBuilder().build();
+    }
+
+    public static AuthorizationToken fromProto(bisq.network.protobuf.AuthorizationToken proto) {
+        return new AuthorizationToken();
+    }
 }

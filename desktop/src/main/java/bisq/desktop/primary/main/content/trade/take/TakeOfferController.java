@@ -26,8 +26,8 @@ import bisq.desktop.primary.main.content.portfolio.pending.PendingTradesControll
 import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.take.components.TakersSettlementSelection;
-import bisq.offer.Direction;
 import bisq.offer.Offer;
+import bisq.offer.spec.Direction;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.protocol.ProtocolService;
 import javafx.beans.property.BooleanProperty;

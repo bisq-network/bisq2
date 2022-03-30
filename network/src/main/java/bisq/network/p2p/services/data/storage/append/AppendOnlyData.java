@@ -20,5 +20,8 @@ package bisq.network.p2p.services.data.storage.append;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageData;
 
+/**
+ * Interface for AppendOnlyData implementations like AccountAgeWitnessData
+ */
 public interface AppendOnlyData extends DistributedData, StorageData {
 }

@@ -1,0 +1,142 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+
+package social;
+option java_package = "bisq.social.protobuf";
+option java_multiple_files = true;
+import "common.proto";
+import "network.proto";
+import "security.proto";
+import "identity.proto";
+
+
+message ProofOfBurnProof {
+  string txId = 1;
+  uint64 burntAmount = 2;
+  uint64 date = 3;
+}
+message BondedRoleProof {
+  string txId = 1;
+  string signature = 2;
+}
+message InvitationProof {
+  string invitationCode = 1;
+}
+message Proof {
+  oneof message {
+    ProofOfBurnProof proofOfBurnProof = 1;
+    BondedRoleProof bondedRoleProof = 2;
+    InvitationProof invitationProof = 3;
+  }
+}
+message Entitlement {
+  enum Type {
+    LIQUIDITY_PROVIDER = 0;
+    CHANNEL_ADMIN = 1;
+    CHANNEL_MODERATOR = 2;
+    MEDIATOR = 3;
+  }
+  enum ProofType {
+    PROOF_OF_BURN = 0;
+    BONDED_ROLE = 1;
+    CHANNEL_ADMIN_INVITATION = 2;
+  }
+  string entitlementType = 1;
+  Proof proof = 2;
+}
+
+message ChatUser {
+  network.NetworkId networkId = 1;
+  repeated Entitlement entitlements = 2;
+}
+message QuotedMessage {
+  string userName = 1;
+  common.ByteArray pubKeyHash = 2;
+  string message = 3;
+}
+
+enum ChannelType {
+  PUBLIC = 0;
+  PRIVATE = 1;
+}
+
+message PrivateChatMessage {
+}
+message PublicChatMessage {
+}
+message ChatMessage {
+  string channelId = 1;
+  string text = 2;
+  ChatUser author = 3;
+  QuotedMessage quotedMessage = 4;
+  uint64 date = 5;
+  ChannelType channelType = 6;
+  bool wasEdited = 7;
+  network.MetaData metaData = 8;
+  oneof message {
+    PrivateChatMessage privateChatMessage = 20;
+    PublicChatMessage publicChatMessage = 21;
+  }
+}
+
+enum NotificationSetting {
+  ALL = 0;
+  MENTION = 1;
+  NEVER = 2;
+}
+
+message UserProfile {
+  identity.Identity identity = 1;
+  repeated Entitlement entitlements = 2;
+}
+
+// Channels
+message PrivateChannel {
+  ChatUser peer = 1;
+  UserProfile myProfile = 2;
+}
+message PublicChannel {
+  string channelName = 1;
+  string description = 2;
+  ChatUser channelAdmin = 3;
+  repeated ChatUser channelModerators = 4;
+}
+message Channel {
+  string id = 1;
+  NotificationSetting notificationSetting = 2;
+  repeated ChatMessage chatMessages = 3;
+  oneof message{
+    PrivateChannel privateChannel = 10;
+    PublicChannel publicChannel = 11;
+  }
+}
+
+// Stores
+message UserProfileStore {
+  repeated UserProfile userProfiles = 1;
+  UserProfile selectedUserProfile = 2;
+  map<string, Proof> verifiedProofOfBurnProofs = 3;
+}
+
+message ChatStore {
+  repeated Channel privateChannels = 1;
+  repeated Channel publicChannels = 2;
+  Channel selectedChannel = 3;
+  repeated string ignoredChatUserIds = 4;
+}

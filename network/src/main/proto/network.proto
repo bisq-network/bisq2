@@ -1,4 +1,281 @@
 syntax = "proto3";
-package network.proto;
-option java_package = "bisq.network.proto";
+package network;
+option java_package = "bisq.network.protobuf";
 option java_multiple_files = true;
+import "common.proto";
+import "security.proto";
+import "google/protobuf/any.proto";
+
+////////////////////////////////////////////////////////////////////
+// Data
+////////////////////////////////////////////////////////////////////
+
+message Address {
+  string host = 1;
+  uint32 port = 2;
+}
+
+message AddressTransportTypeTuple {
+  string transportType = 1;
+  Address address = 2;
+}
+
+message NetworkId {
+  repeated AddressTransportTypeTuple addressNetworkTypeTuple = 1;
+  security.PubKey pubKey = 2;
+  string nodeId = 3;
+}
+
+message Capability {
+  Address address = 1;
+  repeated string supportedTransportTypes = 2;
+}
+
+message Load {
+  uint32 numConnections = 1;
+}
+
+message FilterEntry {
+  bytes hash = 1;
+  uint32 sequenceNumber = 2;
+}
+
+message DataFilter {
+  repeated FilterEntry filterEntries = 1;
+}
+
+message Inventory {
+  repeated DataRequest entries = 1;
+  uint32 numDropped = 2;
+}
+
+message Peer {
+  Capability capability = 1;
+  Load load = 2;
+  bool isOutboundConnection = 3;
+  uint64 created = 4;
+}
+
+////////////////////////////////////////////////////////////////////
+// NetworkMessages
+////////////////////////////////////////////////////////////////////
+
+message ConnectionHandshake {
+  message Request {
+    Capability capability = 1;
+    Load load = 2;
+  }
+  message Response {
+    Capability capability = 1;
+    Load load = 2;
+  }
+}
+
+message CloseConnectionMessage {
+  string closeReason = 1;
+}
+
+message PeerExchangeRequest {
+  uint32 nonce = 1;
+  repeated Peer peers = 2;
+}
+message PeerExchangeResponse {
+  uint32 nonce = 1;
+  repeated Peer peers = 2;
+}
+
+message AddressValidationRequest {
+  uint32 nonce = 1;
+}
+message AddressValidationResponse {
+  uint32 requestNonce = 1;
+}
+
+message Ping {
+  uint32 nonce = 1;
+}
+message Pong {
+  uint32 requestNonce = 1;
+}
+
+message ConfidentialMessage {
+  security.ConfidentialData confidentialData = 1;
+  string receiverKeyId = 2;
+}
+
+message InventoryRequest {
+  DataFilter dataFilter = 1;
+  uint32 nonce = 2;
+}
+message InventoryResponse {
+  Inventory inventory = 1;
+  uint32 requestNonce = 2;
+}
+
+message ExternalNetworkMessage {
+  google.protobuf.Any any = 1;
+}
+
+
+////////////////////////////////////////////////////////////////////
+// NetworkMessage types
+////////////////////////////////////////////////////////////////////
+
+message NetworkMessage {
+  oneof message {
+    ConnectionHandshake.Request connectionHandshakeRequest = 1;
+    ConnectionHandshake.Response connectionHandshakeResponse = 2;
+
+    CloseConnectionMessage closeConnectionMessage = 3;
+
+    PeerExchangeRequest peerExchangeRequest = 4;
+    PeerExchangeResponse peerExchangeResponse = 5;
+
+    AddressValidationRequest addressValidationRequest = 6;
+    AddressValidationResponse addressValidationResponse = 7;
+
+    Ping ping = 8;
+    Pong pong = 9;
+
+    ConfidentialMessage confidentialMessage = 10;
+
+    InventoryRequest inventoryRequest = 11;
+    InventoryResponse inventoryResponse = 12;
+
+    DataRequest dataRequest = 13;
+
+    // Wrapper for NetworkMessages defined in other modules like PrivateChatMessage which are wrapped in an Any blob
+    ExternalNetworkMessage externalNetworkMessage = 14;
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////
+// DataRequests
+////////////////////////////////////////////////////////////////////
+
+message MetaData {
+  uint64 ttl = 1;
+  uint32 maxSizeInBytes = 2;
+  string fileName = 3;
+}
+message AuthorizedData {
+  bytes signature = 1;
+  bytes authorizedPublicKeyBytes = 2;
+}
+message DefaultAuthenticatedData {
+}
+message AuthenticatedData {
+  google.protobuf.Any distributedData = 1;
+  oneof message {
+    DefaultAuthenticatedData defaultAuthenticatedData = 10;
+    AuthorizedData authorizedData = 11;
+  }
+}
+message AuthenticatedSequentialData {
+  AuthenticatedData authenticatedData = 1;
+  uint32 sequenceNumber = 2;
+  bytes pubKeyHash = 3;
+  uint64 created = 4;
+}
+message AddAuthenticatedDataRequest {
+  AuthenticatedSequentialData authenticatedSequentialData = 1;
+  bytes signature = 2;
+  bytes ownerPublicKeyBytes = 3;
+}
+message RemoveAuthenticatedDataRequest {
+  MetaData metaData = 1;
+  bytes hash = 2;
+  bytes ownerPublicKeyBytes = 3;
+  uint32 sequenceNumber = 4;
+  bytes signature = 5;
+  uint64 created = 6;
+}
+message RefreshAuthenticatedDataRequest {
+  MetaData metaData = 1;
+  bytes hash = 2;
+  bytes ownerPublicKeyBytes = 3;
+  uint32 sequenceNumber = 4;
+  bytes signature = 5;
+}
+
+message MailboxData {
+  ConfidentialMessage confidentialMessage = 1;
+  MetaData metaData = 2;
+}
+message MailboxSequentialData {
+  MailboxData mailboxData = 1;
+  uint32 sequenceNumber = 2;
+  bytes senderPublicKeyHash = 3;
+  uint64 created = 4;
+  bytes receiversPubKeyBytes = 5;
+  bytes receiversPubKeyHash = 6;
+}
+message AddMailboxRequest {
+  MailboxSequentialData mailboxSequentialData = 1;
+  bytes signature = 2;
+  bytes senderPublicKeyBytes = 3;
+}
+message RemoveMailboxRequest {
+  MetaData metaData = 1;
+  bytes hash = 2;
+  bytes receiverPublicKeyBytes = 3;
+  bytes signature = 4;
+  uint64 created = 5;
+}
+
+message AddAppendOnlyDataRequest {
+  google.protobuf.Any appendOnlyData = 1;
+}
+
+////////////////////////////////////////////////////////////////////
+// DataRequest types
+////////////////////////////////////////////////////////////////////
+
+message DataRequest {
+  oneof message {
+    AddAuthenticatedDataRequest addAuthenticatedDataRequest = 1;
+    RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = 2;
+    RefreshAuthenticatedDataRequest refreshAuthenticatedDataRequest = 3;
+
+    AddMailboxRequest  addMailboxRequest = 4;
+    RemoveMailboxRequest removeMailboxRequest = 5;
+
+    AddAppendOnlyDataRequest addAppendOnlyDataRequest = 6;
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////
+// NetworkEnvelope
+////////////////////////////////////////////////////////////////////
+
+message AuthorizationToken {}
+
+message NetworkEnvelope {
+  uint32 version = 1;
+  AuthorizationToken authorizationToken = 2;
+  NetworkMessage networkMessage = 3;
+}
+
+
+////////////////////////////////////////////////////////////////////
+// Stores
+////////////////////////////////////////////////////////////////////
+
+message DataStore {
+  message MapEntry {
+    common.ByteArray key = 1;
+    DataRequest value = 2;
+  }
+  repeated MapEntry mapEntries = 1;
+}
+
+message NetworkIdStore {
+  map<string, NetworkId> networkIdByNodeId = 1;
+}
+
+message PeerGroupStore {
+  repeated Peer persistedPeers = 1;
+}
+    

@@ -59,7 +59,7 @@ public class KeyGeneration {
         java.security.spec.EllipticCurve ellipticCurve = EC5Util.convertCurve(curve, params.getSeed());
         java.security.spec.ECPoint point = ECPointUtil.decodePoint(ellipticCurve, compressedKey);
         java.security.spec.ECParameterSpec params2 = EC5Util.convertSpec(ellipticCurve, params);
-        java.security.spec.ECPublicKeySpec keySpec = new java.security.spec.ECPublicKeySpec(point,params2);
+        java.security.spec.ECPublicKeySpec keySpec = new java.security.spec.ECPublicKeySpec(point, params2);
         return fact.generatePublic(keySpec);
     }
 

@@ -17,13 +17,25 @@
 
 package bisq.persistence;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
+import bisq.common.proto.ProtoResolver;
+import com.google.protobuf.Any;
 
 /**
  * Interface for the outside envelope object persisted to disk.
  */
 public interface PersistableStore<T> extends Proto {
+    static PersistableStore<?> fromAny(Any anyProto) {
+        return PersistableStoreResolver.fromAny(anyProto);
+    }
+
+    default Any toAny() {
+        return Any.pack(toProto());
+    }
+
     T getClone();
 
     void applyPersisted(T persisted);
+
+    ProtoResolver<PersistableStore<?>> getResolver();
 }

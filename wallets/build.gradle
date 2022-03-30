@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    alias(libs.plugins.protobuf)
 }
 
 repositories {
@@ -13,7 +14,6 @@ apply from: '../buildSrc/test-dependencies.gradle'
 apply from: '../buildSrc/lombok-dependencies.gradle'
 
 ext {
-    guavaVersion = '31.0.1-jre'
     jsonrpc4jVersion = '1.6.0.bisq.2'
     jacksonDatabindVersion = '2.12.0'
 }
@@ -28,7 +28,7 @@ dependencies {
         exclude(module: 'base64')
         exclude(module: 'httpcore-nio')
     }
-    implementation("com.google.guava:guava:$guavaVersion")
+    implementation libs.guava
 
     testImplementation("org.assertj:assertj-core:3.22.0")
 }
@@ -36,4 +36,23 @@ dependencies {
 test {
     useJUnitPlatform()
     exclude '**/**Integration*'
+}
+
+ext {
+    generatedProtoSrcDir = 'build/generated/source/main/java'
+}
+
+sourceSets.main {
+    java.srcDirs += [generatedProtoSrcDir]
+}
+
+protobuf {
+    protoc {
+        // Append 'osxArch' property to workaround M1 Mac bug.
+        artifact = "com.google.protobuf:protoc:3.19.4${osxArch}"
+    }
+    generateProtoTasks {
+        all()*.plugins {}
+    }
+    generatedFilesBaseDir = "$projectDir/build/generated/source"
 }

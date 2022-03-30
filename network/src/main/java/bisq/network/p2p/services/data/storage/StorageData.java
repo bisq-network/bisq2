@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.storage;
 
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 
 // Interface covering data for storage. Implemented by AppendOnlyData, AuthenticatedData
 public interface StorageData extends Proto {

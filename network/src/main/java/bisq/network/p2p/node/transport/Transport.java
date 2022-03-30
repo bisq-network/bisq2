@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.node.transport;
 
-import bisq.common.encoding.Proto;
 import bisq.network.p2p.node.Address;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
@@ -28,7 +27,10 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface Transport {
-    enum Type implements Proto {
+    /**
+     * We do not use a protobuf enum for Type as it is used as key in a protobuf map and that does not support enums.
+     */
+    enum Type {
         TOR,
         I2P,
         CLEAR;

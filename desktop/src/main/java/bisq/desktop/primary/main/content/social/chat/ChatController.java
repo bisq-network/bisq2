@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.observable.ObservableSet;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
@@ -35,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -77,7 +77,7 @@ public class ChatController implements Controller {
                 channelInfo.getRoot(),
                 quotedMessageBlock.getRoot());
 
-        model.getSortedChatMessages().setComparator(Comparator.naturalOrder());
+        model.getSortedChatMessages().setComparator(ChatMessageListItem::compareTo);
     }
 
     @Override
@@ -89,9 +89,17 @@ public class ChatController implements Controller {
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
             }
-            chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem>bind(model.getChatMessages())
-                    .map(ChatMessageListItem::new)
-                    .to(channel.getChatMessages());
+            chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
+                    .map(chatMessage -> {
+                        if (chatMessage instanceof PrivateChatMessage privateChatMessage) {
+                            return new ChatMessageListItem<>(privateChatMessage);
+                        } else if (chatMessage instanceof PublicChatMessage publicChatMessage) {
+                            return new ChatMessageListItem<>(publicChatMessage);
+                        } else {
+                            throw new RuntimeException("ChatMessage has unexpected type. chatMessage=" + chatMessage);
+                        }
+                    })
+                    .to((ObservableSet<ChatMessage>) channel.getChatMessages()); //todo expected type <? extends ChatMessage> does not work ;-(
 
             model.getSelectedChannelAsString().set(channel.getChannelName());
             model.getSelectedChannel().set(channel);
@@ -127,7 +135,7 @@ public class ChatController implements Controller {
                 if (channel.getNotificationSetting().get() == NotificationSetting.ALL) {
                     String messages = Joiner.on("\n").join(
                             c.getAddedSubList().stream()
-                                    .map(item -> item.getSenderUserName() + ": " + item.getChatMessage().getText())
+                                    .map(item -> item.getAuthorUserName() + ": " + item.getChatMessage().getText())
                                     .collect(Collectors.toSet()));
                     if (!messages.isEmpty()) {
                         new Notification().headLine(messages).autoClose().hideCloseButton().show();
@@ -141,9 +149,9 @@ public class ChatController implements Controller {
                     String messages = Joiner.on("\n").join(
                             c.getAddedSubList().stream()
                                     .filter(item -> myUserNames.stream().anyMatch(myUserName -> item.getMessage().contains("@" + myUserName)))
-                                    .filter(item -> !myUserNames.contains(item.getSenderUserName()))
+                                    .filter(item -> !myUserNames.contains(item.getAuthorUserName()))
                                     .map(item -> Res.get("social.notification.getMentioned",
-                                            item.getSenderUserName(),
+                                            item.getAuthorUserName(),
                                             item.getChatMessage().getText()))
                                     .collect(Collectors.toSet()));
                     if (!messages.isEmpty()) {
@@ -218,7 +226,7 @@ public class ChatController implements Controller {
         model.getChannelInfoVisible().set(false);
         model.getNotificationsVisible().set(false);
 
-        ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(), chatMessage.getChatUser());
+        ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(), chatMessage.getAuthor());
         chatUserDetails.setOnSendPrivateMessage(chatUser -> {
             // todo
             log.info("onSendPrivateMessage {}", chatUser);
@@ -258,9 +266,9 @@ public class ChatController implements Controller {
 
     private void refreshMessages() {
         chatMessagesPin.unbind();
-        chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem>bind(model.getChatMessages())
+        chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
                 .map(ChatMessageListItem::new)
-                .to(model.getSelectedChannel().get().getChatMessages());
+                .to((ObservableSet<ChatMessage>) model.getSelectedChannel().get().getChatMessages()); //todo expected type <? extends ChatMessage> does not work ;-(
     }
 
     public void onOpenEmojiSelector(ChatMessage chatMessage) {
@@ -268,28 +276,29 @@ public class ChatController implements Controller {
     }
 
     public void onReply(ChatMessage chatMessage) {
-        if (!model.isMyMessage(chatMessage)) {
+        if (!chatService.isMyMessage(chatMessage)) {
             quotedMessageBlock.reply(chatMessage);
         }
     }
 
     /**
      * open a private channel to specified user. Automatically select it so user is ready to type the message to send.
+     *
      * @param chatMessage
      */
-    public void addPrivateChannel(ChatMessage chatMessage) {
-        if (model.isMyMessage(chatMessage)) {
+    public void onOpenPrivateChannel(ChatMessage chatMessage) {
+        if (chatService.isMyMessage(chatMessage)) {
             return; // should never happen as the button for opening the channel should not appear
             // but kept here for double safety
         }
-        ChatUser peerUser = chatMessage.getChatUser();
-        String channelId = PrivateChannel.createChannelId(peerUser, userProfileService.getPersistableStore().getSelectedUserProfile().get());
-        PrivateChannel channel = chatService.getOrCreatePrivateChannel(channelId, peerUser);
+        ChatUser peer = chatMessage.getAuthor();
+        String channelId = PrivateChannel.createChannelId(peer, userProfileService.getPersistableStore().getSelectedUserProfile().get());
+        PrivateChannel channel = chatService.getOrCreatePrivateChannel(channelId, peer);
         chatService.selectChannel(channel);
     }
 
     public void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
-        if (!model.isMyMessage(chatMessage)) {
+        if (!chatService.isMyMessage(chatMessage)) {
             return;
         }
         if (chatMessage instanceof PublicChatMessage publicChatMessage) {
@@ -304,10 +313,10 @@ public class ChatController implements Controller {
     }
 
     public void onDeleteMessage(ChatMessage chatMessage) {
-        if (model.isMyMessage(chatMessage)) {
+        if (chatService.isMyMessage(chatMessage)) {
             if (chatMessage instanceof PublicChatMessage publicChatMessage) {
                 UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
-                    chatService.deletePublicChatMessage(publicChatMessage, userProfile);
+                chatService.deletePublicChatMessage(publicChatMessage, userProfile);
             } else {
                 //todo delete private message
             }

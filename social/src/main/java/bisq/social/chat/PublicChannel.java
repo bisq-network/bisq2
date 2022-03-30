@@ -22,7 +22,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @ToString
@@ -38,11 +40,49 @@ public class PublicChannel extends Channel<PublicChatMessage> {
                          String description,
                          ChatUser channelAdmin,
                          Set<ChatUser> channelModerators) {
-        super(id);
+        this(id, channelName, description, channelAdmin, channelModerators, NotificationSetting.MENTION, new HashSet<>());
+    }
+
+    public PublicChannel(String id,
+                         String channelName,
+                         String description,
+                         ChatUser channelAdmin,
+                         Set<ChatUser> channelModerators,
+                         NotificationSetting notificationSetting,
+                         Set<PublicChatMessage> chatMessages) {
+        super(id, notificationSetting, chatMessages);
 
         this.channelName = channelName;
         this.description = description;
         this.channelAdmin = channelAdmin;
         this.channelModerators = channelModerators;
+    }
+
+    public bisq.social.protobuf.Channel toProto() {
+        return getChannelBuilder().setPublicChannel(bisq.social.protobuf.PublicChannel.newBuilder()
+                        .setChannelName(channelName)
+                        .setDescription(description)
+                        .setChannelAdmin(channelAdmin.toProto())
+                        .addAllChannelModerators(channelModerators.stream().map(ChatUser::toProto).collect(Collectors.toList())))
+                .build();
+    }
+
+    public static PublicChannel fromProto(bisq.social.protobuf.Channel baseProto,
+                                          bisq.social.protobuf.PublicChannel proto) {
+        return new PublicChannel(
+                baseProto.getId(),
+                proto.getChannelName(),
+                proto.getDescription(),
+                ChatUser.fromProto(proto.getChannelAdmin()),
+                proto.getChannelModeratorsList().stream().map(ChatUser::fromProto).collect(Collectors.toSet()),
+                NotificationSetting.fromProto(baseProto.getNotificationSetting()),
+                baseProto.getChatMessagesList().stream()
+                        .map(PublicChatMessage::fromProto)
+                        .collect(Collectors.toSet()));
+    }
+
+    @Override
+    protected bisq.social.protobuf.ChatMessage getChatMessageProto(PublicChatMessage chatMessage) {
+        return chatMessage.toProto();
     }
 }

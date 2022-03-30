@@ -35,4 +35,9 @@ public final class RevolutAccount extends Account<FiatSettlementMethod> {
                 new RevolutAccountPayload(METHOD.name(), email),
                 FiatSettlementMethod.getTradeCurrencies(METHOD));
     }
+
+    @Override
+    public bisq.account.protobuf.Account toProto() {
+        return null;
+    }
 }

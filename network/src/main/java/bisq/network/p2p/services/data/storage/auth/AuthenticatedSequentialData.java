@@ -18,19 +18,20 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
-import bisq.common.encoding.ObjectSerializer;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
+import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Data which ensures that the sequence of add or remove request is maintained correctly.
  * The data gets hashed and signed and need to be deterministic.
  */
+@Slf4j
 @Getter
 @EqualsAndHashCode
 public class AuthenticatedSequentialData implements Proto {
-
     public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber) {
         return new AuthenticatedSequentialData(data.getAuthenticatedData(),
                 sequenceNumber,
@@ -53,6 +54,22 @@ public class AuthenticatedSequentialData implements Proto {
         this.created = created;
     }
 
+    public bisq.network.protobuf.AuthenticatedSequentialData toProto() {
+        return bisq.network.protobuf.AuthenticatedSequentialData.newBuilder()
+                .setAuthenticatedData(authenticatedData.toProto())
+                .setSequenceNumber(sequenceNumber)
+                .setPubKeyHash(ByteString.copyFrom(pubKeyHash))
+                .setCreated(created)
+                .build();
+    }
+
+    public static AuthenticatedSequentialData fromProto(bisq.network.protobuf.AuthenticatedSequentialData proto) {
+        return new AuthenticatedSequentialData(AuthenticatedData.fromProto(proto.getAuthenticatedData()),
+                proto.getSequenceNumber(),
+                proto.getPubKeyHash().toByteArray(),
+                proto.getCreated());
+    }
+
     public boolean isExpired() {
         return (System.currentTimeMillis() - created) > authenticatedData.getMetaData().getTtl();
     }
@@ -61,13 +78,9 @@ public class AuthenticatedSequentialData implements Proto {
         return sequenceNumber <= seqNumberFromMap;
     }
 
-    public byte[] serialize() {
-        return ObjectSerializer.serialize(this);
-    }
-
     @Override
     public String toString() {
-        return "AuthenticatedData{" +
+        return "AuthenticatedSequentialData{" +
                 "\r\n     authenticatedData=" + authenticatedData +
                 ",\r\n     sequenceNumber=" + sequenceNumber +
                 ",\r\n     created=" + created +

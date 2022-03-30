@@ -23,7 +23,7 @@ import bisq.contract.Contract;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
-import bisq.offer.SettlementSpec;
+import bisq.offer.spec.SettlementSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.QuoteFormatter;
 import bisq.protocol.Protocol;

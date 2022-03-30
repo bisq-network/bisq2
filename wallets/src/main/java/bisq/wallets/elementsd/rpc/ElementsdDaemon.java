@@ -18,11 +18,8 @@
 package bisq.wallets.elementsd.rpc;
 
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
-import bisq.wallets.bitcoind.rpc.calls.BitcoindGetTxOutProofRpcCall;
 import bisq.wallets.elementsd.rpc.calls.ElementsdStopRpcCall;
 import bisq.wallets.rpc.RpcClient;
-
-import java.util.List;
 
 public class ElementsdDaemon extends BitcoindDaemon {
     public ElementsdDaemon(RpcClient rpcClient) {

@@ -18,7 +18,7 @@
 package bisq.common.monetary;
 
 import bisq.common.currency.TradeCurrency;
-import bisq.common.encoding.Proto;
+import bisq.common.proto.Proto;
 import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -62,6 +62,19 @@ public class Quote implements Comparable<Quote>, Proto {
         this.precision = quoteMonetary.precision;
         lowPrecision = quoteMonetary.minPrecision;
         market = new Market(baseMonetary.getCode(), quoteMonetary.getCode());
+    }
+
+    public bisq.common.protobuf.Quote toProto() {
+        return bisq.common.protobuf.Quote.newBuilder().setValue(value)
+                .setBaseMonetary(baseMonetary.getMonetaryBuilder())
+                .setQuoteMonetary(quoteMonetary.getMonetaryBuilder())
+                .build();
+    }
+
+    public static Quote fromProto(bisq.common.protobuf.Quote proto) {
+        return new Quote(proto.getValue(),
+                Monetary.fromProto(proto.getBaseMonetary()),
+                Monetary.fromProto(proto.getQuoteMonetary()));
     }
 
     /**

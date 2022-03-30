@@ -57,7 +57,7 @@ public class CryptoCurrencyRepository {
     }
 
     private static List<CryptoCurrency> initMajorCurrencies() {
-        List<String> mainCodes = new ArrayList<>(List.of("BTC", "XMR", "L-BTC","ETH", "USDT","GRIN", "ZEC"));
+        List<String> mainCodes = new ArrayList<>(List.of("BTC", "XMR", "L-BTC", "ETH", "USDT", "GRIN", "ZEC"));
         return mainCodes.stream()
                 .map(code -> currencyByCode.get(code))
                 .distinct()

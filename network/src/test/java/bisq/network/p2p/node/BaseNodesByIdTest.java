@@ -143,6 +143,11 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         public Ping(String msg) {
             this.msg = msg;
         }
+
+        @Override
+        public bisq.network.protobuf.NetworkMessage toProto() {
+            return null;
+        }
     }
 
     @ToString
@@ -151,6 +156,11 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
 
         public Pong(String msg) {
             this.msg = msg;
+        }
+
+        @Override
+        public bisq.network.protobuf.NetworkMessage toProto() {
+            return null;
         }
     }
 }

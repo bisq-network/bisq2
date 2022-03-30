@@ -21,12 +21,16 @@ import bisq.account.protocol.SwapProtocolType;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.offer.options.ListingOption;
+import bisq.offer.options.OfferOption;
+import bisq.offer.spec.*;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -35,26 +39,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public class Offer implements DistributedData {
-    private final String id;
-    private final long date;
-    private final NetworkId makerNetworkId;
-    private final PriceSpec priceSpec;
-    private final List<SwapProtocolType> protocolTypes;
-    private final List<SettlementSpec> baseSideSettlementSpecs;
-    private final List<SettlementSpec> quoteSideSettlementSpecs;
-    private final List<ListingOption> listingOptions;
-    private final Market market;
-    private final Direction direction;
-    private final MetaData metaData;
-    private final long baseAmount;
-
-
     public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
     public static final String REFERRAL_ID = "referralId";
     // Only used in payment method F2F
@@ -70,6 +61,19 @@ public class Offer implements DistributedData {
     public static final String XMR_AUTO_CONF = "xmrAutoConf";
     public static final String XMR_AUTO_CONF_ENABLED_VALUE = "1";
 
+    private final String id;
+    private final long date;
+    private final NetworkId makerNetworkId;
+    private final Market market;
+    private final Direction direction;
+    private final long baseAmount;
+    private final PriceSpec priceSpec;
+    private final List<SwapProtocolType> swapProtocolTypes;
+    private final List<SettlementSpec> baseSideSettlementSpecs;
+    private final List<SettlementSpec> quoteSideSettlementSpecs;
+    private final List<OfferOption> offerOptions;
+    private final MetaData metaData;
+
     public Offer(String id,
                  long date,
                  NetworkId makerNetworkId,
@@ -77,10 +81,36 @@ public class Offer implements DistributedData {
                  Direction direction,
                  long baseAmount,
                  PriceSpec priceSpec,
-                 List<SwapProtocolType> protocolTypes,
+                 List<SwapProtocolType> swapProtocolTypes,
                  List<SettlementSpec> baseSideSettlementSpecs,
                  List<SettlementSpec> quoteSideSettlementSpecs,
-                 List<ListingOption> listingOptions) {
+                 List<OfferOption> offerOptions) {
+        this(id,
+                date,
+                makerNetworkId,
+                market,
+                direction,
+                baseAmount,
+                priceSpec,
+                swapProtocolTypes,
+                baseSideSettlementSpecs,
+                quoteSideSettlementSpecs,
+                offerOptions,
+                new MetaData(TimeUnit.MINUTES.toMillis(5), 100000, Offer.class.getSimpleName()));
+    }
+
+    private Offer(String id,
+                  long date,
+                  NetworkId makerNetworkId,
+                  Market market,
+                  Direction direction,
+                  long baseAmount,
+                  PriceSpec priceSpec,
+                  List<SwapProtocolType> swapProtocolTypes,
+                  List<SettlementSpec> baseSideSettlementSpecs,
+                  List<SettlementSpec> quoteSideSettlementSpecs,
+                  List<OfferOption> offerOptions,
+                  MetaData metaData) {
         this.id = id;
         this.date = date;
         this.makerNetworkId = makerNetworkId;
@@ -88,17 +118,11 @@ public class Offer implements DistributedData {
         this.direction = direction;
         this.baseAmount = baseAmount;
         this.priceSpec = priceSpec;
-        this.protocolTypes = protocolTypes;
+        this.swapProtocolTypes = swapProtocolTypes;
         this.baseSideSettlementSpecs = baseSideSettlementSpecs;
         this.quoteSideSettlementSpecs = quoteSideSettlementSpecs;
-        this.listingOptions = listingOptions;
-
-      /*  if (priceOption instanceof FixPriceOption fixPriceOption) {
-            Monetary base = Monetary.from(baseAmount, market.baseCurrencyCode());
-            Quote quote = Quote.fromPrice(fixPriceOption.value(), market);
-            quoteAmount = Quote.toQuoteMonetary(base,quote).getValue();
-        }*/
-        metaData = new MetaData(TimeUnit.MINUTES.toMillis(5), 100000, getClass().getSimpleName());
+        this.offerOptions = offerOptions;
+        this.metaData = metaData;
     }
 
     @Override
@@ -111,13 +135,67 @@ public class Offer implements DistributedData {
         return false;
     }
 
+    public bisq.offer.protobuf.Offer toProto() {
+        return bisq.offer.protobuf.Offer.newBuilder()
+                .setId(id)
+                .setDate(date)
+                .setMakerNetworkId(makerNetworkId.toProto())
+                .setMarket(market.toProto())
+                .setDirection(direction.toProto())
+                .setBaseAmount(baseAmount)
+                .setPriceSpec(priceSpec.toProto())
+                .addAllSwapProtocolTypes(swapProtocolTypes.stream().map(Enum::name).collect(Collectors.toList()))
+                .addAllBaseSideSettlementSpecs(baseSideSettlementSpecs.stream().map(SettlementSpec::toProto).collect(Collectors.toList()))
+                .addAllQuoteSideSettlementSpecs(quoteSideSettlementSpecs.stream().map(SettlementSpec::toProto).collect(Collectors.toList()))
+                .addAllOfferOptions(offerOptions.stream().map(OfferOption::toProto).collect(Collectors.toList()))
+                .setMetaData(metaData.toProto())
+                .build();
+    }
+
+    public static Offer fromProto(bisq.offer.protobuf.Offer proto) {
+        List<SwapProtocolType> protocolTypes = proto.getSwapProtocolTypesList().stream()
+                .map(SwapProtocolType::fromProto)
+                .collect(Collectors.toList());
+        List<SettlementSpec> baseSideSettlementSpecs = proto.getBaseSideSettlementSpecsList().stream()
+                .map(SettlementSpec::fromProto)
+                .collect(Collectors.toList());
+        List<SettlementSpec> quoteSideSettlementSpecs = proto.getQuoteSideSettlementSpecsList().stream()
+                .map(SettlementSpec::fromProto)
+                .collect(Collectors.toList());
+        List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
+                .map(OfferOption::fromProto)
+                .collect(Collectors.toList());
+        return new Offer(proto.getId(),
+                proto.getDate(),
+                NetworkId.fromProto(proto.getMakerNetworkId()),
+                Market.fromProto(proto.getMarket()),
+                Direction.fromProto(proto.getDirection()),
+                proto.getBaseAmount(),
+                PriceSpec.fromProto(proto.getPriceSpec()),
+                protocolTypes,
+                baseSideSettlementSpecs,
+                quoteSideSettlementSpecs,
+                offerOptions,
+                MetaData.fromProto(proto.getMetaData()));
+    }
+
+    public static ProtoResolver<DistributedData> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.offer.protobuf.Offer.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
+    }
+
     public Optional<SwapProtocolType> findProtocolType() {
-        if (protocolTypes.isEmpty()) {
+        if (swapProtocolTypes.isEmpty()) {
             return Optional.empty();
-        } else if (protocolTypes.size() == 1) {
-            return Optional.of(protocolTypes.get(0));
+        } else if (swapProtocolTypes.size() == 1) {
+            return Optional.of(swapProtocolTypes.get(0));
         } else {
-            throw new IllegalStateException("Multiple protocolTypes are not supported yet. protocolTypes=" + protocolTypes);
+            throw new IllegalStateException("Multiple protocolTypes are not supported yet. protocolTypes=" + swapProtocolTypes);
         }
     }
 

@@ -17,11 +17,11 @@
 
 package bisq.presentation.offer;
 
+import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.monetary.Monetary;
-import bisq.account.protocol.SwapProtocolType;
-import bisq.offer.options.ReputationOption;
 import bisq.offer.options.FiatSettlementOption;
+import bisq.offer.options.ReputationOption;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import lombok.extern.slf4j.Slf4j;

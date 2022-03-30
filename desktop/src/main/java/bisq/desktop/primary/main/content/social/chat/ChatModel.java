@@ -54,12 +54,12 @@ public class ChatModel implements Model {
     private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
 
     private final double defaultLeftDividerPosition = 0.3;
-    private final ObservableList<ChatMessageListItem> chatMessages = FXCollections.observableArrayList();
-    private final SortedList<ChatMessageListItem> sortedChatMessages = new SortedList<>(chatMessages);
-    private final FilteredList<ChatMessageListItem> filteredChatMessages = new FilteredList<>(sortedChatMessages);
+    private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
+    private final SortedList<ChatMessageListItem<? extends ChatMessage>> sortedChatMessages = new SortedList<>(chatMessages);
+    private final FilteredList<ChatMessageListItem<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(sortedChatMessages);
     private final StringProperty textInput = new SimpleStringProperty("");
     private final ChatService chatService;
-    private final Predicate<ChatMessageListItem> ignoredChatUserPredicate;
+    private final Predicate<ChatMessageListItem<? extends ChatMessage>> ignoredChatUserPredicate;
     private final UserProfileService userProfileService;
     @Setter
     private Optional<ChatUserDetails> chatUserDetails = Optional.empty();
@@ -80,9 +80,7 @@ public class ChatModel implements Model {
         log.error("Send message resulted in an error: channelId={}, error={}", channelId, throwable.toString());  //todo
     }
 
-     boolean isMyMessage(ChatMessage chatMessage) {
-         String chatId = chatMessage.getChatUser().getId();
-         return userProfileService.getPersistableStore().getUserProfiles().stream()
-                .anyMatch(userprofile -> userprofile.chatUser().getId().equals(chatId));
+    boolean isMyMessage(ChatMessage chatMessage) {
+        return chatService.isMyMessage(chatMessage);
     }
 }

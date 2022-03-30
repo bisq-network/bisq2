@@ -33,7 +33,7 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
     }
 
     public void setFixHeight(double value) {
-       setMinHeight(value);
-       setMaxHeight(value);
+        setMinHeight(value);
+        setMaxHeight(value);
     }
 }

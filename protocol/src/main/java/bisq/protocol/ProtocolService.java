@@ -18,8 +18,8 @@
 package bisq.protocol;
 
 import bisq.account.protocol.SwapProtocolType;
-import bisq.common.observable.ObservableSet;
 import bisq.common.monetary.Monetary;
+import bisq.common.observable.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.Contract;

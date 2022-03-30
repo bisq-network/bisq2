@@ -1,0 +1,8 @@
+syntax = "proto3";
+package oracle;
+option java_package = "bisq.oracle.protobuf";
+option java_multiple_files = true;
+
+message DaoBridgeData {
+  string txId = 1;
+}

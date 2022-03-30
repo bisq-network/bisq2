@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 @Slf4j
 public class CompletableFutureUtils {
     /**
@@ -48,12 +49,17 @@ public class CompletableFutureUtils {
         );
     }
 
-    public static <T> CompletableFuture<List<T>> anyOf(Collection<CompletableFuture<T>> collection) {
+    public static CompletableFuture<Boolean> anyOfBooleanMatchingFilterOrAll(boolean filter, Collection<CompletableFuture<Boolean>> collection) {
+        //noinspection unchecked
+        return anyOfBooleanMatchingFilterOrAll(filter, collection.toArray(new CompletableFuture[0]));
+    }
+
+    public static <T> CompletableFuture<T> anyOf(Collection<CompletableFuture<T>> collection) {
         //noinspection unchecked
         return anyOf(collection.toArray(new CompletableFuture[0]));
     }
 
-    public static <T> CompletableFuture<List<T>> anyOf(Stream<CompletableFuture<T>> collection) {
+    public static <T> CompletableFuture<T> anyOf(Stream<CompletableFuture<T>> collection) {
         return anyOf(collection.collect(Collectors.toList()));
     }
 
@@ -64,6 +70,43 @@ public class CompletableFutureUtils {
                         .filter(CompletableFuture::isDone)
                         .findAny()
                         .orElseThrow());
+    }
+
+    /**
+     * Completes on any one of the following conditions:
+     * <br/>
+     * a) ANY of the CompletableFutures completes with the given filter, or
+     * <br/>
+     * b) ALL CompletableFutures complete
+     * <br/><br/>
+     * <p>
+     * Useful in situations such as
+     * <br/>
+     * "complete when any boolean future in the list completes with true, else complete when all complete with false"
+     *
+     * @param filter
+     * @param list
+     * @return
+     * @see "https://stackoverflow.com/a/58999999"
+     */
+    @SafeVarargs
+    public static CompletableFuture<Boolean> anyOfBooleanMatchingFilterOrAll(
+            boolean filter, CompletableFuture<Boolean>... list) {
+        CompletableFuture<Boolean> allWithFailFast = CompletableFuture
+                .allOf(list)
+                .thenApply(__ -> {
+                            Stream.of(list)
+                                    .map(CompletableFuture::join);
+                            return filter;
+                        }
+                );
+        Stream.of(list)
+                .forEach(f -> f.thenAccept(result -> {
+                    if (result == filter) {
+                        allWithFailFast.complete(result);
+                    }
+                }));
+        return allWithFailFast;
     }
 
     // CompletableFuture.applyToEither has some undesired error handling behavior (if first fail result fails).

@@ -67,7 +67,7 @@ public class QuotedMessageBlock {
 
     public Optional<QuotedMessage> getQuotedMessage() {
         String text = controller.model.quotedMessage.get();
-        ChatUser chatUser = controller.model.chatUser;
+        ChatUser chatUser = controller.model.author;
         if (text == null || text.isEmpty() || chatUser == null) {
             return Optional.empty();
         }
@@ -86,10 +86,10 @@ public class QuotedMessageBlock {
         }
 
         private void reply(ChatMessage chatMessage) {
-            ChatUser chatUser = chatMessage.getChatUser();
-            model.chatUser = chatUser;
-            model.userName.set(chatUser.getUserName());
-            model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash()), false));
+            ChatUser author = chatMessage.getAuthor();
+            model.author = author;
+            model.userName.set(author.getUserName());
+            model.roboHashNode.set(RoboHash.getImage(new ByteArray(author.getPubKeyHash()), false));
             model.quotedMessage.set(chatMessage.getText());
             model.visible.set(true);
         }
@@ -113,7 +113,7 @@ public class QuotedMessageBlock {
         private final StringProperty quotedMessage = new SimpleStringProperty("");
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
-        private ChatUser chatUser;
+        private ChatUser author;
 
         private Model() {
         }

@@ -367,8 +367,9 @@ public class Node implements Connection.Handler {
         }
         if (authorizationService.isAuthorized(networkMessage, authorizationToken)) {
             if (networkMessage instanceof CloseConnectionMessage closeConnectionMessage) {
-                log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this, connection.getPeerAddress(), closeConnectionMessage.closeReason());
-                closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.closeReason().name()));
+                log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this,
+                        connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
+                closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
             } else {
                 // We got called from Connection on the dispatcher thread, so no mapping needed here.
                 connection.notifyListeners(networkMessage);

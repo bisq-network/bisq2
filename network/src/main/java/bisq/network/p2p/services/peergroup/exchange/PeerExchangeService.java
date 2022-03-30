@@ -26,6 +26,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.Peer;
+import bisq.network.p2p.services.peergroup.PersistedPeersHandler;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,14 +53,20 @@ public class PeerExchangeService implements Node.Listener {
 
     private final Node node;
     private final PeerExchangeStrategy peerExchangeStrategy;
+
+    // todo if persisted peer needs to be written from that class we can use the addPersistedPeerHandler to delegate it 
+    // to the PeerGroupService. We do not want a dependency from PeerExchangeService to PeerGroupService as 
+    // PeerExchangeService got created by PeerGroupService
+    private final PersistedPeersHandler persistedPeersHandler;
     private final Map<String, PeerExchangeRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private int doInitialPeerExchangeDelaySec = 1; //todo move to config
     private volatile boolean isStopped;
     private Optional<Scheduler> scheduler = Optional.empty();
 
-    public PeerExchangeService(Node node, PeerExchangeStrategy peerExchangeStrategy) {
+    public PeerExchangeService(Node node, PeerExchangeStrategy peerExchangeStrategy, PersistedPeersHandler persistedPeersHandler) {
         this.node = node;
         this.peerExchangeStrategy = peerExchangeStrategy;
+        this.persistedPeersHandler = persistedPeersHandler;
         this.node.addListener(this);
     }
 
@@ -71,18 +78,20 @@ public class PeerExchangeService implements Node.Listener {
         return doPeerExchange(peerExchangeStrategy.getAddressesForFurtherPeerExchange());
     }
 
-    private CompletableFuture<Void> doPeerExchange(List<Address> candidates) {
+    private CompletableFuture<Void> doPeerExchange(Set<Address> candidates) {
         if (candidates.isEmpty() || isStopped) {
             return CompletableFuture.completedFuture(null);
         }
         log.info("Node {} starts peer exchange with: {}", node,
                 StringUtils.truncate(candidates.stream()
-                        .map(Address::toString)
-                        .collect(Collectors.toList()).toString()));
+                        .map(Address::toString).toList().toString()));
         List<CompletableFuture<Boolean>> allFutures = candidates.stream()
                 .map(this::doPeerExchangeAsync)
                 .collect(Collectors.toList());
-        return CompletableFutureUtils.allOf(allFutures)
+
+        // When ALL futures complete (successfully or not),
+        // then consider peer exchange complete and decide whether it should be re-done, in case of too few peers
+        CompletableFutureUtils.allOf(allFutures)
                 .thenApply(resultList -> {
                     int numSuccess = (int) resultList.stream().filter(e -> e).count();
                     log.info("Node {} completed peer exchange to {} candidates. {} requests successfully completed.",
@@ -98,6 +107,14 @@ public class PeerExchangeService implements Node.Listener {
                     } else {
                         scheduler.ifPresent(Scheduler::stop);
                     }
+                    return null;
+                });
+
+        // Complete when the first future completes (the first peer exchange succeeds), or when all futures fail
+        // This helps the initialization phase (and subsequent peer exchanges) complete as soon peers have been exchanged with at least one peer
+        return CompletableFutureUtils.anyOfBooleanMatchingFilterOrAll(true, allFutures)
+                .thenApply(result -> {
+                    log.info("Node {} completed peer exchange to at least one candidate", node);
                     return null;
                 });
     }

@@ -18,9 +18,15 @@
 package bisq.network.p2p.node;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+/**
+ * We do not use a protobuf enum for CloseReason as it might easily change its entries and with protobuf it becomes 
+ * more restrictive to handle updates.
+ */
+@Slf4j
 @Getter
 public enum CloseReason {
     SHUTDOWN(true),

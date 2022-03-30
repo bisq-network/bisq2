@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'com.google.protobuf' version '0.8.16'
+    alias(libs.plugins.protobuf)
 }
 
 repositories {
@@ -27,7 +27,7 @@ dependencies {
     implementation 'io.grpc:grpc-services'
     implementation 'io.grpc:grpc-stub'
     implementation 'org.codehaus.mojo:animal-sniffer-annotations'
-    implementation 'com.google.guava:guava'
+    implementation libs.guava
 }
 
 ext {
@@ -43,7 +43,7 @@ sourceSets.main {
 protobuf {
     protoc {
         // Append 'osxArch' property to workaround M1 Mac bug.
-        artifact = "com.google.protobuf:protoc:3.12.4${osxArch}"
+        artifact = "com.google.protobuf:protoc:3.19.4${osxArch}"
     }
     plugins {
         grpc {

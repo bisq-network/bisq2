@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -38,9 +37,9 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     private static final int MAX_MAP_SIZE = 10000;
 
     public interface Listener {
-        void onAdded(MailboxData mailboxPayload);
+        void onAdded(MailboxData mailboxData);
 
-        void onRemoved(MailboxData mailboxPayload);
+        void onRemoved(MailboxData mailboxData);
     }
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
@@ -61,12 +60,12 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
     public Result add(AddMailboxRequest request) {
-        MailboxSequentialData data = request.getMailboxSequentialData();
-        MailboxData payload = data.getMailboxData();
-        byte[] hash = DigestUtil.hash(payload.serialize());
+        MailboxSequentialData mailboxSequentialData = request.getMailboxSequentialData();
+        MailboxData mailboxData = mailboxSequentialData.getMailboxData();
+        byte[] hash = DigestUtil.hash(mailboxData.serialize());
         ByteArray byteArray = new ByteArray(hash);
         MailboxRequest requestFromMap;
-        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (map.size() > MAX_MAP_SIZE) {
                 return new Result(false).maxMapSizeReached();
@@ -78,15 +77,15 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 return new Result(false).requestAlreadyReceived();
             }
 
-            if (requestFromMap != null && data.isSequenceNrInvalid(sequenceNumberFromMap)) {
+            if (requestFromMap != null && mailboxSequentialData.isSequenceNrInvalid(sequenceNumberFromMap)) {
                 return new Result(false).sequenceNrInvalid();
             }
 
-            if (data.isExpired()) {
+            if (mailboxSequentialData.isExpired()) {
                 return new Result(false).expired();
             }
 
-            if (payload.isDataInvalid()) {
+            if (mailboxData.isDataInvalid()) {
                 return new Result(false).dataInvalid();
             }
 
@@ -107,15 +106,15 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             return new Result(false).payloadAlreadyStored();
         }
 
-        listeners.forEach(listener -> listener.onAdded(payload));
+        listeners.forEach(listener -> listener.onAdded(mailboxData));
         return new Result(true);
     }
 
     public Result remove(RemoveMailboxRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
-        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         MailboxRequest requestFromMap = map.get(byteArray);
-        MailboxSequentialData dataFromMap;
+        MailboxSequentialData sequentialSataFromMap;
         synchronized (mapAccessLock) {
             if (requestFromMap == null) {
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
@@ -138,13 +137,13 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             // At that point we know requestFromMap is an AddProtectedDataRequest
             AddMailboxRequest addRequest = (AddMailboxRequest) requestFromMap;
             // We have an entry, lets validate if we can remove it
-            dataFromMap = addRequest.getMailboxSequentialData();
-            if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
+            sequentialSataFromMap = addRequest.getMailboxSequentialData();
+            if (request.isSequenceNrInvalid(sequentialSataFromMap.getSequenceNumber())) {
                 // Sequence number has not increased
                 return new Result(false).sequenceNrInvalid();
             }
 
-            if (request.isPublicKeyHashInvalid(dataFromMap)) {
+            if (request.isPublicKeyHashInvalid(sequentialSataFromMap)) {
                 // Hash of pubKey of data does not match provided one
                 return new Result(false).publicKeyHashInvalid();
             }
@@ -154,11 +153,11 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             }
 
             map.put(byteArray, request);
-            listeners.forEach(listener -> listener.onRemoved(dataFromMap.getMailboxData()));
+            listeners.forEach(listener -> listener.onRemoved(sequentialSataFromMap.getMailboxData()));
         }
 
         persist();
-        return new Result(true).removedData(dataFromMap.getMailboxData());
+        return new Result(true).removedData(sequentialSataFromMap.getMailboxData());
     }
 
     @Override
@@ -181,7 +180,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     int getSequenceNumber(byte[] hash) {
         ByteArray byteArray = new ByteArray(hash);
         int sequenceNumber = 0;
-        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (map.containsKey(byteArray)) {
                 sequenceNumber = map.get(byteArray).getSequenceNumber();
@@ -191,14 +190,14 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
     boolean contains(byte[] hash) {
-        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             return map.containsKey(new ByteArray(hash));
         }
     }
 
-    boolean canAddMailboxMessage(MailboxData mailboxPayload) {
-        byte[] hash = DigestUtil.hash(mailboxPayload.serialize());
+    boolean canAddMailboxMessage(MailboxData mailboxData) {
+        byte[] hash = DigestUtil.hash(mailboxData.serialize());
         return getSequenceNumber(hash) < Integer.MAX_VALUE;
     }
 
@@ -215,7 +214,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        ConcurrentHashMap<ByteArray, MailboxRequest> map = persistableStore.getMap();
+        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             map.clear();
             map.putAll(pruned);

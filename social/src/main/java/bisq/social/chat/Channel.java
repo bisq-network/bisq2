@@ -21,18 +21,53 @@ import bisq.common.encoding.Proto;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import lombok.EqualsAndHashCode;
+import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.Getter;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class Channel<T extends ChatMessage> implements Proto {
     @EqualsAndHashCode.Include
     protected final String id;
-    protected final ObservableSet<ChatMessage> chatMessages = new ObservableSet<>();
-    protected final Observable<NotificationSetting> notificationSetting = new Observable<>(NotificationSetting.MENTION);
+    protected final Observable<NotificationSetting> notificationSetting = new Observable<>();
+    protected final ObservableSet<T> chatMessages = new ObservableSet<>();
 
-    public Channel(String id) {
+    public Channel(String id, NotificationSetting notificationSetting, Set<T> chatMessages) {
         this.id = id;
+        this.notificationSetting.set(notificationSetting);
+        this.chatMessages.addAll(chatMessages);
+    }
+
+    public bisq.social.protobuf.Channel.Builder getChannelBuilder() {
+        return bisq.social.protobuf.Channel.newBuilder()
+                .setId(id)
+                .setNotificationSetting(notificationSetting.get().toProto())
+                .addAllChatMessages(chatMessages.stream().map(this::getChatMessageProto).collect(Collectors.toList()));
+    }
+
+    // As protobuf classes do not support inheritance we need to delegate it to our subclasses to provide the
+    // concrete implementation for the ChatMessage.
+    protected abstract bisq.social.protobuf.ChatMessage getChatMessageProto(T e);
+
+    abstract public bisq.social.protobuf.Channel toProto();
+
+    public static Channel<? extends ChatMessage> fromProto(bisq.social.protobuf.Channel proto) {
+        switch (proto.getMessageCase()) {
+            case PRIVATECHANNEL -> {
+                return PrivateChannel.fromProto(proto, proto.getPrivateChannel());
+            }
+            case PUBLICCHANNEL -> {
+                return PublicChannel.fromProto(proto, proto.getPublicChannel());
+            }
+            case MESSAGE_NOT_SET -> {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 
     public void addChatMessage(T chatMessage) {
@@ -44,8 +79,4 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
     }
 
     public abstract String getChannelName();
-
-    public ObservableSet<ChatMessage> getChatMessages() {
-        return chatMessages;
-    }
 }

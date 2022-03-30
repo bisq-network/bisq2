@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -112,7 +111,7 @@ public class ServiceNode {
                        Optional<DataService> dataService,
                        KeyPairService keyPairService,
                        PersistenceService persistenceService,
-                       List<Address> seedNodeAddresses) {
+                       Set<Address> seedNodeAddresses) {
         BanList banList = new BanList();
         nodesById = new NodesById(banList, nodeConfig);
         defaultNode = nodesById.getDefaultNode();
@@ -133,7 +132,9 @@ public class ServiceNode {
             }
 
             if (services.contains(Service.MONITOR)) {
-                monitorService = Optional.of(new MonitorService(defaultNode, peerGroupService));
+                monitorService = Optional.of(new MonitorService(defaultNode,
+                        peerGroupService.getPeerGroup(),
+                        peerGroupService.getPeerGroupStore()));
             }
         }
 
@@ -251,6 +252,7 @@ public class ServiceNode {
         checkArgument(state.get().ordinal() < newState.ordinal(),
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
+        log.info("New state {}", newState);
         runAsync(() -> listeners.forEach(e -> e.onStateChanged(newState)), NetworkService.DISPATCHER);
     }
 }
