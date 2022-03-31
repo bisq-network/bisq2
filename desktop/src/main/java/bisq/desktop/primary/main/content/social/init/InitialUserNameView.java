@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.social.init;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.controls.BisqTextField;
@@ -44,8 +43,10 @@ public class InitialUserNameView extends View<VBox, InitialUserNameModel, Initia
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
+        if (model.useCenterLayout) {
+            root.setAlignment(Pos.CENTER);
+        }
         root.getStyleClass().add("content-pane");
-        root.setAlignment(Pos.CENTER);
 
         BisqLabel headline = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.headline"));
         headline.getStyleClass().add("headline-label");
@@ -62,12 +63,15 @@ public class InitialUserNameView extends View<VBox, InitialUserNameModel, Initia
         VBox.setMargin(userNameInputField, new Insets(10, 0, 10, 0));
 
         BisqLabel infoLabel = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.info"));
-        infoLabel.setTextAlignment(TextAlignment.CENTER);
+        if (model.useCenterLayout) {
+            infoLabel.setTextAlignment(TextAlignment.CENTER);
+        }
         VBox.setMargin(infoLabel, new Insets(0, 0, 20, 0));
 
         BisqLabel tryOtherInfoLabel = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.info"));
-        tryOtherInfoLabel.setTextAlignment(TextAlignment.CENTER);
-
+        if (model.useCenterLayout) {
+            tryOtherInfoLabel.setTextAlignment(TextAlignment.CENTER);
+        }
         tryOtherButton = new BisqButton(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.button"));
         tryOtherButton.getStyleClass().add("action-button");
 
@@ -78,14 +82,14 @@ public class InitialUserNameView extends View<VBox, InitialUserNameModel, Initia
         feedbackLabel = new BisqLabel("sfdasfa");
         feedbackLabel.setWrapText(true);
 
-        root.getChildren().addAll(headline,
+        root.getChildren().addAll(
+                headline,
                 roboIconImageView,
                 userNameInputField,
                 tryOtherInfoLabel,
                 tryOtherButton,
                 createUserButton,
                 feedbackLabel,
-                Spacer.fillVBox(),
                 infoLabel
         );
     }
@@ -95,7 +99,7 @@ public class InitialUserNameView extends View<VBox, InitialUserNameModel, Initia
         tryOtherButton.disableProperty().bind(model.tryOtherButtonDisable);
         createUserButton.disableProperty().bind(model.createProfileButtonDisable);
         userNameInputField.textProperty().bindBidirectional(model.userName);
-       feedbackLabel.textProperty().bind(model.feedback);
+        feedbackLabel.textProperty().bind(model.feedback);
 
         tryOtherButton.setOnAction(e -> controller.onCreateTempIdentity());
         createUserButton.setOnAction(e -> controller.onCreateUserProfile());

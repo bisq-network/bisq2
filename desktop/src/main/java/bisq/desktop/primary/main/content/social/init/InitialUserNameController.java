@@ -47,13 +47,15 @@ public class InitialUserNameController implements Controller {
     private final KeyPairService keyPairService;
     private final ChatService chatService;
 
-    public InitialUserNameController(DefaultApplicationService applicationService, Runnable onCompleteHandler) {
+    public InitialUserNameController(DefaultApplicationService applicationService, 
+                                     boolean useCenterLayout, 
+                                     Runnable onCompleteHandler) {
         keyPairService = applicationService.getKeyPairService();
         userProfileService = applicationService.getUserProfileService();
-        chatService=  applicationService.getChatService();
+        chatService = applicationService.getChatService();
         this.onCompleteHandler = onCompleteHandler;
 
-        model = new InitialUserNameModel();
+        model = new InitialUserNameModel(useCenterLayout);
         view = new InitialUserNameView(model, this);
     }
 
