@@ -108,7 +108,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         this.node = node;
         this.banList = banList;
         this.config = config;
-        peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, banList, persistableStore);
+        peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, banList, this);
         PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup,
                 config.peerExchangeConfig(),
                 persistableStore);
