@@ -76,8 +76,12 @@ public class PrimaryStageController implements Controller {
     }
 
     public void onDomainInitialized() {
-        initialUserNameController = new InitialUserNameController(model.getApplicationService(), this::onShowMainView);
-        model.setView(initialUserNameController.getView());
+        if (applicationService.getUserProfileService().isDefaultUserProfileMissing()) {
+            initialUserNameController = new InitialUserNameController(applicationService, true, this::onShowMainView);
+            model.setView(initialUserNameController.getView());
+        } else {
+            onShowMainView();
+        }
     }
 
     public void onShowMainView() {

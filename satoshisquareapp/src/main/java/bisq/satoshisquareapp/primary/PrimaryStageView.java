@@ -42,6 +42,8 @@ public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, Primar
 
     public PrimaryStageView(PrimaryStageModel model, PrimaryStageController controller, Stage stage) {
         super(new AnchorPane(), model, controller);
+
+        root.getStyleClass().add("content-pane");
         this.stage = stage;
         scene = new Scene(root); // takes about  50 ms
         try {

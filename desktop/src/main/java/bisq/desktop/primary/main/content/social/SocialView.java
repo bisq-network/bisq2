@@ -52,7 +52,7 @@ public class SocialView extends TabView<JFXTabPane, SocialModel, SocialControlle
     }
 
     @Override
-    public void onViewAttached() {
+    protected void onViewAttached() {
         super.onViewAttached();
         if (model.showSetupInitialUserProfileTab.get()) {
             setupInitialUserProfileTab = createTab(Res.get("social.setupInitialUserProfile"), NavigationTarget.SETUP_INITIAL_USER_PROFILE);

@@ -53,11 +53,13 @@ public class SocialController extends TabController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-           case SETUP_INITIAL_USER_PROFILE -> {
-                return Optional.of(new InitialUserNameController(applicationService, () -> {
-                    model.showSetupInitialUserProfileTab.set(false);
-                    Navigation.navigateTo(NavigationTarget.CHAT);
-                }));
+            case SETUP_INITIAL_USER_PROFILE -> {
+                return Optional.of(new InitialUserNameController(applicationService,
+                        false,
+                        () -> {
+                            model.showSetupInitialUserProfileTab.set(false);
+                            Navigation.navigateTo(NavigationTarget.CHAT);
+                        }));
             }
             case CHAT -> {
                 return Optional.of(new ChatController(applicationService));

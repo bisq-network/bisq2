@@ -31,6 +31,11 @@ public class InitialUserNameModel implements Model {
     final StringProperty userName = new SimpleStringProperty();
     final BooleanProperty tryOtherButtonDisable = new SimpleBooleanProperty();
     final BooleanProperty createProfileButtonDisable = new SimpleBooleanProperty();
+    final boolean useCenterLayout;
     KeyPair tempKeyPair = null;
     String tempKeyId;
+
+    public InitialUserNameModel(boolean useCenterLayout) {
+        this.useCenterLayout = useCenterLayout;
+    }
 }
