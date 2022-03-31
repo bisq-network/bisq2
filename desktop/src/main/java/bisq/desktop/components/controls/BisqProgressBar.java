@@ -15,19 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.satoshisquareapp.primary.main.top;
+package bisq.desktop.components.controls;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.top.components.MarketPriceComponent;
-import lombok.Getter;
+import com.jfoenix.controls.JFXProgressBar;
 
-public class TopPanelController implements Controller {
-    @Getter
-    private final TopPanelView view;
+public class BisqProgressBar extends JFXProgressBar {
+    public BisqProgressBar() {
+        super();
+    }
 
-    public TopPanelController(DefaultApplicationService applicationService) {
-        TopPanelModel model = new TopPanelModel();
-        view = new TopPanelView(model, this, new MarketPriceComponent(applicationService.getMarketPriceService()).getRootPane());
+    public BisqProgressBar(double progress) {
+        super(progress);
     }
 }

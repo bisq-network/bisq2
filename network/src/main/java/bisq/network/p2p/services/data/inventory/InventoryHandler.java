@@ -92,8 +92,8 @@ class InventoryHandler implements Connection.Listener {
                             map.putIfAbsent(simpleName, 0);
                             map.put(simpleName, map.get(simpleName) + 1);
                         });
-                log.info("Node {} received GetInventoryResponse from {} with inventory {} and nonce {}. Connection={}",
-                        node, connection.getPeerAddress(), response.inventory(), response.requestNonce(), connection.getId());
+              /*  log.info("Node {} received GetInventoryResponse from {} with inventory {} and nonce {}. Connection={}",
+                        node, connection.getPeerAddress(), response.inventory(), response.requestNonce(), connection.getId());*/
                 log.info("\n##########################################################################################\n" +
                         "## INVENTORY\n" +
                         "##########################################################################################\n" +

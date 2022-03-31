@@ -36,6 +36,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Represents an inbound or outbound connection to a peer node.
  * Listens for messages from the peer.
@@ -45,6 +47,7 @@ import java.util.function.BiConsumer;
  */
 @Slf4j
 public abstract class Connection {
+
 
     interface Handler {
         void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection);
@@ -72,11 +75,13 @@ public abstract class Connection {
     private final Handler handler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private OutputStream outputStream;
+    private InputStream inputStream;
     @Nullable
     private Future<?> future;
 
     @Getter
     private volatile boolean isStopped;
+    private boolean listeningStopped;
     private final Object writeLock = new Object();
 
     protected Connection(Socket socket,
@@ -91,7 +96,6 @@ public abstract class Connection {
         this.handler = handler;
         this.metrics = metrics;
 
-        InputStream inputStream;
         try {
             outputStream = socket.getOutputStream();
             inputStream = socket.getInputStream();
@@ -105,15 +109,11 @@ public abstract class Connection {
         future = NetworkService.NETWORK_IO_POOL.submit(() -> {
             Thread.currentThread().setName("Connection.read-" + getThreadNameId());
             try {
-                while (isNotStopped()) {
+                while (isInputStreamActive()) {
                     var proto = bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
                     // parsing might need some time wo we check again if connection is still active
-                    if (!isStopped && proto == null) {
-                        //todo at onConnectionClosed we get a null proto here before our connection gets shutdown
-                        // avoid throwing here if it is expected...
-                        throw new NullPointerException("Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
-                    }
-                    if (isNotStopped()) {
+                    if (isInputStreamActive()) {
+                        checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
                         NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
                         if (networkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
                             throw new ConnectionException("Invalid network version. " +
@@ -130,7 +130,7 @@ public abstract class Connection {
                 }
             } catch (Exception exception) {
                 //todo StreamCorruptedException from i2p at shutdown. prob it send some text data at shut down
-                if (!isStopped) {
+                if (isInputStreamActive()) {
                     log.debug("Call shutdown from startListen read handler {} due exception={}", this, exception.toString());
                     close(CloseReason.EXCEPTION.exception(exception));
                     // EOFException expected if connection got closed
@@ -170,6 +170,17 @@ public abstract class Connection {
             // We wrap any exception (also expected EOFException in case of connection close), to inform the caller 
             // that the "send proto" intent failed.
             throw new ConnectionException(exception);
+        }
+    }
+
+    void stopListening() {
+        listeningStopped = true;
+        try {
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -242,8 +253,8 @@ public abstract class Connection {
         return StringUtils.truncate(getPeersCapability().address().toString() + "-" + id.substring(0, 8));
     }
 
-    private boolean isNotStopped() {
-        return !isStopped && !Thread.currentThread().isInterrupted();
+    private boolean isInputStreamActive() {
+        return !listeningStopped && !isStopped && !Thread.currentThread().isInterrupted();
     }
 
     abstract public boolean isPeerAddressVerified();

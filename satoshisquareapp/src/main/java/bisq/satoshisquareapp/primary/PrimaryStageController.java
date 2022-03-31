@@ -18,13 +18,14 @@
 package bisq.satoshisquareapp.primary;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.JavaFxApplicationData;
 import bisq.desktop.common.Browser;
+import bisq.desktop.common.JavaFxApplicationData;
 import bisq.desktop.common.utils.DontShowAgainLookup;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.Notification;
 import bisq.desktop.overlay.Overlay;
+import bisq.desktop.primary.main.content.social.init.InitialUserNameController;
 import bisq.satoshisquareapp.primary.main.MainController;
 import bisq.satoshisquareapp.primary.splash.SplashController;
 import bisq.settings.CookieKey;
@@ -42,6 +43,7 @@ public class PrimaryStageController implements Controller {
     private final SettingsService settingsService;
     private final Runnable onStageReadyHandler;
     private MainController mainController;
+    private InitialUserNameController initialUserNameController;
 
     public PrimaryStageController(DefaultApplicationService applicationService,
                                   JavaFxApplicationData applicationJavaFxApplicationData,
@@ -74,7 +76,11 @@ public class PrimaryStageController implements Controller {
     }
 
     public void onDomainInitialized() {
-        // After the domain is initialized we show the application content
+        initialUserNameController = new InitialUserNameController(model.getApplicationService(), this::onShowMainView);
+        model.setView(initialUserNameController.getView());
+    }
+
+    public void onShowMainView() {
         mainController = new MainController(model.getApplicationService());
         model.setView(mainController.getView());
     }

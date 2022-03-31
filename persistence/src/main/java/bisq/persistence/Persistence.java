@@ -125,8 +125,10 @@ public class Persistence<T extends PersistableStore<T>> {
                 // Atomic rename
                 boolean renameSucceeded = FileUtils.renameFile(tempFile, storageFile);
                 if (!renameSucceeded) {
-                    // TODO at shutdown we get a failure here sometimes. check if its critical and how to avoid it 
-                    log.warn("Renaming of tempFile to storageFile failed. tempFile={}, storageFile={}",
+                    // At shut down we get sometimes renameSucceeded=false. 
+                    // As far I observed the temp file was never left and the storage file got updated, so it seems its
+                    // not a critical issue.
+                    log.debug("Renaming of tempFile to storageFile failed. tempFile={}, storageFile={}",
                             tempFile, storageFile);
                 }
                 //log.debug("Persisted {}", persistableStore);

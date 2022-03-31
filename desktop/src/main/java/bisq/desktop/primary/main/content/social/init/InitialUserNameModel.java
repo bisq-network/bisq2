@@ -15,19 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.satoshisquareapp.primary.main.top;
+package bisq.desktop.primary.main.content.social.init;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.top.components.MarketPriceComponent;
+import bisq.desktop.common.view.Model;
+import javafx.beans.property.*;
+import javafx.scene.image.Image;
 import lombok.Getter;
 
-public class TopPanelController implements Controller {
-    @Getter
-    private final TopPanelView view;
+import java.security.KeyPair;
 
-    public TopPanelController(DefaultApplicationService applicationService) {
-        TopPanelModel model = new TopPanelModel();
-        view = new TopPanelView(model, this, new MarketPriceComponent(applicationService.getMarketPriceService()).getRootPane());
-    }
+@Getter
+public class InitialUserNameModel implements Model {
+    final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
+    final StringProperty feedback = new SimpleStringProperty();
+    final StringProperty userName = new SimpleStringProperty();
+    final BooleanProperty tryOtherButtonDisable = new SimpleBooleanProperty();
+    final BooleanProperty createProfileButtonDisable = new SimpleBooleanProperty();
+    KeyPair tempKeyPair = null;
+    String tempKeyId;
 }

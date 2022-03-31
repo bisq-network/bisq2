@@ -28,6 +28,7 @@ import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
+import bisq.social.chat.ChatService;
 import bisq.social.user.UserNameGenerator;
 import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.*;
@@ -51,8 +52,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class CreateUserProfile {
     private final Controller controller;
 
-    public CreateUserProfile(UserProfileService userProfileService, KeyPairService keyPairService) {
-        controller = new Controller(userProfileService, keyPairService);
+    public CreateUserProfile(ChatService chatService, UserProfileService userProfileService, KeyPairService keyPairService) {
+        controller = new Controller(chatService, userProfileService, keyPairService);
     }
 
     public Pane getRoot() {
@@ -64,12 +65,13 @@ public class CreateUserProfile {
         private final Model model;
         @Getter
         private final View view;
+        private final ChatService chatService;
         private final UserProfileService userProfileService;
         private final KeyPairService keyPairService;
         private final EntitlementSelection entitlementSelection;
-
-
-        private Controller(UserProfileService userProfileService, KeyPairService keyPairService) {
+        
+        private Controller(ChatService chatService, UserProfileService userProfileService, KeyPairService keyPairService) {
+            this.chatService = chatService;
             this.userProfileService = userProfileService;
             this.keyPairService = keyPairService;
             model = new Model();
@@ -103,6 +105,7 @@ public class CreateUserProfile {
                             new HashSet<>(entitlementSelection.getVerifiedEntitlements()))
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
+                            chatService.maybeAddDummyChannels();
                             checkArgument(userProfile.identity().domainId().equals(useName));
                             reset();
                             model.feedback.set(Res.get("social.createUserProfile.success", useName));

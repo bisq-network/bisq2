@@ -415,6 +415,7 @@ public class Node implements Connection.Handler {
 
     public void closeConnectionGracefully(Connection connection, CloseReason closeReason) {
         try {
+            connection.stopListening();
             send(new CloseConnectionMessage(closeReason), connection);
         } catch (Throwable ignore) {
         }

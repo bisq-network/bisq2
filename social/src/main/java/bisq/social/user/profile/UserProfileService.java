@@ -92,11 +92,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        if (persistableStore.getUserProfiles().isEmpty()) {
-            return createDefaultUserProfile();
-        } else {
-            return CompletableFuture.completedFuture(true);
-        }
+        return CompletableFuture.completedFuture(true);
     }
 
 
@@ -123,6 +119,10 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     public void selectUserProfile(UserProfile value) {
         persistableStore.getSelectedUserProfile().set(value);
         persist();
+    }
+
+    public boolean isDefaultUserProfileMissing() {
+        return persistableStore.getUserProfiles().isEmpty();
     }
 
     public CompletableFuture<Optional<ChatUser.BurnInfo>> findBurnInfoAsync(byte[] pubKeyHash, Set<Entitlement> entitlements) {
