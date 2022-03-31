@@ -19,7 +19,7 @@ package bisq.satoshisquareapp.primary.main.top;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import javafx.scene.layout.HBox;
+import bisq.desktop.primary.main.top.components.MarketPriceComponent;
 import lombok.Getter;
 
 public class TopPanelController implements Controller {
@@ -28,9 +28,6 @@ public class TopPanelController implements Controller {
 
     public TopPanelController(DefaultApplicationService applicationService) {
         TopPanelModel model = new TopPanelModel();
-       // bisq.oracle.marketprice.MarketPriceService marketPriceService = applicationService.getMarketPriceService();
-     //   var marketPriceComponent = new MarketPriceComponent(marketPriceService);
-      //  view = new TopPanelView(model, this, marketPriceComponent.getRootPane());
-        view = new TopPanelView(model, this, new HBox());
+        view = new TopPanelView(model, this, new MarketPriceComponent(applicationService.getMarketPriceService()).getRootPane());
     }
 }
