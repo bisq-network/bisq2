@@ -32,7 +32,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
 
         ImageView logo = new ImageView();
         logo.setId("image-splash-logo");
-
+        // logo.setId("satoshisquare-splash");
         root.getChildren().addAll(logo);
     }
 }
