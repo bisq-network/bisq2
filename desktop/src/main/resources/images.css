@@ -13,6 +13,9 @@
 #i2p {
     -fx-image: url("images/connection/i2p.png");
 }
+#satoshisquare-splash {
+    -fx-image: url("images/satoshisquare_splash.png");
+}
 
 #logo-small {
     -fx-image: url("images/logo_small.png");

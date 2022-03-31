@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop;
+package bisq.satoshisquareapp;
 
 import bisq.application.DefaultApplicationService;
 import bisq.application.Executable;
 import bisq.common.annotations.LateInit;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.primary.PrimaryStageController;
+import bisq.satoshisquareapp.primary.PrimaryStageController;
 import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;

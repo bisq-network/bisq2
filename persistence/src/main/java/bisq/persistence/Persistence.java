@@ -123,7 +123,12 @@ public class Persistence<T extends PersistableStore<T>> {
                 fileOutputStream = null;
 
                 // Atomic rename
-                FileUtils.renameFile(tempFile, storageFile);
+                boolean renameSucceeded = FileUtils.renameFile(tempFile, storageFile);
+                if (!renameSucceeded) {
+                    // TODO at shutdown we get a failure here sometimes. check if its critical and how to avoid it 
+                    log.warn("Renaming of tempFile to storageFile failed. tempFile={}, storageFile={}",
+                            tempFile, storageFile);
+                }
                 //log.debug("Persisted {}", persistableStore);
                 success = true;
             } catch (IOException ex) {

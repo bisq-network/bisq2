@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.splash;
+package bisq.satoshisquareapp.primary.splash;
 
 import bisq.desktop.common.view.View;
 import javafx.geometry.Pos;
@@ -31,8 +31,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         root.setAlignment(Pos.CENTER);
 
         ImageView logo = new ImageView();
-        logo.setId("image-splash-logo");
-        // logo.setId("satoshisquare-splash");
+        logo.setId("satoshisquare-splash");
         root.getChildren().addAll(logo);
     }
 }

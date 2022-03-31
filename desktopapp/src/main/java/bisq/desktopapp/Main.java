@@ -1,4 +1,4 @@
-package bisq.desktop;
+package bisq.desktopapp;
 
 import lombok.extern.slf4j.Slf4j;
 

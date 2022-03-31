@@ -15,24 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop;
+package bisq.desktop.common;
 
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.CompletableFuture;
-
-@Slf4j
-public class JavaFXApplication extends Application {
-    public record Data(Stage stage, Parameters parameters, HostServices hostServices) {
-    }
-
-    static final CompletableFuture<Data> onApplicationLaunched = new CompletableFuture<>();
-
-    @Override
-    public void start(Stage stage) {
-        onApplicationLaunched.complete(new Data(stage, getParameters(), getHostServices()));
-    }
+public record JavaFxApplicationData(Stage stage, Application.Parameters parameters, HostServices hostServices) {
 }

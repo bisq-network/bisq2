@@ -12,7 +12,7 @@ To help developers set up their environment, we provide a couple Gradle tasks.
 You can start Bisq 2 with 50 BTC by running:
 
 ```
-./gradlew :desktop:runWithBitcoindRegtestWallet
+./gradlew :desktopapp:runWithBitcoindRegtestWallet
 ```
 
 This command starts Bitcoin-Qt, creates a new wallet, mines the initial regtest blocks (101), and starts Bisq 2 with the
@@ -31,7 +31,7 @@ Other tasks to make you life easier:
 You can start Bisq 2 with ~20 L-BTC by running:
 
 ```
-./gradlew :desktop:runWithElementsRegtestWallet
+./gradlew :desktopapp:runWithElementsRegtestWallet
 ```
 
 This command starts Bitcoin-Qt, creates a new wallet, mines the initial regtest blocks (101), starts Elements-Qt, pegs
@@ -52,7 +52,7 @@ Other tasks to make you life easier:
 
 ### Manual BTC Pegin
 
-The `:desktop:runWithElementsRegtestWallet` Gradle task does a 20 BTC pegin. Here's a quick summary of how to do it
+The `:desktopapp:runWithElementsRegtestWallet` Gradle task does a 20 BTC pegin. Here's a quick summary of how to do it
 manually. First, we need to get a pegin address.
 
 ```

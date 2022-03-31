@@ -15,24 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.splash;
+package bisq.satoshisquareapp;
 
-import bisq.desktop.common.view.View;
-import javafx.geometry.Pos;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.VBox;
+import bisq.desktop.common.JavaFxApplicationData;
+import javafx.application.Application;
+import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
 
-public class SplashView extends View<VBox, SplashModel, SplashController> {
+import java.util.concurrent.CompletableFuture;
 
-    public SplashView(SplashModel model, SplashController controller) {
-        super(new VBox(), model, controller);
+@Slf4j
+public class JavaFXApplication extends Application {
 
-        root.getStyleClass().add("content-pane");
-        root.setAlignment(Pos.CENTER);
+    static final CompletableFuture<JavaFxApplicationData> onApplicationLaunched = new CompletableFuture<>();
 
-        ImageView logo = new ImageView();
-        logo.setId("image-splash-logo");
-        // logo.setId("satoshisquare-splash");
-        root.getChildren().addAll(logo);
+    @Override
+    public void start(Stage stage) {
+        onApplicationLaunched.complete(new JavaFxApplicationData(stage, getParameters(), getHostServices()));
     }
 }

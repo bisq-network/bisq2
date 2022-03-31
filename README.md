@@ -63,7 +63,7 @@ Bisq 2 requires Java 16 and Gradle 7.3.3.
 
 Currently, you need to start the Desktop app from the IntelliJ IDE and not via gradle as there are some open issues with the JFoenix library we are currently using (might get replaced with Gluon).
 
-You can right-click the `bisq.desktop.Main` class in the desktop module to create a run config or create a `run config` in `Run/Edi Configurations`. You need to add the JVM argument: `--add-opens java.base/java.lang.reflect=ALL-UNNAMED` (due the JFoenix issue with Java 16).
+You can right-click the `bisq.desktopapp.Main` class in the desktopapp module to create a run config or create a `run config` in `Run/Edi Configurations`. You need to add the JVM argument: `--add-opens java.base/java.lang.reflect=ALL-UNNAMED` (due the JFoenix issue with Java 16).
 
 The desktop app also requires JVM args (the typesafe config lib we use does not support overriding program args, so you have to use JVM args).
 - For clearnet use

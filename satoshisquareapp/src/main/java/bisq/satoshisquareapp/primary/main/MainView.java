@@ -15,24 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.splash;
+package bisq.satoshisquareapp.primary.main;
 
 import bisq.desktop.common.view.View;
-import javafx.geometry.Pos;
-import javafx.scene.image.ImageView;
+import bisq.desktop.primary.main.content.ContentView;
+import bisq.satoshisquareapp.primary.main.top.TopPanelView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-public class SplashView extends View<VBox, SplashModel, SplashController> {
+public class MainView extends View<VBox, MainModel, MainController> {
 
-    public SplashView(SplashModel model, SplashController controller) {
+    public MainView(MainModel model,
+                    MainController controller,
+                    ContentView contentView,
+                    TopPanelView topPanelView) {
         super(new VBox(), model, controller);
 
         root.getStyleClass().add("content-pane");
-        root.setAlignment(Pos.CENTER);
 
-        ImageView logo = new ImageView();
-        logo.setId("image-splash-logo");
-        // logo.setId("satoshisquare-splash");
-        root.getChildren().addAll(logo);
+        HBox leftNavAndContentBox = new HBox();
+        HBox.setHgrow(contentView.getRoot(), Priority.ALWAYS);
+        leftNavAndContentBox.getChildren().addAll(contentView.getRoot());
+
+        VBox.setVgrow(leftNavAndContentBox, Priority.ALWAYS);
+        root.getChildren().addAll(topPanelView.getRoot(), leftNavAndContentBox);
     }
 }
