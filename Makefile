@@ -22,7 +22,7 @@
 #
 # 1) Local clearnet scenario
 #
-#    Launch 2 clearnet seeds and several (n) clearnet desktop clients with:
+#    Launch 2 clearnet seeds and several (n) clearnet desktopapp clients with:
 #
 #     $ make start-clearnet-full-env n=4
 #
@@ -32,7 +32,7 @@
 #
 # 2) Local tor scenario
 #
-#    Launches 2 tor seeds and several (n) tor desktop clients. This needs 2 steps:
+#    Launches 2 tor seeds and several (n) tor desktopapp clients. This needs 2 steps:
 #
 #    First step: have the tor seeds generate their tor addresses with:
 #
@@ -45,7 +45,7 @@
 #    That line indicates the seed has its tor identity. Once both seed outputs have that line,
 #    stop both seeds with Ctrl+C.
 #
-#    Second step: start a combination of 2 tor seeds and several (n) tor desktop clients with:
+#    Second step: start a combination of 2 tor seeds and several (n) tor desktopapp clients with:
 #
 #     $ make start-tor-full-env n=4
 #
@@ -58,7 +58,7 @@
 #
 # 3) Local I2P scenario
 #
-#    Launches 2 I2P seeds and several (n) I2P desktop clients. This needs 2 steps:
+#    Launches 2 I2P seeds and several (n) I2P desktopapp clients. This needs 2 steps:
 #
 #    First step: have the I2P seeds generate their private key and destinations with:
 #
@@ -68,7 +68,7 @@
 #    local I2P console at http://127.0.0.1:7657/home . Once two new green entries appear in
 #    the I2P console, go to the terminal and stop both seeds with Ctrl+C.
 #
-#    Second step: start a combination of 2 I2P seeds and several (n) I2P desktop clients with:
+#    Second step: start a combination of 2 I2P seeds and several (n) I2P desktopapp clients with:
 #
 #     $ make start-i2p-full-env n=4
 #
@@ -134,7 +134,7 @@ clean:
 
 .start-clearnet-clients:
 	for i in $$(seq 1 $n); do \
-		screen -S localtests -X screen -t client-$${i}-clear ./gradlew --console=plain desktop:run \
+		screen -S localtests -X screen -t client-$${i}-clear ./gradlew --console=plain desktopapp:run \
 			-Dbisq.application.appName=bisq_client$${i}_test \
 			-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
 			-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
@@ -163,7 +163,7 @@ seed2-tor-hostname:
 # If any is not known, this will fail
 .start-tor-clients: seed1-tor-hostname seed2-tor-hostname
 	for i in $$(seq 1 $n); do \
-		screen -S localtests -X screen -t client-$${i}-tor ./gradlew --console=plain desktop:run \
+		screen -S localtests -X screen -t client-$${i}-tor ./gradlew --console=plain desktopapp:run \
 			-Dbisq.application.appName=bisq_client$${i}_tor_test \
 			-Dbisq.networkServiceConfig.supportedTransportTypes.0=TOR \
 			-Dbisq.networkServiceConfig.seedAddressByTransportType.tor.0=$(file < seed1-tor-hostname):1000 \
@@ -239,7 +239,7 @@ seed2-i2p-destination:
   		# the resulting cmd had to be built line by line ;\
   		# See .demo-send-large-command-to-screen for details ;\
   		screen -S localtests -X screen -t client-$${i}-i2p ;\
-  		screen -S localtests -X stuff './gradlew --console=plain desktop:run ' ;\
+  		screen -S localtests -X stuff './gradlew --console=plain desktopapp:run ' ;\
 		screen -S localtests -X stuff "-Dbisq.application.appName=bisq_client$${i}_i2p_test " ;\
 		screen -S localtests -X stuff '-Dbisq.networkServiceConfig.supportedTransportTypes.0=I2P ' ;\
 		screen -S localtests -X stuff '-Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.0=$(file < seed1-i2p-destination):5000 ' ;\

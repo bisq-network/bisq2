@@ -27,7 +27,7 @@ object ApplicationRunTaskFactory {
         cmdLineArgs: List<String>,
         dependentTask: TaskProvider<out DefaultTask>?
     ) {
-        val desktopProject: Project = project.project("desktop")
+        val desktopProject: Project = project.project("desktopapp")
         registerRunTaskToProject(
             project = desktopProject,
             taskName = taskName,

@@ -1,5 +1,7 @@
 plugins {
     id 'java-library'
+    id 'application'
+   /* id 'distribution'*/ //todo as long we dont need a jar we leave that out, speeds up build
     id 'org.openjfx.javafxplugin' version '0.0.10'
 }
 
@@ -9,14 +11,43 @@ repositories {
 }
 
 apply from: '../buildSrc/bisq-version.gradle'
-apply from: '../buildSrc/logging-dependencies.gradle'
-apply from: '../buildSrc/test-dependencies.gradle'
-apply from: '../buildSrc/lombok-dependencies.gradle'
+
+application {
+    project.mainClassName = 'bisq.desktopapp.Main'
+    applicationDefaultJvmArgs = ['--add-exports', 'javafx.controls/com.sun.javafx.scene.control.behavior=ALL-UNNAMED',
+                                 '--add-exports', 'javafx.controls/com.sun.javafx.scene.control=ALL-UNNAMED',
+                                 '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED']
+}
+
+run {
+    // Pass command-line properties to application
+    // Normally they'd only be applied to the gradle process, but we need them in the started application
+    // See https://stackoverflow.com/a/23689696
+    systemProperties System.getProperties()
+}
+
+distributions {
+    main {
+        distributionBaseName = 'jfx-dist'
+    }
+}
+
+tasks.named('jar') {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version,
+                'Main-Class': 'bisq.desktopapp.Main')
+    }
+}
 
 javafx {
     version = '16'
     modules = ['javafx.base', 'javafx.controls', 'javafx.graphics']
 }
+
+apply from: '../buildSrc/logging-dependencies.gradle'
+apply from: '../buildSrc/test-dependencies.gradle'
+apply from: '../buildSrc/lombok-dependencies.gradle'
 
 dependencies {
     api platform(project(':platforms:common-platform'))
@@ -37,6 +68,7 @@ dependencies {
     implementation project(':presentation')
     implementation project(':application')
     implementation project(':wallets')
+    implementation project(':desktop')
 
     implementation libs.guava
 

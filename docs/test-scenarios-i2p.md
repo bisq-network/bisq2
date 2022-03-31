@@ -5,7 +5,7 @@ This document describes a few manual test scenarios with focus on the I2P networ
 The requirements to run them are:
 
  - access to a virtualization environment (create / delete VMs)
- - each VM can run a seed or a desktop client (JDK 16 or higher)
+ - each VM can run a seed or a desktopapp client (JDK 16 or higher)
  - each VM can run the makefile tests (see Requirements in `Makefile` header)
  - each VM can optionally start a local I2P router, for some scenarios
  - have a way to copy files between VMs (a good solution is `wormhole`, see [docs](https://github.com/magic-wormhole/magic-wormhole/blob/master/docs/welcome.md))
@@ -46,7 +46,7 @@ Test steps:
 VMs used:
 
  - `vm1`: for 2 seeds
- - `vm2`: for 2 desktop clients
+ - `vm2`: for 2 desktopapp clients
 
 Test steps:
 
@@ -60,7 +60,7 @@ Test steps:
    - `make start-i2p-clients`
      - Both these clients will connect to the seeds, then find each other as peers
    - In both clients: wait until 2-3 active connections are established
-   - For both desktop clients: Under Settings > Network Info, ensure there are 3 connections
+   - For both desktopapp clients: Under Settings > Network Info, ensure there are 3 connections
    - In one client, create a Trade Intent
    - In the other client: check if Trade Intent is visible
 
