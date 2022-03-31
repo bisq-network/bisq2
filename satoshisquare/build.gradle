@@ -1,0 +1,102 @@
+plugins {
+    id 'java-library'
+    alias(libs.plugins.protobuf)
+    id 'application'
+    id 'distribution'
+    id 'org.openjfx.javafxplugin' version '0.0.10'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+apply from: '../buildSrc/bisq-version.gradle'
+
+application {
+    project.mainClassName = 'bisq.satoshisquare.Main'
+    applicationDefaultJvmArgs = ['--add-exports', 'javafx.controls/com.sun.javafx.scene.control.behavior=ALL-UNNAMED',
+                                 '--add-exports', 'javafx.controls/com.sun.javafx.scene.control=ALL-UNNAMED',
+                                 '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED']
+}
+
+run {
+    // Pass command-line properties to application
+    // Normally they'd only be applied to the gradle process, but we need them in the started application
+    // See https://stackoverflow.com/a/23689696
+    systemProperties System.getProperties()
+}
+
+distributions {
+    main {
+        distributionBaseName = 'jfx-dist'
+    }
+}
+
+tasks.named('jar') {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version,
+                'Main-Class': 'bisq.satoshisquare.Main')
+    }
+}
+
+javafx {
+    version = '16'
+    modules = ['javafx.base', 'javafx.controls', 'javafx.graphics']
+}
+
+apply from: '../buildSrc/logging-dependencies.gradle'
+apply from: '../buildSrc/test-dependencies.gradle'
+apply from: '../buildSrc/lombok-dependencies.gradle'
+
+dependencies {
+    api platform(project(':platforms:common-platform'))
+
+    implementation project(':common')
+    implementation project(':persistence')
+    implementation project(':i18n')
+    implementation project(':security')
+    implementation project(':identity')
+    implementation project(':network')
+    implementation project(':settings')
+    implementation project(':social')
+    implementation project(':presentation')
+    implementation project(':application')
+    implementation project(':desktop')
+
+    implementation 'com.google.protobuf:protobuf-java'
+    implementation libs.guava
+
+    implementation 'com.jfoenix:jfoenix:9.0.10'
+    implementation 'de.jensd:fontawesomefx:8.0.0'
+    implementation 'de.jensd:fontawesomefx-commons:9.1.2'
+    implementation 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
+    implementation 'org.controlsfx:controlsfx:11.1.1'
+
+    implementation "org.fxmisc.easybind:easybind:1.0.3"
+
+}
+test {
+    useJUnitPlatform()
+    exclude '**/**Integration*'
+}
+
+ext {
+    generatedProtoSrcDir = 'build/generated/source/main/java'
+}
+
+sourceSets.main {
+    java.srcDirs += [generatedProtoSrcDir]
+}
+
+protobuf {
+    protoc {
+        // Append 'osxArch' property to workaround M1 Mac bug.
+        artifact = "com.google.protobuf:protoc:3.19.4${osxArch}"
+    }
+    generateProtoTasks {
+        all()*.plugins {}
+    }
+    generatedFilesBaseDir = "$projectDir/build/generated/source"
+}

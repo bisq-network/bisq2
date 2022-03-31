@@ -15,21 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop;
+package bisq.satoshisquare.primary.main.top;
 
-import javafx.application.Application;
-import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.primary.main.top.components.MarketPriceComponent;
+import lombok.Getter;
 
-import java.util.concurrent.CompletableFuture;
+public class TopPanelController implements Controller {
+    @Getter
+    private final TopPanelView view;
 
-@Slf4j
-public class JavaFXApplication extends Application {
-
-    static final CompletableFuture<JavaFxApplicationData> onApplicationLaunched = new CompletableFuture<>();
-
-    @Override
-    public void start(Stage stage) {
-        onApplicationLaunched.complete(new JavaFxApplicationData(stage, getParameters(), getHostServices()));
+    public TopPanelController(DefaultApplicationService applicationService) {
+        TopPanelModel model = new TopPanelModel();
+        var marketPriceComponent = new MarketPriceComponent(applicationService.getMarketPriceService());
+        view = new TopPanelView(model, this, marketPriceComponent.getRootPane());
     }
 }

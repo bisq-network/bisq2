@@ -15,21 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop;
+package bisq.satoshisquare.primary.splash;
 
-import javafx.application.Application;
-import javafx.stage.Stage;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.CompletableFuture;
-
 @Slf4j
-public class JavaFXApplication extends Application {
+public class SplashController implements Controller {
+    private final SplashModel model;
+    @Getter
+    private final SplashView view;
 
-    static final CompletableFuture<JavaFxApplicationData> onApplicationLaunched = new CompletableFuture<>();
+    public SplashController(DefaultApplicationService applicationService) {
+        model = new SplashModel();
+        view = new SplashView(model, this);
+    }
 
-    @Override
-    public void start(Stage stage) {
-        onApplicationLaunched.complete(new JavaFxApplicationData(stage, getParameters(), getHostServices()));
+    public void onViewAttached() {
+    }
+
+    public void onViewDetached() {
     }
 }

@@ -18,18 +18,8 @@
 package bisq.desktop;
 
 import javafx.application.Application;
+import javafx.application.HostServices;
 import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.CompletableFuture;
-
-@Slf4j
-public class JavaFXApplication extends Application {
-
-    static final CompletableFuture<JavaFxApplicationData> onApplicationLaunched = new CompletableFuture<>();
-
-    @Override
-    public void start(Stage stage) {
-        onApplicationLaunched.complete(new JavaFxApplicationData(stage, getParameters(), getHostServices()));
-    }
+public record JavaFxApplicationData(Stage stage, Application.Parameters parameters, HostServices hostServices) {
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary;
+package bisq.satoshisquare.primary;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.JavaFxApplicationData;
@@ -25,8 +25,8 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.Notification;
 import bisq.desktop.overlay.Overlay;
-import bisq.desktop.primary.main.MainController;
-import bisq.desktop.primary.splash.SplashController;
+import bisq.satoshisquare.primary.main.MainController;
+import bisq.satoshisquare.primary.splash.SplashController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.application.Platform;

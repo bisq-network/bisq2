@@ -15,21 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop;
+package bisq.satoshisquare.primary.main.top;
 
-import javafx.application.Application;
-import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.CompletableFuture;
+import bisq.desktop.common.view.Model;
 
-@Slf4j
-public class JavaFXApplication extends Application {
-
-    static final CompletableFuture<JavaFxApplicationData> onApplicationLaunched = new CompletableFuture<>();
-
-    @Override
-    public void start(Stage stage) {
-        onApplicationLaunched.complete(new JavaFxApplicationData(stage, getParameters(), getHostServices()));
-    }
+public class TopPanelModel implements Model {
 }
