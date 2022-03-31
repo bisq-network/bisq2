@@ -18,10 +18,12 @@
 package bisq.desktop.primary.main.content.social;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.social.chat.ChatController;
+import bisq.desktop.primary.main.content.social.init.InitialUserNameController;
 import bisq.desktop.primary.main.content.social.profile.UserProfileController;
 import bisq.desktop.primary.main.content.social.tradeintent.TradeIntentController;
 import lombok.Getter;
@@ -41,18 +43,27 @@ public class SocialController extends TabController {
         super(NavigationTarget.SOCIAL);
 
         this.applicationService = applicationService;
-        model = new SocialModel();
+
+        model = new SocialModel(applicationService.getUserProfileService());
         view = new SocialView(model, this);
+
+        model.showSetupInitialUserProfileTab.set(applicationService.getUserProfileService().isDefaultUserProfileMissing());
     }
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case TRADE_INTENT -> {
-                return Optional.of(new TradeIntentController(applicationService));
+           case SETUP_INITIAL_USER_PROFILE -> {
+                return Optional.of(new InitialUserNameController(applicationService, () -> {
+                    model.showSetupInitialUserProfileTab.set(false);
+                    Navigation.navigateTo(NavigationTarget.CHAT);
+                }));
             }
             case CHAT -> {
                 return Optional.of(new ChatController(applicationService));
+            }
+            case TRADE_INTENT -> {
+                return Optional.of(new TradeIntentController(applicationService));
             }
             case USER_PROFILE -> {
                 return Optional.of(new UserProfileController(applicationService));

@@ -19,15 +19,24 @@ package bisq.desktop.primary.main.content.social;
 
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
+import bisq.social.user.profile.UserProfileService;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 
 
 public class SocialModel extends NavigationModel {
 
-    public SocialModel() {
+    private final UserProfileService userProfileService;
+    BooleanProperty showSetupInitialUserProfileTab = new SimpleBooleanProperty();
+
+    public SocialModel(UserProfileService userProfileService) {
+        this.userProfileService = userProfileService;
     }
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.CHAT;
+        return userProfileService.isDefaultUserProfileMissing() ?
+                NavigationTarget.SETUP_INITIAL_USER_PROFILE :
+                NavigationTarget.CHAT;
     }
 }

@@ -77,7 +77,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        addDummyChannels();
+        maybeAddDummyChannels();
         setSelectedChannelIfNotSet();
         return CompletableFuture.completedFuture(true);
     }
@@ -319,7 +319,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 .anyMatch(userprofile -> userprofile.chatUser().getId().equals(chatId));
     }
 
-    private void addDummyChannels() {
+    public void maybeAddDummyChannels() {
         UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
         if (userProfile == null || !persistableStore.getPublicChannels().isEmpty()) {
             return;

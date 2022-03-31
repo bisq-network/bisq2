@@ -32,6 +32,8 @@ import lombok.Setter;
 
 public class Transitions {
     public final static int DEFAULT_DURATION = 600;
+    public final static int CROSS_FADE_IN_DURATION = 1500;
+    public final static int CROSS_FADE_OUT_DURATION = 1000;
     @Setter
     private static DisplaySettings displaySettings;
 
@@ -129,7 +131,7 @@ public class Transitions {
         }
     }
 
-    private static FadeTransition fadeOut(Node node, int duration) {
+    public static FadeTransition fadeOut(Node node, int duration) {
         FadeTransition fade = new FadeTransition(Duration.millis(getDuration(duration)), node);
         fade.setFromValue(node.getOpacity());
         fade.setToValue(0.0);
@@ -139,5 +141,10 @@ public class Transitions {
 
     private static int getDuration(int duration) {
         return displaySettings.isUseAnimations() ? duration : 1;
+    }
+
+    public static void crossFade(Node node1, Node node2) {
+        fadeOut(node1, CROSS_FADE_OUT_DURATION)
+                .setOnFinished(e -> Transitions.fadeIn(node2, CROSS_FADE_IN_DURATION));
     }
 }

@@ -22,6 +22,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
 import bisq.network.NetworkId;
 import bisq.security.DigestUtil;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -40,10 +41,10 @@ import java.util.stream.Collectors;
  * the chat user is part of the message (e.g. use an id and reference to p2p network data for chat user).
  */
 @ToString
+@EqualsAndHashCode
 @Slf4j
 public class ChatUser implements Proto {
     private static final transient Map<ByteArray, DerivedData> CACHE = new HashMap<>();
-
     @Getter
     private final NetworkId networkId;
     @Getter

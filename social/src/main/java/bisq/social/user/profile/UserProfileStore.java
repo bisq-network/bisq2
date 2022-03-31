@@ -69,7 +69,7 @@ public class UserProfileStore implements PersistableStore<UserProfileStore> {
     public static UserProfileStore fromProto(bisq.social.protobuf.UserProfileStore proto) {
         return new UserProfileStore(UserProfile.fromProto(proto.getSelectedUserProfile()),
                 proto.getUserProfilesList().stream()
-                        .map(e -> UserProfile.fromProto(proto.getSelectedUserProfile()))
+                        .map(UserProfile::fromProto)
                         .collect(Collectors.toSet()),
                 proto.getVerifiedProofOfBurnProofsMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,

@@ -38,6 +38,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -147,6 +148,7 @@ public class UserProfileComboBox {
         }
     }
 
+    @ToString
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     public static class ListItem {
         private final UserProfile userProfile;

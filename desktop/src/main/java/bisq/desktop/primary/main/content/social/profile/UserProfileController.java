@@ -23,6 +23,7 @@ import bisq.desktop.primary.main.content.social.components.UserProfileDisplay;
 import bisq.desktop.primary.main.content.social.profile.components.ChannelAdmin;
 import bisq.desktop.primary.main.content.social.profile.components.CreateUserProfile;
 import bisq.desktop.primary.main.content.social.profile.components.UserProfileSelection;
+import bisq.social.chat.ChatService;
 import bisq.social.user.Entitlement;
 import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
@@ -42,13 +43,15 @@ public class UserProfileController implements Controller {
     private final UserProfileDisplay userProfileDisplay;
     private final ChannelAdmin channelAdmin;
     private final UserProfileService userProfileService;
+    private final ChatService chatService;
     private Subscription selectedUserProfileSubscription;
 
     public UserProfileController(DefaultApplicationService applicationService) {
+        chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
         userProfileSelection = new UserProfileSelection(userProfileService);
         userProfileDisplay = new UserProfileDisplay(userProfileService);
-        createUserProfile = new CreateUserProfile(userProfileService, applicationService.getKeyPairService());
+        createUserProfile = new CreateUserProfile(chatService, userProfileService, applicationService.getKeyPairService());
         channelAdmin = new ChannelAdmin(userProfileService, applicationService.getChatService());
         model = new UserProfileModel(applicationService);
         view = new UserProfileView(model,
