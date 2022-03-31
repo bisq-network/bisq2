@@ -266,7 +266,7 @@ public class FileUtils {
         return file;
     }
 
-    public static void renameFile(File oldFile, File newFile) throws IOException {
+    public static boolean renameFile(File oldFile, File newFile) throws IOException {
         File target = newFile;
         if (OsUtils.isWindows()) {
             // Work around an issue on Windows whereby you can't rename over existing files.
@@ -276,10 +276,7 @@ public class FileUtils {
             }
         }
 
-        boolean success = oldFile.renameTo(target);
-        if (!success) {
-            throw new IOException("Failed to rename " + oldFile + " to " + target);
-        }
+        return oldFile.renameTo(target);
     }
 
     public static void backupCorruptedFile(String directory, File storageFile, String fileName, String backupFolderName)
