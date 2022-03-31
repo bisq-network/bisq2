@@ -78,7 +78,7 @@ public class Persistence<T extends PersistableStore<T>> {
             try {
                 FileUtils.backupCorruptedFile(directory, storageFile, fileName, "corruptedFilesAtRead");
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Error trying to backup corrupted file " + fileName + ": " + e.getMessage(), e);
             }
             return Optional.empty();
         }
