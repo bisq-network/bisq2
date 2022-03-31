@@ -36,8 +36,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * Represents an inbound or outbound connection to a peer node.
  * Listens for messages from the peer.
@@ -110,7 +108,11 @@ public abstract class Connection {
                 while (isNotStopped()) {
                     var proto = bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
                     // parsing might need some time wo we check again if connection is still active
-                    checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
+                    if (!isStopped && proto == null) {
+                        //todo at onConnectionClosed we get a null proto here before our connection gets shutdown
+                        // avoid throwing here if it is expected...
+                        throw new NullPointerException("Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
+                    }
                     if (isNotStopped()) {
                         NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
                         if (networkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
@@ -150,7 +152,9 @@ public abstract class Connection {
             NetworkEnvelope networkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, authorizationToken, networkMessage);
             synchronized (writeLock) {
                 bisq.network.protobuf.NetworkEnvelope proto = networkEnvelope.toProto();
-                checkNotNull(proto, "Proto from networkEnvelope.toProto() must not be null");
+                if (!isStopped && proto == null) {
+                    throw new NullPointerException("Proto from networkEnvelope.toProto() must not be null");
+                }
                 proto.writeDelimitedTo(outputStream);
                 outputStream.flush();
             }
