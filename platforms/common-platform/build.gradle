@@ -3,6 +3,10 @@ plugins {
     id 'maven-publish'
 }
 
+
+// As a platform, this enforces the versions defined below on ALL dependencies (incl. transitive)
+// https://docs.gradle.org/7.4.1/userguide/platforms.html#sub:platforms-vs-catalog
+// Note: this doesn't support constraints on plugin versions
 dependencies {
     constraints {
         /////////////////////////////////////////////////////////////////////////////////
@@ -22,20 +26,12 @@ dependencies {
         /////////////////////////////////////////////////////////////////////////////////
         // Protobuf dependency constraints
         /////////////////////////////////////////////////////////////////////////////////
-        api('com.google.protobuf:protobuf-gradle-plugin') {
-            version { require '0.8.18' }
-        }
-        api('com.google.protobuf:protobuf-java') {
-            version { require '3.19.4' }
-        }
+        api(libs.protobuf.java)
 
         /////////////////////////////////////////////////////////////////////////////////
         // Guava and transitive dependency constraints
         /////////////////////////////////////////////////////////////////////////////////
-        // TODO Version constraint currently not checked?
-        api('com.google.guava:guava') {
-            version { require '30.1.1-jre' }
-        }
+        api(libs.guava)
         // Declaring the guava dependency above will bring in the transitive dependencies below.
         // If some other dependency brings in other versions of the transitive dependencies below,
         // they should be excluded.

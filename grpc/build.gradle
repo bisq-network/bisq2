@@ -18,7 +18,7 @@ dependencies {
 
     implementation project(':application')
     implementation 'javax.annotation:javax.annotation-api'
-    implementation 'com.google.protobuf:protobuf-java'
+    implementation libs.protobuf.java
     implementation 'io.grpc:grpc-api'
     implementation 'io.grpc:grpc-core'
     implementation 'io.grpc:grpc-context'

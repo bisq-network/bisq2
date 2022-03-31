@@ -15,7 +15,7 @@ apply from: '../buildSrc/lombok-dependencies.gradle'
 dependencies {
     api platform(project(':platforms:common-platform'))
 
-    implementation 'com.google.protobuf:protobuf-java'
+    implementation libs.protobuf.java
     implementation libs.guava
     implementation 'com.typesafe:config'
     implementation 'org.jetbrains:annotations:23.0.0'

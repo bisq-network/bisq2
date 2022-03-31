@@ -24,10 +24,9 @@ dependencies {
     implementation project(':security')
     implementation project(':persistence')
 
-    implementation 'com.google.protobuf:protobuf-java'
+    implementation libs.protobuf.java
     implementation libs.guava
     implementation 'com.typesafe:config'
-    implementation 'com.google.protobuf:protobuf-java'
 
     implementation 'com.github.chimp1984:jsocks'
     implementation 'org.apache.httpcomponents:httpclient'

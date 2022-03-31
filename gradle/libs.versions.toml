@@ -1,18 +1,33 @@
 # Version Catalogs documentation: https://docs.gradle.org/7.4.1/userguide/platforms.html
 
+# Used in the [libraries] and [bundles] sections below using version.ref
+# See https://docs.gradle.org/7.4.1/userguide/rich_versions.html for keywords (strictly / required / prefer / reject)
+# Convention: mark all versions using 'strictly'. This ensures only one version is allowed in the dependency tree, even
+# when multiple versions are attempted to be brought in as transitive dependencies of other requirements.
 [versions]
-guava = '31.1-jre'
-i2p = '1.7.0'
-protobuf = '0.8.18'
+guava =         { strictly = '31.1-jre' }
+i2p =           { strictly = '1.7.0' }
+protobuf =      { strictly = '0.8.18' }
+protobuf-java = { strictly = '3.19.4' }
 
+# Referenced in subproject's build.gradle > dependencies block in the form 'implementation libs.guava'
+# Note: keys can contain dash (protobuf-java) but the dash is replaced by dot when referenced
+# in a build.gradle ('implementation libs.protobuf.java')
 [libraries]
-guava = { module = 'com.google.guava:guava', version.ref = 'guava'}
-i2p-streaming = { module = 'net.i2p.client:streaming', version.ref = 'i2p' }
-i2p-core = { module = 'net.i2p:i2p', version.ref = 'i2p' }
-i2p-router = { module = 'net.i2p:router', version.ref = 'i2p' }
+guava =             { module = 'com.google.guava:guava',            version.ref = 'guava' }
+i2p-streaming =     { module = 'net.i2p.client:streaming',          version.ref = 'i2p' }
+i2p-core =          { module = 'net.i2p:i2p',                       version.ref = 'i2p' }
+i2p-router =        { module = 'net.i2p:router',                    version.ref = 'i2p' }
+protobuf-java =     { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java' }
 
+# Defines groups of libs that are commonly used together
+# Referenced in dependencies block as 'implementation libs.bundles.i2p'
 [bundles]
 i2p = ['i2p-core', 'i2p-router', 'i2p-streaming']
 
+# Referenced in subproject's build.gradle > plugin block as alias: `alias(libs.plugins.protobuf)`
+# Note: plugin version constraints are not supported by the java-platform plugin, so cannot be enforced there. However,
+# since plugins don't bring other plugins as transitive dependencies, as long as they are loaded using the
+# `alias(libs.plugins.protobuf)` mechanism, there is no risk of loading multiple versions.
 [plugins]
 protobuf = { id = 'com.google.protobuf', version.ref = 'protobuf' }
