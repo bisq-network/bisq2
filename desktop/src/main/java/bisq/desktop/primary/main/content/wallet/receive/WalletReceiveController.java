@@ -35,6 +35,14 @@ public class WalletReceiveController implements Controller {
         view = new WalletReceiveView(model, this);
     }
 
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
+
     public void onGenerateNewAddress() {
         walletService.getNewAddress("")
                 .thenAccept(newAddress -> UIThread.run(() -> model.addNewAddress(newAddress)));

@@ -45,6 +45,14 @@ public class PortfolioController extends TabController {
     }
 
     @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
+
+    @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
         super.onNavigate(navigationTarget, data);
     }

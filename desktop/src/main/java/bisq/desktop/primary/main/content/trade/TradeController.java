@@ -49,6 +49,13 @@ public class TradeController extends TabController {
         offerbookController = new OfferbookController(applicationService);
     }
 
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
 
     @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {

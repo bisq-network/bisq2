@@ -81,7 +81,7 @@ public class ChatController implements Controller {
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
                 value -> chatService.setNotificationSetting(chatService.getPersistableStore().getSelectedChannel().get(), value));
 
@@ -164,7 +164,7 @@ public class ChatController implements Controller {
     }
 
     @Override
-    public void onViewDetached() {
+    public void onDeactivate() {
         notificationSettingSubscription.unsubscribe();
         selectedChannelPin.unbind();
         chatMessagesPin.unbind();

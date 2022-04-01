@@ -30,4 +30,12 @@ public class MarketsController implements Controller {
         model = new MarketsModel();
         view = new MarketsView(model, this);
     }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
 }

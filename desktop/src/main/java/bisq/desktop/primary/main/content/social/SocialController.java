@@ -51,6 +51,14 @@ public class SocialController extends TabController {
     }
 
     @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
+
+    @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case SETUP_INITIAL_USER_PROFILE -> {

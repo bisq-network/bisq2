@@ -33,12 +33,12 @@ public class TransportTypeController implements Controller {
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         model.updateLists();
     }
 
     @Override
-    public void onViewDetached() {
+    public void onDeactivate() {
         model.cleanup();
     }
 }

@@ -258,12 +258,12 @@ public class TakersSettlementSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             resetAndApplyData();
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
             model.selectedBaseSideAccount.set(null);
             model.selectedQuoteSideAccount.set(null);
             model.selectedBaseSideSettlementMethod.set(null);

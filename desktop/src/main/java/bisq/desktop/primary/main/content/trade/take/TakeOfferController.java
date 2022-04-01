@@ -101,7 +101,7 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         selectedBaseSideAccountSubscription = EasyBind.subscribe(settlementSelection.getSelectedBaseSideAccount(),
                 model::setSelectedBaseSideAccount);
         selectedQuoteSideAccountSubscription = EasyBind.subscribe(settlementSelection.getSelectedQuoteSideAccount(),
@@ -113,7 +113,7 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
     }
 
     @Override
-    public void onViewDetached() {
+    public void onDeactivate() {
         selectedBaseSideAccountSubscription.unsubscribe();
         selectedQuoteSideAccountSubscription.unsubscribe();
         selectedBaseSideSettlementMethodSubscription.unsubscribe();

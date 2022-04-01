@@ -49,6 +49,14 @@ public class ContentController extends NavigationController {
     }
 
     @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
+
+    @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case SOCIAL -> {

@@ -50,11 +50,11 @@ public class FilterBox {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
         }
 
         private void onSearch(String filterString) {

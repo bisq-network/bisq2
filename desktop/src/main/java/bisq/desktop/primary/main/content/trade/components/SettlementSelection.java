@@ -207,12 +207,12 @@ public class SettlementSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             resetAndApplyData();
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
             model.selectedBaseSideAccounts.clear();
             model.selectedQuoteSideAccounts.clear();
         }

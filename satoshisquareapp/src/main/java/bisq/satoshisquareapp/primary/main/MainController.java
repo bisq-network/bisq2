@@ -51,7 +51,7 @@ public class MainController implements Controller, Navigation.Listener {
         Navigation.addListener(NavigationTarget.ROOT, this);
     }
 
-    public void onViewAttached() {
+    public void onActivate() {
         String persisted = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
         if (persisted != null) {
             Navigation.navigateTo(NavigationTarget.valueOf(persisted));
@@ -60,10 +60,7 @@ public class MainController implements Controller, Navigation.Listener {
         }
     }
 
-    public void onViewDetached() {
-    }
-
-    public void onDomainInitialized() {
+    public void onDeactivate() {
     }
 
     @Override

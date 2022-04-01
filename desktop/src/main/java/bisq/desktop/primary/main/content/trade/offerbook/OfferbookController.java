@@ -67,7 +67,7 @@ public class OfferbookController implements Controller {
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         selectedMarketSubscription = EasyBind.subscribe(marketSelection.selectedMarketProperty(),
                 selectedMarket -> {
                     model.selectedMarket = selectedMarket;
@@ -90,7 +90,7 @@ public class OfferbookController implements Controller {
     }
 
     @Override
-    public void onViewDetached() {
+    public void onDeactivate() {
         selectedMarketSubscription.unsubscribe();
         directionSubscription.unsubscribe();
         offerListPin.unbind();

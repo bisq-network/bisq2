@@ -38,8 +38,12 @@ public class WalletTransactionsController implements NonCachingController {
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         walletService.listTransactions()
                 .thenAccept(txs -> UIThread.run(() -> model.addTransactions(txs)));
+    }
+
+    @Override
+    public void onDeactivate() {
     }
 }

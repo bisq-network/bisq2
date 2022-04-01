@@ -32,4 +32,11 @@ public class AboutController implements Controller {
         view = new AboutView(model, this);
     }
 
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
 }

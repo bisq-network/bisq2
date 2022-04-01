@@ -68,13 +68,13 @@ public class MarketSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             model.markets.setAll(model.settingsService.getMarkets());
             model.selectedMarket.set(model.settingsService.getSelectedMarket());
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
         }
 
         private void onSelectMarket(Market selected) {

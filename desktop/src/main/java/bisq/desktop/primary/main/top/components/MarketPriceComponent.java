@@ -79,6 +79,14 @@ public class MarketPriceComponent {
         }
 
         @Override
+        public void onActivate() {
+        }
+
+        @Override
+        public void onDeactivate() {
+        }
+
+        @Override
         public void onMarketPriceUpdate(Map<Market, MarketPrice> map) {
             UIThread.run(() -> model.applyMarketPriceMap(map));
         }

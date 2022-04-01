@@ -33,9 +33,11 @@ public class SplashController implements Controller {
         view = new SplashView(model, this);
     }
 
-    public void onViewAttached() {
+    @Override
+    public void onActivate() {
     }
 
-    public void onViewDetached() {
+    @Override
+    public void onDeactivate() {
     }
 }

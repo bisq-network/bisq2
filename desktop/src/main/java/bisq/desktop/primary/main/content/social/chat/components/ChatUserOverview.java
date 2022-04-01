@@ -79,7 +79,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             ChatUser chatUser = model.chatUser;
             if (chatUser == null) {
                 return;
@@ -94,7 +94,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
         }
     }
 

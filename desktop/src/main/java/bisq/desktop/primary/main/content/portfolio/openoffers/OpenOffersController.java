@@ -51,7 +51,7 @@ public class OpenOffersController implements Controller {
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         offerListPin = FxBindings.<OpenOffer, OpenOfferListItem>bind(model.getListItems())
                 .map(openOffer -> new OpenOfferListItem(openOffer, model.marketPriceService))
                 .to(openOfferService.getOpenOffers());
@@ -63,7 +63,7 @@ public class OpenOffersController implements Controller {
     }
 
     @Override
-    public void onViewDetached() {
+    public void onDeactivate() {
         offerListPin.unbind();
     }
 

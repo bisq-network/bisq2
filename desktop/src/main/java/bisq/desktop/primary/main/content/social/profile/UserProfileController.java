@@ -63,7 +63,7 @@ public class UserProfileController implements Controller {
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         model.createUserProfileVisible.set(false);
         model.channelAdminVisible.set(true);
         selectedUserProfileSubscription = EasyBind.subscribe(userProfileSelection.getSelectedUserProfile(),
@@ -73,7 +73,7 @@ public class UserProfileController implements Controller {
     }
 
     @Override
-    public void onViewDetached() {
+    public void onDeactivate() {
         selectedUserProfileSubscription.unsubscribe();
     }
 

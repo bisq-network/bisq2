@@ -84,14 +84,14 @@ public class ProtocolSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             if (model.selectedMarket != null) {
                 model.fillObservableList(ProtocolType.getProtocols(model.selectedMarket));
             }
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
         }
     }
 

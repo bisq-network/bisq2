@@ -92,7 +92,7 @@ public class AmountInput {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             if (model.isCreateOffer) {
                 model.amount.set(null);
             }
@@ -100,7 +100,7 @@ public class AmountInput {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
         }
 
         // View events

@@ -18,8 +18,8 @@
 package bisq.desktop.primary;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.JavaFxApplicationData;
 import bisq.desktop.common.Browser;
+import bisq.desktop.common.JavaFxApplicationData;
 import bisq.desktop.common.utils.DontShowAgainLookup;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
@@ -66,11 +66,15 @@ public class PrimaryStageController implements Controller {
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         SplashController splashController = new SplashController(applicationService);
         model.setView(splashController.getView());
 
         onStageReadyHandler.run();
+    }
+
+    @Override
+    public void onDeactivate() {
     }
 
     public void onDomainInitialized() {

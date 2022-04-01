@@ -71,7 +71,7 @@ public class UserProfileComboBox {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             selectedUserProfilePin = FxBindings.subscribe(userProfileService.getPersistableStore().getSelectedUserProfile(),
                     userProfile -> model.selectedUserProfile.set(new ListItem(userProfile)));
             userProfilesPin = FxBindings.<UserProfile, ListItem>bind(model.userProfiles)
@@ -80,7 +80,7 @@ public class UserProfileComboBox {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
             if (selectedUserProfilePin != null) {
                 selectedUserProfilePin.unbind();
             }

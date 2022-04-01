@@ -29,8 +29,8 @@ public class PublicChannelSelection extends ChannelSelection {
     public PublicChannelSelection(ChatService chatService) {
         super(new ChannelSelection.Controller(chatService, Res.get("social.publicChannels")) {
             @Override
-            public void onViewAttached() {
-                super.onViewAttached();
+            public void onActivate() {
+                super.onActivate();
                 channelsPin = FxBindings.<PublicChannel, Channel<?>>bind(model.channels)
                         .to(this.chatService.getPersistableStore().getPublicChannels());
 

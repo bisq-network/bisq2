@@ -60,13 +60,13 @@ public class InitialUserNameController implements Controller {
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         model.feedback.set("");
         onCreateTempIdentity();
     }
 
     @Override
-    public void onViewDetached() {
+    public void onDeactivate() {
         model.createProfileButtonDisable.unbind();
     }
 

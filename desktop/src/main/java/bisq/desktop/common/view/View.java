@@ -59,22 +59,22 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
         };
         root.sceneProperty().addListener(sceneChangeListener);
     }
-
-    private void onViewDetachedPrivate(M model, C controller) {
-        onViewDetachedInternal();
-        controller.onViewDetached();
-    }
-
-    private void onViewAttachedPrivate(M model, C controller) {
-        onViewAttachedInternal();
-        controller.onViewAttached();
-    }
-
     public R getRoot() {
         return root;
     }
 
-    // The internal methods should be only used by framework classes (like TabView)
+    private void onViewDetachedPrivate(M model, C controller) {
+        onViewDetachedInternal();
+        controller.onDeactivateInternal();
+    }
+
+    private void onViewAttachedPrivate(M model, C controller) {
+        onViewAttachedInternal();
+        controller.onActivateInternal();
+    }
+  
+ 
+    // The internal methods should be only used by framework classes (e.g. TabView)
     void onViewAttachedInternal() {
         onViewAttached();
     }

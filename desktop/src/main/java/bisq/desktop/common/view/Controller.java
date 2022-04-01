@@ -22,9 +22,16 @@ import javafx.scene.Parent;
 public interface Controller {
     View<? extends Parent, ? extends Model, ? extends Controller> getView();
 
-    default void onViewAttached() {
+    // The internal methods should be only used by framework classes (e.g. NavigationController)
+    default void onActivateInternal() {
+        onActivate();
     }
 
-    default void onViewDetached() {
+    default void onDeactivateInternal() {
+        onDeactivate();
     }
+
+    void onActivate();
+
+    void onDeactivate();
 }

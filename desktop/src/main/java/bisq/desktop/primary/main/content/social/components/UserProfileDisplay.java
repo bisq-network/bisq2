@@ -65,7 +65,7 @@ public class UserProfileDisplay {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             pin = FxBindings.subscribe(userProfileService.getPersistableStore().getSelectedUserProfile(),
                     userProfile -> {
                         model.userName.set(userProfile.identity().domainId());
@@ -78,7 +78,7 @@ public class UserProfileDisplay {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
             pin.unbind();
         }
     }

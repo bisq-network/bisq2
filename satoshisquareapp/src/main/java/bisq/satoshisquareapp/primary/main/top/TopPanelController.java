@@ -30,4 +30,12 @@ public class TopPanelController implements Controller {
         TopPanelModel model = new TopPanelModel();
         view = new TopPanelView(model, this, new MarketPriceComponent(applicationService.getMarketPriceService()).getRootPane());
     }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
 }

@@ -51,7 +51,7 @@ public abstract class ChannelSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             selectedChannelPin = FxBindings.subscribe(chatService.getPersistableStore().getSelectedChannel(),
                     channel -> model.selectedChannel.set(model.channels.stream()
                             .filter(currentChannel -> currentChannel.equals(channel))
@@ -61,7 +61,7 @@ public abstract class ChannelSelection {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
             selectedChannelPin.unbind();
             channelsPin.unbind();
         }

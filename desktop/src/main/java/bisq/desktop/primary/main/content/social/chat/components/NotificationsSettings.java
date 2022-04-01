@@ -67,11 +67,11 @@ public class NotificationsSettings {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
         }
 
         public void onSelected(NotificationSetting notificationSetting) {

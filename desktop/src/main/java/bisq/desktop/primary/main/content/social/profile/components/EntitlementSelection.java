@@ -95,7 +95,7 @@ public class EntitlementSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             model.tableVisible.set(false);
         }
 
@@ -105,7 +105,7 @@ public class EntitlementSelection {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
         }
 
         private CompletableFuture<Optional<Entitlement.ProofOfBurnProof>> onVerifyProofOfBurn(EntitlementItem entitlementItem,
