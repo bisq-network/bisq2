@@ -33,11 +33,7 @@ public class SocialView extends TabView<JFXTabPane, SocialModel, SocialControlle
     public SocialView(SocialModel model, SocialController controller) {
         super(new JFXTabPane(), model, controller);
 
-        selectedUserProfileListener = (observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                root.getTabs().remove(setupInitialUserProfileTab);
-            }
-        };
+        selectedUserProfileListener = (observable, oldValue, newValue) -> setTabs();
     }
 
     @Override
@@ -46,16 +42,25 @@ public class SocialView extends TabView<JFXTabPane, SocialModel, SocialControlle
         createOfferTab = createTab(Res.get("social.createOffer"), NavigationTarget.CREATE_SIMPLE_OFFER);
         chatTab = createTab(Res.get("social.chat"), NavigationTarget.CHAT);
         userProfileTab = createTab(Res.get("social.userProfile"), NavigationTarget.USER_PROFILE);
-        root.getTabs().setAll(setupInitialUserProfileTab, createOfferTab, chatTab, userProfileTab);
-
-        model.getSelectedUserProfile().addListener(selectedUserProfileListener);
     }
 
     @Override
     protected void onViewAttached() {
+        model.getSelectedUserProfile().addListener(selectedUserProfileListener);
+        setTabs();
+    }
+
+    private void setTabs() {
+        root.getTabs().clear();      
+        if (model.getSelectedUserProfile().get() == null) {
+            root.getTabs().setAll(setupInitialUserProfileTab);
+        } else {
+            root.getTabs().setAll(createOfferTab, chatTab, userProfileTab);
+        }
     }
 
     @Override
     protected void onViewDetached() {
+        model.getSelectedUserProfile().removeListener(selectedUserProfileListener);
     }
 }
