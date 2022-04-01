@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.view;
 
+import bisq.desktop.common.threading.UIThread;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -42,38 +43,39 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
         sceneChangeListener = (ov, oldValue, newScene) -> {
             if (oldValue == null && newScene != null) {
                 if (newScene.getWindow() != null) {
-                    onViewAttachedPrivate(model, controller);
-                    //  UIThread.run(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
+                    onViewAttachedPrivate();
+                    UIThread.run(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
                 } else {
                     // For overlays, we need to wait until window is available
                     windowChangeListener = (observable, oldValue1, newWindow) -> {
                         checkNotNull(newWindow, "Window must not be null");
-                        onViewAttachedPrivate(model, controller);
-                        // UIThread.run(() -> newScene.windowProperty().removeListener(View.this.windowChangeListener));
+                        onViewAttachedPrivate();
+                        UIThread.run(() -> newScene.windowProperty().removeListener(View.this.windowChangeListener));
                     };
                     newScene.windowProperty().addListener(windowChangeListener);
                 }
             } else if (oldValue != null && newScene == null) {
-                onViewDetachedPrivate(model, controller);
+                onViewDetachedPrivate();
             }
         };
         root.sceneProperty().addListener(sceneChangeListener);
     }
+
     public R getRoot() {
         return root;
     }
 
-    private void onViewDetachedPrivate(M model, C controller) {
+    private void onViewDetachedPrivate() {
         onViewDetachedInternal();
         controller.onDeactivateInternal();
     }
 
-    private void onViewAttachedPrivate(M model, C controller) {
+    private void onViewAttachedPrivate() {
         onViewAttachedInternal();
         controller.onActivateInternal();
     }
-  
- 
+
+
     // The internal methods should be only used by framework classes (e.g. TabView)
     void onViewAttachedInternal() {
         onViewAttached();
