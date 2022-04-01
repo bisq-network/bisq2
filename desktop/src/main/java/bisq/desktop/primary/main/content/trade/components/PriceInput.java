@@ -97,7 +97,7 @@ public class PriceInput {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             if (model.isCreateOffer) {
                 model.marketPriceService.addListener(this);
             }
@@ -105,7 +105,7 @@ public class PriceInput {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
             if (model.isCreateOffer) {
                 model.marketPriceService.removeListener(this);
             }
@@ -214,7 +214,7 @@ public class PriceInput {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             if (model.isCreateOffer) {
                 textInput.textProperty().addListener(textInputListener);
                 textInput.focusedProperty().addListener(focusListener);
@@ -229,7 +229,7 @@ public class PriceInput {
         }
 
         @Override
-        public void onViewDetached() {
+        protected void onViewDetached() {
             if (model.isCreateOffer) {
                 textInput.textProperty().removeListener(textInputListener);
                 textInput.focusedProperty().removeListener(focusListener);

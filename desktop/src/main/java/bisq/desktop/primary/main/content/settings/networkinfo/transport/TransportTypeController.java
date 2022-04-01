@@ -31,4 +31,14 @@ public class TransportTypeController implements Controller {
         model = new TransportTypeModel(applicationService, transportType);
         view = new TransportTypeView(model, this);
     }
+
+    @Override
+    public void onActivate() {
+        model.updateLists();
+    }
+
+    @Override
+    public void onDeactivate() {
+        model.cleanup();
+    }
 }

@@ -59,12 +59,12 @@ public class WalletBalanceComponent {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             balancePin = FxBindings.bind(model.balanceAsCoinProperty).to(walletService.getObservableBalanceAsCoin());
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
             balancePin.unbind();
         }
     }
@@ -85,6 +85,14 @@ public class WalletBalanceComponent {
             var descriptionLabel = new Label();
             descriptionLabel.textProperty().bind(model.formattedBalanceProperty);
             root.getChildren().add(descriptionLabel);
+        }
+
+        @Override
+        protected void onViewAttached() {
+        }
+
+        @Override
+        protected void onViewDetached() {
         }
     }
 }

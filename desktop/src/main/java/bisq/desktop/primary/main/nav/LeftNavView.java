@@ -75,9 +75,13 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
     }
 
     @Override
-    public void onViewAttached() {
+    protected void onViewAttached() {
         model.getNavigationTarget().addListener(navigationTargetChangeListener);
         Optional.ofNullable(map.get(model.getNavigationTarget().get())).ifPresent(toggleGroup::selectToggle);
+    }
+
+    @Override
+    protected void onViewDetached() {
     }
 
     private NavigationButton createNavigationButton(String title, NavigationTarget navigationTarget) {

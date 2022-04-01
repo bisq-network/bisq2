@@ -68,11 +68,15 @@ public class PrimaryStageController implements Controller {
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         SplashController splashController = new SplashController(applicationService);
         model.setView(splashController.getView());
 
         onStageReadyHandler.run();
+    }
+
+    @Override
+    public void onDeactivate() {
     }
 
     public void onDomainInitialized() {

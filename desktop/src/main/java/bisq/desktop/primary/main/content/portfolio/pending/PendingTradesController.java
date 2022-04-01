@@ -50,14 +50,14 @@ public class PendingTradesController implements InitWithDataController<PendingTr
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         protocolsPin = FxBindings.<Protocol<? extends ProtocolModel>, PendingTradeListItem>bind(model.getListItems())
                 .map(PendingTradeListItem::new)
                 .to(protocolService.getProtocols());
     }
 
     @Override
-    public void onViewDetached() {
+    public void onDeactivate() {
         protocolsPin.unbind();
     }
 }

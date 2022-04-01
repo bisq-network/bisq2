@@ -86,7 +86,7 @@ public class CreateOfferView extends View<ScrollPane, CreateOfferModel, CreateOf
     }
 
     @Override
-    public void onViewAttached() {
+    protected void onViewAttached() {
         model.getOfferProperty().addListener(offerListener);
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
         createOfferButton.visibleProperty().bind(model.createOfferButtonVisibleProperty());
@@ -96,7 +96,7 @@ public class CreateOfferView extends View<ScrollPane, CreateOfferModel, CreateOf
     }
 
     @Override
-    public void onViewDetached() {
+    protected void onViewDetached() {
         model.getOfferProperty().removeListener(offerListener);
         createOfferButton.setOnAction(null);
         createOfferButton.visibleProperty().unbind();

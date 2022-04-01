@@ -53,16 +53,14 @@ public class WalletController extends TabController {
     }
 
     @Override
-    public void onViewAttached() {
-        super.onViewAttached();
+    public void onActivate() {
         if (!isWalletReady()) {
             walletConfigPopup.show();
         }
     }
 
     @Override
-    public void onViewDetached() {
-        super.onViewDetached();
+    public void onDeactivate() {
     }
 
     @Override

@@ -46,14 +46,14 @@ public class ClosedTradesController implements Controller {
 
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         protocolsPin = FxBindings.<Protocol<? extends ProtocolModel>, ClosedTradeListItem>bind(model.getListItems())
                 .map(ClosedTradeListItem::new)
                 .to(protocolService.getProtocols());
     }
 
     @Override
-    public void onViewDetached() {
+    public void onDeactivate() {
         protocolsPin.unbind();
     }
 }

@@ -28,10 +28,4 @@ public class AboutModel implements Model {
 
     public AboutModel(DefaultApplicationService applicationService) {
     }
-
-    public void onViewAttached() {
-    }
-
-    public void onViewDetached() {
-    }
 }

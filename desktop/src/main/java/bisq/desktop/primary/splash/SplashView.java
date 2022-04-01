@@ -23,7 +23,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 
 public class SplashView extends View<VBox, SplashModel, SplashController> {
-
     public SplashView(SplashModel model, SplashController controller) {
         super(new VBox(), model, controller);
 
@@ -34,5 +33,13 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         logo.setId("image-splash-logo");
         // logo.setId("satoshisquare-splash");
         root.getChildren().addAll(logo);
+    }
+
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
     }
 }

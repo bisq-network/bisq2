@@ -33,11 +33,10 @@ public class AboutView extends View<VBox, AboutModel, AboutController> {
     }
 
     @Override
-    public void onViewAttached() {
+    protected void onViewAttached() {
     }
 
     @Override
     protected void onViewDetached() {
     }
-
 }

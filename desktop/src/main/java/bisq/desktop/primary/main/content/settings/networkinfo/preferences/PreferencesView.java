@@ -33,11 +33,10 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     }
 
     @Override
-    public void onViewAttached() {
+    protected void onViewAttached() {
     }
 
     @Override
     protected void onViewDetached() {
     }
-
 }

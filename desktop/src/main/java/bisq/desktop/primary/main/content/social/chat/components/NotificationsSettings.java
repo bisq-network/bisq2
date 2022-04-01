@@ -67,11 +67,11 @@ public class NotificationsSettings {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
         }
 
         public void onSelected(NotificationSetting notificationSetting) {
@@ -146,7 +146,7 @@ public class NotificationsSettings {
 
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             model.channel.addListener(channelChangeListener);
             toggleGroup.selectedToggleProperty().addListener(toggleListener);
         }

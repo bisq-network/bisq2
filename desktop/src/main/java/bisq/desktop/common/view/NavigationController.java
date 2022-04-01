@@ -48,6 +48,18 @@ public abstract class NavigationController implements Controller, Navigation.Lis
         }
     }
 
+    @Override
+    public void onActivateInternal() {
+        Navigation.addListener(host, this);
+        onActivate();
+    }
+
+    @Override
+    public void onDeactivateInternal() {
+        Navigation.removeListener(host, this);
+        onDeactivate();
+    }
+
     protected Optional<Controller> findController(NavigationTarget navigationTarget, Optional<Object> data) {
         if (controllerCache.containsKey(navigationTarget)) {
             Controller controller = controllerCache.get(navigationTarget);
@@ -68,16 +80,6 @@ public abstract class NavigationController implements Controller, Navigation.Lis
                         return controller;
                     });
         }
-    }
-
-    @Override
-    public void onViewAttached() {
-        Navigation.addListener(host, this);
-    }
-
-    @Override
-    public void onViewDetached() {
-        Navigation.removeListener(host, this);
     }
 
     protected abstract Optional<? extends Controller> createController(NavigationTarget navigationTarget);

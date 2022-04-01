@@ -71,13 +71,13 @@ public class UserProfileSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             userProfilesPin = FxBindings.<UserProfile, UserProfile>bind(model.userProfiles).to(userProfileService.getPersistableStore().getUserProfiles());
             selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(userProfileService.getPersistableStore().getSelectedUserProfile());
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
             userProfilesPin.unbind();
             selectedUserProfilePin.unbind();
         }
@@ -126,7 +126,7 @@ public class UserProfileSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             comboBox.setOnAction(e -> controller.onSelected(comboBox.getSelectionModel().getSelectedItem()));
             subscription = EasyBind.subscribe(model.selectedUserProfile,
                     selected -> UIThread.runLater(() -> comboBox.getSelectionModel().select(selected)));

@@ -59,4 +59,12 @@ public class WalletTransactionsView extends View<VBox, WalletTransactionsModel, 
                 .valuePropertySupplier(WalletTransactionListItem::confirmationsProperty)
                 .build());
     }
+
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
+    }
 }

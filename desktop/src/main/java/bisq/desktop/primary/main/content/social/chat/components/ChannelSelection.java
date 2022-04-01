@@ -51,7 +51,7 @@ public abstract class ChannelSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             selectedChannelPin = FxBindings.subscribe(chatService.getPersistableStore().getSelectedChannel(),
                     channel -> model.selectedChannel.set(model.channels.stream()
                             .filter(currentChannel -> currentChannel.equals(channel))
@@ -61,7 +61,7 @@ public abstract class ChannelSelection {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
             selectedChannelPin.unbind();
             channelsPin.unbind();
         }
@@ -129,7 +129,7 @@ public abstract class ChannelSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             subscription = EasyBind.subscribe(listView.getSelectionModel().selectedItemProperty(), controller::onSelected);
             // We cannot use binding for listView.getSelectionModel().selectedItemProperty() 
             // See: https://stackoverflow.com/questions/32782065/binding-a-javafx-listviews-selection-index-to-an-integer-property#32782145

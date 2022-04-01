@@ -77,11 +77,11 @@ public class WalletConfigPopup extends Popup {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
         }
 
         private void onConnectToWallet() {
@@ -160,6 +160,14 @@ public class WalletConfigPopup extends Popup {
             popup.actionButtonText(Res.get("wallet.config.connect"));
             popup.onAction(controller::onConnectToWallet);
             popup.doCloseOnAction(false);
+        }
+
+        @Override
+        protected void onViewAttached() {
+        }
+
+        @Override
+        protected void onViewDetached() {
         }
 
         private void addContent() {

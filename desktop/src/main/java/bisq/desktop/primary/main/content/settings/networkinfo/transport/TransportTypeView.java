@@ -135,4 +135,12 @@ public class TransportTypeView extends View<BisqGridPane, TransportTypeModel, Tr
                 .comparator(NodeListItem::compareNumConnections)
                 .build());
     }
+
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
+    }
 }

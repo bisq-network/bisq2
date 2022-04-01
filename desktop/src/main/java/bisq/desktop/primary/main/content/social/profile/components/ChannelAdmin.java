@@ -66,13 +66,13 @@ public class ChannelAdmin {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile)
                     .to(userProfileService.getPersistableStore().getSelectedUserProfile());
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
             selectedUserProfilePin.unbind();
         }
 
@@ -128,7 +128,7 @@ public class ChannelAdmin {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             addChannelButton.setOnAction(e -> controller.addChannel());
             channelNameField.textProperty().bindBidirectional(model.channelName);
             descriptionField.textProperty().bindBidirectional(model.description);

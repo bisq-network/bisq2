@@ -34,6 +34,14 @@ public class WalletSendController implements Controller {
         view = new WalletSendView(model, this);
     }
 
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
+
     public void onSendButtonClicked() {
         walletService.sendToAddress(model.getAddress(), Double.parseDouble(model.getAmount()));
     }

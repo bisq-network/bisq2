@@ -81,7 +81,7 @@ public class TradeIntentView extends View<VBox, TradeIntentModel, TradeIntentCon
     }
 
     @Override
-    public void onViewAttached() {
+    protected void onViewAttached() {
         tableView.getSelectionModel().selectedItemProperty().addListener(dataTableSelectedItemListener);
         addDataResultLabel.textProperty().bind(model.getAddDataResultProperty());
     }

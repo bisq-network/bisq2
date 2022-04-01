@@ -50,7 +50,7 @@ public class PendingTradesView extends View<VBox, PendingTradesModel, PendingTra
     }
 
     @Override
-    public void onViewAttached() {
+    protected void onViewAttached() {
     }
 
     @Override

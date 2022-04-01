@@ -38,8 +38,12 @@ public class WalletUtxosController implements NonCachingController {
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         walletService.listUnspent()
                 .thenAccept(utxos -> UIThread.run(() -> model.addUtxos(utxos)));
+    }
+
+    @Override
+    public void onDeactivate() {
     }
 }

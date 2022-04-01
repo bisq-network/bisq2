@@ -88,7 +88,7 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         model.getCreateOfferButtonVisibleProperty().set(model.getSelectedProtocolType() != null);
 
         selectedMarketSubscription = EasyBind.subscribe(marketSelection.selectedMarketProperty(),
@@ -129,7 +129,7 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
     }
 
     @Override
-    public void onViewDetached() {
+    public void onDeactivate() {
         selectedMarketSubscription.unsubscribe();
         directionSubscription.unsubscribe();
         protocolSelectionSubscription.unsubscribe();

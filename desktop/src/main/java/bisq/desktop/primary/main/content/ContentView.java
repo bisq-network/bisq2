@@ -33,4 +33,12 @@ public class ContentView extends View<HBox, ContentModel, ContentController> {
             root.getChildren().setAll(newValue.getRoot());
         });
     }
+
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
+    }
 }

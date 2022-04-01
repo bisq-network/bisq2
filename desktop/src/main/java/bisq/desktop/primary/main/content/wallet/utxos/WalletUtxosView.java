@@ -39,6 +39,14 @@ public class WalletUtxosView extends View<VBox, WalletUtxosModel, WalletUtxosCon
         root.getChildren().add(tableView);
     }
 
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
+    }
+
     private void createAndBindColumns() {
         TableColumn<WalletUtxoListItem, String> txIdColumn = new TableColumn<>(Res.get("wallet.column.txId"));
         txIdColumn.setCellValueFactory(param -> param.getValue().txIdProperty());

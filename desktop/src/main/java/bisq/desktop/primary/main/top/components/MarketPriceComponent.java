@@ -79,6 +79,14 @@ public class MarketPriceComponent {
         }
 
         @Override
+        public void onActivate() {
+        }
+
+        @Override
+        public void onDeactivate() {
+        }
+
+        @Override
         public void onMarketPriceUpdate(Map<Market, MarketPrice> map) {
             UIThread.run(() -> model.applyMarketPriceMap(map));
         }
@@ -142,6 +150,14 @@ public class MarketPriceComponent {
             root.getChildren().addAll(comboBox, marketPriceLabel);
 
             model.selected.addListener((o, old, newValue) -> comboBox.getSelectionModel().select(newValue));
+        }
+
+        @Override
+        protected void onViewAttached() {
+        }
+
+        @Override
+        protected void onViewDetached() {
         }
     }
 

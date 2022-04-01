@@ -70,7 +70,7 @@ public class TransportTypeModel implements Model {
     private final Map<String, Node.Listener> nodeListenersByNodeId = new HashMap<>();
     private Collection<Node> allNodes = new ArrayList<>();
 
-
+    //todo move behaviour code to controller
     public TransportTypeModel(DefaultApplicationService applicationService, Transport.Type transportType) {
         networkService = applicationService.getNetworkService();
         identityService = applicationService.getIdentityService();
@@ -115,9 +115,16 @@ public class TransportTypeModel implements Model {
             addNodeListener(node);
             updateLists();
         });
+
+        networkService.findServiceNode(transportType)
+                .map(ServiceNode::getNodesById)
+                .ifPresent(nodesById -> nodesById.addListener(nodesByIdListener));
+
+        updateLists();
+        allNodes.forEach(this::addNodeListener);
     }
 
-    private void updateLists() {
+    void updateLists() {
         allNodes = new ArrayList<>(serviceNode.getNodesById().getAllNodes());
         connectionListItems.setAll(allNodes.stream()
                 .flatMap(node -> node.getAllConnections().map(c -> new Pair<>(c, node.getNodeId())))
@@ -130,15 +137,13 @@ public class TransportTypeModel implements Model {
                 .collect(Collectors.toList()));
     }
 
-    public void onViewAttached() {
+     void cleanup() {
+        allNodes.forEach(node -> node.removeListener(nodeListenersByNodeId.get(node.getNodeId())));
         networkService.findServiceNode(transportType)
                 .map(ServiceNode::getNodesById)
-                .ifPresent(nodesById -> nodesById.addListener(nodesByIdListener));
-
-        updateLists();
-        allNodes.forEach(this::addNodeListener);
+                .ifPresent(nodesById -> nodesById.removeListener(nodesByIdListener));
     }
-
+    
     private void addNodeListener(Node node) {
         Node.Listener listener = new Node.Listener() {
             @Override
@@ -180,13 +185,6 @@ public class TransportTypeModel implements Model {
         };
         node.addListener(listener);
         nodeListenersByNodeId.put(node.getNodeId(), listener);
-    }
-
-    public void onViewDetached() {
-        allNodes.forEach(node -> node.removeListener(nodeListenersByNodeId.get(node.getNodeId())));
-        networkService.findServiceNode(transportType)
-                .map(ServiceNode::getNodesById)
-                .ifPresent(nodesById -> nodesById.removeListener(nodesByIdListener));
     }
 
     private void maybeUpdateMyAddress(Node node) {

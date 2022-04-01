@@ -40,6 +40,14 @@ public class LeftNavController implements Controller, Navigation.Listener {
         Navigation.addListener(NavigationTarget.ROOT, this);
     }
 
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
+
     void select(NavigationTarget navigationTarget) {
         model.select(navigationTarget);
         Navigation.navigateTo(navigationTarget);

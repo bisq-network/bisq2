@@ -79,11 +79,11 @@ public class ChannelInfo {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
         }
 
         public void onUndoIgnoreUser(ChatUser chatUser) {
@@ -226,7 +226,7 @@ public class ChannelInfo {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             model.channel.addListener(channelChangeListener);
         }
 

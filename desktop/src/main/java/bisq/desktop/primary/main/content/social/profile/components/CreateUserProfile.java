@@ -81,7 +81,7 @@ public class CreateUserProfile {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             reset();
             model.feedback.set("");
             onCreateIdentity();
@@ -91,7 +91,7 @@ public class CreateUserProfile {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
             model.createProfileButtonDisable.unbind();
         }
 
@@ -204,7 +204,7 @@ public class CreateUserProfile {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             generateNewIdentityButton.disableProperty().bind(model.generateNewIdentityButtonDisable);
             entitlementButton.setOnAction(e -> controller.onShowEntitlementSelection());
             entitlementButton.visibleProperty().bind(model.entitlementSelectionVisible.not());

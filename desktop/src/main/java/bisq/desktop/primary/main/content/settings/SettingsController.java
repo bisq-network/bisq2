@@ -45,6 +45,14 @@ public class SettingsController extends TabController {
         view = new SettingsView(model, this);
     }
 
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
+
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case PREFERENCES -> {

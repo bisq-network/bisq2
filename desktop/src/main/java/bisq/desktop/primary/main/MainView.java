@@ -26,7 +26,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class MainView extends View<VBox, MainModel, MainController> {
-
     public MainView(MainModel model,
                     MainController controller,
                     ContentView contentView,
@@ -42,5 +41,13 @@ public class MainView extends View<VBox, MainModel, MainController> {
 
         VBox.setVgrow(leftNavAndContentBox, Priority.ALWAYS);
         root.getChildren().addAll(topPanelView.getRoot(), leftNavAndContentBox);
+    }
+
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
     }
 }

@@ -82,7 +82,7 @@ public class DirectionSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             if (model.selectedMarket != null) {
                 model.baseCode.set(model.selectedMarket.baseCurrencyCode());
             }
@@ -92,7 +92,7 @@ public class DirectionSelection {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
         }
 
         private void onBuySelected() {
@@ -157,7 +157,7 @@ public class DirectionSelection {
 
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             if (model.isCreateOffer) {
                 buy.setOnAction(e -> controller.onBuySelected());
                 sell.setOnAction(e -> controller.onSellSelected());
@@ -180,7 +180,7 @@ public class DirectionSelection {
         }
 
         @Override
-        public void onViewDetached() {
+        protected void onViewDetached() {
             if (model.isCreateOffer) {
                 buy.setOnAction(null);
                 sell.setOnAction(null);

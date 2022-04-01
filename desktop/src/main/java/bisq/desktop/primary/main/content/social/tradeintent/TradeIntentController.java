@@ -66,14 +66,14 @@ public class TradeIntentController implements Controller/*, ChatService.Listener
     }
 
     @Override
-    public void onViewAttached() {
+    public void onActivate() {
         listItemsPin = FxBindings.<TradeIntent, TradeIntentListItem>bind(model.getListItems())
                 .map(TradeIntentListItem::new)
                 .to(tradeIntentListingsService.getTradeIntents());
     }
 
     @Override
-    public void onViewDetached() {
+    public void onDeactivate() {
         listItemsPin.unbind();
     }
 

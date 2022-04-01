@@ -40,12 +40,10 @@ public class PortfolioView extends TabView<JFXTabPane, PortfolioModel, Portfolio
     }
 
     @Override
-    public void onViewAttached() {
-        super.onViewAttached();
+    protected void onViewAttached() {
     }
 
     @Override
-    public void onViewDetached() {
-        super.onViewDetached();
+    protected void onViewDetached() {
     }
 }

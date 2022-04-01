@@ -31,4 +31,12 @@ public class PreferencesController implements Controller {
         model = new PreferencesModel(applicationService);
         view = new PreferencesView(model, this);
     }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
 }

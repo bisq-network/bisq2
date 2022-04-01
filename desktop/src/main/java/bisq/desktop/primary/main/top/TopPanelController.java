@@ -33,4 +33,12 @@ public class TopPanelController implements Controller {
         var walletBalanceComponent = new WalletBalanceComponent(applicationService.getWalletService());
         view = new TopPanelView(model, this, marketPriceComponent.getRootPane(), walletBalanceComponent.getRootPane());
     }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
 }

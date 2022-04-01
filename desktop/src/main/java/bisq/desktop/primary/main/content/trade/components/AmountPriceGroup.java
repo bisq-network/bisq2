@@ -130,7 +130,7 @@ public class AmountPriceGroup {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             if (model.isCreateOffer) {
                 model.baseSideAmount.addListener(baseCurrencyAmountListener);
                 model.quoteSideAmount.addListener(quoteCurrencyAmountListener);
@@ -139,7 +139,7 @@ public class AmountPriceGroup {
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
             if (model.isCreateOffer) {
                 model.baseSideAmount.removeListener(baseCurrencyAmountListener);
                 model.quoteSideAmount.removeListener(quoteCurrencyAmountListener);
@@ -219,13 +219,15 @@ public class AmountPriceGroup {
             root.getChildren().addAll(headline, hBox);
         }
 
-        public void onViewAttached() {
+        @Override
+        protected void onViewAttached() {
             if (!model.isCreateOffer) {
                 headline.setText(Res.get("takeOffer.amountAndPrice"));
             }
         }
 
-        public void onViewDetached() {
+        @Override
+        protected void onViewDetached() {
         }
     }
 }

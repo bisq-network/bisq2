@@ -258,12 +258,12 @@ public class TakersSettlementSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        public void onActivate() {
             resetAndApplyData();
         }
 
         @Override
-        public void onViewDetached() {
+        public void onDeactivate() {
             model.selectedBaseSideAccount.set(null);
             model.selectedQuoteSideAccount.set(null);
             model.selectedBaseSideSettlementMethod.set(null);
@@ -385,7 +385,7 @@ public class TakersSettlementSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             baseSideAccountsComboBox.setOnAction(e -> controller.onAccountSelectionChanged(
                     baseSideAccountsComboBox.getSelectionModel().getSelectedItem(), true));
             quoteSideAccountsComboBox.setOnAction(e -> controller.onAccountSelectionChanged(
@@ -420,7 +420,7 @@ public class TakersSettlementSelection {
         }
 
         @Override
-        public void onViewDetached() {
+        protected void onViewDetached() {
             baseSideAccountsComboBox.setOnAction(null);
             quoteSideAccountsComboBox.setOnAction(null);
             baseSideSettlementComboBox.setOnAction(null);
