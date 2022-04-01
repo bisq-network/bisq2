@@ -21,51 +21,41 @@ import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.NavigationTargetTab;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
+import bisq.social.user.profile.UserProfile;
 import com.jfoenix.controls.JFXTabPane;
 import javafx.beans.value.ChangeListener;
 
-import javax.annotation.Nullable;
-
 public class SocialView extends TabView<JFXTabPane, SocialModel, SocialController> {
 
-    private final ChangeListener<Boolean> showSetupInitialUserProfileTabListener;
-    @Nullable
-    private NavigationTargetTab setupInitialUserProfileTab;
-    private NavigationTargetTab chatTab, tradeIntentTab, userProfileTab;
+    private NavigationTargetTab setupInitialUserProfileTab, chatTab, createOfferTab, userProfileTab;
+    private ChangeListener<UserProfile> selectedUserProfileListener;
 
     public SocialView(SocialModel model, SocialController controller) {
         super(new JFXTabPane(), model, controller);
 
-        showSetupInitialUserProfileTabListener = (observable, oldValue, newValue) -> {
-            if (!newValue) {
+        selectedUserProfileListener = (observable, oldValue, newValue) -> {
+            if (newValue != null) {
                 root.getTabs().remove(setupInitialUserProfileTab);
-                root.getTabs().setAll(chatTab, tradeIntentTab, userProfileTab);
             }
         };
     }
 
     @Override
     protected void createAndAddTabs() {
+        setupInitialUserProfileTab = createTab(Res.get("social.setupInitialUserProfile"), NavigationTarget.SETUP_INITIAL_USER_PROFILE);
+        createOfferTab = createTab(Res.get("social.createOffer"), NavigationTarget.CREATE_SIMPLE_OFFER);
         chatTab = createTab(Res.get("social.chat"), NavigationTarget.CHAT);
-        tradeIntentTab = createTab(Res.get("social.tradeIntent"), NavigationTarget.TRADE_INTENT);
         userProfileTab = createTab(Res.get("social.userProfile"), NavigationTarget.USER_PROFILE);
+        root.getTabs().setAll(setupInitialUserProfileTab, createOfferTab, chatTab, userProfileTab);
+
+        model.getSelectedUserProfile().addListener(selectedUserProfileListener);
     }
 
     @Override
     protected void onViewAttached() {
-        if (model.showSetupInitialUserProfileTab.get()) {
-            setupInitialUserProfileTab = createTab(Res.get("social.setupInitialUserProfile"), NavigationTarget.SETUP_INITIAL_USER_PROFILE);
-            root.getTabs().add(setupInitialUserProfileTab);
-            model.showSetupInitialUserProfileTab.addListener(showSetupInitialUserProfileTabListener);
-        } else {
-            root.getTabs().setAll(chatTab, tradeIntentTab, userProfileTab);
-        }
     }
 
     @Override
     protected void onViewDetached() {
-        if (setupInitialUserProfileTab != null) {
-            model.showSetupInitialUserProfileTab.removeListener(showSetupInitialUserProfileTabListener);
-        }
     }
 }
