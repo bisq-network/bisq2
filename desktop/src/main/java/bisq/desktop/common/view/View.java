@@ -42,28 +42,32 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
         sceneChangeListener = (ov, oldValue, newScene) -> {
             if (oldValue == null && newScene != null) {
                 if (newScene.getWindow() != null) {
-                    onViewAttachedInternal();
-                    controller.onViewAttached();
-                    model.onViewAttached();
+                    onViewAttachedPrivate(model, controller);
                     //  UIThread.run(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
                 } else {
                     // For overlays, we need to wait until window is available
                     windowChangeListener = (observable, oldValue1, newWindow) -> {
                         checkNotNull(newWindow, "Window must not be null");
-                        onViewAttachedInternal();   // We invert the order at deactivate as we want to remove listeners in view first
-                        controller.onViewAttached();
-                        model.onViewAttached();
+                        onViewAttachedPrivate(model, controller);
                         // UIThread.run(() -> newScene.windowProperty().removeListener(View.this.windowChangeListener));
                     };
                     newScene.windowProperty().addListener(windowChangeListener);
                 }
             } else if (oldValue != null && newScene == null) {
-                onViewDetachedInternal();
-                controller.onViewDetached();
-                model.onViewDetached();
+                onViewDetachedPrivate(model, controller);
             }
         };
         root.sceneProperty().addListener(sceneChangeListener);
+    }
+
+    private void onViewDetachedPrivate(M model, C controller) {
+        onViewDetachedInternal();
+        controller.onViewDetached();
+    }
+
+    private void onViewAttachedPrivate(M model, C controller) {
+        onViewAttachedInternal();
+        controller.onViewAttached();
     }
 
     public R getRoot() {

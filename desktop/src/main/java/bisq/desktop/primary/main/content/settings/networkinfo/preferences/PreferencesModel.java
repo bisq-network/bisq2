@@ -28,10 +28,4 @@ public class PreferencesModel implements Model {
 
     public PreferencesModel(DefaultApplicationService applicationService) {
     }
-
-    public void onViewAttached() {
-    }
-
-    public void onViewDetached() {
-    }
 }
