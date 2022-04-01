@@ -36,9 +36,11 @@ public class MainController implements Controller, Navigation.Listener {
     @Getter
     private final MainView view;
     private final SettingsService settingsService;
+    private final DefaultApplicationService applicationService;
 
     public MainController(DefaultApplicationService applicationService) {
         settingsService = applicationService.getSettingsService();
+        this.applicationService = applicationService;
         ContentController contentController = new ContentController(applicationService);
         TopPanelController topPanelController = new TopPanelController(applicationService);
 
@@ -56,7 +58,7 @@ public class MainController implements Controller, Navigation.Listener {
         if (persisted != null) {
             Navigation.navigateTo(NavigationTarget.valueOf(persisted));
         } else {
-            Navigation.navigateTo(NavigationTarget.CHAT);
+            Navigation.navigateTo(NavigationTarget.SETUP_INITIAL_USER_PROFILE);
         }
     }
 

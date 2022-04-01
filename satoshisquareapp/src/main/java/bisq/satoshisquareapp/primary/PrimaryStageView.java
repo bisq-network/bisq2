@@ -23,11 +23,14 @@ import bisq.desktop.common.utils.KeyCodeUtils;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.layout.Layout;
+import bisq.desktop.primary.main.content.social.init.InitialUserNameView;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +45,9 @@ public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, Primar
 
     public PrimaryStageView(PrimaryStageModel model, PrimaryStageController controller, Stage stage) {
         super(new AnchorPane(), model, controller);
+
+        InitialUserNameView.alignment = Pos.CENTER;
+        InitialUserNameView.textAlignment = TextAlignment.CENTER.CENTER;
 
         root.getStyleClass().add("content-pane");
         this.stage = stage;

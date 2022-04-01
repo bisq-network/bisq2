@@ -18,14 +18,15 @@
 package bisq.desktop.primary.main.content.social;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.Navigation;
+import bisq.common.observable.Pin;
 import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.social.chat.ChatController;
+import bisq.desktop.primary.main.content.social.createoffer.CreateSimpleOfferController;
 import bisq.desktop.primary.main.content.social.init.InitialUserNameController;
 import bisq.desktop.primary.main.content.social.profile.UserProfileController;
-import bisq.desktop.primary.main.content.social.tradeintent.TradeIntentController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,6 +39,7 @@ public class SocialController extends TabController {
     private final SocialModel model;
     @Getter
     private final SocialView view;
+    private Pin selectedUserProfilePin;
 
     public SocialController(DefaultApplicationService applicationService) {
         super(NavigationTarget.SOCIAL);
@@ -46,34 +48,30 @@ public class SocialController extends TabController {
 
         model = new SocialModel(applicationService.getUserProfileService());
         view = new SocialView(model, this);
-
-        model.showSetupInitialUserProfileTab.set(applicationService.getUserProfileService().isDefaultUserProfileMissing());
     }
 
     @Override
     public void onActivate() {
+        selectedUserProfilePin = FxBindings.bind(model.getSelectedUserProfile())
+                .to(applicationService.getUserProfileService().getPersistableStore().getSelectedUserProfile());
     }
 
     @Override
     public void onDeactivate() {
+        selectedUserProfilePin.unbind();
     }
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case SETUP_INITIAL_USER_PROFILE -> {
-                return Optional.of(new InitialUserNameController(applicationService,
-                        false,
-                        () -> {
-                            model.showSetupInitialUserProfileTab.set(false);
-                            Navigation.navigateTo(NavigationTarget.CHAT);
-                        }));
+                return Optional.of(new InitialUserNameController(applicationService));
+            }
+            case CREATE_SIMPLE_OFFER -> {
+                return Optional.of(new CreateSimpleOfferController(applicationService));
             }
             case CHAT -> {
                 return Optional.of(new ChatController(applicationService));
-            }
-            case TRADE_INTENT -> {
-                return Optional.of(new TradeIntentController(applicationService));
             }
             case USER_PROFILE -> {
                 return Optional.of(new UserProfileController(applicationService));

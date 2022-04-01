@@ -63,7 +63,11 @@ public class UserNameGenerator {
         int nounIndexInt = nounsIndex.mod(MAX_INTEGER).intValue() % nouns.size();
         int appendixInt = appendixIndex.mod(MAX_INTEGER).intValue();
         appendixInt = appendixInt % 1000;
-        return adverbs.get(adverbsIndexInt) + adjectives.get(adjectiveIndexInt) + nouns.get(nounIndexInt) + appendixInt;
+        String separator = "-";
+        return adverbs.get(adverbsIndexInt) + separator +
+                adjectives.get(adjectiveIndexInt) + separator +
+                nouns.get(nounIndexInt) + separator +
+                appendixInt;
     }
 
     @VisibleForTesting
