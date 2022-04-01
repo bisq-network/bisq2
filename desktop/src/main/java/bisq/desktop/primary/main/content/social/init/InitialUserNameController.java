@@ -20,6 +20,8 @@ package bisq.desktop.primary.main.content.social.init;
 import bisq.application.DefaultApplicationService;
 import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
+import bisq.desktop.Navigation;
+import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -43,19 +45,15 @@ public class InitialUserNameController implements Controller {
     @Getter
     private final InitialUserNameView view;
     private final UserProfileService userProfileService;
-    private final Runnable onCompleteHandler;
     private final KeyPairService keyPairService;
     private final ChatService chatService;
 
-    public InitialUserNameController(DefaultApplicationService applicationService, 
-                                     boolean useCenterLayout, 
-                                     Runnable onCompleteHandler) {
+    public InitialUserNameController(DefaultApplicationService applicationService) {
         keyPairService = applicationService.getKeyPairService();
         userProfileService = applicationService.getUserProfileService();
         chatService = applicationService.getChatService();
-        this.onCompleteHandler = onCompleteHandler;
 
-        model = new InitialUserNameModel(useCenterLayout);
+        model = new InitialUserNameModel();
         view = new InitialUserNameView(model, this);
     }
 
@@ -84,7 +82,7 @@ public class InitialUserNameController implements Controller {
                         chatService.maybeAddDummyChannels();
                         checkArgument(userProfile.identity().domainId().equals(useName));
                         model.feedback.set(Res.get("social.createUserProfile.success", useName));
-                        UIScheduler.run(onCompleteHandler).after(100);
+                        UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget.CREATE_SIMPLE_OFFER)).after(100);
                     });
                 });
     }

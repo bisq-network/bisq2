@@ -32,6 +32,9 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 public class InitialUserNameView extends View<VBox, InitialUserNameModel, InitialUserNameController> {
+    public static Pos alignment = Pos.TOP_LEFT;
+    public static TextAlignment textAlignment = TextAlignment.LEFT;
+
     private final ImageView roboIconImageView;
     private final BisqButton createUserButton;
     private final BisqLabel feedbackLabel;
@@ -43,9 +46,7 @@ public class InitialUserNameView extends View<VBox, InitialUserNameModel, Initia
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
-        if (model.useCenterLayout) {
-            root.setAlignment(Pos.CENTER);
-        }
+        root.setAlignment(alignment);
         root.getStyleClass().add("content-pane");
 
         BisqLabel headline = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.headline"));
@@ -63,17 +64,12 @@ public class InitialUserNameView extends View<VBox, InitialUserNameModel, Initia
         VBox.setMargin(userNameInputField, new Insets(10, 0, 10, 0));
 
         BisqLabel infoLabel = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.info"));
-        if (model.useCenterLayout) {
-            infoLabel.setTextAlignment(TextAlignment.CENTER);
-        }
+        infoLabel.setTextAlignment(textAlignment);
         VBox.setMargin(infoLabel, new Insets(0, 0, 20, 0));
 
         BisqLabel tryOtherInfoLabel = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.info"));
-        if (model.useCenterLayout) {
-            tryOtherInfoLabel.setTextAlignment(TextAlignment.CENTER);
-        }
+        tryOtherInfoLabel.setTextAlignment(textAlignment);
         tryOtherButton = new BisqButton(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.button"));
-        tryOtherButton.getStyleClass().add("action-button");
 
         createUserButton = new BisqButton(Res.get("satoshisquareapp.setDefaultUserProfile.done"));
         createUserButton.disableProperty().bind(userNameInputField.textProperty().isEmpty());
