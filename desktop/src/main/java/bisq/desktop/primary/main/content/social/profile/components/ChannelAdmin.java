@@ -128,7 +128,7 @@ public class ChannelAdmin {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             addChannelButton.setOnAction(e -> controller.addChannel());
             channelNameField.textProperty().bindBidirectional(model.channelName);
             descriptionField.textProperty().bindBidirectional(model.description);

@@ -50,7 +50,7 @@ public class ClosedTradesView extends View<VBox, ClosedTradesModel, ClosedTrades
     }
 
     @Override
-    public void onViewAttached() {
+    protected void onViewAttached() {
     }
 
     @Override

@@ -41,4 +41,12 @@ public class MainView extends View<VBox, MainModel, MainController> {
         VBox.setVgrow(leftNavAndContentBox, Priority.ALWAYS);
         root.getChildren().addAll(topPanelView.getRoot(), leftNavAndContentBox);
     }
+
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
+    }
 }

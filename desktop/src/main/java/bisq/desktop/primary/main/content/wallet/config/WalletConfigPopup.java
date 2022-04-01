@@ -162,6 +162,14 @@ public class WalletConfigPopup extends Popup {
             popup.doCloseOnAction(false);
         }
 
+        @Override
+        protected void onViewAttached() {
+        }
+
+        @Override
+        protected void onViewDetached() {
+        }
+
         private void addContent() {
             BisqGridPane gridPane = popup.getGridPane();
 

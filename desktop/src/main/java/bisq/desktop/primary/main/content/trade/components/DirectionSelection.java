@@ -157,7 +157,7 @@ public class DirectionSelection {
 
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             if (model.isCreateOffer) {
                 buy.setOnAction(e -> controller.onBuySelected());
                 sell.setOnAction(e -> controller.onSellSelected());
@@ -180,7 +180,7 @@ public class DirectionSelection {
         }
 
         @Override
-        public void onViewDetached() {
+        protected void onViewDetached() {
             if (model.isCreateOffer) {
                 buy.setOnAction(null);
                 sell.setOnAction(null);

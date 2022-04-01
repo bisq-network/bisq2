@@ -47,6 +47,14 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
         root.setMaxWidth(330); // Right align Button
     }
 
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
+    }
+
     private BisqTextField createTextField(String promptText) {
         BisqTextField textField = new BisqTextField();
         textField.setPromptText(promptText);

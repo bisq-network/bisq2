@@ -42,7 +42,7 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
         sceneChangeListener = (ov, oldValue, newScene) -> {
             if (oldValue == null && newScene != null) {
                 if (newScene.getWindow() != null) {
-                    onViewAttached();
+                    onViewAttachedInternal();
                     controller.onViewAttached();
                     model.onViewAttached();
                     //  UIThread.run(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
@@ -50,7 +50,7 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
                     // For overlays, we need to wait until window is available
                     windowChangeListener = (observable, oldValue1, newWindow) -> {
                         checkNotNull(newWindow, "Window must not be null");
-                        onViewAttached();   // We invert the order at deactivate as we want to remove listeners in view first
+                        onViewAttachedInternal();   // We invert the order at deactivate as we want to remove listeners in view first
                         controller.onViewAttached();
                         model.onViewAttached();
                         // UIThread.run(() -> newScene.windowProperty().removeListener(View.this.windowChangeListener));
@@ -58,7 +58,7 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
                     newScene.windowProperty().addListener(windowChangeListener);
                 }
             } else if (oldValue != null && newScene == null) {
-                onViewDetached();
+                onViewDetachedInternal();
                 controller.onViewDetached();
                 model.onViewDetached();
             }
@@ -70,9 +70,16 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
         return root;
     }
 
-    protected void onViewAttached() {
+    // The internal methods should be only used by framework classes (like TabView)
+    void onViewAttachedInternal() {
+        onViewAttached();
     }
 
-    protected void onViewDetached() {
+    void onViewDetachedInternal() {
+        onViewDetached();
     }
+
+    abstract protected void onViewAttached();
+
+    abstract protected void onViewDetached();
 }

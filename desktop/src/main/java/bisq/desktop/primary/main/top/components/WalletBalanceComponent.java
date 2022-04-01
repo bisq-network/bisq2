@@ -86,5 +86,13 @@ public class WalletBalanceComponent {
             descriptionLabel.textProperty().bind(model.formattedBalanceProperty);
             root.getChildren().add(descriptionLabel);
         }
+
+        @Override
+        protected void onViewAttached() {
+        }
+
+        @Override
+        protected void onViewDetached() {
+        }
     }
 }

@@ -163,13 +163,13 @@ public class ProtocolSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             tableView.getSelectionModel().selectedItemProperty().addListener(selectedTableItemListener);
             model.selectedProtocolItem.addListener(selectedProtocolItemListener);
         }
 
         @Override
-        public void onViewDetached() {
+        protected void onViewDetached() {
             tableView.getSelectionModel().selectedItemProperty().removeListener(selectedTableItemListener);
             model.selectedProtocolItem.removeListener(selectedProtocolItemListener);
         }

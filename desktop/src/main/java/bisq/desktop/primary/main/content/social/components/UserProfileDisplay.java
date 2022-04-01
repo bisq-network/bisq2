@@ -125,7 +125,7 @@ public class UserProfileDisplay {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             userName.textProperty().bind(model.userName);
             id.textProperty().bind(model.id);
             entitlements.textProperty().bind(model.entitlements);

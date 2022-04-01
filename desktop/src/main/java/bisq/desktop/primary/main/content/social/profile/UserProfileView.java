@@ -54,7 +54,7 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
     }
 
     @Override
-    public void onViewAttached() {
+    protected void onViewAttached() {
         showCreateUserProfileButton.setOnAction(e -> controller.showCreateUserProfile());
 
         showCreateUserProfileButton.visibleProperty().bind(model.createUserProfileVisible.not());
@@ -74,6 +74,5 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
         channelAdmin.managedProperty().unbind();
         createUserProfile.visibleProperty().unbind();
         createUserProfile.managedProperty().unbind();
-
     }
 }

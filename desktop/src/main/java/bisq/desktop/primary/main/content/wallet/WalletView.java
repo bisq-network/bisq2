@@ -41,12 +41,10 @@ public class WalletView extends TabView<JFXTabPane, WalletModel, WalletControlle
     }
 
     @Override
-    public void onViewAttached() {
-        super.onViewAttached();
+    protected void onViewAttached() {
     }
 
     @Override
-    public void onViewDetached() {
-        super.onViewDetached();
+    protected void onViewDetached() {
     }
 }

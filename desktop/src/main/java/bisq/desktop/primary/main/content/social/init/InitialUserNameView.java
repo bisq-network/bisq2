@@ -95,7 +95,7 @@ public class InitialUserNameView extends View<VBox, InitialUserNameModel, Initia
     }
 
     @Override
-    public void onViewAttached() {
+    protected void onViewAttached() {
         tryOtherButton.disableProperty().bind(model.tryOtherButtonDisable);
         createUserButton.disableProperty().bind(model.createProfileButtonDisable);
         userNameInputField.textProperty().bindBidirectional(model.userName);

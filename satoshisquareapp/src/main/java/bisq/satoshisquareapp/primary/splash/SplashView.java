@@ -81,16 +81,21 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         root.getChildren().addAll(logo, slogansPane, progressBar, connectingTitle);
     }
 
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
+        progressBar.setProgress(0);
+        scheduler.stop();
+    }
+
     private Label getSubTitle(String text) {
         Label label = new BisqLabel(text);
         label.setStyle("-fx-font-size: 1.6em; -fx-text-fill: -bs-color-gray-4;");
         label.setTextAlignment(TextAlignment.CENTER);
         label.setOpacity(0);
         return label;
-    }
-
-    protected void onViewDetached() {
-        progressBar.setProgress(0);
-        scheduler.stop();
     }
 }

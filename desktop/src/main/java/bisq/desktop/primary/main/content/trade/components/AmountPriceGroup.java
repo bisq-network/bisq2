@@ -219,13 +219,15 @@ public class AmountPriceGroup {
             root.getChildren().addAll(headline, hBox);
         }
 
-        public void onViewAttached() {
+        @Override
+        protected void onViewAttached() {
             if (!model.isCreateOffer) {
                 headline.setText(Res.get("takeOffer.amountAndPrice"));
             }
         }
 
-        public void onViewDetached() {
+        @Override
+        protected void onViewDetached() {
         }
     }
 }

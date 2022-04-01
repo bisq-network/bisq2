@@ -129,7 +129,7 @@ public abstract class ChannelSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             subscription = EasyBind.subscribe(listView.getSelectionModel().selectedItemProperty(), controller::onSelected);
             // We cannot use binding for listView.getSelectionModel().selectedItemProperty() 
             // See: https://stackoverflow.com/questions/32782065/binding-a-javafx-listviews-selection-index-to-an-integer-property#32782145

@@ -123,7 +123,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
     }
 
     @Override
-    public void onViewAttached() {
+    protected void onViewAttached() {
         userProfileComboBox.prefWidthProperty().bind(left.widthProperty());
         selectedChannelLabel.textProperty().bind(model.getSelectedChannelAsString());
         filterBoxRoot.visibleProperty().bind(model.getFilterBoxVisible());

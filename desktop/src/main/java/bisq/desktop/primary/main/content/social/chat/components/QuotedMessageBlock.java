@@ -153,7 +153,7 @@ public class QuotedMessageBlock {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             root.visibleProperty().bind(model.visible);
             root.managedProperty().bind(model.visible);
             userName.textProperty().bind(model.userName);

@@ -143,6 +143,14 @@ public class MarketPriceComponent {
 
             model.selected.addListener((o, old, newValue) -> comboBox.getSelectionModel().select(newValue));
         }
+
+        @Override
+        protected void onViewAttached() {
+        }
+
+        @Override
+        protected void onViewDetached() {
+        }
     }
 
     @ToString

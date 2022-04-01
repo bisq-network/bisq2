@@ -53,7 +53,7 @@ public abstract class TabView<R extends TabPane, M extends NavigationModel, C ex
     }
 
     @Override
-    protected void onViewAttached() {
+    void onViewAttachedInternal() {
         if (root.getTabs().isEmpty()) {
             createAndAddTabs();
         }
@@ -61,12 +61,16 @@ public abstract class TabView<R extends TabPane, M extends NavigationModel, C ex
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         // We need to delay a bit to give the child view chance to register the collection
         UIThread.runLater(() -> controller.onTabSelected(model.getNavigationTarget()));
+
+        onViewAttached();
     }
 
     @Override
-    protected void onViewDetached() {
+    void onViewDetachedInternal() {
         model.getView().removeListener(viewChangeListener);
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
+
+        onViewDetached();
     }
 
     protected NavigationTargetTab createTab(String title, NavigationTarget navigationTarget) {

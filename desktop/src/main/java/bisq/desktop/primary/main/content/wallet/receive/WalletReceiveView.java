@@ -36,4 +36,12 @@ public class WalletReceiveView extends View<VBox, WalletReceiveModel, WalletRece
 
         root.getChildren().addAll(generateNewAddressButton, listView);
     }
+
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
+    }
 }

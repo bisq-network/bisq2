@@ -74,7 +74,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     }
 
     @Override
-    public void onViewAttached() {
+    protected void onViewAttached() {
         showAllMarkets.setOnAction(e -> controller.onShowAllMarketsChanged(showAllMarkets.isSelected()));
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
         marketSelection.disableProperty().bind(model.marketSelectionDisabled);

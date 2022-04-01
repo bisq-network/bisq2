@@ -146,7 +146,7 @@ public class NotificationsSettings {
 
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             model.channel.addListener(channelChangeListener);
             toggleGroup.selectedToggleProperty().addListener(toggleListener);
         }

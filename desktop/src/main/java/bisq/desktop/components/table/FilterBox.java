@@ -88,7 +88,7 @@ public class FilterBox {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             root.textProperty().addListener(listener);
             root.setOnAction(e -> controller.onSearch(root.getText()));
         }

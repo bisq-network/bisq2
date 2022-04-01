@@ -48,4 +48,12 @@ public class NetworkInfoView extends TabView<JFXTabPane, NetworkInfoModel, Netwo
         tab.setDisable(model.isDisabled(navigationTarget));
         return tab;
     }
+
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
+    }
 }

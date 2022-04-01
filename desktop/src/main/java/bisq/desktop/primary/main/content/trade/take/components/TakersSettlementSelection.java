@@ -385,7 +385,7 @@ public class TakersSettlementSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             baseSideAccountsComboBox.setOnAction(e -> controller.onAccountSelectionChanged(
                     baseSideAccountsComboBox.getSelectionModel().getSelectedItem(), true));
             quoteSideAccountsComboBox.setOnAction(e -> controller.onAccountSelectionChanged(
@@ -420,7 +420,7 @@ public class TakersSettlementSelection {
         }
 
         @Override
-        public void onViewDetached() {
+        protected void onViewDetached() {
             baseSideAccountsComboBox.setOnAction(null);
             quoteSideAccountsComboBox.setOnAction(null);
             baseSideSettlementComboBox.setOnAction(null);

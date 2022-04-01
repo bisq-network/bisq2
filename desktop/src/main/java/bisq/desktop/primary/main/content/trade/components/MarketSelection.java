@@ -128,14 +128,14 @@ public class MarketSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             comboBox.setOnAction(e -> controller.onSelectMarket(comboBox.getSelectionModel().getSelectedItem()));
             model.selectedMarket.addListener(selectedMarketListener);
             comboBox.getSelectionModel().select(model.selectedMarket.get());
         }
 
         @Override
-        public void onViewDetached() {
+        protected void onViewDetached() {
             comboBox.setOnAction(null);
             model.selectedMarket.addListener(selectedMarketListener);
         }

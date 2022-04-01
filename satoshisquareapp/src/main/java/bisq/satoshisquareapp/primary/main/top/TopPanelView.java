@@ -39,4 +39,12 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
 
         root.getChildren().addAll(logo, Spacer.fillHBox(), marketPriceBox);
     }
+
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
+    }
 }

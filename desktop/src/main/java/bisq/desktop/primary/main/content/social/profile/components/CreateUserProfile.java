@@ -204,7 +204,7 @@ public class CreateUserProfile {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             generateNewIdentityButton.disableProperty().bind(model.generateNewIdentityButtonDisable);
             entitlementButton.setOnAction(e -> controller.onShowEntitlementSelection());
             entitlementButton.visibleProperty().bind(model.entitlementSelectionVisible.not());

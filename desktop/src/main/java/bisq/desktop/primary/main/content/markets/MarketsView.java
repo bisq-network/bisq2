@@ -27,6 +27,13 @@ public class MarketsView extends View<HBox, MarketsModel, MarketsController> {
 
         root.setSpacing(20);
         root.getChildren().addAll(new BisqLabel(this.getClass().getSimpleName()));
+    }
 
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
     }
 }

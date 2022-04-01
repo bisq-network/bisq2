@@ -72,6 +72,14 @@ public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, Primar
         }
     }
 
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
+    }
+
     void showStage() {
         long ts = System.currentTimeMillis();
         stage.show();

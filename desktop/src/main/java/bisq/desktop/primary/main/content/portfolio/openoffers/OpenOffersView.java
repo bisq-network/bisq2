@@ -50,7 +50,7 @@ public class OpenOffersView extends View<VBox, OpenOffersModel, OpenOffersContro
     }
 
     @Override
-    public void onViewAttached() {
+    protected void onViewAttached() {
     }
 
     @Override

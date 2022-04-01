@@ -348,7 +348,7 @@ public class SettlementSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             baseSideButton.setOnAction(e -> controller.onCreateBaseSideAccount());
             quoteSideButton.setOnAction(e -> controller.onCreateQuoteSideAccount());
 
@@ -370,7 +370,7 @@ public class SettlementSelection {
         }
 
         @Override
-        public void onViewDetached() {
+        protected void onViewDetached() {
             baseSideButton.setOnAction(null);
             quoteSideButton.setOnAction(null);
 

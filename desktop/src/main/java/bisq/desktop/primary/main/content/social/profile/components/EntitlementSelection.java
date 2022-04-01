@@ -210,7 +210,7 @@ public class EntitlementSelection {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             headline.visibleProperty().bind(model.tableVisible);
             headline.managedProperty().bind(model.tableVisible);
             tableView.visibleProperty().bind(model.tableVisible);

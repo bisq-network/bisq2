@@ -226,7 +226,7 @@ public class ChannelInfo {
         }
 
         @Override
-        public void onViewAttached() {
+        protected void onViewAttached() {
             model.channel.addListener(channelChangeListener);
         }
 

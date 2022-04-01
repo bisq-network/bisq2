@@ -38,12 +38,10 @@ public class SettingsView extends TabView<JFXTabPane, SettingsModel, SettingsCon
     }
 
     @Override
-    public void onViewAttached() {
-        super.onViewAttached();
+    protected void onViewAttached() {
     }
 
     @Override
     protected void onViewDetached() {
-        super.onViewDetached();
     }
 }
