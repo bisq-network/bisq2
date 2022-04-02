@@ -17,77 +17,39 @@
 
 package bisq.social.intent;
 
-import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
-import bisq.network.NetworkId;
-import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService.BroadCastDataResult;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
+import bisq.persistence.PersistenceService;
 import bisq.social.chat.ChatService;
-import bisq.social.user.ChatUser;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
-// Note: will get probably removed
 @Slf4j
-public class TradeIntentService {
+@Getter
+public class TradeIntentService implements PersistenceClient<TradeIntentStore> {
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final TradeIntentListingsService tradeIntentListingsService;
     private final ChatService chatService;
+    private final TradeIntentStore persistableStore = new TradeIntentStore();
+    private final Persistence<TradeIntentStore> persistence;
 
     public TradeIntentService(NetworkService networkService,
                               IdentityService identityService,
-                              TradeIntentListingsService tradeIntentListingsService,
-                              ChatService chatService) {
+                              ChatService chatService,
+                              PersistenceService persistenceService) {
         this.networkService = networkService;
         this.identityService = identityService;
-        this.tradeIntentListingsService = tradeIntentListingsService;
         this.chatService = chatService;
+
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        // republishMyTradeIntents();
         return CompletableFuture.completedFuture(true);
-    }
-
-    public CompletableFuture<TradeIntent> createTradeIntent(String ask, String bid) {
-        String tradeIntentId = StringUtils.createUid();
-        return identityService.getOrCreateIdentity(tradeIntentId).thenApply(identity -> {
-            NetworkId makerNetworkId = identity.networkId();
-            ChatUser maker = new ChatUser(makerNetworkId);
-            return new TradeIntent(tradeIntentId, maker, ask, bid, new Date().getTime());
-        });
-    }
-
-    public CompletableFuture<BroadCastDataResult> publishTradeIntent(TradeIntent tradeIntent) {
-        // openOfferService.add(tradeIntent);
-        return addToNetwork(tradeIntent);
-    }
-
-    private void republishMyTradeIntents() {
-        // openOfferService.getOpenOffers().forEach(openOffer -> addToNetwork(openOffer.getOffer()));
-    }
-
-    public CompletableFuture<BroadCastDataResult> removeMyTradeIntent(TradeIntent tradeIntent) {
-        // openOfferService.remove(tradeIntent);
-        return removeFromNetwork(tradeIntent);
-    }
-
-    public CompletableFuture<BroadCastDataResult> addToNetwork(TradeIntent tradeIntent) {
-        return identityService.getOrCreateIdentity(tradeIntent.id())
-                .thenCompose(identity -> {
-                    NetworkIdWithKeyPair nodeIdAndKeyPair = identity.getNodeIdAndKeyPair();
-                    return networkService.publishAuthenticatedData(tradeIntent, nodeIdAndKeyPair);
-                });
-    }
-
-    public CompletableFuture<BroadCastDataResult> removeFromNetwork(TradeIntent tradeIntent) {
-        return identityService.findActiveIdentity(tradeIntent.id())
-                .map(identity -> networkService.removeAuthenticatedData(tradeIntent, identity.getNodeIdAndKeyPair()))
-                .orElse(CompletableFuture.completedFuture(new BroadCastDataResult()));
     }
 }

@@ -79,6 +79,7 @@ dependencies {
     implementation 'org.controlsfx:controlsfx:11.1.1'
 
     implementation "org.fxmisc.easybind:easybind:1.0.3"
+    implementation 'org.fxmisc.richtext:richtextfx:0.10.9'
 
 }
 test {

@@ -18,93 +18,181 @@
 package bisq.desktop.primary.main.content.social.onboarding.onboardNewbie;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.monetary.Market;
+import bisq.common.observable.ObservableSet;
+import bisq.common.observable.Pin;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.InitWithDataController;
-import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
+import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.trade.components.MarketSelection;
+import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
+import bisq.social.chat.ChatService;
+import bisq.social.chat.PublicChannel;
+import bisq.social.intent.TradeIntentService;
+import bisq.social.intent.TradeIntentStore;
+import bisq.social.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+import org.fxmisc.richtext.model.StyleSpans;
+import org.fxmisc.richtext.model.StyleSpansBuilder;
+
+import java.text.BreakIterator;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
-public class OnboardNewbieController implements InitWithDataController<OnboardNewbieController.InitData> {
-
-
-    public static record InitData(Market market, Direction direction, boolean showCreateOfferTab) {
-    }
-
+public class OnboardNewbieController implements Controller {
+    private final TradeIntentService tradeIntentService;
     private final OnboardNewbieModel model;
     @Getter
     private final OnboardNewbieView view;
     private final MarketSelection marketSelection;
-    private final DirectionSelection directionSelection;
     private final BtcFiatAmountGroup btcFiatAmountGroup;
+    private final DefaultApplicationService applicationService;
     private final PaymentMethodsSelection paymentMethodsSelection;
+    private Pin tradeTagsPin, currencyTagsPin, paymentMethodTagsPin;
 
-    private Subscription selectedMarketSubscription, directionSubscription, baseSideAmountSubscription;
+    private Subscription selectedMarketSubscription, baseSideAmountSubscription;
 
     public OnboardNewbieController(DefaultApplicationService applicationService) {
-        model = new OnboardNewbieModel();
+        this.applicationService = applicationService;
+        tradeIntentService = applicationService.getTradeIntentService();
+        model = new OnboardNewbieModel(applicationService.getUserProfileService().getPersistableStore().getSelectedUserProfile().get().userName());
 
-        directionSelection = new DirectionSelection();
         marketSelection = new MarketSelection(applicationService.getSettingsService());
         btcFiatAmountGroup = new BtcFiatAmountGroup(applicationService.getMarketPriceService());
+
         paymentMethodsSelection = new PaymentMethodsSelection();
 
         view = new OnboardNewbieView(model, this,
                 marketSelection.getRoot(),
-                directionSelection.getRoot(),
                 btcFiatAmountGroup.getRoot(),
-                paymentMethodsSelection.getRoot());
+                paymentMethodsSelection);
+
+        Direction direction = Direction.BUY;
+        btcFiatAmountGroup.setDirection(direction);
+        paymentMethodsSelection.setDirection(direction);
     }
 
-    @Override
-    public void initWithData(InitData data) {
-        marketSelection.setSelectedMarket(data.market());
-        directionSelection.setDirection(data.direction());
-    }
 
     @Override
     public void onActivate() {
         selectedMarketSubscription = EasyBind.subscribe(marketSelection.selectedMarketProperty(),
                 selectedMarket -> {
                     model.setSelectedMarket(selectedMarket);
-                    directionSelection.setSelectedMarket(selectedMarket);
                     btcFiatAmountGroup.setSelectedMarket(selectedMarket);
                     paymentMethodsSelection.setSelectedMarket(selectedMarket);
-                });
-        directionSubscription = EasyBind.subscribe(directionSelection.directionProperty(),
-                direction -> {
-                    model.setDirection(direction);
-                    btcFiatAmountGroup.setDirection(direction);
-                    paymentMethodsSelection.setDirection(direction);
                 });
         baseSideAmountSubscription = EasyBind.subscribe(btcFiatAmountGroup.baseSideAmountProperty(),
                 model::setBaseSideAmount);
 
         model.getSelectedPaymentMethods().setAll(paymentMethodsSelection.getSelectedPaymentMethods());
+
+        model.getTerms().set(Res.get("satoshisquareapp.createOffer.defaultTerms"));
+
+
+        TradeIntentStore tradeIntentStore = tradeIntentService.getPersistableStore();
+        tradeTagsPin = FxBindings.<String, String>bind(model.getTradeTags()).to(tradeIntentStore.getTradeTags());
+        currencyTagsPin = FxBindings.<String, String>bind(model.getCurrencyTags()).to(tradeIntentStore.getCurrencyTags());
+        paymentMethodTagsPin = FxBindings.<String, String>bind(model.getPaymentMethodTags()).to(tradeIntentStore.getPaymentMethodTags());
+        updateOfferPreview();
     }
 
     @Override
     public void onDeactivate() {
         selectedMarketSubscription.unsubscribe();
-        directionSubscription.unsubscribe();
         baseSideAmountSubscription.unsubscribe();
+        tradeTagsPin.unbind();
+        currencyTagsPin.unbind();
+        paymentMethodTagsPin.unbind();
+    }
+
+    private void updateOfferPreview() {
+        //todo
+        String amount = "0.007 BTC";
+        String quoteCurrency = "EUR";
+        String paymentMethods = "SEPA, Bank-transfer";
+
+        String previewText = Res.get("satoshisquareapp.createOffer.offerPreview",
+                amount, quoteCurrency, paymentMethods);
+        model.getStyleSpans().set(getStyleSpans(previewText, model.getTradeTags(), model.getCurrencyTags(), model.getPaymentMethodTags()));
+        model.getOfferPreview().set(previewText);
     }
 
     public void onCreateOffer() {
-      Navigation.navigateTo(NavigationTarget.CHAT); //todo
+        ChatService chatService = applicationService.getChatService();
+        ObservableSet<PublicChannel> publicChannels = chatService.getPersistableStore().getPublicChannels();
+        PublicChannel publicChannel = publicChannels.stream()
+                .filter(e -> e.getChannelName().toLowerCase().contains(model.getSelectedMarket().quoteCurrencyCode().toLowerCase()))
+                .findAny()
+                .orElse(publicChannels.stream()
+                        .filter(e -> e.getChannelName().toLowerCase().contains("other"))
+                        .findAny()
+                        .orElseThrow());
+        UserProfile userProfile = applicationService.getUserProfileService().getPersistableStore().getSelectedUserProfile().get();
+        
+        //todo add tradeIntent object
+        chatService.publishPublicChatMessage(model.getOfferPreview().get(),
+                Optional.empty(),
+                publicChannel,
+                userProfile);
+        Navigation.navigateTo(NavigationTarget.CHAT);
     }
 
-    public void onPublishOffer() {
-       Navigation.navigateTo(NavigationTarget.CHAT);//todo
+
+    public void onSkip() {
+        Navigation.navigateTo(NavigationTarget.CHAT);
     }
 
-    public void onCancel() {
-      Navigation.navigateTo(NavigationTarget.CHAT);//todo
+    private StyleSpans<Collection<String>> getStyleSpans(String text,
+                                                         List<String> tradeTags,
+                                                         List<String> currencyTags,
+                                                         List<String> paymentMethodTags) {
+        StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
+        BreakIterator iterator = BreakIterator.getWordInstance();
+        iterator.setText(text);
+        int lastIndex = iterator.first();
+        int lastKwEnd = 0;
+        while (lastIndex != BreakIterator.DONE) {
+            int firstIndex = lastIndex;
+            lastIndex = iterator.next();
+            if (lastIndex != BreakIterator.DONE && Character.isLetterOrDigit(text.charAt(firstIndex))) {
+                String word = text.substring(firstIndex, lastIndex).toLowerCase();
+                if (tradeTags.contains(word)) {
+                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
+                    spansBuilder.add(Collections.singleton("keyword-tradeTags"), lastIndex - firstIndex);
+                    lastKwEnd = lastIndex;
+                } else if (currencyTags.contains(word)) {
+                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
+                    spansBuilder.add(Collections.singleton("keyword-currencyTags"), lastIndex - firstIndex);
+                    lastKwEnd = lastIndex;
+                } else if (paymentMethodTags.contains(word)) {
+                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
+                    spansBuilder.add(Collections.singleton("keyword-paymentMethodTags"), lastIndex - firstIndex);
+                    lastKwEnd = lastIndex;
+                } else if (word.equals("btc") || word.equals("bitcoin")) {
+                    // I would like to buy 0.007 BTC for EUR using SEPA, Bank transfers
+                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
+                    spansBuilder.add(Collections.singleton("keyword-btc"), lastIndex - firstIndex);
+                    lastKwEnd = lastIndex;
+                } else if (word.matches("[0-9]{1,13}(\\.[0-9]*)?")) {
+                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
+                    spansBuilder.add(Collections.singleton("keyword-amountTag"), lastIndex - firstIndex);
+                    lastKwEnd = lastIndex;
+                } else {
+                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
+                    spansBuilder.add(Collections.singleton("keyword-none"), lastIndex - firstIndex);
+                    lastKwEnd = lastIndex;
+                }
+            }
+        }
+        spansBuilder.add(Collections.emptyList(), text.length() - lastKwEnd);
+        StyleSpans<Collection<String>> styleSpans = spansBuilder.create();
+        return styleSpans;
     }
 }

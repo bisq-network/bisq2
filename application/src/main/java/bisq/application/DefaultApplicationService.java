@@ -42,7 +42,6 @@ import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.social.SocialService;
 import bisq.social.chat.ChatService;
-import bisq.social.intent.TradeIntentListingsService;
 import bisq.social.intent.TradeIntentService;
 import bisq.social.user.profile.UserProfileService;
 import bisq.wallets.NetworkType;
@@ -85,7 +84,6 @@ public class DefaultApplicationService extends ServiceProvider {
     private final ProtocolService protocolService;
     private final OfferBookService offerBookService;
     private final AccountService accountService;
-    private final TradeIntentListingsService tradeIntentListingsService;
     private final TradeIntentService tradeIntentService;
     private final UserProfileService userProfileService;
     private final WalletService walletService;
@@ -125,8 +123,7 @@ public class DefaultApplicationService extends ServiceProvider {
         UserProfileService.Config userProfileServiceConfig = UserProfileService.Config.from(getConfig("bisq.userProfileServiceConfig"));
         userProfileService = new UserProfileService(persistenceService, userProfileServiceConfig, keyPairService, identityService, networkService);
         chatService = new ChatService(persistenceService, identityService, networkService, userProfileService);
-        tradeIntentListingsService = new TradeIntentListingsService(networkService);
-        tradeIntentService = new TradeIntentService(networkService, identityService, tradeIntentListingsService, chatService);
+        tradeIntentService = new TradeIntentService(networkService, identityService, chatService, persistenceService);
 
         // add data use case is not available yet at networkService
         offerService = new OfferService();
@@ -188,7 +185,6 @@ public class DefaultApplicationService extends ServiceProvider {
                                 .thenCompose(res -> chatService.initialize()),
                         openOfferService.initialize(),
                         offerBookService.initialize(),
-                        tradeIntentListingsService.initialize(),
                         tradeIntentService.initialize()))
                 // TODO Needs to increase if using embedded I2P router (i2p internal bootstrap timeouts after 5 mins)
                 .orTimeout(5, TimeUnit.MINUTES)

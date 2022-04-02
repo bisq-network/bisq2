@@ -201,7 +201,7 @@ class BtcFiatAmountGroup {
             this.quoteAmount = quoteAmount;
 
             root.setSpacing(0);
-
+            
             BisqLabel headline = new BisqLabel(Res.get("satoshisquareapp.createOffer.setAmount"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 

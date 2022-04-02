@@ -140,3 +140,7 @@ message ChatStore {
   Channel selectedChannel = 3;
   repeated string ignoredChatUserIds = 4;
 }
+
+message TradeIntentStore {
+  repeated string tradeKeyWords = 1;
+}
