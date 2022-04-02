@@ -29,7 +29,7 @@ dependencies {
 
     implementation libs.protobuf.java
     implementation libs.guava
-    implementation 'com.typesafe:config'
+    implementation libs.typesafe.config
 
     implementation("org.jeasy:easy-states:2.0.0")
 }

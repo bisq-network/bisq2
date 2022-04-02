@@ -24,7 +24,7 @@ dependencies {
 
     implementation libs.protobuf.java
     implementation libs.guava
-    implementation 'com.typesafe:config'
+    implementation libs.typesafe.config
 }
 test {
     useJUnitPlatform()
