@@ -5,12 +5,8 @@ plugins {
 
 dependencies {
     constraints {
-        api('org.junit.jupiter:junit-jupiter-api') {
-            version { require '5.7.2' }
-        }
-        runtime('org.junit.jupiter:junit-jupiter-engine') {
-            version { require '5.7.2' }
-        }
+        api(libs.junit.jupiter.api)
+        runtime(libs.junit.jupiter.engine)
     }
 }
 
