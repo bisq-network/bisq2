@@ -35,16 +35,21 @@ import java.util.Scanner;
 @Slf4j
 public class UserNameGenerator {
     private static final BigInteger MAX_INTEGER = BigInteger.valueOf(Integer.MAX_VALUE);
+    private static final String DEFAULT_SEPARATOR = "-";
 
     public static String fromHash(byte[] hash) {
         List<String> adverbs = read("/adverbs.txt");
         List<String> adjectives = read("/adjectives.txt");
         List<String> nouns = read("/nouns.txt");
-        return fromHash(new BigInteger(hash), adverbs, adjectives, nouns);
+        return fromHash(new BigInteger(hash), adverbs, adjectives, nouns, DEFAULT_SEPARATOR);
     }
 
     @VisibleForTesting
     static String fromHash(BigInteger hashAsBigInteger, List<String> adverbs, List<String> adjectives, List<String> nouns) {
+        return fromHash(hashAsBigInteger, adverbs, adjectives, nouns, "");
+    }
+
+    static String fromHash(BigInteger hashAsBigInteger, List<String> adverbs, List<String> adjectives, List<String> nouns, String separator) {
         hashAsBigInteger = hashAsBigInteger.abs();
         BigInteger numAdjectives = BigInteger.valueOf(adjectives.size());
         BigInteger numNouns = BigInteger.valueOf(nouns.size());
@@ -63,7 +68,6 @@ public class UserNameGenerator {
         int nounIndexInt = nounsIndex.mod(MAX_INTEGER).intValue() % nouns.size();
         int appendixInt = appendixIndex.mod(MAX_INTEGER).intValue();
         appendixInt = appendixInt % 1000;
-        String separator = "-";
         return adverbs.get(adverbsIndexInt) + separator +
                 adjectives.get(adjectiveIndexInt) + separator +
                 nouns.get(nounIndexInt) + separator +
