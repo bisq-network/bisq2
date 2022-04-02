@@ -18,13 +18,13 @@
 package bisq.desktop.primary.main.content.wallet;
 
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.NavigationModel;
+import bisq.desktop.common.view.TabModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class WalletModel extends NavigationModel {
+public class WalletModel extends TabModel {
     public WalletModel() {
     }
 

@@ -15,21 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.portfolio;
+package bisq.desktop.common.view;
 
-import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-@Getter
-public class PortfolioModel extends TabModel {
-    public PortfolioModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.OPEN_OFFERS;
-    }
+public abstract class TabModel extends NavigationModel {
 }

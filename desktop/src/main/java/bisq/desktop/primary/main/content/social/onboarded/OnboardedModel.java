@@ -18,11 +18,11 @@
 package bisq.desktop.primary.main.content.social.onboarded;
 
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.NavigationModel;
+import bisq.desktop.common.view.TabModel;
 import lombok.Getter;
 
 @Getter
-public class OnboardedModel extends NavigationModel {
+public class OnboardedModel extends TabModel {
     public OnboardedModel( ) {
     }
 
