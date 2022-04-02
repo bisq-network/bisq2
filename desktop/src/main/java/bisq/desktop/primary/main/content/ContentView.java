@@ -17,13 +17,13 @@
 
 package bisq.desktop.primary.main.content;
 
-import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.NavigationView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ContentView extends View<HBox, ContentModel, ContentController> {
+public class ContentView extends NavigationView<HBox, ContentModel, ContentController> {
 
     public ContentView(ContentModel model, ContentController controller) {
         super(new HBox(), model, controller);

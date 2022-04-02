@@ -64,7 +64,7 @@ public class MarketPriceService {
     public interface Listener {
         void onMarketPriceUpdate(Map<Market, MarketPrice> map);
 
-        void onMarketPriceSelected(MarketPrice selected);
+        void onMarketSelected(Market selectedMarket);
     }
 
     private final List<Provider> providers;
@@ -76,7 +76,7 @@ public class MarketPriceService {
     @Getter
     private final Map<Market, MarketPrice> marketPriceByCurrencyMap = new HashMap<>();
     @Getter
-    private Optional<MarketPrice> selectedMarketPrice = Optional.empty();
+    private Optional<Market> selectedMarket = Optional.empty();
 
     public MarketPriceService(Config conf, NetworkService networkService, String version) {
         providers = new ArrayList<>(conf.providers);
@@ -99,11 +99,10 @@ public class MarketPriceService {
         return CompletableFuture.completedFuture(true);
     }
 
-    public void select(MarketPrice marketPrice) {
-        selectedMarketPrice = Optional.of(marketPrice);
-        listeners.forEach(listener -> listener.onMarketPriceSelected(marketPrice));
+    public void select(Market market) {
+        selectedMarket = Optional.of(market);
+        listeners.forEach(listener -> listener.onMarketSelected(market));
     }
-
 
     public void shutdown() {
         httpClient.ifPresent(BaseHttpClient::shutdown);
@@ -146,9 +145,9 @@ public class MarketPriceService {
                 marketPriceByCurrencyMap.clear();
                 marketPriceByCurrencyMap.putAll(map);
                 listeners.forEach(listener -> listener.onMarketPriceUpdate(marketPriceByCurrencyMap));
-                if (selectedMarketPrice.isEmpty()) {
-                    selectedMarketPrice = Optional.of(map.get(MarketRepository.getDefault()));
-                    listeners.forEach(listener -> listener.onMarketPriceSelected(selectedMarketPrice.get()));
+                if (selectedMarket.isEmpty()) {
+                    selectedMarket = Optional.of(map.get(MarketRepository.getDefault()).getMarket());
+                    listeners.forEach(listener -> listener.onMarketSelected(selectedMarket.get()));
                 }
                 return marketPriceByCurrencyMap;
             } catch (IOException e) {

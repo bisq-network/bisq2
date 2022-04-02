@@ -17,50 +17,26 @@
 
 package bisq.desktop.primary.main.content.social;
 
-import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.NavigationTargetTab;
-import bisq.desktop.common.view.TabView;
-import bisq.i18n.Res;
-import bisq.social.user.profile.UserProfile;
-import com.jfoenix.controls.JFXTabPane;
-import javafx.beans.value.ChangeListener;
+import bisq.desktop.common.view.NavigationView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 
-public class SocialView extends TabView<JFXTabPane, SocialModel, SocialController> {
-
-    private NavigationTargetTab setupInitialUserProfileTab, chatTab, createOfferTab, userProfileTab;
-    private ChangeListener<UserProfile> selectedUserProfileListener;
+public class SocialView extends NavigationView<HBox, SocialModel, SocialController> {
 
     public SocialView(SocialModel model, SocialController controller) {
-        super(new JFXTabPane(), model, controller);
+        super(new HBox(), model, controller);
 
-        selectedUserProfileListener = (observable, oldValue, newValue) -> setTabs();
-    }
-
-    @Override
-    protected void createAndAddTabs() {
-        setupInitialUserProfileTab = createTab(Res.get("social.setupInitialUserProfile"), NavigationTarget.SETUP_INITIAL_USER_PROFILE);
-        createOfferTab = createTab(Res.get("social.createOffer"), NavigationTarget.CREATE_SIMPLE_OFFER);
-        chatTab = createTab(Res.get("social.chat"), NavigationTarget.CHAT);
-        userProfileTab = createTab(Res.get("social.userProfile"), NavigationTarget.USER_PROFILE);
+        model.getView().addListener((observable, oldValue, newValue) -> {
+            HBox.setHgrow(newValue.getRoot(), Priority.ALWAYS);
+            root.getChildren().setAll(newValue.getRoot());
+        });
     }
 
     @Override
     protected void onViewAttached() {
-        model.getSelectedUserProfile().addListener(selectedUserProfileListener);
-        setTabs();
-    }
-
-    private void setTabs() {
-        root.getTabs().clear();      
-        if (model.getSelectedUserProfile().get() == null) {
-            root.getTabs().setAll(setupInitialUserProfileTab);
-        } else {
-            root.getTabs().setAll(createOfferTab, chatTab, userProfileTab);
-        }
     }
 
     @Override
     protected void onViewDetached() {
-        model.getSelectedUserProfile().removeListener(selectedUserProfileListener);
     }
 }

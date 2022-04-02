@@ -121,7 +121,7 @@ public class PriceInput {
         }
 
         @Override
-        public void onMarketPriceSelected(MarketPrice selected) {
+        public void onMarketSelected(Market selectedMarket) {
         }
 
         // View events

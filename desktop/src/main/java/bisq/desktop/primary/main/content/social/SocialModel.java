@@ -27,7 +27,6 @@ import lombok.Getter;
 
 @Getter
 public class SocialModel extends NavigationModel {
-
     private final UserProfileService userProfileService;
     private final ObjectProperty<UserProfile> selectedUserProfile = new SimpleObjectProperty<>();
 
@@ -37,10 +36,6 @@ public class SocialModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        // return NavigationTarget.SETUP_INITIAL_USER_PROFILE;
-
-        return userProfileService.isDefaultUserProfileMissing() ?
-                NavigationTarget.SETUP_INITIAL_USER_PROFILE :
-                NavigationTarget.CHAT;
+        return userProfileService.isDefaultUserProfileMissing() ? NavigationTarget.ONBOARDING : NavigationTarget.ONBOARDED;
     }
 }

@@ -92,13 +92,16 @@ public class MarketPriceComponent {
         }
 
         @Override
-        public void onMarketPriceSelected(MarketPrice selected) {
-            UIThread.run(() -> model.selected.set(new ListItem(selected)));
+        public void onMarketSelected(Market selectedMarket) {
+            model.items.stream()
+                    .filter(e -> e.marketPrice.getMarket().equals(selectedMarket))
+                    .findAny()
+                    .ifPresent(listItem -> UIThread.run(() -> model.selected.set(listItem)));
         }
 
         private void onSelect(ListItem selectedItem) {
             if (selectedItem != null) {
-                marketPriceService.select(selectedItem.marketPrice);
+                marketPriceService.select(selectedItem.marketPrice.getMarket());
             }
         }
     }
