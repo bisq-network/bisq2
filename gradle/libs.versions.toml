@@ -9,6 +9,7 @@ guava =         { strictly = '31.1-jre' }
 i2p =           { strictly = '1.7.0' }
 protobuf =      { strictly = '0.8.18' }
 protobuf-java = { strictly = '3.19.4' }
+typesafe-config = { strictly = '1.4.2' }
 
 # Referenced in subproject's build.gradle > dependencies block in the form 'implementation libs.guava'
 # Note: keys can contain dash (protobuf-java) but the dash is replaced by dot when referenced
@@ -19,6 +20,7 @@ i2p-streaming =     { module = 'net.i2p.client:streaming',          version.ref 
 i2p-core =          { module = 'net.i2p:i2p',                       version.ref = 'i2p' }
 i2p-router =        { module = 'net.i2p:router',                    version.ref = 'i2p' }
 protobuf-java =     { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java' }
+typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-config' }
 
 # Defines groups of libs that are commonly used together
 # Referenced in dependencies block as 'implementation libs.bundles.i2p'

@@ -30,7 +30,7 @@ dependencies {
     implementation project(':application')
 
     implementation libs.guava
-    implementation 'com.typesafe:config'
+    implementation libs.typesafe.config
 }
 test {
     useJUnitPlatform()

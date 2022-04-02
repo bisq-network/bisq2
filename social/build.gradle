@@ -29,7 +29,7 @@ dependencies {
     implementation "com.google.code.gson:gson:2.8.5"
     implementation libs.protobuf.java
     implementation libs.guava
-    implementation 'com.typesafe:config'
+    implementation libs.typesafe.config
 }
 
 test {
