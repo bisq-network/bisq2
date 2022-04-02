@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'org.openjfx.javafxplugin' version '0.0.10'
+    alias(libs.plugins.openjfx)
 }
 
 repositories {

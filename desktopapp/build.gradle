@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'application'
    /* id 'distribution'*/ //todo as long we dont need a jar we leave that out, speeds up build
-    id 'org.openjfx.javafxplugin' version '0.0.10'
+    alias(libs.plugins.openjfx)
 }
 
 repositories {
