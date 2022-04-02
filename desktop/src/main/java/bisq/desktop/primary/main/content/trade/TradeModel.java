@@ -24,7 +24,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
 public class TradeModel extends NavigationModel {
-
     private final DefaultApplicationService applicationService;
     public BooleanProperty createOfferTabVisible = new SimpleBooleanProperty();
     public BooleanProperty takeOfferTabVisible = new SimpleBooleanProperty();

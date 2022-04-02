@@ -17,6 +17,9 @@
 
 package bisq.desktop.primary.main.content;
 
+import bisq.desktop.Navigation;
+import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -36,6 +39,13 @@ public class ContentView extends View<HBox, ContentModel, ContentController> {
 
     @Override
     protected void onViewAttached() {
+        //todo
+        UIThread.runLater(() -> {
+            NavigationTarget navigationTarget = model.getNavigationTarget();
+            if (navigationTarget != null) {
+                Navigation.navigateTo(navigationTarget);
+            }
+        });
     }
 
     @Override

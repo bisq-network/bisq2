@@ -23,7 +23,7 @@ import bisq.desktop.common.utils.KeyCodeUtils;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.layout.Layout;
-import bisq.desktop.primary.main.content.social.init.InitialUserNameView;
+import bisq.desktop.primary.main.content.social.onboarding.initUserProfile.InitialUserProfileView;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -46,8 +46,8 @@ public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, Primar
     public PrimaryStageView(PrimaryStageModel model, PrimaryStageController controller, Stage stage) {
         super(new AnchorPane(), model, controller);
 
-        InitialUserNameView.alignment = Pos.CENTER;
-        InitialUserNameView.textAlignment = TextAlignment.CENTER.CENTER;
+        InitialUserProfileView.alignment = Pos.CENTER;
+        InitialUserProfileView.textAlignment = TextAlignment.CENTER.CENTER;
 
         root.getStyleClass().add("content-pane");
         this.stage = stage;

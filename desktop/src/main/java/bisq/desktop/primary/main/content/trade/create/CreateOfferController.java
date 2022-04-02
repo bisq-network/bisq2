@@ -102,6 +102,7 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
         directionSubscription = EasyBind.subscribe(directionSelection.directionProperty(),
                 direction -> {
                     model.setDirection(direction);
+                    amountPriceGroup.setDirection(direction);
                     settlementSelection.setDirection(direction);
                 });
         protocolSelectionSubscription = EasyBind.subscribe(protocolSelection.selectedProtocolType(),

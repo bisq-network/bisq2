@@ -22,18 +22,16 @@ import bisq.common.observable.Pin;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.social.chat.ChatController;
-import bisq.desktop.primary.main.content.social.createoffer.CreateSimpleOfferController;
-import bisq.desktop.primary.main.content.social.init.InitialUserNameController;
-import bisq.desktop.primary.main.content.social.profile.UserProfileController;
+import bisq.desktop.common.view.NavigationController;
+import bisq.desktop.primary.main.content.social.onboarded.OnboardedController;
+import bisq.desktop.primary.main.content.social.onboarding.OnboardingController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public class SocialController extends TabController {
+public class SocialController extends NavigationController {
     private final DefaultApplicationService applicationService;
     @Getter
     private final SocialModel model;
@@ -64,17 +62,11 @@ public class SocialController extends TabController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case SETUP_INITIAL_USER_PROFILE -> {
-                return Optional.of(new InitialUserNameController(applicationService));
+            case ONBOARDING -> {
+                return Optional.of(new OnboardingController(applicationService));
             }
-            case CREATE_SIMPLE_OFFER -> {
-                return Optional.of(new CreateSimpleOfferController(applicationService));
-            }
-            case CHAT -> {
-                return Optional.of(new ChatController(applicationService));
-            }
-            case USER_PROFILE -> {
-                return Optional.of(new UserProfileController(applicationService));
+            case ONBOARDED -> {
+                return Optional.of(new OnboardedController(applicationService));
             }
             default -> {
                 return Optional.empty();

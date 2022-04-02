@@ -18,28 +18,21 @@
 package bisq.satoshisquareapp.primary.main;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.primary.main.content.ContentView;
-import bisq.satoshisquareapp.primary.main.top.TopPanelView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
+import javafx.geometry.Insets;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
 public class MainView extends View<VBox, MainModel, MainController> {
 
     public MainView(MainModel model,
                     MainController controller,
-                    ContentView contentView,
-                    TopPanelView topPanelView) {
+                    Pane social,
+                    Pane topPanel) {
         super(new VBox(), model, controller);
 
-        root.getStyleClass().add("content-pane");
+        root.setPadding(new Insets(20, 20, 20, 20));
 
-        HBox leftNavAndContentBox = new HBox();
-        HBox.setHgrow(contentView.getRoot(), Priority.ALWAYS);
-        leftNavAndContentBox.getChildren().addAll(contentView.getRoot());
-
-        VBox.setVgrow(leftNavAndContentBox, Priority.ALWAYS);
-        root.getChildren().addAll(topPanelView.getRoot(), leftNavAndContentBox);
+        root.getChildren().addAll(topPanel, social);
     }
 
     @Override

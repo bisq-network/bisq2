@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.ContentController;
+import bisq.desktop.primary.main.content.social.SocialController;
 import bisq.satoshisquareapp.primary.main.top.TopPanelController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -36,18 +36,16 @@ public class MainController implements Controller, Navigation.Listener {
     @Getter
     private final MainView view;
     private final SettingsService settingsService;
-    private final DefaultApplicationService applicationService;
 
     public MainController(DefaultApplicationService applicationService) {
         settingsService = applicationService.getSettingsService();
-        this.applicationService = applicationService;
-        ContentController contentController = new ContentController(applicationService);
+        SocialController socialController = new SocialController(applicationService);
         TopPanelController topPanelController = new TopPanelController(applicationService);
 
         view = new MainView(model,
                 this,
-                contentController.getView(),
-                topPanelController.getView());
+                socialController.getView().getRoot(),
+                topPanelController.getView().getRoot());
 
         // By using ROOT we listen to all NavigationTargets
         Navigation.addListener(NavigationTarget.ROOT, this);
@@ -58,7 +56,7 @@ public class MainController implements Controller, Navigation.Listener {
         if (persisted != null) {
             Navigation.navigateTo(NavigationTarget.valueOf(persisted));
         } else {
-            Navigation.navigateTo(NavigationTarget.SETUP_INITIAL_USER_PROFILE);
+            Navigation.navigateTo(NavigationTarget.INIT_USER_PROFILE);
         }
     }
 
