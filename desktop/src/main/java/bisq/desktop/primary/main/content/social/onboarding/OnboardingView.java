@@ -17,16 +17,13 @@
 
 package bisq.desktop.primary.main.content.social.onboarding;
 
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.NavigationView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OnboardingView extends View<HBox, OnboardingModel, OnboardingController> {
+public class OnboardingView extends NavigationView<HBox, OnboardingModel, OnboardingController> {
     public OnboardingView(OnboardingModel model, OnboardingController controller) {
         super(new HBox(), model, controller);
 
@@ -38,13 +35,6 @@ public class OnboardingView extends View<HBox, OnboardingModel, OnboardingContro
 
     @Override
     protected void onViewAttached() {   
-        //todo
-        UIThread.runLater(() -> {
-            NavigationTarget navigationTarget = model.getNavigationTarget();
-            if (navigationTarget != null) {
-                Navigation.navigateTo(navigationTarget);
-            }
-        });
     }
 
     @Override

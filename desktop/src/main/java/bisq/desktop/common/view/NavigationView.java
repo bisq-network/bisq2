@@ -15,30 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content;
+package bisq.desktop.common.view;
 
-import bisq.desktop.common.view.NavigationView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
+import bisq.desktop.Navigation;
+import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.threading.UIThread;
+import javafx.scene.Node;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ContentView extends NavigationView<HBox, ContentModel, ContentController> {
+public abstract class NavigationView<R extends Node, M extends NavigationModel, C extends NavigationController> extends View<R, M, C> {
 
-    public ContentView(ContentModel model, ContentController controller) {
-        super(new HBox(), model, controller);
+    public NavigationView(R root, M model, C controller) {
+        super(root, model, controller);
+    }
 
-        model.getView().addListener((observable, oldValue, newValue) -> {
-            HBox.setHgrow(newValue.getRoot(), Priority.ALWAYS);
-            root.getChildren().setAll(newValue.getRoot());
+    @Override
+    void onViewAttachedInternal() {
+        UIThread.runLater(() -> {
+            NavigationTarget navigationTarget = model.getNavigationTarget();
+            if (navigationTarget != null) {
+                Navigation.navigateTo(navigationTarget);
+            }
         });
-    }
-
-    @Override
-    protected void onViewAttached() {
-    }
-
-    @Override
-    protected void onViewDetached() {
+        onViewAttached();
     }
 }

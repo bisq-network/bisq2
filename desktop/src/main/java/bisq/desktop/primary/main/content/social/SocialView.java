@@ -17,14 +17,11 @@
 
 package bisq.desktop.primary.main.content.social;
 
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.NavigationView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 
-public class SocialView extends View<HBox, SocialModel, SocialController> {
+public class SocialView extends NavigationView<HBox, SocialModel, SocialController> {
 
     public SocialView(SocialModel model, SocialController controller) {
         super(new HBox(), model, controller);
@@ -37,13 +34,6 @@ public class SocialView extends View<HBox, SocialModel, SocialController> {
 
     @Override
     protected void onViewAttached() {
-        //todo
-        UIThread.runLater(() -> {
-            NavigationTarget navigationTarget = model.getNavigationTarget();
-            if (navigationTarget != null) {
-                Navigation.navigateTo(navigationTarget);
-            }
-        });
     }
 
     @Override
