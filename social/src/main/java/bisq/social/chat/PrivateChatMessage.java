@@ -17,15 +17,12 @@
 
 package bisq.social.chat;
 
-import bisq.common.proto.ProtoResolver;
-import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
 import bisq.social.user.ChatUser;
 import com.google.protobuf.Any;
-import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -67,7 +64,7 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
                                MetaData metaData) {
         super(channelId,
                 sender,
-                text,
+                Optional.of(text),
                 quotedMessage,
                 date,
                 channelType,
@@ -101,16 +98,10 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
                 MetaData.fromProto(baseProto.getMetaData()));
     }
 
-    public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getResolver() {
-        return any -> {
-            try {
-                return fromProto(any.unpack(bisq.social.protobuf.ChatMessage.class));
-            } catch (InvalidProtocolBufferException e) {
-                throw new UnresolvableProtobufMessageException(e);
-            }
-        };
+    @Override
+    public String getText() {
+        return optionalText.get();
     }
-
     // Required for MailboxMessage use case
     @Override
     public MetaData getMetaData() {

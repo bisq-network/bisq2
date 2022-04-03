@@ -208,7 +208,7 @@ public class AmountInput {
         }
 
         private void applyAmount(Monetary newValue) {
-            textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue));
+            textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
         }
 
         @Override

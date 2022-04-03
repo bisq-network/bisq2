@@ -32,9 +32,9 @@ import java.util.Optional;
 
 @Slf4j
 class OfferFormatter {
-    static String formatAmountWithMinAmount(Monetary amount, Optional<Long> optionalMinAmount) {
-        return AmountFormatter.formatMinAmount(optionalMinAmount, amount) +
-                AmountFormatter.formatAmountWithCode(amount);
+    static String formatAmountWithMinAmount(Monetary amount, Optional<Long> optionalMinAmount, boolean useMinPrecision) {
+        return AmountFormatter.formatMinAmount(optionalMinAmount, amount, useMinPrecision) +
+                AmountFormatter.formatAmountWithCode(amount, useMinPrecision);
     }
 
     static String formatDate(long date) {

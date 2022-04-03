@@ -110,25 +110,29 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
 
     @Override
     public void onViewAttached() {
+        terms.textProperty().bindBidirectional(model.getTerms());
         publishButton.visibleProperty().bind(model.getCreateOfferButtonVisibleProperty());
         publishButton.managedProperty().bind(model.getCreateOfferButtonVisibleProperty());
-        terms.textProperty().bindBidirectional(model.getTerms());
+        publishButton.disableProperty().bind(model.getIsInvalidTradeIntent());
         publishButton.setOnAction(e -> controller.onCreateOffer());
         skipButton.setOnAction(e -> controller.onSkip());
         offerPreviewSubscription = EasyBind.subscribe(model.getOfferPreview(), text -> {
             if (text != null) {
+                offerPreview.clear();
                 offerPreview.replaceText(0, 0, text);
                 StyleSpans<Collection<String>> styleSpans = model.getStyleSpans().get();
                 offerPreview.setStyleSpans(0, styleSpans);
             }
         });
+
     }
 
     @Override
     public void onViewDetached() {
+        terms.textProperty().unbindBidirectional(model.getTerms());
         publishButton.visibleProperty().unbind();
         publishButton.managedProperty().unbind();
-        terms.textProperty().unbindBidirectional(model.getTerms());
+        publishButton.disableProperty().unbind();
         publishButton.setOnAction(null);
         skipButton.setOnAction(null);
         offerPreviewSubscription.unsubscribe();

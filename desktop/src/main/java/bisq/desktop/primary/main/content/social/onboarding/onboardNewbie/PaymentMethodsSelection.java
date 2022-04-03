@@ -24,6 +24,7 @@ import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
+import bisq.social.intent.TradeIntentService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -42,12 +43,14 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.stream.Collectors;
+
 @Slf4j
 public class PaymentMethodsSelection {
     private final Controller controller;
 
-    public PaymentMethodsSelection() {
-        controller = new Controller();
+    public PaymentMethodsSelection(TradeIntentService tradeIntentService) {
+        controller = new Controller(tradeIntentService);
     }
 
     void setSelectedMarket(Market selectedMarket) {
@@ -75,8 +78,8 @@ public class PaymentMethodsSelection {
         @Getter
         private final View view;
 
-        private Controller() {
-            model = new Model();
+        private Controller(TradeIntentService tradeIntentService) {
+            model = new Model(tradeIntentService);
             view = new View(model, this);
         }
 
@@ -137,20 +140,16 @@ public class PaymentMethodsSelection {
         public Market selectedMarket;
         public Direction direction;
 
-        public Model() {
-            //todo provide from domain
-            paymentMethods.add("SEPA");
-            paymentMethods.add("Bank transfer");
-            paymentMethods.add("Revolut");
-            paymentMethods.add("Zelle");
-            paymentMethods.add("Other");
+        public Model(TradeIntentService tradeIntentService) {
+            paymentMethods.addAll(tradeIntentService.getPersistableStore().getPaymentMethodTags().stream()
+                    .map(String::toUpperCase)
+                    .collect(Collectors.toList()));
         }
     }
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqComboBox<String> comboBox;
-        private final ChangeListener<String> selectedMarketListener;
         private final ListChangeListener<String> selectedPaymentMethodsListener;
         private final HBox box;
         private final BisqLabel description;
@@ -177,8 +176,6 @@ public class PaymentMethodsSelection {
             box.setPadding(new Insets(10, 0, 0, 0));
             root.getChildren().addAll(description, comboBox, maxPaymentMethods, box);
 
-            // From model
-            selectedMarketListener = (o, old, newValue) -> comboBox.getSelectionModel().select(newValue);
             selectedPaymentMethodsListener = c -> {
                 c.next();
                 box.getChildren().clear();

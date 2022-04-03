@@ -36,7 +36,7 @@ import java.util.Collection;
 public class OnboardNewbieModel implements Model {
     private final ObservableList<String> tradeTags = FXCollections.observableArrayList();
     private final ObservableList<String> currencyTags = FXCollections.observableArrayList();
-    private final ObservableList<String> paymentMethodTags = FXCollections.observableArrayList();
+    private final ObservableList<String> paymentMethodsTags = FXCollections.observableArrayList();
     @Setter
     private Market selectedMarket;
     @Setter
@@ -49,6 +49,7 @@ public class OnboardNewbieModel implements Model {
     private final ObservableList<String> selectedPaymentMethods = FXCollections.observableArrayList();
 
     private final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
+    private final BooleanProperty isInvalidTradeIntent = new SimpleBooleanProperty();
     private final StringProperty offerPreview = new SimpleStringProperty();
     private final StringProperty terms = new SimpleStringProperty();
     private final String userName ;

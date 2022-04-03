@@ -30,6 +30,7 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.social.intent.TradeIntent;
 import bisq.social.user.ChatUser;
 import bisq.social.user.Entitlement;
 import bisq.social.user.profile.UserProfile;
@@ -252,7 +253,17 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                     }
                 });
     }
-
+    public void publishTradeChatMessage(TradeIntent tradeIntent,
+                                        PublicChannel publicChannel,
+                                        UserProfile userProfile) {
+        TradeChatMessage chatMessage = new TradeChatMessage(publicChannel.getId(),
+                userProfile.chatUser(),
+                tradeIntent,
+                new Date().getTime(),
+                false);
+        networkService.publishAuthenticatedData(chatMessage,
+                userProfile.identity().getNodeIdAndKeyPair());
+    }
     public void sendPrivateChatMessage(String text, Optional<QuotedMessage> quotedMessage,
                                        PrivateChannel privateChannel) {
         String channelId = privateChannel.getId();

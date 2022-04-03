@@ -27,38 +27,52 @@ import java.util.Optional;
 
 @Slf4j
 public class AmountFormatter {
-    public static String formatAmountWithMinAmount(Monetary amount, Optional<Long> optionalMinAmount) {
-        return AmountFormatter.formatMinAmount(optionalMinAmount, amount) +
-                AmountFormatter.formatAmount(amount);
+    public static String formatAmountWithMinAmount(Monetary amount, Optional<Long> optionalMinAmount, boolean useMinPrecision) {
+        return AmountFormatter.formatMinAmount(optionalMinAmount, amount, useMinPrecision) +
+                AmountFormatter.formatAmount(amount, useMinPrecision);
     }
 
     public static String formatAmountWithCode(Monetary amount) {
-        return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale());
+        return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), false);
     }
 
-    public static String formatAmountWithCode(Monetary amount, Locale locale) {
-        return formatAmount(amount, locale) + " " + amount.getCode();
+    public static String formatAmountWithCode(Monetary amount, boolean useMinPrecision) {
+        return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), useMinPrecision);
+    }
+
+    public static String formatAmountWithCode(Monetary amount, Locale locale, boolean useMinPrecision) {
+        return formatAmount(amount, locale, useMinPrecision) + " " + amount.getCode();
     }
 
     public static String formatAmount(Monetary amount) {
-        return formatAmount(amount, LocaleRepository.getDefaultLocale());
+        return formatAmount(amount, LocaleRepository.getDefaultLocale(), false);
+    }
+
+    public static String formatAmount(Monetary amount, boolean useMinPrecision) {
+        return formatAmount(amount, LocaleRepository.getDefaultLocale(), useMinPrecision);
     }
 
     public static String formatAmount(Monetary amount, Locale locale) {
-        return getDecimalFormat(amount, locale).format(amount.asDouble());
+        return getDecimalFormat(amount, locale, false).format(amount.asDouble());
     }
 
-    public static String formatMinAmount(Optional<Long> optionalMinAmount, Monetary amount) {
-        return formatMinAmount(optionalMinAmount, amount, LocaleRepository.getDefaultLocale());
+    public static String formatAmount(Monetary amount, Locale locale, boolean useMinPrecision) {
+        return getDecimalFormat(amount, locale, useMinPrecision).format(amount.asDouble());
     }
 
-    public static String formatMinAmount(Optional<Long> optionalMinAmount, Monetary amount, Locale locale) {
+    public static String formatMinAmount(Optional<Long> optionalMinAmount, Monetary amount, boolean useMinPrecision) {
+        return formatMinAmount(optionalMinAmount, amount, LocaleRepository.getDefaultLocale(), useMinPrecision);
+    }
+
+    public static String formatMinAmount(Optional<Long> optionalMinAmount, Monetary amount, Locale locale, boolean useMinPrecision) {
         return optionalMinAmount
-                .map(minAmount -> getDecimalFormat(amount, locale).format(amount.toDouble(minAmount)) + " - ")
+                .map(minAmount -> getDecimalFormat(amount, locale, useMinPrecision).format(amount.toDouble(minAmount)) + " - ")
                 .orElse("");
     }
 
-    private static DecimalFormatters.Format getDecimalFormat(Monetary amount, Locale locale) {
-        return DecimalFormatters.getDecimalFormat(locale, amount.getPrecision());
+    private static DecimalFormatters.Format getDecimalFormat(Monetary amount, Locale locale, boolean useMinPrecision) {
+        return useMinPrecision ?
+                DecimalFormatters.getDecimalFormat(locale, amount.getMinPrecision()) :
+                DecimalFormatters.getDecimalFormat(locale, amount.getPrecision());
     }
 }

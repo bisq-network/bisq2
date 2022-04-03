@@ -23,8 +23,7 @@ import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.Offer;
 import bisq.oracle.daobridge.DaoBridgeData;
-import bisq.social.chat.PrivateChatMessage;
-import bisq.social.chat.PublicChatMessage;
+import bisq.social.chat.ChatMessage;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -40,13 +39,13 @@ public abstract class ServiceProvider {
         bisqConfig.checkValid(ConfigFactory.defaultReference(), configFileName);
    
         // Register resolvers for distributedData 
-        DistributedDataResolver.addResolver("social.ChatMessage", PublicChatMessage.getResolver());
+        DistributedDataResolver.addResolver("social.ChatMessage", ChatMessage.getDistributedDataResolver());
         DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
         DistributedDataResolver.addResolver("oracle.DaoBridgeData", DaoBridgeData.getResolver());
         DistributedDataResolver.addResolver("account.AccountAgeWitnessData", AccountAgeWitnessData.getResolver());
 
         // Register resolvers for networkMessages 
-        NetworkMessageResolver.addResolver("social.ChatMessage", PrivateChatMessage.getResolver());
+        NetworkMessageResolver.addResolver("social.ChatMessage", ChatMessage.getNetworkMessageResolver());
     }
 
     protected Config getConfig(String path) {

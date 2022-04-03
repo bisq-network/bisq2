@@ -31,6 +31,10 @@ public class BisqTextArea extends JFXTextArea {
     @Nullable
     private ChangeListener<Number> scrollTopListener;
 
+    public BisqTextArea() {
+        setStyle("-fx-background-color: -bs-background-color; -fx-border-color: -bs-background-color;");
+    }
+
     @Override
     protected Skin<?> createDefaultSkin() {
         return new JFXTextAreaSkinBisqStyle(this);
