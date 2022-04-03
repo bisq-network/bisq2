@@ -48,11 +48,11 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
 
         ImageView logo = new ImageView();
         logo.setId("satoshisquare-splash");
-        VBox.setMargin(logo, new Insets(-60, 0, 60, 0));
+        VBox.setMargin(logo, new Insets(-60, 0, 80, 0));
 
-        subTitle1 = getSubTitle(Res.get("satoshisquareapp.splash.subTitle1"));
-        subTitle2 = getSubTitle(Res.get("satoshisquareapp.splash.subTitle2"));
-        subTitle3 = getSubTitle(Res.get("satoshisquareapp.splash.subTitle3"));
+        subTitle1 = getSubTitle(Res.get("satoshisquareapp.splash.subTitle1").toUpperCase());
+        subTitle2 = getSubTitle(Res.get("satoshisquareapp.splash.subTitle2").toUpperCase());
+        subTitle3 = getSubTitle(Res.get("satoshisquareapp.splash.subTitle3").toUpperCase());
         Transitions.fadeIn(subTitle1);
         scheduler = UIScheduler.run(() -> {
                     if (sloganCounter == 1) {
@@ -72,10 +72,11 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         progressBar = new BisqProgressBar(-1);
         progressBar.setMaxHeight(2);
         progressBar.setMinWidth(400);
-        VBox.setMargin(progressBar, new Insets(60, 0, 0, 0));
+        VBox.setMargin(progressBar, new Insets(60, 0, 10, 0));
 
-        Label connectingTitle = new BisqLabel(Res.get("satoshisquareapp.splash.connecting"));
-        VBox.setMargin(connectingTitle, new Insets(20, 0, 0, 0));
+        Label connectingTitle = new BisqLabel(Res.get("satoshisquareapp.splash.connecting").toUpperCase());
+        connectingTitle.setStyle("-fx-font-size: 0.9em; -fx-text-fill: -fx-light-text-color;");
+        //VBox.setMargin(connectingTitle, new Insets(20, 0, 0, 0));
         Pane slogansPane = new StackPane();
         slogansPane.getChildren().addAll(subTitle1, subTitle2, subTitle3);
         root.getChildren().addAll(logo, slogansPane, progressBar, connectingTitle);
@@ -93,7 +94,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
 
     private Label getSubTitle(String text) {
         Label label = new BisqLabel(text);
-        label.setStyle("-fx-font-size: 1.6em; -fx-text-fill: -bs-color-gray-4;");
+        label.setStyle("-fx-font-size: 1.2em; -fx-text-fill: -fx-dark-text-color;");
         label.setTextAlignment(TextAlignment.CENTER);
         label.setOpacity(0);
         return label;
