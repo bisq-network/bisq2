@@ -24,6 +24,8 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.wallets.bitcoind.BitcoinWallet;
+import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
+import bisq.wallets.bitcoind.zeromq.BitcoindZeroMq;
 import bisq.wallets.elementsd.LiquidWallet;
 import bisq.wallets.exceptions.WalletNotInitializedException;
 import bisq.wallets.model.Transaction;
@@ -34,8 +36,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -50,6 +54,9 @@ public class WalletService implements PersistenceClient<WalletStore> {
     private final Optional<WalletConfig> walletConfig;
     @Getter
     private Optional<Wallet> wallet = Optional.empty();
+
+    private Optional<BitcoindZeroMq> bitcoindZeroMq = Optional.empty();
+    private final Set<String> utxoTxIds = new HashSet<>();
 
     @Getter
     private final Observable<Coin> observableBalanceAsCoin = new Observable<>(Coin.of(0, "BTC"));
@@ -79,6 +86,10 @@ public class WalletService implements PersistenceClient<WalletStore> {
                 case BITCOIND -> {
                     var bitcoindWallet = createBitcoinWallet(walletConfig, walletsDataDir);
                     bitcoindWallet.initialize(walletPassphrase);
+
+                    BitcoindZeroMq bitcoindZeroMq = initializeBitcoindZeroMq(bitcoindWallet.getDaemon());
+                    this.bitcoindZeroMq = Optional.of(bitcoindZeroMq);
+
                     yield bitcoindWallet;
                 }
                 case ELEMENTSD -> {
@@ -109,8 +120,36 @@ public class WalletService implements PersistenceClient<WalletStore> {
         return new LiquidWallet(bitcoindDataDir, rpcConfig);
     }
 
+    private BitcoindZeroMq initializeBitcoindZeroMq(BitcoindDaemon bitcoindDaemon) {
+        var bitcoindZeroMq = new BitcoindZeroMq(bitcoindDaemon);
+        bitcoindZeroMq.initialize();
+        // Update balance when new block gets mined
+        bitcoindZeroMq.getListeners().registerNewBlockMinedListener(unused -> updateBalance());
+
+        // Update balance if a UTXO is spent
+        bitcoindZeroMq.getListeners().registerTransactionIdInInputListener(txId -> {
+            if (utxoTxIds.contains(txId)) {
+                updateBalance();
+            }
+        });
+
+        // Update balance if a receive address is in tx output
+        ObservableSet<String> receiveAddresses = persistableStore.getReceiveAddresses();
+        bitcoindZeroMq.getListeners().registerTxOutputAddressesListener(addresses -> {
+            boolean receiveAddressInTxOutput = addresses.stream().anyMatch(receiveAddresses::contains);
+            if (receiveAddressInTxOutput) {
+                updateBalance();
+            }
+        });
+
+        return bitcoindZeroMq;
+    }
+
     public CompletableFuture<Void> shutdown() {
-        return CompletableFuture.runAsync(() -> wallet.ifPresent(Wallet::shutdown));
+        return CompletableFuture.runAsync(() -> {
+            bitcoindZeroMq.ifPresent(BitcoindZeroMq::shutdown);
+            wallet.ifPresent(Wallet::shutdown);
+        });
     }
 
     public boolean isWalletReady() {
@@ -120,9 +159,20 @@ public class WalletService implements PersistenceClient<WalletStore> {
     private void updateBalance() {
         CompletableFuture.runAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
-            double walletBalance = wallet.getBalance();
-            Coin coin = Coin.of(walletBalance, "BTC");
-            observableBalanceAsCoin.set(coin);
+            double balance = wallet.getBalance();
+            Coin coin = Coin.of(balance, "BTC");
+
+            // Balance changed?
+            if (!observableBalanceAsCoin.get().equals(coin)) {
+                observableBalanceAsCoin.set(coin);
+
+                listUnspent().thenAccept(utxos -> {
+                    utxoTxIds.clear();
+                    utxos.stream()
+                            .map(Utxo::getTxId)
+                            .forEach(utxoTxIds::add);
+                });
+            }
         });
     }
 
