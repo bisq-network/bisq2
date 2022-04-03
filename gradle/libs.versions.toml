@@ -8,6 +8,7 @@
 guava =         { strictly = '31.1-jre' }
 i2p =           { strictly = '1.7.0' }
 junit-jupiter = { strictly = '5.8.2' }
+lombok =        { strictly = '1.18.22'}
 openjfx =       { strictly = '0.0.12' }
 protobuf =      { strictly = '0.8.18' }
 protobuf-java = { strictly = '3.19.4' }
@@ -23,6 +24,7 @@ i2p-core =          { module = 'net.i2p:i2p',                       version.ref 
 i2p-router =        { module = 'net.i2p:router',                    version.ref = 'i2p' }
 junit-jupiter-api = { module = 'org.junit.jupiter:junit-jupiter-api', version.ref = 'junit-jupiter' }
 junit-jupiter-engine = { module = 'org.junit.jupiter:junit-jupiter-engine', version.ref = 'junit-jupiter' }
+lombok =            { module = 'org.projectlombok:lombok',          version.ref = 'lombok' }
 protobuf-java =     { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java' }
 typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-config' }
 
