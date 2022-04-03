@@ -25,12 +25,17 @@ import lombok.Getter;
 public class TopPanelController implements Controller {
     @Getter
     private final TopPanelView view;
+    private final TopPanelModel model;
 
     public TopPanelController(DefaultApplicationService applicationService) {
-        TopPanelModel model = new TopPanelModel();
+        model = new TopPanelModel();
         view = new TopPanelView(model, this, new MarketPriceComponent(applicationService.getMarketPriceService()).getRootPane());
     }
 
+    public void setMarketPriceBoxVisible(boolean value) {
+        model.getMarketPriceBoxVisible().set(value);
+    }
+    
     @Override
     public void onActivate() {
     }

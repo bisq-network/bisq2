@@ -26,12 +26,23 @@ import lombok.Getter;
 public class TopPanelController implements Controller {
     @Getter
     private final TopPanelView view;
+    private final TopPanelModel model;
+    private final MarketPriceComponent marketPriceComponent;
+    private final WalletBalanceComponent walletBalanceComponent;
 
     public TopPanelController(DefaultApplicationService applicationService) {
-        TopPanelModel model = new TopPanelModel();
-        var marketPriceComponent = new MarketPriceComponent(applicationService.getMarketPriceService());
-        var walletBalanceComponent = new WalletBalanceComponent(applicationService.getWalletService());
+        model = new TopPanelModel();
+        marketPriceComponent = new MarketPriceComponent(applicationService.getMarketPriceService());
+        walletBalanceComponent = new WalletBalanceComponent(applicationService.getWalletService());
         view = new TopPanelView(model, this, marketPriceComponent.getRootPane(), walletBalanceComponent.getRootPane());
+    }
+
+    public void setMarketPriceBoxVisible(boolean value) {
+        model.getMarketPriceBoxVisible().set(value);
+    }
+
+    public void setWalletBalanceBoxVisible(boolean value) {
+        model.getWalletBalanceBoxVisible().set(value);
     }
 
     @Override

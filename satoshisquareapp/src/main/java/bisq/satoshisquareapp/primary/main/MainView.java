@@ -18,7 +18,6 @@
 package bisq.satoshisquareapp.primary.main;
 
 import bisq.desktop.common.view.View;
-import javafx.geometry.Insets;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
@@ -29,8 +28,6 @@ public class MainView extends View<VBox, MainModel, MainController> {
                     Pane social,
                     Pane topPanel) {
         super(new VBox(), model, controller);
-
-        root.setPadding(new Insets(20, 20, 20, 20));
 
         root.getChildren().addAll(topPanel, social);
     }

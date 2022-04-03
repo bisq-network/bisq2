@@ -26,10 +26,13 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 
 public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> {
+    private final Pane marketPriceBox;
+
     public TopPanelView(TopPanelModel model,
                         TopPanelController controller,
                         Pane marketPriceBox) {
         super(new HBox(), model, controller);
+        this.marketPriceBox = marketPriceBox;
 
         root.setMinHeight(53);
         root.setMaxHeight(root.getMinHeight());
@@ -42,9 +45,11 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
 
     @Override
     protected void onViewAttached() {
+        marketPriceBox.visibleProperty().bind(model.getMarketPriceBoxVisible());
     }
 
     @Override
     protected void onViewDetached() {
+        marketPriceBox.visibleProperty().unbind();
     }
 }

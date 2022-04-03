@@ -19,6 +19,12 @@ package bisq.desktop.primary.main.top;
 
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import lombok.Getter;
 
+@Getter
 public class TopPanelModel implements Model {
+    private BooleanProperty marketPriceBoxVisible = new SimpleBooleanProperty();
+    private BooleanProperty walletBalanceBoxVisible = new SimpleBooleanProperty();
 }

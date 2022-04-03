@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.social.onboarding.onboardNewbie;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.BisqScrollPane;
+import bisq.desktop.components.containers.SectionBox;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqTextArea;
@@ -57,30 +58,28 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
         vBox.getStyleClass().add("content-pane");
         vBox.setSpacing(20);
         vBox.setFillWidth(true);
+        vBox.setPadding(new Insets(0,20,20,20));
         root.setContent(vBox);
-
-        Pane section1Headline = getSectionHeadline(Res.get("satoshisquareapp.createOffer.section1.headline"));
-        VBox.setMargin(section1Headline, new Insets(0, -20, -20, -20));
-
-        Pane section2Headline = getSectionHeadline(Res.get("satoshisquareapp.createOffer.section2.headline"));
-        VBox.setMargin(section2Headline, new Insets(0, -20, -20, -20));
-
+       
         double width = 560;
         paymentMethods.setWidth(width / 2 - 30);
-        VBox leftBox = getVBox(width);
-        leftBox.getChildren().addAll(section1Headline, marketSelection, amountPrice, section2Headline, paymentMethods.getRoot());
+        SectionBox leftBox = new SectionBox(Res.get("satoshisquareapp.createOffer.section1.headline"));
+        leftBox.setPrefWidth(width);
+        Pane section2Headline = SectionBox.getHeadline(Res.get("satoshisquareapp.createOffer.section2.headline"));
+        VBox.setMargin(section2Headline, new Insets(0, -20, -20, -20));
+        leftBox.getChildren().addAll(marketSelection, amountPrice, section2Headline, paymentMethods.getRoot());
 
-        VBox rightBox = getVBox(width);
+        SectionBox rightBox = new SectionBox(Res.get("satoshisquareapp.createOffer.section3.headline"));
+        leftBox.setPrefWidth(width);
 
-        Pane section3Headline = getSectionHeadline(Res.get("satoshisquareapp.createOffer.section3.headline"));
-        VBox.setMargin(section3Headline, new Insets(0, -20, -20, -20));
-
+        Pane section3Headline = SectionBox.getHeadline(Res.get("satoshisquareapp.createOffer.section3.headline"));
+      
         offerPreview = new StyleClassedTextArea();
         offerPreview.setWrapText(true);
         offerPreview.setBackground(null);
         offerPreview.setStyle("-fx-fill: white");
 
-        Pane section4Headline = getSectionHeadline(Res.get("satoshisquareapp.createOffer.section4.headline"));
+        Pane section4Headline = SectionBox.getHeadline(Res.get("satoshisquareapp.createOffer.section4.headline"));
         VBox.setMargin(section4Headline, new Insets(0, -20, -20, -20));
 
         terms = new BisqTextArea();
@@ -124,7 +123,6 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
                 offerPreview.setStyleSpans(0, styleSpans);
             }
         });
-
     }
 
     @Override
@@ -137,25 +135,4 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
         skipButton.setOnAction(null);
         offerPreviewSubscription.unsubscribe();
     }
-
-    private VBox getVBox(double width) {
-        VBox vBox = new VBox();
-        vBox.setSpacing(30);
-        vBox.setPrefWidth(width);
-        vBox.setMinWidth(560);
-        vBox.setPadding(new Insets(20, 20, 20, 20));
-        vBox.setStyle("-fx-background-color: #181818; -fx-background-radius: 10");
-        return vBox;
-    }
-
-    private Pane getSectionHeadline(String headline) {
-        Label label = new Label(headline);
-        label.setStyle("-fx-font-size: 1.5em; -fx-text-fill: #ddd;");
-        label.setPadding(new Insets(10, 10, 10, 10));
-        Pane pane = new Pane();
-        pane.setStyle("-fx-background-color: #111;");
-        pane.getChildren().add(label);
-        return pane;
-    }
-
 }
