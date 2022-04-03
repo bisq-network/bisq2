@@ -93,7 +93,7 @@ public class Transitions {
         KeyFrame kf2 = new KeyFrame(Duration.millis(getDuration(duration)), kv2);
         timeline.getKeyFrames().addAll(kf1, kf2);
         node.setEffect(blur);
-        if (removeNode) timeline.setOnFinished(actionEvent -> UIThread.run(() -> ((Pane) (node.getParent()))
+        if (removeNode) timeline.setOnFinished(actionEvent -> UIThread.runLater(() -> ((Pane) (node.getParent()))
                 .getChildren().remove(node)));
         timeline.play();
     }
