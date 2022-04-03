@@ -25,6 +25,7 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.Notification;
 import bisq.desktop.overlay.Overlay;
+import bisq.desktop.overlay.Popup;
 import bisq.satoshisquareapp.primary.main.MainController;
 import bisq.satoshisquareapp.primary.splash.SplashController;
 import bisq.settings.CookieKey;
@@ -83,7 +84,8 @@ public class PrimaryStageController implements Controller {
     }
 
     public void onUncaughtException(Thread thread, Throwable throwable) {
-        // todo show error popup
+        log.error("UncaughtException on thread: {}. Error = {}", thread.getName(), throwable);
+        new Popup().error(throwable.toString()).show();
     }
 
     public void onQuit() {
