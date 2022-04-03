@@ -52,11 +52,11 @@ public class BisqTextArea extends JFXTextArea {
         if (scrollTopListener == null) {
             scrollTopListener = (observable, oldValue, newValue) -> {
                 if (newValue.doubleValue() >= rowHeight) {
-                    UIThread.runLater(() -> adjustedHeight.set(adjustedHeight.get() + newValue.doubleValue()));
+                    UIThread.runOnNextRenderFrame(() -> adjustedHeight.set(adjustedHeight.get() + newValue.doubleValue()));
                 }
             };
             scrollTopProperty().addListener(scrollTopListener);
-            UIThread.runLater(() -> adjustedHeight.set(adjustedHeight.get() + getScrollTop()));
+            UIThread.runOnNextRenderFrame(() -> adjustedHeight.set(adjustedHeight.get() + getScrollTop()));
         }
     }
 

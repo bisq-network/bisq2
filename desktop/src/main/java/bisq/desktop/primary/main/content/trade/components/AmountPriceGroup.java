@@ -119,13 +119,13 @@ public class AmountPriceGroup {
             // apply the conversion before the other component has processed the market change event.
             // The order of the event notification is not deterministic. 
             baseCurrencyAmountListener = (observable, oldValue, newValue) -> {
-                UIThread.runLater(this::setQuoteFromBase);
+                UIThread.runOnNextRenderFrame(this::setQuoteFromBase);
             };
             quoteCurrencyAmountListener = (observable, oldValue, newValue) -> {
-                UIThread.runLater(this::setBaseFromQuote);
+                UIThread.runOnNextRenderFrame(this::setBaseFromQuote);
             };
             fixPriceQuoteListener = (observable, oldValue, newValue) -> {
-                UIThread.runLater(this::applyFixPrice);
+                UIThread.runOnNextRenderFrame(this::applyFixPrice);
             };
         }
 

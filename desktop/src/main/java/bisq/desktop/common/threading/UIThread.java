@@ -26,7 +26,7 @@ public class UIThread {
         }
     }
 
-    public static void runLater(Runnable task) {
+    public static void runOnNextRenderFrame(Runnable task) {
         Platform.runLater(task);
     }
 }

@@ -32,7 +32,7 @@ public abstract class NavigationView<R extends Node, M extends NavigationModel, 
 
     @Override
     void onViewAttachedInternal() {
-        UIThread.runLater(() -> {
+        UIThread.runOnNextRenderFrame(() -> {
             NavigationTarget navigationTarget = model.getNavigationTarget();
             if (navigationTarget != null) {
                 Navigation.navigateTo(navigationTarget);

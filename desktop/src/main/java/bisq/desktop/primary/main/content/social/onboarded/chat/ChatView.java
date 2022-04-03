@@ -305,7 +305,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                     VBox contentBox = Layout.vBoxWith(iconAndUserName, quotedMessageField);
                                     contentBox.setSpacing(0);
                                     quotedMessageBox.getChildren().setAll(verticalLine, contentBox);
-                                    UIThread.runLater(() -> verticalLine.setMinHeight(contentBox.getHeight() - 10));
+                                    UIThread.runOnNextRenderFrame(() -> verticalLine.setMinHeight(contentBox.getHeight() - 10));
                                 }
                             } else {
                                 quotedMessageBox.getChildren().clear();

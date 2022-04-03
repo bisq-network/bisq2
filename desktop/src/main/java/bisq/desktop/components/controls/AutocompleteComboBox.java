@@ -147,7 +147,7 @@ public class AutocompleteComboBox<T> extends JFXComboBox<T> {
 
     private void reactToQueryChanges() {
         getEditor().addEventHandler(KeyEvent.KEY_RELEASED, (KeyEvent event) -> {
-            UIThread.runLater(() -> {
+            UIThread.runOnNextRenderFrame(() -> {
                 String query = getEditor().getText();
                 var exactMatch = completeList.stream().anyMatch(item -> asString(item).equalsIgnoreCase(query));
                 if (!exactMatch) {

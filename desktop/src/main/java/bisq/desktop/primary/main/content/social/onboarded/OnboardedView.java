@@ -17,9 +17,7 @@
 
 package bisq.desktop.primary.main.content.social.onboarded;
 
-import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.NavigationTargetTab;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
@@ -41,12 +39,12 @@ public class OnboardedView extends TabView<JFXTabPane, OnboardedModel, Onboarded
     @Override
     protected void onViewAttached() {
         //todo
-        UIThread.runLater(() -> {
+      /*  UIThread.runLater(() -> {
             NavigationTarget navigationTarget = model.getNavigationTarget();
             if (navigationTarget != null) {
                 Navigation.navigateTo(navigationTarget);
             }
-        });
+        });*/
     }
 
     @Override

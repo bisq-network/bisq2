@@ -60,7 +60,7 @@ public abstract class TabView<R extends TabPane, M extends TabModel, C extends T
         model.getView().addListener(viewChangeListener);
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         // We need to delay a bit to give the child view chance to register the collection
-        UIThread.runLater(() -> controller.onTabSelected(model.getNavigationTarget()));
+        UIThread.runOnNextRenderFrame(() -> controller.onTabSelected(model.getNavigationTarget()));
 
         onViewAttached();
     }
