@@ -74,25 +74,21 @@ public class UIScheduler implements TaskScheduler {
 
     @Override
     public UIScheduler repeated(long delay, TimeUnit timeUnit, long cycles) {
-        UIThread.run(() -> {
-            if (timer != null) {
-                timer.stop();
-            }
-            long period = timeUnit.toMillis(delay);
-            timer = new FxTimer(period, period, task, (int) cycles);
-            timer.restart();
-        });
+        if (timer != null) {
+            timer.stop();
+        }
+        long period = timeUnit.toMillis(delay);
+        timer = new FxTimer(period, period, task, (int) cycles);
+        timer.restart();
         return this;
     }
 
     @Override
     public void stop() {
-        UIThread.run(() -> {
-            if (timer != null) {
-                timer.stop();
-                timer = null;
-            }
-        });
+        if (timer != null) {
+            timer.stop();
+            timer = null;
+        }
     }
 
     @Override
