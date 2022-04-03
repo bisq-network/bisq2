@@ -28,12 +28,15 @@ import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
+import lombok.Setter;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 public class InitialUserProfileView extends View<VBox, InitialUserProfileModel, InitUserProfileController> {
-    public static Pos alignment = Pos.TOP_LEFT;
-    public static TextAlignment textAlignment = TextAlignment.LEFT;
+    @Setter
+    private static Pos alignment = Pos.TOP_LEFT;
+    @Setter
+    private static TextAlignment textAlignment = TextAlignment.LEFT;
 
     private final ImageView roboIconImageView;
     private final BisqButton createUserButton;

@@ -46,8 +46,8 @@ public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, Primar
     public PrimaryStageView(PrimaryStageModel model, PrimaryStageController controller, Stage stage) {
         super(new AnchorPane(), model, controller);
 
-        InitialUserProfileView.alignment = Pos.CENTER;
-        InitialUserProfileView.textAlignment = TextAlignment.CENTER.CENTER;
+        InitialUserProfileView.setAlignment(Pos.CENTER);
+        InitialUserProfileView.setTextAlignment(TextAlignment.CENTER);
 
         root.getStyleClass().add("content-pane");
         this.stage = stage;

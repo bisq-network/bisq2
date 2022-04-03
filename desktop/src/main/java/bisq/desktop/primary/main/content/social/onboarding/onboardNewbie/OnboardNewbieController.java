@@ -129,13 +129,14 @@ public class OnboardNewbieController implements Controller {
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         String channelName = chatService.findPublicChannelForMarket(model.getSelectedMarket()).orElseThrow().getChannelName();
-                        new Popup().feedback(Res.get("satoshisquareapp.createOffer.publish.success", channelName))
+                        new Popup().confirmation(Res.get("satoshisquareapp.createOffer.publish.success", channelName))
                                 .actionButtonText(Res.get("satoshisquareapp.createOffer.publish.goToChat", channelName))
                                 .onAction(() -> Navigation.navigateTo(NavigationTarget.CHAT))
                                 .hideCloseButton()
                                 .show();
                     } else {
-                        //todo error
+                        //todo
+                        new Popup().error(throwable.toString()).show();
                     }
                 });
     }
