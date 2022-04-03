@@ -18,6 +18,7 @@
 package bisq.wallets.bitcoind.rpc;
 
 import bisq.wallets.bitcoind.rpc.calls.*;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindFinalizePsbtResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.rpc.RpcClient;
@@ -44,6 +45,12 @@ public class BitcoindDaemon {
                 loadWallet(walletPath);
             }
         }
+    }
+
+    public BitcoindDecodeRawTransactionResponse decodeRawTransaction(String hexString) {
+        var request = new BitcoindDecodeRawTransactionRpcCall.Request(hexString);
+        var rpcCall = new BitcoindDecodeRawTransactionRpcCall(request);
+        return rpcClient.invokeAndValidate(rpcCall);
     }
 
     public BitcoindFinalizePsbtResponse finalizePsbt(String psbt) {
