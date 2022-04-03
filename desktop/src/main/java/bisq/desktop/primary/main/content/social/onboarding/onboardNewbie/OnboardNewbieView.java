@@ -90,7 +90,7 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
 
         publishButton = new BisqButton(Res.get("satoshisquareapp.createOffer.publish"));
         publishButton.getStyleClass().add("action-button");
-        skipButton = new BisqButton(Res.get("skip"));
+        skipButton = new BisqButton(Res.get("satoshisquareapp.createOffer.skip"));
 
         HBox hBox = Layout.hBoxWith(leftBox, rightBox);
         HBox.setHgrow(leftBox, Priority.ALWAYS);

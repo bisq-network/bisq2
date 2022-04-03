@@ -85,7 +85,6 @@ public abstract class ChatMessage {
     }
 
     public static ChatMessage fromProto(bisq.social.protobuf.ChatMessage proto) {
-        log.error("fromProto {}",proto);
         switch (proto.getMessageCase()) {
             case PRIVATECHATMESSAGE -> {
                 return PrivateChatMessage.fromProto(proto);
@@ -107,7 +106,6 @@ public abstract class ChatMessage {
         return any -> {
             try {
                 bisq.social.protobuf.ChatMessage proto = any.unpack(bisq.social.protobuf.ChatMessage.class);
-                log.error("getDistributedDataResolver {}",proto);
                 switch (proto.getMessageCase()) {
                     case PUBLICCHATMESSAGE -> {
                         return PublicChatMessage.fromProto(proto);

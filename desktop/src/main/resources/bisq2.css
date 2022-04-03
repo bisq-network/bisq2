@@ -120,6 +120,10 @@ New css for bisq2.
     -fx-fill: -bs-turquoise;
 }
 
+.keyword-customTags {
+    -fx-fill: -bs-yellow;
+}
+
 .keyword-none {
     -fx-fill: -fx-dark-text-color;
 }

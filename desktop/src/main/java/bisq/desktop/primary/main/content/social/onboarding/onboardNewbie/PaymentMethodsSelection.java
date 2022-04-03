@@ -24,7 +24,7 @@ import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
-import bisq.social.intent.TradeIntentService;
+import bisq.social.chat.ChatService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -49,8 +49,8 @@ import java.util.stream.Collectors;
 public class PaymentMethodsSelection {
     private final Controller controller;
 
-    public PaymentMethodsSelection(TradeIntentService tradeIntentService) {
-        controller = new Controller(tradeIntentService);
+    public PaymentMethodsSelection(ChatService chatService) {
+        controller = new Controller(chatService);
     }
 
     void setSelectedMarket(Market selectedMarket) {
@@ -77,14 +77,20 @@ public class PaymentMethodsSelection {
         private final Model model;
         @Getter
         private final View view;
+        private final ChatService chatService;
 
-        private Controller(TradeIntentService tradeIntentService) {
-            model = new Model(tradeIntentService);
+        private Controller(ChatService chatService) {
+            this.chatService = chatService;
+            model = new Model();
             view = new View(model, this);
         }
 
         private void setSelectedMarket(Market selectedMarket) {
+            if (selectedMarket == null) {
+                return;
+            }
             model.selectedMarket = selectedMarket;
+            updatePaymentMethods();
             updateDescription();
         }
 
@@ -129,6 +135,14 @@ public class PaymentMethodsSelection {
                         model.selectedMarket.quoteCurrencyCode()));
             }
         }
+
+        private void updatePaymentMethods() {
+            chatService.findPublicChannelForMarket(model.selectedMarket).ifPresent(publicChannel -> {
+                model.paymentMethods.addAll(publicChannel.getPaymentMethodTags().stream()
+                        .map(String::toUpperCase)
+                        .collect(Collectors.toList()));
+            });
+        }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
@@ -137,13 +151,10 @@ public class PaymentMethodsSelection {
         private final BooleanProperty selectPaymentMethodsDisabled = new SimpleBooleanProperty();
         private final StringProperty description = new SimpleStringProperty();
         private final DoubleProperty width = new SimpleDoubleProperty(Double.MAX_VALUE);
-        public Market selectedMarket;
-        public Direction direction;
+        private Market selectedMarket;
+        private Direction direction;
 
-        public Model(TradeIntentService tradeIntentService) {
-            paymentMethods.addAll(tradeIntentService.getPersistableStore().getPaymentMethodTags().stream()
-                    .map(String::toUpperCase)
-                    .collect(Collectors.toList()));
+        private Model() {
         }
     }
 
@@ -170,7 +181,7 @@ public class PaymentMethodsSelection {
 
             comboBox = new BisqComboBox<>();
             comboBox.setItems(model.paymentMethods);
-            
+
             box = new HBox();
             box.setSpacing(10);
             box.setPadding(new Insets(10, 0, 0, 0));

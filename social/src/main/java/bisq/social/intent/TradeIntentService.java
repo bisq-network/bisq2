@@ -17,15 +17,19 @@
 
 package bisq.social.intent;
 
+import bisq.common.monetary.Market;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.p2p.services.data.DataService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.social.chat.ChatService;
+import bisq.social.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -51,5 +55,20 @@ public class TradeIntentService implements PersistenceClient<TradeIntentStore> {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         return CompletableFuture.completedFuture(true);
+    }
+
+    public CompletableFuture<DataService.BroadCastDataResult> publishTradeIntent(Market selectedMarket,
+                                                                                 long baseSideAmount,
+                                                                                 Set<String> selectedPaymentMethods,
+                                                                                 String makersTradeTerms) {
+        return chatService.findPublicChannelForMarket(selectedMarket)
+                .map(publicChannel -> {
+                    UserProfile userProfile = chatService.getUserProfileService().getPersistableStore().getSelectedUserProfile().get();
+                    TradeIntent tradeIntent = new TradeIntent(baseSideAmount,
+                            selectedMarket.quoteCurrencyCode(),
+                            selectedPaymentMethods,
+                            makersTradeTerms);
+                    return chatService.publishTradeChatMessage(tradeIntent, publicChannel, userProfile);
+                }).orElseThrow();
     }
 }

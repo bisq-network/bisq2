@@ -37,6 +37,7 @@ public class OnboardNewbieModel implements Model {
     private final ObservableList<String> tradeTags = FXCollections.observableArrayList();
     private final ObservableList<String> currencyTags = FXCollections.observableArrayList();
     private final ObservableList<String> paymentMethodsTags = FXCollections.observableArrayList();
+    private final ObservableList<String> customTags = FXCollections.observableArrayList();
     @Setter
     private Market selectedMarket;
     @Setter

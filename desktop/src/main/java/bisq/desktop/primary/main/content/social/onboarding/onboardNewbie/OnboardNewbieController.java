@@ -18,61 +18,52 @@
 package bisq.desktop.primary.main.content.social.onboarding.onboardNewbie;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.observable.ObservableSet;
 import bisq.common.observable.Pin;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.utils.KeyWordDetection;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.overlay.Popup;
 import bisq.desktop.primary.main.content.trade.components.MarketSelection;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.social.chat.ChatService;
-import bisq.social.chat.PublicChannel;
-import bisq.social.intent.TradeIntent;
 import bisq.social.intent.TradeIntentService;
-import bisq.social.intent.TradeIntentStore;
-import bisq.social.user.profile.UserProfile;
 import com.google.common.base.Joiner;
 import javafx.beans.InvalidationListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.fxmisc.richtext.model.StyleSpans;
-import org.fxmisc.richtext.model.StyleSpansBuilder;
 
-import java.text.BreakIterator;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 
 @Slf4j
 public class OnboardNewbieController implements Controller {
-    private final TradeIntentService tradeIntentService;
     private final OnboardNewbieModel model;
     @Getter
     private final OnboardNewbieView view;
     private final MarketSelection marketSelection;
     private final BtcFiatAmountGroup btcFiatAmountGroup;
-    private final DefaultApplicationService applicationService;
     private final PaymentMethodsSelection paymentMethodsSelection;
-    private Pin tradeTagsPin, currencyTagsPin, paymentMethodTagsPin;
+    private final ChatService chatService;
+    private final TradeIntentService tradeIntentService;
+    private Pin tradeTagsPin, currencyTagsPin, paymentMethodTagsPin, customTagsPin;
 
     private Subscription selectedMarketSubscription, baseSideAmountSubscription;
     private final InvalidationListener paymentMethodsSelectionListener;
 
     public OnboardNewbieController(DefaultApplicationService applicationService) {
-        this.applicationService = applicationService;
         tradeIntentService = applicationService.getTradeIntentService();
+        chatService = applicationService.getChatService();
         model = new OnboardNewbieModel(applicationService.getUserProfileService().getPersistableStore().getSelectedUserProfile().get().userName());
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
         btcFiatAmountGroup = new BtcFiatAmountGroup(applicationService.getMarketPriceService());
 
-        paymentMethodsSelection = new PaymentMethodsSelection(applicationService.getTradeIntentService());
+        paymentMethodsSelection = new PaymentMethodsSelection(chatService);
 
         view = new OnboardNewbieView(model, this,
                 marketSelection.getRoot(),
@@ -89,7 +80,6 @@ public class OnboardNewbieController implements Controller {
         };
     }
 
-
     @Override
     public void onActivate() {
         selectedMarketSubscription = EasyBind.subscribe(marketSelection.selectedMarketProperty(),
@@ -97,6 +87,13 @@ public class OnboardNewbieController implements Controller {
                     model.setSelectedMarket(selectedMarket);
                     btcFiatAmountGroup.setSelectedMarket(selectedMarket);
                     paymentMethodsSelection.setSelectedMarket(selectedMarket);
+                    chatService.findPublicChannelForMarket(selectedMarket).ifPresent(publicChannel -> {
+                        tradeTagsPin = FxBindings.<String, String>bind(model.getTradeTags()).map(String::toUpperCase).to(publicChannel.getTradeTags());
+                        currencyTagsPin = FxBindings.<String, String>bind(model.getCurrencyTags()).map(String::toUpperCase).to(publicChannel.getCurrencyTags());
+                        paymentMethodTagsPin = FxBindings.<String, String>bind(model.getPaymentMethodsTags()).map(String::toUpperCase).to(publicChannel.getPaymentMethodTags());
+                        customTagsPin = FxBindings.<String, String>bind(model.getCustomTags()).map(String::toUpperCase).to(publicChannel.getCustomTags());
+                    });
+
                     updateOfferPreview();
                 });
         baseSideAmountSubscription = EasyBind.subscribe(btcFiatAmountGroup.baseSideAmountProperty(),
@@ -104,11 +101,6 @@ public class OnboardNewbieController implements Controller {
                     model.setBaseSideAmount(e);
                     updateOfferPreview();
                 });
-
-        TradeIntentStore tradeIntentStore = tradeIntentService.getPersistableStore();
-        tradeTagsPin = FxBindings.<String, String>bind(model.getTradeTags()).map(String::toUpperCase).to(tradeIntentStore.getTradeTags());
-        currencyTagsPin = FxBindings.<String, String>bind(model.getCurrencyTags()).map(String::toUpperCase).to(tradeIntentStore.getCurrencyTags());
-        paymentMethodTagsPin = FxBindings.<String, String>bind(model.getPaymentMethodsTags()).map(String::toUpperCase).to(tradeIntentStore.getPaymentMethodTags());
 
         paymentMethodsSelection.getSelectedPaymentMethods().addListener(paymentMethodsSelectionListener);
 
@@ -125,28 +117,28 @@ public class OnboardNewbieController implements Controller {
         tradeTagsPin.unbind();
         currencyTagsPin.unbind();
         paymentMethodTagsPin.unbind();
+        customTagsPin.unbind();
         paymentMethodsSelection.getSelectedPaymentMethods().removeListener(paymentMethodsSelectionListener);
     }
 
     void onCreateOffer() {
-        ChatService chatService = applicationService.getChatService();
-        ObservableSet<PublicChannel> publicChannels = chatService.getPersistableStore().getPublicChannels();
-        PublicChannel publicChannel = publicChannels.stream()
-                .filter(e -> e.getChannelName().toLowerCase().contains(model.getSelectedMarket().quoteCurrencyCode().toLowerCase()))
-                .findAny()
-                .orElse(publicChannels.stream()
-                        .filter(e -> e.getChannelName().toLowerCase().contains("other"))
-                        .findAny()
-                        .orElseThrow());
-        UserProfile userProfile = applicationService.getUserProfileService().getPersistableStore().getSelectedUserProfile().get();
-
-        TradeIntent tradeIntent = new TradeIntent(model.getBaseSideAmount().getValue(),
-                model.getSelectedMarket().quoteCurrencyCode(),
-                new HashSet<>(model.getSelectedPaymentMethods()));
-        chatService.publishTradeChatMessage(tradeIntent, publicChannel, userProfile);
-        Navigation.navigateTo(NavigationTarget.CHAT);
+        tradeIntentService.publishTradeIntent(model.getSelectedMarket(),
+                        model.getBaseSideAmount().getValue(),
+                        new HashSet<>(model.getSelectedPaymentMethods()),
+                        model.getTerms().get())
+                .whenComplete((result, throwable) -> {
+                    if (throwable == null) {
+                        String channelName = chatService.findPublicChannelForMarket(model.getSelectedMarket()).orElseThrow().getChannelName();
+                        new Popup().feedback(Res.get("satoshisquareapp.createOffer.publish.success", channelName))
+                                .actionButtonText(Res.get("satoshisquareapp.createOffer.publish.goToChat", channelName))
+                                .onAction(() -> Navigation.navigateTo(NavigationTarget.CHAT))
+                                .hideCloseButton()
+                                .show();
+                    } else {
+                        //todo error
+                    }
+                });
     }
-
 
     void onSkip() {
         Navigation.navigateTo(NavigationTarget.CHAT);
@@ -164,57 +156,12 @@ public class OnboardNewbieController implements Controller {
         String paymentMethods = Joiner.on(", ").join(model.getSelectedPaymentMethods());
 
         String previewText = Res.get("satoshisquareapp.createOffer.offerPreview", amount, quoteCurrency, paymentMethods);
-        model.getStyleSpans().set(getStyleSpans(previewText,
+        model.getStyleSpans().set(KeyWordDetection.getStyleSpans(previewText,
                 model.getTradeTags(),
                 model.getCurrencyTags(),
-                model.getPaymentMethodsTags()));
+                model.getPaymentMethodsTags(),
+                model.getCustomTags()));
         model.getOfferPreview().set(previewText);
-    }
-
-    private StyleSpans<Collection<String>> getStyleSpans(String text,
-                                                         List<String> tradeTags,
-                                                         List<String> currencyTags,
-                                                         List<String> paymentMethodTags) {
-        StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
-        BreakIterator iterator = BreakIterator.getWordInstance();
-        iterator.setText(text);
-        int lastIndex = iterator.first();
-        int lastKwEnd = 0;
-        while (lastIndex != BreakIterator.DONE) {
-            int firstIndex = lastIndex;
-            lastIndex = iterator.next();
-            if (lastIndex != BreakIterator.DONE) {
-                String word = text.substring(firstIndex, lastIndex).toUpperCase();
-                if (tradeTags.contains(word)) {
-                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
-                    spansBuilder.add(Collections.singleton("keyword-tradeTags"), lastIndex - firstIndex);
-                    lastKwEnd = lastIndex;
-                } else if (currencyTags.contains(word)) {
-                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
-                    spansBuilder.add(Collections.singleton("keyword-currencyTags"), lastIndex - firstIndex);
-                    lastKwEnd = lastIndex;
-                } else if (paymentMethodTags.contains(word)) {
-                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
-                    spansBuilder.add(Collections.singleton("keyword-paymentMethodTags"), lastIndex - firstIndex);
-                    lastKwEnd = lastIndex;
-                } else if (word.equals("BTC") || word.equals("BITCOIN")) {
-                    // I would like to buy 0.007 BTC for EUR using SEPA, Bank transfers
-                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
-                    spansBuilder.add(Collections.singleton("keyword-btc"), lastIndex - firstIndex);
-                    lastKwEnd = lastIndex;
-                } else if (word.matches("[0-9]{1,13}(\\.[0-9]*)?")) {
-                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
-                    spansBuilder.add(Collections.singleton("keyword-amountTag"), lastIndex - firstIndex);
-                    lastKwEnd = lastIndex;
-                } else {
-                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
-                    spansBuilder.add(Collections.singleton("keyword-none"), lastIndex - firstIndex);
-                    lastKwEnd = lastIndex;
-                }
-            }
-        }
-        spansBuilder.add(Collections.emptyList(), text.length() - lastKwEnd);
-        return spansBuilder.create();
     }
 
     private boolean isInvalidTradeIntent() {
