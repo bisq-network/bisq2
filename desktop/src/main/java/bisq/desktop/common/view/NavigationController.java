@@ -90,7 +90,7 @@ public abstract class NavigationController implements Controller, Navigation.Lis
                         if (controller instanceof InitWithDataController initWithDataController) {
                             data.ifPresent(initWithDataController::initWithObject);
                         }
-                        if (!(controller instanceof NonCachingController)) {
+                        if (controller instanceof CachingController) {
                             controllerCache.put(navigationTarget, controller);
                         }
                         return controller;

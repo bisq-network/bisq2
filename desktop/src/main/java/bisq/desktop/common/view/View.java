@@ -40,7 +40,7 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
         this.model = model;
         this.controller = controller;
 
-        boolean isNonCaching = controller instanceof NonCachingController;
+        boolean isCaching = controller instanceof CachingController;
         sceneChangeListener = (ov, oldValue, newScene) -> {
             if (oldValue == null && newScene != null) {
                 if (newScene.getWindow() != null) {
@@ -59,7 +59,7 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
                 }
             } else if (oldValue != null && newScene == null) {
                 onViewDetachedPrivate();
-                if (isNonCaching) {
+                if (!isCaching) {
                     // If we do not use caching we do not expect to get added again to stage without creating a 
                     // new instance of the view, so we remove our sceneChangeListener.
                     UIThread.runOnNextRenderFrame(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
