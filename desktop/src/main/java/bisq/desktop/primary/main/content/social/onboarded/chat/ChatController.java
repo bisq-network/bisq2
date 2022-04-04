@@ -60,7 +60,7 @@ public class ChatController implements Controller {
     public ChatController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
-
+        
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
         UserProfileComboBox userProfileDisplay = new UserProfileComboBox(userProfileService);
