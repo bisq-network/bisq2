@@ -26,7 +26,6 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -58,9 +57,9 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
         vBox.getStyleClass().add("content-pane");
         vBox.setSpacing(20);
         vBox.setFillWidth(true);
-        vBox.setPadding(new Insets(0,20,20,20));
+        vBox.setPadding(new Insets(0, 20, 20, 20));
         root.setContent(vBox);
-       
+
         double width = 560;
         paymentMethods.setWidth(width / 2 - 30);
         SectionBox leftBox = new SectionBox(Res.get("satoshisquareapp.createOffer.section1.headline"));
@@ -72,12 +71,13 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
         SectionBox rightBox = new SectionBox(Res.get("satoshisquareapp.createOffer.section3.headline"));
         leftBox.setPrefWidth(width);
 
-        Pane section3Headline = SectionBox.getHeadline(Res.get("satoshisquareapp.createOffer.section3.headline"));
-      
+
         offerPreview = new StyleClassedTextArea();
         offerPreview.setWrapText(true);
         offerPreview.setBackground(null);
-        offerPreview.setStyle("-fx-fill: white");
+        offerPreview.setStyle("-fx-fill: -fx-dark-text-color");
+        //offerPreview.setPadding(new Insets(0, 10, 0, 10));
+        //offerPreview.setStyle("-fx-font-size: 1.1em");
 
         Pane section4Headline = SectionBox.getHeadline(Res.get("satoshisquareapp.createOffer.section4.headline"));
         VBox.setMargin(section4Headline, new Insets(0, -20, -20, -20));
@@ -85,7 +85,7 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
         terms = new BisqTextArea();
         terms.setEditable(true);
 
-        rightBox.getChildren().addAll(section3Headline, offerPreview, section4Headline, terms);
+        rightBox.getChildren().addAll(offerPreview, section4Headline, terms);
 
         publishButton = new BisqButton(Res.get("satoshisquareapp.createOffer.publish"));
         publishButton.getStyleClass().add("action-button");
@@ -96,15 +96,7 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
         HBox.setHgrow(rightBox, Priority.ALWAYS);
         HBox buttons = Layout.hBoxWith(Spacer.fillHBox(), skipButton, publishButton);
         VBox.setMargin(buttons, new Insets(0, 20, 20, 0));
-
-        Label welcome = new Label(Res.get("satoshisquareapp.createOffer.welcome"));
-        welcome.setStyle("-fx-font-size: 1.892em; -fx-text-fill: #ddd;");
-        welcome.setPadding(new Insets(20, 0, 0, 20));
-
-        Label intro = new Label(Res.get("satoshisquareapp.createOffer.intro"));
-        intro.setStyle("-fx-font-size: 1.1em; -fx-text-fill: #ddd;");
-        intro.setPadding(new Insets(-10, 0, 10, 20));
-        vBox.getChildren().addAll(welcome, intro, hBox, buttons);
+        vBox.getChildren().addAll(hBox, buttons);
     }
 
     @Override
