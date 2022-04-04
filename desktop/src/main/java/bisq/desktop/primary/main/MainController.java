@@ -28,6 +28,8 @@ import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
@@ -37,12 +39,14 @@ public class MainController implements Controller, Navigation.Listener {
     @Getter
     private final MainView view;
     private final SettingsService settingsService;
+    private final TopPanelController topPanelController;
+    private Subscription marketPriceBoxVisibleSubscription, walletBalanceBoxVisibleSubscription;
 
     public MainController(DefaultApplicationService applicationService) {
         settingsService = applicationService.getSettingsService();
         ContentController contentController = new ContentController(applicationService);
         LeftNavController leftNavController = new LeftNavController(applicationService);
-        TopPanelController topPanelController = new TopPanelController(applicationService);
+        topPanelController = new TopPanelController(applicationService);
 
         view = new MainView(model,
                 this,
@@ -61,9 +65,15 @@ public class MainController implements Controller, Navigation.Listener {
         } else {
             Navigation.navigateTo(NavigationTarget.ONBOARDING);
         }
+        marketPriceBoxVisibleSubscription = EasyBind.subscribe(model.getMarketPriceBoxVisible(),
+                topPanelController::setMarketPriceBoxVisible);
+        walletBalanceBoxVisibleSubscription = EasyBind.subscribe(model.getWalletBalanceBoxVisible(),
+                topPanelController::setWalletBalanceBoxVisible);
     }
 
     public void onDeactivate() {
+        marketPriceBoxVisibleSubscription.unsubscribe();
+        walletBalanceBoxVisibleSubscription.unsubscribe();
     }
 
     @Override

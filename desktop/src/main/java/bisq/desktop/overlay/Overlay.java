@@ -100,7 +100,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     private enum AnimationType {
         FadeInAtCenter,
         SlideDownFromCenterTop,
-        SlideFromRightTop,
+        SlideFromRightTop, // This is used for Notification which is not handled in that class directly but in Notification directly
         ScaleDownToCenter,
         ScaleFromCenter,
         ScaleYFromCenter
@@ -298,14 +298,6 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public T headLine(String headLine) {
         this.headLine = headLine;
-        return cast();
-    }
-
-    public T notification(String message) {
-        type = Type.Notification;
-        if (headLine == null)
-            this.headLine = Res.get("popup.headline.notification");
-        preProcessMessage(message);
         return cast();
     }
 

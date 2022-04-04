@@ -24,6 +24,7 @@ dependencies {
     implementation project(':network')
     implementation project(':identity')
     implementation project(':settings')
+    implementation project(':presentation')
 
     implementation 'com.github.chimp1984:jsocks'
     implementation "com.google.code.gson:gson:2.8.5"

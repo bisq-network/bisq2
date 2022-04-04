@@ -36,6 +36,8 @@ public class SocialModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return userProfileService.isDefaultUserProfileMissing() ? NavigationTarget.ONBOARDING : NavigationTarget.ONBOARDED;
+        return userProfileService.isDefaultUserProfileMissing() ? 
+                NavigationTarget.INIT_USER_PROFILE : 
+                NavigationTarget.ONBOARDING;
     }
 }

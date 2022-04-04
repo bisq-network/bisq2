@@ -21,22 +21,25 @@ import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Model;
-import bisq.offer.Offer;
-import bisq.offer.spec.Direction;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.richtext.model.StyleSpans;
+
+import java.util.Collection;
 
 @Slf4j
 @Getter
 public class OnboardNewbieModel implements Model {
+    private final ObservableList<String> tradeTags = FXCollections.observableArrayList();
+    private final ObservableList<String> currencyTags = FXCollections.observableArrayList();
+    private final ObservableList<String> paymentMethodsTags = FXCollections.observableArrayList();
+    private final ObservableList<String> customTags = FXCollections.observableArrayList();
     @Setter
     private Market selectedMarket;
-    @Setter
-    private Direction direction;
     @Setter
     private Monetary baseSideAmount;
     @Setter
@@ -46,22 +49,14 @@ public class OnboardNewbieModel implements Model {
 
     private final ObservableList<String> selectedPaymentMethods = FXCollections.observableArrayList();
 
-    private final ObjectProperty<Offer> offerProperty = new SimpleObjectProperty<>();
     private final BooleanProperty createOfferButtonVisibleProperty = new SimpleBooleanProperty(true);
-
-    public OnboardNewbieModel() {
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public Offer getOffer() {
-        return offerProperty.get();
-    }
-
-    public ReadOnlyBooleanProperty createOfferButtonVisibleProperty() {
-        return createOfferButtonVisibleProperty;
+    private final BooleanProperty isInvalidTradeIntent = new SimpleBooleanProperty();
+    private final StringProperty offerPreview = new SimpleStringProperty();
+    private final StringProperty terms = new SimpleStringProperty();
+    private final String userName ;
+    ObjectProperty<StyleSpans<Collection<String>>> styleSpans = new SimpleObjectProperty<>();
+    
+    public OnboardNewbieModel( String userName) {
+        this.userName = userName;
     }
 }

@@ -19,68 +19,67 @@ package bisq.social.chat;
 
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.social.intent.TradeIntent;
 import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-/**
- * PublicChatMessage is added as public data to the distributed network storage.
- */
+@Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class PublicChatMessage extends ChatMessage implements DistributedData {
-    public PublicChatMessage(String channelId,
-                             ChatUser sender,
-                             String text,
-                             Optional<QuotedMessage> quotedMessage,
-                             long date,
-                             boolean wasEdited) {
+public class TradeChatMessage extends PublicChatMessage implements DistributedData {
+    private final TradeIntent tradeIntent;
+
+    public TradeChatMessage(String channelId,
+                            ChatUser sender,
+                            TradeIntent tradeIntent,
+                            long date,
+                            boolean wasEdited) {
         this(channelId,
                 sender,
-                Optional.of(text),
-                quotedMessage,
+                tradeIntent,
                 date,
                 ChannelType.PUBLIC,
                 wasEdited,
-                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PublicChatMessage.class.getSimpleName()));
+                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, TradeChatMessage.class.getSimpleName()));
     }
 
-    protected PublicChatMessage(String channelId,
-                              ChatUser sender,
-                              Optional<String> text,
-                              Optional<QuotedMessage> quotedMessage,
-                              long date,
-                              ChannelType channelType,
-                              boolean wasEdited,
-                              MetaData metaData) {
+    private TradeChatMessage(String channelId,
+                             ChatUser sender,
+                             TradeIntent tradeIntent,
+                             long date,
+                             ChannelType channelType,
+                             boolean wasEdited,
+                             MetaData metaData) {
         super(channelId,
                 sender,
-                text,
-                quotedMessage,
+                Optional.empty(),
+                Optional.empty(),
                 date,
                 channelType,
                 wasEdited,
                 metaData);
+        this.tradeIntent = tradeIntent;
     }
 
     public bisq.social.protobuf.ChatMessage toProto() {
-        return getChatMessageBuilder().setPublicChatMessage(bisq.social.protobuf.PublicChatMessage.newBuilder()).build();
+        return getChatMessageBuilder().setTradeChatMessage(
+                        bisq.social.protobuf.TradeChatMessage.newBuilder()
+                                .setTradeIntent(tradeIntent.toProto()))
+                .build();
     }
 
-    public static PublicChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
-        Optional<QuotedMessage> quotedMessage = baseProto.hasQuotedMessage() ?
-                Optional.of(QuotedMessage.fromProto(baseProto.getQuotedMessage())) :
-                Optional.empty();
-        return new PublicChatMessage(
+    public static TradeChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
+        return new TradeChatMessage(
                 baseProto.getChannelId(),
                 ChatUser.fromProto(baseProto.getAuthor()),
-                Optional.of(baseProto.getText()),
-                quotedMessage,
+                TradeIntent.fromProto(baseProto.getTradeChatMessage().getTradeIntent()),
                 baseProto.getDate(),
                 ChannelType.fromProto(baseProto.getChannelType()),
                 baseProto.getWasEdited(),
@@ -89,7 +88,7 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
 
     @Override
     public String getText() {
-        return optionalText.get();
+        return tradeIntent.getChatMessageText();
     }
 
     @Override

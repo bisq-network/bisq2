@@ -395,7 +395,7 @@ public class TakersSettlementSelection {
             quoteSideSettlementComboBox.setOnAction(e -> controller.onSettlementSelectionChanged(
                     quoteSideSettlementComboBox.getSelectionModel().getSelectedItem(), false));
 
-            UIThread.runLater(() -> {
+            UIThread.runOnNextRenderFrame(() -> {
                 baseSideAccountsComboBox.getSelectionModel().select(model.selectedBaseSideAccountListItem.get());
                 quoteSideAccountsComboBox.getSelectionModel().select(model.selectedQuoteSideAccountListItem.get());
                 baseSideSettlementComboBox.getSelectionModel().select(model.selectedBaseSideSettlementListItem.get());

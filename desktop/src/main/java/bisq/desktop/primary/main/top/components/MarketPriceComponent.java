@@ -93,10 +93,10 @@ public class MarketPriceComponent {
 
         @Override
         public void onMarketSelected(Market selectedMarket) {
-            model.items.stream()
+            UIThread.run(() -> model.items.stream()
                     .filter(e -> e.marketPrice.getMarket().equals(selectedMarket))
                     .findAny()
-                    .ifPresent(listItem -> UIThread.run(() -> model.selected.set(listItem)));
+                    .ifPresent(model.selected::set));
         }
 
         private void onSelect(ListItem selectedItem) {

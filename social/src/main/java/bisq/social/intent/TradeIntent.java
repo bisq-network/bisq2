@@ -1,30 +1,58 @@
 package bisq.social.intent;
 
 
-import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.social.user.ChatUser;
-import com.google.protobuf.Message;
+import bisq.common.monetary.Coin;
+import bisq.common.proto.Proto;
+import bisq.i18n.Res;
+import bisq.presentation.formatters.AmountFormatter;
+import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 @Slf4j
-// Note: will get probably removed
-public record TradeIntent(String id, ChatUser maker, String ask, String bid, long date) implements DistributedData {
-    @Override
-    public MetaData getMetaData() {
-        return new MetaData(TimeUnit.MINUTES.toMillis(5), 100000, getClass().getSimpleName());
+public class TradeIntent implements Proto {
+    private final long btcAmount;
+    private final String quoteCurrencyCode;
+    private final Set<String> paymentMethods;
+    private final String makersTradeTerms;
+    @Nullable
+    private transient String chatMessageText = null;
+
+    public TradeIntent(long btcAmount, String quoteCurrencyCode, Set<String> paymentMethods, String makersTradeTerms) {
+        this.btcAmount = btcAmount;
+        this.quoteCurrencyCode = quoteCurrencyCode;
+        this.paymentMethods = paymentMethods;
+        this.makersTradeTerms = makersTradeTerms;
     }
 
     @Override
-    public boolean isDataInvalid() {
-        return false;
+    public bisq.social.protobuf.TradeIntent toProto() {
+        return bisq.social.protobuf.TradeIntent.newBuilder()
+                .setBtcAmount(btcAmount)
+                .setQuoteCurrencyCode(quoteCurrencyCode)
+                .addAllPaymentMethods(new ArrayList<>(paymentMethods))
+                .setMakersTradeTerms(makersTradeTerms)
+                .build();
     }
 
-    @Override
-    public Message toProto() {
-        log.error("Not impl yet");
-        return null;
+    public static TradeIntent fromProto(bisq.social.protobuf.TradeIntent proto) {
+        return new TradeIntent(proto.getBtcAmount(),
+                proto.getQuoteCurrencyCode(),
+                new HashSet<>(proto.getPaymentMethodsList()),
+                proto.getMakersTradeTerms());
+    }
+
+    public String getChatMessageText() {
+        if (chatMessageText == null) {
+            chatMessageText = Res.get("satoshisquareapp.createOffer.offerPreview",
+                    AmountFormatter.formatAmountWithCode(Coin.of(btcAmount, "BTC"), true),
+                    quoteCurrencyCode,
+                    Joiner.on(", ").join(this.paymentMethods));
+        }
+        return chatMessageText;
     }
 }

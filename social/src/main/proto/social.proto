@@ -80,11 +80,20 @@ message PrivateChatMessage {
 }
 message PublicChatMessage {
 }
+message TradeIntent {
+  uint64 btcAmount = 1;
+  string quoteCurrencyCode = 2;
+  repeated string paymentMethods = 3;
+  string makersTradeTerms = 5;
+}
+message TradeChatMessage {
+  TradeIntent tradeIntent = 1;
+}
 message ChatMessage {
   string channelId = 1;
-  string text = 2;
+  optional string text = 2;
   ChatUser author = 3;
-  QuotedMessage quotedMessage = 4;
+  optional QuotedMessage quotedMessage = 4;
   uint64 date = 5;
   ChannelType channelType = 6;
   bool wasEdited = 7;
@@ -92,6 +101,7 @@ message ChatMessage {
   oneof message {
     PrivateChatMessage privateChatMessage = 20;
     PublicChatMessage publicChatMessage = 21;
+    TradeChatMessage tradeChatMessage = 22;
   }
 }
 
@@ -116,6 +126,10 @@ message PublicChannel {
   string description = 2;
   ChatUser channelAdmin = 3;
   repeated ChatUser channelModerators = 4;
+  repeated string tradeTags = 5;
+  repeated string currencyTags = 6;
+  repeated string paymentMethodTags = 7;
+  repeated string customTags = 8;
 }
 message Channel {
   string id = 1;
@@ -139,4 +153,7 @@ message ChatStore {
   repeated Channel publicChannels = 2;
   Channel selectedChannel = 3;
   repeated string ignoredChatUserIds = 4;
+}
+
+message TradeIntentStore {
 }

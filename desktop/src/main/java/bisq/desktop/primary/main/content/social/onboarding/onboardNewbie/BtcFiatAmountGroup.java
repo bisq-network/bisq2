@@ -93,10 +93,10 @@ class BtcFiatAmountGroup {
             // apply the conversion before the other component has processed the market change event.
             // The order of the event notification is not deterministic. 
             baseCurrencyAmountListener = (observable, oldValue, newValue) -> {
-                UIThread.runLater(this::setQuoteFromBase);
+                UIThread.runOnNextRenderFrame(this::setQuoteFromBase);
             };
             quoteCurrencyAmountListener = (observable, oldValue, newValue) -> {
-                UIThread.runLater(this::setBaseFromQuote);
+                UIThread.runOnNextRenderFrame(this::setBaseFromQuote);
             };
         }
 
@@ -201,7 +201,7 @@ class BtcFiatAmountGroup {
             this.quoteAmount = quoteAmount;
 
             root.setSpacing(0);
-
+            
             BisqLabel headline = new BisqLabel(Res.get("satoshisquareapp.createOffer.setAmount"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 

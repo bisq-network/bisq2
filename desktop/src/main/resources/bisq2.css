@@ -50,6 +50,7 @@ New css for bisq2.
 #chat-message-text {
     -fx-fill: -fx-mid-text-color;
 }
+
 #chat-quoted-message-text {
     -fx-fill: -bs-color-gray-2;
 }
@@ -63,7 +64,7 @@ New css for bisq2.
 }
 
 #chat-quoted-message-user-name {
-    -fx-text-fill:  derive(-bs-color-gray-2, 30%);
+    -fx-text-fill: derive(-bs-color-gray-2, 30%);
 }
 
 #chat-message-reactions {
@@ -93,6 +94,38 @@ New css for bisq2.
     -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
     -fx-effect: dropshadow(three-pass-box, -bs-text-color-transparent, 10, 0, 0, 3);
     -fx-font-size: 0.85em;
+}
+
+#small-info-label {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 0.85em;
+}
+
+.keyword-tradeTags {
+    -fx-fill: -bs-buy-hover;
+}
+.keyword-btc {
+    -fx-fill: -bs-buy-hover;
+}
+
+.keyword-amountTag {
+    -fx-fill: -bs-buy-hover;
+}
+
+.keyword-currencyTags {
+    -fx-fill: -bs-turquoise;
+}
+
+.keyword-paymentMethodTags {
+    -fx-fill: -bs-turquoise;
+}
+
+.keyword-customTags {
+    -fx-fill: -bs-yellow;
+}
+
+.keyword-none {
+    -fx-fill: -fx-dark-text-color;
 }
 
 /*

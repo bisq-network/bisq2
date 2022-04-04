@@ -24,10 +24,8 @@ import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import bisq.social.chat.ChatService;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -45,12 +43,14 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.stream.Collectors;
+
 @Slf4j
 public class PaymentMethodsSelection {
     private final Controller controller;
 
-    public PaymentMethodsSelection() {
-        controller = new Controller();
+    public PaymentMethodsSelection(ChatService chatService) {
+        controller = new Controller(chatService);
     }
 
     void setSelectedMarket(Market selectedMarket) {
@@ -69,18 +69,28 @@ public class PaymentMethodsSelection {
         return controller.model.selectedPaymentMethods;
     }
 
+    public void setWidth(double width) {
+        controller.model.width.set(width);
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
         private final View view;
+        private final ChatService chatService;
 
-        private Controller() {
+        private Controller(ChatService chatService) {
+            this.chatService = chatService;
             model = new Model();
             view = new View(model, this);
         }
 
         private void setSelectedMarket(Market selectedMarket) {
+            if (selectedMarket == null) {
+                return;
+            }
             model.selectedMarket = selectedMarket;
+            updatePaymentMethods();
             updateDescription();
         }
 
@@ -125,6 +135,14 @@ public class PaymentMethodsSelection {
                         model.selectedMarket.quoteCurrencyCode()));
             }
         }
+
+        private void updatePaymentMethods() {
+            chatService.findPublicChannelForMarket(model.selectedMarket).ifPresent(publicChannel -> {
+                model.paymentMethods.addAll(publicChannel.getPaymentMethodTags().stream()
+                        .map(String::toUpperCase)
+                        .collect(Collectors.toList()));
+            });
+        }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
@@ -132,23 +150,17 @@ public class PaymentMethodsSelection {
         private final ObservableList<String> selectedPaymentMethods = FXCollections.observableArrayList();
         private final BooleanProperty selectPaymentMethodsDisabled = new SimpleBooleanProperty();
         private final StringProperty description = new SimpleStringProperty();
-        public Market selectedMarket;
-        public Direction direction;
+        private final DoubleProperty width = new SimpleDoubleProperty(Double.MAX_VALUE);
+        private Market selectedMarket;
+        private Direction direction;
 
-        public Model() {
-            //todo provide from domain
-            paymentMethods.add("SEPA");
-            paymentMethods.add("Bank transfer");
-            paymentMethods.add("Revolut");
-            paymentMethods.add("Zelle");
-            paymentMethods.add("Other");
+        private Model() {
         }
     }
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqComboBox<String> comboBox;
-        private final ChangeListener<String> selectedMarketListener;
         private final ListChangeListener<String> selectedPaymentMethodsListener;
         private final HBox box;
         private final BisqLabel description;
@@ -158,9 +170,6 @@ public class PaymentMethodsSelection {
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
 
-            Label headline = new BisqLabel(Res.get("satoshisquareapp.createOffer.paymentMethods.headline"));
-            headline.setPadding(new Insets(0, 0, 10, 0));
-            headline.getStyleClass().add("titled-group-bg-label-active");
             description = new BisqLabel();
             description.setPadding(new Insets(0, 0, 2, 0));
             description.setId("small-info-label");
@@ -172,15 +181,12 @@ public class PaymentMethodsSelection {
 
             comboBox = new BisqComboBox<>();
             comboBox.setItems(model.paymentMethods);
-            comboBox.setPrefWidth(310);
 
             box = new HBox();
             box.setSpacing(10);
             box.setPadding(new Insets(10, 0, 0, 0));
-            root.getChildren().addAll(headline, description, comboBox, maxPaymentMethods, box);
+            root.getChildren().addAll(description, comboBox, maxPaymentMethods, box);
 
-            // From model
-            selectedMarketListener = (o, old, newValue) -> comboBox.getSelectionModel().select(newValue);
             selectedPaymentMethodsListener = c -> {
                 c.next();
                 box.getChildren().clear();
@@ -211,6 +217,7 @@ public class PaymentMethodsSelection {
         protected void onViewAttached() {
             comboBox.disableProperty().bind(model.selectPaymentMethodsDisabled);
             description.textProperty().bind(model.description);
+            comboBox.prefWidthProperty().bind(model.width);
             comboBox.getSelectionModel().selectedItemProperty().addListener(selectedItemListener);
             model.selectedPaymentMethods.addListener(selectedPaymentMethodsListener);
             maxPaymentMethods.prefWidthProperty().bind(comboBox.widthProperty());
@@ -220,6 +227,7 @@ public class PaymentMethodsSelection {
         protected void onViewDetached() {
             comboBox.disableProperty().unbind();
             description.textProperty().unbind();
+            comboBox.prefWidthProperty().unbind();
             comboBox.getSelectionModel().selectedItemProperty().removeListener(selectedItemListener);
             model.selectedPaymentMethods.removeListener(selectedPaymentMethodsListener);
             maxPaymentMethods.prefWidthProperty().unbind();

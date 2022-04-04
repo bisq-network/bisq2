@@ -17,6 +17,10 @@
 
 package bisq.social.chat;
 
+import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.currency.TradeCurrency;
+import bisq.common.monetary.Market;
+import bisq.common.observable.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
@@ -30,6 +34,7 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.social.intent.TradeIntent;
 import bisq.social.user.ChatUser;
 import bisq.social.user.Entitlement;
 import bisq.social.user.profile.UserProfile;
@@ -43,6 +48,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -143,6 +149,10 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Optional<PublicChannel>> addChannel(UserProfile userProfile, String channelName, String description) {
+        Set<String> currencyTags = getFiatCurrencyTags();
+        Set<String> tradeTags = getTradeTags();
+        Set<String> paymentMethodTags = getPaymentMethodTags();
+        Set<String> customTags = getCustomTags();
         return userProfile.entitlements().stream()
                 .filter(entitlement -> entitlement.entitlementType() == Entitlement.Type.CHANNEL_ADMIN)
                 .filter(entitlement -> entitlement.proof() instanceof Entitlement.BondedRoleProof)
@@ -156,7 +166,11 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                     channelName,
                                     description,
                                     chatUser,
-                                    new HashSet<>());
+                                    new HashSet<>(),
+                                    tradeTags,
+                                    currencyTags,
+                                    paymentMethodTags,
+                                    customTags);
                             persistableStore.getPublicChannels().add(publicChannel);
                             persist();
                             setSelectedChannelIfNotSet();
@@ -165,6 +179,20 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                         .orElse(Optional.empty())))
                 .findAny()
                 .orElse(CompletableFuture.completedFuture(Optional.empty()));
+    }
+
+    public Optional<PublicChannel> findPublicChannelForMarket(Market selectedMarket) {
+        if (selectedMarket == null) {
+            return Optional.empty();
+        }
+        ObservableSet<PublicChannel> publicChannels = getPersistableStore().getPublicChannels();
+        return Optional.of(publicChannels.stream()
+                .filter(e -> e.getChannelName().toLowerCase().contains(selectedMarket.quoteCurrencyCode().toLowerCase()))
+                .findAny()
+                .orElse(publicChannels.stream()
+                        .filter(e -> e.getChannelName().toLowerCase().contains("other")) //todo 
+                        .findAny()
+                        .orElseThrow()));
     }
 
     public PrivateChannel getOrCreatePrivateChannel(String id, ChatUser peer) {
@@ -253,6 +281,18 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 });
     }
 
+    public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatMessage(TradeIntent tradeIntent,
+                                                                                      PublicChannel publicChannel,
+                                                                                      UserProfile userProfile) {
+        TradeChatMessage chatMessage = new TradeChatMessage(publicChannel.getId(),
+                userProfile.chatUser(),
+                tradeIntent,
+                new Date().getTime(),
+                false);
+        return networkService.publishAuthenticatedData(chatMessage,
+                userProfile.identity().getNodeIdAndKeyPair());
+    }
+
     public void sendPrivateChatMessage(String text, Optional<QuotedMessage> quotedMessage,
                                        PrivateChannel privateChannel) {
         String channelId = privateChannel.getId();
@@ -324,6 +364,11 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         if (userProfile == null || !persistableStore.getPublicChannels().isEmpty()) {
             return;
         }
+
+        Set<String> currencyTags = getFiatCurrencyTags();
+        Set<String> tradeTags = getTradeTags();
+        Set<String> paymentMethodTags = getPaymentMethodTags();
+        Set<String> customTags = getCustomTags();
         ChatUser dummyChannelAdmin = new ChatUser(userProfile.identity().networkId());
         Set<ChatUser> dummyChannelModerators = userProfileService.getPersistableStore().getUserProfiles().stream()
                 .map(p -> new ChatUser(p.identity().networkId()))
@@ -333,23 +378,39 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 "BTC-EUR Market",
                 "Channel for trading Bitcoin with EUR",
                 dummyChannelAdmin,
-                dummyChannelModerators);
+                dummyChannelModerators,
+                tradeTags,
+                currencyTags,
+                paymentMethodTags,
+                customTags);
         persistableStore.getPublicChannels().add(defaultChannel);
         persistableStore.getPublicChannels().add(new PublicChannel("BTC-USD Market",
                 "BTC-USD Market",
                 "Channel for trading Bitcoin with USD",
                 dummyChannelAdmin,
-                dummyChannelModerators));
+                dummyChannelModerators,
+                tradeTags,
+                currencyTags,
+                paymentMethodTags,
+                customTags));
         persistableStore.getPublicChannels().add(new PublicChannel("Other Markets",
                 "Other Markets",
                 "Channel for trading any market",
                 dummyChannelAdmin,
-                dummyChannelModerators));
+                dummyChannelModerators,
+                tradeTags,
+                currencyTags,
+                paymentMethodTags,
+                customTags));
         persistableStore.getPublicChannels().add(new PublicChannel("Off-topic",
                 "Off-topic",
                 "Channel for off topic",
                 dummyChannelAdmin,
-                dummyChannelModerators));
+                dummyChannelModerators,
+                tradeTags,
+                currencyTags,
+                paymentMethodTags,
+                customTags));
         persistableStore.getSelectedChannel().set(defaultChannel);
     }
 
@@ -358,5 +419,23 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
             persistableStore.getPublicChannels().stream().findAny()
                     .ifPresent(channel -> persistableStore.getSelectedChannel().set(channel));
         }
+    }
+
+    private Set<String> getFiatCurrencyTags() {
+        Stream<String> names = FiatCurrencyRepository.getAllCurrencies().stream().map(TradeCurrency::getName);
+        Stream<String> codes = FiatCurrencyRepository.getAllCurrencies().stream().map(TradeCurrency::getCode);
+        return Stream.concat(names, codes).collect(Collectors.toSet());
+    }
+
+    private Set<String> getCustomTags() {
+        return Set.of("Tor", "I2P", "Trezor", "Ledger", "Wasabi", "Samurai", "Monero");
+    }
+
+    private Set<String> getPaymentMethodTags() {
+        return Set.of("sepa", "bank-transfer", "zelle", "revolut");
+    }
+
+    private Set<String> getTradeTags() {
+        return Set.of("BUY", "SELL", "WANT", "RECEIVE");
     }
 }

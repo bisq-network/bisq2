@@ -44,13 +44,13 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
             if (oldValue == null && newScene != null) {
                 if (newScene.getWindow() != null) {
                     onViewAttachedPrivate();
-                    UIThread.run(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
+                    UIThread.runOnNextRenderFrame(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
                 } else {
                     // For overlays, we need to wait until window is available
                     windowChangeListener = (observable, oldValue1, newWindow) -> {
                         checkNotNull(newWindow, "Window must not be null");
                         onViewAttachedPrivate();
-                        UIThread.run(() -> newScene.windowProperty().removeListener(View.this.windowChangeListener));
+                        UIThread.runOnNextRenderFrame(() -> newScene.windowProperty().removeListener(View.this.windowChangeListener));
                     };
                     newScene.windowProperty().addListener(windowChangeListener);
                 }

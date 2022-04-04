@@ -28,8 +28,9 @@ import javafx.scene.effect.GaussianBlur;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
-
+@Slf4j
 public class Transitions {
     public final static int DEFAULT_DURATION = 600;
     public final static int CROSS_FADE_IN_DURATION = 1500;
@@ -93,7 +94,7 @@ public class Transitions {
         KeyFrame kf2 = new KeyFrame(Duration.millis(getDuration(duration)), kv2);
         timeline.getKeyFrames().addAll(kf1, kf2);
         node.setEffect(blur);
-        if (removeNode) timeline.setOnFinished(actionEvent -> UIThread.run(() -> ((Pane) (node.getParent()))
+        if (removeNode) timeline.setOnFinished(actionEvent -> UIThread.runOnNextRenderFrame(() -> ((Pane) (node.getParent()))
                 .getChildren().remove(node)));
         timeline.play();
     }

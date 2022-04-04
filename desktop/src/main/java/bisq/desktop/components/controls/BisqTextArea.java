@@ -31,6 +31,10 @@ public class BisqTextArea extends JFXTextArea {
     @Nullable
     private ChangeListener<Number> scrollTopListener;
 
+    public BisqTextArea() {
+        setStyle("-fx-background-color: -bs-background-color; -fx-border-color: -bs-background-color;");
+    }
+
     @Override
     protected Skin<?> createDefaultSkin() {
         return new JFXTextAreaSkinBisqStyle(this);
@@ -48,11 +52,11 @@ public class BisqTextArea extends JFXTextArea {
         if (scrollTopListener == null) {
             scrollTopListener = (observable, oldValue, newValue) -> {
                 if (newValue.doubleValue() >= rowHeight) {
-                    UIThread.runLater(() -> adjustedHeight.set(adjustedHeight.get() + newValue.doubleValue()));
+                    UIThread.runOnNextRenderFrame(() -> adjustedHeight.set(adjustedHeight.get() + newValue.doubleValue()));
                 }
             };
             scrollTopProperty().addListener(scrollTopListener);
-            UIThread.runLater(() -> adjustedHeight.set(adjustedHeight.get() + getScrollTop()));
+            UIThread.runOnNextRenderFrame(() -> adjustedHeight.set(adjustedHeight.get() + getScrollTop()));
         }
     }
 

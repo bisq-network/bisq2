@@ -98,7 +98,7 @@ public class TransportTypeModel implements Model {
             @Override
             public void onStateChange(Node.State state) {
                 if (state == Node.State.SERVER_INITIALIZED) {
-                    UIThread.runLater(() -> {
+                    UIThread.run(() -> {
                         updateLists();
                         networkService.findDefaultNode(transportType)
                                 .filter(node -> node.getState().get() != Node.State.SERVER_INITIALIZED)

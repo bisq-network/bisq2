@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.social.onboarding.initUserProfile;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.SectionBox;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.controls.BisqTextField;
@@ -26,15 +27,13 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-public class InitialUserProfileView extends View<VBox, InitialUserProfileModel, InitUserProfileController> {
-    public static Pos alignment = Pos.TOP_LEFT;
-    public static TextAlignment textAlignment = TextAlignment.LEFT;
-
+public class InitialUserProfileView extends View<HBox, InitialUserProfileModel, InitUserProfileController> {
     private final ImageView roboIconImageView;
     private final BisqButton createUserButton;
     private final BisqLabel feedbackLabel;
@@ -43,15 +42,12 @@ public class InitialUserProfileView extends View<VBox, InitialUserProfileModel, 
     private Subscription roboHashNodeSubscription;
 
     public InitialUserProfileView(InitialUserProfileModel model, InitUserProfileController controller) {
-        super(new VBox(), model, controller);
+        super(new HBox(), model, controller);
 
         root.setSpacing(20);
-        root.setAlignment(alignment);
+        root.setAlignment(Pos.TOP_CENTER);
         root.getStyleClass().add("content-pane");
-
-        BisqLabel headline = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.headline"));
-        headline.getStyleClass().add("headline-label");
-        VBox.setMargin(headline, new Insets(20, 0, -20, 0));
+        root.setFillHeight(false);
 
         roboIconImageView = new ImageView();
 
@@ -64,22 +60,25 @@ public class InitialUserProfileView extends View<VBox, InitialUserProfileModel, 
         VBox.setMargin(userNameInputField, new Insets(10, 0, 10, 0));
 
         BisqLabel infoLabel = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.info"));
-        infoLabel.setTextAlignment(textAlignment);
+        infoLabel.setTextAlignment(TextAlignment.CENTER);
         VBox.setMargin(infoLabel, new Insets(0, 0, 20, 0));
 
         BisqLabel tryOtherInfoLabel = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.info"));
-        tryOtherInfoLabel.setTextAlignment(textAlignment);
+        tryOtherInfoLabel.setTextAlignment(TextAlignment.CENTER);
         tryOtherButton = new BisqButton(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.button"));
 
         createUserButton = new BisqButton(Res.get("satoshisquareapp.setDefaultUserProfile.done"));
         createUserButton.disableProperty().bind(userNameInputField.textProperty().isEmpty());
         createUserButton.getStyleClass().add("action-button");
 
-        feedbackLabel = new BisqLabel("sfdasfa");
+        feedbackLabel = new BisqLabel();
         feedbackLabel.setWrapText(true);
 
-        root.getChildren().addAll(
-                headline,
+        SectionBox sectionBox = new SectionBox(Res.get("satoshisquareapp.setDefaultUserProfile.headline"));
+        sectionBox.setPrefWidth(600);
+        sectionBox.setAlignment(Pos.CENTER);
+
+        sectionBox.getChildren().addAll(
                 roboIconImageView,
                 userNameInputField,
                 tryOtherInfoLabel,
@@ -88,6 +87,7 @@ public class InitialUserProfileView extends View<VBox, InitialUserProfileModel, 
                 feedbackLabel,
                 infoLabel
         );
+        root.getChildren().addAll(sectionBox);
     }
 
     @Override

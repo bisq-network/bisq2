@@ -118,7 +118,7 @@ public class UserProfileComboBox {
         protected void onViewAttached() {
             root.setOnAction(e -> controller.onSelected(root.getSelectionModel().getSelectedItem()));
             subscription = EasyBind.subscribe(model.selectedUserProfile,
-                    selected -> UIThread.runLater(() -> root.getSelectionModel().select(selected)));
+                    selected -> UIThread.runOnNextRenderFrame(() -> root.getSelectionModel().select(selected)));
         }
 
         @Override

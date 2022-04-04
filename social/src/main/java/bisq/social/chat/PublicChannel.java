@@ -17,6 +17,7 @@
 
 package bisq.social.chat;
 
+import bisq.common.observable.ObservableSet;
 import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -34,13 +35,32 @@ public class PublicChannel extends Channel<PublicChatMessage> {
     private final String description;
     private final ChatUser channelAdmin;
     private final Set<ChatUser> channelModerators;
+    private final ObservableSet<String> tradeTags = new ObservableSet<>();
+    private final ObservableSet<String> currencyTags = new ObservableSet<>();
+    private final ObservableSet<String> paymentMethodTags = new ObservableSet<>();
+    private final ObservableSet<String> customTags = new ObservableSet<>();
 
     public PublicChannel(String id,
                          String channelName,
                          String description,
                          ChatUser channelAdmin,
-                         Set<ChatUser> channelModerators) {
-        this(id, channelName, description, channelAdmin, channelModerators, NotificationSetting.MENTION, new HashSet<>());
+                         Set<ChatUser> channelModerators,
+                         Set<String> tradeTags,
+                         Set<String> currencyTags,
+                         Set<String> paymentMethodTags,
+                         Set<String> customTags
+    ) {
+        this(id, channelName,
+                description,
+                channelAdmin,
+                channelModerators,
+                NotificationSetting.MENTION,
+                new HashSet<>(),
+                tradeTags,
+                currencyTags,
+                paymentMethodTags,
+                customTags
+        );
     }
 
     public PublicChannel(String id,
@@ -49,13 +69,21 @@ public class PublicChannel extends Channel<PublicChatMessage> {
                          ChatUser channelAdmin,
                          Set<ChatUser> channelModerators,
                          NotificationSetting notificationSetting,
-                         Set<PublicChatMessage> chatMessages) {
+                         Set<PublicChatMessage> chatMessages,
+                         Set<String> tradeTags,
+                         Set<String> currencyTags,
+                         Set<String> paymentMethodTags,
+                         Set<String> customTags) {
         super(id, notificationSetting, chatMessages);
 
         this.channelName = channelName;
         this.description = description;
         this.channelAdmin = channelAdmin;
         this.channelModerators = channelModerators;
+        this.tradeTags.addAll(tradeTags);
+        this.currencyTags.addAll(currencyTags);
+        this.paymentMethodTags.addAll(paymentMethodTags);
+        this.customTags.addAll(customTags);
     }
 
     public bisq.social.protobuf.Channel toProto() {
@@ -63,7 +91,12 @@ public class PublicChannel extends Channel<PublicChatMessage> {
                         .setChannelName(channelName)
                         .setDescription(description)
                         .setChannelAdmin(channelAdmin.toProto())
-                        .addAllChannelModerators(channelModerators.stream().map(ChatUser::toProto).collect(Collectors.toList())))
+                        .addAllChannelModerators(channelModerators.stream().map(ChatUser::toProto).collect(Collectors.toList()))
+                        .addAllTradeTags(tradeTags)
+                        .addAllCurrencyTags(currencyTags)
+                        .addAllPaymentMethodTags(paymentMethodTags)
+                        .addAllCustomTags(customTags)
+                )
                 .build();
     }
 
@@ -78,7 +111,12 @@ public class PublicChannel extends Channel<PublicChatMessage> {
                 NotificationSetting.fromProto(baseProto.getNotificationSetting()),
                 baseProto.getChatMessagesList().stream()
                         .map(PublicChatMessage::fromProto)
-                        .collect(Collectors.toSet()));
+                        .collect(Collectors.toSet()),
+                new HashSet<>(proto.getTradeTagsList()),
+                new HashSet<>(proto.getCurrencyTagsList()),
+                new HashSet<>(proto.getPaymentMethodTagsList()),
+                new HashSet<>(proto.getCustomTagsList())
+        );
     }
 
     @Override

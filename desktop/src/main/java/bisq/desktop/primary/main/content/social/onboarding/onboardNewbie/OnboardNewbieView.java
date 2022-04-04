@@ -19,86 +19,112 @@ package bisq.desktop.primary.main.content.social.onboarding.onboardNewbie;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.BisqScrollPane;
+import bisq.desktop.components.containers.SectionBox;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
-import bisq.offer.Offer;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.model.StyleSpans;
+
+import java.util.Collection;
 
 @Slf4j
 public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, OnboardNewbieController> {
-    private final ChangeListener<Offer> offerListener;
-    private final BisqButton createOfferButton;
-    private final BisqTextArea offerSummary;
+    private final StyleClassedTextArea offerPreview;
+    private final BisqTextArea terms;
+    private final BisqButton publishButton, skipButton;
+    private Subscription offerPreviewSubscription;
 
     public OnboardNewbieView(OnboardNewbieModel model,
                              OnboardNewbieController controller,
                              Pane marketSelection,
-                             Pane direction,
                              Pane amountPrice,
-                             Pane settlement) {
+                             PaymentMethodsSelection paymentMethods) {
         super(new BisqScrollPane(), model, controller);
-        
+
         // Place content within a VBox, within a ScrollPane, to show scrollbars if window size is too small
         VBox vBox = new VBox();
         vBox.getStyleClass().add("content-pane");
-        vBox.setSpacing(30);
-        vBox.setPadding(new Insets(20, 20, 20, 0));
+        vBox.setSpacing(20);
+        vBox.setFillWidth(true);
+        vBox.setPadding(new Insets(0, 20, 20, 20));
         root.setContent(vBox);
 
-        amountPrice.setPadding(new Insets(0, 0, -5, 0));
+        double width = 560;
+        paymentMethods.setWidth(width / 2 - 30);
+        SectionBox leftBox = new SectionBox(Res.get("satoshisquareapp.createOffer.section1.headline"));
+        leftBox.setPrefWidth(width);
+        Pane section2Headline = SectionBox.getHeadline(Res.get("satoshisquareapp.createOffer.section2.headline"));
+        VBox.setMargin(section2Headline, new Insets(0, -20, -20, -20));
+        leftBox.getChildren().addAll(marketSelection, amountPrice, section2Headline, paymentMethods.getRoot());
 
-        createOfferButton = new BisqButton(Res.get("createOffer.button"));
-        createOfferButton.getStyleClass().add("action-button");
-        BisqButton cancelButton = new BisqButton(Res.get("cancel"));
-        cancelButton.setOnAction(e -> controller.onCancel());
+        SectionBox rightBox = new SectionBox(Res.get("satoshisquareapp.createOffer.section3.headline"));
+        leftBox.setPrefWidth(width);
 
-        //todo temp
-        offerSummary = new BisqTextArea();
-        offerSummary.setVisible(false);
 
-        BisqButton publishButton = new BisqButton(Res.get("publishOffer.button"));
-        publishButton.setOnAction(e -> controller.onPublishOffer());
-        publishButton.setVisible(false);
+        offerPreview = new StyleClassedTextArea();
+        offerPreview.setWrapText(true);
+        offerPreview.setBackground(null);
+        offerPreview.setStyle("-fx-fill: -fx-dark-text-color");
+        //offerPreview.setPadding(new Insets(0, 10, 0, 10));
+        //offerPreview.setStyle("-fx-font-size: 1.1em");
 
-        vBox.getChildren().addAll(
-                direction,
-                marketSelection,
-                amountPrice,
-                settlement,
-                Layout.hBoxWith(createOfferButton, cancelButton),
-                offerSummary,
-                publishButton);
+        Pane section4Headline = SectionBox.getHeadline(Res.get("satoshisquareapp.createOffer.section4.headline"));
+        VBox.setMargin(section4Headline, new Insets(0, -20, -20, -20));
 
-        offerListener = (observable, oldValue, newValue) -> {
-            //todo show summary
-            offerSummary.setVisible(true);
-            offerSummary.setText(newValue.toString());
+        terms = new BisqTextArea();
+        terms.setEditable(true);
 
-            publishButton.setVisible(true);
-        };
+        rightBox.getChildren().addAll(offerPreview, section4Headline, terms);
+
+        publishButton = new BisqButton(Res.get("satoshisquareapp.createOffer.publish"));
+        publishButton.getStyleClass().add("action-button");
+        skipButton = new BisqButton(Res.get("satoshisquareapp.createOffer.skip"));
+
+        HBox hBox = Layout.hBoxWith(leftBox, rightBox);
+        HBox.setHgrow(leftBox, Priority.ALWAYS);
+        HBox.setHgrow(rightBox, Priority.ALWAYS);
+        HBox buttons = Layout.hBoxWith(Spacer.fillHBox(), skipButton, publishButton);
+        VBox.setMargin(buttons, new Insets(0, 20, 20, 0));
+        vBox.getChildren().addAll(hBox, buttons);
     }
 
     @Override
     public void onViewAttached() {
-        model.getOfferProperty().addListener(offerListener);
-        createOfferButton.setOnAction(e -> controller.onCreateOffer());
-        createOfferButton.visibleProperty().bind(model.createOfferButtonVisibleProperty());
-        createOfferButton.managedProperty().bind(model.createOfferButtonVisibleProperty());
-
-        offerSummary.clear();
+        terms.textProperty().bindBidirectional(model.getTerms());
+        publishButton.visibleProperty().bind(model.getCreateOfferButtonVisibleProperty());
+        publishButton.managedProperty().bind(model.getCreateOfferButtonVisibleProperty());
+        publishButton.disableProperty().bind(model.getIsInvalidTradeIntent());
+        publishButton.setOnAction(e -> controller.onCreateOffer());
+        skipButton.setOnAction(e -> controller.onSkip());
+        offerPreviewSubscription = EasyBind.subscribe(model.getOfferPreview(), text -> {
+            if (text != null) {
+                offerPreview.clear();
+                offerPreview.replaceText(0, 0, text);
+                StyleSpans<Collection<String>> styleSpans = model.getStyleSpans().get();
+                offerPreview.setStyleSpans(0, styleSpans);
+            }
+        });
     }
 
     @Override
     public void onViewDetached() {
-        model.getOfferProperty().removeListener(offerListener);
-        createOfferButton.setOnAction(null);
-        createOfferButton.visibleProperty().unbind();
-        createOfferButton.managedProperty().unbind();
+        terms.textProperty().unbindBidirectional(model.getTerms());
+        publishButton.visibleProperty().unbind();
+        publishButton.managedProperty().unbind();
+        publishButton.disableProperty().unbind();
+        publishButton.setOnAction(null);
+        skipButton.setOnAction(null);
+        offerPreviewSubscription.unsubscribe();
     }
 }

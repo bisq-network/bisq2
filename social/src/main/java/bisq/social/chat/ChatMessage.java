@@ -17,9 +17,12 @@
 
 package bisq.social.chat;
 
+import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.user.ChatUser;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,22 +31,29 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-@Getter
+
 @ToString
 @EqualsAndHashCode
 public abstract class ChatMessage {
+    @Getter
     protected final String channelId;
-    protected final String text;
+    protected final Optional<String> optionalText;
+    @Getter
     protected ChatUser author;
+    @Getter
     protected final Optional<QuotedMessage> quotedMessage;
+    @Getter
     protected final long date;
+    @Getter
     protected final ChannelType channelType;
+    @Getter
     protected final boolean wasEdited;
+    @Getter
     protected final MetaData metaData;
 
     protected ChatMessage(String channelId,
                           ChatUser author,
-                          String text,
+                          Optional<String> text,
                           Optional<QuotedMessage> quotedMessage,
                           long date,
                           ChannelType channelType,
@@ -51,7 +61,7 @@ public abstract class ChatMessage {
                           MetaData metaData) {
         this.channelId = channelId;
         this.author = author;
-        this.text = text;
+        this.optionalText = text;
         this.quotedMessage = quotedMessage;
         this.date = date;
         this.channelType = channelType;
@@ -59,16 +69,18 @@ public abstract class ChatMessage {
         this.metaData = metaData;
     }
 
+    abstract public String getText();
+
     bisq.social.protobuf.ChatMessage.Builder getChatMessageBuilder() {
         bisq.social.protobuf.ChatMessage.Builder builder = bisq.social.protobuf.ChatMessage.newBuilder()
                 .setChannelId(channelId)
                 .setAuthor(author.toProto())
-                .setText(text)
                 .setDate(date)
                 .setChannelType(channelType.toProto())
                 .setWasEdited(wasEdited)
                 .setMetaData(metaData.toProto());
         quotedMessage.ifPresent(quotedMessage -> builder.setQuotedMessage(quotedMessage.toProto()));
+        optionalText.ifPresent(builder::setText);
         return builder;
     }
 
@@ -80,10 +92,45 @@ public abstract class ChatMessage {
             case PUBLICCHATMESSAGE -> {
                 return PublicChatMessage.fromProto(proto);
             }
+            case TRADECHATMESSAGE -> {
+                return TradeChatMessage.fromProto(proto);
+            }
             case MESSAGE_NOT_SET -> {
                 throw new UnresolvableProtobufMessageException(proto);
             }
         }
         throw new UnresolvableProtobufMessageException(proto);
+    }
+
+    public static ProtoResolver<DistributedData> getDistributedDataResolver() {
+        return any -> {
+            try {
+                bisq.social.protobuf.ChatMessage proto = any.unpack(bisq.social.protobuf.ChatMessage.class);
+                switch (proto.getMessageCase()) {
+                    case PUBLICCHATMESSAGE -> {
+                        return PublicChatMessage.fromProto(proto);
+                    }
+                    case TRADECHATMESSAGE -> {
+                        return TradeChatMessage.fromProto(proto);
+                    }
+                    case MESSAGE_NOT_SET -> {
+                        throw new UnresolvableProtobufMessageException(proto);
+                    }
+                }
+                throw new UnresolvableProtobufMessageException(proto);
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
+    }
+
+    public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
+        return any -> {
+            try {
+                return PrivateChatMessage.fromProto(any.unpack(bisq.social.protobuf.ChatMessage.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 }
