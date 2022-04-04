@@ -33,6 +33,10 @@ object ApplicationRunTaskFactory {
             taskName = taskName,
             descriptionText = description,
             cmdLineArgs = cmdLineArgs,
+            jvmArgs = listOf(
+                "-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000",
+                "-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001"
+            ),
             dependentTask = dependentTask
         )
     }
@@ -42,6 +46,7 @@ object ApplicationRunTaskFactory {
         taskName: String,
         descriptionText: String,
         cmdLineArgs: List<String>,
+        jvmArgs: List<String>,
         dependentTask: TaskProvider<out DefaultTask>?
     ) {
         project.tasks.register<JavaExec>(taskName) {
@@ -59,7 +64,7 @@ object ApplicationRunTaskFactory {
             mainModule.set(javaApplication.mainModule)
             mainClass.set(javaApplication.mainClass)
 
-            conventionMapping.map("jvmArgs", javaApplication::getApplicationDefaultJvmArgs)
+            conventionMapping.map("jvmArgs") { javaApplication.applicationDefaultJvmArgs + jvmArgs }
 
             val javaPluginExtension = project.extensions.getByType(JavaPluginExtension::class.java)
             modularity.inferModulePath.convention(javaPluginExtension.modularity.inferModulePath)
