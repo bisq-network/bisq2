@@ -21,6 +21,7 @@ import bisq.desktop.common.threading.UIThread;
 import com.jfoenix.controls.JFXTextArea;
 import javafx.beans.InvalidationListener;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Skin;
 import javafx.scene.text.Text;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +41,6 @@ public class BisqTextArea extends JFXTextArea {
     private static final double INITIAL_HEIGHT = 19.0;
     private static final double SCROLL_HIDE_THRESHOLD = INITIAL_HEIGHT * 5;
 
-    @Setter
     private double initialHeight = INITIAL_HEIGHT;
     @Setter
     private double scrollHideThreshold = SCROLL_HIDE_THRESHOLD;
@@ -52,6 +52,7 @@ public class BisqTextArea extends JFXTextArea {
 
     public BisqTextArea() {
         setWrapText(true);
+        setStyle("-fx-background-color: -bs-background-color; -fx-border-color: -bs-background-color;");
 
         // We use a weakReference for the sceneChangeListener to avoid leaking when our instance is gone
         Objects.requireNonNull(new WeakReference<>(this).get()).sceneProperty()
@@ -66,6 +67,13 @@ public class BisqTextArea extends JFXTextArea {
                         layoutChildren();
                     }
                 });
+    }
+
+    public void setInitialHeight(double initialHeight) {
+        this.initialHeight = initialHeight;
+        if (scrollHideThreshold < initialHeight) {
+            scrollHideThreshold = initialHeight;
+        }
     }
 
     @Override
@@ -86,6 +94,11 @@ public class BisqTextArea extends JFXTextArea {
                 }
             }
         }
+    }
+
+    @Override
+    protected Skin<?> createDefaultSkin() {
+        return new JFXTextAreaSkinBisqStyle(this);
     }
 
     private void adjustHeight() {

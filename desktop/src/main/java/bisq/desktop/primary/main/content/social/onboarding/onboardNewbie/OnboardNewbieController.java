@@ -22,6 +22,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyWordDetection;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.Popup;
@@ -40,6 +41,8 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.HashSet;
 
+import static bisq.desktop.primary.main.content.social.onboarding.onboardNewbie.OnboardNewbieModel.MAX_INPUT_TERMS;
+
 @Slf4j
 public class OnboardNewbieController implements Controller {
     private final OnboardNewbieModel model;
@@ -54,6 +57,7 @@ public class OnboardNewbieController implements Controller {
 
     private Subscription selectedMarketSubscription, baseSideAmountSubscription;
     private final InvalidationListener paymentMethodsSelectionListener;
+    private Subscription termsDisabledSubscription;
 
     public OnboardNewbieController(DefaultApplicationService applicationService) {
         tradeIntentService = applicationService.getTradeIntentService();
@@ -102,6 +106,15 @@ public class OnboardNewbieController implements Controller {
                     updateOfferPreview();
                 });
 
+        termsDisabledSubscription = EasyBind.subscribe(model.getTerms(),
+                text -> {
+                    model.getTermsEditable().set(text == null || text.length() <= MAX_INPUT_TERMS);
+                    if (text != null && text.length() > MAX_INPUT_TERMS) {
+                        String truncated = model.getTerms().get().substring(0, MAX_INPUT_TERMS);
+                        UIThread.runOnNextRenderFrame(() -> model.getTerms().set(truncated));
+                    }
+                });
+
         paymentMethodsSelection.getSelectedPaymentMethods().addListener(paymentMethodsSelectionListener);
 
         model.getSelectedPaymentMethods().setAll(paymentMethodsSelection.getSelectedPaymentMethods());
@@ -114,6 +127,7 @@ public class OnboardNewbieController implements Controller {
     public void onDeactivate() {
         selectedMarketSubscription.unsubscribe();
         baseSideAmountSubscription.unsubscribe();
+        termsDisabledSubscription.unsubscribe();
         tradeTagsPin.unbind();
         currencyTagsPin.unbind();
         paymentMethodTagsPin.unbind();
