@@ -19,59 +19,86 @@ package bisq.desktop.components.controls;
 
 import bisq.desktop.common.threading.UIThread;
 import com.jfoenix.controls.JFXTextArea;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.scene.control.Skin;
+import javafx.beans.InvalidationListener;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.text.Text;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
+import java.lang.ref.WeakReference;
+import java.util.Objects;
 
+/**
+ * TextArea does not support of adjustment of height based on the text content.
+ * A freelance developer has provided an implementation for that feature based on ideas shared at:
+ * https://stackoverflow.com/questions/18588765/how-can-i-make-a-textarea-stretch-to-fill-the-content-expanding-the-parent-in-t/46590540#46590540
+ */
+@Slf4j
 public class BisqTextArea extends JFXTextArea {
-    @Nullable
-    private SimpleDoubleProperty adjustedHeight;
-    @Nullable
-    private ChangeListener<Number> scrollTopListener;
+    private static final String SELECTOR_TEXT = ".viewport .content .text";
+    private static final String SELECTOR_SCROLL_PANE = ".scroll-pane";
+    private static final double INITIAL_HEIGHT = 19.0;
+    private static final double SCROLL_HIDE_THRESHOLD = INITIAL_HEIGHT * 5;
+
+    @Setter
+    private double initialHeight = INITIAL_HEIGHT;
+    @Setter
+    private double scrollHideThreshold = SCROLL_HIDE_THRESHOLD;
+    private boolean initialized;
+    private final InvalidationListener textChangeListener = o -> adjustHeight();
+    ;
+    private ScrollPane selectorScrollPane;
+    private Text selectorText;
 
     public BisqTextArea() {
-        setStyle("-fx-background-color: -bs-background-color; -fx-border-color: -bs-background-color;");
+        setWrapText(true);
+
+        // We use a weakReference for the sceneChangeListener to avoid leaking when our instance is gone
+        Objects.requireNonNull(new WeakReference<>(this).get()).sceneProperty()
+                .addListener((observable, oldValue, newValue) -> {
+                    if (newValue == null) {
+                        // When we get removed from the display graph we remove the textChangeListener. 
+                        // We delay that to the next render frame to avoid potential ConcurrentModificationExceptions 
+                        // at the listener collections.
+                        UIThread.runOnNextRenderFrame(() -> textProperty().removeListener(textChangeListener));
+                    } else {
+                        initialized = false;
+                        layoutChildren();
+                    }
+                });
     }
 
     @Override
-    protected Skin<?> createDefaultSkin() {
-        return new JFXTextAreaSkinBisqStyle(this);
-    }
+    protected void layoutChildren() {
+        super.layoutChildren();
 
-    // TextArea does not support adjustment of it is height when text requires more lines.
-    // It shows a scrollbar instead. This hack below somehow fixes that, but not perfect. 
-    // Waiting for a component implementation which works as expected and replace it then.
-    // As this is temporary we don't handle listener cleanups...
-    public void autoAdjustHeight(double rowHeight) {
-        double extra = 11;
-        adjustedHeight = new SimpleDoubleProperty(extra + rowHeight);
-        prefHeightProperty().bindBidirectional(adjustedHeight);
-        minHeightProperty().bindBidirectional(adjustedHeight);
-        if (scrollTopListener == null) {
-            scrollTopListener = (observable, oldValue, newValue) -> {
-                if (newValue.doubleValue() >= rowHeight) {
-                    UIThread.runOnNextRenderFrame(() -> adjustedHeight.set(adjustedHeight.get() + newValue.doubleValue()));
+        if (!initialized) {
+            if (lookup(SELECTOR_SCROLL_PANE) instanceof ScrollPane selectorScrollPane) {
+                this.selectorScrollPane = selectorScrollPane;
+
+                if (lookup(SELECTOR_TEXT) instanceof Text selectorText) {
+                    this.selectorText = selectorText;
+
+                    textProperty().addListener(textChangeListener);
+                    selectorScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+                    adjustHeight();
+                    initialized = true;
                 }
-            };
-            scrollTopProperty().addListener(scrollTopListener);
-            UIThread.runOnNextRenderFrame(() -> adjustedHeight.set(adjustedHeight.get() + getScrollTop()));
+            }
         }
     }
 
-    public void resetAutoAdjustedHeight() {
-        if (adjustedHeight != null) {
-            adjustedHeight.set(getMinHeight());
+    private void adjustHeight() {
+        double textHeight = selectorText.getBoundsInLocal().getHeight();
+        if (textHeight < initialHeight) {
+            textHeight = initialHeight;
         }
-    }
-
-    public void releaseResources() {
-        if (scrollTopListener != null) {
-            prefHeightProperty().unbindBidirectional(adjustedHeight);
-            minHeightProperty().unbindBidirectional(adjustedHeight);
-            scrollTopProperty().removeListener(scrollTopListener);
-            scrollTopListener = null;
+        if (textHeight > scrollHideThreshold) {
+            selectorScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        } else {
+            selectorScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         }
+        setMinHeight(textHeight + INITIAL_HEIGHT);
+        setMaxHeight(textHeight + INITIAL_HEIGHT);
     }
 }

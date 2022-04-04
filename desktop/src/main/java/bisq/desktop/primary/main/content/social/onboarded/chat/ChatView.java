@@ -141,7 +141,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         infoButton.setOnAction(e -> controller.onToggleChannelInfo());
         closeButton.setOnAction(e -> controller.onCloseSideBar());
 
-        inputField.autoAdjustHeight(19);
         inputField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 event.consume();
@@ -150,7 +149,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                 } else if (!inputField.getText().isEmpty()) {
                     controller.onSendMessage(StringUtils.trimTrailingLinebreak(inputField.getText()));
                     inputField.clear();
-                    inputField.resetAutoAdjustedHeight();
                 }
             }
         });
@@ -186,7 +184,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         sideBar.managedProperty().unbind();
 
         inputField.textProperty().unbindBidirectional(model.getTextInput());
-        inputField.releaseResources();
 
         searchButton.setOnAction(null);
         notificationsButton.setOnAction(null);
@@ -388,8 +385,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             moreOptionsButton.setOnAction(null);
                             saveEditButton.setOnAction(null);
                             cancelEditButton.setOnAction(null);
-
-                            editedMessageField.releaseResources();
                             editedMessageField.setOnKeyPressed(null);
 
                             setGraphic(null);
@@ -398,7 +393,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
                     private void onEditMessage(ChatMessageListItem<? extends ChatMessage> item) {
                         editedMessageField.setPrefWidth(message.getWrappingWidth());
-                        editedMessageField.setPrefHeight(message.getLayoutBounds().getHeight());
                         editedMessageField.setText(message.getText());
                         editedMessageField.setVisible(true);
                         editedMessageField.setManaged(true);
@@ -406,7 +400,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         editControlsBox.setManaged(true);
                         message.setVisible(false);
                         message.setManaged(false);
-                        editedMessageField.autoAdjustHeight(19);
                         editedMessageField.setOnKeyPressed(event -> {
                             if (event.getCode() == KeyCode.ENTER) {
                                 event.consume();
@@ -427,7 +420,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         editControlsBox.setManaged(false);
                         message.setVisible(true);
                         message.setManaged(true);
-                        editedMessageField.resetAutoAdjustedHeight();
                         editedMessageField.setOnKeyPressed(null);
                     }
                 };
