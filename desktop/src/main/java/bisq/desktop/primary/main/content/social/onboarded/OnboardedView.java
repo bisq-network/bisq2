@@ -38,13 +38,6 @@ public class OnboardedView extends TabView<JFXTabPane, OnboardedModel, Onboarded
 
     @Override
     protected void onViewAttached() {
-        //todo
-      /*  UIThread.runLater(() -> {
-            NavigationTarget navigationTarget = model.getNavigationTarget();
-            if (navigationTarget != null) {
-                Navigation.navigateTo(navigationTarget);
-            }
-        });*/
     }
 
     @Override
