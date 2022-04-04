@@ -55,7 +55,7 @@ public class ChatController implements Controller {
     private Pin chatMessagesPin;
     private Pin selectedChannelPin;
     private Subscription notificationSettingSubscription;
-    private ListChangeListener<ChatMessageListItem> messageListener;
+    private ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messageListener;
 
     public ChatController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
