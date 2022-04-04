@@ -40,22 +40,33 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
         this.model = model;
         this.controller = controller;
 
+        boolean isCaching = controller instanceof CachingController;
         sceneChangeListener = (ov, oldValue, newScene) -> {
             if (oldValue == null && newScene != null) {
                 if (newScene.getWindow() != null) {
                     onViewAttachedPrivate();
-                    UIThread.runOnNextRenderFrame(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
                 } else {
                     // For overlays, we need to wait until window is available
-                    windowChangeListener = (observable, oldValue1, newWindow) -> {
-                        checkNotNull(newWindow, "Window must not be null");
-                        onViewAttachedPrivate();
-                        UIThread.runOnNextRenderFrame(() -> newScene.windowProperty().removeListener(View.this.windowChangeListener));
+                    windowChangeListener = (observable, oldWindow, newWindow) -> {
+                        if (newWindow != null) {
+                            onViewAttachedPrivate();
+                        } else {
+                            onViewDetachedPrivate();
+                            UIThread.runOnNextRenderFrame(() -> newScene.windowProperty().removeListener(windowChangeListener));
+                        }
                     };
                     newScene.windowProperty().addListener(windowChangeListener);
                 }
             } else if (oldValue != null && newScene == null) {
                 onViewDetachedPrivate();
+                if (!isCaching) {
+                    // If we do not use caching we do not expect to get added again to stage without creating a 
+                    // new instance of the view, so we remove our sceneChangeListener.
+                    UIThread.runOnNextRenderFrame(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
+                    if (oldValue.getWindow() != null && windowChangeListener != null) {
+                        UIThread.runOnNextRenderFrame(() -> oldValue.windowProperty().removeListener(windowChangeListener));
+                    }
+                }
             }
         };
         root.sceneProperty().addListener(sceneChangeListener);
@@ -74,7 +85,6 @@ public abstract class View<R extends Node, M extends Model, C extends Controller
         onViewAttachedInternal();
         controller.onActivateInternal();
     }
-
 
     // The internal methods should be only used by framework classes (e.g. TabView)
     void onViewAttachedInternal() {

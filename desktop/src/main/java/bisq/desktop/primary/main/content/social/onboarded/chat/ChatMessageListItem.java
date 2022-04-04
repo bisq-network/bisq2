@@ -21,7 +21,6 @@ import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.table.FilteredListItem;
-import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.security.DigestUtil;
@@ -38,7 +37,7 @@ import java.util.Optional;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>>, FilteredListItem {
+public class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>>, FilteredListItem {
     private final T chatMessage;
     private final String message;
     private final String authorUserName;
@@ -51,7 +50,7 @@ class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessa
 
     public ChatMessageListItem(T chatMessage) {
         this.chatMessage = chatMessage;
-        String editPostFix = chatMessage.isWasEdited() ? " " + Res.get("social.message.wasEdited") : "";
+        String editPostFix = chatMessage.isWasEdited() ? ChatView.EDITED_POST_FIX : "";
         message = chatMessage.getText() + editPostFix;
         quotedMessage = chatMessage.getQuotedMessage();
         author = chatMessage.getAuthor();

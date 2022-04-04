@@ -49,7 +49,8 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class ChatView extends View<SplitPane, ChatModel, ChatController> {
-
+    public final static String EDITED_POST_FIX = " " + Res.get("social.message.wasEdited");
+    
     private final ListView<ChatMessageListItem<? extends ChatMessage>> messagesListView;
     private final BisqTextArea inputField;
     private final BisqLabel selectedChannelLabel;
@@ -393,7 +394,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
                     private void onEditMessage(ChatMessageListItem<? extends ChatMessage> item) {
                         editedMessageField.setPrefWidth(message.getWrappingWidth());
-                        editedMessageField.setText(message.getText());
+                        editedMessageField.setText(message.getText().replace(EDITED_POST_FIX, ""));
                         editedMessageField.setVisible(true);
                         editedMessageField.setManaged(true);
                         editControlsBox.setVisible(true);
@@ -406,7 +407,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                 if (event.isShiftDown()) {
                                     editedMessageField.appendText(System.getProperty("line.separator"));
                                 } else if (!editedMessageField.getText().isEmpty()) {
-                                    controller.onSaveEditedMessage(item.getChatMessage(), StringUtils.trimTrailingLinebreak(editedMessageField.getText()));
+                                    controller.onSaveEditedMessage(item.getChatMessage(),
+                                            StringUtils.trimTrailingLinebreak(editedMessageField.getText()));
                                     onCloseEditMessage();
                                 }
                             }

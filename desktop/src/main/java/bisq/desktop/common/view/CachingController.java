@@ -16,6 +16,8 @@
  */
 
 package bisq.desktop.common.view;
-
-public interface NonCachingController extends Controller {
+/**
+ * Interface to mark a child controller to be cached by its parent Navigation controller.
+ */
+public interface CachingController extends Controller {
 }

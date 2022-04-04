@@ -92,7 +92,7 @@ public class AmountPriceGroup {
         controller.quoteAmount.setDirection(direction);
     }
 
-    public static class Controller implements bisq.desktop.common.view.Controller {
+    private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
         private final View view;
@@ -102,7 +102,7 @@ public class AmountPriceGroup {
         private final AmountInput quoteAmount;
         private final PriceInput price;
 
-        public Controller(MarketPriceService marketPriceService) {
+        private Controller(MarketPriceService marketPriceService) {
             baseAmount = new AmountInput(true);
             quoteAmount = new AmountInput(false);
             price = new PriceInput(marketPriceService);
@@ -178,9 +178,9 @@ public class AmountPriceGroup {
         private final ReadOnlyObjectProperty<Monetary> baseSideAmount;
         private final ReadOnlyObjectProperty<Monetary> quoteSideAmount;
         private final ReadOnlyObjectProperty<Quote> fixPrice;
-        public boolean isCreateOffer = true;
+        private boolean isCreateOffer = true;
 
-        public Model(ReadOnlyObjectProperty<Monetary> baseSideAmount,
+        private Model(ReadOnlyObjectProperty<Monetary> baseSideAmount,
                      ReadOnlyObjectProperty<Monetary> quoteSideAmount,
                      ReadOnlyObjectProperty<Quote> fixPrice) {
             this.baseSideAmount = baseSideAmount;
@@ -190,10 +190,10 @@ public class AmountPriceGroup {
     }
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+    private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqLabel headline;
 
-        public View(Model model,
+        private View(Model model,
                     Controller controller,
                     Pane baseAmount,
                     Pane price,

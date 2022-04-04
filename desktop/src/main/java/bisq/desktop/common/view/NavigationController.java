@@ -29,6 +29,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class NavigationController implements Controller, Navigation.Listener {
     protected final Map<NavigationTarget, Controller> controllerCache = new ConcurrentHashMap<>();
     protected final NavigationTarget host;
+    // We do not hold the controller as we don't want to pin a reference in case it's a non caching controller
+    private Optional<String> childControllerClassName = Optional.empty();
 
     public NavigationController(NavigationTarget host) {
         this.host = host;
@@ -38,11 +40,25 @@ public abstract class NavigationController implements Controller, Navigation.Lis
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
         Optional<NavigationTarget> candidate = Optional.of(navigationTarget);
         while (candidate.isPresent()) {
-            Optional<Controller> controller = findController(candidate.get(), data);
-            if (controller.isPresent()) {
-                getModel().select(candidate.get(), controller.get().getView());
+            Optional<Controller> childController = findController(candidate.get(), data);
+            if (childController.isPresent()) {
+                // If that controller is handling that navigationTarget and creates a childController we 
+                // apply the child view to our view.
+                if (childControllerClassName.isEmpty() ||
+                        !childControllerClassName.get().equals(childController.get().getClass().toString())) {
+                    // log.debug("{}: Apply child controller. childController={}",
+                    //          this.getClass().getSimpleName(), childController.get().getClass().getSimpleName());
+                    getModel().applyChild(candidate.get(), childController.get().getView());
+                    childControllerClassName = Optional.of(childController.get().getClass().toString());
+                } else {
+                    // We might get called from the navigation event dispatcher when child views gets attached and
+                    // apply their default navigationTargets. 
+                    // log.debug("{}: We have applied already that child controller. childController={}",
+                    //         this.getClass().getSimpleName(), childController.get().getClass().getSimpleName());
+                }
                 break;
             } else {
+                // At NavigationTarget.ROOT we don't have a parent and candidate is not present, exiting the while loop
                 candidate = candidate.get().getParent();
             }
         }
@@ -74,7 +90,7 @@ public abstract class NavigationController implements Controller, Navigation.Lis
                         if (controller instanceof InitWithDataController initWithDataController) {
                             data.ifPresent(initWithDataController::initWithObject);
                         }
-                        if (!(controller instanceof NonCachingController)) {
+                        if (controller instanceof CachingController) {
                             controllerCache.put(navigationTarget, controller);
                         }
                         return controller;

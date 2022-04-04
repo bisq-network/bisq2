@@ -37,7 +37,7 @@ public abstract class NavigationModel implements Model {
 
     public abstract NavigationTarget getDefaultNavigationTarget();
 
-    public void select(NavigationTarget navigationTarget, View<? extends Parent, ? extends Model, ? extends Controller> view) {
+    public void applyChild(NavigationTarget navigationTarget, View<? extends Parent, ? extends Model, ? extends Controller> view) {
         this.navigationTarget = navigationTarget;
         this.view.set(view);
     }

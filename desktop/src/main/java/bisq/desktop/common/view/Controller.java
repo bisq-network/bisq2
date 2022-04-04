@@ -19,6 +19,10 @@ package bisq.desktop.common.view;
 
 import javafx.scene.Parent;
 
+/**
+ * By default, we do not use caching. If a child controller should be cached by its parent Navigation controller,
+ * it has to implement the CachingController interface.
+ */
 public interface Controller {
     View<? extends Parent, ? extends Model, ? extends Controller> getView();
 
