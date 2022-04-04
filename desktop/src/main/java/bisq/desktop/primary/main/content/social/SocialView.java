@@ -20,7 +20,9 @@ package bisq.desktop.primary.main.content.social;
 import bisq.desktop.common.view.NavigationView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class SocialView extends NavigationView<HBox, SocialModel, SocialController> {
 
     public SocialView(SocialModel model, SocialController controller) {
