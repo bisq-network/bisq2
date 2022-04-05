@@ -69,9 +69,7 @@ dependencies {
         /////////////////////////////////////////////////////////////////////////////////
         // Logging dependency constraints
         /////////////////////////////////////////////////////////////////////////////////
-        api('org.slf4j:slf4j-api') {
-            version { require '1.7.30' }
-        }
+        api(libs.slf4j.api)
         api('ch.qos.logback:logback-core') {
             version { require '1.2.3' }
         }
@@ -81,8 +79,6 @@ dependencies {
 
         // The runtime configuration should be used to declare
         // constraints or dependencies which are visible at runtime.
-        runtime('org.slf4j:slf4j-api') {
-            version { require '1.7.30' }
-        }
+        runtime(libs.slf4j.api)
     }
 }
