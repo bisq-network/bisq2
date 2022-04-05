@@ -17,34 +17,43 @@
 
 package bisq.tools.theme;
 
+import bisq.desktop.common.utils.KeyCodeUtils;
 import bisq.tools.theme.sample.SamplePage;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
-import static java.util.Objects.requireNonNull;
-
-/**
- * Show case for basic JavaFx components used in Bisq with custom styling for Bisq
- * SamplePage is borrowed from: https://github.com/JFXtras/jfxtras-styles/
- */
+// Just temp as example for using an external theme
 // Requires a gradle build for first run so that resource is in deployment directory
 @Slf4j
-public class BisqThemeDemoApp extends Application {
+public abstract class ThemeDemoApp extends Application {
+    protected Scene scene;
+
     @Override
     public void start(Stage stage) {
         ScrollPane scrollPane = new ScrollPane();
         SamplePage samplePage = new SamplePage();
         scrollPane.setContent(samplePage);
-        Scene scene = new Scene(scrollPane, 1400, 1000);
-        stage.setTitle(getClass().getSimpleName());
+        scene = new Scene(scrollPane, 1400, 1000);
+        stage.setTitle(getTitle());
         stage.setScene(scene);
 
-        scene.setUserAgentStylesheet(getClass().getResource("bisq/bisq.css").toExternalForm());
-        scene.getStylesheets().setAll(requireNonNull(getClass().getResource("bisq/dark.css")).toExternalForm());
-       
+        loadStyles();
+        scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
+            if (KeyCodeUtils.isCtrlPressed(KeyCode.W, keyEvent) ||
+                    KeyCodeUtils.isCtrlPressed(KeyCode.Q, keyEvent)) {
+                Platform.exit();
+            }
+        });
         stage.show();
     }
+
+    protected abstract void loadStyles();
+
+    protected abstract String getTitle();
 }

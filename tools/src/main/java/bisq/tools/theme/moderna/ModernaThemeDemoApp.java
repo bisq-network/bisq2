@@ -15,15 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tools.theme;
+package bisq.tools.theme.moderna;
 
-import javafx.application.Application;
+import bisq.tools.theme.ThemeDemoApp;
+import lombok.extern.slf4j.Slf4j;
 
-// Requires a gradle build for first run so that resource is in deployment directory
-public class BisqThemeDemoMain {
-    public static void main(String[] args) {
-        new Thread(() -> {
-            Application.launch(BisqThemeDemoApp.class, args); //blocks until app is closed
-        }).start();
+/**
+ * Show case for basic JavaFx components used in Bisq with default JavaFx (moderna) styling
+ * SamplePage is borrowed from: https://github.com/JFXtras/jfxtras-styles/
+ */
+@Slf4j
+public class ModernaThemeDemoApp extends ThemeDemoApp {
+    @Override
+    protected void loadStyles() {
+        // do nothing as we use defaults
+    }
+
+    @Override
+    protected String getTitle() {
+        return "Moderna";
     }
 }

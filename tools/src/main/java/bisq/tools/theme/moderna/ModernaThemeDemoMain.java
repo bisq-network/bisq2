@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tools.theme;
+package bisq.tools.theme.moderna;
 
 import javafx.application.Application;
 

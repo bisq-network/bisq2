@@ -15,15 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tools.theme;
+package bisq.tools.theme.bisq;
 
-import javafx.application.Application;
+import bisq.tools.theme.ThemeDemoApp;
+import lombok.extern.slf4j.Slf4j;
+
+import static java.util.Objects.requireNonNull;
+
+/**
+ * Show case for basic JavaFx components used in Bisq with custom styling for Bisq
+ * SamplePage is borrowed from: https://github.com/JFXtras/jfxtras-styles/
+ */
 // Requires a gradle build for first run so that resource is in deployment directory
-// Just temp as example for using an external theme
-public class JMetroThemeDemoMain {
-    public static void main(String[] args) {
-        new Thread(() -> {
-            Application.launch(JMetroThemeDemoApp.class, args); //blocks until app is closed
-        }).start();
+@Slf4j
+public class BisqThemeDemoApp extends ThemeDemoApp {
+    @Override
+    protected void loadStyles() {
+        scene.setUserAgentStylesheet(requireNonNull(getClass().getResource("bisq.css")).toExternalForm());
+        scene.getStylesheets().setAll(requireNonNull(getClass().getResource("dark.css")).toExternalForm());
+    }
+
+    @Override
+    protected String getTitle() {
+        return "Bisq";
     }
 }
+
