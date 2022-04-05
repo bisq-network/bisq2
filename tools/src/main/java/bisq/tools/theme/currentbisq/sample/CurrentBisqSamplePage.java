@@ -56,8 +56,10 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package bisq.tools.theme.sample;
+package bisq.tools.theme.currentbisq.sample;
 
+import bisq.desktop.components.controls.*;
+import bisq.desktop.components.table.BisqTableView;
 import javafx.collections.ObservableList;
 import javafx.geometry.*;
 import javafx.scene.Node;
@@ -72,104 +74,71 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static bisq.tools.theme.sample.SamplePageHelpers.*;
-import static bisq.tools.theme.sample.SamplePageTableHelper.createTableView;
-import static bisq.tools.theme.sample.SamplePageTableHelper.createTableViewSimple;
+import static bisq.tools.theme.currentbisq.sample.CurrentBisqSamplePageHelpers.*;
+import static bisq.tools.theme.currentbisq.sample.CurrentBisqSamplePageTableHelper.createTableView;
+import static bisq.tools.theme.currentbisq.sample.CurrentBisqSamplePageTableHelper.createTableViewSimple;
 
 /**
  * Page showing every control in every state.
  */
-public class SamplePage extends GridPane {
+public class CurrentBisqSamplePage extends GridPane {
     private int rowIndex = 0;
     private Map<String, Node> content = new HashMap<>();
     private List<Section> sections = new ArrayList<>();
 
-    public SamplePage() {
+    public CurrentBisqSamplePage() {
         setVgap(25);
         setHgap(15);
         setPadding(new Insets(15));
         newSection("Label:",
-                new Label("Label"),
-                withState(new Label("Disabled"), "disabled"));
+                new BisqLabel("Label"),
+                withState(new BisqLabel("Disabled"), "disabled"));
 
-        TextField textF = new TextField();
-        textF.setPromptText("Prompt Text");
-        newSection(
-                "TextField:",
-                new TextField("TextField"),
-                textF,
-                withState(new TextField("Focused"), "focused"),
-                withState(new TextField("Disabled"), "disabled"));
-        PasswordField pField1 = new PasswordField();
-        pField1.setText("Password");
-        PasswordField pField2 = new PasswordField();
-        pField2.setPromptText("Prompt Text");
-        PasswordField pField3 = new PasswordField();
-        pField3.setText("Password");
-        PasswordField pField4 = new PasswordField();
-        pField4.setText("Password");
-        newSection(
-                "PasswordField:",
-                pField1,
-                pField2,
-                withState(pField3, "focused"),
-                withState(pField4, "disabled"));
-        TextArea tArea1 = new TextArea("TextArea");
-        tArea1.setPrefColumnCount(10);
-        tArea1.setPrefRowCount(2);
-        TextArea tArea2 = new TextArea("Many Lines of\nText.\n#3\n#4\n#5\n#6\n#7\n#8\n#9\n#10");
-        tArea2.setPrefColumnCount(10);
-        tArea2.setPrefRowCount(5);
-        TextArea tArea3 = new TextArea("Many Lines of\nText.\n#3\n#4\n#5\n#6\n#7\n#8\n#9\n#10");
-        tArea3.setPrefColumnCount(6);
-        tArea3.setPrefRowCount(5);
-        TextArea tArea4 = new TextArea("Prompt Text");
-        tArea4.setPrefColumnCount(10);
-        tArea4.setPrefRowCount(2);
-
-        TextArea tArea5 = new TextArea("Focused");
-        tArea5.setPrefColumnCount(7);
-        tArea5.setPrefRowCount(2);
-        TextArea tArea6 = new TextArea("Disabled");
-        tArea6.setPrefColumnCount(8);
-        tArea6.setPrefRowCount(2);
-        newSection(
-                "TextArea:",
-                tArea1, tArea2, tArea3, tArea4,
-                withState(tArea5, "focused"),
-                withState(tArea6, "disabled"));
-        
-        
         newSection("Button:",
-                new Button("Button"),
-                withState(new Button("Hover"), "hover"),
-                withState(new Button("Armed"), "armed"),
-                withState(new Button("Focused"), "focused"),
-                withState(new Button("Focused & Hover"), "focused, hover"),
-                withState(new Button("Focused & Armed"), "focused, armed"),
-                withState(new Button("Disabled"), "disabled"));
-        Button defaultButton = new Button("Button");
-        defaultButton.setDefaultButton(true);
+                new BisqButton("Button"),
+                withState(new BisqButton("Hover"), "hover"),
+                withState(new BisqButton("Armed"), "armed"),
+                withState(new BisqButton("Focused"), "focused"),
+                withState(new BisqButton("Focused & Hover"), "focused, hover"),
+                withState(new BisqButton("Focused & Armed"), "focused, armed"),
+                withState(new BisqButton("Disabled"), "disabled"));
+
+        BisqButton defaultButton = new BisqButton("Button");
+        defaultButton.setActionButton(true);
+
+        BisqButton hover = new BisqButton("Hover");
+        hover.setActionButton(true);
+        BisqButton armed = new BisqButton("Armed");
+        armed.setActionButton(true);
+        BisqButton focused = new BisqButton("Focused");
+        focused.setActionButton(true);
+        BisqButton node = new BisqButton("Focused & Hover");
+        node.setActionButton(true);
+        BisqButton node1 = new BisqButton("Focused & Armed");
+        node1.setActionButton(true);
+        BisqButton disabled = new BisqButton("Disabled");
+        disabled.setActionButton(true);
         newSection("Default Button:",
                 defaultButton,
-                withState(new Button("Hover"), "default, hover"),
-                withState(new Button("Armed"), "default, armed"),
-                withState(new Button("Focused"), "default, focused"),
-                withState(new Button("Focused & Hover"), "default, focused, hover"),
-                withState(new Button("Focused & Armed"), "default, focused, armed"),
-                withState(new Button("Disabled"), "default, disabled"));
-        Button b1 = new Button("Button");
+                withState(hover, "default, hover"),
+                withState(armed, "default, armed"),
+                withState(focused, "default, focused"),
+                withState(node, "default, focused, hover"),
+                withState(node1, "default, focused, armed"),
+                withState(disabled, "default, disabled"));
+        
+       /* Button b1 = new BisqButton("Button");
         b1.setStyle("-fx-base: #f3622d;");
-        Button b2 = new Button("Button");
+        Button b2 = new BisqButton("Button");
         b2.setStyle("-fx-base: #fba71b;");
-        Button b3 = new Button("Button");
+        Button b3 = new BisqButton("Button");
         b3.setStyle("-fx-base: #57b757;");
-        Button b4 = new Button("Button");
+        Button b4 = new BisqButton("Button");
         b4.setStyle("-fx-base: #41a9c9;");
-        Button b5 = new Button("Button");
+        Button b5 = new BisqButton("Button");
         b5.setStyle("-fx-base: #888;");
-        newSection("Nice Colors:", b1, b2, b3, b4, b5);
-        newSection("Greys:",0,
+        newSection("Nice Colors:", b1, b2, b3, b4, b5);*/
+        newSection("Greys:", 0,
                 createGreyButton(0),
                 createGreyButton(0.1),
                 createGreyButton(0.2),
@@ -186,45 +155,45 @@ public class SamplePage extends GridPane {
         ToggleGroup tg3 = new ToggleGroup();
         ToggleGroup tg4 = new ToggleGroup();
 
-        ToggleButton left1 = new ToggleButton("Left");
+        ToggleButton left1 = new BisqToggleButton("Left");
         left1.getStyleClass().add("left-pill");
         left1.setToggleGroup(tg1);
-        ToggleButton center1 = new ToggleButton("Center");
+        ToggleButton center1 = new BisqToggleButton("Center");
         center1.getStyleClass().add("center-pill");
         center1.setToggleGroup(tg1);
-        ToggleButton right1 = new ToggleButton("Right");
+        ToggleButton right1 = new BisqToggleButton("Right");
         right1.getStyleClass().add("right-pill");
         right1.setToggleGroup(tg1);
 
-        ToggleButton left2 = new ToggleButton("Left");
+        ToggleButton left2 = new BisqToggleButton("Left");
         left2.getStyleClass().add("left-pill");
         left2.setToggleGroup(tg2);
         left2.setSelected(true);
-        ToggleButton center2 = new ToggleButton("Center");
+        ToggleButton center2 = new BisqToggleButton("Center");
         center2.getStyleClass().add("center-pill");
         center2.setToggleGroup(tg2);
-        ToggleButton right2 = new ToggleButton("Right");
+        ToggleButton right2 = new BisqToggleButton("Right");
         right2.getStyleClass().add("right-pill");
         right2.setToggleGroup(tg2);
 
-        ToggleButton left3 = new ToggleButton("Left");
+        ToggleButton left3 = new BisqToggleButton("Left");
         left3.getStyleClass().add("left-pill");
         left3.setToggleGroup(tg3);
-        ToggleButton center3 = new ToggleButton("Center");
+        ToggleButton center3 = new BisqToggleButton("Center");
         center3.getStyleClass().add("center-pill");
         center3.setToggleGroup(tg3);
         center3.setSelected(true);
-        ToggleButton right3 = new ToggleButton("Right");
+        ToggleButton right3 = new BisqToggleButton("Right");
         right3.getStyleClass().add("right-pill");
         right3.setToggleGroup(tg3);
 
-        ToggleButton left4 = new ToggleButton("Left");
+        ToggleButton left4 = new BisqToggleButton("Left");
         left4.getStyleClass().add("left-pill");
         left4.setToggleGroup(tg4);
-        ToggleButton center4 = new ToggleButton("Center");
+        ToggleButton center4 = new BisqToggleButton("Center");
         center4.getStyleClass().add("center-pill");
         center4.setToggleGroup(tg4);
-        ToggleButton right4 = new ToggleButton("Right");
+        ToggleButton right4 = new BisqToggleButton("Right");
         right4.getStyleClass().add("right-pill");
         right4.setToggleGroup(tg4);
         right4.setSelected(true);
@@ -241,80 +210,80 @@ public class SamplePage extends GridPane {
         ToggleGroup tg7 = new ToggleGroup();
         ToggleGroup tg8 = new ToggleGroup();
 
-        ToggleButton left5 = new ToggleButton("#");
+        ToggleButton left5 = new BisqToggleButton("#");
         left5.getStyleClass().add("left-pill");
         left5.setToggleGroup(tg5);
-        ToggleButton center5 = new ToggleButton("#");
+        ToggleButton center5 = new BisqToggleButton("#");
         center5.getStyleClass().add("center-pill");
         center5.setToggleGroup(tg5);
-        ToggleButton right5 = new ToggleButton("#");
+        ToggleButton right5 = new BisqToggleButton("#");
         right5.getStyleClass().add("right-pill");
         right5.setToggleGroup(tg5);
 
-        ToggleButton left5_1 = new ToggleButton("L");
+        ToggleButton left5_1 = new BisqToggleButton("L");
         left5_1.getStyleClass().add("left-pill");
         left5_1.setToggleGroup(tg5);
         withState(left5_1, "focused");
-        ToggleButton center5_1 = new ToggleButton("C");
+        ToggleButton center5_1 = new BisqToggleButton("C");
         center5_1.getStyleClass().add("center-pill");
         center5_1.setToggleGroup(tg5);
-        ToggleButton right5_1 = new ToggleButton("R");
+        ToggleButton right5_1 = new BisqToggleButton("R");
         right5_1.getStyleClass().add("right-pill");
         right5_1.setToggleGroup(tg5);
 
-        ToggleButton left5_2 = new ToggleButton("L");
+        ToggleButton left5_2 = new BisqToggleButton("L");
         left5_2.getStyleClass().add("left-pill");
         left5_2.setToggleGroup(tg5);
-        ToggleButton center5_2 = new ToggleButton("C");
+        ToggleButton center5_2 = new BisqToggleButton("C");
         center5_2.getStyleClass().add("center-pill");
         center5_2.setToggleGroup(tg5);
         withState(center5_2, "focused");
-        ToggleButton right5_2 = new ToggleButton("R");
+        ToggleButton right5_2 = new BisqToggleButton("R");
         right5_2.getStyleClass().add("right-pill");
         right5_2.setToggleGroup(tg5);
 
-        ToggleButton left5_3 = new ToggleButton("L");
+        ToggleButton left5_3 = new BisqToggleButton("L");
         left5_3.getStyleClass().add("left-pill");
         left5_3.setToggleGroup(tg5);
-        ToggleButton center5_3 = new ToggleButton("C");
+        ToggleButton center5_3 = new BisqToggleButton("C");
         center5_3.getStyleClass().add("center-pill");
         center5_3.setToggleGroup(tg5);
-        ToggleButton right5_3 = new ToggleButton("R");
+        ToggleButton right5_3 = new BisqToggleButton("R");
         right5_3.getStyleClass().add("right-pill");
         right5_3.setToggleGroup(tg5);
         withState(right5_3, "focused");
 
-        ToggleButton left6 = new ToggleButton("L");
+        ToggleButton left6 = new BisqToggleButton("L");
         left6.getStyleClass().add("left-pill");
         left6.setToggleGroup(tg6);
         left6.setSelected(true);
         withState(left6, "focused");
-        ToggleButton center6 = new ToggleButton("C");
+        ToggleButton center6 = new BisqToggleButton("C");
         center6.getStyleClass().add("center-pill");
         center6.setToggleGroup(tg6);
-        ToggleButton right6 = new ToggleButton("R");
+        ToggleButton right6 = new BisqToggleButton("R");
         right6.getStyleClass().add("right-pill");
         right6.setToggleGroup(tg6);
 
-        ToggleButton left7 = new ToggleButton("L");
+        ToggleButton left7 = new BisqToggleButton("L");
         left7.getStyleClass().add("left-pill");
         left7.setToggleGroup(tg7);
-        ToggleButton center7 = new ToggleButton("C");
+        ToggleButton center7 = new BisqToggleButton("C");
         center7.getStyleClass().add("center-pill");
         center7.setToggleGroup(tg7);
         center7.setSelected(true);
         withState(center7, "focused");
-        ToggleButton right7 = new ToggleButton("R");
+        ToggleButton right7 = new BisqToggleButton("R");
         right7.getStyleClass().add("right-pill");
         right7.setToggleGroup(tg7);
 
-        ToggleButton left8 = new ToggleButton("L");
+        ToggleButton left8 = new BisqToggleButton("L");
         left8.getStyleClass().add("left-pill");
         left8.setToggleGroup(tg8);
-        ToggleButton center8 = new ToggleButton("C");
+        ToggleButton center8 = new BisqToggleButton("C");
         center8.getStyleClass().add("center-pill");
         center8.setToggleGroup(tg8);
-        ToggleButton right8 = new ToggleButton("R");
+        ToggleButton right8 = new BisqToggleButton("R");
         right8.getStyleClass().add("right-pill");
         right8.setToggleGroup(tg8);
         right8.setSelected(true);
@@ -330,66 +299,66 @@ public class SamplePage extends GridPane {
                 new HBox(left8, center8, right8)
         );
         newSection("ToggleButton:",
-                new ToggleButton("Button"),
-                withState(new ToggleButton("Hover"), "hover"),
-                withState(new ToggleButton("Armed"), "armed"),
-                withState(new ToggleButton("Focused"), "focused"),
-                withState(new ToggleButton("Focused & Hover"), "focused, hover"),
-                withState(new ToggleButton("Focused & Armed"), "focused, armed"),
-                withState(new ToggleButton("Disabled"), "disabled"));
+                new BisqToggleButton("Button"),
+                withState(new BisqToggleButton("Hover"), "hover"),
+                withState(new BisqToggleButton("Armed"), "armed"),
+                withState(new BisqToggleButton("Focused"), "focused"),
+                withState(new BisqToggleButton("Focused & Hover"), "focused, hover"),
+                withState(new BisqToggleButton("Focused & Armed"), "focused, armed"),
+                withState(new BisqToggleButton("Disabled"), "disabled"));
         newSection("ToggleButton Selected:",
-                withState(new ToggleButton("Button"), "selected"),
-                withState(new ToggleButton("Hover"), "selected, hover"),
-                withState(new ToggleButton("Armed"), "selected, armed"),
-                withState(new ToggleButton("Focused"), "selected, focused"),
-                withState(new ToggleButton("Focused & Hover"), "selected, focused, hover"),
-                withState(new ToggleButton("Focused & Armed"), "selected, focused, armed"),
-                withState(new ToggleButton("Disabled"), "selected, disabled"));
+                withState(new BisqToggleButton("Button"), "selected"),
+                withState(new BisqToggleButton("Hover"), "selected, hover"),
+                withState(new BisqToggleButton("Armed"), "selected, armed"),
+                withState(new BisqToggleButton("Focused"), "selected, focused"),
+                withState(new BisqToggleButton("Focused & Hover"), "selected, focused, hover"),
+                withState(new BisqToggleButton("Focused & Armed"), "selected, focused, armed"),
+                withState(new BisqToggleButton("Disabled"), "selected, disabled"));
         newSection("CheckBox:",
-                new CheckBox("CheckBox"),
-                withState(new CheckBox("Hover"), "hover"),
-                withState(new CheckBox("Armed"), "armed"),
-                withState(new CheckBox("Focused"), "focused"),
-                withState(new CheckBox("Focused & Hover"), "focused, hover"),
-                withState(new CheckBox("Focused & Armed"), "focused, armed"),
-                withState(new CheckBox("Disabled"), "disabled"));
+                new BisqCheckBox("CheckBox"),
+                withState(new BisqCheckBox("Hover"), "hover"),
+                withState(new BisqCheckBox("Armed"), "armed"),
+                withState(new BisqCheckBox("Focused"), "focused"),
+                withState(new BisqCheckBox("Focused & Hover"), "focused, hover"),
+                withState(new BisqCheckBox("Focused & Armed"), "focused, armed"),
+                withState(new BisqCheckBox("Disabled"), "disabled"));
         newSection("CheckBox Selected:",
-                withState(new CheckBox("CheckBox"), "selected"),
-                withState(new CheckBox("Hover"), "selected, hover"),
-                withState(new CheckBox("Armed"), "selected, armed"),
-                withState(new CheckBox("Focused"), "selected, focused"),
-                withState(new CheckBox("Focused & Hover"), "selected, focused, hover"),
-                withState(new CheckBox("Focused & Armed"), "selected, focused, armed"),
-                withState(new CheckBox("Disabled"), "selected, disabled"));
+                withState(new BisqCheckBox("CheckBox"), "selected"),
+                withState(new BisqCheckBox("Hover"), "selected, hover"),
+                withState(new BisqCheckBox("Armed"), "selected, armed"),
+                withState(new BisqCheckBox("Focused"), "selected, focused"),
+                withState(new BisqCheckBox("Focused & Hover"), "selected, focused, hover"),
+                withState(new BisqCheckBox("Focused & Armed"), "selected, focused, armed"),
+                withState(new BisqCheckBox("Disabled"), "selected, disabled"));
 
-        CheckBox checkB = new CheckBox("CheckBox");
+        CheckBox checkB = new BisqCheckBox("CheckBox");
         checkB.setSelected(true);
         checkB.setIndeterminate(true);
         checkB.setAllowIndeterminate(true);
         newSection("CheckBox\nIndeterminate:",
                 checkB,
-                withState(new CheckBox("Hover"), "indeterminate, selected, hover"),
-                withState(new CheckBox("Armed"), "indeterminate, selected, armed"),
-                withState(new CheckBox("Focused"), "indeterminate, selected, focused"),
-                withState(new CheckBox("Focused & Hover"), "indeterminate, selected, focused, hover"),
-                withState(new CheckBox("Focused & Armed"), "indeterminate, selected, focused, armed"),
-                withState(new CheckBox("Disabled"), "indeterminate, selected, disabled"));
+                withState(new BisqCheckBox("Hover"), "indeterminate, selected, hover"),
+                withState(new BisqCheckBox("Armed"), "indeterminate, selected, armed"),
+                withState(new BisqCheckBox("Focused"), "indeterminate, selected, focused"),
+                withState(new BisqCheckBox("Focused & Hover"), "indeterminate, selected, focused, hover"),
+                withState(new BisqCheckBox("Focused & Armed"), "indeterminate, selected, focused, armed"),
+                withState(new BisqCheckBox("Disabled"), "indeterminate, selected, disabled"));
         newSection("RadioButton:",
-                new RadioButton("RadioButton"),
-                withState(new RadioButton("Hover"), "hover"),
-                withState(new RadioButton("Armed"), "armed"),
-                withState(new RadioButton("Focused"), "focused"),
-                withState(new RadioButton("Focused & Hover"), "focused, hover"),
-                withState(new RadioButton("Focused & Armed"), "focused, armed"),
-                withState(new RadioButton("Disabled"), "disabled"));
+                new BisqRadioButton("RadioButton"),
+                withState(new BisqRadioButton("Hover"), "hover"),
+                withState(new BisqRadioButton("Armed"), "armed"),
+                withState(new BisqRadioButton("Focused"), "focused"),
+                withState(new BisqRadioButton("Focused & Hover"), "focused, hover"),
+                withState(new BisqRadioButton("Focused & Armed"), "focused, armed"),
+                withState(new BisqRadioButton("Disabled"), "disabled"));
         newSection("RadioButton\nSelected:",
-                withState(new RadioButton("RadioButton"), "selected"),
-                withState(new RadioButton("Hover"), "selected, hover"),
-                withState(new RadioButton("Armed"), "selected, armed"),
-                withState(new RadioButton("Focused"), "selected, focused"),
-                withState(new RadioButton("Focused & Hover"), "selected, focused, hover"),
-                withState(new RadioButton("Focused & Armed"), "selected, focused, armed"),
-                withState(new RadioButton("Disabled"), "selected, disabled"));
+                withState(new BisqRadioButton("RadioButton"), "selected"),
+                withState(new BisqRadioButton("Hover"), "selected, hover"),
+                withState(new BisqRadioButton("Armed"), "selected, armed"),
+                withState(new BisqRadioButton("Focused"), "selected, focused"),
+                withState(new BisqRadioButton("Focused & Hover"), "selected, focused, hover"),
+                withState(new BisqRadioButton("Focused & Armed"), "selected, focused, armed"),
+                withState(new BisqRadioButton("Disabled"), "selected, disabled"));
         newSection("HyperLink:",
                 new Hyperlink("Hyperlink"),
                 withState(new Hyperlink("Visited"), "visited"),
@@ -400,7 +369,7 @@ public class SamplePage extends GridPane {
                 withState(new Hyperlink("F & Hover"), "focused, hover"),
                 withState(new Hyperlink("F & Armed"), "focused, armed"),
                 withState(new Hyperlink("Disabled"), "disabled"));
-      
+
         ObservableList<String> choiceBoxLongList = sampleItems(200);
         choiceBoxLongList.add(100, "Long List");
         
@@ -423,44 +392,44 @@ public class SamplePage extends GridPane {
                 withState(cb4,"showing"),
                 withState(cb5,"focused"),
                 cb6);*/
-        
-        
-        ComboBox<String> c1 = new ComboBox<String>(sampleItems());
+
+
+        ComboBox<String> c1 = new BisqComboBox<String>(sampleItems());
         c1.setValue("Item A");
-        ComboBox<String> c2 = new ComboBox<String>(choiceBoxLongList);
+        ComboBox<String> c2 = new BisqComboBox<String>(choiceBoxLongList);
         c2.setValue("Long List");
-        ComboBox<String> c3 = new ComboBox<String>(sampleItems());
+        ComboBox<String> c3 = new BisqComboBox<String>(sampleItems());
         c3.setValue("Item B");
-        ComboBox<String> c4 = new ComboBox<String>(sampleItems());
+        ComboBox<String> c4 = new BisqComboBox<String>(sampleItems());
         c4.setValue("Item B");
-        ComboBox<String> c5 = new ComboBox<String>(sampleItems());
+        ComboBox<String> c5 = new BisqComboBox<String>(sampleItems());
         c5.setValue("Item B");
-        ComboBox<String> c6 = new ComboBox<String>(sampleItems());
+        ComboBox<String> c6 = new BisqComboBox<String>(sampleItems());
         c6.setValue("Item C");
         c6.setDisable(true);
         newSection(
                 "ComboBox:", c1, c2,
                 withState(c3, "hover"),
                 withState(c4, "showing"),
-                withState(c5,"focused"),
+                withState(c5, "focused"),
                 c6);
-        ComboBox<String> com1 = new ComboBox<String>(sampleItems());
+        ComboBox<String> com1 = new BisqComboBox<String>(sampleItems());
         com1.setValue("Item A");
         com1.setEditable(true);
-        ComboBox<String> com2 = new ComboBox<String>(sampleItems());
+        ComboBox<String> com2 = new BisqComboBox<String>(sampleItems());
         com2.setValue("Item B");
         com2.setEditable(true);
-        ComboBox<String> com3 = new ComboBox<String>(sampleItems());
+        ComboBox<String> com3 = new BisqComboBox<String>(sampleItems());
         com3.setValue("Item B");
         com3.setEditable(true);
         newSection(
                 "ComboBox\nEditable:", com1,
                 withState(com2, "editable", ".arrow-button", "hover"),
                 withState(com3, "editable", ".arrow-button", "pressed"));
-        ComboBox<String> co1 = new ComboBox<String>(sampleItems());
+        ComboBox<String> co1 = new BisqComboBox<String>(sampleItems());
         co1.setValue("Item B");
         co1.setEditable(true);
-        ComboBox<String> co2 = new ComboBox<String>(sampleItems());
+        ComboBox<String> co2 = new BisqComboBox<String>(sampleItems());
         co2.setValue("Item C");
         co2.setEditable(true);
         co2.setDisable(true);
@@ -468,7 +437,7 @@ public class SamplePage extends GridPane {
                 "ComboBox\nEditable\n(More):",
                 withState(co1, "editable,contains-focus", ".text-field", "focused"),
                 co2);
-        String[] spinnerStyles = new String[] {
+        String[] spinnerStyles = new String[]{
                 "default",
                 Spinner.STYLE_CLASS_ARROWS_ON_RIGHT_HORIZONTAL,
                 Spinner.STYLE_CLASS_ARROWS_ON_LEFT_VERTICAL,
@@ -569,8 +538,8 @@ public class SamplePage extends GridPane {
         splitmb4.setText("armed");
         newSection(
                 "SplitMenuButton:", splitmb1, splitmb2,
-                withState(splitmb3, "openvertically",".label", "hover"),
-                withState(splitmb4,"armed,openvertically",".label", "armed"));
+                withState(splitmb3, "openvertically", ".label", "hover"),
+                withState(splitmb4, "armed,openvertically", ".label", "armed"));
         SplitMenuButton splitmb_m1 = new SplitMenuButton(createMenuItems(20));
         splitmb_m1.setText("arrow hover");
         SplitMenuButton splitmb_m2 = new SplitMenuButton(createMenuItems(20));
@@ -588,7 +557,7 @@ public class SamplePage extends GridPane {
         newSection(
                 "DatePicker:",
                 new DatePicker(),
-                withState(new DatePicker(),"hover"),
+                withState(new DatePicker(), "hover"),
                 withState(new DatePicker(), "showing"),
                 withState(new DatePicker(), "focused"),
                 withState(new DatePicker(), "disabled"));
@@ -636,7 +605,7 @@ public class SamplePage extends GridPane {
                 withState(s_v4, "disabled"),
                 s_v5);
         */
-        
+
         ScrollBar sb1 = new ScrollBar();
         sb1.setMinWidth(30);
         sb1.setPrefWidth(30);
@@ -675,28 +644,28 @@ public class SamplePage extends GridPane {
         );
         
      /*   
-        ScrollPane scrollPane = new ScrollPane(scrollPaneContent());
+        ScrollPane scrollPane = new BisqScrollPane(scrollPaneContent());
         scrollPane.setMinWidth(40);
         scrollPane.setPrefWidth(40);
         scrollPane.setMinHeight(40);
         scrollPane.setPrefHeight(40);
         newDetailedSection(
                 new String[] {"ScrollPane: ", "normal", "small", "focused", "empty"},
-                new ScrollPane(scrollPaneContent()),
+                new BisqScrollPane(scrollPaneContent()),
                 scrollPane,
-                withState(new ScrollPane(scrollPaneContent()), "focused"),
-                new ScrollPane()
+                withState(new BisqScrollPane(scrollPaneContent()), "focused"),
+                new BisqScrollPane()
         );
-        ScrollPane scrollPaneVbar = new ScrollPane(scrollPaneContent());
+        ScrollPane scrollPaneVbar = new BisqScrollPane(scrollPaneContent());
         scrollPaneVbar.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        ScrollPane scrollPaneHbar = new ScrollPane(scrollPaneContent());
+        ScrollPane scrollPaneHbar = new BisqScrollPane(scrollPaneContent());
         scrollPaneHbar.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         newDetailedSection(
                 new String[] {"ScrollPane H/V: ", "H Bar", "V bar"},
                 scrollPaneVbar,
                 scrollPaneHbar);*/
-        
-        
+
+
         Separator sep1 = new Separator();
         sep1.setPrefWidth(100);
         Separator sep2 = new Separator(Orientation.VERTICAL);
@@ -739,8 +708,52 @@ public class SamplePage extends GridPane {
         newDetailedSection(
                 new String[]{"ProgressIndicator\nIndeterminate: ", "normal", "small", "large", "disabled"},
                 pi1, pi2, pi3, pi4);*/
-      
-      
+        TextField textF = new BisqTextField();
+        textF.setPromptText("Prompt Text");
+        newSection(
+                "TextField:",
+                new BisqTextField("TextField"),
+                textF,
+                withState(new BisqTextField("Focused"), "focused"),
+                withState(new BisqTextField("Disabled"), "disabled"));
+        PasswordField pField1 = new PasswordField();
+        pField1.setText("Password");
+        PasswordField pField2 = new PasswordField();
+        pField2.setPromptText("Prompt Text");
+        PasswordField pField3 = new PasswordField();
+        pField3.setText("Password");
+        PasswordField pField4 = new PasswordField();
+        pField4.setText("Password");
+        newSection(
+                "PasswordField:",
+                pField1,
+                pField2,
+                withState(pField3, "focused"),
+                withState(pField4, "disabled"));
+        TextArea tArea1 = new BisqTextArea("TextArea");
+        tArea1.setPrefColumnCount(10);
+        tArea1.setPrefRowCount(2);
+        TextArea tArea2 = new BisqTextArea("Many Lines of\nText.\n#3\n#4\n#5\n#6\n#7\n#8\n#9\n#10");
+        tArea2.setPrefColumnCount(10);
+        tArea2.setPrefRowCount(5);
+        TextArea tArea3 = new BisqTextArea("Many Lines of\nText.\n#3\n#4\n#5\n#6\n#7\n#8\n#9\n#10");
+        tArea3.setPrefColumnCount(6);
+        tArea3.setPrefRowCount(5);
+        TextArea tArea4 = new BisqTextArea("Prompt Text");
+        tArea4.setPrefColumnCount(10);
+        tArea4.setPrefRowCount(2);
+
+        TextArea tArea5 = new BisqTextArea("Focused");
+        tArea5.setPrefColumnCount(7);
+        tArea5.setPrefRowCount(2);
+        TextArea tArea6 = new BisqTextArea("Disabled");
+        tArea6.setPrefColumnCount(8);
+        tArea6.setPrefRowCount(2);
+        newSection(
+                "TextArea:",
+                tArea1, tArea2, tArea3, tArea4,
+                withState(tArea5, "focused"),
+                withState(tArea6, "disabled"));
       /*  newSection(
                 "HTMLEditor:",
                 new HTMLEditor() {{
@@ -755,13 +768,13 @@ public class SamplePage extends GridPane {
                 }}, "focused")
                 );*/
         newDetailedSection(
-                new String[] { "ToolBar (H|TOP):", "normal", "overflow", "disabled" },
+                new String[]{"ToolBar (H|TOP):", "normal", "overflow", "disabled"},
                 createToolBar(Side.TOP, false, false),
                 createToolBar(Side.TOP, true, false),
                 createToolBar(Side.TOP, false, true)
         );
         newDetailedSection(
-                new String[] { "ToolBar (H|BOTTOM):", "normal", "overflow", "disabled" },
+                new String[]{"ToolBar (H|BOTTOM):", "normal", "overflow", "disabled"},
                 createToolBar(Side.BOTTOM, false, false),
                 createToolBar(Side.BOTTOM, true, false),
                 createToolBar(Side.BOTTOM, false, true)
@@ -779,8 +792,8 @@ public class SamplePage extends GridPane {
                 createToolBar(Side.RIGHT,true,false),
                 createToolBar(Side.RIGHT,false,true)
                 );*/
-        
-        
+
+
         newSection(
                 "Tabs\n(Top):",
                 wrapBdr(createTabPane(4, 250, 100, null, false, false, Side.TOP)),
@@ -792,7 +805,7 @@ public class SamplePage extends GridPane {
                 createTabPane(4, 250, 100, null, true, false, Side.TOP),
                 withState(createTabPane(5, 200, 100, "Tab Disabled &\nMany Tabs", true, true, Side.TOP), null, ".tab", "disabled"),
                 withState(createTabPane(5, 200, 100, "Disabled", true, false, Side.TOP), "disabled")
-                );
+        );
         
    /*     
         newSection(
@@ -835,17 +848,17 @@ public class SamplePage extends GridPane {
                 withState(createTabPane(5, 200, 250, "Tab Disabled &\nMany Tabs", true, true, Side.RIGHT), null, ".tab", "disabled"),
                 withState(createTabPane(5, 200, 250, "Disabled", true, false, Side.RIGHT), "disabled")
         );*/
-        
-        
-        TitledPane tPane = new TitledPane("Not Collapsible", new Label("Content\nLine2."));
+
+
+        TitledPane tPane = new TitledPane("Not Collapsible", new BisqLabel("Content\nLine2."));
         tPane.setCollapsible(false);
         newDetailedSection(
                 new String[]{"TitledPane:", "normal", "not collapsible", "hover", "focused", "disabled"},
-                new TitledPane("Title", new Label("Content\nLine2.")),
+                new TitledPane("Title", new BisqLabel("Content\nLine2.")),
                 tPane,
-                withState(new TitledPane("Title", new Label("Content\nLine2.")), "hover"),
-                withState(new TitledPane("Title", new Label("Content\nLine2.")), "focused"),
-                withState(new TitledPane("Title", new Label("Content\nLine2.")), "disabled")
+                withState(new TitledPane("Title", new BisqLabel("Content\nLine2.")), "hover"),
+                withState(new TitledPane("Title", new BisqLabel("Content\nLine2.")), "focused"),
+                withState(new TitledPane("Title", new BisqLabel("Content\nLine2.")), "disabled")
         );
        /* newDetailedSection(
                 new String[] {"Accordion:", "normal", "hover", "focused", "disabled"},
@@ -855,17 +868,17 @@ public class SamplePage extends GridPane {
                 withState(createAccordion(), "disabled")
                 );*/
         newDetailedSection(
-                new String[] {"SplitPane (H):", "simple", "many", "complex"},
+                new String[]{"SplitPane (H):", "simple", "many", "complex"},
                 createSplitPane(2, false, null),
                 createSplitPane(4, false, null),
                 createSplitPane(2, false, createSplitPane(2, true, null))
-                );
+        );
         newDetailedSection(
-                new String[] {"SplitPane (V):", "simple", "many", "complex"},
-                createSplitPane(2,true,null),
-                createSplitPane(4,true,null),
-                createSplitPane(2,true,createSplitPane(2,false,null))
-                );
+                new String[]{"SplitPane (V):", "simple", "many", "complex"},
+                createSplitPane(2, true, null),
+                createSplitPane(4, true, null),
+                createSplitPane(2, true, createSplitPane(2, false, null))
+        );
         
         
       /*  newDetailedSection(
@@ -882,26 +895,26 @@ public class SamplePage extends GridPane {
                 "Pagination\nNo Arrows:",
                 createPagination(Integer.MAX_VALUE, false, false)
         );*/
-        
-        
+
+
         newDetailedSection(
-                new String[] { "ListView\n2 items\nsingle selection:", "normal", "focused", "disabled" },
+                new String[]{"ListView\n2 items\nsingle selection:", "normal", "focused", "disabled"},
                 createListView(3, false, false, false),
                 withState(createListView(3, false, false, false), "focused"),
                 createListView(3, false, true, false)
         );
         newDetailedSection(
-                new String[] {"ListView\n10,000 items\nmultiple selection:","normal", "focused", "disabled"},
+                new String[]{"ListView\n10,000 items\nmultiple selection:", "normal", "focused", "disabled"},
                 createListView(10000, true, false, false),
                 withState(createListView(10000, true, false, false), "focused"),
                 createListView(10000, true, true, false)
-                );
+        );
         newDetailedSection(
-                new String[] {"ListView (H)\n10,000 items\nmultiple selection:","normal", "focused", "disabled"},
+                new String[]{"ListView (H)\n10,000 items\nmultiple selection:", "normal", "focused", "disabled"},
                 createListView(10000, true, false, true),
                 withState(createListView(10000, true, false, true), "focused"),
                 createListView(10000, true, true, true)
-                );
+        );
         newSection(
                 "TableView Simple:\n(Row Selection)",
                 createTableViewSimple(550, true, false),
@@ -921,7 +934,7 @@ public class SamplePage extends GridPane {
                 "TableView:\n(Cell Selection)",
                 createTableView(550, false),
                 withState(createTableView(150, false), "focused")
-                );
+        );
        /* newSection(
                 "TreeView:",
                 createTreeView(350),
@@ -941,7 +954,7 @@ public class SamplePage extends GridPane {
         ListView<String> lv = new ListView<>();
         lv.setPrefWidth(150);
         lv.setPrefHeight(100);
-        TableView tv = new TableView();
+        TableView tv = new BisqTableView();
         tv.setPrefWidth(150);
         tv.setPrefHeight(100);
         TreeView treev = new TreeView();
@@ -953,19 +966,19 @@ public class SamplePage extends GridPane {
                 new TreeTableView() {{
                     setPrefSize(150, 100);
                 }});
-        Label label1 = new Label("This is a simple Tooltip.");
+        Label label1 = new BisqLabel("This is a simple Tooltip.");
         label1.getStyleClass().add("tooltip");
-        Label label2 = new Label("This is a simple Tooltip\nwith graphic.", createGraphic());
-        label2.getStyleClass().add("tooltip");
+        // Label label2 = new BisqLabel("This is a simple Tooltip\nwith graphic.", createGraphic());
+        // label2.getStyleClass().add("tooltip");
         VBox vb = new VBox(4);
         vb.setFillWidth(true);
-        Button button1 = new Button("Hover over me");
+        Button button1 = new BisqButton("Hover over me");
         button1.setTooltip(new Tooltip("This is a simple Tooltip."));
-        Button button2 = new Button("me too");
+        Button button2 = new BisqButton("me too");
         button2.setTooltip(new Tooltip("This is a simple Tooltip\nwith more than one line."));
-        Button button3 = new Button("or me");
+        Button button3 = new BisqButton("or me");
         Tooltip tip = new Tooltip("This is a simple Tooltip\nwith graphic.");
-        tip.setGraphic(createGraphic());
+        // tip.setGraphic(createGraphic());
         button3.setTooltip(tip);
         vb.getChildren().addAll(button1, button2, button3);
 
@@ -1043,14 +1056,14 @@ public class SamplePage extends GridPane {
         return sections;
     }
 
-    private void newSection(String name, Node ...children) {
+    private void newSection(String name, Node... children) {
         newSection(name, 10, children);
     }
 
-    private void newSection(String name, int spacing, Node ...children) {
-        Label sectionLabel = new Label(name);
+    private void newSection(String name, int spacing, Node... children) {
+        Label sectionLabel = new BisqLabel(name);
         sectionLabel.getStyleClass().add("section-label");
-        sectionLabel.setMaxSize(Double.MAX_VALUE,Double.MAX_VALUE);
+        sectionLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         HBox box = new HBox(spacing);
         box.getStyleClass().add("section-border");
         box.getChildren().addAll(children);
@@ -1061,22 +1074,22 @@ public class SamplePage extends GridPane {
         content.put(name, box);
     }
 
-    private void newDetailedSection(String[] labels, Node ...children) {
-        Label sectionLabel = new Label(labels[0]);
+    private void newDetailedSection(String[] labels, Node... children) {
+        Label sectionLabel = new BisqLabel(labels[0]);
         sectionLabel.getStyleClass().add("section-label");
         sectionLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         HBox hbox = new HBox(10);
-        for (int n = 0; n < children.length; n++ ) {
+        for (int n = 0; n < children.length; n++) {
             VBox vbox = new VBox(10);
             vbox.getStyleClass().add("section-border");
             vbox.setAlignment(Pos.CENTER);
-            Label stateLabel = new Label(labels[n+1]);
+            Label stateLabel = new BisqLabel(labels[n + 1]);
             stateLabel.getStyleClass().add("section-label");
             vbox.getChildren().add(stateLabel);
             vbox.getChildren().add(children[n]);
             hbox.getChildren().addAll(vbox);
         }
-        setConstraints(sectionLabel, 0, rowIndex,1,1, HPos.CENTER, VPos.CENTER, Priority.ALWAYS,Priority.ALWAYS);
+        setConstraints(sectionLabel, 0, rowIndex, 1, 1, HPos.CENTER, VPos.CENTER, Priority.ALWAYS, Priority.ALWAYS);
         setConstraints(hbox, 1, rowIndex++);
         getChildren().addAll(sectionLabel, hbox);
         sections.add(new Section(labels[0], sectionLabel, hbox));
@@ -1098,8 +1111,9 @@ public class SamplePage extends GridPane {
             this.box = box;
         }
 
-        @Override public String toString() {
-            return name.replaceAll("\n"," ");
+        @Override
+        public String toString() {
+            return name.replaceAll("\n", " ");
         }
     }
 }

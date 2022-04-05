@@ -23,6 +23,13 @@ import javafx.collections.transformation.SortedList;
 import javafx.scene.control.TableView;
 
 public class BisqTableView<S extends TableItem> extends TableView<S> {
+    public BisqTableView() {
+        super();
+
+        setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        setPlaceholder(new BisqLabel(Res.get("table.placeholder.noData")));
+    }
+
     public BisqTableView(SortedList<S> sortedList) {
         super(sortedList);
 
