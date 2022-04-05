@@ -54,13 +54,19 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.common.util.OsUtils.EXIT_FAILURE;
 import static bisq.common.util.OsUtils.EXIT_SUCCESS;
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
 /**
@@ -73,6 +79,8 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 @Getter
 @Slf4j
 public class DefaultApplicationService extends ServiceProvider {
+    public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("DefaultApplicationService.dispatcher");
+
     private final NetworkService networkService;
     private final OpenOfferService openOfferService;
     private final IdentityService identityService;
@@ -92,6 +100,26 @@ public class DefaultApplicationService extends ServiceProvider {
     private final SecurityService securityService;
     private final DaoBridgeService daoBridgeService;
     private final AccountAgeWitnessService accountAgeWitnessService;
+
+    public interface Listener {
+        void onStateChanged(State state);
+    }
+
+    public enum State {
+        CREATED,
+        SECURITY_SERVICE_INITIALIZED,
+        NETWORK_BOOTSTRAPPED,
+        IDENTITY_SERVICE_INITIALIZED,
+        DAO_BRIDGE_SERVICE_INITIALIZED,
+        MARKET_PRICE_SERVICE_INITIALIZED,
+        ACCOUNT_AGE_WITNESS_SERVICE_INITIALIZED,
+        PROTOCOL_SERVICE_INITIALIZED,
+        INIT_COMPLETE,
+        INIT_FAILED
+    }
+
+    public AtomicReference<State> state = new AtomicReference<>(State.CREATED);
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public DefaultApplicationService(String[] args) {
         super("Bisq");
@@ -152,14 +180,12 @@ public class DefaultApplicationService extends ServiceProvider {
      */
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return securityService.initialize()
-                .thenCompose(result -> networkService.bootstrapToNetwork())
-                .whenComplete((r, t) -> {
-                    log.debug("Network bootstrapped");
-                })
-                .thenCompose(result -> identityService.initialize())
-                .thenCompose(result -> daoBridgeService.initialize())
-                .thenCompose(result -> marketPriceService.initialize())
+        return CompletableFuture.completedFuture(true)
+                .thenCompose(result -> setStateAfter(securityService.initialize(), State.SECURITY_SERVICE_INITIALIZED))
+                .thenCompose(result -> setStateAfter(networkService.bootstrapToNetwork(), State.NETWORK_BOOTSTRAPPED))
+                .thenCompose(result -> setStateAfter(identityService.initialize(), State.IDENTITY_SERVICE_INITIALIZED))
+                .thenCompose(result -> setStateAfter(daoBridgeService.initialize(), State.DAO_BRIDGE_SERVICE_INITIALIZED))
+                .thenCompose(result -> setStateAfter(marketPriceService.initialize(), State.MARKET_PRICE_SERVICE_INITIALIZED))
                 .whenComplete((list, throwable) -> {
                     log.info("add dummy accounts");
                     if (accountService.getAccounts().isEmpty()) {
@@ -177,8 +203,8 @@ public class DefaultApplicationService extends ServiceProvider {
                         accountService.addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
                     }
                 })
-                .thenCompose(result -> accountAgeWitnessService.initialize())
-                .thenCompose(result -> protocolService.initialize())
+                .thenCompose(result -> setStateAfter(accountAgeWitnessService.initialize(), State.ACCOUNT_AGE_WITNESS_SERVICE_INITIALIZED))
+                .thenCompose(result -> setStateAfterList(protocolService.initialize(), State.PROTOCOL_SERVICE_INITIALIZED))
                 .thenCompose(result -> CompletableFutureUtils.allOf(
                         walletService.tryAutoInitialization(),
                         userProfileService.initialize()
@@ -192,8 +218,10 @@ public class DefaultApplicationService extends ServiceProvider {
                 .whenComplete((list, throwable) -> {
                     if (throwable == null) {
                         log.info("All application services initialized");
+                        setState(State.INIT_COMPLETE);
                     } else {
                         log.error("Error at initializing application services", throwable);
+                        setState(State.INIT_FAILED);
                     }
                 });
     }
@@ -245,5 +273,31 @@ public class DefaultApplicationService extends ServiceProvider {
                 .walletsDataDirPath(walletsDataDirPath)
                 .build();
         return Optional.of(walletConfig);
+    }
+
+    private CompletableFuture<Boolean> setState(State newState) {
+        checkArgument(state.get().ordinal() < newState.ordinal(),
+                "New state %s must have a higher ordinal as the current state %s", newState, state.get());
+        state.set(newState);
+        log.info("New state {}", newState);
+        runAsync(() -> listeners.forEach(e -> e.onStateChanged(newState)), DISPATCHER);
+
+        return CompletableFuture.completedFuture(true);
+    }
+
+    private CompletableFuture<Boolean> setStateAfter(CompletableFuture<Boolean> initTask, State stateAfter) {
+        return initTask.thenCompose(result -> setState(stateAfter));
+    }
+
+    private CompletableFuture<Boolean> setStateAfterList(CompletableFuture<List<Boolean>> initTaskList, State stateAfter) {
+        return initTaskList.thenCompose(result -> setState(stateAfter));
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
     }
 }

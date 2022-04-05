@@ -45,7 +45,7 @@ import java.util.concurrent.ExecutorService;
 
 @Slf4j
 public class ProtocolService implements MessageListener, PersistenceClient<ProtocolStore> {
-    public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
+    public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("ProtocolService.dispatcher");
 
     @Getter
     private final ProtocolStore persistableStore = new ProtocolStore();

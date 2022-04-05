@@ -18,7 +18,9 @@
 package bisq.desktop.primary.splash;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 
@@ -32,7 +34,15 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         ImageView logo = new ImageView();
         logo.setId("image-splash-logo");
         // logo.setId("satoshisquare-splash");
-        root.getChildren().addAll(logo);
+
+        Label statusLabel = new Label();
+        statusLabel.textProperty().bind(model.getStatus());
+
+        root.getChildren().addAll(
+                logo,
+                Spacer.height(50),
+                statusLabel
+        );
     }
 
     @Override

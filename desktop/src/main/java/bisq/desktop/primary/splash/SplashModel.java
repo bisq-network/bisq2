@@ -18,8 +18,13 @@
 package bisq.desktop.primary.splash;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 
 @Getter
 public class SplashModel implements Model {
+
+    private final StringProperty status = new SimpleStringProperty();
+
 }
