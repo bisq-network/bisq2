@@ -5,28 +5,38 @@
 # Convention: mark all versions using 'strictly'. This ensures only one version is allowed in the dependency tree, even
 # when multiple versions are attempted to be brought in as transitive dependencies of other requirements.
 [versions]
-guava =         { strictly = '31.1-jre' }
-i2p =           { strictly = '1.7.0' }
-junit-jupiter = { strictly = '5.8.2' }
-lombok =        { strictly = '1.18.22'}
-openjfx =       { strictly = '0.0.12' }
-protobuf =      { strictly = '0.8.18' }
-protobuf-java = { strictly = '3.19.4' }
-typesafe-config = { strictly = '1.4.2' }
+annotations-lib =       { strictly = '23.0.0' }
+google-gson-lib =       { strictly = '2.9.0' }
+google-guava-lib =      { strictly = '31.1-jre' }
+i2p-lib =               { strictly = '1.7.0' }
+junit-jupiter-lib =     { strictly = '5.8.2' }
+kotlindsl-plugin =      { strictly = '2.1.7' }
+logback-lib =           { strictly = '1.2.11' }
+lombok-lib =            { strictly = '1.18.22' }
+openjfx-plugin =        { strictly = '0.0.12' }
+protobuf-plugin =       { strictly = '0.8.18' }
+protobuf-java-lib =     { strictly = '3.19.4' }
+slf4j-lib =             { strictly = '1.7.36' }
+typesafe-config-lib =   { strictly = '1.4.2' }
 
 # Referenced in subproject's build.gradle > dependencies block in the form 'implementation libs.guava'
 # Note: keys can contain dash (protobuf-java) but the dash is replaced by dot when referenced
 # in a build.gradle ('implementation libs.protobuf.java')
 [libraries]
-guava =             { module = 'com.google.guava:guava',            version.ref = 'guava' }
-i2p-streaming =     { module = 'net.i2p.client:streaming',          version.ref = 'i2p' }
-i2p-core =          { module = 'net.i2p:i2p',                       version.ref = 'i2p' }
-i2p-router =        { module = 'net.i2p:router',                    version.ref = 'i2p' }
-junit-jupiter-api = { module = 'org.junit.jupiter:junit-jupiter-api', version.ref = 'junit-jupiter' }
-junit-jupiter-engine = { module = 'org.junit.jupiter:junit-jupiter-engine', version.ref = 'junit-jupiter' }
-lombok =            { module = 'org.projectlombok:lombok',          version.ref = 'lombok' }
-protobuf-java =     { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java' }
-typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-config' }
+annotations =       { module = 'org.jetbrains:annotations',         version.ref = 'annotations-lib' }
+google-gson =       { module = 'com.google.code.gson:gson',         version.ref = 'google-gson-lib' }
+google-guava =      { module = 'com.google.guava:guava',            version.ref = 'google-guava-lib' }
+i2p-streaming =     { module = 'net.i2p.client:streaming',          version.ref = 'i2p-lib' }
+i2p-core =          { module = 'net.i2p:i2p',                       version.ref = 'i2p-lib' }
+i2p-router =        { module = 'net.i2p:router',                    version.ref = 'i2p-lib' }
+junit-jupiter-api = { module = 'org.junit.jupiter:junit-jupiter-api', version.ref = 'junit-jupiter-lib' }
+junit-jupiter-engine = { module = 'org.junit.jupiter:junit-jupiter-engine', version.ref = 'junit-jupiter-lib' }
+logback-core =      { module = 'ch.qos.logback:logback-core',       version.ref = 'logback-lib' }
+logback-classic =   { module = 'ch.qos.logback:logback-classic',    version.ref = 'logback-lib' }
+lombok =            { module = 'org.projectlombok:lombok',          version.ref = 'lombok-lib' }
+protobuf-java =     { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java-lib' }
+slf4j-api =         { module = 'org.slf4j:slf4j-api',               version.ref = 'slf4j-lib' }
+typesafe-config =   { module = 'com.typesafe:config',               version.ref = 'typesafe-config-lib' }
 
 # Defines groups of libs that are commonly used together
 # Referenced in dependencies block as 'implementation libs.bundles.i2p'
@@ -38,5 +48,6 @@ i2p = ['i2p-core', 'i2p-router', 'i2p-streaming']
 # since plugins don't bring other plugins as transitive dependencies, as long as they are loaded using the
 # `alias(libs.plugins.protobuf)` mechanism, there is no risk of loading multiple versions.
 [plugins]
-openjfx = { id = 'org.openjfx.javafxplugin', version.ref = 'openjfx' }
-protobuf = { id = 'com.google.protobuf', version.ref = 'protobuf' }
+kotlindsl = { id = 'org.gradle.kotlin.kotlin-dsl', version.ref = 'kotlindsl-plugin' }
+openjfx = { id = 'org.openjfx.javafxplugin', version.ref = 'openjfx-plugin' }
+protobuf = { id = 'com.google.protobuf', version.ref = 'protobuf-plugin' }

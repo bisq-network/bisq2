@@ -27,9 +27,9 @@ dependencies {
     implementation project(':presentation')
 
     implementation 'com.github.chimp1984:jsocks'
-    implementation "com.google.code.gson:gson:2.8.5"
     implementation libs.protobuf.java
-    implementation libs.guava
+    implementation libs.google.gson
+    implementation libs.google.guava
     implementation libs.typesafe.config
 }
 

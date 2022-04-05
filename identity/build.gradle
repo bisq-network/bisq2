@@ -23,7 +23,7 @@ dependencies {
     implementation project(':network')
 
     implementation libs.protobuf.java
-    implementation libs.guava
+    implementation libs.google.guava
     implementation libs.typesafe.config
 }
 test {

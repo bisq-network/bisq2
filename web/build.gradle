@@ -22,7 +22,7 @@ dependencies {
     implementation project(':presentation')
     implementation project(':application')
 
-    implementation 'com.google.code.gson:gson'
+    implementation libs.google.gson
 
     implementation 'io.ratpack:ratpack-core'
     implementation 'io.ratpack:ratpack-rx2'

@@ -1,5 +1,5 @@
 plugins {
-    id "org.gradle.kotlin.kotlin-dsl" version "2.1.7"
+    alias(libs.plugins.kotlindsl)
     alias(libs.plugins.protobuf)
     id 'signing'
     id 'maven-publish'

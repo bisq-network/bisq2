@@ -16,9 +16,9 @@ dependencies {
     api platform(project(':platforms:common-platform'))
 
     implementation libs.protobuf.java
-    implementation libs.guava
+    implementation libs.google.guava
     implementation libs.typesafe.config
-    implementation 'org.jetbrains:annotations:23.0.0'
+    implementation libs.annotations
 }
 
 test {

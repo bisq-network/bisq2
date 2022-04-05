@@ -18,7 +18,7 @@ dependencies {
 
     implementation project(':common')
 
-    implementation libs.guava
+    implementation libs.google.guava
 
     implementation 'org.apache.commons:commons-compress'
 

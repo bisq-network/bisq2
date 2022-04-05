@@ -23,7 +23,7 @@ dependencies {
     implementation project(':offer')
     implementation project(':oracle')
 
-    implementation libs.guava
+    implementation libs.google.guava
 }
 
 test {

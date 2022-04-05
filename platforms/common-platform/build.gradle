@@ -29,7 +29,7 @@ dependencies {
         /////////////////////////////////////////////////////////////////////////////////
         // Guava and transitive dependency constraints
         /////////////////////////////////////////////////////////////////////////////////
-        api(libs.guava)
+        api(libs.google.guava)
         // Declaring the guava dependency above will bring in the transitive dependencies below.
         // If some other dependency brings in other versions of the transitive dependencies below,
         // they should be excluded.
@@ -62,27 +62,17 @@ dependencies {
         /////////////////////////////////////////////////////////////////////////////////
         // Gson dependency constraints
         /////////////////////////////////////////////////////////////////////////////////
-        api('com.google.code.gson:gson') {
-            version { require '2.8.6' }
-        }
+        api(libs.google.gson)
 
         /////////////////////////////////////////////////////////////////////////////////
         // Logging dependency constraints
         /////////////////////////////////////////////////////////////////////////////////
-        api('org.slf4j:slf4j-api') {
-            version { require '1.7.30' }
-        }
-        api('ch.qos.logback:logback-core') {
-            version { require '1.2.3' }
-        }
-        api('ch.qos.logback:logback-classic') {
-            version { require '1.2.3' }
-        }
+        api(libs.slf4j.api)
+        api(libs.logback.core)
+        api(libs.logback.classic)
 
         // The runtime configuration should be used to declare
         // constraints or dependencies which are visible at runtime.
-        runtime('org.slf4j:slf4j-api') {
-            version { require '1.7.30' }
-        }
+        runtime(libs.slf4j.api)
     }
 }
