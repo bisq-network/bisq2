@@ -70,6 +70,11 @@ public class BisqTextArea extends JFXTextArea {
                 });
     }
 
+    public BisqTextArea(String text) {
+        this();
+        setText(text);
+    }
+
     public void setInitialHeight(double initialHeight) {
         this.initialHeight = initialHeight;
         if (scrollHideThreshold < initialHeight) {

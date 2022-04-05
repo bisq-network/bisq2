@@ -53,6 +53,11 @@ public class BisqButton extends JFXButton {
         setMaxWidth(value);
     }
 
+    public void setActionButton(boolean value) {
+        super.setDefaultButton(value);
+        getStyleClass().add("action-button");
+    }
+
     private static class AutoTooltipButtonSkin extends JFXButtonSkin {
         public AutoTooltipButtonSkin(JFXButton button) {
             super(button);

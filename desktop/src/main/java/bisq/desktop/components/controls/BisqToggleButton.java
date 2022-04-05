@@ -9,6 +9,11 @@ public class BisqToggleButton extends JFXToggleButton {
         super();
     }
 
+    public BisqToggleButton(String text) {
+        super();
+        setText(text);
+    }
+
     @Override
     protected Skin<?> createDefaultSkin() {
         return new AutoTooltipSlideToggleButtonSkin(this);
