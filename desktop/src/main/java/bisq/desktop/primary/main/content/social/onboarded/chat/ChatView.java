@@ -225,7 +225,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
                         message.setAutoHeight(true);
                         VBox.setMargin(message, new Insets(0, 0, 0, 5));
-                        
+
                         //todo emojiButton1, emojiButton2, emojiButton3 will be filled with emoji icons
                         emojiButton1 = BisqIconButton.createIconButton(AwesomeIcon.THUMBS_UP_ALT);
                         emojiButton1.setUserData(":+1:");
@@ -405,7 +405,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         editedMessageField.setText(message.getText().replace(EDITED_POST_FIX, ""));
                         editedMessageField.setInitialHeight(message.getHeight());
                         editedMessageField.setScrollHideThreshold(200);
-                        
+
                         editControlsBox.setVisible(true);
                         editControlsBox.setManaged(true);
                         message.setVisible(false);

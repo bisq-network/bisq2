@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.controls;
 
+import javafx.geometry.Insets;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 public class BisqTaggableTextArea extends StyleClassedTextArea {
@@ -25,10 +26,11 @@ public class BisqTaggableTextArea extends StyleClassedTextArea {
         setBackground(null);
         setEditable(false);
         setStyle("-fx-fill: -fx-dark-text-color");
+        setPadding(new Insets(0, 0, 5, 0));
     }
 
     public void setText(String text) {
         clear();
-       replaceText(0, 0, text);
+        replaceText(0, 0, text);
     }
 }
