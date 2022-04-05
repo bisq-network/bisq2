@@ -69,7 +69,6 @@ public class InitUserProfileController implements Controller {
     }
 
     void onCreateUserProfile() {
-        model.tryOtherButtonDisable.set(true);
         model.createProfileButtonDisable.set(true);
         model.feedback.set(Res.get("social.createUserProfile.prepare"));
         String useName = model.userName.get();
