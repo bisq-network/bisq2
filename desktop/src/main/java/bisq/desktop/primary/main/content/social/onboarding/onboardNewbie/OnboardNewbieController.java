@@ -128,11 +128,13 @@ public class OnboardNewbieController implements Controller {
         selectedMarketSubscription.unsubscribe();
         baseSideAmountSubscription.unsubscribe();
         termsDisabledSubscription.unsubscribe();
-        tradeTagsPin.unbind();
-        currencyTagsPin.unbind();
-        paymentMethodTagsPin.unbind();
-        customTagsPin.unbind();
         paymentMethodsSelection.getSelectedPaymentMethods().removeListener(paymentMethodsSelectionListener);
+        if (tradeTagsPin != null) {
+            tradeTagsPin.unbind();
+            currencyTagsPin.unbind();
+            paymentMethodTagsPin.unbind();
+            customTagsPin.unbind();
+        }
     }
 
     void onCreateOffer() {

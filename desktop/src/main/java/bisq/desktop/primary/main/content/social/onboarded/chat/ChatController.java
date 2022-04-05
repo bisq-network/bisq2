@@ -52,15 +52,15 @@ public class ChatController implements Controller {
     private final ChannelInfo channelInfo;
     private final NotificationsSettings notificationsSettings;
     private final QuotedMessageBlock quotedMessageBlock;
-    private Pin chatMessagesPin;
-    private Pin selectedChannelPin;
+    private Pin chatMessagesPin, selectedChannelPin, tradeTagsPin, currencyTagsPin, paymentMethodTagsPin, customTagsPin;
+
     private Subscription notificationSettingSubscription;
     private ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messageListener;
 
     public ChatController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
-        
+
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
         UserProfileComboBox userProfileDisplay = new UserProfileComboBox(userProfileService);
@@ -86,6 +86,13 @@ public class ChatController implements Controller {
                 value -> chatService.setNotificationSetting(chatService.getPersistableStore().getSelectedChannel().get(), value));
 
         selectedChannelPin = chatService.getPersistableStore().getSelectedChannel().addObserver(channel -> {
+            if (channel instanceof PublicChannel publicChannel) {
+                tradeTagsPin = FxBindings.<String, String>bind(model.getTradeTags()).map(String::toUpperCase).to(publicChannel.getTradeTags());
+                currencyTagsPin = FxBindings.<String, String>bind(model.getCurrencyTags()).map(String::toUpperCase).to(publicChannel.getCurrencyTags());
+                paymentMethodTagsPin = FxBindings.<String, String>bind(model.getPaymentMethodsTags()).map(String::toUpperCase).to(publicChannel.getPaymentMethodTags());
+                customTagsPin = FxBindings.<String, String>bind(model.getCustomTags()).map(String::toUpperCase).to(publicChannel.getCustomTags());
+            }
+
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
             }
@@ -171,6 +178,13 @@ public class ChatController implements Controller {
 
         if (messageListener != null) {
             model.getChatMessages().removeListener(messageListener);
+        }
+        
+        if (tradeTagsPin != null) {
+            tradeTagsPin.unbind();
+            currencyTagsPin.unbind();
+            paymentMethodTagsPin.unbind();
+            customTagsPin.unbind();
         }
     }
 
