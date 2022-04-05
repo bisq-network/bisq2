@@ -5,6 +5,7 @@
 # Convention: mark all versions using 'strictly'. This ensures only one version is allowed in the dependency tree, even
 # when multiple versions are attempted to be brought in as transitive dependencies of other requirements.
 [versions]
+annotations =   { strictly = '23.0.0' }
 guava =         { strictly = '31.1-jre' }
 i2p =           { strictly = '1.7.0' }
 junit-jupiter = { strictly = '5.8.2' }
@@ -18,6 +19,7 @@ typesafe-config = { strictly = '1.4.2' }
 # Note: keys can contain dash (protobuf-java) but the dash is replaced by dot when referenced
 # in a build.gradle ('implementation libs.protobuf.java')
 [libraries]
+annotations =       { module = 'org.jetbrains:annotations',         version.ref = 'annotations' }
 guava =             { module = 'com.google.guava:guava',            version.ref = 'guava' }
 i2p-streaming =     { module = 'net.i2p.client:streaming',          version.ref = 'i2p' }
 i2p-core =          { module = 'net.i2p:i2p',                       version.ref = 'i2p' }
