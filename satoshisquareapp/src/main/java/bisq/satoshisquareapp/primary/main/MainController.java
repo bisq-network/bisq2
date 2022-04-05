@@ -73,6 +73,9 @@ public class MainController implements Controller, Navigation.Listener {
 
     @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+        model.getMarketPriceBoxVisible().set(navigationTarget != NavigationTarget.INIT_USER_PROFILE &&
+                navigationTarget != NavigationTarget.SELECT_USER_TYPE);
+
         if (navigationTarget.isAllowPersistence()) {
             settingsService.getPersistableStore().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
             settingsService.persist();
