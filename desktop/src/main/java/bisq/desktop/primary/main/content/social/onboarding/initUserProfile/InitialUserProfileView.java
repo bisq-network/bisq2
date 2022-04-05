@@ -21,15 +21,15 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.SectionBox;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
-import bisq.desktop.components.controls.BisqTextField;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
+import javafx.scene.Cursor;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -37,52 +37,57 @@ public class InitialUserProfileView extends View<HBox, InitialUserProfileModel, 
     private final ImageView roboIconImageView;
     private final BisqButton createUserButton;
     private final BisqLabel feedbackLabel;
-    private final Button tryOtherButton;
-    private final BisqTextField userNameInputField;
+    private final Label userName;
     private Subscription roboHashNodeSubscription;
 
     public InitialUserProfileView(InitialUserProfileModel model, InitUserProfileController controller) {
         super(new HBox(), model, controller);
 
-        root.setSpacing(20);
         root.setAlignment(Pos.TOP_CENTER);
         root.getStyleClass().add("content-pane");
         root.setFillHeight(false);
 
         roboIconImageView = new ImageView();
+        Tooltip.install(roboIconImageView, new Tooltip(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.button")));
+        roboIconImageView.setCursor(Cursor.HAND);
+        VBox.setMargin(roboIconImageView, new Insets(10, 0, 0, 0));
 
-        userNameInputField = new BisqTextField();
-        userNameInputField.setMaxWidth(300);
-        userNameInputField.setEditable(false);
-        userNameInputField.setFocusTraversable(false);
-        userNameInputField.setMouseTransparent(false);
-        userNameInputField.setPromptText(Res.get("social.createUserProfile.userName.prompt"));
-        VBox.setMargin(userNameInputField, new Insets(10, 0, 10, 0));
 
-        BisqLabel infoLabel = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.info"));
-        infoLabel.setTextAlignment(TextAlignment.CENTER);
-        VBox.setMargin(infoLabel, new Insets(0, 0, 20, 0));
+        Label userNameLabel = new Label(Res.get("social.createUserProfile.userName.prompt"));
+        userNameLabel.setStyle("-fx-font-size: 0.9em; -fx-text-fill: -fx-light-text-color;");
+
+        userName = new Label();
+        userName.setStyle("-fx-background-color: -bs-background-color;-fx-text-fill: -fx-dark-text-color;");
+        userName.setMaxWidth(300);
+        userName.setMinWidth(300);
+        userName.setPadding(new Insets(7, 7, 7, 7));
+
+        VBox userNameBox = new VBox();
+        userNameBox.setSpacing(2);
+        userNameBox.getChildren().addAll(userNameLabel, userName);
+        VBox.setMargin(userNameBox, new Insets(-20, 0, 0, 0));
 
         BisqLabel tryOtherInfoLabel = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.info"));
-        tryOtherInfoLabel.setTextAlignment(TextAlignment.CENTER);
-        tryOtherButton = new BisqButton(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.button"));
+        VBox.setMargin(tryOtherInfoLabel, new Insets(-10, 0, -10, 0));
 
         createUserButton = new BisqButton(Res.get("satoshisquareapp.setDefaultUserProfile.done"));
-        createUserButton.disableProperty().bind(userNameInputField.textProperty().isEmpty());
+        createUserButton.disableProperty().bind(userName.textProperty().isEmpty());
         createUserButton.getStyleClass().add("action-button");
 
         feedbackLabel = new BisqLabel();
         feedbackLabel.setWrapText(true);
 
+        BisqLabel infoLabel = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.info"));
+        infoLabel.setWrapText(true);
+        VBox.setMargin(infoLabel, new Insets(50, 0, 0, 0));
+        infoLabel.setStyle("-fx-font-size: 0.9em; -fx-text-fill: -fx-light-text-color;");
+      
         SectionBox sectionBox = new SectionBox(Res.get("satoshisquareapp.setDefaultUserProfile.headline"));
-        sectionBox.setPrefWidth(600);
-        sectionBox.setAlignment(Pos.CENTER);
-
+        sectionBox.setPrefWidth(450);
         sectionBox.getChildren().addAll(
                 roboIconImageView,
-                userNameInputField,
+                userNameBox,
                 tryOtherInfoLabel,
-                tryOtherButton,
                 createUserButton,
                 feedbackLabel,
                 infoLabel
@@ -92,12 +97,11 @@ public class InitialUserProfileView extends View<HBox, InitialUserProfileModel, 
 
     @Override
     protected void onViewAttached() {
-        tryOtherButton.disableProperty().bind(model.tryOtherButtonDisable);
         createUserButton.disableProperty().bind(model.createProfileButtonDisable);
-        userNameInputField.textProperty().bindBidirectional(model.userName);
+        userName.textProperty().bindBidirectional(model.userName);
         feedbackLabel.textProperty().bind(model.feedback);
 
-        tryOtherButton.setOnAction(e -> controller.onCreateTempIdentity());
+        roboIconImageView.setOnMousePressed(e -> controller.onCreateTempIdentity());
         createUserButton.setOnAction(e -> controller.onCreateUserProfile());
 
         roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
@@ -110,12 +114,11 @@ public class InitialUserProfileView extends View<HBox, InitialUserProfileModel, 
 
     @Override
     protected void onViewDetached() {
-        tryOtherButton.disableProperty().unbind();
         createUserButton.disableProperty().unbind();
-        userNameInputField.textProperty().unbindBidirectional(model.userName);
+        userName.textProperty().unbindBidirectional(model.userName);
         feedbackLabel.textProperty().unbind();
 
-        tryOtherButton.setOnAction(null);
+        roboIconImageView.setOnMousePressed(null);
         createUserButton.setOnAction(null);
 
         roboHashNodeSubscription.unsubscribe();

@@ -29,7 +29,6 @@ public class InitialUserProfileModel implements Model {
     final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
     final StringProperty feedback = new SimpleStringProperty();
     final StringProperty userName = new SimpleStringProperty();
-    final BooleanProperty tryOtherButtonDisable = new SimpleBooleanProperty();
     final BooleanProperty createProfileButtonDisable = new SimpleBooleanProperty();
 
     KeyPair tempKeyPair = null;
