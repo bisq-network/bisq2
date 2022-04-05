@@ -6,10 +6,11 @@
 # when multiple versions are attempted to be brought in as transitive dependencies of other requirements.
 [versions]
 annotations-lib =       { strictly = '23.0.0' }
-guava-lib =             { strictly = '31.1-jre' }
+google-gson-lib =       { strictly = '2.9.0' }
+google-guava-lib =      { strictly = '31.1-jre' }
 i2p-lib =               { strictly = '1.7.0' }
 junit-jupiter-lib =     { strictly = '5.8.2' }
-kotlindsl-plugin =      { strictly = '2.2.0' }
+kotlindsl-plugin =      { strictly = '2.1.7' }
 logback-lib =           { strictly = '1.2.11' }
 lombok-lib =            { strictly = '1.18.22' }
 openjfx-plugin =        { strictly = '0.0.12' }
@@ -23,7 +24,8 @@ typesafe-config-lib =   { strictly = '1.4.2' }
 # in a build.gradle ('implementation libs.protobuf.java')
 [libraries]
 annotations =       { module = 'org.jetbrains:annotations',         version.ref = 'annotations-lib' }
-guava =             { module = 'com.google.guava:guava',            version.ref = 'guava-lib' }
+google-gson =       { module = 'com.google.code.gson:gson',         version.ref = 'google-gson-lib' }
+google-guava =      { module = 'com.google.guava:guava',            version.ref = 'google-guava-lib' }
 i2p-streaming =     { module = 'net.i2p.client:streaming',          version.ref = 'i2p-lib' }
 i2p-core =          { module = 'net.i2p:i2p',                       version.ref = 'i2p-lib' }
 i2p-router =        { module = 'net.i2p:router',                    version.ref = 'i2p-lib' }

@@ -27,8 +27,8 @@ dependencies {
     implementation project(':wallets')
 
     implementation libs.protobuf.java
-    implementation libs.guava
-    implementation 'com.google.code.gson:gson'
+    implementation libs.google.gson
+    implementation libs.google.guava
     implementation 'com.github.chimp1984:jsocks'
 }
 

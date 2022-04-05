@@ -20,7 +20,7 @@ dependencies {
     implementation project(':persistence')
 
     implementation libs.protobuf.java
-    implementation libs.guava
+    implementation libs.google.guava
 }
 test {
     useJUnitPlatform()

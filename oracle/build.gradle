@@ -24,8 +24,8 @@ dependencies {
     implementation project(':network')
 
     implementation libs.protobuf.java
-    implementation libs.guava
-    implementation 'com.google.code.gson:gson'
+    implementation libs.google.gson
+    implementation libs.google.guava
     implementation libs.typesafe.config
 }
 

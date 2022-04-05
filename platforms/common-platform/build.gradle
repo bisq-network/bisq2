@@ -29,7 +29,7 @@ dependencies {
         /////////////////////////////////////////////////////////////////////////////////
         // Guava and transitive dependency constraints
         /////////////////////////////////////////////////////////////////////////////////
-        api(libs.guava)
+        api(libs.google.guava)
         // Declaring the guava dependency above will bring in the transitive dependencies below.
         // If some other dependency brings in other versions of the transitive dependencies below,
         // they should be excluded.
@@ -62,9 +62,7 @@ dependencies {
         /////////////////////////////////////////////////////////////////////////////////
         // Gson dependency constraints
         /////////////////////////////////////////////////////////////////////////////////
-        api('com.google.code.gson:gson') {
-            version { require '2.8.6' }
-        }
+        api(libs.google.gson)
 
         /////////////////////////////////////////////////////////////////////////////////
         // Logging dependency constraints

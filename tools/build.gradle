@@ -70,7 +70,7 @@ dependencies {
     implementation project(':wallets')
     implementation project(':desktop')
 
-    implementation libs.guava
+    implementation libs.google.guava
 
     implementation 'com.jfoenix:jfoenix:9.0.10'
     implementation 'de.jensd:fontawesomefx:8.0.0'

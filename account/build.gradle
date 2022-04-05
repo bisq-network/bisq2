@@ -24,7 +24,7 @@ dependencies {
     implementation project(':network')
 
     implementation libs.protobuf.java
-    implementation libs.guava
+    implementation libs.google.guava
 }
 test {
     useJUnitPlatform()

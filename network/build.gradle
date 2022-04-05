@@ -25,7 +25,7 @@ dependencies {
     implementation project(':persistence')
 
     implementation libs.protobuf.java
-    implementation libs.guava
+    implementation libs.google.guava
     implementation libs.typesafe.config
 
     implementation 'com.github.chimp1984:jsocks'
