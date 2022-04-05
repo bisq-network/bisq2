@@ -1,6 +1,6 @@
 dependencies {
     api platform(project(':platforms:common-platform'))
     implementation libs.slf4j.api
-    implementation 'ch.qos.logback:logback-core'
-    implementation 'ch.qos.logback:logback-classic'
+    implementation libs.logback.core
+    implementation libs.logback.classic
 }

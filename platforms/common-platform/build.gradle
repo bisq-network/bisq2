@@ -70,12 +70,8 @@ dependencies {
         // Logging dependency constraints
         /////////////////////////////////////////////////////////////////////////////////
         api(libs.slf4j.api)
-        api('ch.qos.logback:logback-core') {
-            version { require '1.2.3' }
-        }
-        api('ch.qos.logback:logback-classic') {
-            version { require '1.2.3' }
-        }
+        api(libs.logback.core)
+        api(libs.logback.classic)
 
         // The runtime configuration should be used to declare
         // constraints or dependencies which are visible at runtime.
