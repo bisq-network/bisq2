@@ -1,0 +1,155 @@
+/*
+New css for bisq2.
+*/
+
+.navigation-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+    -fx-padding: 11;
+}
+
+.navigation-button .text {
+    -fx-font-size: 1.8em;
+    -fx-fill: -bs-rd-nav-deselected;
+}
+
+.navigation-button:selected {
+    -fx-background-color: -bs-background-color;
+    -fx-border-radius: 4;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 4, 0, 0, 0, 2);
+}
+
+.navigation-button:selected .text {
+    -fx-fill: -bs-rd-nav-selected;
+}
+
+.accent-headline {
+    -fx-font-size: 1.1em;
+    -fx-text-fill: -bs-color-green-5;
+}
+
+.channel-settings-headline {
+    -fx-font-size: 1.692em;
+    -fx-text-fill: -bs-color-green-5;
+}
+
+.chat-message-box {
+    -fx-background-color: -bs-background-color;
+}
+
+.chat-message-box-active {
+    -fx-background-color: derive(-bs-background-color, 15%);
+}
+
+#chat-user-name {
+    -fx-text-fill: -bs-color-green-5;
+    -fx-font-size: 1.0em;
+    -fx-cursor: hand;
+}
+
+#chat-quoted-message-text {
+    -fx-fill: -bs-color-gray-2;
+}
+
+#chat-quoted-message-vertical-line {
+    -fx-background-color: -bs-color-gray-2;
+}
+
+#chat-quoted-message {
+    -fx-fill: -bs-color-gray-2;
+}
+
+#chat-quoted-message-user-name {
+    -fx-text-fill: derive(-bs-color-gray-2, 30%);
+}
+
+#chat-message-reactions {
+    -fx-background-color: -bs-content-background-gray;
+}
+
+#chat-message-reactions-separator {
+    -fx-text-fill: -bs-color-gray-dim;
+    -fx-font-weight: bold;
+}
+
+#chat-quoted-message-top-pane {
+    -fx-background-color: -bs-color-gray-5;
+}
+
+#proof-of-burn-tooltip {
+    -fx-background: -bs-color-gray-fafa;
+    -fx-text-fill: -bs-text-color;
+    -fx-background-color: -bs-color-gray-fafa;
+    -fx-background-radius: 6px;
+    -fx-background-insets: 0;
+    -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
+    -fx-effect: dropshadow(three-pass-box, -bs-text-color-transparent, 10, 0, 0, 3);
+    -fx-font-size: 0.85em;
+}
+
+#small-info-label {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 0.85em;
+}
+
+.keyword-tradeTags {
+    -fx-fill: -bs-buy-hover;
+}
+
+.keyword-btc {
+    -fx-fill: -bs-buy-hover;
+}
+
+.keyword-amountTag {
+    -fx-fill: -bs-buy-hover;
+}
+
+.keyword-currencyTags {
+    -fx-fill: -bs-turquoise;
+}
+
+.keyword-paymentMethodTags {
+    -fx-fill: -bs-turquoise;
+}
+
+.keyword-customTags {
+    -fx-fill: -bs-yellow;
+}
+
+.keyword-none {
+    -fx-fill: -fx-dark-text-color;
+}
+
+/*
+.jfx-badge .badge-pane {
+    -fx-background-color: -bs-red;
+    -fx-background-radius: 15;
+    -fx-pref-width: 15;
+    -fx-pref-height: 15;
+}
+
+.jfx-badge.new .badge-pane {
+    -fx-pref-width: 30;
+}
+
+.jfx-badge.auto-conf .badge-pane {
+    -fx-background-color: -xmr-orange;
+    -fx-pref-width: -1;
+    -fx-padding: -1 10 0 10;
+}
+
+.jfx-badge .badge-pane .label {
+    -fx-font-weight: bold;
+    -fx-font-size: 0.692em;
+    -fx-text-fill: -bs-background-color;
+}
+
+.jfx-badge {
+    -fx-padding: -3 0 0 0;
+}
+
+.jfx-badge > .navigation-button {
+    -fx-translate-y: 1;
+}
+*/
+
