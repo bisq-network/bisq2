@@ -22,9 +22,12 @@ import bisq.desktop.components.containers.BisqScrollPane;
 import bisq.desktop.components.containers.SectionBox;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqButton;
+import bisq.desktop.components.controls.BisqTaggableTextArea;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.layout.Layout;
+import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -33,16 +36,13 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.fxmisc.richtext.StyleClassedTextArea;
-import org.fxmisc.richtext.model.StyleSpans;
-
-import java.util.Collection;
 
 @Slf4j
 public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, OnboardNewbieController> {
-    private final StyleClassedTextArea offerPreview;
+    private final BisqTaggableTextArea offerPreview;
     private final BisqTextArea terms;
     private final BisqButton publishButton, skipButton;
+    private final ChangeListener<Boolean> termsEditableListener;
     private Subscription offerPreviewSubscription;
 
     public OnboardNewbieView(OnboardNewbieModel model,
@@ -70,20 +70,16 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
 
         SectionBox rightBox = new SectionBox(Res.get("satoshisquareapp.createOffer.section3.headline"));
         leftBox.setPrefWidth(width);
-
-
-        offerPreview = new StyleClassedTextArea();
-        offerPreview.setWrapText(true);
-        offerPreview.setBackground(null);
-        offerPreview.setStyle("-fx-fill: -fx-dark-text-color");
-        //offerPreview.setPadding(new Insets(0, 10, 0, 10));
-        //offerPreview.setStyle("-fx-font-size: 1.1em");
+        
+        offerPreview = new BisqTaggableTextArea();
 
         Pane section4Headline = SectionBox.getHeadline(Res.get("satoshisquareapp.createOffer.section4.headline"));
         VBox.setMargin(section4Headline, new Insets(0, -20, -20, -20));
 
         terms = new BisqTextArea();
         terms.setEditable(true);
+        terms.setInitialHeight(120);
+        VBox.setMargin(terms, new Insets(5, 0, 0, 0));
 
         rightBox.getChildren().addAll(offerPreview, section4Headline, terms);
 
@@ -97,11 +93,19 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
         HBox buttons = Layout.hBoxWith(Spacer.fillHBox(), skipButton, publishButton);
         VBox.setMargin(buttons, new Insets(0, 20, 20, 0));
         vBox.getChildren().addAll(hBox, buttons);
+        termsEditableListener = (observable, oldValue, newValue) -> {
+            if (!newValue) {
+                new Popup()
+                        .warning(Res.get("satoshisquareapp.createOffer.termsTooLong", OnboardNewbieModel.MAX_INPUT_TERMS))
+                        .show();
+            }
+        };
     }
 
     @Override
     public void onViewAttached() {
         terms.textProperty().bindBidirectional(model.getTerms());
+        terms.editableProperty().bind(model.getTermsEditable());
         publishButton.visibleProperty().bind(model.getCreateOfferButtonVisibleProperty());
         publishButton.managedProperty().bind(model.getCreateOfferButtonVisibleProperty());
         publishButton.disableProperty().bind(model.getIsInvalidTradeIntent());
@@ -109,22 +113,24 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
         skipButton.setOnAction(e -> controller.onSkip());
         offerPreviewSubscription = EasyBind.subscribe(model.getOfferPreview(), text -> {
             if (text != null) {
-                offerPreview.clear();
-                offerPreview.replaceText(0, 0, text);
-                StyleSpans<Collection<String>> styleSpans = model.getStyleSpans().get();
-                offerPreview.setStyleSpans(0, styleSpans);
+                offerPreview.setText(text);
+                offerPreview.setStyleSpans(0,  model.getStyleSpans().get());
             }
         });
+        
+        terms.editableProperty().addListener(termsEditableListener);
     }
 
     @Override
     public void onViewDetached() {
         terms.textProperty().unbindBidirectional(model.getTerms());
+        terms.editableProperty().unbind();
         publishButton.visibleProperty().unbind();
         publishButton.managedProperty().unbind();
         publishButton.disableProperty().unbind();
         publishButton.setOnAction(null);
         skipButton.setOnAction(null);
         offerPreviewSubscription.unsubscribe();
+        terms.editableProperty().removeListener(termsEditableListener);
     }
 }

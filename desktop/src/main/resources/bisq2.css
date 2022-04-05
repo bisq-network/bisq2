@@ -47,10 +47,6 @@ New css for bisq2.
     -fx-cursor: hand;
 }
 
-#chat-message-text {
-    -fx-fill: -fx-mid-text-color;
-}
-
 #chat-quoted-message-text {
     -fx-fill: -bs-color-gray-2;
 }
@@ -80,11 +76,6 @@ New css for bisq2.
     -fx-background-color: -bs-color-gray-5;
 }
 
-#chat-message-edit-text-area {
-    -fx-background-color: -bs-color-gray-6;
-    -fx-text-fill: -bs-color-gray-fafa;
-}
-
 #proof-of-burn-tooltip {
     -fx-background: -bs-color-gray-fafa;
     -fx-text-fill: -bs-text-color;
@@ -104,6 +95,7 @@ New css for bisq2.
 .keyword-tradeTags {
     -fx-fill: -bs-buy-hover;
 }
+
 .keyword-btc {
     -fx-fill: -bs-buy-hover;
 }

@@ -63,7 +63,11 @@ public class ChatModel implements Model {
     private final UserProfileService userProfileService;
     @Setter
     private Optional<ChatUserDetails> chatUserDetails = Optional.empty();
-
+    private final ObservableList<String> tradeTags = FXCollections.observableArrayList();
+    private final ObservableList<String> currencyTags = FXCollections.observableArrayList();
+    private final ObservableList<String> paymentMethodsTags = FXCollections.observableArrayList();
+    private final ObservableList<String> customTags = FXCollections.observableArrayList();
+    
     public ChatModel(ChatService chatService, UserProfileService userProfileService) {
         this.chatService = chatService;
         ignoredChatUserPredicate = item -> !chatService.getPersistableStore().getIgnoredChatUserIds().contains(item.getChatUserId());

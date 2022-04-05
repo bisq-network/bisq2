@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.social.onboarded.chat;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.KeyWordDetection;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
@@ -50,7 +51,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class ChatView extends View<SplitPane, ChatModel, ChatController> {
     public final static String EDITED_POST_FIX = " " + Res.get("social.message.wasEdited");
-    
+
     private final ListView<ChatMessageListItem<? extends ChatMessage>> messagesListView;
     private final BisqTextArea inputField;
     private final BisqLabel selectedChannelLabel;
@@ -207,7 +208,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             pmButton, editButton, deleteButton, moreOptionsButton;
                     private final BisqLabel userName = new BisqLabel();
                     private final BisqLabel time = new BisqLabel();
-                    private final Text message = new Text();
+                    private final BisqTaggableTextArea message = new BisqTaggableTextArea();
                     private final Text quotedMessageField = new Text();
                     private final HBox hBox, reactionsBox, editControlsBox, quotedMessageBox;
                     private final VBox vBox, messageBox;
@@ -222,8 +223,9 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         time.setPadding(new Insets(-6, 0, 0, 0));
                         time.setVisible(false);
 
-                        message.setId("chat-message-text");
-                        VBox.setMargin(message, new Insets(5, 0, 0, 5));
+                        message.setAutoHeight(true);
+                        VBox.setMargin(message, new Insets(0, 0, 0, 5));
+
                         //todo emojiButton1, emojiButton2, emojiButton3 will be filled with emoji icons
                         emojiButton1 = BisqIconButton.createIconButton(AwesomeIcon.THUMBS_UP_ALT);
                         emojiButton1.setUserData(":+1:");
@@ -256,7 +258,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         editedMessageField = new BisqTextArea();
                         editedMessageField.setVisible(false);
                         editedMessageField.setManaged(false);
-                        editedMessageField.setId("chat-message-edit-text-area");
 
                         saveEditButton = new BisqButton(Res.get("shared.save"));
                         cancelEditButton = new BisqButton(Res.get("shared.cancel"));
@@ -308,7 +309,14 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             } else {
                                 quotedMessageBox.getChildren().clear();
                             }
+
                             message.setText(item.getMessage());
+                            message.setStyleSpans(0, KeyWordDetection.getStyleSpans(item.getMessage(),
+                                    model.getTradeTags(),
+                                    model.getCurrencyTags(),
+                                    model.getPaymentMethodsTags(),
+                                    model.getCustomTags()));
+
                             time.setText(item.getTime());
 
                             saveEditButton.setOnAction(e -> {
@@ -361,7 +369,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             widthSubscription = EasyBind.subscribe(messagesListView.widthProperty(),
                                     width -> {
                                         double wrappingWidth = width.doubleValue() - 95;
-                                        message.setWrappingWidth(wrappingWidth);
                                         quotedMessageField.setWrappingWidth(wrappingWidth - 20);
                                     });
 
@@ -393,10 +400,12 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                     }
 
                     private void onEditMessage(ChatMessageListItem<? extends ChatMessage> item) {
-                        editedMessageField.setPrefWidth(message.getWrappingWidth());
-                        editedMessageField.setText(message.getText().replace(EDITED_POST_FIX, ""));
                         editedMessageField.setVisible(true);
                         editedMessageField.setManaged(true);
+                        editedMessageField.setText(message.getText().replace(EDITED_POST_FIX, ""));
+                        editedMessageField.setInitialHeight(message.getHeight());
+                        editedMessageField.setScrollHideThreshold(200);
+
                         editControlsBox.setVisible(true);
                         editControlsBox.setManaged(true);
                         message.setVisible(false);

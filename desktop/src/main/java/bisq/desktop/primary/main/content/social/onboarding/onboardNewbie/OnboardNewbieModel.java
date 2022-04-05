@@ -34,6 +34,7 @@ import java.util.Collection;
 @Slf4j
 @Getter
 public class OnboardNewbieModel implements Model {
+    static final int MAX_INPUT_TERMS = 500;
     private final ObservableList<String> tradeTags = FXCollections.observableArrayList();
     private final ObservableList<String> currencyTags = FXCollections.observableArrayList();
     private final ObservableList<String> paymentMethodsTags = FXCollections.observableArrayList();
@@ -53,6 +54,7 @@ public class OnboardNewbieModel implements Model {
     private final BooleanProperty isInvalidTradeIntent = new SimpleBooleanProperty();
     private final StringProperty offerPreview = new SimpleStringProperty();
     private final StringProperty terms = new SimpleStringProperty();
+    private final BooleanProperty termsEditable = new SimpleBooleanProperty(true);
     private final String userName ;
     ObjectProperty<StyleSpans<Collection<String>>> styleSpans = new SimpleObjectProperty<>();
     
