@@ -34,7 +34,7 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
 
         root.setMinHeight(53);
         root.setMaxHeight(root.getMinHeight());
-        root.setPadding(new Insets(14, 20, 5, 19));
+        root.setPadding(new Insets(14, 20, 10, 19));
 
         ImageView logo = ImageUtil.getImageViewById("logo-small");
 

@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.social.chat.components;
 import bisq.common.data.ByteArray;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.social.user.ChatUser;
 import javafx.beans.property.*;
@@ -124,11 +125,11 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
             root.setAlignment(Pos.CENTER_LEFT);
 
             userName = new BisqLabel();
-            userName.setPadding(new Insets(4, 0, 0, 0));
-
             roboIconImageView = new ImageView();
-            roboIconImageView.setFitWidth(50);
-            roboIconImageView.setFitHeight(50);
+            roboIconImageView.setFitWidth(25);
+            roboIconImageView.setFitHeight(25);
+            HBox hBox = Layout.hBoxWith(roboIconImageView, userName);
+            hBox.setAlignment(Pos.CENTER_LEFT);
 
             ImageView trust = new ImageView();
             trust.setId("trust");
@@ -137,6 +138,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
             StackPane icons = new StackPane();
             icons.getChildren().addAll(roboIconImageView, trust);
+
             root.getChildren().addAll(icons, userName);
 
             // todo add tooltip overlay for id and entitlements

@@ -31,11 +31,12 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -136,10 +137,11 @@ public class UserProfileComboBox {
                     if (item != null && !empty) {
                         BisqLabel userName = new BisqLabel(item.userName);
                         ImageView roboIconImageView = new ImageView(item.roboHashNode);
-                        userName.setPadding(new Insets(4, 0, 0, 0));
-                        roboIconImageView.setFitWidth(50);
-                        roboIconImageView.setFitHeight(50);
-                        setGraphic(Layout.hBoxWith(roboIconImageView, userName));
+                        roboIconImageView.setFitWidth(25);
+                        roboIconImageView.setFitHeight(25);
+                        HBox hBox = Layout.hBoxWith(roboIconImageView, userName);
+                        hBox.setAlignment(Pos.CENTER_LEFT);
+                        setGraphic(hBox);
                     } else {
                         setGraphic(null);
                     }

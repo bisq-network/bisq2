@@ -67,7 +67,7 @@ public class SatoshiSquareSplashView extends View<VBox, SatoshiSquareSplashModel
                         sloganCounter = 1;
                     }
                 })
-                .periodically(5, TimeUnit.SECONDS);
+                .periodically(4, TimeUnit.SECONDS);
 
         progressBar = new BisqProgressBar(-1);
         progressBar.setMaxHeight(2);

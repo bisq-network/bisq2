@@ -23,8 +23,8 @@ import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.JavaFxApplicationData;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.PrimaryStageController;
-import bisq.desktop.primary.main.content.social.SocialController;
 import bisq.desktop.primary.onboarding.OnboardingController;
+import bisq.satoshisquareapp.primary.main.SatoshiSquareMainController;
 import bisq.satoshisquareapp.primary.splash.SatoshiSquareSplashController;
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,14 +58,16 @@ public class SatoshiSquarePrimaryStageController extends PrimaryStageController 
             case ONBOARDING -> {
                 return Optional.of(new OnboardingController(applicationService));
             }
-            case SOCIAL -> {
-                return Optional.of(new SocialController(applicationService));
+            case MAIN -> {
+                return Optional.of(new SatoshiSquareMainController(applicationService));
             }
             default -> {
                 return Optional.empty();
             }
         }
     }
+
+  
 
     @Override
     public void onDomainInitialized() {

@@ -84,7 +84,7 @@ public class BisqTextArea extends JFXTextArea {
 
     @Override
     protected void layoutChildren() {
-        try {
+      /*  try {
             // todo get sometimes 
             // java.lang.IndexOutOfBoundsException: Index 0 out of bounds for length 0
             //	at java.base/jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:64)
@@ -99,11 +99,23 @@ public class BisqTextArea extends JFXTextArea {
             super.layoutChildren();
         } catch (Throwable t) {
             t.printStackTrace();
-        }
+            getscro
+            super.layoutChildren();
+            //  t.printStackTrace();
+        }*/
 
 
-        if (!initialized) {
-            if (lookup(SELECTOR_SCROLL_PANE) instanceof ScrollPane selectorScrollPane) {
+        if (lookup(SELECTOR_SCROLL_PANE) instanceof ScrollPane selectorScrollPane) {
+            if (!selectorScrollPane.getChildrenUnmodifiable().isEmpty()) {
+                try {
+                    super.layoutChildren();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    super.layoutChildren();
+                }
+            }
+
+            if (!initialized) {
                 this.selectorScrollPane = selectorScrollPane;
 
                 if (lookup(SELECTOR_TEXT) instanceof Text selectorText) {

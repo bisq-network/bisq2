@@ -67,7 +67,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
     private Subscription chatUserOverviewRootSubscription;
     private Pane chatUserOverviewRoot;
 
-    public ChatView(ChatModel model, ChatController controller,
+    public ChatView(ChatModel model,
+                    ChatController controller,
                     ComboBox<UserProfileComboBox.ListItem> userProfileComboBox,
                     Pane publicChannelSelection,
                     Pane privateChannelSelection,
@@ -101,6 +102,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         messagesListView = new ListView<>();
         messagesListView.setCellFactory(getCellFactory());
         messagesListView.setFocusTraversable(false);
+        messagesListView.setStyle("-fx-border-width: 0; -fx-background-color: -bs-background-color");
         VBox.setVgrow(messagesListView, Priority.ALWAYS);
 
         inputField = new BisqTextArea();
@@ -345,7 +347,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                 time.setVisible(false);
                                 reactionsBox.setVisible(false);
                                 messageBox.getStyleClass().remove("chat-message-box-active");
-                                setStyle("-fx-background-color: transparent;");
+                                setStyle("-fx-background-color: -bs-background-color;");
                             });
 
                             ChatMessage chatMessage = item.getChatMessage();

@@ -163,14 +163,14 @@ public class ChannelInfo {
 
             model.adminProfile.ifPresent(adminProfile -> {
                 BisqLabel adminHeadLine = new BisqLabel(Res.get("social.channel.settings.admin"));
-                adminHeadLine.setPadding(new Insets(20, 0, -10, 0));
+                adminHeadLine.setPadding(new Insets(20, 0, 0, 0));
                 adminHeadLine.getStyleClass().add("accent-headline");
                 root.getChildren().addAll(adminHeadLine, adminProfile.getRoot());
             });
 
             if (!model.moderators.isEmpty()) {
                 BisqLabel moderatorsHeadLine = new BisqLabel(Res.get("social.channel.settings.moderators"));
-                moderatorsHeadLine.setPadding(new Insets(20, 0, -10, 0));
+                moderatorsHeadLine.setPadding(new Insets(20, 0, 0, 0));
                 moderatorsHeadLine.getStyleClass().add("accent-headline");
                 root.getChildren().add(moderatorsHeadLine);
                 root.getChildren().addAll(model.moderators.stream()
@@ -179,10 +179,10 @@ public class ChannelInfo {
             }
 
             members = new ListView<>();
+            members.setStyle("-fx-border-width: 0; -fx-background-color: -bs-background-color");
             members.setFocusTraversable(false);
             VBox.setVgrow(members, Priority.ALWAYS);
             members.setCellFactory(new Callback<>() {
-
                 @Override
                 public ListCell<ChatUserOverview> call(ListView<ChatUserOverview> list) {
                     return new ListCell<>() {

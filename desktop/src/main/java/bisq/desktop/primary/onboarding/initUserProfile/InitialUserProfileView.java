@@ -52,7 +52,6 @@ public class InitialUserProfileView extends View<HBox, InitialUserProfileModel, 
         roboIconImageView.setCursor(Cursor.HAND);
         VBox.setMargin(roboIconImageView, new Insets(10, 0, 0, 0));
 
-
         Label userNameLabel = new Label(Res.get("social.createUserProfile.userName.prompt"));
         userNameLabel.setStyle("-fx-font-size: 0.9em; -fx-text-fill: -fx-light-text-color;");
 

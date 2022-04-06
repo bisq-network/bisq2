@@ -18,6 +18,8 @@
 package bisq.desktop.primary;
 
 import bisq.common.util.OsUtils;
+import bisq.desktop.Navigation;
+import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.KeyCodeUtils;
 import bisq.desktop.common.utils.Transitions;
@@ -114,6 +116,16 @@ public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageMod
             if (KeyCodeUtils.isCtrlPressed(KeyCode.W, keyEvent) ||
                     KeyCodeUtils.isCtrlPressed(KeyCode.Q, keyEvent)) {
                 controller.onQuit();
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
+                Navigation.navigateTo(NavigationTarget.SPLASH);
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
+                Navigation.navigateTo(NavigationTarget.INIT_USER_PROFILE);
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
+                Navigation.navigateTo(NavigationTarget.SELECT_USER_TYPE);
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
+                Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
+                Navigation.navigateTo(NavigationTarget.ONBOARD_PRO_TRADER);
             }
         });
     }

@@ -15,20 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.onboarding;
+package bisq.satoshisquareapp.primary.main;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.layout.Layout;
 import javafx.geometry.Insets;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OnboardingView extends NavigationView<VBox, OnboardingModel, OnboardingController> {
-    public OnboardingView(OnboardingModel model, OnboardingController controller) {
+public class SatoshiSquareMainView extends NavigationView<VBox, SatoshiSquareMainModel, SatoshiSquareMainController> {
+    public SatoshiSquareMainView(SatoshiSquareMainModel model, SatoshiSquareMainController controller) {
         super(new VBox(), model, controller);
 
         root.getStyleClass().add("content-pane");
@@ -36,11 +38,13 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
         ImageView logo = ImageUtil.getImageViewById("logo-small");
         VBox.setMargin(logo, new Insets(20, 20, 10, 20));
 
-        Pane pane = new Pane();
+        AnchorPane pane = new AnchorPane();
         root.getChildren().addAll(logo, pane);
+        VBox.setVgrow(pane, Priority.ALWAYS);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
-            newValue.getRoot().setPadding(new Insets(0, 20, 20, 20));
+           // newValue.getRoot().setPadding(new Insets(20, 20, 20, 20));
+            Layout.pinToAnchorPane( newValue.getRoot(), 0, 20, 20, 20);
             pane.getChildren().add(newValue.getRoot());
             if (oldValue != null) {
                 Transitions.transitHorizontal(newValue.getRoot(), oldValue.getRoot());

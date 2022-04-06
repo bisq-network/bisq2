@@ -44,7 +44,6 @@ public abstract class TabView<R extends TabPane, M extends TabModel, C extends T
             if (newValue.getContent() instanceof Region nodeIn) {
                 nodeInHeightListener = (observable1, oldValue1, height) -> {
                     if (height.doubleValue() > 0) {
-                        log.error("height " + height);
                         nodeIn.heightProperty().removeListener(nodeInHeightListener);
                         Transitions.transitInNewTab(nodeIn);
                     }
