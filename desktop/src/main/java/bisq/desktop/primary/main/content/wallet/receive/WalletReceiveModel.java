@@ -20,11 +20,9 @@ package bisq.desktop.primary.main.content.wallet.receive;
 import bisq.desktop.common.view.Model;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import lombok.Getter;
 
 public class WalletReceiveModel implements Model {
+    @Getter
     final ObservableList<String> listItems = FXCollections.observableArrayList();
-
-    public ObservableList<String> getListItems() {
-        return listItems;
-    }
 }
