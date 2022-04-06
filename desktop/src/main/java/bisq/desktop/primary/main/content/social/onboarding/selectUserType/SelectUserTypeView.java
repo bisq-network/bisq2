@@ -17,75 +17,90 @@
 
 package bisq.desktop.primary.main.content.social.onboarding.selectUserType;
 
-import bisq.common.data.Pair;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.SectionBox;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.components.controls.BisqComboBox;
+import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 
-public class SelectUserTypeView extends View<AnchorPane, SelectUserTypeModel, SelectUserTypeController> {
-    private final BisqButton newTraderButton, proTraderButton, skipButton;
+public class SelectUserTypeView extends View<HBox, SelectUserTypeModel, SelectUserTypeController> {
+    private final ComboBox<SelectUserTypeModel.Type> userTypeBox;
+    private final BisqLabel info;
+    private final BisqButton button;
 
     public SelectUserTypeView(SelectUserTypeModel model, SelectUserTypeController controller) {
-        super(new AnchorPane(), model, controller);
+        super(new HBox(), model, controller);
 
-        Pair<Node, BisqButton> newTraderPair = getButton(Res.get("satoshisquareapp.selectTraderType.newbie"),
-                Res.get("satoshisquareapp.selectTraderType.newbie.info"),
-                Res.get("satoshisquareapp.selectTraderType.newbie.button"));
-        Pair<Node, BisqButton> proTraderPair = getButton(Res.get("satoshisquareapp.selectTraderType.proTrader"),
-                Res.get("satoshisquareapp.selectTraderType.proTrader.info"),
-                Res.get("satoshisquareapp.selectTraderType.proTrader.button"));
-        Pair<Node, BisqButton> skipPair = getButton(Res.get("satoshisquareapp.selectTraderType.skip"),
-                Res.get("satoshisquareapp.selectTraderType.skip.info"),
-                Res.get("satoshisquareapp.selectTraderType.skip.button"));
-        newTraderButton = newTraderPair.second();
-        proTraderButton = proTraderPair.second();
-        skipButton = skipPair.second();
+        root.setAlignment(Pos.TOP_CENTER);
+        root.getStyleClass().add("content-pane");
+        root.setFillHeight(false);
+
+        ImageView roboIconImageView = new ImageView();
+        roboIconImageView.setImage(model.getRoboHashImage());
+        VBox.setMargin(roboIconImageView, new Insets(10, 0, 0, 0));
+
+        Label userName = new Label(model.getChatUserName());
+        userName.setStyle("-fx-background-color: -bs-content-background-gray;-fx-text-fill: -fx-dark-text-color;");
+        userName.setMaxWidth(300);
+        userName.setMinWidth(300);
+        userName.setAlignment(Pos.CENTER);
+        userName.setPadding(new Insets(7, 7, 7, 7));
+        VBox.setMargin(userName, new Insets(-30, 0, 0, 0));
+
+        userTypeBox = new BisqComboBox<>();
+        userTypeBox.setItems(model.getUserTypes());
+        userTypeBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(SelectUserTypeModel.Type value) {
+                return value != null ? value.getDisplayString() : "";
+            }
+
+            @Override
+            public SelectUserTypeModel.Type fromString(String string) {
+                return null;
+            }
+        });
+
+        info = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.info"));
+        info.setWrapText(true);
+
+        button = new BisqButton();
+        button.setActionButton(true);
 
         SectionBox sectionBox = new SectionBox(Res.get("satoshisquareapp.selectTraderType.headline"));
-        sectionBox.setAlignment(Pos.CENTER);
-        sectionBox.getChildren().addAll(newTraderPair.first(), proTraderPair.first(), skipPair.first());
+        sectionBox.setPrefWidth(450);
+        sectionBox.getChildren().addAll(roboIconImageView, userName, userTypeBox, info, button);
 
-        Layout.pinToAnchorPane(sectionBox, 0, 20, null, 20);
         root.getChildren().addAll(sectionBox);
     }
 
     @Override
     protected void onViewAttached() {
-        newTraderButton.setOnAction(e -> controller.onNewTrader());
-        proTraderButton.setOnAction(e -> controller.onProTrader());
-        skipButton.setOnAction(e -> controller.onSkip());
+        info.textProperty().bind(model.getInfo());
+        button.textProperty().bind(model.getButtonText());
+        
+        userTypeBox.getSelectionModel().select(0);
+        userTypeBox.setOnAction(e -> controller.onSelect(userTypeBox.getSelectionModel().getSelectedItem()));
+        
+        button.setOnAction(e -> controller.onAction());
     }
 
     @Override
     protected void onViewDetached() {
-    }
-
-    private Pair<Node, BisqButton> getButton(String header, String info, String buttonText) {
-        Label headerLabel = new Label(header);
-        headerLabel.setStyle("-fx-font-size: 1.3em; -fx-font-weight:bold; -fx-fill: -fx-dark-text-color;");
-
-        Label infoLabel = new Label(info);
-        infoLabel.setStyle("-fx-font-size: 1.1em; -fx-fill: -fx-dark-text-color;");
-        infoLabel.setWrapText(true);
-
-        VBox box = new VBox();
-        box.setSpacing(10);
-        box.setPadding(new Insets(20, 20, 20, 20));
-        box.setStyle("-fx-background-color: -bs-background-color");
-
-        BisqButton button = new BisqButton(buttonText);
-        button.setStyle("-fx-background-color: -fx-selection-bar");
-        box.getChildren().addAll(headerLabel, infoLabel, Layout.hBoxWith(Spacer.fillHBox(), button));
-        return new Pair<>(box, button);
+        info.textProperty().unbind();
+        button.textProperty().unbind();
+        
+        userTypeBox.setOnAction(null);
+        button.setOnAction(null);
     }
 
 }

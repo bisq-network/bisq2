@@ -212,7 +212,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                     private final Text quotedMessageField = new Text();
                     private final HBox hBox, reactionsBox, editControlsBox, quotedMessageBox;
                     private final VBox vBox, messageBox;
-                    private final ChatUserIcon chatUserIcon = new ChatUserIcon(30);
+                    private final ChatUserIcon chatUserIcon = new ChatUserIcon(50);
                     Tooltip dateTooltip;
                     Subscription widthSubscription;
 
@@ -294,9 +294,9 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                     userName.setPadding(new Insets(4, 0, 0, 0));
                                     userName.setId("chat-quoted-message-user-name");
                                     ImageView roboIconImageView = new ImageView();
-                                    roboIconImageView.setFitWidth(20);
-                                    roboIconImageView.setFitHeight(20);
-                                    Image image = RoboHash.getImage(quotedMessage.pubKeyHash(), false);
+                                    roboIconImageView.setFitWidth(25);
+                                    roboIconImageView.setFitHeight(25);
+                                    Image image = RoboHash.getImage(quotedMessage.pubKeyHash());
                                     roboIconImageView.setImage(image);
                                     HBox.setMargin(roboIconImageView, new Insets(0, 0, 0, -5));
                                     HBox iconAndUserName = Layout.hBoxWith(roboIconImageView, userName);
@@ -335,15 +335,17 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             chatUserIcon.setChatUser(item.getAuthor(), model.getUserProfileService());
                             chatUserIcon.setCursor(Cursor.HAND);
                             chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
-                            hBox.setOnMouseEntered(e -> {
+                            setOnMouseEntered(e -> {
                                 time.setVisible(true);
                                 reactionsBox.setVisible(true);
                                 messageBox.getStyleClass().add("chat-message-box-active");
+                                setStyle("-fx-background-color: #282828;");
                             });
-                            hBox.setOnMouseExited(e -> {
+                            setOnMouseExited(e -> {
                                 time.setVisible(false);
                                 reactionsBox.setVisible(false);
                                 messageBox.getStyleClass().remove("chat-message-box-active");
+                                setStyle("-fx-background-color: transparent;");
                             });
 
                             ChatMessage chatMessage = item.getChatMessage();

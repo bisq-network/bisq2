@@ -90,7 +90,7 @@ public class InitUserProfileController implements Controller {
         model.tempKeyId = StringUtils.createUid();
         model.tempKeyPair = keyPairService.generateKeyPair();
         byte[] hash = DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded());
-        model.roboHashNode.set(RoboHash.getImage(new ByteArray(hash), false));
+        model.roboHashNode.set(RoboHash.getImage(new ByteArray(hash)));
         model.userName.set(UserNameGenerator.fromHash(hash));
     }
 }

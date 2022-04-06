@@ -137,8 +137,8 @@ public class UserProfileComboBox {
                         BisqLabel userName = new BisqLabel(item.userName);
                         ImageView roboIconImageView = new ImageView(item.roboHashNode);
                         userName.setPadding(new Insets(4, 0, 0, 0));
-                        roboIconImageView.setFitWidth(30);
-                        roboIconImageView.setFitHeight(30);
+                        roboIconImageView.setFitWidth(50);
+                        roboIconImageView.setFitHeight(50);
                         setGraphic(Layout.hBoxWith(roboIconImageView, userName));
                     } else {
                         setGraphic(null);
@@ -160,7 +160,7 @@ public class UserProfileComboBox {
             this.userProfile = userProfile;
             userName = userProfile.identity().domainId();
 
-            roboHashNode = RoboHash.getImage(new ByteArray(userProfile.chatUser().getPubKeyHash()), false);
+            roboHashNode = RoboHash.getImage(new ByteArray(userProfile.chatUser().getPubKeyHash()));
         }
     }
 }

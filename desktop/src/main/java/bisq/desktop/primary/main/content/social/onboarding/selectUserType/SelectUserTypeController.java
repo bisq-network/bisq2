@@ -17,9 +17,11 @@
 
 package bisq.desktop.primary.main.content.social.onboarding.selectUserType;
 
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
+import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,28 +31,44 @@ public class SelectUserTypeController implements Controller {
     @Getter
     private final SelectUserTypeView view;
 
-    public SelectUserTypeController() {
-        model = new SelectUserTypeModel();
+    public SelectUserTypeController(DefaultApplicationService applicationService) {
+        model = new SelectUserTypeModel(applicationService.getUserProfileService());
         view = new SelectUserTypeView(model, this);
+
+        model.getUserTypes().addAll(SelectUserTypeModel.Type.NEWBIE, SelectUserTypeModel.Type.PRO_TRADER);
     }
 
     @Override
     public void onActivate() {
+        onSelect(SelectUserTypeModel.Type.NEWBIE);
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    public void onNewTrader() {
-        Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
+    public void onSelect(SelectUserTypeModel.Type selectedType) {
+        model.setSelectedType(selectedType);
+        switch (selectedType) {
+            case NEWBIE -> {
+                model.getInfo().set(Res.get("satoshisquareapp.selectTraderType.newbie.info"));
+                model.getButtonText().set(Res.get("satoshisquareapp.selectTraderType.newbie.button").toUpperCase());
+            }
+            case PRO_TRADER -> {
+                model.getInfo().set(Res.get("satoshisquareapp.selectTraderType.proTrader.info"));
+                model.getButtonText().set(Res.get("satoshisquareapp.selectTraderType.proTrader.button").toUpperCase());
+            }
+        }
     }
 
-    public void onProTrader() {
-        Navigation.navigateTo(NavigationTarget.ONBOARD_PRO_TRADER);
-    }
-
-    public void onSkip() {
-        Navigation.navigateTo(NavigationTarget.CHAT);
+    public void onAction() {
+        switch (model.getSelectedType()) {
+            case NEWBIE -> {
+                Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
+            }
+            case PRO_TRADER -> {
+                Navigation.navigateTo(NavigationTarget.ONBOARD_PRO_TRADER);
+            }
+        }
     }
 }

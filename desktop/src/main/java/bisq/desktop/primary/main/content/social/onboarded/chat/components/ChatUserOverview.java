@@ -87,7 +87,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
             model.id.set(chatUser.getId());
             model.userName.set(chatUser.getUserName());
-            model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash()), false));
+            model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
             String entitledRoles = chatUser.getEntitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
             model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
             model.entitlementsVisible.set(!chatUser.getEntitlements().isEmpty());
@@ -127,8 +127,8 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
             userName.setPadding(new Insets(4, 0, 0, 0));
 
             roboIconImageView = new ImageView();
-            roboIconImageView.setFitWidth(30);
-            roboIconImageView.setFitHeight(30);
+            roboIconImageView.setFitWidth(50);
+            roboIconImageView.setFitHeight(50);
 
             ImageView trust = new ImageView();
             trust.setId("trust");

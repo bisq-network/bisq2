@@ -61,7 +61,7 @@ public class OnboardingController extends NavigationController {
                 return Optional.of(new InitUserProfileController(applicationService));
             }
             case SELECT_USER_TYPE -> {
-                return Optional.of(new SelectUserTypeController());
+                return Optional.of(new SelectUserTypeController(applicationService));
             }
             case ONBOARD_NEWBIE -> {
                 return Optional.of(new OnboardNewbieController(applicationService));

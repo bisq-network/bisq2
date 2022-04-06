@@ -89,7 +89,7 @@ public class QuotedMessageBlock {
             ChatUser author = chatMessage.getAuthor();
             model.author = author;
             model.userName.set(author.getUserName());
-            model.roboHashNode.set(RoboHash.getImage(new ByteArray(author.getPubKeyHash()), false));
+            model.roboHashNode.set(RoboHash.getImage(new ByteArray(author.getPubKeyHash())));
             model.quotedMessage.set(chatMessage.getText());
             model.visible.set(true);
         }
@@ -143,8 +143,8 @@ public class QuotedMessageBlock {
             userName = new BisqLabel();
             userName.setPadding(new Insets(4, 0, 0, -5));
             roboIconImageView = new ImageView();
-            roboIconImageView.setFitWidth(30);
-            roboIconImageView.setFitHeight(30);
+            roboIconImageView.setFitWidth(25);
+            roboIconImageView.setFitHeight(25);
             HBox userBox = Layout.hBoxWith(roboIconImageView, userName);
 
             quotedMessage = new Text();
