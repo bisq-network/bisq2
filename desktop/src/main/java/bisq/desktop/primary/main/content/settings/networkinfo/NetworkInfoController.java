@@ -51,11 +51,6 @@ public class NetworkInfoController extends TabController {
     }
 
     @Override
-    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        super.onNavigate(navigationTarget, data);
-    }
-
-    @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case CLEAR_NET -> {

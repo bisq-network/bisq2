@@ -17,27 +17,29 @@
 
 package bisq.desktop.primary.main;
 
-import bisq.desktop.common.view.View;
-import bisq.desktop.primary.main.content.ContentView;
+import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.primary.main.nav.LeftNavView;
 import bisq.desktop.primary.main.top.TopPanelView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-public class MainView extends View<VBox, MainModel, MainController> {
+public class MainView extends NavigationView<VBox, MainModel, MainController> {
     public MainView(MainModel model,
                     MainController controller,
-                    ContentView contentView,
                     LeftNavView leftNavView,
                     TopPanelView topPanelView) {
         super(new VBox(), model, controller);
 
         root.getStyleClass().add("content-pane");
-
+        
         HBox leftNavAndContentBox = new HBox();
-        HBox.setHgrow(contentView.getRoot(), Priority.ALWAYS);
-        leftNavAndContentBox.getChildren().addAll(leftNavView.getRoot(), contentView.getRoot());
+        leftNavAndContentBox.getChildren().add(leftNavView.getRoot());
+        model.getView().addListener((observable, oldValue, contentView) -> {
+            HBox.setHgrow(contentView.getRoot(), Priority.ALWAYS);
+            leftNavAndContentBox.getChildren().add(contentView.getRoot());
+        });
+
 
         VBox.setVgrow(leftNavAndContentBox, Priority.ALWAYS);
         root.getChildren().addAll(topPanelView.getRoot(), leftNavAndContentBox);

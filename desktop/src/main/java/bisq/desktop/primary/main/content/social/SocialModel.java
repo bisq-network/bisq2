@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.social;
 
 import bisq.desktop.NavigationTarget;
-import bisq.desktop.common.view.NavigationModel;
+import bisq.desktop.common.view.TabModel;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.ObjectProperty;
@@ -26,7 +26,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
 @Getter
-public class SocialModel extends NavigationModel {
+public class SocialModel extends TabModel {
     private final UserProfileService userProfileService;
     private final ObjectProperty<UserProfile> selectedUserProfile = new SimpleObjectProperty<>();
 
@@ -36,8 +36,6 @@ public class SocialModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return userProfileService.isDefaultUserProfileMissing() ? 
-                NavigationTarget.INIT_USER_PROFILE : 
-                NavigationTarget.ONBOARDING;
+        return NavigationTarget.CHAT;
     }
 }

@@ -16,6 +16,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+//todo use equihash
 // Derived from https://github.com/neuhalje/android-robohash
 @Slf4j
 public class RoboHash {

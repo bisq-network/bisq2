@@ -19,16 +19,19 @@ package bisq.desktop.common.view;
 
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.Transitions;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Parent;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.Region;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class TabView<R extends TabPane, M extends TabModel, C extends TabController> extends NavigationView<R, M, C> {
     protected final ChangeListener<Tab> tabChangeListener;
     protected final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
+    private ChangeListener<Number> nodeInHeightListener;
 
     public TabView(R root, M model, C controller) {
         super(root, model, controller);
@@ -37,13 +40,30 @@ public abstract class TabView<R extends TabPane, M extends TabModel, C extends T
             if (newValue instanceof NavigationTargetTab navigationTargetTab) {
                 controller.onTabSelected(navigationTargetTab.getNavigationTarget());
             }
+
+            if (newValue.getContent() instanceof Region nodeIn) {
+                nodeInHeightListener = (observable1, oldValue1, height) -> {
+                    if (height.doubleValue() > 0) {
+                        log.error("height " + height);
+                        nodeIn.heightProperty().removeListener(nodeInHeightListener);
+                        Transitions.transitInNewTab(nodeIn);
+                    }
+                };
+                if (nodeIn.getHeight() > 0) {
+                    log.error("height " + nodeIn.getHeight());
+                    Transitions.transitInNewTab(nodeIn);
+                } else {
+                    nodeIn.heightProperty().addListener(nodeInHeightListener);
+                }
+            } else {
+                UIThread.runOnNextRenderFrame(() -> Transitions.fadeIn(newValue.getContent(), 100));
+            }
         };
 
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
                 NavigationTargetTab tab = getTabFromTarget(model.getNavigationTarget());
                 tab.setContent(newValue.getRoot());
-
                 // Remove tabChangeListener temporarily to avoid that the tabChangeListener gets called from the selection call
                 root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
                 root.getSelectionModel().select(tab);

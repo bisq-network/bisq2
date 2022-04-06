@@ -26,16 +26,11 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 
 public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> {
-    private final Pane marketPriceBox;
-    private final Pane walletBalanceBox;
-
     public TopPanelView(TopPanelModel model,
                         TopPanelController controller,
                         Pane marketPriceBox,
                         Pane walletBalanceBox) {
         super(new HBox(), model, controller);
-        this.marketPriceBox = marketPriceBox;
-        this.walletBalanceBox = walletBalanceBox;
 
         root.setMinHeight(53);
         root.setMaxHeight(root.getMinHeight());
@@ -48,13 +43,9 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
 
     @Override
     protected void onViewAttached() {
-        marketPriceBox.visibleProperty().bind(model.getMarketPriceBoxVisible());
-        walletBalanceBox.visibleProperty().bind(model.getWalletBalanceBoxVisible());
     }
 
     @Override
     protected void onViewDetached() {
-        marketPriceBox.visibleProperty().unbind();
-        walletBalanceBox.visibleProperty().unbind();
     }
 }

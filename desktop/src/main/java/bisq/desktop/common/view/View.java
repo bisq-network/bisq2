@@ -19,15 +19,15 @@ package bisq.desktop.common.view;
 
 import bisq.desktop.common.threading.UIThread;
 import javafx.beans.value.ChangeListener;
-import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.layout.Region;
 import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public abstract class View<R extends Node, M extends Model, C extends Controller> {
+public abstract class View<R extends Region, M extends Model, C extends Controller> {
     protected final R root;
     protected final M model;
     protected final C controller;

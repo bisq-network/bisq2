@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.trade;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
@@ -30,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class TradeController extends TabController {
+public class TradeController extends TabController implements Navigation.Listener {
 
     private final DefaultApplicationService applicationService;
     @Getter
@@ -51,10 +52,12 @@ public class TradeController extends TabController {
 
     @Override
     public void onActivate() {
+        Navigation.addListener(host, this);
     }
 
     @Override
     public void onDeactivate() {
+        Navigation.removeListener(host, this);
     }
 
     @Override
@@ -63,8 +66,6 @@ public class TradeController extends TabController {
                 offerbookController.showCreateOfferTab());
         model.takeOfferTabVisible.set(navigationTarget == NavigationTarget.TAKE_OFFER ||
                 offerbookController.getShowTakeOfferTab().get());
-
-        super.onNavigate(navigationTarget, data);
     }
 
     @Override

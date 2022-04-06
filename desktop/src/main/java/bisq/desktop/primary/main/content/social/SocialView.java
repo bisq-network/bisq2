@@ -17,21 +17,25 @@
 
 package bisq.desktop.primary.main.content.social;
 
-import bisq.desktop.common.view.NavigationView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
+import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTargetTab;
+import bisq.desktop.common.view.TabView;
+import bisq.i18n.Res;
+import com.jfoenix.controls.JFXTabPane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SocialView extends NavigationView<HBox, SocialModel, SocialController> {
+public class SocialView extends TabView<JFXTabPane, SocialModel, SocialController> {
 
     public SocialView(SocialModel model, SocialController controller) {
-        super(new HBox(), model, controller);
+        super(new JFXTabPane(), model, controller);
+    }
 
-        model.getView().addListener((observable, oldValue, newValue) -> {
-            HBox.setHgrow(newValue.getRoot(), Priority.ALWAYS);
-            root.getChildren().setAll(newValue.getRoot());
-        });
+    @Override
+    protected void createAndAddTabs() {
+        NavigationTargetTab chatTab = createTab(Res.get("social.chat"), NavigationTarget.CHAT);
+        NavigationTargetTab userProfileTab = createTab(Res.get("social.userProfile"), NavigationTarget.USER_PROFILE);
+        root.getTabs().setAll(chatTab, userProfileTab);
     }
 
     @Override

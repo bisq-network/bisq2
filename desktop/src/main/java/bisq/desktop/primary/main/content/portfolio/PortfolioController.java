@@ -53,11 +53,6 @@ public class PortfolioController extends TabController {
     }
 
     @Override
-    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        super.onNavigate(navigationTarget, data);
-    }
-
-    @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case OPEN_OFFERS -> {

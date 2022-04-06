@@ -17,20 +17,26 @@
 
 package bisq.desktop.primary.main.content;
 
+import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
+import javafx.geometry.Insets;
+import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ContentView extends NavigationView<HBox, ContentModel, ContentController> {
+public class ContentView extends NavigationView<Pane, ContentModel, ContentController> {
 
     public ContentView(ContentModel model, ContentController controller) {
-        super(new HBox(), model, controller);
+        super(new Pane(), model, controller);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
-            HBox.setHgrow(newValue.getRoot(), Priority.ALWAYS);
-            root.getChildren().setAll(newValue.getRoot());
+            root.setPadding(new Insets(20, 20, 20, 20));
+            root.getChildren().add(newValue.getRoot());
+            if (oldValue != null) {
+                Transitions.transitContentViews(newValue.getRoot(), oldValue.getRoot());
+            } else {
+                Transitions.fadeIn(newValue.getRoot());
+            }
         });
     }
 

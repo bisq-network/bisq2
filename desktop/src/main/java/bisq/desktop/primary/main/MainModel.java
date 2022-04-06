@@ -17,13 +17,15 @@
 
 package bisq.desktop.primary.main;
 
-import bisq.desktop.common.view.Model;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationModel;
 import lombok.Getter;
 
 @Getter
-public class MainModel implements Model {
-    private BooleanProperty marketPriceBoxVisible = new SimpleBooleanProperty();
-    private BooleanProperty walletBalanceBoxVisible = new SimpleBooleanProperty();
+public class MainModel extends NavigationModel {
+
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.CONTENT;
+    }
 }

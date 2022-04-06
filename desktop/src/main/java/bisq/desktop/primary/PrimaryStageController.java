@@ -18,14 +18,18 @@
 package bisq.desktop.primary;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.Navigation;
+import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.JavaFxApplicationData;
 import bisq.desktop.common.utils.DontShowAgainLookup;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.overlay.Notification;
 import bisq.desktop.overlay.Overlay;
 import bisq.desktop.primary.main.MainController;
+import bisq.desktop.primary.onboarding.OnboardingController;
 import bisq.desktop.primary.splash.SplashController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -33,19 +37,23 @@ import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
-public class PrimaryStageController implements Controller {
-    private final DefaultApplicationService applicationService;
-    private final PrimaryStageModel model;
+public class PrimaryStageController extends NavigationController {
+    protected final DefaultApplicationService applicationService;
     @Getter
-    private final PrimaryStageView view;
-    private final SettingsService settingsService;
-    private final Runnable onStageReadyHandler;
-    private MainController mainController;
+    protected final PrimaryStageModel model;
+    @Getter
+    protected final PrimaryStageView view;
+    protected final SettingsService settingsService;
+    protected final Runnable onStageReadyHandler;
 
     public PrimaryStageController(DefaultApplicationService applicationService,
                                   JavaFxApplicationData applicationJavaFxApplicationData,
                                   Runnable onStageReadyHandler) {
+        super(NavigationTarget.PRIMARY_STAGE);
+
         this.applicationService = applicationService;
         settingsService = applicationService.getSettingsService();
         this.onStageReadyHandler = onStageReadyHandler;
@@ -67,20 +75,39 @@ public class PrimaryStageController implements Controller {
 
     @Override
     public void onActivate() {
-        SplashController splashController = new SplashController(applicationService);
-        model.setView(splashController.getView());
-
         onStageReadyHandler.run();
+        Navigation.navigateTo(NavigationTarget.SPLASH);
     }
 
     @Override
     public void onDeactivate() {
     }
 
+    @Override
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        switch (navigationTarget) {
+            case SPLASH -> {
+                return Optional.of(new SplashController(applicationService));
+            }
+            case ONBOARDING -> {
+                return Optional.of(new OnboardingController(applicationService));
+            }
+            case MAIN -> {
+                return Optional.of(new MainController(applicationService));
+            }
+            default -> {
+                return Optional.empty();
+            }
+        }
+    }
+
     public void onDomainInitialized() {
         // After the domain is initialized we show the application content
-        mainController = new MainController(model.getApplicationService());
-        model.setView(mainController.getView());
+        if (applicationService.getUserProfileService().isDefaultUserProfileMissing()) {
+            Navigation.navigateTo(NavigationTarget.ONBOARDING);
+        } else {
+            Navigation.navigateTo(NavigationTarget.MAIN);
+        }
     }
 
     public void onUncaughtException(Thread thread, Throwable throwable) {
