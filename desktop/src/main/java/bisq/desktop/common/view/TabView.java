@@ -17,7 +17,6 @@
 
 package bisq.desktop.common.view;
 
-import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
 import javafx.beans.value.ChangeListener;

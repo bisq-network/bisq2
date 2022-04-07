@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.left;
 
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.utils.Icons;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;

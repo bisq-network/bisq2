@@ -18,8 +18,8 @@
 package bisq.desktop.primary;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.JavaFxApplicationData;
 import bisq.desktop.common.utils.DontShowAgainLookup;

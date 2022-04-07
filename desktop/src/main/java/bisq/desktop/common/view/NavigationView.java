@@ -17,8 +17,6 @@
 
 package bisq.desktop.common.view;
 
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
 import javafx.scene.layout.Region;
 import lombok.extern.slf4j.Slf4j;

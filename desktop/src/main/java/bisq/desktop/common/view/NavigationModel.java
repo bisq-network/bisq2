@@ -17,7 +17,6 @@
 
 package bisq.desktop.common.view;
 
-import bisq.desktop.NavigationTarget;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Parent;

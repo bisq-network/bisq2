@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.left;
 
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;

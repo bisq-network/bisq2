@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.social;
 
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;

@@ -18,8 +18,8 @@
 package bisq.desktop.primary;
 
 import bisq.common.util.OsUtils;
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.KeyCodeUtils;
 import bisq.desktop.common.utils.Transitions;

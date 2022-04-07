@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.left;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
 import bisq.network.NetworkService;

@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.onboarding.onboardProTrader;
 
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import javafx.scene.control.Label;

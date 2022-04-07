@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.wallet;
 
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

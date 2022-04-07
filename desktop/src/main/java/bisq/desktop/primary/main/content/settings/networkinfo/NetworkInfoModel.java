@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.settings.networkinfo;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;

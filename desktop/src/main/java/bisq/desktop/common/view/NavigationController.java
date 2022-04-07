@@ -17,8 +17,6 @@
 
 package bisq.desktop.common.view;
 
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;

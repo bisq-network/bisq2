@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.onboarding;
 
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;

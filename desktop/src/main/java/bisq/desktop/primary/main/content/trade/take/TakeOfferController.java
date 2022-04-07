@@ -19,8 +19,8 @@ package bisq.desktop.primary.main.content.trade.take;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.portfolio.pending.PendingTradesController;

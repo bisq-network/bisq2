@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;

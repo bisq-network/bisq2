@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.left;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

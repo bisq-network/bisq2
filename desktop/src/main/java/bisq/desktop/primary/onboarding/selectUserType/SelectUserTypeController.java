@@ -18,8 +18,8 @@
 package bisq.desktop.primary.onboarding.selectUserType;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
 import lombok.Getter;

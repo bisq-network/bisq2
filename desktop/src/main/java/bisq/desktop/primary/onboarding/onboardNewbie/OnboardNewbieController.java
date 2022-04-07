@@ -19,8 +19,8 @@ package bisq.desktop.primary.onboarding.onboardNewbie;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyWordDetection;

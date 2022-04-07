@@ -18,7 +18,7 @@
 package bisq.satoshisquareapp.primary.main;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.primary.main.content.social.SocialController;
