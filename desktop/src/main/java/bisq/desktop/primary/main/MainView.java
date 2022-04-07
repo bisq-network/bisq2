@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main;
 
 import bisq.desktop.common.view.NavigationView;
-import bisq.desktop.primary.main.nav.LeftNavView;
+import bisq.desktop.primary.main.left.LeftNavView;
 import bisq.desktop.primary.main.top.TopPanelView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.nav;
+package bisq.desktop.primary.main.left;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.Navigation;

@@ -24,7 +24,7 @@ import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.primary.main.content.ContentController;
-import bisq.desktop.primary.main.nav.LeftNavController;
+import bisq.desktop.primary.main.left.LeftNavController;
 import bisq.desktop.primary.main.top.TopPanelController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
