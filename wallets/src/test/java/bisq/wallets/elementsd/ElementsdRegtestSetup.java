@@ -83,9 +83,9 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
     }
 
     @Override
-    public void mineOneBlock() {
+    public List<String> mineOneBlock() {
         String minerAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
-        daemon.generateToAddress(1, minerAddress);
+        return daemon.generateToAddress(1, minerAddress);
     }
 
     @Override

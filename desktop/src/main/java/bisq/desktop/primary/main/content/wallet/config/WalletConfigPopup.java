@@ -91,7 +91,7 @@ public class WalletConfigPopup extends Popup {
             model.walletPassphraseProperty.setValue(""); // Wipe passphrase from memory
 
             WalletConfig walletConfig = createWalletConfigFromModel();
-            walletService.initialize(walletConfig, passphrase)
+            walletService.loadOrCreateWallet(walletConfig, passphrase)
                     .whenComplete((__, throwable) -> {
                         if (throwable == null) {
                             UIThread.run(() -> {

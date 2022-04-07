@@ -27,6 +27,7 @@ import bisq.wallets.model.Utxo;
 import bisq.wallets.rpc.RpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
 import bisq.wallets.rpc.RpcConfig;
+import lombok.Getter;
 
 import java.net.MalformedURLException;
 import java.nio.file.Path;
@@ -36,6 +37,7 @@ import java.util.Optional;
 public class BitcoinWallet implements Wallet {
     private final Path walletPath;
 
+    @Getter
     private final BitcoindDaemon daemon;
     private final BitcoindWallet wallet;
 

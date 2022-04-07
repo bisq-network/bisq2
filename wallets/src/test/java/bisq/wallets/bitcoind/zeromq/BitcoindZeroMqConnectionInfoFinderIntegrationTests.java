@@ -15,14 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.wallet.receive;
+package bisq.wallets.bitcoind.zeromq;
 
-import bisq.desktop.common.view.Model;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import lombok.Getter;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
+import org.junit.jupiter.api.Test;
 
-public class WalletReceiveModel implements Model {
-    @Getter
-    final ObservableList<String> listItems = FXCollections.observableArrayList();
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class BitcoindZeroMqConnectionInfoFinderIntegrationTests extends AbstractBitcoindZeroMqTests {
+    @Test
+    void findConnectionInfo() {
+        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = daemon.getZmqNotifications();
+        assertThat(zmqNotifications).isNotEmpty();
+    }
 }

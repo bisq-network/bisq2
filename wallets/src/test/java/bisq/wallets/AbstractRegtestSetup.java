@@ -24,6 +24,7 @@ import bisq.wallets.rpc.RpcConfig;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
+import java.util.List;
 
 public abstract class AbstractRegtestSetup<T extends BisqProcess, W> implements BisqProcess {
     public static final String WALLET_PASSPHRASE = "My super secret passphrase that nobody can guess.";
@@ -46,7 +47,7 @@ public abstract class AbstractRegtestSetup<T extends BisqProcess, W> implements 
         daemonProcess.shutdown();
     }
 
-    public abstract void mineOneBlock();
+    public abstract List<String> mineOneBlock();
 
     public abstract W createNewWallet(Path walletPath) throws MalformedURLException;
 

@@ -10,19 +10,24 @@ apply from: '../buildSrc/test-dependencies.gradle'
 ext {
     jsonrpc4jVersion = '1.6.0.bisq.2'
     jacksonDatabindVersion = '2.12.0'
+    jeroMqVersion = '0.5.2'
 }
 
 dependencies {
     api platform(project(':platforms:common-platform'))
 
     implementation project(':common')
+    implementation project(':persistence')
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonDatabindVersion")
     implementation("com.github.bisq-network:jsonrpc4j:$jsonrpc4jVersion") {
         exclude(module: 'base64')
         exclude(module: 'httpcore-nio')
     }
+
     implementation libs.google.guava
+    implementation libs.protobuf.java
+    implementation("org.zeromq:jeromq:$jeroMqVersion")
 
     testImplementation("org.assertj:assertj-core:3.22.0")
 }

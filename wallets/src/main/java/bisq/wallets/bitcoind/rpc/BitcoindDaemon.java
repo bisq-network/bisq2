@@ -18,7 +18,9 @@
 package bisq.wallets.bitcoind.rpc;
 
 import bisq.wallets.bitcoind.rpc.calls.*;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindFinalizePsbtResponse;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.rpc.RpcClient;
 
 import java.nio.file.Path;
@@ -43,6 +45,12 @@ public class BitcoindDaemon {
                 loadWallet(walletPath);
             }
         }
+    }
+
+    public BitcoindDecodeRawTransactionResponse decodeRawTransaction(String hexString) {
+        var request = new BitcoindDecodeRawTransactionRpcCall.Request(hexString);
+        var rpcCall = new BitcoindDecodeRawTransactionRpcCall(request);
+        return rpcClient.invokeAndValidate(rpcCall);
     }
 
     public BitcoindFinalizePsbtResponse finalizePsbt(String psbt) {
@@ -71,6 +79,12 @@ public class BitcoindDaemon {
         var request = new BitcoindGetTxOutProofRpcCall.Request(txIds);
         var rpcCall = new BitcoindGetTxOutProofRpcCall(request);
         return rpcClient.invokeAndValidate(rpcCall);
+    }
+
+    public List<BitcoindGetZmqNotificationsResponse> getZmqNotifications() {
+        var rpcCall = new BitcoindGetZmqNotificationsRpcCall();
+        BitcoindGetZmqNotificationsResponse[] responses = rpcClient.invokeAndValidate(rpcCall);
+        return Arrays.asList(responses);
     }
 
     public List<String> listWallets() {

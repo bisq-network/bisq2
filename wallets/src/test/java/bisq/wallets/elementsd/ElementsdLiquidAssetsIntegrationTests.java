@@ -31,7 +31,7 @@ public class ElementsdLiquidAssetsIntegrationTests extends SharedElementsdInstan
 
     @Override
     @BeforeAll
-    public void start() throws IOException {
+    public void start() throws IOException, InterruptedException {
         super.start();
         peginBtc(20);
     }

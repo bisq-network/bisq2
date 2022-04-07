@@ -15,14 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.wallet.receive;
+package bisq.wallets.bitcoind.rpc.responses;
 
-import bisq.desktop.common.view.Model;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import lombok.Getter;
+import lombok.Setter;
 
-public class WalletReceiveModel implements Model {
-    @Getter
-    final ObservableList<String> listItems = FXCollections.observableArrayList();
+@Getter
+@Setter
+public class BitcoindScriptPubKey {
+    private String asm;
+    private String hex;
+    private int reqSigs;
+    private String type;
+    private String address;
 }

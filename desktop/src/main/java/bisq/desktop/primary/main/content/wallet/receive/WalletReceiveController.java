@@ -18,7 +18,8 @@
 package bisq.desktop.primary.main.content.wallet.receive;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.threading.UIThread;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.wallets.WalletService;
 import lombok.Getter;
@@ -29,6 +30,8 @@ public class WalletReceiveController implements Controller {
     @Getter
     private final WalletReceiveView view;
 
+    private Pin receiveAddressListPin;
+
     public WalletReceiveController(DefaultApplicationService applicationService) {
         this.walletService = applicationService.getWalletService();
         model = new WalletReceiveModel();
@@ -37,14 +40,16 @@ public class WalletReceiveController implements Controller {
 
     @Override
     public void onActivate() {
+        receiveAddressListPin = FxBindings.<String, String>bind(model.getListItems())
+                .to(walletService.getReceiveAddresses());
     }
 
     @Override
     public void onDeactivate() {
+        receiveAddressListPin.unbind();
     }
 
     public void onGenerateNewAddress() {
-        walletService.getNewAddress("")
-                .thenAccept(newAddress -> UIThread.run(() -> model.addNewAddress(newAddress)));
+        walletService.getNewAddress("");
     }
 }

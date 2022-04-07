@@ -40,7 +40,7 @@ public abstract class SharedBitcoindInstanceTests
 
     @Override
     @BeforeAll
-    public void start() throws IOException {
+    public void start() throws IOException, InterruptedException {
         super.start();
         daemon = regtestSetup.getDaemon();
         minerWallet = regtestSetup.getMinerWallet();

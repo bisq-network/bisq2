@@ -39,6 +39,7 @@ abstract class StartBitcoinQtTask : DefaultTask() {
     }
 
     private fun spawnBitcoinQtProcess(bitcoindDataDir: File) {
+        val zmqPort = Network.findFreeSystemPort()
         ProcessBuilder(
             listOf(
                 "bitcoin-qt",
@@ -51,6 +52,9 @@ abstract class StartBitcoinQtTask : DefaultTask() {
                 "-rpcallowip=127.0.0.1",
                 "-rpcuser=bisq",
                 "-rpcpassword=bisq",
+
+                "-zmqpubhashblock=tcp://127.0.0.1:$zmqPort",
+                "-zmqpubrawtx=tcp://127.0.0.1:$zmqPort",
 
                 "-fallbackfee=0.00000001",
                 "-txindex=1"

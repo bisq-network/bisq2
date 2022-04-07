@@ -50,7 +50,7 @@ public abstract class SharedElementsdInstanceTests
 
     @Override
     @BeforeAll
-    public void start() throws IOException {
+    public void start() throws IOException, InterruptedException {
         super.start();
 
         bitcoindRegtestSetup = elementsdRegtestSetup.getBitcoindRegtestSetup();

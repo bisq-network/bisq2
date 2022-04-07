@@ -54,11 +54,13 @@ public class BitcoindProcess implements DaemonProcess {
     @Override
     public ProcessConfig createProcessConfig() {
         String networkArg = getParamForNetworkType(rpcConfig.networkType());
+        int zmqPort = NetworkUtils.findFreeSystemPort();
         return new ProcessConfig(
                 "bitcoind",
                 List.of(
                         networkArg,
                         "-datadir=" + dataDir.toAbsolutePath(),
+                        "-debug=1",
 
                         "-bind=127.0.0.1:" + NetworkUtils.findFreeSystemPort(),
                         "-whitelist=127.0.0.1",
@@ -67,6 +69,9 @@ public class BitcoindProcess implements DaemonProcess {
                         "-rpcallowip=127.0.0.1",
                         "-rpcuser=" + rpcConfig.user(),
                         "-rpcpassword=" + rpcConfig.password(),
+
+                        "-zmqpubhashblock=tcp://127.0.0.1:" + zmqPort,
+                        "-zmqpubrawtx=tcp://127.0.0.1:" + zmqPort,
 
                         "-fallbackfee=0.00000001",
                         "-txindex=1")

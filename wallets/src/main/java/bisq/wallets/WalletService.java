@@ -19,68 +19,93 @@ package bisq.wallets;
 
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
+import bisq.common.observable.ObservableSet;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
+import bisq.persistence.PersistenceService;
 import bisq.wallets.bitcoind.BitcoinWallet;
+import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
+import bisq.wallets.bitcoind.zeromq.BitcoindZeroMq;
 import bisq.wallets.elementsd.LiquidWallet;
 import bisq.wallets.exceptions.WalletNotInitializedException;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
 import bisq.wallets.rpc.RpcConfig;
+import bisq.wallets.stores.WalletStore;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class WalletService {
+public class WalletService implements PersistenceClient<WalletStore> {
     private static final String LOCALHOST = "127.0.0.1";
+
+    @Getter
+    private final WalletStore persistableStore = new WalletStore();
+    @Getter
+    private final Persistence<WalletStore> persistence;
 
     private final Optional<WalletConfig> walletConfig;
     @Getter
     private Optional<Wallet> wallet = Optional.empty();
+
+    private Optional<BitcoindZeroMq> bitcoindZeroMq = Optional.empty();
+    private final Set<String> utxoTxIds = new HashSet<>();
+
     @Getter
     private final Observable<Coin> observableBalanceAsCoin = new Observable<>(Coin.of(0, "BTC"));
 
-    public WalletService(Optional<WalletConfig> walletConfig) {
+    public WalletService(PersistenceService persistenceService,
+                         Optional<WalletConfig> walletConfig) {
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.walletConfig = walletConfig;
     }
 
-    public CompletableFuture<Boolean> tryAutoInitialization() {
-        if (walletConfig.isEmpty()) {
-            return CompletableFuture.completedFuture(true);
+    public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
+
+        if (walletConfig.isPresent()) {
+            return loadOrCreateWallet(walletConfig.get(), Optional.empty());
         }
-        return initialize(walletConfig.get(), Optional.empty());
+
+        return CompletableFuture.completedFuture(true);
     }
 
-    public CompletableFuture<Boolean> initialize(WalletConfig walletConfig, Optional<String> walletPassphrase) {
-        if (wallet.isPresent()) {
-            return CompletableFuture.completedFuture(true);
+    public CompletableFuture<Boolean> loadOrCreateWallet(WalletConfig walletConfig, Optional<String> walletPassphrase) {
+        if (wallet.isEmpty()) {
+            Path walletsDataDir = walletConfig.getWalletsDataDirPath();
+            walletsDataDir.toFile().mkdirs();
+
+            Wallet wallet = switch (walletConfig.getWalletBackend()) {
+                case BITCOIND -> {
+                    var bitcoindWallet = createBitcoinWallet(walletConfig, walletsDataDir);
+                    bitcoindWallet.initialize(walletPassphrase);
+
+                    BitcoindZeroMq bitcoindZeroMq = initializeBitcoindZeroMq(bitcoindWallet.getDaemon());
+                    this.bitcoindZeroMq = Optional.of(bitcoindZeroMq);
+
+                    yield bitcoindWallet;
+                }
+                case ELEMENTSD -> {
+                    var liquidWallet = createLiquidWallet(walletConfig, walletsDataDir);
+                    liquidWallet.initialize(walletPassphrase);
+                    yield liquidWallet;
+                }
+            };
+
+            this.wallet = Optional.of(wallet);
+            log.info("Successfully created/loaded wallet at {}", walletsDataDir);
+
+            updateBalance();
         }
 
-        return CompletableFuture.runAsync(() -> {
-                    Path walletsDataDir = walletConfig.getWalletsDataDirPath();
-                    walletsDataDir.toFile().mkdirs();
-
-                    Wallet wallet = switch (walletConfig.getWalletBackend()) {
-                        case BITCOIND -> {
-                            var bitcoindWallet = createBitcoinWallet(walletConfig, walletsDataDir);
-                            bitcoindWallet.initialize(walletPassphrase);
-                            yield bitcoindWallet;
-                        }
-                        case ELEMENTSD -> {
-                            var liquidWallet = createLiquidWallet(walletConfig, walletsDataDir);
-                            liquidWallet.initialize(walletPassphrase);
-                            yield liquidWallet;
-                        }
-                    };
-
-                    this.wallet = Optional.of(wallet);
-                    log.info("Successfully created wallet at {}", walletsDataDir);
-                })
-                .thenRun(this::getBalance)
-                .thenApply(e -> true);
+        return CompletableFuture.completedFuture(true);
     }
 
     private BitcoinWallet createBitcoinWallet(WalletConfig walletConfig, Path walletsDataDir) {
@@ -95,29 +120,76 @@ public class WalletService {
         return new LiquidWallet(bitcoindDataDir, rpcConfig);
     }
 
+    private BitcoindZeroMq initializeBitcoindZeroMq(BitcoindDaemon bitcoindDaemon) {
+        var bitcoindZeroMq = new BitcoindZeroMq(bitcoindDaemon);
+        bitcoindZeroMq.initialize();
+        // Update balance when new block gets mined
+        bitcoindZeroMq.getListeners().registerNewBlockMinedListener(unused -> updateBalance());
+
+        // Update balance if a UTXO is spent
+        bitcoindZeroMq.getListeners().registerTransactionIdInInputListener(txId -> {
+            if (utxoTxIds.contains(txId)) {
+                updateBalance();
+            }
+        });
+
+        // Update balance if a receive address is in tx output
+        ObservableSet<String> receiveAddresses = persistableStore.getReceiveAddresses();
+        bitcoindZeroMq.getListeners().registerTxOutputAddressesListener(addresses -> {
+            boolean receiveAddressInTxOutput = addresses.stream().anyMatch(receiveAddresses::contains);
+            if (receiveAddressInTxOutput) {
+                updateBalance();
+            }
+        });
+
+        return bitcoindZeroMq;
+    }
+
     public CompletableFuture<Void> shutdown() {
-        return CompletableFuture.runAsync(() -> wallet.ifPresent(Wallet::shutdown));
+        return CompletableFuture.runAsync(() -> {
+            bitcoindZeroMq.ifPresent(BitcoindZeroMq::shutdown);
+            wallet.ifPresent(Wallet::shutdown);
+        });
     }
 
     public boolean isWalletReady() {
         return walletConfig.isPresent() || wallet.isPresent();
     }
 
-    public CompletableFuture<Long> getBalance() {
-        return CompletableFuture.supplyAsync(() -> {
+    private void updateBalance() {
+        CompletableFuture.runAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
-            double walletBalance = wallet.getBalance();
-            Coin coin = Coin.of(walletBalance, "BTC");
-            observableBalanceAsCoin.set(coin);
-            return coin.getValue();
+            double balance = wallet.getBalance();
+            Coin coin = Coin.of(balance, "BTC");
+
+            // Balance changed?
+            if (!observableBalanceAsCoin.get().equals(coin)) {
+                observableBalanceAsCoin.set(coin);
+
+                listUnspent().thenAccept(utxos -> {
+                    utxoTxIds.clear();
+                    utxos.stream()
+                            .map(Utxo::getTxId)
+                            .forEach(utxoTxIds::add);
+                });
+            }
         });
     }
 
     public CompletableFuture<String> getNewAddress(String label) {
         return CompletableFuture.supplyAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
-            return wallet.getNewAddress(AddressType.BECH32, label);
+            String receiveAddress = wallet.getNewAddress(AddressType.BECH32, label);
+
+            getReceiveAddresses().add(receiveAddress);
+            persist();
+
+            return receiveAddress;
         });
+    }
+
+    public ObservableSet<String> getReceiveAddresses() {
+        return persistableStore.getReceiveAddresses();
     }
 
     public CompletableFuture<String> signMessage(String address, String message) {
