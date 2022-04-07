@@ -51,7 +51,7 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
     private final Map<NavigationTarget, NavigationButton> buttonsMap = new HashMap<>();
     private final Label expandIcon, collapseIcon;
     private final ImageView logoExpanded, logoCollapsed;
-    private final Pane icons;
+    private final Pane expandMenuIcons;
     private Subscription navigationTargetSubscription, menuExpandedSubscription;
 
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
@@ -86,15 +86,17 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
         expandIcon.setCursor(Cursor.HAND);
         collapseIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_LEFT, "24");
         collapseIcon.setCursor(Cursor.HAND);
-        icons = new Pane();
-        icons.getChildren().addAll(expandIcon, collapseIcon);
-        icons.setOpacity(0.3);
-        icons.setPadding(new Insets(0, 0, -18, 0));
-
+        expandMenuIcons = new Pane();
+        expandMenuIcons.getChildren().addAll(expandIcon, collapseIcon);
+        expandMenuIcons.setOpacity(0.3);
+      /*  expandMenuIcons.setPadding(new Insets(0, 0, -18, 0));
+        VBox.setMargin(expandMenuIcons, new Insets(12, 0, 25, 0));*/
+       // expandMenuIcons.setPadding(new Insets(0, 0, -18, 0));
+        VBox.setMargin(expandMenuIcons, new Insets(12+35, 0, -10, 0));
         logoExpanded = ImageUtil.getImageViewById("bisq-logo");
         logoCollapsed = ImageUtil.getImageViewById("bisq-logo-mark");
 
-        root.getChildren().addAll(logoExpanded, logoCollapsed, icons,
+        root.getChildren().addAll(logoExpanded, logoCollapsed, expandMenuIcons,
                 trade, portfolio, education, social, events, markets, wallet, settings,
                 spacer, networkInfoBox);
     }

@@ -29,7 +29,6 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
                         Pane marketPriceBox,
                         Pane walletBalanceBox) {
         super(new HBox(), model, controller);
-
         root.setMinHeight(62);
         root.setMaxHeight(62);
         root.setMaxHeight(root.getMinHeight());

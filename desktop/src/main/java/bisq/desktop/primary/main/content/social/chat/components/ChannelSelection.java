@@ -110,6 +110,7 @@ public abstract class ChannelSelection {
             listView = new ListView<>();
             listView.setItems(model.sortedList);
             listView.setFocusTraversable(false);
+            listView.setPadding(new Insets(5, 0, 5, 0));
             listView.setStyle("-fx-background-color: -bisq-menu-bg; -fx-border-width: 0;");
             listView.setCellFactory(new Callback<>() {
                 @Override
@@ -194,7 +195,7 @@ public abstract class ChannelSelection {
         private void adjustHeight() {
             UIThread.runOnNextRenderFrame(() -> {
                 if (listView.lookup(".list-cell") instanceof ListCell listCell) {
-                    listView.setPrefHeight(listCell.getHeight() * listView.getItems().size());
+                    listView.setPrefHeight(listCell.getHeight() * listView.getItems().size() + 10);
                 }
             });
         }
