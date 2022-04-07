@@ -18,20 +18,16 @@
 package bisq.desktop.primary;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.View;
+import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationModel;
 import bisq.settings.Cookie;
 import bisq.settings.CookieKey;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.scene.Parent;
 import lombok.Getter;
 
 import java.util.Optional;
 
 @Getter
-public class PrimaryStageModel implements Model {
+public class PrimaryStageModel extends NavigationModel {
     private final String title;
     private final DefaultApplicationService applicationService;
     private final Optional<Double> stageX;
@@ -42,8 +38,6 @@ public class PrimaryStageModel implements Model {
     private final double minHeight = 600;
     private final double prefWidth = 1400;
     private final double prefHeight = 1000;
-    @Getter
-    private final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
 
     public PrimaryStageModel(DefaultApplicationService applicationService) {
         this.applicationService = applicationService;
@@ -56,7 +50,8 @@ public class PrimaryStageModel implements Model {
         stageHeight = cookie.getAsOptionalDouble(CookieKey.STAGE_H);
     }
 
-    public void setView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
-        this.view.set(view);
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.SPLASH;
     }
 }

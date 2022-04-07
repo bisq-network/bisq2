@@ -16,6 +16,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+//todo use equihash
 // Derived from https://github.com/neuhalje/android-robohash
 @Slf4j
 public class RoboHash {
@@ -25,6 +26,10 @@ public class RoboHash {
             new Set3Configuration());
     private static final HandleFactory HANDLE_FACTORY = new HandleFactory();
     private static final ConcurrentHashMap<ByteArray, Image> CACHE = new ConcurrentHashMap<>();
+
+    public static Image getImage(ByteArray pubKeyHash) {
+        return getImage(pubKeyHash, true);
+    }
 
     public static Image getImage(ByteArray pubKeyHash, boolean useCache) {
         if (useCache && CACHE.containsKey(pubKeyHash)) {

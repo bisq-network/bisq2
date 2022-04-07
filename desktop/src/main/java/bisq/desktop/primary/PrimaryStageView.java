@@ -18,10 +18,12 @@
 package bisq.desktop.primary;
 
 import bisq.common.util.OsUtils;
+import bisq.desktop.Navigation;
+import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.KeyCodeUtils;
 import bisq.desktop.common.utils.Transitions;
-import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.layout.Layout;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -35,13 +37,14 @@ import lombok.extern.slf4j.Slf4j;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
-public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, PrimaryStageController> {
+public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageModel, PrimaryStageController> {
     private final Stage stage;
     @Getter
     private final Scene scene;
 
     public PrimaryStageView(PrimaryStageModel model, PrimaryStageController controller, Stage stage) {
         super(new AnchorPane(), model, controller);
+
         this.stage = stage;
         scene = new Scene(root); // takes about  50 ms
         try {
@@ -113,6 +116,16 @@ public class PrimaryStageView extends View<AnchorPane, PrimaryStageModel, Primar
             if (KeyCodeUtils.isCtrlPressed(KeyCode.W, keyEvent) ||
                     KeyCodeUtils.isCtrlPressed(KeyCode.Q, keyEvent)) {
                 controller.onQuit();
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
+                Navigation.navigateTo(NavigationTarget.SPLASH);
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
+                Navigation.navigateTo(NavigationTarget.INIT_USER_PROFILE);
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
+                Navigation.navigateTo(NavigationTarget.SELECT_USER_TYPE);
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
+                Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
+                Navigation.navigateTo(NavigationTarget.ONBOARD_PRO_TRADER);
             }
         });
     }

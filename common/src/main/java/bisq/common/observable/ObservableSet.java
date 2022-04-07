@@ -36,7 +36,7 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
         public void addAll(Collection<? extends M> values) {
             executor.accept(() -> collection.addAll(values.stream()
                     .map(mapFunction)
-                    .collect(Collectors.toSet())));
+                    .collect(Collectors.toList())));
         }
 
         public void remove(Object element) {

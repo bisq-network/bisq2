@@ -20,11 +20,11 @@ package bisq.desktop.common.view;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
-import javafx.scene.Node;
+import javafx.scene.layout.Region;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class NavigationView<R extends Node, M extends NavigationModel, C extends NavigationController> extends View<R, M, C> {
+public abstract class NavigationView<R extends Region, M extends NavigationModel, C extends NavigationController> extends View<R, M, C> {
 
     public NavigationView(R root, M model, C controller) {
         super(root, model, controller);

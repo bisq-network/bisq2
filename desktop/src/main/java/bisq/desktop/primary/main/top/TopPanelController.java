@@ -37,14 +37,6 @@ public class TopPanelController implements Controller {
         view = new TopPanelView(model, this, marketPriceComponent.getRootPane(), walletBalanceComponent.getRootPane());
     }
 
-    public void setMarketPriceBoxVisible(boolean value) {
-        model.getMarketPriceBoxVisible().set(value);
-    }
-
-    public void setWalletBalanceBoxVisible(boolean value) {
-        model.getWalletBalanceBoxVisible().set(value);
-    }
-
     @Override
     public void onActivate() {
     }

@@ -22,16 +22,16 @@ import bisq.common.observable.Pin;
 import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.primary.main.content.social.onboarded.OnboardedController;
-import bisq.desktop.primary.main.content.social.onboarding.OnboardingController;
+import bisq.desktop.common.view.TabController;
+import bisq.desktop.primary.main.content.social.chat.ChatController;
+import bisq.desktop.primary.main.content.social.profile.UserProfileController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public class SocialController extends NavigationController {
+public class SocialController extends TabController {
     private final DefaultApplicationService applicationService;
     @Getter
     private final SocialModel model;
@@ -59,14 +59,15 @@ public class SocialController extends NavigationController {
         selectedUserProfilePin.unbind();
     }
 
+    
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case ONBOARDING -> {
-                return Optional.of(new OnboardingController(applicationService));
+            case CHAT -> {
+                return Optional.of(new ChatController(applicationService));
             }
-            case ONBOARDED -> {
-                return Optional.of(new OnboardedController(applicationService));
+            case USER_PROFILE -> {
+                return Optional.of(new UserProfileController(applicationService));
             }
             default -> {
                 return Optional.empty();

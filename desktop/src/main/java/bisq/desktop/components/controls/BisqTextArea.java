@@ -84,10 +84,17 @@ public class BisqTextArea extends JFXTextArea {
 
     @Override
     protected void layoutChildren() {
-        super.layoutChildren();
+        if (lookup(SELECTOR_SCROLL_PANE) instanceof ScrollPane selectorScrollPane) {
+            if (!selectorScrollPane.getChildrenUnmodifiable().isEmpty()) {
+                try {
+                    super.layoutChildren();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    super.layoutChildren();
+                }
+            }
 
-        if (!initialized) {
-            if (lookup(SELECTOR_SCROLL_PANE) instanceof ScrollPane selectorScrollPane) {
+            if (!initialized) {
                 this.selectorScrollPane = selectorScrollPane;
 
                 if (lookup(SELECTOR_TEXT) instanceof Text selectorText) {

@@ -17,7 +17,6 @@
 
 package bisq.desktop;
 
-import bisq.desktop.common.view.Controller;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedList;
@@ -30,7 +29,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @Slf4j
 public class Navigation {
 
-    public interface Listener extends Controller {
+    public interface Listener {
         void onNavigate(NavigationTarget navigationTarget, Optional<Object> data);
     }
 
