@@ -6,6 +6,7 @@
 # when multiple versions are attempted to be brought in as transitive dependencies of other requirements.
 [versions]
 annotations-lib =       { strictly = '23.0.0' }
+bouncycastle-lib =      { strictly = '1.67' } # Oldest version without known CVEs
 google-gson-lib =       { strictly = '2.9.0' }
 google-guava-lib =      { strictly = '31.1-jre' }
 i2p-lib =               { strictly = '1.7.0' }
@@ -24,6 +25,7 @@ typesafe-config-lib =   { strictly = '1.4.2' }
 # in a build.gradle ('implementation libs.protobuf.java')
 [libraries]
 annotations =       { module = 'org.jetbrains:annotations',         version.ref = 'annotations-lib' }
+bouncycastle =      { module = 'org.bouncycastle:bcprov-jdk15on',   version.ref = 'bouncycastle-lib' }
 google-gson =       { module = 'com.google.code.gson:gson',         version.ref = 'google-gson-lib' }
 google-guava =      { module = 'com.google.guava:guava',            version.ref = 'google-guava-lib' }
 i2p-streaming =     { module = 'net.i2p.client:streaming',          version.ref = 'i2p-lib' }

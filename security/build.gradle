@@ -20,7 +20,7 @@ dependencies {
 
     implementation libs.protobuf.java
     implementation libs.google.guava
-    implementation 'org.bouncycastle:bcprov-jdk16:1.46'
+    implementation libs.bouncycastle
 }
 test {
     useJUnitPlatform()
