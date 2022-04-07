@@ -88,7 +88,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
                 return;
             }
 
-            model.id.set(chatUser.getId());
+            model.id.set(Res.get("social.createUserProfile.id", chatUser.getId()));
             model.userName.set(chatUser.getUserName());
             model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
             String entitledRoles = chatUser.getEntitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
@@ -149,18 +149,20 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
             root.setSpacing(10);
             root.setAlignment(Pos.TOP_LEFT);
+            
+            roboIconImageView = new ImageView();
+            VBox.setMargin(roboIconImageView, new Insets(0, 0, 0, 0));
 
             userName = new BisqLabel();
-            userName.getStyleClass().add("headline-label");
-            userName.setPadding(new Insets(10, 0, 0, 0));
-
-            roboIconImageView = new ImageView();
-            roboIconImageView.setFitWidth(75);
-            roboIconImageView.setFitHeight(75);
+            userName.setStyle("-fx-background-color: -bs-background-color;-fx-text-fill: -fx-dark-text-color;");
+            userName.setMaxWidth(300);
+            userName.setMinWidth(300);
+            userName.setPadding(new Insets(7, 7, 7, 7));
+            VBox.setMargin(userName, new Insets(-10, 0, 0, 0));
 
             id = new BisqLabel();
             id.getStyleClass().add("offer-label-small"); //todo
-            id.setPadding(new Insets(-5, 0, 0, 0));
+            id.setPadding(new Insets(-5, 0, 0, 5));
 
             entitlements = new BisqLabel();
             entitlements.getStyleClass().add("offer-label-small"); //todo
@@ -173,7 +175,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             ignoreButton = new BisqButton(Res.get("social.ignore"));
             reportButton = new BisqButton(Res.get("social.report"));
 
-            root.getChildren().addAll(userName, roboIconImageView, id, entitlements, Spacer.height(10),
+            root.getChildren().addAll(roboIconImageView,userName, id, entitlements, Spacer.height(10),
                     openPrivateMessageButton, mentionButton, ignoreButton, reportButton);
         }
 

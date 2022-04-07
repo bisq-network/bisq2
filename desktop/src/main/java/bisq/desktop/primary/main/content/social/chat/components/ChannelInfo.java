@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.social.chat.components;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
@@ -136,15 +137,16 @@ public class ChannelInfo {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
 
-        private final ChangeListener<Channel> channelChangeListener;
-        private ListView<ChatUserOverview> members;
+        private final ChangeListener<Channel<?>> channelChangeListener;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
 
             root.setSpacing(5);
+            // root.setFillWidth(true);
 
             channelChangeListener = (observable, oldValue, newValue) -> update();
+
             update();
         }
 
@@ -178,8 +180,8 @@ public class ChannelInfo {
                         .collect(Collectors.toList()));
             }
 
-            members = new ListView<>();
-            members.setStyle("-fx-border-width: 0; -fx-background-color: -bs-background-color");
+            ListView<ChatUserOverview> members = new ListView<>();
+            members.setStyle("-fx-border-width: 0; -fx-background-color: -bs-color-gray-background");
             members.setFocusTraversable(false);
             VBox.setVgrow(members, Priority.ALWAYS);
             members.setCellFactory(new Callback<>() {
@@ -201,7 +203,13 @@ public class ChannelInfo {
 
                                 updateState(chatUserOverview, chatUserOverviewRoot);
                                 HBox hBox = Layout.hBoxWith(chatUserOverviewRoot, Spacer.fillHBox(), undoIgnoreUserButton);
+                                hBox.setFillHeight(true);
                                 setGraphic(hBox);
+                                UIThread.runOnNextRenderFrame(() -> {
+                                    if (getWidth() > 0) {
+                                        members.setPrefWidth(getWidth() + 25);
+                                    }
+                                });
                             } else {
                                 if (undoIgnoreUserButton != null) {
                                     undoIgnoreUserButton.setOnAction(null);
@@ -217,11 +225,11 @@ public class ChannelInfo {
                     };
                 }
             });
-            members.setMinWidth(400);
             members.setItems(model.members);
             BisqLabel membersHeadLine = new BisqLabel(Res.get("social.channel.settings.members"));
             membersHeadLine.setPadding(new Insets(20, 0, 0, 0));
             membersHeadLine.getStyleClass().add("accent-headline");
+
             root.getChildren().addAll(membersHeadLine, members);
         }
 

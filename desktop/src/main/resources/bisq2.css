@@ -62,11 +62,6 @@ New css for bisq2.
 }
 
 
-.list-cell:empty {
-    -fx-opacity: 0;
-}
-
-
 .navigation-button {
     -fx-cursor: hand;
     -fx-background-color: transparent;

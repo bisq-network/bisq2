@@ -20,6 +20,8 @@ package bisq.desktop.primary.main.content.social.chat;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.ObservableSet;
 import bisq.common.observable.Pin;
+import bisq.desktop.Navigation;
+import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.Notification;
@@ -343,5 +345,9 @@ public class ChatController implements Controller {
 
     public void onAddEmoji(String emojiId) {
 
+    }
+
+    public void onCreateOffer() {
+        Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
     }
 }

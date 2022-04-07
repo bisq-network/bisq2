@@ -64,6 +64,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
     private final Pane channelInfo;
     private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
     private final HBox messagesListAndSideBar;
+    private final BisqButton createOfferButton;
     private Subscription chatUserOverviewRootSubscription;
     private Pane chatUserOverviewRoot;
 
@@ -85,7 +86,16 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
         userProfileComboBox.setPadding(new Insets(10, 10, 10, 10));
 
-        left = Layout.vBoxWith(userProfileComboBox, publicChannelSelection, privateChannelSelection);
+        createOfferButton = new BisqButton(Res.get("satoshisquareapp.chat.createOffer.button"));
+        createOfferButton.setActionButton(true);
+        VBox.setMargin(createOfferButton, new Insets(0, 20, 20, 20));
+        createOfferButton.setPrefWidth(Double.MAX_VALUE);
+
+        left = Layout.vBoxWith(userProfileComboBox,
+                publicChannelSelection,
+                privateChannelSelection,
+                Spacer.fillVBox(),
+                createOfferButton);
         left.setMinWidth(150);
 
         selectedChannelLabel = new BisqLabel();
@@ -98,6 +108,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         notificationsButton = BisqIconButton.createIconButton(AwesomeIcon.BELL);
         infoButton = BisqIconButton.createIconButton(AwesomeIcon.INFO_SIGN);
         HBox centerToolbar = Layout.hBoxWith(selectedChannelLabel, filterBoxRoot, searchButton, notificationsButton, infoButton);
+        centerToolbar.setStyle("-fx-background-color: #333334");
+        centerToolbar.setPadding(new Insets(10, 10, 10, 10));
 
         messagesListView = new ListView<>();
         messagesListView.setCellFactory(getCellFactory());
@@ -106,20 +118,27 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         VBox.setVgrow(messagesListView, Priority.ALWAYS);
 
         inputField = new BisqTextArea();
+        inputField.setLabelFloat(true);
         inputField.setPromptText(Res.get("social.chat.input.prompt"));
+        inputField.setStyle("-fx-background-color: -bs-content-background-gray");
 
         VBox messagesAndInput = Layout.vBoxWith(messagesListView, reply, inputField);
         channelInfo.setMinWidth(200);
 
         closeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
-
+        VBox.setMargin(closeButton, new Insets(-10, -20, 0, 0));
         sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo);
         sideBar.setAlignment(Pos.TOP_RIGHT);
+        sideBar.setPadding(new Insets(10, 20, 20, 20));
+       // sideBar.setFillWidth(true);
+        sideBar.setStyle("-fx-background-color: -bs-color-gray-background");
+      
         messagesListAndSideBar = Layout.hBoxWith(messagesAndInput, sideBar);
         HBox.setHgrow(messagesAndInput, Priority.ALWAYS);
         VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);
         VBox center = Layout.vBoxWith(centerToolbar, messagesListAndSideBar);
-        center.setPadding(new Insets(10, 10, 10, 10));
+        // center.setSpacing(0);
+        messagesListAndSideBar.setPadding(new Insets(10, 10, 10, 10));
         root.setDividerPosition(0, model.getDefaultLeftDividerPosition());
         root.getItems().addAll(left, center);
 
@@ -144,6 +163,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         notificationsButton.setOnAction(e -> controller.onToggleNotifications());
         infoButton.setOnAction(e -> controller.onToggleChannelInfo());
         closeButton.setOnAction(e -> controller.onCloseSideBar());
+        createOfferButton.setOnAction(e -> controller.onCreateOffer());
 
         inputField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
@@ -194,6 +214,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         infoButton.setOnAction(null);
         inputField.setOnKeyPressed(null);
         closeButton.setOnAction(null);
+        createOfferButton.setOnAction(null);
         model.getFilteredChatMessages().removeListener(messagesListener);
         chatUserOverviewRootSubscription.unsubscribe();
     }
