@@ -113,6 +113,7 @@ public class UserProfileComboBox {
 
             root.setButtonCell(getListCell());
             root.setCellFactory(param -> getListCell());
+           // root.setStyle("-fx-background-color: -fx-base");
         }
 
         @Override

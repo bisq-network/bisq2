@@ -78,14 +78,16 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                     Pane reply) {
         super(new SplitPane(), model, controller);
 
-        root.setPadding(new Insets(20, 0, 0, 0));
 
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
         this.userProfileComboBox = userProfileComboBox;
 
-        this.root.getStyleClass().add("hide-focus");
+        root.setPadding(new Insets(20, 0, 0, 0));
+        root.setStyle("-fx-background-color: -fx-base");
+        root.getStyleClass().add("hide-focus");
 
+        // Left 
         userProfileComboBox.setPadding(new Insets(10, 10, 10, 10));
 
         createOfferButton = new BisqButton(Res.get("satoshisquareapp.chat.createOffer.button"));
@@ -99,48 +101,57 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                 createOfferButton);
         left.setMinWidth(250);
 
+        // Center toolbar
         selectedChannelLabel = new BisqLabel();
         selectedChannelLabel.getStyleClass().add("headline-label");
+
         filterBox = new FilterBox(model.getFilteredChatMessages());
         filterBoxRoot = filterBox.getRoot();
-       // filterBoxRoot.setStyle("-fx-background-color: -bisq-content-bg");
+        filterBoxRoot.setStyle("-fx-background-color: -bisq-menu-bg");
         HBox.setHgrow(filterBoxRoot, Priority.ALWAYS);
         HBox.setMargin(filterBoxRoot, new Insets(0, 0, 0, 10));
+
         searchButton = BisqIconButton.createIconButton(AwesomeIcon.SEARCH);
         notificationsButton = BisqIconButton.createIconButton(AwesomeIcon.BELL);
         infoButton = BisqIconButton.createIconButton(AwesomeIcon.INFO_SIGN);
         HBox centerToolbar = Layout.hBoxWith(selectedChannelLabel, filterBoxRoot, searchButton, notificationsButton, infoButton);
-        centerToolbar.setStyle("-fx-background-color: #333334");
+        centerToolbar.setStyle("-fx-background-color: -fx-base");
         centerToolbar.setPadding(new Insets(10, 10, 10, 10));
 
+        // messagesAndInput
         messagesListView = new ListView<>();
         messagesListView.setCellFactory(getCellFactory());
         messagesListView.setFocusTraversable(false);
-      //  messagesListView.setStyle("-fx-border-width: 0; -fx-background-color: -bisq-content-bg");
+        messagesListView.setStyle("-fx-border-width: 0; -fx-background-color: -fx-base");
         VBox.setVgrow(messagesListView, Priority.ALWAYS);
 
         inputField = new BisqTextArea();
         inputField.setLabelFloat(true);
         inputField.setPromptText(Res.get("social.chat.input.prompt"));
-       // inputField.setStyle("-fx-background-color: -bisq-content-bg");
+        inputField.setStyle("-fx-background-color: -fx-base");
 
         VBox messagesAndInput = Layout.vBoxWith(messagesListView, reply, inputField);
         channelInfo.setMinWidth(200);
+        messagesAndInput.setStyle("-fx-background-color: -fx-base");
 
+        // sideBar
         closeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
         VBox.setMargin(closeButton, new Insets(-10, -20, 0, 0));
         sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo);
         sideBar.setAlignment(Pos.TOP_RIGHT);
         sideBar.setPadding(new Insets(10, 20, 20, 20));
-         sideBar.setFillWidth(true);
+        sideBar.setFillWidth(true);
         sideBar.setStyle("-fx-background-color: -bisq-menu-bg");
 
+        // messagesListAndSideBar
         messagesListAndSideBar = Layout.hBoxWith(messagesAndInput, sideBar);
         HBox.setHgrow(messagesAndInput, Priority.ALWAYS);
         VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);
         VBox center = Layout.vBoxWith(centerToolbar, messagesListAndSideBar);
+        center.setStyle("-fx-background-color: -fx-base");
         // center.setSpacing(0);
         messagesListAndSideBar.setPadding(new Insets(10, 10, 10, 10));
+        messagesListAndSideBar.setStyle("-fx-background-color: -fx-base");
 
         root.setDividerPosition(0, model.getDefaultLeftDividerPosition());
         root.getItems().addAll(left, center);
@@ -279,7 +290,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                 moreOptionsButton);
                         reactionsBox.setSpacing(5);
                         reactionsBox.setVisible(false);
-                        reactionsBox.setId("chat-message-reactions");
+                        reactionsBox.setStyle("-fx-background-color: -bisq-menu-selected; -fx-background-radius: 3px");
+                        // reactionsBox.setStyle("-fx-background-color: -bisq-menu-bg");
 
                         editedMessageField = new BisqTextArea();
                         editedMessageField.setVisible(false);
@@ -293,11 +305,17 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         editControlsBox.setManaged(false);
                         quotedMessageBox = new HBox();
                         quotedMessageBox.setSpacing(10);
-                        messageBox = Layout.vBoxWith(quotedMessageBox, message, editedMessageField, editControlsBox, reactionsBox);
+                        VBox.setMargin(quotedMessageBox, new Insets(10,0,5,0));
+                        messageBox = Layout.vBoxWith(quotedMessageBox,
+                                message, 
+                                editedMessageField,
+                                editControlsBox, 
+                                Layout.hBoxWith(Spacer.fillHBox(),reactionsBox));
                         VBox.setVgrow(messageBox, Priority.ALWAYS);
                         vBox = Layout.vBoxWith(userName, messageBox);
                         HBox.setHgrow(vBox, Priority.ALWAYS);
                         hBox = Layout.hBoxWith(Layout.vBoxWith(chatUserIcon, time), vBox);
+                        setStyle("-fx-background-color: -fx-base");
                     }
 
                     @Override
@@ -310,25 +328,30 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                         quotedMessage.pubKeyHash() != null &&
                                         quotedMessage.message() != null) {
                                     Region verticalLine = new Region();
-                                    verticalLine.setId("chat-quoted-message-vertical-line");
+                                    verticalLine.setStyle("-fx-background-color: -bisq-text-disabled");
                                     verticalLine.setMinWidth(3);
-                                    verticalLine.setMinHeight(20);
-                                    HBox.setMargin(verticalLine, new Insets(5, 0, 0, 5));
+                                    verticalLine.setMinHeight(25);
+                                    HBox.setMargin(verticalLine, new Insets(0, 0, 0, 5));
+                                   
                                     quotedMessageField.setText(quotedMessage.message());
-                                    quotedMessageField.setId("chat-quoted-message");
+                                    quotedMessageField.setStyle("-fx-fill: -bisq-text-disabled");
+                                   
                                     BisqLabel userName = new BisqLabel(quotedMessage.userName());
                                     userName.setPadding(new Insets(4, 0, 0, 0));
-                                    userName.setId("chat-quoted-message-user-name");
+                                    userName.setStyle("-fx-text-fill: -bisq-text-disabled");
+                                   
                                     ImageView roboIconImageView = new ImageView();
                                     roboIconImageView.setFitWidth(25);
                                     roboIconImageView.setFitHeight(25);
                                     Image image = RoboHash.getImage(quotedMessage.pubKeyHash());
                                     roboIconImageView.setImage(image);
+                                   
                                     HBox.setMargin(roboIconImageView, new Insets(0, 0, 0, -5));
                                     HBox iconAndUserName = Layout.hBoxWith(roboIconImageView, userName);
-                                    iconAndUserName.setSpacing(3);
+                                    iconAndUserName.setSpacing(5);
+                                   
                                     VBox contentBox = Layout.vBoxWith(iconAndUserName, quotedMessageField);
-                                    contentBox.setSpacing(0);
+                                    contentBox.setSpacing(5);
                                     quotedMessageBox.getChildren().setAll(verticalLine, contentBox);
                                     UIThread.runOnNextRenderFrame(() -> verticalLine.setMinHeight(contentBox.getHeight() - 10));
                                 }
@@ -364,14 +387,14 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             setOnMouseEntered(e -> {
                                 time.setVisible(true);
                                 reactionsBox.setVisible(true);
-                                messageBox.getStyleClass().add("chat-message-box-active");
-                                setStyle("-fx-background-color: #282828;");
+                                messageBox.setStyle("-fx-background-color: -bisq-menu-bg");
+                                setStyle("-fx-background-color: -bisq-menu-bg;");
                             });
                             setOnMouseExited(e -> {
                                 time.setVisible(false);
                                 reactionsBox.setVisible(false);
-                                messageBox.getStyleClass().remove("chat-message-box-active");
-                                setStyle("-fx-background-color: -bs-background-color;");
+                                messageBox.setStyle("-fx-background-color: -fx-base");
+                                setStyle("-fx-background-color: -fx-base");
                             });
 
                             ChatMessage chatMessage = item.getChatMessage();

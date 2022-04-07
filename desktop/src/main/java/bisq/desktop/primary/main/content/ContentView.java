@@ -31,7 +31,6 @@ public class ContentView extends NavigationView<AnchorPane, ContentModel, Conten
         super(new AnchorPane(), model, controller);
         
         root.setPadding(new Insets(15, 15, 15, 0));
-       // root.setStyle("-fx-background-color: yellow");
         model.getView().addListener((observable, oldValue, newValue) -> {
             Layout.pinToAnchorPane(newValue.getRoot(), 0, 0, 0, 0);
             root.getChildren().add(newValue.getRoot());

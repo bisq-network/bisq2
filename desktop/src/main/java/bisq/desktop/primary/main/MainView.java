@@ -32,7 +32,6 @@ public class MainView extends NavigationView<HBox, MainModel, MainController> {
 
         root.setFillHeight(true);
         
-     //   root.setStyle("-fx-background-color: green");
         VBox topPanelAndContentBox = new VBox();
         topPanelAndContentBox.setFillWidth(true);
         topPanelAndContentBox.getChildren().add(topPanelView);

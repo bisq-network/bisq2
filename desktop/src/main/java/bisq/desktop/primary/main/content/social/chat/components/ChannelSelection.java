@@ -105,11 +105,12 @@ public abstract class ChannelSelection {
         protected View(ChannelSelection.Model model, ChannelSelection.Controller controller, String headlineText) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
+            root.setStyle("-fx-background-color: -bisq-menu-bg;");
 
             listView = new ListView<>();
             listView.setItems(model.sortedList);
             listView.setFocusTraversable(false);
-            listView.setStyle("-fx-border-width: 0");
+            listView.setStyle("-fx-background-color: -bisq-menu-bg; -fx-border-width: 0;");
             listView.setCellFactory(new Callback<>() {
                 @Override
                 public ListCell<Channel<?>> call(ListView<Channel<?>> list) {
@@ -123,6 +124,7 @@ public abstract class ChannelSelection {
                             hBox.setPadding(new Insets(7, 5, 7, 5));
                             hBox.setMouseTransparent(true);
                             setCursor(Cursor.HAND);
+                            setStyle("-fx-background-color: -bisq-menu-bg; -fx-border-width: 0;");
                         }
 
                         @Override
@@ -142,13 +144,12 @@ public abstract class ChannelSelection {
                                 label.setText(item.getChannelName());
 
                                 if (item.equals(model.selectedChannel.get())) {
-                                    hBox.setStyle("-fx-background-color: -bs-color-gray-6; -fx-background-radius: 3px");
-                                    label.setStyle("-fx-text-fill: -bs-color-gray-fafa; -fx-font-weight: bold;");
+                                    hBox.setStyle("-fx-background-color: -bisq-menu-selected; -fx-background-radius: 3px");
+                                    label.setStyle("-fx-text-fill: -fx-light-text-color;");
                                 } else {
-                                    hBox.setStyle("-fx-background-color: -bs-background-color; -fx-background-radius: 3px");
-                                    label.setStyle("-fx-text-fill: -fx-dark-text-color; -fx-font-weight: normal;");
+                                    hBox.setStyle("-fx-background-color: -bisq-menu-bg; -fx-background-radius: 3px");
+                                    label.setStyle("-fx-text-fill: -fx-mid-text-color;");
                                 }
-
                                 setGraphic(hBox);
                             } else {
                                 hBox.getChildren().clear();
@@ -160,6 +161,7 @@ public abstract class ChannelSelection {
             });
 
             TitledPane titledPane = new TitledPane(headlineText, listView);
+            titledPane.setStyle("-fx-background-color: -bisq-menu-bg; -fx-border-width: 0");
 
             root.getChildren().addAll(titledPane);
             channelChangeListener = (channelObserver, oldValue, newValue) -> {

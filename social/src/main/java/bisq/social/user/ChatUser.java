@@ -92,6 +92,11 @@ public class ChatUser implements Proto {
     }
 
     public byte[] getPubKeyHash() {
+        if (derivedData == null) {
+            // todo sometimes we get derivedData = null. not clear why...
+            log.warn("derivedData is null. we call getDerivedData()");
+            return getDerivedData(networkId.getPubKey().publicKey().getEncoded()).pubKeyHash().getBytes();
+        }
         return derivedData.pubKeyHash().getBytes();
     }
 

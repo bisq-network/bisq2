@@ -153,6 +153,24 @@ Taken from Bisq. Might need some clean up
     -xmr-orange: #f26822;
 }
 
+/* Bisq 2 - does not work inside bisq2.css ...*/
+.action-button {
+    -fx-background-color: -bisq-dark-green;
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.action-button:hover, .action-button:focused {
+    -fx-background-color: derive(-fx-accent, -10%);
+}
+
+.action-button:disabled, #sell-button:disabled, #buy-button:disabled {
+    -fx-background-color: -bisq-icon-bg-disabled;
+    -fx-text-fill: -bisq-text-medium;
+}
+
+
+
+
 /* table view */
 .table-view, .table-cell:focused, .table-row-cell {
     -fx-background: transparent;
@@ -242,10 +260,11 @@ Taken from Bisq. Might need some clean up
     -fx-text-fill: -bs-color-gray-6;
 }
 
-.action-button {
-    -fx-background-color: -bs-color-primary-dark;
-    -fx-text-fill: -fx-dark-text-color;
-}
+/*.action-button {
+    -fx-background-color: -fx-accent;
+    -fx-text-fill: -fx-light-text-color;
+}*/
+
 
 .chart-pane, .chart-plot-background,
 #charts .chart-plot-background,
@@ -530,9 +549,9 @@ Taken from Bisq. Might need some clean up
     -fx-border-color: -bs-rd-separator-dark;
 }
 
-.action-button:disabled, #sell-button:disabled, #buy-button:disabled {
+/*.action-button:disabled, #sell-button:disabled, #buy-button:disabled {
     -fx-background-color: derive(-bs-color-gray-0, -20%);
-}
+}*/
 
 .warning-box {
     -fx-background-color: -bs-color-primary-dark;
