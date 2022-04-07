@@ -102,6 +102,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         selectedChannelLabel.getStyleClass().add("headline-label");
         filterBox = new FilterBox(model.getFilteredChatMessages());
         filterBoxRoot = filterBox.getRoot();
+        filterBoxRoot.setStyle("-fx-background-color: -bs-color-gray-background");
         HBox.setHgrow(filterBoxRoot, Priority.ALWAYS);
         HBox.setMargin(filterBoxRoot, new Insets(0, 0, 0, 10));
         searchButton = BisqIconButton.createIconButton(AwesomeIcon.SEARCH);

@@ -207,7 +207,7 @@ public class ChannelInfo {
                                 setGraphic(hBox);
                                 UIThread.runOnNextRenderFrame(() -> {
                                     if (getWidth() > 0) {
-                                        members.setPrefWidth(getWidth() + 25);
+                                        members.setPrefWidth(getWidth() + 30);
                                     }
                                 });
                             } else {
