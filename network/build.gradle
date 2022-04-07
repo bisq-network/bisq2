@@ -1,16 +1,10 @@
 plugins {
-    id 'java-library'
+    id 'bisq.java-library'
     alias(libs.plugins.protobuf)
-}
-
-repositories {
-    mavenCentral()
-    maven { url 'https://jitpack.io' }
 }
 
 apply from: '../buildSrc/bisq-version.gradle'
 apply from: '../buildSrc/logging-dependencies.gradle'
-apply from: '../buildSrc/lombok-dependencies.gradle'
 apply from: '../buildSrc/test-dependencies.gradle'
 apply from: '../buildSrc/gen-protos.gradle'
 
@@ -30,11 +24,6 @@ dependencies {
 
     implementation 'com.github.chimp1984:jsocks'
     implementation 'org.apache.httpcomponents:httpclient'
-}
-
-test {
-    useJUnitPlatform()
-    exclude '**/**Integration*'
 }
 
 ext {

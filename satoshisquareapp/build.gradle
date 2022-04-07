@@ -1,19 +1,13 @@
 plugins {
-    id 'java-library'
+    id 'bisq.java-library'
     id 'application'
    /* id 'distribution'*/  //todo as long we dont need a jar we leave that out, speeds up build
     alias(libs.plugins.openjfx)
 }
 
-repositories {
-    mavenCentral()
-    maven { url 'https://jitpack.io' }
-}
-
 apply from: '../buildSrc/bisq-version.gradle'
 apply from: '../buildSrc/logging-dependencies.gradle'
 apply from: '../buildSrc/test-dependencies.gradle'
-apply from: '../buildSrc/lombok-dependencies.gradle'
 
 application {
     project.mainClassName = 'bisq.satoshisquareapp.Main'
@@ -79,8 +73,4 @@ dependencies {
 
     implementation "org.fxmisc.easybind:easybind:1.0.3"
     implementation 'org.fxmisc.richtext:richtextfx:0.10.9'
-}
-test {
-    useJUnitPlatform()
-    exclude '**/**Integration*'
 }

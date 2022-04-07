@@ -1,10 +1,6 @@
 plugins {
-    id 'java-library'
+    id 'bisq.java-library'
     alias(libs.plugins.protobuf)
-}
-
-repositories {
-    mavenCentral()
 }
 
 apply from: '../buildSrc/bisq-version.gradle'
@@ -18,9 +14,4 @@ dependencies {
     implementation 'io.grpc:grpc-core'
     implementation 'io.grpc:grpc-stub'
     implementation 'io.grpc:grpc-netty-shaded'
-}
-
-test {
-    useJUnitPlatform()
-    exclude '**/**Integration*'
 }

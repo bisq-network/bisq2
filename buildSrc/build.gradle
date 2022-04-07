@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.kotlindsl)
     alias(libs.plugins.protobuf)
+    id 'groovy-gradle-plugin'
     id 'signing'
     id 'maven-publish'
 }
