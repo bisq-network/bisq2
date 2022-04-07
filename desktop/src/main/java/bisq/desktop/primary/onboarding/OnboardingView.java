@@ -31,7 +31,7 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
     public OnboardingView(OnboardingModel model, OnboardingController controller) {
         super(new VBox(), model, controller);
 
-        root.getStyleClass().add("content-pane");
+        // root.getStyleClass().add("content-pane");
 
         ImageView logo = ImageUtil.getImageViewById("logo-small");
         VBox.setMargin(logo, new Insets(20, 20, 10, 20));

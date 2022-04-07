@@ -59,6 +59,8 @@ public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageMod
                 event.consume();
                 controller.onQuit();
             });
+
+            root.setStyle("-fx-background-color: -fx-base;");
             model.getView().addListener((observable, oldValue, newValue) -> {
                 Layout.pinToAnchorPane(newValue.getRoot(), 0, 0, 0, 0);
                 root.getChildren().add(newValue.getRoot());

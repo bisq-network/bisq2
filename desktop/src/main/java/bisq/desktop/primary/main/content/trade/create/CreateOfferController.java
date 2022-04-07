@@ -23,6 +23,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.trade.components.*;
 import bisq.offer.OpenOfferService;
@@ -36,7 +37,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.ArrayList;
 
 @Slf4j
-public class CreateOfferController implements InitWithDataController<CreateOfferController.InitData> {
+public class CreateOfferController implements InitWithDataController<CreateOfferController.InitData>, CachingController {
 
     public static record InitData(Market market, Direction direction, boolean showCreateOfferTab) {
     }

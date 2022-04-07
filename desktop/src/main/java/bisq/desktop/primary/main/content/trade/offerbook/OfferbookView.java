@@ -48,7 +48,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         this.marketSelection = marketSelection;
 
         root.setSpacing(30);
-        root.setPadding(new Insets(20, 20, 20, 0));
+        root.setPadding(new Insets(20,0,0,0));
 
         showAllMarkets = new BisqToggleButton();
         showAllMarkets.setText(Res.get("offerbook.showAllMarkets"));

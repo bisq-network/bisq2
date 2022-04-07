@@ -18,31 +18,32 @@
 package bisq.desktop.primary.main;
 
 import bisq.desktop.common.view.NavigationView;
-import bisq.desktop.primary.main.left.LeftNavView;
-import bisq.desktop.primary.main.top.TopPanelView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-public class MainView extends NavigationView<VBox, MainModel, MainController> {
+public class MainView extends NavigationView<HBox, MainModel, MainController> {
     public MainView(MainModel model,
                     MainController controller,
-                    LeftNavView leftNavView,
-                    TopPanelView topPanelView) {
-        super(new VBox(), model, controller);
+                    Pane leftNavView,
+                    Pane topPanelView) {
+        super(new HBox(), model, controller);
 
-        root.getStyleClass().add("content-pane");
+        root.setFillHeight(true);
         
-        HBox leftNavAndContentBox = new HBox();
-        leftNavAndContentBox.getChildren().add(leftNavView.getRoot());
+     //   root.setStyle("-fx-background-color: green");
+        VBox topPanelAndContentBox = new VBox();
+        topPanelAndContentBox.setFillWidth(true);
+        topPanelAndContentBox.getChildren().add(topPanelView);
+
         model.getView().addListener((observable, oldValue, contentView) -> {
             HBox.setHgrow(contentView.getRoot(), Priority.ALWAYS);
-            leftNavAndContentBox.getChildren().add(contentView.getRoot());
+            topPanelAndContentBox.getChildren().add(contentView.getRoot());
         });
 
-
-        VBox.setVgrow(leftNavAndContentBox, Priority.ALWAYS);
-        root.getChildren().addAll(topPanelView.getRoot(), leftNavAndContentBox);
+        HBox.setHgrow(topPanelAndContentBox, Priority.ALWAYS);
+        root.getChildren().addAll(leftNavView, topPanelAndContentBox);
     }
 
     @Override

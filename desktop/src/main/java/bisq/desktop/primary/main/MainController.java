@@ -53,8 +53,8 @@ public class MainController extends NavigationController implements CachingContr
 
         view = new MainView(model,
                 this,
-                leftNavController.getView(),
-                topPanelController.getView());
+                leftNavController.getView().getRoot(),
+                topPanelController.getView().getRoot());
     }
 
     @Override

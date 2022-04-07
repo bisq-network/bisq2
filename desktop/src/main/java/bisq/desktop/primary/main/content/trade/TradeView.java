@@ -27,8 +27,7 @@ import org.fxmisc.easybind.Subscription;
 
 public class TradeView extends TabView<JFXTabPane, TradeModel, TradeController> {
 
-    private NavigationTargetTab createOffer;
-    private NavigationTargetTab takeOffer;
+    private NavigationTargetTab offerbook, createOffer, takeOffer;
     private Subscription createOfferTabVisibleSubscription, takeOfferTabVisibleSubscription;
 
     public TradeView(TradeModel model, TradeController controller) {
@@ -37,7 +36,7 @@ public class TradeView extends TabView<JFXTabPane, TradeModel, TradeController> 
 
     @Override
     protected void createAndAddTabs() {
-        NavigationTargetTab offerbook = createTab(Res.get("trade.offerbook"), NavigationTarget.OFFERBOOK);
+        offerbook = createTab(Res.get("trade.offerbook"), NavigationTarget.OFFERBOOK);
         createOffer = createTab(Res.get("trade.createOffer"), NavigationTarget.CREATE_OFFER);
         takeOffer = createTab(Res.get("trade.takeOffer"), NavigationTarget.TAKE_OFFER);
         root.getTabs().setAll(offerbook);

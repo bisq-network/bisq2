@@ -41,7 +41,7 @@ public class SelectUserTypeView extends View<HBox, SelectUserTypeModel, SelectUs
         super(new HBox(), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
-        root.getStyleClass().add("content-pane");
+        // root.getStyleClass().add("content-pane");
         root.setFillHeight(false);
 
         ImageView roboIconImageView = new ImageView();

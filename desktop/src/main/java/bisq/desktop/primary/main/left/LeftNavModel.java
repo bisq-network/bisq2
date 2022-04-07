@@ -49,8 +49,9 @@ public class LeftNavModel implements Model {
     private final StringProperty i2pNumConnections = new SimpleStringProperty("0");
     private final StringProperty i2pNumTargetConnections = new SimpleStringProperty("0");
     private final BooleanProperty i2pIsVisible = new SimpleBooleanProperty(false);
+    private final BooleanProperty menuExpanded = new SimpleBooleanProperty(true);
     private final Set<NavigationTarget> navigationTargets = new HashSet<>();
-
+    
     public LeftNavModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
 

@@ -38,6 +38,7 @@ public abstract class NavigationController implements Controller {
         this.host = host;
 
         navigationListener = (navigationTarget, data) -> {
+            onNavigate2(navigationTarget, data);
             Optional<NavigationTarget> candidate = Optional.of(navigationTarget);
             while (candidate.isPresent()) {
                 Optional<Controller> childController = findController(candidate.get(), data);
@@ -63,6 +64,9 @@ public abstract class NavigationController implements Controller {
                 }
             }
         };
+    }
+
+    public void onNavigate2(NavigationTarget navigationTarget, Optional<Object> data) {
     }
 
     @Override

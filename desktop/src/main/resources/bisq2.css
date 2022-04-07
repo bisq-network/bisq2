@@ -1,3 +1,37 @@
+
+
+.root {
+    -bisq-green: #25b135;
+    
+    -bisq-bg: #131415;
+    
+    -bisq-menu-bg: #1C1D1F;
+    -bisq-menu-selected: #343436;
+
+    -bisq-content-bg: #1C1D1F;
+    -bisq-content-bg-disabled: #1F2021;
+
+    -bisq-icon-bg-disabled: #474748;
+    -bisq-badge-bg: #343536;
+    
+    -bisq-text: #FFFFFF;
+    -bisq-text-medium: #D0D0D1;
+    -bisq-text-disabled: #888989;
+    
+
+    -fx-base: -bisq-bg;
+    -fx-accent: -bisq-green;
+    
+    -fx-dark-text-color: black;
+    -fx-mid-text-color: -bisq-text-medium;
+    -fx-light-text-color: -bisq-text;
+}
+
+
+.content-pane {
+    -fx-background-color: -fx-base;
+}
+
 /*
 New css for bisq2.
 */

@@ -34,6 +34,8 @@ public class Navigation {
     }
 
     private static final Map<NavigationTarget, Set<Listener>> listeners = new ConcurrentHashMap<>();
+    // navigationControllerListeners are called first
+   // private static final Map<NavigationTarget, Set<NavigationController>> navigationControllerListeners = new ConcurrentHashMap<>();
     private static final LinkedList<NavigationTarget> history = new LinkedList<>();
     private static final LinkedList<NavigationTarget> alt = new LinkedList<>();
 
@@ -45,6 +47,15 @@ public class Navigation {
     public static void removeListener(NavigationTarget host, Listener listener) {
         Optional.ofNullable(listeners.get(host)).ifPresent(set -> set.remove(listener));
     }
+
+/*    public static void addNavigationControllerListener(NavigationTarget host, NavigationController listener) {
+        navigationControllerListeners.putIfAbsent(host, new CopyOnWriteArraySet<>());
+        navigationControllerListeners.get(host).add(listener);
+    }
+
+    public static void removeNavigationControllerListener(NavigationTarget host, NavigationController listener) {
+        Optional.ofNullable(navigationControllerListeners.get(host)).ifPresent(set -> set.remove(listener));
+    }*/
 
     public static void navigateTo(NavigationTarget navigationTarget) {
         history.add(navigationTarget);

@@ -43,7 +43,7 @@ public class SatoshiSquareSplashView extends View<VBox, SatoshiSquareSplashModel
     public SatoshiSquareSplashView(SatoshiSquareSplashModel model, SatoshiSquareSplashController controller) {
         super(new VBox(), model, controller);
 
-        root.getStyleClass().add("content-pane");
+        // root.getStyleClass().add("content-pane");
         root.setAlignment(Pos.CENTER);
 
         ImageView logo = new ImageView();

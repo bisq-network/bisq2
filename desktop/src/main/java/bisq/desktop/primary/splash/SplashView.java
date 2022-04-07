@@ -28,7 +28,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
     public SplashView(SplashModel model, SplashController controller) {
         super(new VBox(), model, controller);
 
-        root.getStyleClass().add("content-pane");
+        // root.getStyleClass().add("content-pane");
         root.setAlignment(Pos.CENTER);
 
         ImageView logo = new ImageView();

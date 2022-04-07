@@ -36,7 +36,7 @@ public class PendingTradesView extends View<VBox, PendingTradesModel, PendingTra
         super(new VBox(), model, controller);
 
         root.setSpacing(30);
-        root.setPadding(new Insets(20, 20, 20, 0));
+        root.setPadding(new Insets(20, 0, 0, 0));
 
         Label headline = new BisqLabel(Res.get("pendingTrades.headline"));
         headline.getStyleClass().add("titled-group-bg-label-active");

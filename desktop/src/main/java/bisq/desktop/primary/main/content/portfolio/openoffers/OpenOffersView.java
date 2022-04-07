@@ -34,9 +34,9 @@ public class OpenOffersView extends View<VBox, OpenOffersModel, OpenOffersContro
 
     public OpenOffersView(OpenOffersModel model, OpenOffersController controller) {
         super(new VBox(), model, controller);
-
+        
         root.setSpacing(30);
-        root.setPadding(new Insets(20, 20, 20, 0));
+        root.setPadding(new Insets(20, 0, 0, 0));
 
         Label headline = new BisqLabel(Res.get("openOffers.headline"));
         headline.getStyleClass().add("titled-group-bg-label-active");

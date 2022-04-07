@@ -631,10 +631,10 @@ tree-table-view:focused {
 #base-content-container {
     -fx-background-color: -bs-background-gray;
 }
-
+/*
 .content-pane {
     -fx-background-color: linear-gradient(-bs-content-pane-bg-top 0%, -bs-content-pane-bg-bottom 100%);
-}
+}*/
 
 #footer-pane {
     -fx-background-color: -bs-footer-pane-background;
@@ -1227,11 +1227,11 @@ textfield */
     -fx-background-color: -fx-accent;
 }
 
-.jfx-tab-pane .tab-header-background {
+/*.jfx-tab-pane .tab-header-background {
     -fx-background-color: -bs-color-gray-background;
     -fx-border-width: 0 0 1 0;
     -fx-border-color: -bs-rd-tab-border;
-}
+}*/
 
 .jfx-tab-pane .headers-region .tab-selected-line {
     -fx-background-color: -fx-accent;

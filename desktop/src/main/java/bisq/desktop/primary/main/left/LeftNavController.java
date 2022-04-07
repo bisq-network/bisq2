@@ -48,13 +48,17 @@ public class LeftNavController implements Controller, Navigation.Listener {
     public void onDeactivate() {
     }
 
+    @Override
+    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+        model.select(navigationTarget);
+    }
+
     void select(NavigationTarget navigationTarget) {
         model.select(navigationTarget);
         Navigation.navigateTo(navigationTarget);
     }
 
-    @Override
-    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        model.select(navigationTarget);
+    public void onToggleExpandMenu( ) {
+        model.getMenuExpanded().set(!model.getMenuExpanded().get());
     }
 }

@@ -4,15 +4,15 @@ Taken from Bisq. Might need some clean up
 
 .root {
     /* javafx main color palette */
-    -fx-base: #29292a;
+   /* -fx-base: #29292a;*/
     -fx-background: #29292a;
     -fx-control-inner-background: #2B2B2B;
-    -fx-dark-text-color: #fcfcfc;
+   /* -fx-dark-text-color: #fcfcfc;
     -fx-mid-text-color: #dadada;
-    -fx-light-text-color: #cacaca;
+    -fx-light-text-color: #cacaca;*/
 
     /* javafx elements */
-    -fx-accent: #25b135;
+   /* -fx-accent: #25b135;*/
     -fx-box-border: transparent;
     -fx-focus-color: #2ea33c;
     -fx-faint-focus-color: #2ea33c;

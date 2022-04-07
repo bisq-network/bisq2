@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
 import bisq.desktop.Navigation;
 import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.portfolio.pending.PendingTradesController;
 import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
@@ -37,7 +38,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TakeOfferController implements InitWithDataController<TakeOfferController.InitData> {
+public class TakeOfferController implements InitWithDataController<TakeOfferController.InitData>, CachingController {
     public static record InitData(Offer offer, BooleanProperty showTakeOfferTab) {
     }
 

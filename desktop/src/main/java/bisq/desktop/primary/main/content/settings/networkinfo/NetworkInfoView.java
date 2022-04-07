@@ -31,7 +31,8 @@ public class NetworkInfoView extends TabView<JFXTabPane, NetworkInfoModel, Netwo
     public NetworkInfoView(NetworkInfoModel model, NetworkInfoController controller) {
         super(new JFXTabPane(), model, controller);
 
-        root.setPadding(new Insets(20, 20, 20, 0));
+        root.setPadding(new Insets(20,0,0,0));
+
     }
 
     @Override

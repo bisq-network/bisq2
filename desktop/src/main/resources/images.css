@@ -13,12 +13,21 @@
 #i2p {
     -fx-image: url("images/connection/i2p.png");
 }
+
 #satoshisquare-splash {
     -fx-image: url("images/satoshisquare_splash.png");
 }
 
 #logo-small {
     -fx-image: url("images/logo_small.png");
+}
+
+#bisq-logo {
+    -fx-image: url("images/bisq_logo.png");
+}
+
+#bisq-logo-mark {
+    -fx-image: url("images/bisq_logo_mark.png");
 }
 
 #chat-settings {
