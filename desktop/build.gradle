@@ -1,17 +1,11 @@
 plugins {
-    id 'java-library'
+    id 'bisq.java-library'
     alias(libs.plugins.openjfx)
-}
-
-repositories {
-    mavenCentral()
-    maven { url 'https://jitpack.io' }
 }
 
 apply from: '../buildSrc/bisq-version.gradle'
 apply from: '../buildSrc/logging-dependencies.gradle'
 apply from: '../buildSrc/test-dependencies.gradle'
-apply from: '../buildSrc/lombok-dependencies.gradle'
 
 javafx {
     version = '16'
@@ -49,8 +43,4 @@ dependencies {
     implementation "org.fxmisc.easybind:easybind:1.0.3"
     implementation 'org.fxmisc.richtext:richtextfx:0.10.9'
 
-}
-test {
-    useJUnitPlatform()
-    exclude '**/**Integration*'
 }
