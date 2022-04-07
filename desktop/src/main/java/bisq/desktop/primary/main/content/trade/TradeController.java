@@ -18,9 +18,8 @@
 package bisq.desktop.primary.main.content.trade;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.trade.create.CreateOfferController;
 import bisq.desktop.primary.main.content.trade.offerbook.OfferbookController;
@@ -31,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class TradeController extends TabController implements /*Navigation.Listener,*/ CachingController {
+public class TradeController extends TabController  {
 
     private final DefaultApplicationService applicationService;
     @Getter
@@ -52,16 +51,16 @@ public class TradeController extends TabController implements /*Navigation.Liste
 
     @Override
     public void onActivate() {
-       // Navigation.addListener(host, na);
+        // Navigation.addListener(host, na);
     }
 
     @Override
     public void onDeactivate() {
-       // Navigation.removeListener(host, this);
+        // Navigation.removeListener(host, this);
     }
 
     @Override
-    public void onNavigate2(NavigationTarget navigationTarget, Optional<Object> data) {
+    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
         model.createOfferTabVisible.set(navigationTarget == NavigationTarget.CREATE_OFFER ||
                 offerbookController.showCreateOfferTab());
         model.takeOfferTabVisible.set(navigationTarget == NavigationTarget.TAKE_OFFER ||

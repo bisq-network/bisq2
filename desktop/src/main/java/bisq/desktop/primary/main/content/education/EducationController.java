@@ -15,28 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.left;
+package bisq.desktop.primary.main.content.education;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class LeftNavController implements Controller {
-    private final LeftNavModel model;
+public class EducationController implements Controller {
+    private final EducationModel model;
     @Getter
-    private final LeftNavView view;
+    private final EducationView view;
 
-    public LeftNavController(DefaultApplicationService applicationService) {
-        model = new LeftNavModel(applicationService);
-        view = new LeftNavView(model, this);
-    }
-
-    public void setNavigationTarget(NavigationTarget navigationTarget) {
-        model.select(navigationTarget);
+    public EducationController(DefaultApplicationService applicationService) {
+        model = new EducationModel();
+        view = new EducationView(model, this);
     }
 
     @Override
@@ -45,15 +37,5 @@ public class LeftNavController implements Controller {
 
     @Override
     public void onDeactivate() {
-    }
-
-
-    void onNavigationTargetSelected(NavigationTarget navigationTarget) {
-        model.select(navigationTarget);
-        Navigation.navigateTo(navigationTarget);
-    }
-
-    public void onToggleExpandMenu() {
-        model.getMenuExpanded().set(!model.getMenuExpanded().get());
     }
 }

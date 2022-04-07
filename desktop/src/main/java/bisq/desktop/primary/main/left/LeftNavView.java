@@ -17,9 +17,9 @@
 
 package bisq.desktop.primary.main.left;
 
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -64,14 +64,22 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
 
         NavigationButton trade = createNavigationButton(Res.get("trade"), AwesomeIcon.EXCHANGE, NavigationTarget.TRADE);
         NavigationButton portfolio = createNavigationButton(Res.get("portfolio"), AwesomeIcon.STACKEXCHANGE, NavigationTarget.PORTFOLIO);
+        NavigationButton education = createNavigationButton(Res.get("education"), AwesomeIcon.BOOK, NavigationTarget.EDUCATION);
         NavigationButton social = createNavigationButton(Res.get("social"), AwesomeIcon.GROUP, NavigationTarget.SOCIAL);
+        NavigationButton events = createNavigationButton(Res.get("events"), AwesomeIcon.CALENDAR, NavigationTarget.EVENTS);
+        social.setOnAction(() -> {
+            controller.onNavigationTargetSelected(NavigationTarget.SOCIAL);
+            if (model.getMenuExpanded().get()) {
+                controller.onToggleExpandMenu();
+            }
+        });
         NavigationButton markets = createNavigationButton(Res.get("markets"), AwesomeIcon.BAR_CHART, NavigationTarget.MARKETS);
         NavigationButton wallet = createNavigationButton(Res.get("wallet"), AwesomeIcon.MONEY, NavigationTarget.WALLET);
         NavigationButton settings = createNavigationButton(Res.get("settings"), AwesomeIcon.GEARS, NavigationTarget.SETTINGS);
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
-        networkInfoBox = new NetworkInfoBox(model, () -> controller.select(NavigationTarget.NETWORK_INFO));
+        networkInfoBox = new NetworkInfoBox(model, () -> controller.onNavigationTargetSelected(NavigationTarget.NETWORK_INFO));
         model.addNavigationTarget(NavigationTarget.NETWORK_INFO);
 
         expandIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_RIGHT, "24");
@@ -81,12 +89,14 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
         icons = new Pane();
         icons.getChildren().addAll(expandIcon, collapseIcon);
         icons.setOpacity(0.3);
-        icons.setPadding(new Insets(0,0,-18,0));
+        icons.setPadding(new Insets(0, 0, -18, 0));
 
         logoExpanded = ImageUtil.getImageViewById("bisq-logo");
         logoCollapsed = ImageUtil.getImageViewById("bisq-logo-mark");
-       
-        root.getChildren().addAll(logoExpanded, logoCollapsed, icons, trade, portfolio, social, markets, wallet, settings, spacer, networkInfoBox);
+
+        root.getChildren().addAll(logoExpanded, logoCollapsed, icons,
+                trade, portfolio, education, social, events, markets, wallet, settings,
+                spacer, networkInfoBox);
     }
 
     @Override
@@ -109,7 +119,7 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
 
             networkInfoBox.setVisible(menuExpanded);
             networkInfoBox.setManaged(menuExpanded);
-            
+
             logoExpanded.setVisible(menuExpanded);
             logoExpanded.setManaged(menuExpanded);
             logoCollapsed.setVisible(!menuExpanded);
@@ -131,7 +141,8 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
     }
 
     private NavigationButton createNavigationButton(String title, AwesomeIcon awesomeIcon, NavigationTarget navigationTarget) {
-        NavigationButton button = new NavigationButton(title, awesomeIcon, toggleGroup, navigationTarget, controller);
+        NavigationButton button = new NavigationButton(title, awesomeIcon, toggleGroup);
+        button.setOnAction(() -> controller.onNavigationTargetSelected(navigationTarget));
         buttonsMap.put(navigationTarget, button);
         model.addNavigationTarget(navigationTarget);
         return button;

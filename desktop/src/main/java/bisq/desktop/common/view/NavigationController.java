@@ -29,53 +29,51 @@ public abstract class NavigationController implements Controller {
     private final Map<NavigationTarget, Controller> controllerCache = new ConcurrentHashMap<>();
     // We do not hold the controller as we don't want to pin a reference in case it's a non caching controller
     private Optional<String> childControllerClassName = Optional.empty();
-    // We don't implement Navigation.Listener to avoid that subclasses might forget to call super.
-    private final Navigation.Listener navigationListener;
 
     public NavigationController(NavigationTarget host) {
         this.host = host;
-
-        navigationListener = (navigationTarget, data) -> {
-            onNavigate2(navigationTarget, data);
-            Optional<NavigationTarget> candidate = Optional.of(navigationTarget);
-            while (candidate.isPresent()) {
-                Optional<Controller> childController = findController(candidate.get(), data);
-                if (childController.isPresent()) {
-                    // If that controller is handling that navigationTarget and creates a childController we 
-                    // apply the child view to our view.
-                    if (childControllerClassName.isEmpty() ||
-                            !childControllerClassName.get().equals(childController.get().getClass().toString())) {
-                        // log.debug("{}: Apply child controller. childController={}",
-                        //          this.getClass().getSimpleName(), childController.get().getClass().getSimpleName());
-                        getModel().applyChild(candidate.get(), childController.get().getView());
-                        childControllerClassName = Optional.of(childController.get().getClass().toString());
-                    } else {
-                        // We might get called from the navigation event dispatcher when child views gets attached and
-                        // apply their default navigationTargets. 
-                        // log.debug("{}: We have applied already that child controller. childController={}",
-                        //         this.getClass().getSimpleName(), childController.get().getClass().getSimpleName());
-                    }
-                    break;
-                } else {
-                    // At NavigationTarget.ROOT we don't have a parent and candidate is not present, exiting the while loop
-                    candidate = candidate.get().getParent();
-                }
-            }
-        };
     }
 
-    public void onNavigate2(NavigationTarget navigationTarget, Optional<Object> data) {
+    void onNavigate2(NavigationTarget navigationTarget, Optional<Object> data) {
+        this.onNavigate(navigationTarget, data);
+        Optional<NavigationTarget> candidate = Optional.of(navigationTarget);
+        while (candidate.isPresent()) {
+            Optional<Controller> childController = findController(candidate.get(), data);
+            if (childController.isPresent()) {
+                // If that controller is handling that navigationTarget and creates a childController we 
+                // apply the child view to our view.
+                if (childControllerClassName.isEmpty() ||
+                        !childControllerClassName.get().equals(childController.get().getClass().toString())) {
+                    // log.debug("{}: Apply child controller. childController={}",
+                    //          this.getClass().getSimpleName(), childController.get().getClass().getSimpleName());
+                    getModel().applyChild(candidate.get(), childController.get().getView());
+                    childControllerClassName = Optional.of(childController.get().getClass().toString());
+                } else {
+                    // We might get called from the navigation event dispatcher when child views gets attached and
+                    // apply their default navigationTargets. 
+                    // log.debug("{}: We have applied already that child controller. childController={}",
+                    //         this.getClass().getSimpleName(), childController.get().getClass().getSimpleName());
+                }
+                break;
+            } else {
+                // At NavigationTarget.ROOT we don't have a parent and candidate is not present, exiting the while loop
+                candidate = candidate.get().getParent();
+            }
+        }
+    }
+
+    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
     }
 
     @Override
     public void onActivateInternal() {
-        Navigation.addListener(host, navigationListener);
+        Navigation.addListener(host, this);
         onActivate();
     }
 
     @Override
     public void onDeactivateInternal() {
-        Navigation.removeListener(host, navigationListener);
+        Navigation.removeListener(host, this);
         onDeactivate();
     }
 

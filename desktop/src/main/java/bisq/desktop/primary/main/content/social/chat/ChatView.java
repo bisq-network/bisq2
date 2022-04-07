@@ -103,7 +103,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         selectedChannelLabel.getStyleClass().add("headline-label");
         filterBox = new FilterBox(model.getFilteredChatMessages());
         filterBoxRoot = filterBox.getRoot();
-        filterBoxRoot.setStyle("-fx-background-color: -bisq-content-bg");
+       // filterBoxRoot.setStyle("-fx-background-color: -bisq-content-bg");
         HBox.setHgrow(filterBoxRoot, Priority.ALWAYS);
         HBox.setMargin(filterBoxRoot, new Insets(0, 0, 0, 10));
         searchButton = BisqIconButton.createIconButton(AwesomeIcon.SEARCH);
@@ -116,13 +116,13 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         messagesListView = new ListView<>();
         messagesListView.setCellFactory(getCellFactory());
         messagesListView.setFocusTraversable(false);
-        messagesListView.setStyle("-fx-border-width: 0; -fx-background-color: -bisq-content-bg");
+      //  messagesListView.setStyle("-fx-border-width: 0; -fx-background-color: -bisq-content-bg");
         VBox.setVgrow(messagesListView, Priority.ALWAYS);
 
         inputField = new BisqTextArea();
         inputField.setLabelFloat(true);
         inputField.setPromptText(Res.get("social.chat.input.prompt"));
-        inputField.setStyle("-fx-background-color: -bisq-content-bg");
+       // inputField.setStyle("-fx-background-color: -bisq-content-bg");
 
         VBox messagesAndInput = Layout.vBoxWith(messagesListView, reply, inputField);
         channelInfo.setMinWidth(200);
@@ -132,7 +132,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo);
         sideBar.setAlignment(Pos.TOP_RIGHT);
         sideBar.setPadding(new Insets(10, 20, 20, 20));
-        // sideBar.setFillWidth(true);
+         sideBar.setFillWidth(true);
         sideBar.setStyle("-fx-background-color: -bisq-menu-bg");
 
         messagesListAndSideBar = Layout.hBoxWith(messagesAndInput, sideBar);
@@ -145,15 +145,12 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         root.setDividerPosition(0, model.getDefaultLeftDividerPosition());
         root.getItems().addAll(left, center);
 
-        // splitPane.setDividerPosition(0, model.getDefaultLeftDividerPosition());
-        //  splitPane.getItems().addAll(left, center);
-
         messagesListener = c -> messagesListView.scrollTo(model.getFilteredChatMessages().size() - 1);
     }
 
     @Override
     protected void onViewAttached() {
-       /* userProfileComboBox.prefWidthProperty().bind(left.widthProperty());
+        userProfileComboBox.prefWidthProperty().bind(left.widthProperty());
         selectedChannelLabel.textProperty().bind(model.getSelectedChannelAsString());
         filterBoxRoot.visibleProperty().bind(model.getFilterBoxVisible());
         notificationsSettings.visibleProperty().bind(model.getNotificationsVisible());
@@ -162,7 +159,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         channelInfo.managedProperty().bind(model.getChannelInfoVisible());
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
-*/
+
         inputField.textProperty().bindBidirectional(model.getTextInput());
 
         searchButton.setOnAction(e -> controller.onToggleFilterBox());

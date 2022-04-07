@@ -29,22 +29,22 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @Slf4j
 public class Navigation {
 
-    public interface Listener {
-        void onNavigate(NavigationTarget navigationTarget, Optional<Object> data);
-    }
+  /*  public interface Listener {
+        void onNavigate2(NavigationTarget navigationTarget, Optional<Object> data);
+    }*/
 
-    private static final Map<NavigationTarget, Set<Listener>> listeners = new ConcurrentHashMap<>();
+    private static final Map<NavigationTarget, Set<NavigationController>> listeners = new ConcurrentHashMap<>();
     // navigationControllerListeners are called first
    // private static final Map<NavigationTarget, Set<NavigationController>> navigationControllerListeners = new ConcurrentHashMap<>();
     private static final LinkedList<NavigationTarget> history = new LinkedList<>();
     private static final LinkedList<NavigationTarget> alt = new LinkedList<>();
 
-    public static void addListener(NavigationTarget host, Listener listener) {
+     static void addListener(NavigationTarget host, NavigationController listener) {
         listeners.putIfAbsent(host, new CopyOnWriteArraySet<>());
         listeners.get(host).add(listener);
     }
 
-    public static void removeListener(NavigationTarget host, Listener listener) {
+     static void removeListener(NavigationTarget host, NavigationController listener) {
         Optional.ofNullable(listeners.get(host)).ifPresent(set -> set.remove(listener));
     }
 
@@ -61,7 +61,7 @@ public class Navigation {
         history.add(navigationTarget);
         listeners.forEach((key, value) -> {
             if (navigationTarget.getPath().contains(key)) {
-                value.forEach(l -> l.onNavigate(navigationTarget, Optional.empty()));
+                value.forEach(l -> l.onNavigate2(navigationTarget, Optional.empty()));
             }
         });
     }
@@ -71,7 +71,7 @@ public class Navigation {
     public static void navigateTo(NavigationTarget navigationTarget, Object data) {
         listeners.forEach((key, value) -> {
             if (navigationTarget.getPath().contains(key)) {
-                value.forEach(l -> l.onNavigate(navigationTarget, Optional.of(data)));
+                value.forEach(l -> l.onNavigate2(navigationTarget, Optional.of(data)));
             }
         });
     }
@@ -84,7 +84,7 @@ public class Navigation {
         alt.add(navigationTarget);
         listeners.forEach((key, value) -> {
             if (navigationTarget.getPath().contains(key)) {
-                value.forEach(l -> l.onNavigate(navigationTarget, Optional.empty()));
+                value.forEach(l -> l.onNavigate2(navigationTarget, Optional.empty()));
             }
         });
     }
@@ -97,7 +97,7 @@ public class Navigation {
         history.add(navigationTarget);
         listeners.forEach((key, value) -> {
             if (navigationTarget.getPath().contains(key)) {
-                value.forEach(l -> l.onNavigate(navigationTarget, Optional.empty()));
+                value.forEach(l -> l.onNavigate2(navigationTarget, Optional.empty()));
             }
         });
     }

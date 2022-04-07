@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.left;
 
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.utils.Icons;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
@@ -39,14 +38,13 @@ class NavigationButton extends Pane implements Toggle {
     private final Label icon;
     private final Label label;
     private final Tooltip tooltip;
+    private boolean menuExpanded;
 
-    NavigationButton(String title, AwesomeIcon awesomeIcon, ToggleGroup toggleGroup, NavigationTarget navigationTarget, LeftNavController controller) {
-
+    NavigationButton(String title, AwesomeIcon awesomeIcon, ToggleGroup toggleGroup) {
         setMinHeight(HEIGHT);
         setMaxHeight(HEIGHT);
 
         setCursor(Cursor.HAND);
-        setOnMouseClicked(e -> controller.select(navigationTarget));
         tooltip = new Tooltip(title);
         tooltip.setShowDelay(Duration.millis(200));
 
@@ -68,7 +66,12 @@ class NavigationButton extends Pane implements Toggle {
         getChildren().addAll(icon, label);
     }
 
+    public final void setOnAction(Runnable handler) {
+        setOnMouseClicked(e -> handler.run());
+    }
+
     public void setMenuExpanded(boolean menuExpanded, int width) {
+        this.menuExpanded = menuExpanded;
         setMinWidth(width);
         setMaxWidth(width);
         label.setVisible(menuExpanded);
