@@ -40,7 +40,7 @@ public class KeyWordDetection {
             int firstIndex = lastIndex;
             lastIndex = iterator.next();
             if (lastIndex != BreakIterator.DONE) {
-                String word = text.substring(firstIndex, lastIndex).toUpperCase();
+                String word = text.substring(firstIndex, lastIndex).toUpperCase(); //todo make case insensitive
                 if (tradeTags.contains(word)) {
                     spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
                     spansBuilder.add(Collections.singleton("keyword-tradeTags"), lastIndex - firstIndex);

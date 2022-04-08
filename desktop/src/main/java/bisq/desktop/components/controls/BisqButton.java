@@ -32,15 +32,11 @@ public class BisqButton extends JFXButton {
     }
 
     public BisqButton(String text) {
-        super(text.toUpperCase());
+        super(text);
     }
 
     public BisqButton(String text, Node graphic) {
-        super(text.toUpperCase(), graphic);
-    }
-
-    public void setTextAsUppercase(String text) {
-        setText(text.toUpperCase());
+        super(text, graphic);
     }
 
     @Override

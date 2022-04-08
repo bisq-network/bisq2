@@ -3,22 +3,22 @@
     -bisq-green: #25b135;
     -bisq-dark-green: #2ea33c;
 
-    -bisq-bg: #131415;
+    -bisq-bg: #262626;
 
-    -bisq-menu-bg: #1C1D1F;
-    -bisq-menu-selected: #343436;
+    -bisq-dark-bg: #212121;
+    -bisq-dark-bg-selected: #1D1D1D;
 
-    -bisq-content-bg: #1C1D1F;
-    -bisq-content-bg-disabled: #1F2021;
+    -bisq-controls-bg: #333333;
+    /*todo not defined from pedro*/
+    -bisq-controls-bg-disabled: #474748;
 
-    -bisq-icon-bg-disabled: #474748;
-    -bisq-badge-bg: #343536;
-
-    -bisq-button-bg: #333436;
+    -bisq-bright-bg: #C9C9C9;
+    /*todo not defined from pedro*/
+    -bisq-bright-bg-disabled: #a9a9a9;
 
     -bisq-text: #FFFFFF;
-    -bisq-text-medium: #D0D0D1;
-    -bisq-text-disabled: #888989;
+    -bisq-text-medium: #828282;
+    -bisq-text-disabled: #1D1D1D;
 
 
     -fx-base: -bisq-bg;
@@ -41,7 +41,7 @@
 
 
 .jfx-button, .action-button {
-    -fx-background-color: -bisq-button-bg;
+    -fx-background-color: -bisq-controls-bg;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 0.923em;
     -fx-font-weight: normal;
@@ -53,7 +53,7 @@
 }
 
 .jfx-button:hover, .jfx-button:focused {
-    -fx-background-color: derive(-bisq-button-bg, -10%);
+    -fx-background-color: derive(-bisq-controls-bg, -10%);
 }
 
 /*
@@ -140,8 +140,8 @@ New css for bisq2.
 /* horizontal the two nodes are placed to the left/right of each other. */
 .split-pane:horizontal > .split-pane-divider {
     /*-fx-background-color: -fx-box-border, -fx-inner-border-horizontal;*/
-    -fx-background-color: -bisq-menu-bg;
-    /* -fx-background-color: -bisq-menu-selected;*/
+    -fx-background-color: -bisq-dark-bg;
+    /* -fx-background-color: -bisq-dark-bg-selected;*/
 
     -fx-background-insets: 0, 0 1 0 1;
 }

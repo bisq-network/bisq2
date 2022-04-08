@@ -24,14 +24,18 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 
 public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> {
+    public static final int HEIGHT = 85;
+
     public TopPanelView(TopPanelModel model,
                         TopPanelController controller,
                         Pane marketPriceBox,
                         Pane walletBalanceBox) {
         super(new HBox(), model, controller);
-        root.setMinHeight(62);
-        root.setMaxHeight(62);
+        
+        root.setMinHeight(HEIGHT);
+        root.setMaxHeight(HEIGHT);
         root.setMaxHeight(root.getMinHeight());
+        root.setStyle("-fx-background-color: -bisq-dark-bg;");
         root.setPadding(new Insets(15, 15, 15, 15));
         root.getChildren().addAll(Spacer.fillHBox(), marketPriceBox, walletBalanceBox);
     }

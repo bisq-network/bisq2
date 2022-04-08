@@ -45,7 +45,7 @@ public class NetworkInfoView extends TabView<JFXTabPane, NetworkInfoModel, Netwo
 
     @Override
     protected NavigationTargetTab createTab(String title, NavigationTarget navigationTarget) {
-        NavigationTargetTab tab = super.createTab(title.toUpperCase(), navigationTarget);
+        NavigationTargetTab tab = super.createTab(title, navigationTarget);
         tab.setDisable(model.isDisabled(navigationTarget));
         return tab;
     }

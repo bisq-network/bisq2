@@ -53,7 +53,7 @@ public class BisqTextArea extends JFXTextArea {
     public BisqTextArea() {
         setWrapText(true);
 
-        setStyle("-fx-background-color: -bisq-content-bg; -fx-border-color: -bisq-content-bg; -fx-text-fill: -fx-light-text-color;");
+        setStyle("-fx-background-color: -bisq-controls-bg; -fx-border-color: -bisq-controls-bg; -fx-text-fill: -fx-light-text-color;");
 
         // We use a weakReference for the sceneChangeListener to avoid leaking when our instance is gone
         Objects.requireNonNull(new WeakReference<>(this).get()).sceneProperty()

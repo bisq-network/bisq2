@@ -105,13 +105,13 @@ public abstract class ChannelSelection {
         protected View(ChannelSelection.Model model, ChannelSelection.Controller controller, String headlineText) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
-            root.setStyle("-fx-background-color: -bisq-menu-bg;");
+            root.setStyle("-fx-background-color: -bisq-dark-bg;");
 
             listView = new ListView<>();
             listView.setItems(model.sortedList);
             listView.setFocusTraversable(false);
             listView.setPadding(new Insets(5, 0, 5, 0));
-            listView.setStyle("-fx-background-color: -bisq-menu-bg; -fx-border-width: 0;");
+            listView.setStyle("-fx-background-color: -bisq-dark-bg; -fx-border-width: 0;");
             listView.setCellFactory(new Callback<>() {
                 @Override
                 public ListCell<Channel<?>> call(ListView<Channel<?>> list) {
@@ -125,7 +125,7 @@ public abstract class ChannelSelection {
                             hBox.setPadding(new Insets(7, 5, 7, 5));
                             hBox.setMouseTransparent(true);
                             setCursor(Cursor.HAND);
-                            setStyle("-fx-background-color: -bisq-menu-bg; -fx-border-width: 0;");
+                            setStyle("-fx-background-color: -bisq-dark-bg; -fx-border-width: 0;");
                         }
 
                         @Override
@@ -145,10 +145,10 @@ public abstract class ChannelSelection {
                                 label.setText(item.getChannelName());
 
                                 if (item.equals(model.selectedChannel.get())) {
-                                    hBox.setStyle("-fx-background-color: -bisq-menu-selected; -fx-background-radius: 3px");
+                                    hBox.setStyle("-fx-background-color: -bisq-dark-bg-selected; -fx-background-radius: 3px");
                                     label.setStyle("-fx-text-fill: -fx-light-text-color;");
                                 } else {
-                                    hBox.setStyle("-fx-background-color: -bisq-menu-bg; -fx-background-radius: 3px");
+                                    hBox.setStyle("-fx-background-color: -bisq-dark-bg; -fx-background-radius: 3px");
                                     label.setStyle("-fx-text-fill: -fx-mid-text-color;");
                                 }
                                 setGraphic(hBox);
@@ -162,7 +162,7 @@ public abstract class ChannelSelection {
             });
 
             TitledPane titledPane = new TitledPane(headlineText, listView);
-            titledPane.setStyle("-fx-background-color: -bisq-menu-bg; -fx-border-width: 0");
+            titledPane.setStyle("-fx-background-color: -bisq-dark-bg; -fx-border-width: 0");
 
             root.getChildren().addAll(titledPane);
             channelChangeListener = (channelObserver, oldValue, newValue) -> {

@@ -50,9 +50,9 @@ public class SatoshiSquareSplashView extends View<VBox, SatoshiSquareSplashModel
         logo.setId("satoshisquare-splash");
         VBox.setMargin(logo, new Insets(-60, 0, 80, 0));
 
-        subTitle1 = getSubTitle(Res.get("satoshisquareapp.splash.subTitle1").toUpperCase());
-        subTitle2 = getSubTitle(Res.get("satoshisquareapp.splash.subTitle2").toUpperCase());
-        subTitle3 = getSubTitle(Res.get("satoshisquareapp.splash.subTitle3").toUpperCase());
+        subTitle1 = getSubTitle(Res.get("satoshisquareapp.splash.subTitle1"));
+        subTitle2 = getSubTitle(Res.get("satoshisquareapp.splash.subTitle2"));
+        subTitle3 = getSubTitle(Res.get("satoshisquareapp.splash.subTitle3"));
         Transitions.fadeIn(subTitle1);
         scheduler = UIScheduler.run(() -> {
                     if (sloganCounter == 1) {
@@ -74,7 +74,7 @@ public class SatoshiSquareSplashView extends View<VBox, SatoshiSquareSplashModel
         progressBar.setMinWidth(400);
         VBox.setMargin(progressBar, new Insets(60, 0, 10, 0));
 
-        Label connectingTitle = new BisqLabel(Res.get("satoshisquareapp.splash.connecting").toUpperCase());
+        Label connectingTitle = new BisqLabel(Res.get("satoshisquareapp.splash.connecting"));
         connectingTitle.setStyle("-fx-font-size: 0.9em; -fx-text-fill: -fx-light-text-color;");
         //VBox.setMargin(connectingTitle, new Insets(20, 0, 0, 0));
         Pane slogansPane = new StackPane();
