@@ -17,24 +17,10 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
-public class BitcoindDecodeRawTransactionResponse {
-    @JsonProperty("txid")
-    private String txId;
-    private String hash;
-    private int size;
-    private int vsize;
-    private int weight;
-    private int version;
-
-    private int locktime;
-    private List<BitcoindVin> vin;
-    private List<BitcoindVout> vout;
+public class BitcoindDecodeRawTransactionResponse extends AbstractDecodeRawTransactionResponse<BitcoindVin, BitcoindVout> {
 }

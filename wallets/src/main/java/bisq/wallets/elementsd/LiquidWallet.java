@@ -17,19 +17,18 @@
 
 package bisq.wallets.elementsd;
 
+import bisq.common.observable.ObservableSet;
 import bisq.wallets.AddressType;
 import bisq.wallets.Wallet;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
-import bisq.wallets.exceptions.WalletInitializationFailedException;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
-import bisq.wallets.rpc.RpcClient;
-import bisq.wallets.rpc.RpcClientFactory;
-import bisq.wallets.rpc.RpcConfig;
+import bisq.wallets.stores.LiquidWalletStore;
+import bisq.wallets.zmq.ZmqConnection;
+import lombok.Getter;
 
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -40,16 +39,22 @@ public class LiquidWallet implements Wallet {
     private final ElementsdDaemon daemon;
     private final ElementsdWallet wallet;
 
-    public LiquidWallet(Path walletPath, RpcConfig rpcConfig) {
-        this.walletPath = walletPath;
+    @Getter
+    private final LiquidWalletStore liquidWalletStore;
 
-        try {
-            RpcClient rpcClient = RpcClientFactory.create(rpcConfig);
-            daemon = new ElementsdDaemon(rpcClient);
-            wallet = new ElementsdWallet(rpcClient);
-        } catch (MalformedURLException e) {
-            throw new WalletInitializationFailedException("Couldn't initialize WalletService", e);
-        }
+    @Getter
+    private final ZmqConnection zmqConnection;
+
+    public LiquidWallet(Path walletPath,
+                        ElementsdDaemon daemon,
+                        ElementsdWallet wallet,
+                        LiquidWalletStore liquidWalletStore,
+                        ZmqConnection zmqConnection) {
+        this.walletPath = walletPath;
+        this.daemon = daemon;
+        this.wallet = wallet;
+        this.liquidWalletStore = liquidWalletStore;
+        this.zmqConnection = zmqConnection;
     }
 
     @Override
@@ -70,7 +75,14 @@ public class LiquidWallet implements Wallet {
 
     @Override
     public String getNewAddress(AddressType addressType, String label) {
-        return wallet.getNewAddress(addressType, label);
+        String newAddress = wallet.getNewAddress(addressType, label);
+        liquidWalletStore.getReceiveAddresses().add(newAddress);
+        return newAddress;
+    }
+
+    @Override
+    public ObservableSet<String> getReceiveAddresses() {
+        return liquidWalletStore.getReceiveAddresses();
     }
 
     @Override

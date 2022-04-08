@@ -15,21 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-syntax = "proto3";
+package bisq.wallets.bitcoind.rpc.responses;
 
-package wallets;
-option java_package = "bisq.wallets.protobuf";
-option java_multiple_files = true;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
-message BitcoinWalletStore {
-  repeated string receiveAddresses = 1;
-}
+import java.util.List;
 
-message LiquidWalletStore {
-  repeated string receiveAddresses = 1;
-}
-
-message WalletStore {
-  BitcoinWalletStore bitcoinWalletStore = 1;
-  LiquidWalletStore liquidWalletStore = 2;
+@Getter
+@Setter
+public abstract class AbstractVin {
+    private String coinbase;
+    @JsonProperty("txid")
+    private String txId;
+    private int vout;
+    private BitcoindScriptSig scriptSig;
+    @JsonProperty("txinwitness")
+    private List<String> txInWitness;
+    private long sequence;
 }

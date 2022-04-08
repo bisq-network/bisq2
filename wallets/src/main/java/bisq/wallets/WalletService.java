@@ -24,14 +24,12 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.wallets.bitcoind.BitcoinWallet;
-import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
-import bisq.wallets.bitcoind.zeromq.BitcoindZeroMq;
 import bisq.wallets.elementsd.LiquidWallet;
 import bisq.wallets.exceptions.WalletNotInitializedException;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
-import bisq.wallets.rpc.RpcConfig;
 import bisq.wallets.stores.WalletStore;
+import bisq.wallets.zmq.ZmqConnection;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,7 +42,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class WalletService implements PersistenceClient<WalletStore> {
-    private static final String LOCALHOST = "127.0.0.1";
 
     @Getter
     private final WalletStore persistableStore = new WalletStore();
@@ -55,7 +52,7 @@ public class WalletService implements PersistenceClient<WalletStore> {
     @Getter
     private Optional<Wallet> wallet = Optional.empty();
 
-    private Optional<BitcoindZeroMq> bitcoindZeroMq = Optional.empty();
+    private Optional<ZmqConnection> zmqConnection = Optional.empty();
     private final Set<String> utxoTxIds = new HashSet<>();
 
     @Getter
@@ -84,17 +81,29 @@ public class WalletService implements PersistenceClient<WalletStore> {
 
             Wallet wallet = switch (walletConfig.getWalletBackend()) {
                 case BITCOIND -> {
-                    var bitcoindWallet = createBitcoinWallet(walletConfig, walletsDataDir);
+                    BitcoinWallet bitcoindWallet = WalletFactory.createBitcoinWallet(walletConfig,
+                            walletsDataDir,
+                            persistableStore.getBitcoinWalletStore());
                     bitcoindWallet.initialize(walletPassphrase);
 
-                    BitcoindZeroMq bitcoindZeroMq = initializeBitcoindZeroMq(bitcoindWallet.getDaemon());
-                    this.bitcoindZeroMq = Optional.of(bitcoindZeroMq);
+                    ZmqConnection zmqConnection = bitcoindWallet.getZmqConnection();
+                    ObservableSet<String> receiveAddresses = bitcoindWallet.getReceiveAddresses();
+                    initializeZmqListeners(zmqConnection, receiveAddresses);
 
+                    this.zmqConnection = Optional.of(zmqConnection);
                     yield bitcoindWallet;
                 }
                 case ELEMENTSD -> {
-                    var liquidWallet = createLiquidWallet(walletConfig, walletsDataDir);
+                    LiquidWallet liquidWallet = WalletFactory.createLiquidWallet(walletConfig,
+                            walletsDataDir,
+                            persistableStore.getLiquidWalletStore());
                     liquidWallet.initialize(walletPassphrase);
+
+                    ZmqConnection zmqConnection = liquidWallet.getZmqConnection();
+                    ObservableSet<String> receiveAddresses = liquidWallet.getReceiveAddresses();
+                    initializeZmqListeners(zmqConnection, receiveAddresses);
+
+                    this.zmqConnection = Optional.of(zmqConnection);
                     yield liquidWallet;
                 }
             };
@@ -108,47 +117,30 @@ public class WalletService implements PersistenceClient<WalletStore> {
         return CompletableFuture.completedFuture(true);
     }
 
-    private BitcoinWallet createBitcoinWallet(WalletConfig walletConfig, Path walletsDataDir) {
-        Path bitcoindDataDir = walletsDataDir.resolve("bitcoind"); // directory name for bitcoind wallet
-        RpcConfig rpcConfig = createRpcConfigFromWalletConfig(walletConfig, bitcoindDataDir);
-        return new BitcoinWallet(bitcoindDataDir, rpcConfig);
+    public CompletableFuture<Void> shutdown() {
+        return CompletableFuture.runAsync(() -> {
+            zmqConnection.ifPresent(ZmqConnection::shutdown);
+            wallet.ifPresent(Wallet::shutdown);
+        });
     }
 
-    private LiquidWallet createLiquidWallet(WalletConfig walletConfig, Path walletsDataDir) {
-        Path bitcoindDataDir = walletsDataDir.resolve("elementsd"); // directory name for bitcoind wallet
-        RpcConfig rpcConfig = createRpcConfigFromWalletConfig(walletConfig, bitcoindDataDir);
-        return new LiquidWallet(bitcoindDataDir, rpcConfig);
-    }
-
-    private BitcoindZeroMq initializeBitcoindZeroMq(BitcoindDaemon bitcoindDaemon) {
-        var bitcoindZeroMq = new BitcoindZeroMq(bitcoindDaemon);
-        bitcoindZeroMq.initialize();
+    private void initializeZmqListeners(ZmqConnection zmqConnection, ObservableSet<String> receiveAddresses) {
         // Update balance when new block gets mined
-        bitcoindZeroMq.getListeners().registerNewBlockMinedListener(unused -> updateBalance());
+        zmqConnection.getListeners().registerNewBlockMinedListener(unused -> updateBalance());
 
         // Update balance if a UTXO is spent
-        bitcoindZeroMq.getListeners().registerTransactionIdInInputListener(txId -> {
+        zmqConnection.getListeners().registerTransactionIdInInputListener(txId -> {
             if (utxoTxIds.contains(txId)) {
                 updateBalance();
             }
         });
 
         // Update balance if a receive address is in tx output
-        ObservableSet<String> receiveAddresses = persistableStore.getReceiveAddresses();
-        bitcoindZeroMq.getListeners().registerTxOutputAddressesListener(addresses -> {
+        zmqConnection.getListeners().registerTxOutputAddressesListener(addresses -> {
             boolean receiveAddressInTxOutput = addresses.stream().anyMatch(receiveAddresses::contains);
             if (receiveAddressInTxOutput) {
                 updateBalance();
             }
-        });
-
-        return bitcoindZeroMq;
-    }
-
-    public CompletableFuture<Void> shutdown() {
-        return CompletableFuture.runAsync(() -> {
-            bitcoindZeroMq.ifPresent(BitcoindZeroMq::shutdown);
-            wallet.ifPresent(Wallet::shutdown);
         });
     }
 
@@ -181,7 +173,7 @@ public class WalletService implements PersistenceClient<WalletStore> {
             Wallet wallet = getWalletOrThrowException();
             String receiveAddress = wallet.getNewAddress(AddressType.BECH32, label);
 
-            getReceiveAddresses().add(receiveAddress);
+            // getNewAddress updates the receive adresses set
             persist();
 
             return receiveAddress;
@@ -189,7 +181,10 @@ public class WalletService implements PersistenceClient<WalletStore> {
     }
 
     public ObservableSet<String> getReceiveAddresses() {
-        return persistableStore.getReceiveAddresses();
+        if (wallet.isEmpty()) {
+            return new ObservableSet<>();
+        }
+        return wallet.get().getReceiveAddresses();
     }
 
     public CompletableFuture<String> signMessage(String address, String message) {
@@ -218,21 +213,6 @@ public class WalletService implements PersistenceClient<WalletStore> {
             Wallet wallet = getWalletOrThrowException();
             return wallet.sendToAddress(address, amount);
         });
-    }
-
-    private RpcConfig createRpcConfigFromWalletConfig(WalletConfig walletConfig, Path walletPath) {
-        String hostname = walletConfig.getHostname().orElse(LOCALHOST);
-        int port = walletConfig.getPort()
-                .orElseGet(() -> walletConfig.getWalletBackend() == WalletBackend.BITCOIND ? 18443 : 7040);
-
-        return new RpcConfig.Builder()
-                .networkType(NetworkType.REGTEST)
-                .hostname(hostname)
-                .port(port)
-                .user(walletConfig.getUser())
-                .password(walletConfig.getPassword())
-                .walletPath(walletPath)
-                .build();
     }
 
     private Wallet getWalletOrThrowException() {

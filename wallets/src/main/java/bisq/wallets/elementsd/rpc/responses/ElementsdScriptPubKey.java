@@ -15,21 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-syntax = "proto3";
+package bisq.wallets.elementsd.rpc.responses;
 
-package wallets;
-option java_package = "bisq.wallets.protobuf";
-option java_multiple_files = true;
+import lombok.Getter;
+import lombok.Setter;
 
-message BitcoinWalletStore {
-  repeated string receiveAddresses = 1;
-}
+import java.util.List;
 
-message LiquidWalletStore {
-  repeated string receiveAddresses = 1;
-}
-
-message WalletStore {
-  BitcoinWalletStore bitcoinWalletStore = 1;
-  LiquidWalletStore liquidWalletStore = 2;
+@Getter
+@Setter
+public class ElementsdScriptPubKey {
+    private String asm;
+    private String hex;
+    private int reqSigs;
+    private String type;
+    private List<String> addresses;
 }

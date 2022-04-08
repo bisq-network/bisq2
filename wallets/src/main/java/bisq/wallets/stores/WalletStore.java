@@ -17,38 +17,39 @@
 
 package bisq.wallets.stores;
 
-import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-import java.util.Set;
-
-@Slf4j
 public class WalletStore implements PersistableStore<WalletStore> {
+
     @Getter
-    private final ObservableSet<String> receiveAddresses = new ObservableSet<>();
+    private BitcoinWalletStore bitcoinWalletStore = new BitcoinWalletStore();
+    @Getter
+    private LiquidWalletStore liquidWalletStore = new LiquidWalletStore();
 
     public WalletStore() {
     }
 
-    private WalletStore(Set<String> receiveAddresses) {
-        this.receiveAddresses.addAll(receiveAddresses);
+    public WalletStore(BitcoinWalletStore bitcoinWalletStore, LiquidWalletStore liquidWalletStore) {
+        this.bitcoinWalletStore = bitcoinWalletStore;
+        this.liquidWalletStore = liquidWalletStore;
     }
 
     @Override
     public bisq.wallets.protobuf.WalletStore toProto() {
         return bisq.wallets.protobuf.WalletStore.newBuilder()
-                .addAllReceiveAddresses(receiveAddresses)
+                .setBitcoinWalletStore(bitcoinWalletStore.toProto())
+                .setLiquidWalletStore(liquidWalletStore.toProto())
                 .build();
     }
 
     public static WalletStore fromProto(bisq.wallets.protobuf.WalletStore proto) {
-        return new WalletStore(new HashSet<>(proto.getReceiveAddressesList()));
+        return new WalletStore(BitcoinWalletStore.fromProto(proto.getBitcoinWalletStore()),
+                LiquidWalletStore.fromProto(proto.getLiquidWalletStore())
+        );
     }
 
     @Override
@@ -64,12 +65,12 @@ public class WalletStore implements PersistableStore<WalletStore> {
 
     @Override
     public WalletStore getClone() {
-        return new WalletStore(receiveAddresses);
+        return new WalletStore(bitcoinWalletStore, liquidWalletStore);
     }
 
     @Override
     public void applyPersisted(WalletStore persisted) {
-        receiveAddresses.clear();
-        receiveAddresses.addAll(persisted.getReceiveAddresses());
+        bitcoinWalletStore = persisted.bitcoinWalletStore;
+        liquidWalletStore = persisted.liquidWalletStore;
     }
 }

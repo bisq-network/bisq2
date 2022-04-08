@@ -15,8 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq.listeners;
+package bisq.wallets.elementsd.rpc.responses;
 
-public interface NewBlockMinedListener {
-    void onNewBlock(String blockHash);
+import bisq.wallets.bitcoind.rpc.responses.AbstractVin;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class ElementsdVin extends AbstractVin {
+    @JsonProperty("is_pegin")
+    private boolean isPegin;
 }

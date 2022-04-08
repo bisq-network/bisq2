@@ -17,13 +17,15 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.util.Collections;
+import java.util.List;
 
-@Getter
-@Setter
-public class BitcoindVout {
-    private double value;
-    private int n;
-    private BitcoindScriptPubKey scriptPubKey;
+public class BitcoindVout extends AbstractVout<BitcoindScriptPubKey> {
+    @Override
+    public List<String> getAddresses() {
+        if (scriptPubKey != null && scriptPubKey.getAddress() != null) {
+            return List.of(scriptPubKey.getAddress());
+        }
+        return Collections.emptyList();
+    }
 }

@@ -15,21 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-syntax = "proto3";
+package bisq.wallets.zmq.listeners;
 
-package wallets;
-option java_package = "bisq.wallets.protobuf";
-option java_multiple_files = true;
-
-message BitcoinWalletStore {
-  repeated string receiveAddresses = 1;
-}
-
-message LiquidWalletStore {
-  repeated string receiveAddresses = 1;
-}
-
-message WalletStore {
-  BitcoinWalletStore bitcoinWalletStore = 1;
-  LiquidWalletStore liquidWalletStore = 2;
+public interface TxIdInInputListener {
+    void onTxIdInInput(String txId);
 }

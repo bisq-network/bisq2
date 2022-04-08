@@ -15,10 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq.exceptions;
+package bisq.wallets.zmq.listeners;
 
-public class CannotFindZmqAddressException extends RuntimeException {
-    public CannotFindZmqAddressException(String message) {
-        super(message);
-    }
+public interface NewBlockMinedListener {
+    void onNewBlock(String blockHash);
 }

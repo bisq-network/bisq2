@@ -15,10 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq.exceptions;
+package bisq.wallets.bitcoind.zmq;
 
-public class CannotFindZmqTopicException extends RuntimeException {
-    public CannotFindZmqTopicException(String message) {
-        super(message);
-    }
+public record BitcoindZmqMessage(BitcoindZmqTopic topic, byte[] secondPart, byte[] thirdPart) {
 }

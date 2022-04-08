@@ -15,13 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq;
+package bisq.wallets.zmq;
 
 import bisq.common.threading.ExecutorFactory;
-import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
-import bisq.wallets.bitcoind.zeromq.exceptions.CannotFindZmqAddressException;
-import bisq.wallets.bitcoind.zeromq.exceptions.CannotFindZmqTopicException;
+import bisq.wallets.bitcoind.zmq.BitcoindZmqMessage;
+import bisq.wallets.bitcoind.zmq.BitcoindZmqTopic;
+import bisq.wallets.zmq.exceptions.CannotFindZmqAddressException;
+import bisq.wallets.zmq.exceptions.CannotFindZmqTopicException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.zeromq.SocketType;
@@ -37,31 +38,30 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class BitcoindZeroMq implements AutoCloseable {
+public class ZmqConnection implements AutoCloseable {
 
     private static final int ERROR_CODE_SOCKET_CLOSED = 4;
     private static final int ERROR_CODE_CONTEXT_TERMINATED = 156384765;
 
-    private final BitcoindDaemon bitcoindDaemon;
-    private final BitcoindZeroMqTopicProcessors topicProcessors;
+    private final ZmqTopicProcessors topicProcessors;
     @Getter
-    private final BitcoindZeroMqListeners listeners;
+    private final ZmqListeners listeners;
 
     private final ExecutorService executorService = ExecutorFactory
             .newFixedThreadPool("wallet-zeromq-notification-thread-pool", 2);
 
     private ZContext context;
 
-    public BitcoindZeroMq(BitcoindDaemon bitcoindDaemon) {
-        this.bitcoindDaemon = bitcoindDaemon;
-        listeners = new BitcoindZeroMqListeners();
-        topicProcessors = new BitcoindZeroMqTopicProcessors(bitcoindDaemon, listeners);
+    public ZmqConnection(ZmqTopicProcessors topicProcessors, ZmqListeners listeners) {
+        this.topicProcessors = topicProcessors;
+        this.listeners = listeners;
     }
 
-    public void initialize() {
+    public void initialize(List<BitcoindGetZmqNotificationsResponse> zmqConnectionEndpoints) {
         context = new ZContext();
         executorService.execute(() -> {
-            ZMQ.Socket socket = createSocket();
+            String zmqAddress = findZmqAddress(zmqConnectionEndpoints);
+            ZMQ.Socket socket = createSocket(zmqAddress);
             try {
                 messageLoop(socket);
             } catch (ZMQException e) {
@@ -84,16 +84,14 @@ public class BitcoindZeroMq implements AutoCloseable {
         context.close();
     }
 
-    private ZMQ.Socket createSocket() {
+    private ZMQ.Socket createSocket(String zmqAddress) {
         ZMQ.Socket socket = context.createSocket(SocketType.SUB);
 
         // Subscribe to all topics
-        Arrays.stream(BitcoindZeroMqTopic.values())
+        Arrays.stream(BitcoindZmqTopic.values())
                 .forEach(topic -> socket.subscribe(topic.getTopicName()));
 
-        String zmqAddress = findZmqAddress();
         socket.connect(zmqAddress);
-
         return socket;
     }
 
@@ -105,20 +103,18 @@ public class BitcoindZeroMq implements AutoCloseable {
             byte[] thirdPart = socket.recv();
 
             executorService.execute(() -> {
-                BitcoindZeroMqTopic zmqTopic = BitcoindZeroMqTopic.parse(topicName);
-                var message = new BitcoindZeroMqMessage(zmqTopic, secondPart, thirdPart);
+                BitcoindZmqTopic zmqTopic = BitcoindZmqTopic.parse(topicName);
+                var message = new BitcoindZmqMessage(zmqTopic, secondPart, thirdPart);
                 topicProcessors.process(message);
             });
         }
     }
 
-    private String findZmqAddress() {
-        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = bitcoindDaemon.getZmqNotifications();
-
+    private String findZmqAddress(List<BitcoindGetZmqNotificationsResponse> zmqNotifications) {
         if (!canSubscribeToAllTopics(zmqNotifications)) {
             throw new CannotFindZmqTopicException(
                     "ZeroMQ: Bitcoind hasn't publishing all topics (" +
-                            Arrays.stream(BitcoindZeroMqTopic.values()).collect(Collectors.toSet()) +
+                            Arrays.stream(BitcoindZmqTopic.values()).collect(Collectors.toSet()) +
                             ")"
             );
         }
@@ -131,8 +127,8 @@ public class BitcoindZeroMq implements AutoCloseable {
     }
 
     private boolean canSubscribeToAllTopics(List<BitcoindGetZmqNotificationsResponse> zmqNotifications) {
-        Set<String> allTopicNames = Arrays.stream(BitcoindZeroMqTopic.values())
-                .map(BitcoindZeroMqTopic::getTopicName)
+        Set<String> allTopicNames = Arrays.stream(BitcoindZmqTopic.values())
+                .map(BitcoindZmqTopic::getTopicName)
                 .collect(Collectors.toSet());
 
         long count = zmqNotifications.stream().map(BitcoindGetZmqNotificationsResponse::getType)

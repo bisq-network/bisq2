@@ -17,6 +17,7 @@
 
 package bisq.wallets.bitcoind;
 
+import bisq.common.observable.ObservableSet;
 import bisq.wallets.AddressType;
 import bisq.wallets.Wallet;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
@@ -27,6 +28,8 @@ import bisq.wallets.model.Utxo;
 import bisq.wallets.rpc.RpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
 import bisq.wallets.rpc.RpcConfig;
+import bisq.wallets.stores.BitcoinWalletStore;
+import bisq.wallets.zmq.ZmqConnection;
 import lombok.Getter;
 
 import java.net.MalformedURLException;
@@ -37,16 +40,27 @@ import java.util.Optional;
 public class BitcoinWallet implements Wallet {
     private final Path walletPath;
 
-    @Getter
     private final BitcoindDaemon daemon;
     private final BitcoindWallet wallet;
 
-    public BitcoinWallet(Path walletPath, RpcConfig rpcConfig) {
+    @Getter
+    private final BitcoinWalletStore bitcoinWalletStore;
+
+    @Getter
+    private final ZmqConnection zmqConnection;
+
+    public BitcoinWallet(Path walletPath,
+                         RpcConfig rpcConfig,
+                         BitcoindDaemon daemon,
+                         BitcoinWalletStore bitcoinWalletStore,
+                         ZmqConnection zmqConnection) {
         this.walletPath = walletPath;
+        this.daemon = daemon;
+        this.bitcoinWalletStore = bitcoinWalletStore;
+        this.zmqConnection = zmqConnection;
 
         try {
             RpcClient rpcClient = RpcClientFactory.create(rpcConfig);
-            daemon = new BitcoindDaemon(rpcClient);
             wallet = new BitcoindWallet(rpcClient);
         } catch (MalformedURLException e) {
             throw new WalletInitializationFailedException("Couldn't initialize WalletService", e);
@@ -71,7 +85,14 @@ public class BitcoinWallet implements Wallet {
 
     @Override
     public String getNewAddress(AddressType addressType, String label) {
-        return wallet.getNewAddress(addressType, label);
+        String newAddress = wallet.getNewAddress(addressType, label);
+        bitcoinWalletStore.getReceiveAddresses().add(newAddress);
+        return newAddress;
+    }
+
+    @Override
+    public ObservableSet<String> getReceiveAddresses() {
+        return bitcoinWalletStore.getReceiveAddresses();
     }
 
     @Override

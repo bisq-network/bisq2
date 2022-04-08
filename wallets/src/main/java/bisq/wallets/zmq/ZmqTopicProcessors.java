@@ -15,42 +15,33 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq;
+package bisq.wallets.zmq;
 
-import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
-import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
+import bisq.wallets.bitcoind.zmq.BitcoindZmqMessage;
 import com.google.common.io.BaseEncoding;
 
-public class BitcoindZeroMqTopicProcessors {
+public class ZmqTopicProcessors {
 
-    private final BitcoindDaemon bitcoindDaemon;
-    private final BitcoindZeroMqListeners listeners;
+    private final ZmqListeners listeners;
+    private final ZmqRawTxProcessor rawTxProcessor;
 
-    public BitcoindZeroMqTopicProcessors(BitcoindDaemon bitcoindDaemon, BitcoindZeroMqListeners listeners) {
-        this.bitcoindDaemon = bitcoindDaemon;
+    public ZmqTopicProcessors(ZmqRawTxProcessor rawTxProcessor, ZmqListeners listeners) {
+        this.rawTxProcessor = rawTxProcessor;
         this.listeners = listeners;
     }
 
-    public void process(BitcoindZeroMqMessage zeroMqMessage) {
+    public void process(BitcoindZmqMessage zeroMqMessage) {
         byte[] secondPart = zeroMqMessage.secondPart();
         byte[] thirdPart = zeroMqMessage.thirdPart();
         switch (zeroMqMessage.topic()) {
             case TOPIC_HASHBLOCK -> processHashBlock(secondPart, thirdPart);
-            case TOPIC_RAWTX -> processRawTx(secondPart, thirdPart);
+            case TOPIC_RAWTX -> rawTxProcessor.processRawTx(secondPart, thirdPart);
         }
     }
 
     private void processHashBlock(byte[] blockHash, byte[] sequenceNumber) {
         String blockHashInHex = bytesToHexString(blockHash);
         listeners.getNewBlockMinedListeners().forEach(listener -> listener.onNewBlock(blockHashInHex));
-    }
-
-    private void processRawTx(byte[] serializedTx, byte[] sequenceNumber) {
-        String txInHex = bytesToHexString(serializedTx);
-        BitcoindDecodeRawTransactionResponse rawTransaction = bitcoindDaemon.decodeRawTransaction(txInHex);
-
-        listeners.fireTxOutputAddressesListeners(rawTransaction);
-        listeners.fireTxIdInputListeners(rawTransaction);
     }
 
     private String bytesToHexString(byte[] bytes) {

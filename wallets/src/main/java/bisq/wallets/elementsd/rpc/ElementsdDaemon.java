@@ -18,17 +18,66 @@
 package bisq.wallets.elementsd.rpc;
 
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
+import bisq.wallets.elementsd.rpc.calls.ElementsdDecodeRawTransactionRpcCall;
 import bisq.wallets.elementsd.rpc.calls.ElementsdStopRpcCall;
+import bisq.wallets.elementsd.rpc.responses.ElementsdDecodeRawTransactionResponse;
 import bisq.wallets.rpc.RpcClient;
 
-public class ElementsdDaemon extends BitcoindDaemon {
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
+
+public class ElementsdDaemon {
+
+    private final RpcClient rpcClient;
+    private final BitcoindDaemon bitcoindDaemon;
+
     public ElementsdDaemon(RpcClient rpcClient) {
-        super(rpcClient);
+        this.rpcClient = rpcClient;
+        bitcoindDaemon = new BitcoindDaemon(rpcClient);
     }
 
-    @Override
+    public void createOrLoadWallet(Path walletPath, Optional<String> passphrase) {
+        bitcoindDaemon.createOrLoadWallet(walletPath, passphrase);
+    }
+
+    public ElementsdDecodeRawTransactionResponse decodeRawTransaction(String txInHex) {
+        var request = new ElementsdDecodeRawTransactionRpcCall.Request(txInHex);
+        var rpcCall = new ElementsdDecodeRawTransactionRpcCall(request);
+        return rpcClient.invokeAndValidate(rpcCall);
+    }
+
+    public List<String> generateToAddress(int numberOfBlocksToMine, String addressOfMiner) {
+        return bitcoindDaemon.generateToAddress(numberOfBlocksToMine, addressOfMiner);
+    }
+
+    public String getRawTransaction(String txId) {
+        return bitcoindDaemon.getRawTransaction(txId);
+    }
+
+    public String getTxOutProof(List<String> txIds) {
+        return bitcoindDaemon.getTxOutProof(txIds);
+    }
+
+    public List<BitcoindGetZmqNotificationsResponse> getZmqNotifications() {
+        return bitcoindDaemon.getZmqNotifications();
+    }
+
+    public List<String> listWallets() {
+        return bitcoindDaemon.listWallets();
+    }
+
+    public String sendRawTransaction(String hexString) {
+        return bitcoindDaemon.sendRawTransaction(hexString);
+    }
+
     public void stop() {
         var rpcCall = new ElementsdStopRpcCall();
         rpcClient.invokeAndValidate(rpcCall);
+    }
+
+    public void unloadWallet(Path walletPath) {
+        bitcoindDaemon.unloadWallet(walletPath);
     }
 }

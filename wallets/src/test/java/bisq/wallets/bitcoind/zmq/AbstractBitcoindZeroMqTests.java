@@ -15,21 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq;
+package bisq.wallets.bitcoind.zmq;
 
 import bisq.wallets.bitcoind.SharedBitcoindInstanceTests;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
+import bisq.wallets.zmq.ZmqConnection;
+import bisq.wallets.zmq.ZmqListeners;
+import bisq.wallets.zmq.ZmqTopicProcessors;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class AbstractBitcoindZeroMqTests extends SharedBitcoindInstanceTests {
-    protected BitcoindZeroMq bitcoindZeroMq;
+    protected ZmqConnection bitcoindZeroMq;
 
     @BeforeAll
     @Override
@@ -39,8 +44,8 @@ public class AbstractBitcoindZeroMqTests extends SharedBitcoindInstanceTests {
 
         CountDownLatch waitToMineBlockLatch = new CountDownLatch(1);
         AtomicBoolean isConnectedToDaemon = new AtomicBoolean();
-        bitcoindZeroMq = new BitcoindZeroMq(daemon);
-        bitcoindZeroMq.initialize();
+
+        bitcoindZeroMq = createAndInitializeZmqConnection();
         bitcoindZeroMq.getListeners().registerNewBlockMinedListener((blockHash) -> isConnectedToDaemon.set(true));
 
         waitToMineBlockLatch.countDown();
@@ -71,6 +76,18 @@ public class AbstractBitcoindZeroMqTests extends SharedBitcoindInstanceTests {
                 e.printStackTrace();
             }
         }).join();
+    }
+
+    private ZmqConnection createAndInitializeZmqConnection() {
+        var zmqListeners = new ZmqListeners();
+        var bitcoindRawTxProcessor = new BitcoindRawTxProcessor(daemon, zmqListeners);
+
+        var bitcoindZmqTopicProcessors = new ZmqTopicProcessors(bitcoindRawTxProcessor, zmqListeners);
+        ZmqConnection zmqConnection = new ZmqConnection(bitcoindZmqTopicProcessors, zmqListeners);
+
+        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = daemon.getZmqNotifications();
+        zmqConnection.initialize(zmqNotifications);
+        return zmqConnection;
     }
 
     private Thread createAndStartThread(Runnable runnable) {

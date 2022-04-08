@@ -29,8 +29,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class BitcoindDaemon {
-
-    protected final RpcClient rpcClient;
+    private final RpcClient rpcClient;
 
     public BitcoindDaemon(RpcClient rpcClient) {
         this.rpcClient = rpcClient;
@@ -47,8 +46,8 @@ public class BitcoindDaemon {
         }
     }
 
-    public BitcoindDecodeRawTransactionResponse decodeRawTransaction(String hexString) {
-        var request = new BitcoindDecodeRawTransactionRpcCall.Request(hexString);
+    public BitcoindDecodeRawTransactionResponse decodeRawTransaction(String txInHex) {
+        var request = new BitcoindDecodeRawTransactionRpcCall.Request(txInHex);
         var rpcCall = new BitcoindDecodeRawTransactionRpcCall(request);
         return rpcClient.invokeAndValidate(rpcCall);
     }

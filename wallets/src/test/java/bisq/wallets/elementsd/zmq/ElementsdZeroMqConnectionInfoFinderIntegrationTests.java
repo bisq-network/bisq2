@@ -15,7 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq;
+package bisq.wallets.elementsd.zmq;
 
-public record BitcoindZeroMqMessage(BitcoindZeroMqTopic topic, byte[] secondPart, byte[] thirdPart) {
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
+import bisq.wallets.elementsd.SharedElementsdInstanceTests;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class ElementsdZeroMqConnectionInfoFinderIntegrationTests extends SharedElementsdInstanceTests {
+    @Test
+    void findConnectionInfo() {
+        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = elementsdDaemon.getZmqNotifications();
+        assertThat(zmqNotifications).isNotEmpty();
+    }
 }

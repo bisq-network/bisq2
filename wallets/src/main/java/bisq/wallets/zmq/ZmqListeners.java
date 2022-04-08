@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq;
+package bisq.wallets.zmq;
 
-import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
-import bisq.wallets.bitcoind.zeromq.listeners.NewBlockMinedListener;
-import bisq.wallets.bitcoind.zeromq.listeners.TransactionOutputAddressesListener;
-import bisq.wallets.bitcoind.zeromq.listeners.TxIdInInputListener;
+import bisq.wallets.bitcoind.rpc.responses.AbstractDecodeRawTransactionResponse;
+import bisq.wallets.zmq.listeners.NewBlockMinedListener;
+import bisq.wallets.zmq.listeners.TransactionOutputAddressesListener;
+import bisq.wallets.zmq.listeners.TxIdInInputListener;
 import lombok.Getter;
 
 import java.util.List;
@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
-public class BitcoindZeroMqListeners {
+public class ZmqListeners {
     @Getter
     private final List<NewBlockMinedListener> newBlockMinedListeners = new CopyOnWriteArrayList<>();
     @Getter
@@ -36,15 +36,15 @@ public class BitcoindZeroMqListeners {
     @Getter
     private final List<TxIdInInputListener> txIdInInputListeners = new CopyOnWriteArrayList<>();
 
-    void fireTxOutputAddressesListeners(BitcoindDecodeRawTransactionResponse rawTransaction) {
+    public <T extends AbstractDecodeRawTransactionResponse<?, ?>> void fireTxOutputAddressesListeners(T rawTransaction) {
         Set<String> addressesInOutput = rawTransaction.getVout()
                 .stream()
-                .map(vout -> vout.getScriptPubKey().getAddress())
+                .flatMap(vout -> vout.getAddresses().stream())
                 .collect(Collectors.toSet());
         txOutputAddressesListeners.forEach(listener -> listener.onNewTransaction(addressesInOutput));
     }
 
-    void fireTxIdInputListeners(BitcoindDecodeRawTransactionResponse rawTransaction) {
+    public <T extends AbstractDecodeRawTransactionResponse<?, ?>> void fireTxIdInputListeners(T rawTransaction) {
         rawTransaction.getVin().forEach(vin -> {
             String txId = vin.getTxId();
             if (txId != null) {

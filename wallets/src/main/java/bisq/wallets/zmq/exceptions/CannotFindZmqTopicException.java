@@ -15,19 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq;
+package bisq.wallets.zmq.exceptions;
 
-import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
-public class BitcoindZeroMqConnectionInfoFinderIntegrationTests extends AbstractBitcoindZeroMqTests {
-    @Test
-    void findConnectionInfo() {
-        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = daemon.getZmqNotifications();
-        assertThat(zmqNotifications).isNotEmpty();
+public class CannotFindZmqTopicException extends RuntimeException {
+    public CannotFindZmqTopicException(String message) {
+        super(message);
     }
 }
