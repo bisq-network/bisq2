@@ -57,10 +57,9 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
         super(new VBox(), model, controller);
 
-        root.setStyle("-fx-background-color: green");
         root.setSpacing(10);
         root.setPadding(new Insets(15, 30, 15, 15));
-        root.setStyle("-fx-background-color: -bisq-menu-bg;; -fx-background-insets: 0 15 0 0");
+        root.setStyle("-fx-background-color: -bisq-menu-bg;; -fx-background-insets: 61 15 0 0");
 
         NavigationButton trade = createNavigationButton(Res.get("trade"), AwesomeIcon.EXCHANGE, NavigationTarget.TRADE);
         NavigationButton portfolio = createNavigationButton(Res.get("portfolio"), AwesomeIcon.STACKEXCHANGE, NavigationTarget.PORTFOLIO);
@@ -89,13 +88,13 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
         expandMenuIcons = new Pane();
         expandMenuIcons.getChildren().addAll(expandIcon, collapseIcon);
         expandMenuIcons.setOpacity(0.3);
-      /*  expandMenuIcons.setPadding(new Insets(0, 0, -18, 0));
-        VBox.setMargin(expandMenuIcons, new Insets(12, 0, 25, 0));*/
-       // expandMenuIcons.setPadding(new Insets(0, 0, -18, 0));
-        VBox.setMargin(expandMenuIcons, new Insets(12+35, 0, -10, 0));
+        VBox.setMargin(expandMenuIcons, new Insets(47, 0, -10, 0));
+       
         logoExpanded = ImageUtil.getImageViewById("bisq-logo");
         logoCollapsed = ImageUtil.getImageViewById("bisq-logo-mark");
-
+        VBox.setMargin(logoExpanded, new Insets(0, 0, 0, 11));
+        VBox.setMargin(logoCollapsed, new Insets(0, 0, 0, 11));
+      
         root.getChildren().addAll(logoExpanded, logoCollapsed, expandMenuIcons,
                 trade, portfolio, education, social, events, markets, wallet, settings,
                 spacer, networkInfoBox);
@@ -117,7 +116,6 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
             expandIcon.setLayoutX(width - 40);
             collapseIcon.setLayoutX(width - 40);
             buttonsMap.values().forEach(e -> e.setMenuExpanded(menuExpanded, width - 45));
-
 
             networkInfoBox.setVisible(menuExpanded);
             networkInfoBox.setManaged(menuExpanded);
