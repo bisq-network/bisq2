@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.portfolio;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.portfolio.closed.ClosedTradesController;

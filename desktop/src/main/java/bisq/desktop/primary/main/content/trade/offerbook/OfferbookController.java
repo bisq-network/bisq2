@@ -20,11 +20,11 @@ package bisq.desktop.primary.main.content.trade.offerbook;
 import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
 import bisq.common.observable.Pin;
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.CachingController;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
@@ -43,7 +43,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class OfferbookController implements Controller {
+public class OfferbookController implements CachingController {
     private final OfferbookModel model;
     @Getter
     private final OfferbookView view;

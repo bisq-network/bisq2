@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.nav;
+package bisq.desktop.primary.main.left;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
 import bisq.network.NetworkService;
@@ -49,8 +49,9 @@ public class LeftNavModel implements Model {
     private final StringProperty i2pNumConnections = new SimpleStringProperty("0");
     private final StringProperty i2pNumTargetConnections = new SimpleStringProperty("0");
     private final BooleanProperty i2pIsVisible = new SimpleBooleanProperty(false);
+    private final BooleanProperty menuExpanded = new SimpleBooleanProperty(true);
     private final Set<NavigationTarget> navigationTargets = new HashSet<>();
-
+    
     public LeftNavModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
 

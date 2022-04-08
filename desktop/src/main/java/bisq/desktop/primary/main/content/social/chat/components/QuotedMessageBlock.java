@@ -131,24 +131,30 @@ public class QuotedMessageBlock {
             super(new VBox(), model, controller);
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
+            root.setStyle("-fx-background-color: -bisq-menu-bg;");
 
             BisqLabel headline = new BisqLabel(Res.get("social.reply.headline"));
+            headline.setStyle("-fx-text-fill: -bisq-text-disabled");
             removeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
             VBox.setMargin(removeButton, new Insets(0, 0, 0, 0));
             HBox topBox = Layout.hBoxWith(headline, Spacer.fillHBox(), removeButton);
             topBox.setAlignment(Pos.CENTER);
-            topBox.setId("chat-quoted-message-top-pane");
+            // topBox.setStyle("-fx-background-color: -bisq-menu-bg");
             topBox.setPadding(new Insets(5, 5, 5, 5));
 
             userName = new BisqLabel();
-            userName.setPadding(new Insets(4, 0, 0, -5));
+            userName.setPadding(new Insets(3, 0, 0, -3));
+            userName.setStyle("-fx-text-fill: -bisq-text-disabled");
             roboIconImageView = new ImageView();
             roboIconImageView.setFitWidth(25);
             roboIconImageView.setFitHeight(25);
+            //  HBox.setMargin(roboIconImageView, new Insets(0, 0, 0, 5));
             HBox userBox = Layout.hBoxWith(roboIconImageView, userName);
-
+            // userBox.setPadding(new Insets(0, 0, 0, 5));
+            VBox.setMargin(userBox, new Insets(0, 0, 0, 30));
             quotedMessage = new Text();
-            quotedMessage.setId("chat-quoted-message-text");
+            quotedMessage.setStyle("-fx-fill: -bisq-text-disabled");
+            VBox.setMargin(quotedMessage, new Insets(0, 0, 15, 30));
             root.getChildren().addAll(topBox, userBox, quotedMessage);
         }
 

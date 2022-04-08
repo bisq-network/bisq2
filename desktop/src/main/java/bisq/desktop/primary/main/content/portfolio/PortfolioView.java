@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.portfolio;
 
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.NavigationTargetTab;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;

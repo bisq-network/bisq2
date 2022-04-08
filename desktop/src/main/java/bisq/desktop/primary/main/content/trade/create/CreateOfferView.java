@@ -48,8 +48,8 @@ public class CreateOfferView extends View<ScrollPane, CreateOfferModel, CreateOf
         // Place content within a VBox, within a ScrollPane, to show scrollbars if window size is too small
         VBox vBox = new VBox();
         vBox.setSpacing(30);
-        vBox.setPadding(new Insets(20, 20, 20, 0));
         root.setContent(vBox);
+        root.setPadding(new Insets(20,0,0,0));
 
         amountPrice.setPadding(new Insets(0, 0, -5, 0));
 

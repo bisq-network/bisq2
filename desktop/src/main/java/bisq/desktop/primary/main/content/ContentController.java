@@ -18,9 +18,11 @@
 package bisq.desktop.primary.main.content;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.main.content.education.EducationController;
+import bisq.desktop.primary.main.content.events.EventsController;
 import bisq.desktop.primary.main.content.markets.MarketsController;
 import bisq.desktop.primary.main.content.portfolio.PortfolioController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
@@ -64,6 +66,12 @@ public class ContentController extends NavigationController {
             }
             case SETTINGS -> {
                 return Optional.of(new SettingsController(applicationService));
+            }
+            case EDUCATION -> {
+                return Optional.of(new EducationController(applicationService));
+            }
+            case EVENTS -> {
+                return Optional.of(new EventsController(applicationService));
             }
             case PORTFOLIO -> {
                 return Optional.of(new PortfolioController(applicationService));

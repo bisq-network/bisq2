@@ -18,11 +18,11 @@
 package bisq.desktop.primary;
 
 import bisq.common.util.OsUtils;
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.KeyCodeUtils;
 import bisq.desktop.common.utils.Transitions;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.layout.Layout;
 import javafx.scene.Scene;
@@ -59,6 +59,8 @@ public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageMod
                 event.consume();
                 controller.onQuit();
             });
+
+            root.setStyle("-fx-background-color: -fx-base;");
             model.getView().addListener((observable, oldValue, newValue) -> {
                 Layout.pinToAnchorPane(newValue.getRoot(), 0, 0, 0, 0);
                 root.getChildren().add(newValue.getRoot());

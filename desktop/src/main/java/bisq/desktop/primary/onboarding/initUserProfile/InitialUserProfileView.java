@@ -44,7 +44,7 @@ public class InitialUserProfileView extends View<HBox, InitialUserProfileModel, 
         super(new HBox(), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
-        root.getStyleClass().add("content-pane");
+        // root.getStyleClass().add("content-pane");
         root.setFillHeight(false);
 
         roboIconImageView = new ImageView();

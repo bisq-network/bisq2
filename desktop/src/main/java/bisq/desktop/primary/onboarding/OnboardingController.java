@@ -18,7 +18,7 @@
 package bisq.desktop.primary.onboarding;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.primary.onboarding.onboardNewbie.OnboardNewbieController;

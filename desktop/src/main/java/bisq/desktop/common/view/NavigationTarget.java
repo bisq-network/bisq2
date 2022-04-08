@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop;
+package bisq.desktop.common.view;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +59,9 @@ public enum NavigationTarget {
     PENDING_TRADES(PORTFOLIO),
     CLOSED_TRADES(PORTFOLIO),
 
+    EDUCATION(CONTENT),
+    EVENTS(CONTENT),
+    
     SETTINGS(CONTENT),
     PREFERENCES(SETTINGS),
 

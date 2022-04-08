@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.networkinfo;
 
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.NavigationTargetTab;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
@@ -31,7 +31,8 @@ public class NetworkInfoView extends TabView<JFXTabPane, NetworkInfoModel, Netwo
     public NetworkInfoView(NetworkInfoModel model, NetworkInfoController controller) {
         super(new JFXTabPane(), model, controller);
 
-        root.setPadding(new Insets(20, 20, 20, 0));
+        root.setPadding(new Insets(20,0,0,0));
+
     }
 
     @Override

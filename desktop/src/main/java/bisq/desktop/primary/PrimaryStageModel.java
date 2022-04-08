@@ -18,7 +18,7 @@
 package bisq.desktop.primary;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.settings.Cookie;
 import bisq.settings.CookieKey;

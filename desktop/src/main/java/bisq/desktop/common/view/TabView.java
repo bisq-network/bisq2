@@ -17,7 +17,6 @@
 
 package bisq.desktop.common.view;
 
-import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
 import javafx.beans.value.ChangeListener;
@@ -49,7 +48,6 @@ public abstract class TabView<R extends TabPane, M extends TabModel, C extends T
                     }
                 };
                 if (nodeIn.getHeight() > 0) {
-                    log.error("height " + nodeIn.getHeight());
                     Transitions.transitInNewTab(nodeIn);
                 } else {
                     nodeIn.heightProperty().addListener(nodeInHeightListener);
@@ -76,6 +74,15 @@ public abstract class TabView<R extends TabPane, M extends TabModel, C extends T
         if (root.getTabs().isEmpty()) {
             createAndAddTabs();
         }
+
+        //todo  hack for setting bg color, did not work via css
+     /*   UIThread.runOnNextRenderFrame(() -> {
+            Node node = root.lookup(".tab-header-background");
+            if (node !=null){
+                node.setStyle("-fx-background-color: -fx-base");
+            }
+        });*/
+
         model.getView().addListener(viewChangeListener);
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         // We need to delay a bit to give the child view chance to register the collection

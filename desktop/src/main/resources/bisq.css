@@ -145,7 +145,7 @@
     -fx-fill: null;
 }
 
-.jfx-button, .action-button {
+/*.jfx-button, .action-button {
     -fx-background-color: -bs-color-gray-bbb;
     -fx-text-fill: -bs-rd-font-dark-gray;
     -fx-font-size: 0.923em;
@@ -156,20 +156,20 @@
     -fx-padding: 0 40 0 40;
     -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 2, 0, 0, 0, 1);
     -fx-cursor: hand;
-}
+}*/
 
-.jfx-button:hover, .jfx-button:focused {
+/*.jfx-button:hover, .jfx-button:focused {
     -fx-background-color: derive(-bs-color-gray-2, -10%);
-}
+}*/
 
-.action-button:hover, .action-button:focused {
+/*.action-button:hover, .action-button:focused {
     -fx-background-color: derive(-bs-color-primary-dark, -10%);
-}
+}*/
 
-.action-button {
+/*.action-button {
     -fx-background-color: -bs-color-primary-dark;
     -fx-text-fill: -bs-background-color;
-}
+}*/
 
 .compact-button, .table-cell .jfx-button, .action-button.compact-button {
     -fx-padding: 0 10 0 10;
@@ -631,10 +631,10 @@ tree-table-view:focused {
 #base-content-container {
     -fx-background-color: -bs-background-gray;
 }
-
+/*
 .content-pane {
     -fx-background-color: linear-gradient(-bs-content-pane-bg-top 0%, -bs-content-pane-bg-bottom 100%);
-}
+}*/
 
 #footer-pane {
     -fx-background-color: -bs-footer-pane-background;
@@ -1227,11 +1227,11 @@ textfield */
     -fx-background-color: -fx-accent;
 }
 
-.jfx-tab-pane .tab-header-background {
+/*.jfx-tab-pane .tab-header-background {
     -fx-background-color: -bs-color-gray-background;
     -fx-border-width: 0 0 1 0;
     -fx-border-color: -bs-rd-tab-border;
-}
+}*/
 
 .jfx-tab-pane .headers-region .tab-selected-line {
     -fx-background-color: -fx-accent;
@@ -1865,10 +1865,10 @@ textfield */
     -fx-text-fill: -bs-rd-font-dark-gray;
 }
 
-.action-button:disabled, #sell-button:disabled, #buy-button:disabled {
+/*.action-button:disabled, #sell-button:disabled, #buy-button:disabled {
     -fx-background-color: -bs-color-gray-0;
     -fx-text-fill: -bs-rd-font-dark-gray;
-}
+}*/
 
 /********************************************************************************************************************
  *                                                                                                                  *

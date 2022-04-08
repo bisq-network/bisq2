@@ -15,29 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.nav;
+package bisq.desktop.primary.main.content.education;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
-@Slf4j
-public class LeftNavController implements Controller, Navigation.Listener {
-    private final LeftNavModel model;
+public class EducationController implements Controller {
+    private final EducationModel model;
     @Getter
-    private final LeftNavView view;
+    private final EducationView view;
 
-    public LeftNavController(DefaultApplicationService applicationService) {
-        model = new LeftNavModel(applicationService);
-        view = new LeftNavView(model, this);
-
-        // By using ROOT we listen to all NavigationTargets
-        Navigation.addListener(NavigationTarget.ROOT, this);
+    public EducationController(DefaultApplicationService applicationService) {
+        model = new EducationModel();
+        view = new EducationView(model, this);
     }
 
     @Override
@@ -46,15 +37,5 @@ public class LeftNavController implements Controller, Navigation.Listener {
 
     @Override
     public void onDeactivate() {
-    }
-
-    void select(NavigationTarget navigationTarget) {
-        model.select(navigationTarget);
-        Navigation.navigateTo(navigationTarget);
-    }
-
-    @Override
-    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        model.select(navigationTarget);
     }
 }

@@ -18,15 +18,13 @@
 package bisq.desktop.primary.main;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
 import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.ContentController;
-import bisq.desktop.primary.main.nav.LeftNavController;
+import bisq.desktop.primary.main.left.LeftNavController;
 import bisq.desktop.primary.main.top.TopPanelController;
-import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,13 +32,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class MainController extends NavigationController implements CachingController, Navigation.Listener {
+public class MainController extends NavigationController implements CachingController {
     @Getter
     private final MainModel model = new MainModel();
     @Getter
     private final MainView view;
     private final SettingsService settingsService;
     private final DefaultApplicationService applicationService;
+    private final LeftNavController leftNavController;
 
     public MainController(DefaultApplicationService applicationService) {
         super(NavigationTarget.MAIN);
@@ -48,30 +47,21 @@ public class MainController extends NavigationController implements CachingContr
         settingsService = applicationService.getSettingsService();
         this.applicationService = applicationService;
 
-        LeftNavController leftNavController = new LeftNavController(applicationService);
+         leftNavController = new LeftNavController(applicationService);
         TopPanelController topPanelController = new TopPanelController(applicationService);
 
         view = new MainView(model,
                 this,
-                leftNavController.getView(),
-                topPanelController.getView());
+                leftNavController.getView().getRoot(),
+                topPanelController.getView().getRoot());
     }
 
     @Override
     public void onActivate() {
-        // By using ROOT we listen to all NavigationTargets
-        Navigation.addListener(NavigationTarget.ROOT, this);
-        String persisted = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
-        if (persisted != null) {
-            Navigation.navigateTo(NavigationTarget.valueOf(persisted));
-        } else {
-            Navigation.navigateTo(NavigationTarget.ONBOARDING);
-        }
     }
 
     @Override
     public void onDeactivate() {
-        Navigation.removeListener(NavigationTarget.ROOT, this);
     }
 
     @Override
@@ -88,9 +78,6 @@ public class MainController extends NavigationController implements CachingContr
 
     @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        if (navigationTarget.isAllowPersistence()) {
-            settingsService.getPersistableStore().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
-            settingsService.persist();
-        }
+        leftNavController.setNavigationTarget(navigationTarget);
     }
 }

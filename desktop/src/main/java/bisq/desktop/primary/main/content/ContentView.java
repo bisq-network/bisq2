@@ -29,9 +29,9 @@ public class ContentView extends NavigationView<AnchorPane, ContentModel, Conten
 
     public ContentView(ContentModel model, ContentController controller) {
         super(new AnchorPane(), model, controller);
-
+        
+        root.setPadding(new Insets(0, 15, 15, 0));
         model.getView().addListener((observable, oldValue, newValue) -> {
-            root.setPadding(new Insets(0, 20, 20, 0));
             Layout.pinToAnchorPane(newValue.getRoot(), 0, 0, 0, 0);
             root.getChildren().add(newValue.getRoot());
             if (oldValue != null) {

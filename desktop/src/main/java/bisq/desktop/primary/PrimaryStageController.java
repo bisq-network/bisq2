@@ -18,8 +18,8 @@
 package bisq.desktop.primary;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.Navigation;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.JavaFxApplicationData;
 import bisq.desktop.common.utils.DontShowAgainLookup;
@@ -76,7 +76,13 @@ public class PrimaryStageController extends NavigationController {
     @Override
     public void onActivate() {
         onStageReadyHandler.run();
-        Navigation.navigateTo(NavigationTarget.SPLASH);
+
+        String persisted = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
+        if (persisted != null) {
+            Navigation.navigateTo(NavigationTarget.valueOf(persisted));
+        } else {
+            Navigation.navigateTo(NavigationTarget.SPLASH);
+        }
     }
 
     @Override
@@ -101,6 +107,13 @@ public class PrimaryStageController extends NavigationController {
         }
     }
 
+    @Override
+    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+        if (navigationTarget.isAllowPersistence()) {
+            settingsService.getPersistableStore().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
+            settingsService.persist();
+        }
+    }
     public void onDomainInitialized() {
         // After the domain is initialized we show the application content
         if (applicationService.getUserProfileService().isDefaultUserProfileMissing()) {

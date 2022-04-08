@@ -37,6 +37,16 @@ public class Icons {
         return label;
     }
 
+    public static Label getIcon(AwesomeIcon icon, String fontSize) {
+        Label label = new Label();
+        AwesomeDude.setIcon(label, icon, fontSize);
+        return label;
+    }
+
+    public static Label getIcon(AwesomeIcon icon) {
+        return getIcon(icon, AwesomeDude.DEFAULT_ICON_SIZE);
+    }
+
     public static Text getSmallIconForLabel(GlyphIcons icon, Label label, String style) {
         return getIconForLabel(icon, "0.769em", label, style);
     }

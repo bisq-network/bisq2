@@ -17,7 +17,6 @@
 
 package bisq.desktop.common.view;
 
-import bisq.desktop.NavigationTarget;
 import javafx.scene.control.Tab;
 import lombok.Getter;
 

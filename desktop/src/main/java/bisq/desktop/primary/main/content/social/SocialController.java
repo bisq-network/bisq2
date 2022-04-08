@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.social;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
-import bisq.desktop.NavigationTarget;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class SocialController extends TabController {
+public class SocialController extends TabController  {
     private final DefaultApplicationService applicationService;
     @Getter
     private final SocialModel model;

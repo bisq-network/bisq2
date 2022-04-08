@@ -39,8 +39,8 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
                          Pane settlement) {
         super(new VBox(), model, controller);
         root.setSpacing(30);
-        root.setPadding(new Insets(20, 20, 20, 0));
-
+        root.setPadding(new Insets(20,0,0,0));
+        
         protocolLabel = new BisqLabel();
         protocolLabel.getStyleClass().add("titled-group-bg-label-active");
 

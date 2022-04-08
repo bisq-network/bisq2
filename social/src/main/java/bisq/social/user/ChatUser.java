@@ -49,7 +49,7 @@ public class ChatUser implements Proto {
     private final NetworkId networkId;
     @Getter
     private final Set<Entitlement> entitlements;
-    private transient final DerivedData derivedData;
+    private transient DerivedData derivedData;
 
     public ChatUser(NetworkId networkId) {
         this(networkId, new HashSet<>());
@@ -58,7 +58,6 @@ public class ChatUser implements Proto {
     public ChatUser(NetworkId networkId, Set<Entitlement> entitlements) {
         this.networkId = networkId;
         this.entitlements = entitlements;
-        derivedData = getDerivedData(networkId.getPubKey().publicKey().getEncoded());
     }
 
     public bisq.social.protobuf.ChatUser toProto() {
@@ -84,19 +83,28 @@ public class ChatUser implements Proto {
 
     // Delegates
     public String getId() {
-        return derivedData.id();
+        return getDerivedData().id();
     }
 
     public String getUserName() {
-        return derivedData.userName;
+        return getDerivedData().userName;
     }
 
     public byte[] getPubKeyHash() {
-        return derivedData.pubKeyHash().getBytes();
+        return getDerivedData().pubKeyHash().getBytes();
     }
 
     public ByteArray getPubKeyHashAsByteArray() {
-        return derivedData.pubKeyHash();
+        return getDerivedData().pubKeyHash();
+    }
+
+    private DerivedData getDerivedData() {
+        if (derivedData == null) {
+            // todo sometimes we get derivedData = null. not clear why...
+            log.warn("derivedData is null. we call getDerivedData()");
+            derivedData = ChatUser.getDerivedData(networkId.getPubKey().publicKey().getEncoded());
+        }
+        return derivedData;
     }
 
     private static DerivedData getDerivedData(byte[] pubKeyBytes) {
