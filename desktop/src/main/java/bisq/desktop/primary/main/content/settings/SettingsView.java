@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.settings;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.NavigationTargetTab;
+import bisq.desktop.common.view.FxNavigationTargetTab;
 import bisq.desktop.common.view.FxTabView;
 import bisq.i18n.Res;
 import com.jfoenix.controls.JFXTabPane;
@@ -31,9 +31,9 @@ public class SettingsView extends FxTabView<JFXTabPane, SettingsModel, SettingsC
 
     @Override
     protected void createAndAddTabs() {
-        NavigationTargetTab preferencesTab = createTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
-        NavigationTargetTab networkTab = createTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
-        NavigationTargetTab aboutTab = createTab(Res.get("settings.about"), NavigationTarget.ABOUT);
+        FxNavigationTargetTab preferencesTab = createTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
+        FxNavigationTargetTab networkTab = createTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
+        FxNavigationTargetTab aboutTab = createTab(Res.get("settings.about"), NavigationTarget.ABOUT);
         root.getTabs().setAll(preferencesTab, networkTab, aboutTab);
     }
 

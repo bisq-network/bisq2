@@ -62,7 +62,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final VBox vBox;
     private final int menuTop;
     private Subscription navigationTargetSubscription, menuExpandedSubscription;
-    private boolean menuExpanded;
 
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
         super(new AnchorPane(), model, controller);
@@ -158,7 +157,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             }
         });
         menuExpandedSubscription = EasyBind.subscribe(model.getMenuExpanded(), menuExpanded -> {
-            this.menuExpanded = menuExpanded;
             int width = menuExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
             vBox.setMaxWidth(width);
             vBox.setMinWidth(width);

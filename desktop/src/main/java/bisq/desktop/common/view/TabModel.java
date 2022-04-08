@@ -15,20 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content;
+package bisq.desktop.common.view;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.NavigationModel;
-import lombok.extern.slf4j.Slf4j;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import lombok.Getter;
 
-@Slf4j
+import java.util.ArrayList;
+import java.util.List;
 
-public class ContentModel extends NavigationModel {
-    public ContentModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.PORTFOLIO;
-    }
+public abstract class TabModel extends NavigationModel {
+    @Getter
+   private final ObjectProperty<TabButton> selectedTabButton = new SimpleObjectProperty<>();
+    @Getter
+    private final List<TabButton> tabButtons = new ArrayList<>();
 }

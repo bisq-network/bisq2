@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.NavigationTargetTab;
+import bisq.desktop.common.view.FxNavigationTargetTab;
 import bisq.desktop.common.view.FxTabView;
 import bisq.i18n.Res;
 import com.jfoenix.controls.JFXTabPane;
@@ -27,7 +27,7 @@ import org.fxmisc.easybind.Subscription;
 
 public class TradeView extends FxTabView<JFXTabPane, TradeModel, TradeController> {
 
-    private NavigationTargetTab offerbook, createOffer, takeOffer;
+    private FxNavigationTargetTab offerbook, createOffer, takeOffer;
     private Subscription createOfferTabVisibleSubscription, takeOfferTabVisibleSubscription;
 
     public TradeView(TradeModel model, TradeController controller) {

@@ -18,13 +18,13 @@
 package bisq.desktop.primary.main.content.portfolio;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.FxTabModel;
+import bisq.desktop.common.view.TabModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class PortfolioModel extends FxTabModel {
+public class PortfolioModel extends TabModel {
     public PortfolioModel() {
     }
 

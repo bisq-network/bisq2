@@ -27,12 +27,12 @@ import javafx.scene.layout.Region;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class FxTabView<R extends TabPane, M extends FxTabModel, C extends FxTabController> extends NavigationView<R, M, C> {
+public abstract class BisqTabView<R extends TabPane, M extends FxTabModel, C extends FxTabController> extends NavigationView<R, M, C> {
     protected final ChangeListener<Tab> tabChangeListener;
     protected final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
     private ChangeListener<Number> nodeInHeightListener;
 
-    public FxTabView(R root, M model, C controller) {
+    public BisqTabView(R root, M model, C controller) {
         super(root, model, controller);
 
         tabChangeListener = (observable, oldValue, newValue) -> {

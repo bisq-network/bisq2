@@ -38,7 +38,7 @@ public class ClosedTradesView extends View<VBox, ClosedTradesModel, ClosedTrades
         root.setSpacing(30);
         root.setPadding(new Insets(20, 0, 0, 0));
 
-        Label headline = new BisqLabel(Res.get("pendingTrades.headline"));
+        Label headline = new BisqLabel(Res.get("closedTrades.headline"));
         headline.getStyleClass().add("titled-group-bg-label-active");
 
         tableView = new BisqTableView<>(model.getSortedItems());

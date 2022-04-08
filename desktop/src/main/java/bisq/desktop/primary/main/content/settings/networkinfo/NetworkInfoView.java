@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.settings.networkinfo;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.NavigationTargetTab;
+import bisq.desktop.common.view.FxNavigationTargetTab;
 import bisq.desktop.common.view.FxTabView;
 import bisq.i18n.Res;
 import com.jfoenix.controls.JFXTabPane;
@@ -37,15 +37,15 @@ public class NetworkInfoView extends FxTabView<JFXTabPane, NetworkInfoModel, Net
 
     @Override
     protected void createAndAddTabs() {
-        NavigationTargetTab clearNetTab = createTab(Res.get("clearNet"), NavigationTarget.CLEAR_NET);
-        NavigationTargetTab torTab = createTab("Tor", NavigationTarget.TOR);
-        NavigationTargetTab i2pTab = createTab("I2P", NavigationTarget.I2P);
+        FxNavigationTargetTab clearNetTab = createTab(Res.get("clearNet"), NavigationTarget.CLEAR_NET);
+        FxNavigationTargetTab torTab = createTab("Tor", NavigationTarget.TOR);
+        FxNavigationTargetTab i2pTab = createTab("I2P", NavigationTarget.I2P);
         root.getTabs().setAll(clearNetTab, torTab, i2pTab);
     }
 
     @Override
-    protected NavigationTargetTab createTab(String title, NavigationTarget navigationTarget) {
-        NavigationTargetTab tab = super.createTab(title, navigationTarget);
+    protected FxNavigationTargetTab createTab(String title, NavigationTarget navigationTarget) {
+        FxNavigationTargetTab tab = super.createTab(title, navigationTarget);
         tab.setDisable(model.isDisabled(navigationTarget));
         return tab;
     }

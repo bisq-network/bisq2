@@ -17,15 +17,5 @@
 
 package bisq.desktop.common.view;
 
-import javafx.scene.control.Tab;
-import lombok.Getter;
-
-public class NavigationTargetTab extends Tab {
-    @Getter
-    private final NavigationTarget navigationTarget;
-
-    public NavigationTargetTab(String title, NavigationTarget navigationTarget) {
-        super(title);
-        this.navigationTarget = navigationTarget;
-    }
+public class BisqTabPane {
 }

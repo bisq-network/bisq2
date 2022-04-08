@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.social;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.NavigationTargetTab;
+import bisq.desktop.common.view.FxNavigationTargetTab;
 import bisq.desktop.common.view.FxTabView;
 import bisq.i18n.Res;
 import com.jfoenix.controls.JFXTabPane;
@@ -33,8 +33,8 @@ public class SocialView extends FxTabView<JFXTabPane, SocialModel, SocialControl
 
     @Override
     protected void createAndAddTabs() {
-        NavigationTargetTab chatTab = createTab(Res.get("social.chat"), NavigationTarget.CHAT);
-        NavigationTargetTab userProfileTab = createTab(Res.get("social.userProfile"), NavigationTarget.USER_PROFILE);
+        FxNavigationTargetTab chatTab = createTab(Res.get("social.chat"), NavigationTarget.CHAT);
+        FxNavigationTargetTab userProfileTab = createTab(Res.get("social.userProfile"), NavigationTarget.USER_PROFILE);
         root.getTabs().setAll(chatTab, userProfileTab);
     }
 
