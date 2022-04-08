@@ -164,7 +164,7 @@ Taken from Bisq. Might need some clean up
 }
 
 .action-button:disabled, #sell-button:disabled, #buy-button:disabled {
-    -fx-background-color: -bisq-icon-bg-disabled;
+    -fx-background-color: -bisq-controls-bg-disabled;
     -fx-text-fill: -bisq-text-medium;
 }
 

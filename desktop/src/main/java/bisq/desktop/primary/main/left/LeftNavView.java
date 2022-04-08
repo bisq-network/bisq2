@@ -19,8 +19,11 @@ package bisq.desktop.primary.main.left;
 
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
+import bisq.desktop.layout.Layout;
+import bisq.desktop.primary.main.top.TopPanelView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
@@ -30,7 +33,10 @@ import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -41,9 +47,10 @@ import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
-public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
-    private final static int EXPANDED_WIDTH = 215;
-    private final static int COLLAPSED_WIDTH = 95;
+public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavController> {
+    private final static int EXPANDED_WIDTH = 330;
+    private final static int COLLAPSED_WIDTH = 110;
+    private final static int MARKER_WIDTH = 4;
 
     private final ToggleGroup toggleGroup = new ToggleGroup();
     @Getter
@@ -51,53 +58,94 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
     private final Map<NavigationTarget, NavigationButton> buttonsMap = new HashMap<>();
     private final Label expandIcon, collapseIcon;
     private final ImageView logoExpanded, logoCollapsed;
-    private final Pane expandMenuIcons;
+    private final Region selectionMarker;
+    private final VBox vBox;
+    private final int menuTop;
     private Subscription navigationTargetSubscription, menuExpandedSubscription;
+    private boolean menuExpanded;
 
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
-        super(new VBox(), model, controller);
+        super(new AnchorPane(), model, controller);
 
-        root.setSpacing(10);
-        root.setPadding(new Insets(15, 30, 15, 15));
-        root.setStyle("-fx-background-color: -bisq-menu-bg;; -fx-background-insets: 61 15 0 0");
+        root.setStyle("-fx-background-color: -bisq-dark-bg; /*-fx-background-insets: 0 30 0 0*/");
 
-        NavigationButton trade = createNavigationButton(Res.get("trade"), AwesomeIcon.EXCHANGE, NavigationTarget.TRADE);
-        NavigationButton portfolio = createNavigationButton(Res.get("portfolio"), AwesomeIcon.STACKEXCHANGE, NavigationTarget.PORTFOLIO);
-        NavigationButton education = createNavigationButton(Res.get("education"), AwesomeIcon.BOOK, NavigationTarget.EDUCATION);
-        NavigationButton social = createNavigationButton(Res.get("social"), AwesomeIcon.GROUP, NavigationTarget.SOCIAL);
-        NavigationButton events = createNavigationButton(Res.get("events"), AwesomeIcon.CALENDAR, NavigationTarget.EVENTS);
-        social.setOnAction(() -> {
+        menuTop = TopPanelView.HEIGHT;
+
+        vBox = new VBox();
+        Layout.pinToAnchorPane(vBox, menuTop, 0, 0, MARKER_WIDTH);
+
+        NavigationButton trade = createNavigationButton(Res.get("trade"),
+                ImageUtil.getImageViewById("sell"),  //todo missing icon
+                NavigationTarget.TRADE);
+        NavigationButton portfolio = createNavigationButton(Res.get("portfolio"),
+                ImageUtil.getImageViewById("portfolio"),
+                NavigationTarget.PORTFOLIO);
+        NavigationButton education = createNavigationButton(Res.get("education"),
+                ImageUtil.getImageViewById("support"), //todo missing icon
+                NavigationTarget.EDUCATION);
+        NavigationButton social = createNavigationButton(Res.get("social"),
+                ImageUtil.getImageViewById("governance"),//todo missing icon
+                NavigationTarget.SOCIAL);
+        NavigationButton events = createNavigationButton(Res.get("events"),
+                ImageUtil.getImageViewById("home"),//todo missing icon
+                NavigationTarget.EVENTS);
+        NavigationButton markets = createNavigationButton(Res.get("markets"),
+                ImageUtil.getImageViewById("market"),
+                NavigationTarget.MARKETS);
+        NavigationButton wallet = createNavigationButton(Res.get("wallet"),
+                ImageUtil.getImageViewById("wallet"),
+                NavigationTarget.WALLET);
+        NavigationButton settings = createNavigationButton(Res.get("settings"),
+                ImageUtil.getImageViewById("settings"),
+                NavigationTarget.SETTINGS);
+
+         /*  social.setOnAction(() -> {
             controller.onNavigationTargetSelected(NavigationTarget.SOCIAL);
             if (model.getMenuExpanded().get()) {
                 controller.onToggleExpandMenu();
             }
-        });
-        NavigationButton markets = createNavigationButton(Res.get("markets"), AwesomeIcon.BAR_CHART, NavigationTarget.MARKETS);
-        NavigationButton wallet = createNavigationButton(Res.get("wallet"), AwesomeIcon.MONEY, NavigationTarget.WALLET);
-        NavigationButton settings = createNavigationButton(Res.get("settings"), AwesomeIcon.GEARS, NavigationTarget.SETTINGS);
+        });*/
 
-        Region spacer = new Region();
-        VBox.setVgrow(spacer, Priority.ALWAYS);
-        networkInfoBox = new NetworkInfoBox(model, () -> controller.onNavigationTargetSelected(NavigationTarget.NETWORK_INFO));
+        networkInfoBox = new NetworkInfoBox(model,
+                () -> controller.onNavigationTargetSelected(NavigationTarget.NETWORK_INFO));
+       // Layout.pinToAnchorPane(networkInfoBox, null, null, 26, 20);
+        Layout.pinToAnchorPane(networkInfoBox, null, null, 0, 0);
+
         model.addNavigationTarget(NavigationTarget.NETWORK_INFO);
 
-        expandIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_RIGHT, "24");
+        expandIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_RIGHT, "22");
         expandIcon.setCursor(Cursor.HAND);
-        collapseIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_LEFT, "24");
+        collapseIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_LEFT, "22");
         collapseIcon.setCursor(Cursor.HAND);
-        expandMenuIcons = new Pane();
-        expandMenuIcons.getChildren().addAll(expandIcon, collapseIcon);
-        expandMenuIcons.setOpacity(0.3);
-        VBox.setMargin(expandMenuIcons, new Insets(47, 0, -10, 0));
-       
+
+        int iconSize = 28;
+        collapseIcon.setLayoutY(menuTop - iconSize);
+        collapseIcon.setLayoutX(MARKER_WIDTH + EXPANDED_WIDTH - iconSize);
+        collapseIcon.setOpacity(0);
+        expandIcon.setLayoutY(menuTop - iconSize);
+        expandIcon.setLayoutX(MARKER_WIDTH + COLLAPSED_WIDTH - iconSize);
+        expandIcon.setOpacity(0);
+
         logoExpanded = ImageUtil.getImageViewById("bisq-logo");
         logoCollapsed = ImageUtil.getImageViewById("bisq-logo-mark");
         VBox.setMargin(logoExpanded, new Insets(0, 0, 0, 11));
         VBox.setMargin(logoCollapsed, new Insets(0, 0, 0, 11));
-      
-        root.getChildren().addAll(logoExpanded, logoCollapsed, expandMenuIcons,
-                trade, portfolio, education, social, events, markets, wallet, settings,
-                spacer, networkInfoBox);
+        logoExpanded.setLayoutX(47);
+        logoCollapsed.setLayoutX(logoExpanded.getLayoutX());
+        logoExpanded.setLayoutY(26);
+        logoCollapsed.setLayoutY(logoExpanded.getLayoutY());
+
+        selectionMarker = new Region();
+        selectionMarker.setStyle("-fx-background-color: -fx-accent;");
+        selectionMarker.setMinWidth(4);
+        selectionMarker.setMaxWidth(4);
+        selectionMarker.setMinHeight(NavigationButton.HEIGHT);
+        selectionMarker.setMaxHeight(NavigationButton.HEIGHT);
+
+        selectionMarker.setLayoutY(menuTop);
+        vBox.getChildren().addAll(trade, portfolio, education, social, events, markets, wallet, settings);
+        vBox.setLayoutY(menuTop);
+        root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, vBox, collapseIcon, expandIcon, networkInfoBox);
     }
 
     @Override
@@ -110,13 +158,19 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
             }
         });
         menuExpandedSubscription = EasyBind.subscribe(model.getMenuExpanded(), menuExpanded -> {
+            this.menuExpanded = menuExpanded;
             int width = menuExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
-            root.setMaxWidth(width);
-            root.setMinWidth(width);
-            expandIcon.setLayoutX(width - 40);
-            collapseIcon.setLayoutX(width - 40);
-            buttonsMap.values().forEach(e -> e.setMenuExpanded(menuExpanded, width - 45));
+            vBox.setMaxWidth(width);
+            vBox.setMinWidth(width);
 
+            root.setMinWidth(width + MARKER_WIDTH);
+            root.setMinWidth(width + MARKER_WIDTH);
+
+            buttonsMap.values().forEach(e -> e.setMenuExpanded(menuExpanded, width));
+
+            networkInfoBox.setMaxWidth(width+ MARKER_WIDTH);
+            networkInfoBox.setMinWidth(width+ MARKER_WIDTH);
+            
             networkInfoBox.setVisible(menuExpanded);
             networkInfoBox.setManaged(menuExpanded);
 
@@ -130,6 +184,15 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
             expandIcon.setVisible(!menuExpanded);
             expandIcon.setManaged(!menuExpanded);
         });
+
+        root.setOnMouseEntered(e -> {
+            Transitions.fadeIn(collapseIcon);
+            Transitions.fadeIn(expandIcon);
+        });
+        root.setOnMouseExited(e -> {
+            Transitions.fadeOut(expandIcon);
+            Transitions.fadeOut(collapseIcon);
+        });
     }
 
     @Override
@@ -138,11 +201,16 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
         collapseIcon.setOnMouseClicked(null);
         navigationTargetSubscription.unsubscribe();
         menuExpandedSubscription.unsubscribe();
+        root.setOnMouseEntered(null);
+        root.setOnMouseExited(null);
     }
 
-    private NavigationButton createNavigationButton(String title, AwesomeIcon awesomeIcon, NavigationTarget navigationTarget) {
-        NavigationButton button = new NavigationButton(title, awesomeIcon, toggleGroup);
-        button.setOnAction(() -> controller.onNavigationTargetSelected(navigationTarget));
+    private NavigationButton createNavigationButton(String title, ImageView icon, NavigationTarget navigationTarget) {
+        NavigationButton button = new NavigationButton(title, icon, toggleGroup);
+        button.setOnAction(() -> {
+            controller.onNavigationTargetSelected(navigationTarget);
+            selectionMarker.setLayoutY(menuTop + button.getBoundsInParent().getMinY());
+        });
         buttonsMap.put(navigationTarget, button);
         model.addNavigationTarget(navigationTarget);
         return button;
@@ -151,7 +219,7 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
     private static class NetworkInfoBox extends VBox {
         private NetworkInfoBox(LeftNavModel model, Runnable handler) {
             setSpacing(5);
-            setPadding(new Insets(10, 10, 10, 10));
+           
             setOnMouseClicked(e -> handler.run());
 
             HBox clearNetBox = getTransportTypeBox("clear-net",
@@ -172,7 +240,16 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
                     model.getI2pIsVisible(),
                     new Insets(0, 0, 5, 0));
 
-            getChildren().addAll(clearNetBox, torBox, i2pBox);
+            Region line = new Region();
+            line.setMinHeight(1);
+            line.setStyle("-fx-background-color: -bisq-controls-bg-disabled");
+            setMinHeight(NavigationButton.HEIGHT);
+            setMaxHeight(NavigationButton.HEIGHT);
+            Insets insets = new Insets(18, 0, 0, 44);
+            VBox.setMargin(clearNetBox, insets);
+            VBox.setMargin(torBox, insets);
+            VBox.setMargin(i2pBox, insets);
+            getChildren().addAll(line,clearNetBox, torBox, i2pBox);
         }
 
         private HBox getTransportTypeBox(String iconId,
@@ -188,13 +265,18 @@ public class LeftNavView extends View<VBox, LeftNavModel, LeftNavController> {
             hBox.visibleProperty().bind(isVisible);
 
             Label peers = new Label(Res.get("peers"));
-
+            String style = "-fx-text-fill: -bisq-text-medium; -fx-font-size: 1.2em";
+            peers.setStyle(style);
+           
             Label numConnectionsLabel = new Label();
+            peers.setStyle(style);
             numConnectionsLabel.textProperty().bind(numConnections);
 
             Label separator = new Label("|");
-
+            separator.setStyle(style);
+            
             Label numTargetConnectionsLabel = new Label();
+            numTargetConnectionsLabel.setStyle(style);
             numTargetConnectionsLabel.textProperty().bind(numTargetConnections);
 
             ImageView icon = new ImageView();

@@ -52,11 +52,11 @@ public class SelectUserTypeController implements Controller {
         switch (selectedType) {
             case NEWBIE -> {
                 model.getInfo().set(Res.get("satoshisquareapp.selectTraderType.newbie.info"));
-                model.getButtonText().set(Res.get("satoshisquareapp.selectTraderType.newbie.button").toUpperCase());
+                model.getButtonText().set(Res.get("satoshisquareapp.selectTraderType.newbie.button"));
             }
             case PRO_TRADER -> {
                 model.getInfo().set(Res.get("satoshisquareapp.selectTraderType.proTrader.info"));
-                model.getButtonText().set(Res.get("satoshisquareapp.selectTraderType.proTrader.button").toUpperCase());
+                model.getButtonText().set(Res.get("satoshisquareapp.selectTraderType.proTrader.button"));
             }
         }
     }

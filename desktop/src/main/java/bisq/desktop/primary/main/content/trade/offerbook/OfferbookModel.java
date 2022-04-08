@@ -75,13 +75,13 @@ public class OfferbookModel implements Model {
 
     String getActionButtonTitle(OfferListItem item) {
         if (isMyOffer(item)) {
-            return Res.get("remove").toUpperCase();
+            return Res.get("remove");
         } else {
             String currencyCode = item.getOffer().getMarket().baseCurrencyCode();
             String dir = item.getOffer().getDirection().isBuy() ?
                     Res.get("direction.label.sell", currencyCode) :
                     Res.get("direction.label.buy", currencyCode);
-            return Res.get("offerbook.table.action.takeOffer", dir).toUpperCase();
+            return Res.get("offerbook.table.action.takeOffer", dir);
         }
     }
 

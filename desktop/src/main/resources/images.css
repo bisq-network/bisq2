@@ -38,6 +38,47 @@
     -fx-image: url("images/trust.png");
 }
 
+/*Left nav*/
+#home {
+    -fx-image: url("images/home.png");
+}
+#buy {
+    -fx-image: url("images/buy.png");
+}
+
+#sell {
+    -fx-image: url("images/sell.png");
+}
+
+#market {
+    -fx-image: url("images/market.png");
+}
+
+#portfolio {
+    -fx-image: url("images/portfolio.png");
+}
+
+#wallet {
+    -fx-image: url("images/wallet.png");
+}
+
+#support {
+    -fx-image: url("images/support.png");
+}
+
+#settings {
+    -fx-image: url("images/settings.png");
+}
+
+#accounts {
+    -fx-image: url("images/accounts.png");
+}
+#governance {
+    -fx-image: url("images/governance.png");
+}
+
+
+
 /* unused....*/
 
 #image-splash-logo {

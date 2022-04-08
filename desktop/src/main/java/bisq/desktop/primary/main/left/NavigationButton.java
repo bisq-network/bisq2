@@ -17,8 +17,6 @@
 
 package bisq.desktop.primary.main.left;
 
-import bisq.desktop.common.utils.Icons;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -28,19 +26,22 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 class NavigationButton extends Pane implements Toggle {
-    static final int HEIGHT = 45;
+    static final int HEIGHT = 70;
     private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
     private final BooleanProperty selectedProperty = new SimpleBooleanProperty();
-    private final Label icon;
     private final Label label;
     private final Tooltip tooltip;
-    private boolean menuExpanded;
+    private final ImageView icon;
 
-    NavigationButton(String title, AwesomeIcon awesomeIcon, ToggleGroup toggleGroup) {
+    NavigationButton(String title, ImageView icon, ToggleGroup toggleGroup) {
+        this.icon = icon;
         setMinHeight(HEIGHT);
         setMaxHeight(HEIGHT);
 
@@ -52,17 +53,19 @@ class NavigationButton extends Pane implements Toggle {
         toggleGroup.getToggles().add(this);
         selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
 
-        icon = Icons.getIcon(awesomeIcon, "16");
         icon.setMouseTransparent(true);
-        icon.setLayoutX(17);
-        icon.setLayoutY(12);
+        icon.setLayoutX(40);
+        icon.setLayoutY(20);
 
-        label = new Label(title.toUpperCase());
-        label.setLayoutX(50);
-        label.setLayoutY(13);
+        label = new Label(title);
+        label.setLayoutX(94);
+        label.setLayoutY(20);
         label.setMouseTransparent(true);
-        label.setStyle("-fx-text-fill: -bs-rd-font-dark-gray");
 
+        setStyle("-fx-background-color: -bisq-dark-bg;");
+        label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-size: 1.78em;");
+        icon.setOpacity(0.6);
+        
         getChildren().addAll(icon, label);
     }
 
@@ -71,7 +74,6 @@ class NavigationButton extends Pane implements Toggle {
     }
 
     public void setMenuExpanded(boolean menuExpanded, int width) {
-        this.menuExpanded = menuExpanded;
         setMinWidth(width);
         setMaxWidth(width);
         label.setVisible(menuExpanded);
@@ -118,13 +120,13 @@ class NavigationButton extends Pane implements Toggle {
         selectedProperty.set(selected);
 
         if (selected) {
-            setStyle("-fx-background-color: -bisq-menu-selected; -fx-background-radius: 3;");
-            label.setStyle("-fx-text-fill: -fx-light-text-color;");
+            setStyle("-fx-background-color: -bisq-dark-bg-selected;");
+            label.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-size: 1.8em;");
             icon.setOpacity(1);
         } else {
-            setStyle("-fx-background-color: -bisq-menu-bg; -fx-background-radius: 3;");
-            label.setStyle("-fx-text-fill: -fx-mid-text-color;");
-            icon.setOpacity(0.7);
+            setStyle("-fx-background-color: -bisq-dark-bg;");
+            label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-size: 1.8em;");
+            icon.setOpacity(0.6);
         }
     }
 }

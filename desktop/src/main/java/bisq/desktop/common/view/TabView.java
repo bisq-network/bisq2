@@ -100,7 +100,7 @@ public abstract class TabView<R extends TabPane, M extends TabModel, C extends T
     }
 
     protected NavigationTargetTab createTab(String title, NavigationTarget navigationTarget) {
-        NavigationTargetTab tab = new NavigationTargetTab(title.toUpperCase(), navigationTarget);
+        NavigationTargetTab tab = new NavigationTargetTab(title, navigationTarget);
         tab.setClosable(false);
         return tab;
     }

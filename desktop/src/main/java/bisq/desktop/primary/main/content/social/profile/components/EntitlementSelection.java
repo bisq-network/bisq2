@@ -325,10 +325,10 @@ public class EntitlementSelection {
                                                 if (throwable == null && proof.isPresent()) {
                                                     //todo hide button and show feedback text instead
                                                     actionButton.getStyleClass().add("action-button");
-                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.success").toUpperCase());
+                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.success"));
                                                 } else {
                                                     actionButton.getStyleClass().remove("action-button");
-                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.failed").toUpperCase());
+                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.failed"));
                                                 }
                                             });
                                         });
@@ -348,10 +348,10 @@ public class EntitlementSelection {
                                                     //todo hide button and show feedback text instead
                                                     actionButton.setDisable(false);
                                                     actionButton.getStyleClass().add("action-button");
-                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.success").toUpperCase());
+                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.success"));
                                                 } else {
                                                     actionButton.getStyleClass().remove("action-button");
-                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.failed").toUpperCase());
+                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.failed"));
                                                 }
                                             });
                                         });
@@ -369,10 +369,10 @@ public class EntitlementSelection {
                                                     //todo hide button and show feedback text instead
                                                     actionButton.setDisable(false);
                                                     actionButton.getStyleClass().add("action-button");
-                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.success").toUpperCase());
+                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.success"));
                                                 } else {
                                                     actionButton.getStyleClass().remove("action-button");
-                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.failed").toUpperCase());
+                                                    actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.failed"));
                                                 }
                                             });
                                         });
