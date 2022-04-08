@@ -19,9 +19,9 @@ package bisq.desktop.primary.main.content.settings;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.common.view.FxTabModel;
 
-public class SettingsModel extends TabModel {
+public class SettingsModel extends FxTabModel {
     private final DefaultApplicationService applicationService;
 
     public SettingsModel(DefaultApplicationService applicationService) {

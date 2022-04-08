@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.portfolio;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.TabController;
+import bisq.desktop.common.view.FxTabController;
 import bisq.desktop.primary.main.content.portfolio.closed.ClosedTradesController;
 import bisq.desktop.primary.main.content.portfolio.openoffers.OpenOffersController;
 import bisq.desktop.primary.main.content.portfolio.pending.PendingTradesController;
@@ -28,7 +28,7 @@ import lombok.Getter;
 
 import java.util.Optional;
 
-public class PortfolioController extends TabController {
+public class PortfolioController extends FxTabController {
 
     private final DefaultApplicationService applicationService;
     @Getter

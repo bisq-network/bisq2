@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.TabController;
+import bisq.desktop.common.view.FxTabController;
 import bisq.desktop.primary.main.content.wallet.config.WalletConfigPopup;
 import bisq.desktop.primary.main.content.wallet.receive.WalletReceiveController;
 import bisq.desktop.primary.main.content.wallet.send.WalletSendController;
@@ -32,7 +32,7 @@ import lombok.Getter;
 
 import java.util.Optional;
 
-public class WalletController extends TabController {
+public class WalletController extends FxTabController {
     @Getter
     private final WalletModel model;
     @Getter

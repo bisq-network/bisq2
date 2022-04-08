@@ -19,13 +19,13 @@ package bisq.desktop.primary.main.content.wallet;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.NavigationTargetTab;
-import bisq.desktop.common.view.TabView;
+import bisq.desktop.common.view.FxTabView;
 import bisq.i18n.Res;
 import com.jfoenix.controls.JFXTabPane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class WalletView extends TabView<JFXTabPane, WalletModel, WalletController> {
+public class WalletView extends FxTabView<JFXTabPane, WalletModel, WalletController> {
 
     public WalletView(WalletModel model, WalletController controller) {
         super(new JFXTabPane(), model, controller);

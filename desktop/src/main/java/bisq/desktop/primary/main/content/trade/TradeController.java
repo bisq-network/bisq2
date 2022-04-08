@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.trade;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabController;
+import bisq.desktop.common.view.FxTabController;
 import bisq.desktop.primary.main.content.trade.create.CreateOfferController;
 import bisq.desktop.primary.main.content.trade.offerbook.OfferbookController;
 import bisq.desktop.primary.main.content.trade.take.TakeOfferController;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class TradeController extends TabController  {
+public class TradeController extends FxTabController {
 
     private final DefaultApplicationService applicationService;
     @Getter

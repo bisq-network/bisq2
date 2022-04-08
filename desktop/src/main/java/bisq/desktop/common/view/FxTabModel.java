@@ -17,5 +17,5 @@
 
 package bisq.desktop.common.view;
 
-public abstract class TabModel extends NavigationModel {
+public abstract class FxTabModel extends NavigationModel {
 }

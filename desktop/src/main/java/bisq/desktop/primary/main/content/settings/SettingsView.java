@@ -19,11 +19,11 @@ package bisq.desktop.primary.main.content.settings;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.NavigationTargetTab;
-import bisq.desktop.common.view.TabView;
+import bisq.desktop.common.view.FxTabView;
 import bisq.i18n.Res;
 import com.jfoenix.controls.JFXTabPane;
 
-public class SettingsView extends TabView<JFXTabPane, SettingsModel, SettingsController> {
+public class SettingsView extends FxTabView<JFXTabPane, SettingsModel, SettingsController> {
 
     public SettingsView(SettingsModel model, SettingsController controller) {
         super(new JFXTabPane(), model, controller);

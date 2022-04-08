@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.settings.networkinfo;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.common.view.FxTabModel;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.transport.Transport;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
-public class NetworkInfoModel extends TabModel {
+public class NetworkInfoModel extends FxTabModel {
     private final NetworkService networkService;
 
     private final BooleanProperty clearNetDisabled = new SimpleBooleanProperty(false);

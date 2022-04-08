@@ -20,14 +20,14 @@ package bisq.desktop.primary.main.content.settings.networkinfo;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.TabController;
+import bisq.desktop.common.view.FxTabController;
 import bisq.desktop.primary.main.content.settings.networkinfo.transport.TransportTypeController;
 import bisq.network.p2p.node.transport.Transport;
 import lombok.Getter;
 
 import java.util.Optional;
 
-public class NetworkInfoController extends TabController {
+public class NetworkInfoController extends FxTabController {
     private final DefaultApplicationService applicationService;
     @Getter
     private final NetworkInfoModel model;

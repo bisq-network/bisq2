@@ -22,7 +22,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.TabController;
+import bisq.desktop.common.view.FxTabController;
 import bisq.desktop.primary.main.content.social.chat.ChatController;
 import bisq.desktop.primary.main.content.social.profile.UserProfileController;
 import lombok.Getter;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class SocialController extends TabController  {
+public class SocialController extends FxTabController {
     private final DefaultApplicationService applicationService;
     @Getter
     private final SocialModel model;

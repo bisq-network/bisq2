@@ -20,9 +20,9 @@ package bisq.desktop.common.view;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class TabController extends NavigationController {
+public abstract class FxTabController extends NavigationController {
 
-    public TabController(NavigationTarget host) {
+    public FxTabController(NavigationTarget host) {
         super(host);
     }
 

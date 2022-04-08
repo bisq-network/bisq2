@@ -19,13 +19,13 @@ package bisq.desktop.primary.main.content.portfolio;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.NavigationTargetTab;
-import bisq.desktop.common.view.TabView;
+import bisq.desktop.common.view.FxTabView;
 import bisq.i18n.Res;
 import com.jfoenix.controls.JFXTabPane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PortfolioView extends TabView<JFXTabPane, PortfolioModel, PortfolioController> {
+public class PortfolioView extends FxTabView<JFXTabPane, PortfolioModel, PortfolioController> {
 
     public PortfolioView(PortfolioModel model, PortfolioController controller) {
         super(new JFXTabPane(), model, controller);

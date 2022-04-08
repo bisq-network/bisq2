@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.settings;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.TabController;
+import bisq.desktop.common.view.FxTabController;
 import bisq.desktop.primary.main.content.settings.networkinfo.NetworkInfoController;
 import bisq.desktop.primary.main.content.settings.networkinfo.about.AboutController;
 import bisq.desktop.primary.main.content.settings.networkinfo.preferences.PreferencesController;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class SettingsController extends TabController {
+public class SettingsController extends FxTabController {
     private final DefaultApplicationService applicationService;
     @Getter
     private final SettingsModel model;
