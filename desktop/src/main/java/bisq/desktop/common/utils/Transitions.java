@@ -70,6 +70,15 @@ public class Transitions {
             fade.setOnFinished(actionEvent -> finishedHandler.run());
         }
     }
+    public static void fadeIn(Node node, int duration,double targetOpacity, @Nullable Runnable finishedHandler) {
+        FadeTransition fade = new FadeTransition(Duration.millis(getDuration(duration)), node);
+        fade.setFromValue(0);
+        fade.setToValue(targetOpacity);
+        fade.play();
+        if (finishedHandler != null) {
+            fade.setOnFinished(actionEvent -> finishedHandler.run());
+        }
+    }
 
     public static FadeTransition fadeOut(Node node) {
         return fadeOut(node, DEFAULT_DURATION, null);

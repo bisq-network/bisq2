@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.events;
+package bisq.desktop.primary.main.content.social.events;
 
 import bisq.desktop.common.view.Model;
 

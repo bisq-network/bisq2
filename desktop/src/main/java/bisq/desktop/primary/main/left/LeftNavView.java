@@ -219,10 +219,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         root.setOnMouseEntered(e -> {
             if (collapseIcon.isVisible()) {
-                Transitions.fadeIn(collapseIcon);
+                Transitions.fadeIn(collapseIcon, Transitions.DEFAULT_DURATION, 0.1, null);
             }
             if (expandIcon.isVisible()) {
-                Transitions.fadeIn(expandIcon);
+                Transitions.fadeIn(expandIcon, Transitions.DEFAULT_DURATION, 0.1, null);
             }
         });
         root.setOnMouseExited(e -> {

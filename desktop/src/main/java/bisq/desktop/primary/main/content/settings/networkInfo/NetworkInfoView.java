@@ -22,7 +22,6 @@ import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.scene.Node;
 import javafx.scene.control.Accordion;
-import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -55,9 +54,7 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
             UIThread.runOnNextRenderFrame(() -> accordion.getPanes().get(0).setExpanded(true));
         }
 
-        Label label = new Label(Res.get("networkInfo"));
-        label.setStyle("-fx-text-fill: -bisq-text;  -fx-font-size: 2.1em; -fx-font-family: \"IBM Plex Sans Light\";");
-        root.getChildren().addAll(label, accordion);
+        root.getChildren().addAll(accordion);
     }
 
     @Override

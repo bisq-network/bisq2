@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education;
+package bisq.desktop.primary.main.content.social.education;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;

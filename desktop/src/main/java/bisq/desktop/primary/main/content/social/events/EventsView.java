@@ -15,15 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education;
+package bisq.desktop.primary.main.content.social.events;
 
 import bisq.desktop.common.view.View;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
-public class EducationView extends View<VBox, EducationModel, EducationController> {
-    public EducationView(EducationModel model, EducationController controller) {
+public class EventsView extends View<VBox, EventsModel, EventsController> {
+    public EventsView(EventsModel model, EventsController controller) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.CENTER);
