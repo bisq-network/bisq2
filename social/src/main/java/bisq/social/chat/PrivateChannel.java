@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class PrivateChannel extends Channel<PrivateChatMessage> {
+    private static final String CHANNEL_DELIMITER = "@PC@";
     private final ChatUser peer;
     private final UserProfile myProfile;
 
@@ -72,7 +73,7 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
     }
 
     public static UserProfile findMyProfileFromChannelId(String id, ChatUser peer, UserProfileService userProfileService) {
-        String[] chatNames = id.split("@PC@");
+        String[] chatNames = id.split(CHANNEL_DELIMITER);
         if (chatNames.length != 2) {
             throw new RuntimeException("malformed channel id"); // TODO figure out how error handling works here
         }
@@ -93,9 +94,9 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
         String peerName = peer.getUserName();
         String myName = senderProfile.userName();
         if (peerName.compareTo(myName) < 0) {
-            return peerName + "@PC@" + myName;
+            return peerName + CHANNEL_DELIMITER + myName;
         } else { // need to have an ordering here, otherwise there would be 2 channelIDs for the same participants
-            return myName + "@PC@" + peerName;
+            return myName + CHANNEL_DELIMITER + peerName;
         }
     }
 
