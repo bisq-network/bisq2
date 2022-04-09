@@ -24,6 +24,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -75,6 +76,10 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
 
     public void removeChatMessage(T chatMessage) {
         chatMessages.remove(chatMessage);
+    }
+
+    public void removeChatMessages(Collection<T> removeMessages) {
+        chatMessages.removeAll(removeMessages);
     }
 
     public abstract String getChannelName();

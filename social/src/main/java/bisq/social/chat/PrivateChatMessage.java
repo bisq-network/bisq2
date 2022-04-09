@@ -51,6 +51,7 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
                 date,
                 ChannelType.PRIVATE,
                 wasEdited,
+//                new MetaData(TimeUnit.SECONDS.toMillis(10), 100000, PrivateChatMessage.class.getSimpleName()));
                 new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PrivateChatMessage.class.getSimpleName()));
     }
 
@@ -102,9 +103,14 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
     public String getText() {
         return optionalText.get();
     }
+
     // Required for MailboxMessage use case
     @Override
     public MetaData getMetaData() {
         return metaData;
+    }
+
+    public boolean isExpired() {
+        return (System.currentTimeMillis() - getDate() > getMetaData().getTtl());
     }
 }

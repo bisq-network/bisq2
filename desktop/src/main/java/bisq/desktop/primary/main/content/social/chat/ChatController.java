@@ -99,16 +99,8 @@ public class ChatController implements Controller {
                 chatMessagesPin.unbind();
             }
             chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
-                    .map(chatMessage -> {
-                        if (chatMessage instanceof PrivateChatMessage privateChatMessage) {
-                            return new ChatMessageListItem<>(privateChatMessage);
-                        } else if (chatMessage instanceof PublicChatMessage publicChatMessage) {
-                            return new ChatMessageListItem<>(publicChatMessage);
-                        } else {
-                            throw new RuntimeException("ChatMessage has unexpected type. chatMessage=" + chatMessage);
-                        }
-                    })
-                    .to((ObservableSet<ChatMessage>) channel.getChatMessages()); //todo expected type <? extends ChatMessage> does not work ;-(
+                    .map(ChatMessageListItem::new) // only Public or PrivatChatmessage possible here
+                    .to((ObservableSet<ChatMessage>) channel.getChatMessages());
 
             model.getSelectedChannelAsString().set(channel.getChannelName());
             model.getSelectedChannel().set(channel);
@@ -133,7 +125,7 @@ public class ChatController implements Controller {
             // settings tab then in the notifications component).
             // We look up all our usernames, not only the selected one
             Set<String> myUserNames = userProfileService.getPersistableStore().getUserProfiles().stream()
-                    .map(userProfile -> userProfile.chatUser().getUserName()) // UserNameGenerator.fromHash(userProfile.chatUser().getPubKeyHash()))
+                    .map(userProfile -> userProfile.chatUser().getUserName())
                     .collect(Collectors.toSet());
             messageListener = c -> {
                 c.next();
@@ -142,10 +134,10 @@ public class ChatController implements Controller {
                     return;
                 }
                 if (channel.getNotificationSetting().get() == NotificationSetting.ALL) {
-                    String messages = Joiner.on("\n").join(
-                            c.getAddedSubList().stream()
+                    String messages = c.getAddedSubList().stream()
                                     .map(item -> item.getAuthorUserName() + ": " + item.getChatMessage().getText())
-                                    .collect(Collectors.toSet()));
+                                    .distinct()
+                                    .collect(Collectors.joining("\n"));
                     if (!messages.isEmpty()) {
                         new Notification().headLine(messages).autoClose().hideCloseButton().show();
                     }
@@ -155,14 +147,14 @@ public class ChatController implements Controller {
                     // in space separated tokens and compare those)
                     // - show user icon of sender (requires extending Notification to support custom graphics)
                     // 
-                    String messages = Joiner.on("\n").join(
-                            c.getAddedSubList().stream()
+                    String messages = c.getAddedSubList().stream()
                                     .filter(item -> myUserNames.stream().anyMatch(myUserName -> item.getMessage().contains("@" + myUserName)))
                                     .filter(item -> !myUserNames.contains(item.getAuthorUserName()))
                                     .map(item -> Res.get("social.notification.getMentioned",
                                             item.getAuthorUserName(),
                                             item.getChatMessage().getText()))
-                                    .collect(Collectors.toSet()));
+                                    .distinct()
+                                    .collect(Collectors.joining("\n"));
                     if (!messages.isEmpty()) {
                         new Notification().headLine(messages).autoClose().hideCloseButton().show();
                     }
