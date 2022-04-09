@@ -30,7 +30,6 @@ import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.node.transport.Transport;
 import com.google.gson.Gson;
-import com.google.gson.internal.LinkedTreeMap;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -159,11 +158,11 @@ public class MarketPriceService {
 
     private Map<Market, MarketPrice> parseResponse(String json) {
         Map<Market, MarketPrice> map = new HashMap<>();
-        LinkedTreeMap<?, ?> linkedTreeMap = new Gson().fromJson(json, LinkedTreeMap.class);
+        Map<?, ?> linkedTreeMap = new Gson().fromJson(json, Map.class);
         List<?> list = (ArrayList<?>) linkedTreeMap.get("data");
         list.forEach(obj -> {
             try {
-                LinkedTreeMap<?, ?> treeMap = (LinkedTreeMap<?, ?>) obj;
+                Map<?, ?> treeMap = (Map<?, ?>) obj;
                 String currencyCode = (String) treeMap.get("currencyCode");
                 if (!currencyCode.startsWith("NON_EXISTING_SYMBOL")) {
                     String dataProvider = (String) treeMap.get("provider"); // Bisq-Aggregate or name of exchange of price feed
