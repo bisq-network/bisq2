@@ -27,10 +27,10 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
-import javafx.geometry.Pos;
+import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import lombok.Getter;
 
 public class WalletBalanceComponent {
@@ -55,7 +55,6 @@ public class WalletBalanceComponent {
             this.walletService = walletService;
             model = new Model();
             view = new View(model, this);
-
         }
 
         @Override
@@ -72,27 +71,37 @@ public class WalletBalanceComponent {
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<Coin> balanceAsCoinProperty = new SimpleObjectProperty<>(Coin.of(0, "BTC"));
         private final ObservableValue<String> formattedBalanceProperty = Bindings.createStringBinding(
-                () -> Res.get("wallet.balance.box",
-                        AmountFormatter.formatAmountWithCode(balanceAsCoinProperty.get())),
+                () -> AmountFormatter.formatAmountWithCode(balanceAsCoinProperty.get()),
                 balanceAsCoinProperty);
     }
 
-    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private View(Model model, Controller controller) {
-            super(new VBox(), model, controller);
-            root.setAlignment(Pos.BASELINE_CENTER);
+    public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
+        private final Label balance;
 
-            var descriptionLabel = new Label();
-            descriptionLabel.textProperty().bind(model.formattedBalanceProperty);
-            root.getChildren().add(descriptionLabel);
+        private View(Model model, Controller controller) {
+            super(new HBox(), model, controller);
+
+           // root.setAlignment(Pos.BASELINE_CENTER);
+            root.setSpacing(13);
+
+            Label label = new Label(Res.get("wallet.availableBalance").toUpperCase());
+            label.setStyle("-fx-text-fill: -bisq-text-medium; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.25em");
+            label.setPadding(new Insets(4,0,0,0));
+            
+            balance = new Label();
+            balance.setStyle("-fx-text-fill: -bisq-text; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.55em");
+           
+            root.getChildren().addAll(label,balance );
         }
 
         @Override
         protected void onViewAttached() {
+            balance.textProperty().bind(model.formattedBalanceProperty);
         }
 
         @Override
         protected void onViewDetached() {
+            balance.textProperty().unbind();
         }
     }
 }
