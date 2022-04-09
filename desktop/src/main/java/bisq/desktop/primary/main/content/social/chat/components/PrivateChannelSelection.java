@@ -30,8 +30,11 @@ public class PrivateChannelSelection extends ChannelSelection {
         super(new Controller(chatService, Res.get("social.privateChannels")) {
             @Override
             public void onActivate() {
+                // Private channels have the ability to disappear, when their messages have expired.
+                // I dont want them to disappear  in front of the user, therefor its done  before display.
+                chatService.removeExpiredPrivateMessages();
                 super.onActivate();
-                channelsPin = FxBindings.<PrivateChannel, Channel<?>>bind(model.channels)
+                channelsPin = FxBindings.<PrivateChannel, Channel<?>> bind(model.channels)
                         .to(chatService.getPersistableStore().getPrivateChannels());
             }
         });

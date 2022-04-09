@@ -216,6 +216,10 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public void selectChannel(Channel<? extends ChatMessage> channel) {
+        if (channel instanceof PrivateChannel privateChannel) {
+            // remove expired messages
+            purgeExpired(privateChannel);
+        }
         persistableStore.getSelectedChannel().set(channel);
         persist();
     }
@@ -438,4 +442,29 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     private Set<String> getTradeTags() {
         return Set.of("BUY", "SELL", "WANT", "RECEIVE");
     }
+
+    public void removeExpiredPrivateMessages() {
+        // will need to go through al channels and check on their messages if they have expired.
+        persistableStore.getPrivateChannels().stream()
+                .forEach(this::purgeExpired);
+    }
+
+    /**
+     * PrivateChannels can expire iff their messages have expired or there is no message left for other reasons
+     * This method actually belongs to Privatechanel. However we cannot do any write operations in Privatechannel
+     * if we dont pass around the ChatService.
+     */
+    public boolean purgeExpired(PrivateChannel privateChannel) {
+        Set<PrivateChatMessage> mortem = privateChannel.getChatMessages().stream()
+                .filter(PrivateChatMessage::isExpired)
+                .collect(Collectors.toSet());
+        if (!mortem.isEmpty()) {
+            synchronized (persistableStore) {
+                privateChannel.removeChatMessages(mortem);
+            }
+            persist();
+        }
+        return privateChannel.getChatMessages().isEmpty();
+    }
+
 }
