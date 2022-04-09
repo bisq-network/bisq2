@@ -17,16 +17,5 @@
 
 package bisq.desktop.common.view;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import lombok.Getter;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public abstract class TabModel extends NavigationModel {
-    @Getter
-    private final ObjectProperty<TabButton> selectedTabButton = new SimpleObjectProperty<>();
-    @Getter
-    private final List<TabButton> tabButtons = new ArrayList<>();
+public abstract class FxTabModel extends NavigationModel {
 }

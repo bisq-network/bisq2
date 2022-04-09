@@ -15,86 +15,48 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.left;
+package bisq.desktop.common.view;
 
-import bisq.desktop.common.utils.Transitions;
-import bisq.desktop.common.view.NavigationTarget;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.Tooltip;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
-import javafx.util.Duration;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-class NavigationButton extends Pane implements Toggle {
-    static final int HEIGHT = 70;
-    @Getter
-    private final NavigationTarget navigationTarget;
+public class TabButton extends Pane implements Toggle {
     private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
     private final BooleanProperty selectedProperty = new SimpleBooleanProperty();
     private final Label label;
-    private final Tooltip tooltip;
-    private final ImageView icon;
+    @Getter
+    private final NavigationTarget navigationTarget;
 
-    NavigationButton(String title, ImageView icon, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
-        this.icon = icon;
+    public TabButton(String title, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
         this.navigationTarget = navigationTarget;
-        setMinHeight(HEIGHT);
-        setMaxHeight(HEIGHT);
 
         setCursor(Cursor.HAND);
-        tooltip = new Tooltip(title);
-        tooltip.setShowDelay(Duration.millis(200));
-
+        
         setToggleGroup(toggleGroup);
         toggleGroup.getToggles().add(this);
+        
         selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
 
-        icon.setMouseTransparent(true);
-        icon.setLayoutX(40);
-        icon.setLayoutY(20);
-
-        label = new Label(title);
-        label.setLayoutX(94);
-        label.setLayoutY(20);
+        label = new Label(title.toUpperCase());
+        label.setPadding(new Insets(12, 0, 0, 0));
         label.setMouseTransparent(true);
 
-        setStyle("-fx-background-color: -bisq-dark-bg;");
-        label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.78em;");
-        icon.setOpacity(0.6);
+        label.setStyle("-fx-text-fill: -bisq-text-dark; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.4em;");
 
-        getChildren().addAll(icon, label);
+        getChildren().addAll(label);
     }
-
 
     public final void setOnAction(Runnable handler) {
         setOnMouseClicked(e -> handler.run());
-    }
-
-    public void setMenuExpanded(boolean menuExpanded, int width, int duration) {
-        //setPrefWidth(width);
-
-        if (menuExpanded) {
-            Tooltip.uninstall(this, tooltip);
-            label.setVisible(true);
-            label.setManaged(true);
-            Transitions.fadeIn(label, duration);
-        } else {
-            Tooltip.install(this, tooltip);
-            Transitions.fadeOut(label, duration, () -> {
-                label.setVisible(false);
-                label.setManaged(false);
-            });
-        }
     }
 
 
@@ -132,13 +94,9 @@ class NavigationButton extends Pane implements Toggle {
         selectedProperty.set(selected);
 
         if (selected) {
-            setStyle("-fx-background-color: -bisq-dark-bg-selected;");
-            label.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.8em;");
-            icon.setOpacity(1);
+            label.setStyle("-fx-text-fill: -bisq-green; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.4em;");
         } else {
-            setStyle("-fx-background-color: -bisq-dark-bg;");
-            label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.8em;");
-            icon.setOpacity(0.6);
+            label.setStyle("-fx-text-fill: -bisq-text-dark; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.4em;");
         }
     }
 }

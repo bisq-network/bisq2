@@ -15,30 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social;
+package bisq.desktop.common.view;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabView;
-import bisq.i18n.Res;
-import lombok.extern.slf4j.Slf4j;
+import javafx.scene.control.Tab;
+import lombok.Getter;
 
-@Slf4j
-public class SocialView extends TabView<SocialModel, SocialController> {
+public class FxNavigationTargetTab extends Tab {
+    @Getter
+    private final NavigationTarget navigationTarget;
 
-    public SocialView(SocialModel model, SocialController controller) {
-        super(model, controller);
-
-        label.setText(Res.get("social"));
-
-        addTab(Res.get("social.chat"), NavigationTarget.CHAT);
-        addTab(Res.get("social.userProfile"), NavigationTarget.USER_PROFILE);
-    }
-
-    @Override
-    protected void onViewAttached() {
-    }
-
-    @Override
-    protected void onViewDetached() {
+    public FxNavigationTargetTab(String title, NavigationTarget navigationTarget) {
+        super(title);
+        this.navigationTarget = navigationTarget;
     }
 }

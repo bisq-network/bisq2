@@ -30,20 +30,16 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class TradeController extends TabController  {
-
+public class TradeController extends TabController<TradeModel> {
     private final DefaultApplicationService applicationService;
-    @Getter
-    private final TradeModel model;
     @Getter
     private final TradeView view;
     private final OfferbookController offerbookController;
 
     public TradeController(DefaultApplicationService applicationService) {
-        super(NavigationTarget.TRADE);
+        super(new TradeModel(), NavigationTarget.TRADE);
 
         this.applicationService = applicationService;
-        model = new TradeModel();
         view = new TradeView(model, this);
 
         offerbookController = new OfferbookController(applicationService);
@@ -51,12 +47,10 @@ public class TradeController extends TabController  {
 
     @Override
     public void onActivate() {
-        // Navigation.addListener(host, na);
     }
 
     @Override
     public void onDeactivate() {
-        // Navigation.removeListener(host, this);
     }
 
     @Override

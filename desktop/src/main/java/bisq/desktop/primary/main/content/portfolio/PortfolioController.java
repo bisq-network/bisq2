@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.portfolio;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.portfolio.closed.ClosedTradesController;
 import bisq.desktop.primary.main.content.portfolio.openoffers.OpenOffersController;
@@ -28,19 +28,17 @@ import lombok.Getter;
 
 import java.util.Optional;
 
-public class PortfolioController extends TabController {
+public class PortfolioController extends TabController<PortfolioModel>/* implements CachingController*/ {
 
     private final DefaultApplicationService applicationService;
-    @Getter
-    private final PortfolioModel model;
+
     @Getter
     private final PortfolioView view;
 
     public PortfolioController(DefaultApplicationService applicationService) {
-        super(NavigationTarget.PORTFOLIO);
+        super(new PortfolioModel(), NavigationTarget.PORTFOLIO);
 
         this.applicationService = applicationService;
-        model = new PortfolioModel();
         view = new PortfolioView(model, this);
     }
 

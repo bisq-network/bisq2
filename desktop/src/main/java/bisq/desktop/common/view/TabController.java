@@ -17,16 +17,41 @@
 
 package bisq.desktop.common.view;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public abstract class TabController extends NavigationController {
+import java.util.Optional;
 
-    public TabController(NavigationTarget host) {
+@Slf4j
+public abstract class TabController<T extends TabModel> extends NavigationController {
+    @Getter
+    protected final T model;
+
+    public TabController(T model, NavigationTarget host) {
         super(host);
+
+        this.model = model;
     }
 
-    public void onTabSelected(NavigationTarget navigationTarget) {
+    void onTabSelected(NavigationTarget navigationTarget) {
+        findTabButton(navigationTarget).ifPresent(tabButton -> model.getSelectedTabButton().set(tabButton));
         Navigation.navigateTo(navigationTarget);
+    }
+
+    void onTabButtonCreated(TabButton tabButton) {
+        model.getTabButtons().add(tabButton);
+    }
+
+    void onTabButtonRemoved(TabButton tabButton) {
+        model.getTabButtons().remove(tabButton);
+        if (model.getSelectedTabButton().get().getNavigationTarget() == tabButton.getNavigationTarget()) {
+            model.getSelectedTabButton().set(null);
+        }
+    }
+
+    Optional<TabButton> findTabButton(NavigationTarget navigationTarget) {
+        return model.getTabButtons().stream()
+                .filter(tabButton -> navigationTarget == tabButton.getNavigationTarget())
+                .findAny();
     }
 }

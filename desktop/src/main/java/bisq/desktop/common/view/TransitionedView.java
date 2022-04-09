@@ -17,16 +17,14 @@
 
 package bisq.desktop.common.view;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import lombok.Getter;
+/**
+ * Interface for views which want to get notified if a transition was applied to it (usually by some outer container)
+ * This is helpful for cascaded animations. 
+ * E.g. ContentView fades in the PortfolioView after a short delay, the PortfolioView listens to onStartTransition to 
+ * start its tabButton animation when fadein has started.
+ */
+public interface TransitionedView {
+    void onTransitionCompleted();
 
-import java.util.ArrayList;
-import java.util.List;
-
-public abstract class TabModel extends NavigationModel {
-    @Getter
-    private final ObjectProperty<TabButton> selectedTabButton = new SimpleObjectProperty<>();
-    @Getter
-    private final List<TabButton> tabButtons = new ArrayList<>();
+    void onStartTransition();
 }

@@ -18,25 +18,21 @@
 package bisq.desktop.primary.main.content.portfolio;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.NavigationTargetTab;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
-import com.jfoenix.controls.JFXTabPane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PortfolioView extends TabView<JFXTabPane, PortfolioModel, PortfolioController> {
+public class PortfolioView extends TabView<PortfolioModel, PortfolioController> {
 
     public PortfolioView(PortfolioModel model, PortfolioController controller) {
-        super(new JFXTabPane(), model, controller);
-    }
+        super(model, controller);
 
-    @Override
-    protected void createAndAddTabs() {
-        NavigationTargetTab openOffers = createTab(Res.get("portfolio.openOffers"), NavigationTarget.OPEN_OFFERS);
-        NavigationTargetTab pendingTrades = createTab(Res.get("portfolio.pending"), NavigationTarget.PENDING_TRADES);
-        NavigationTargetTab closedTrades = createTab(Res.get("portfolio.closed"), NavigationTarget.CLOSED_TRADES);
-        root.getTabs().setAll(openOffers, pendingTrades, closedTrades);
+        addTab(Res.get("portfolio.openOffers"), NavigationTarget.OPEN_OFFERS);
+        addTab(Res.get("portfolio.pending"), NavigationTarget.PENDING_TRADES);
+        addTab(Res.get("portfolio.closed"), NavigationTarget.CLOSED_TRADES);
+   
+        label.setText(Res.get("portfolio"));
     }
 
     @Override

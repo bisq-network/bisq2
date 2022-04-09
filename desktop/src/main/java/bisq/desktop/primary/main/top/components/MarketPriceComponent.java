@@ -21,6 +21,7 @@ import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.BisqComboBox;
+import bisq.desktop.layout.Layout;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.QuoteFormatter;
@@ -34,6 +35,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
@@ -142,6 +145,50 @@ public class MarketPriceComponent {
                 @Override
                 public ListItem fromString(String string) {
                     return null;
+                }
+            });
+            comboBox.setButtonCell(new ListCell<>() {
+                @Override
+                protected void updateItem(ListItem item, boolean empty) {
+                    super.updateItem(item, empty);
+                    {
+                        setStyle("-fx-background-color: -bisq-dark-bg");
+                    }
+                    if (item != null && !empty) {
+                        Label market = new Label(item.marketPrice.getMarket().toString().toUpperCase());
+                        market.setStyle("-fx-text-fill: -bisq-text-medium; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.25em");
+                        market.setPadding(new Insets(4, 0, 0, 0));
+
+                        Label quote = new Label(QuoteFormatter.format(item.marketPrice.quote()));
+                        quote.setStyle("-fx-text-fill: -bisq-text; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.55em");
+                        HBox box = Layout.hBoxWith(market, quote);
+                        box.setSpacing(13);
+                        setGraphic(box);
+                    } else {
+                        setGraphic(null);
+                    }
+                }
+            });
+            comboBox.setCellFactory(p -> new ListCell<>() {
+                @Override
+                protected void updateItem(ListItem item, boolean empty) {
+                    super.updateItem(item, empty);
+                    {
+                        setStyle("-fx-background-color: -bisq-dark-bg");
+                    }
+                    if (item != null && !empty) {
+                        Label market = new Label(item.marketPrice.getMarket().toString().toUpperCase());
+                        market.setStyle("-fx-text-fill: -bisq-text-medium; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.25em");
+                        market.setPadding(new Insets(4, 0, 0, 0));
+
+                        Label quote = new Label(QuoteFormatter.format(item.marketPrice.quote()));
+                        quote.setStyle("-fx-text-fill: -bisq-text; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.55em");
+                        HBox box = Layout.hBoxWith(market, quote);
+                        box.setSpacing(13);
+                        setGraphic(box);
+                    } else {
+                        setGraphic(null);
+                    }
                 }
             });
 

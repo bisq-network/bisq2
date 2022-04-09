@@ -18,9 +18,9 @@
 package bisq.desktop.primary.main.left;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -32,14 +32,20 @@ import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
 @Getter
 public class LeftNavModel implements Model {
     private final NetworkService networkService;
-    private final ObjectProperty<NavigationTarget> navigationTarget = new SimpleObjectProperty<>();
+    private final Set<NavigationTarget> navigationTargets = new HashSet<>();
+    private final List<NavigationButton> navigationButtons = new ArrayList<>();
+    private final ObjectProperty<NavigationTarget> selectedNavigationTarget = new SimpleObjectProperty<>();
+    private final ObjectProperty<NavigationButton> selectedNavigationButton = new SimpleObjectProperty<>();
+    
     private final StringProperty clearNetNumConnections = new SimpleStringProperty("0");
     private final StringProperty clearNetNumTargetConnections = new SimpleStringProperty("0");
     private final BooleanProperty clearNetIsVisible = new SimpleBooleanProperty(false);
@@ -50,7 +56,7 @@ public class LeftNavModel implements Model {
     private final StringProperty i2pNumTargetConnections = new SimpleStringProperty("0");
     private final BooleanProperty i2pIsVisible = new SimpleBooleanProperty(false);
     private final BooleanProperty menuExpanded = new SimpleBooleanProperty(true);
-    private final Set<NavigationTarget> navigationTargets = new HashSet<>();
+ 
     
     public LeftNavModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
@@ -88,21 +94,6 @@ public class LeftNavModel implements Model {
                     });
                 })
         );
-    }
-
-    void addNavigationTarget(NavigationTarget navigationTarget) {
-        navigationTargets.add(navigationTarget);
-    }
-
-    void select(NavigationTarget navigationTarget) {
-        if (navigationTargets.contains(navigationTarget)) {
-            this.navigationTarget.set(navigationTarget);
-            return;
-        }
-        navigationTarget.getPath().stream()
-                .filter(navigationTargets::contains)
-                .findAny()
-                .ifPresent(this.navigationTarget::set);
     }
 
     private void onNumConnectionsChanged(Transport.Type type, PeerGroup peerGroup) {

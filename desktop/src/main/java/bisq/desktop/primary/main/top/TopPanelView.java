@@ -31,13 +31,13 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
                         Pane marketPriceBox,
                         Pane walletBalanceBox) {
         super(new HBox(), model, controller);
-        
-        root.setMinHeight(HEIGHT);
-        root.setMaxHeight(HEIGHT);
-        root.setMaxHeight(root.getMinHeight());
+
+        root.setPrefHeight(HEIGHT);
+        root.setSpacing(28);
         root.setStyle("-fx-background-color: -bisq-dark-bg;");
-        root.setPadding(new Insets(15, 15, 15, 15));
-        root.getChildren().addAll(Spacer.fillHBox(), marketPriceBox, walletBalanceBox);
+        root.setPadding(new Insets(28, 100, 0, 100));
+        marketPriceBox.setPadding(new Insets(-16, 0, 0, 0));
+        root.getChildren().addAll(marketPriceBox, Spacer.fillHBox(), walletBalanceBox);
     }
 
     @Override

@@ -16,7 +16,8 @@ package bisq.desktop.common.threading;/*
  */
 
 import javafx.application.Platform;
-
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
 public class UIThread {
     public static void run(Runnable task) {
         if (Platform.isFxApplicationThread()) {

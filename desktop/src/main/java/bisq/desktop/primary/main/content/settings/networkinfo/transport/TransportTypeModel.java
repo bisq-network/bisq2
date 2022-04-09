@@ -44,8 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 @Getter
 public class TransportTypeModel implements Model {
@@ -62,10 +60,10 @@ public class TransportTypeModel implements Model {
     private final StringProperty messageReceiver = new SimpleStringProperty();
     private final StringProperty receivedMessages = new SimpleStringProperty("");
     private final IdentityService identityService;
-    private final Node.Listener defaultNodeListener;
-    private final NodesById.Listener nodesByIdListener;
-    private final ServiceNode serviceNode;
-    private final Node defaultNode;
+    private  Node.Listener defaultNodeListener;
+    private  NodesById.Listener nodesByIdListener;
+    private  ServiceNode serviceNode;
+    private  Node defaultNode;
     private final Optional<NetworkId> selectedNetworkId = Optional.empty();
     private final Map<String, Node.Listener> nodeListenersByNodeId = new HashMap<>();
     private Collection<Node> allNodes = new ArrayList<>();
@@ -77,7 +75,9 @@ public class TransportTypeModel implements Model {
         this.transportType = transportType;
 
         Optional<ServiceNode> optionalServiceNode = networkService.findServiceNode(transportType);
-        checkArgument(optionalServiceNode.isPresent(), "ServiceNode must be present");
+        if (optionalServiceNode.isEmpty()) {
+            return;
+        }
         serviceNode = optionalServiceNode.get();
         defaultNode = serviceNode.getDefaultNode();
         defaultNode.findMyAddress().ifPresent(e -> myDefaultNodeAddress.set(e.getFullAddress()));
@@ -137,13 +137,13 @@ public class TransportTypeModel implements Model {
                 .collect(Collectors.toList()));
     }
 
-     void cleanup() {
+    void cleanup() {
         allNodes.forEach(node -> node.removeListener(nodeListenersByNodeId.get(node.getNodeId())));
         networkService.findServiceNode(transportType)
                 .map(ServiceNode::getNodesById)
                 .ifPresent(nodesById -> nodesById.removeListener(nodesByIdListener));
     }
-    
+
     private void addNodeListener(Node node) {
         Node.Listener listener = new Node.Listener() {
             @Override

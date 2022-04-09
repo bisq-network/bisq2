@@ -18,28 +18,38 @@
 package bisq.desktop.primary.main.content.settings.networkinfo;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.settings.networkinfo.transport.TransportTypeController;
 import bisq.network.p2p.node.transport.Transport;
+import javafx.scene.Node;
 import lombok.Getter;
 
 import java.util.Optional;
+import java.util.Set;
 
-public class NetworkInfoController extends TabController {
+public class NetworkInfoController implements Controller {
     private final DefaultApplicationService applicationService;
     @Getter
     private final NetworkInfoModel model;
     @Getter
     private final NetworkInfoView view;
+    @Getter
+    private Optional<TransportTypeController> clearNetController = Optional.empty();
+    @Getter
+    private Optional<TransportTypeController> torController = Optional.empty();
+    @Getter
+    private Optional<TransportTypeController> i2pController = Optional.empty();
 
     public NetworkInfoController(DefaultApplicationService applicationService) {
-        super(NavigationTarget.NETWORK_INFO);
-
         this.applicationService = applicationService;
         model = new NetworkInfoModel(applicationService);
-        view = new NetworkInfoView(model, this);
+
+
+        Set<Transport.Type> supportedTransportTypes = applicationService.getNetworkService().getSupportedTransportTypes();
+        view = new NetworkInfoView(model, this,
+                getTransportTypeViewRoot(supportedTransportTypes, Transport.Type.CLEAR),
+                getTransportTypeViewRoot(supportedTransportTypes, Transport.Type.TOR),
+                getTransportTypeViewRoot(supportedTransportTypes, Transport.Type.I2P));
     }
 
     @Override
@@ -50,21 +60,11 @@ public class NetworkInfoController extends TabController {
     public void onDeactivate() {
     }
 
-    @Override
-    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case CLEAR_NET -> {
-                return Optional.of(new TransportTypeController(applicationService, Transport.Type.CLEAR));
-            }
-            case TOR -> {
-                return Optional.of(new TransportTypeController(applicationService, Transport.Type.TOR));
-            }
-            case I2P -> {
-                return Optional.of(new TransportTypeController(applicationService, Transport.Type.I2P));
-            }
-            default -> {
-                return Optional.empty();
-            }
+    private Optional<Node> getTransportTypeViewRoot(Set<Transport.Type> supportedTransportTypes, Transport.Type type) {
+        if (supportedTransportTypes.contains(type)) {
+            return Optional.of(new TransportTypeController(applicationService, type)).map(e -> e.getView().getRoot());
+        } else {
+            return Optional.empty();
         }
     }
 }

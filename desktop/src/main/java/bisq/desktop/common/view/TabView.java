@@ -19,100 +19,176 @@ package bisq.desktop.common.view;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
+import bisq.desktop.components.containers.Spacer;
 import javafx.beans.value.ChangeListener;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class TabView<R extends TabPane, M extends TabModel, C extends TabController> extends NavigationView<R, M, C> {
-    protected final ChangeListener<Tab> tabChangeListener;
+public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<VBox, M, C>
+        implements TransitionedView {
+    protected final Label label;
+    protected final HBox tabs;
+    private final Region selectionMarker, line;
+    private final ToggleGroup toggleGroup = new ToggleGroup();
     protected final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
-    private ChangeListener<Number> nodeInHeightListener;
+    private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
+    private boolean transitionStarted;
 
-    public TabView(R root, M model, C controller) {
-        super(root, model, controller);
+    public TabView(M model, C controller) {
+        super(new VBox(), model, controller);
 
-        tabChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue instanceof NavigationTargetTab navigationTargetTab) {
-                controller.onTabSelected(navigationTargetTab.getNavigationTarget());
-            }
+        root.setFillWidth(true);
 
-            if (newValue.getContent() instanceof Region nodeIn) {
-                nodeInHeightListener = (observable1, oldValue1, height) -> {
-                    if (height.doubleValue() > 0) {
-                        nodeIn.heightProperty().removeListener(nodeInHeightListener);
-                        Transitions.transitInNewTab(nodeIn);
-                    }
-                };
-                if (nodeIn.getHeight() > 0) {
-                    Transitions.transitInNewTab(nodeIn);
-                } else {
-                    nodeIn.heightProperty().addListener(nodeInHeightListener);
-                }
-            } else {
-                UIThread.runOnNextRenderFrame(() -> Transitions.fadeIn(newValue.getContent(), 100));
-            }
-        };
+        label = new Label();
+        label.setStyle("-fx-text-fill: -bisq-text;  -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 2.8em;");
+        HBox.setMargin(label, new Insets(-8, 0, 31, -3));
+
+        tabs = new HBox();
+        tabs.setFillHeight(true);
+        tabs.setSpacing(46);
+        tabs.getChildren().addAll(label, Spacer.fillHBox());
+
+        ScrollPane content = new ScrollPane();
+        content.setFitToHeight(true);
+        content.setFitToWidth(true);
+
+        line = new Region();
+        line.setStyle("-fx-background-color: -bisq-dark-bg;");
+        double lineHeight = 1.5;
+        line.setMinHeight(lineHeight);
+
+        selectionMarker = new Region();
+        selectionMarker.setStyle("-fx-background-color: -fx-accent;");
+        selectionMarker.setPrefHeight(lineHeight);
+
+        Pane lineAndMarker = new Pane();
+        lineAndMarker.getChildren().addAll(line, selectionMarker);
+
+        root.getChildren().addAll(tabs, lineAndMarker, content);
 
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
-                NavigationTargetTab tab = getTabFromTarget(model.getNavigationTarget());
-                tab.setContent(newValue.getRoot());
-                // Remove tabChangeListener temporarily to avoid that the tabChangeListener gets called from the selection call
-                root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
-                root.getSelectionModel().select(tab);
-                root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
+                Region childRoot = newValue.getRoot();
+                childRoot.setStyle("-fx-background-color: -fx-base;");
+                childRoot.setPadding(new Insets(50, 0, 0, 0));
+                content.setContent(childRoot);
             }
         };
     }
 
     @Override
     void onViewAttachedInternal() {
-        if (root.getTabs().isEmpty()) {
-            createAndAddTabs();
-        }
-
-        //todo  hack for setting bg color, did not work via css
-     /*   UIThread.runOnNextRenderFrame(() -> {
-            Node node = root.lookup(".tab-header-background");
-            if (node !=null){
-                node.setStyle("-fx-background-color: -fx-base");
+        selectionMarker.setLayoutX(0);
+        selectionMarker.setPrefWidth(0);
+        transitionStarted = false;
+        UIThread.runOnNextRenderFrame(() -> {
+            NavigationTarget navigationTarget = model.getNavigationTarget();
+            if (navigationTarget != null) {
+                Navigation.navigateTo(navigationTarget);
             }
-        });*/
+        });
+
+        line.prefWidthProperty().bind(root.widthProperty());
+        model.getTabButtons().forEach(tabButton ->
+                tabButton.setOnAction(() -> controller.onTabSelected(tabButton.getNavigationTarget())));
+
+        rootWidthSubscription = EasyBind.subscribe(root.widthProperty(), w -> {
+            if (model.getSelectedTabButton().get() != null) {
+                selectionMarker.setLayoutX(model.getSelectedTabButton().get().getLayoutX());
+            }
+        });
+
+        selectedTabButtonSubscription = EasyBind.subscribe(model.getSelectedTabButton(), selectedTabButton -> {
+            if (selectedTabButton != null) {
+                toggleGroup.selectToggle(selectedTabButton);
+
+                if (transitionStarted) {
+                    maybeAnimateMark();
+                }
+            }
+        });
 
         model.getView().addListener(viewChangeListener);
-        root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
-        // We need to delay a bit to give the child view chance to register the collection
-        UIThread.runOnNextRenderFrame(() -> controller.onTabSelected(model.getNavigationTarget()));
 
+        UIThread.runOnNextRenderFrame(() -> {
+            controller.onTabSelected(model.getNavigationTarget());
+        });
         onViewAttached();
     }
 
     @Override
+    public void onStartTransition() {
+        this.transitionStarted = true;
+        UIThread.runOnNextRenderFrame(this::maybeAnimateMark);
+    }
+
+    @Override
+    public void onTransitionCompleted() {
+    }
+
+    @Override
     void onViewDetachedInternal() {
+        super.onViewDetachedInternal();
+
+        line.prefWidthProperty().unbind();
+        selectedTabButtonSubscription.unsubscribe();
+        rootWidthSubscription.unsubscribe();
+        if (layoutDoneSubscription != null) {
+            layoutDoneSubscription.unsubscribe();
+        }
+        model.getTabButtons().forEach(tabButton -> tabButton.setOnAction(null));
         model.getView().removeListener(viewChangeListener);
-        root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
-
-        onViewDetached();
     }
 
-    protected NavigationTargetTab createTab(String title, NavigationTarget navigationTarget) {
-        NavigationTargetTab tab = new NavigationTargetTab(title, navigationTarget);
-        tab.setClosable(false);
-        return tab;
+    protected void addTab(String text, NavigationTarget navigationTarget) {
+        TabButton tabButton = new TabButton(text, toggleGroup, navigationTarget);
+        controller.onTabButtonCreated(tabButton);
+        tabs.getChildren().addAll(tabButton);
     }
 
-    protected NavigationTargetTab getTabFromTarget(NavigationTarget navigationTarget) {
-        return root.getTabs().stream()
-                .filter(NavigationTargetTab.class::isInstance)
-                .map(NavigationTargetTab.class::cast)
-                .filter(tab -> navigationTarget == tab.getNavigationTarget())
-                .findAny()
-                .orElseThrow();
+    //todo 
+    protected void removeTab(NavigationTarget navigationTarget) {
+        controller.findTabButton(navigationTarget).ifPresent(tabButton -> {
+            controller.onTabButtonRemoved(tabButton);
+            tabs.getChildren().remove(tabButton);
+        });
+
     }
 
-    protected abstract void createAndAddTabs();
+    private void maybeAnimateMark() {
+        TabButton selectedTabButton = model.getSelectedTabButton().get();
+        if (selectedTabButton == null) {
+            return;
+        }
+        if (layoutDoneSubscription != null) {
+            layoutDoneSubscription.unsubscribe();
+        }
+
+        //todo maybe listen to transition animation from outer container to start animation after view is visible
+        layoutDoneSubscription = EasyBind.subscribe(model.getSelectedTabButton().get().layoutXProperty(), x -> {
+            // At the time when x is available the width is available as well
+            if (x.doubleValue() > 0) {
+                Transitions.animateTabButtonMarks(selectionMarker, selectedTabButton.getWidth(),
+                        selectedTabButton.getBoundsInParent().getMinX());
+                UIThread.runOnNextRenderFrame(() -> {
+                    if (layoutDoneSubscription != null) {
+                        layoutDoneSubscription.unsubscribe();
+                        layoutDoneSubscription = null;
+                    }
+                });
+            }
+        });
+    }
+
 }

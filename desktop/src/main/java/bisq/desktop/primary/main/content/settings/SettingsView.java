@@ -18,23 +18,19 @@
 package bisq.desktop.primary.main.content.settings;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.NavigationTargetTab;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
-import com.jfoenix.controls.JFXTabPane;
 
-public class SettingsView extends TabView<JFXTabPane, SettingsModel, SettingsController> {
+public class SettingsView extends TabView<SettingsModel, SettingsController> {
 
     public SettingsView(SettingsModel model, SettingsController controller) {
-        super(new JFXTabPane(), model, controller);
-    }
+        super(model, controller);
 
-    @Override
-    protected void createAndAddTabs() {
-        NavigationTargetTab preferencesTab = createTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
-        NavigationTargetTab networkTab = createTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
-        NavigationTargetTab aboutTab = createTab(Res.get("settings.about"), NavigationTarget.ABOUT);
-        root.getTabs().setAll(preferencesTab, networkTab, aboutTab);
+        addTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
+        addTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
+        addTab(Res.get("settings.about"), NavigationTarget.ABOUT);
+
+        label.setText(Res.get("settings"));
     }
 
     @Override

@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.settings.networkinfo.preferences;
 
 import bisq.desktop.common.view.View;
-import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -28,8 +28,13 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(), model, controller);
-        root.setPadding(new Insets(20, 20, 20, 0));
-        root.getChildren().add(new Label(getClass().getSimpleName()));
+        
+        root.setAlignment(Pos.CENTER);
+        Label label = new Label("WIP");
+        label.setStyle("-fx-text-fill: -bisq-text-dark; -fx-font-size: 30em");
+        Label small = new Label(getClass().getSimpleName());
+        small.setStyle("-fx-text-fill: -bisq-text-dark; -fx-font-size: 2em");
+        root.getChildren().addAll(label, small);
     }
 
     @Override

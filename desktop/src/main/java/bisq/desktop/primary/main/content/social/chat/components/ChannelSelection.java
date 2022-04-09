@@ -105,9 +105,11 @@ public abstract class ChannelSelection {
         protected View(ChannelSelection.Model model, ChannelSelection.Controller controller, String headlineText) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
+
             root.setStyle("-fx-background-color: -bisq-dark-bg;");
 
             listView = new ListView<>();
+            listView.setPrefHeight(100);
             listView.setItems(model.sortedList);
             listView.setFocusTraversable(false);
             listView.setPadding(new Insets(5, 0, 5, 0));

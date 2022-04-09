@@ -18,15 +18,20 @@
 package bisq.desktop.primary.main.content.events;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqLabel;
-import javafx.scene.layout.HBox;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 
-public class EventsView extends View<HBox, EventsModel, EventsController> {
+public class EventsView extends View<VBox, EventsModel, EventsController> {
     public EventsView(EventsModel model, EventsController controller) {
-        super(new HBox(), model, controller);
+        super(new VBox(), model, controller);
 
-        root.setSpacing(20);
-        root.getChildren().addAll(new BisqLabel(this.getClass().getSimpleName()));
+        root.setAlignment(Pos.CENTER);
+        Label label = new Label("WIP");
+        label.setStyle("-fx-text-fill: -bisq-text-dark; -fx-font-size: 30em");
+        Label small = new Label(getClass().getSimpleName());
+        small.setStyle("-fx-text-fill: -bisq-text-dark; -fx-font-size: 2em");
+        root.getChildren().addAll(label, small);
     }
 
     @Override

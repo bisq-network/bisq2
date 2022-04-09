@@ -19,11 +19,16 @@ package bisq.desktop.common.utils;
 
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.TransitionedView;
+import bisq.desktop.common.view.View;
 import bisq.settings.DisplaySettings;
 import javafx.animation.*;
 import javafx.collections.ObservableList;
 import javafx.scene.Camera;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.GaussianBlur;
@@ -33,6 +38,8 @@ import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 public class Transitions {
@@ -50,10 +57,18 @@ public class Transitions {
     }
 
     public static void fadeIn(Node node, int duration) {
+        fadeIn(node, duration, null);
+    }
+
+
+    public static void fadeIn(Node node, int duration, @Nullable Runnable finishedHandler) {
         FadeTransition fade = new FadeTransition(Duration.millis(getDuration(duration)), node);
         fade.setFromValue(0);
         fade.setToValue(1.0);
         fade.play();
+        if (finishedHandler != null) {
+            fade.setOnFinished(actionEvent -> finishedHandler.run());
+        }
     }
 
     public static FadeTransition fadeOut(Node node) {
@@ -64,7 +79,7 @@ public class Transitions {
         return fadeOut(node, duration, null);
     }
 
-    public static FadeTransition fadeOut(Node node, int duration, Runnable finishedHandler) {
+    public static FadeTransition fadeOut(Node node, int duration, @Nullable Runnable finishedHandler) {
         FadeTransition fade = new FadeTransition(Duration.millis(getDuration(duration)), node);
         fade.setFromValue(node.getOpacity());
         fade.setToValue(0.0);
@@ -216,16 +231,46 @@ public class Transitions {
         fadeIn(nodeIn, DEFAULT_DURATION / 2);
     }
 
-    public static void transitContentViews(Region nodeIn, Region nodeOut) {
-        nodeIn.setOpacity(0);
-        UIScheduler.run(() -> fadeIn(nodeIn)).after(DEFAULT_DURATION / 2);
-        slideOutRight(nodeOut, () -> {
-            if (nodeOut.getParent() != null) {
-                if (nodeOut.getParent() instanceof Pane pane) {
-                    pane.getChildren().remove(nodeOut);
+    public static void transitContentViews(View<? extends Parent, ? extends Model, ? extends Controller> oldView,
+                                           View<? extends Parent, ? extends Model, ? extends Controller> newView) {
+        Region nodeIn = newView.getRoot();
+        if (oldView != null) {
+            Region nodeOut = oldView.getRoot();
+            nodeIn.setOpacity(0);
+
+            UIScheduler.run(() -> {
+                        if (newView instanceof TransitionedView transitionedView) {
+                            transitionedView.onStartTransition();
+                        }
+                        fadeIn(nodeIn,
+                                DEFAULT_DURATION / 2,
+                                () -> {
+                                    if (newView instanceof TransitionedView transitionedView) {
+                                        transitionedView.onTransitionCompleted();
+                                    }
+                                });
+                    })
+                    .after(DEFAULT_DURATION / 2);
+            slideOutRight(nodeOut, () -> {
+                if (nodeOut.getParent() != null) {
+                    if (nodeOut.getParent() instanceof Pane pane) {
+                        pane.getChildren().remove(nodeOut);
+                    }
                 }
+            });
+        } else {
+            if (newView instanceof TransitionedView transitionedView) {
+                transitionedView.onStartTransition();
             }
-        });
+            Transitions.fadeIn(nodeIn,
+                    DEFAULT_DURATION,
+                    () -> {
+                        if (newView instanceof TransitionedView transitionedView) {
+                            transitionedView.onTransitionCompleted();
+                        }
+                    });
+        }
+
     }
 
     public static void slideInTop(Region node, int duration) {
@@ -344,6 +389,124 @@ public class Transitions {
             timeline.play();
         } else {
             onFinishedHandler.run();
+        }
+    }
+
+    public static void moveLeft(Region node, int targetX, int duration) {
+        if (displaySettings.isUseAnimations()) {
+            Timeline timeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            double startX = node.getLayoutX();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(node.layoutXProperty(), startX, Interpolator.LINEAR)
+            ));
+            keyFrames.add(new KeyFrame(Duration.millis(duration),
+                    new KeyValue(node.layoutXProperty(), targetX, Interpolator.EASE_OUT)
+            ));
+            timeline.play();
+        } else {
+            node.setLayoutX(targetX);
+        }
+    }
+
+    public static void animateLeftNavigationWidth(Region node, double targetWidth, int duration) {
+        if (displaySettings.isUseAnimations()) {
+            double startWidth = node.getWidth();
+            Interpolator interpolator = startWidth > targetWidth ? Interpolator.EASE_IN : Interpolator.EASE_OUT;
+            Timeline timeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(node.prefWidthProperty(), startWidth, Interpolator.LINEAR)
+            ));
+
+            keyFrames.add(new KeyFrame(Duration.millis(duration),
+                    new KeyValue(node.prefWidthProperty(), targetWidth, interpolator)
+            ));
+            timeline.play();
+        } else {
+            node.setPrefWidth(targetWidth);
+        }
+    }
+
+    public static void animateNavigationButtonMarks(Region node, double targetHeight, double targetY) {
+        double startY = node.getLayoutY();
+        if (displaySettings.isUseAnimations() || startY == 0) {
+            double duration = getDuration(DEFAULT_DURATION / 4);
+            double startHeight = node.getHeight();
+            Timeline timeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(node.layoutYProperty(), startY, Interpolator.LINEAR),
+                    new KeyValue(node.prefHeightProperty(), startHeight, Interpolator.LINEAR)
+            ));
+            if (startY > targetY) {
+                // animate upwards
+                keyFrames.add(new KeyFrame(Duration.millis(duration / 2),
+                        new KeyValue(node.layoutYProperty(), targetY, Interpolator.EASE_OUT),
+                        new KeyValue(node.prefHeightProperty(), startY - targetY + startHeight, Interpolator.EASE_OUT)
+                ));
+                keyFrames.add(new KeyFrame(Duration.millis(duration),
+                        new KeyValue(node.prefHeightProperty(), targetHeight, Interpolator.EASE_OUT)
+                ));
+            } else {
+                // animate downwards
+                keyFrames.add(new KeyFrame(Duration.millis(duration / 2),
+                        new KeyValue(node.layoutYProperty(), startY, Interpolator.LINEAR),
+                        new KeyValue(node.prefHeightProperty(), targetY - startY + targetHeight, Interpolator.EASE_OUT)
+                ));
+                keyFrames.add(new KeyFrame(Duration.millis(duration),
+                        new KeyValue(node.layoutYProperty(), targetY, Interpolator.EASE_OUT),
+                        new KeyValue(node.prefHeightProperty(), targetHeight, Interpolator.EASE_OUT)
+                ));
+            }
+            timeline.play();
+        } else {
+            node.setLayoutY(targetY);
+            node.setPrefHeight(targetHeight);
+        }
+    }
+
+    public static void animateTabButtonMarks(Region node, double targetWidth, double targetX) {
+        if (displaySettings.isUseAnimations()) {
+            double startWidth = node.getWidth();
+            double startX = node.getLayoutX();
+            double duration = getDuration(DEFAULT_DURATION / 4);
+            Timeline timeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(node.layoutXProperty(), startX, Interpolator.LINEAR),
+                    new KeyValue(node.prefWidthProperty(), startWidth, Interpolator.LINEAR)
+            ));
+            if (startX == 0) {
+                // start from left and x,w = 0
+                keyFrames.add(new KeyFrame(Duration.millis(duration),
+                        new KeyValue(node.layoutXProperty(), targetX, Interpolator.EASE_OUT),
+                        new KeyValue(node.prefWidthProperty(), targetWidth, Interpolator.EASE_OUT)
+                ));
+            } else if (startX > targetX) {
+                // animate to left
+                keyFrames.add(new KeyFrame(Duration.millis(duration / 2),
+                        new KeyValue(node.layoutXProperty(), targetX, Interpolator.EASE_OUT),
+                        new KeyValue(node.prefWidthProperty(), startX - targetX + startWidth, Interpolator.EASE_OUT)
+                ));
+                keyFrames.add(new KeyFrame(Duration.millis(duration),
+                        new KeyValue(node.prefWidthProperty(), targetWidth, Interpolator.EASE_OUT)
+                ));
+            } else {
+                // animate to right
+                keyFrames.add(new KeyFrame(Duration.millis(duration / 2),
+                        new KeyValue(node.layoutXProperty(), startX, Interpolator.LINEAR),
+                        new KeyValue(node.prefWidthProperty(), targetX - startX + targetWidth, Interpolator.EASE_OUT)
+                ));
+                keyFrames.add(new KeyFrame(Duration.millis(duration),
+                        new KeyValue(node.layoutXProperty(), targetX, Interpolator.EASE_OUT),
+                        new KeyValue(node.prefWidthProperty(), targetWidth, Interpolator.EASE_OUT)
+                ));
+            }
+            timeline.play();
+        } else {
+            node.setLayoutX(targetX);
+            node.setPrefWidth(targetWidth);
         }
     }
 }
