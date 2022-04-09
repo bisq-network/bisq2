@@ -145,7 +145,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     protected void onViewAttached() {
         expandIcon.setOnMouseClicked(e -> controller.onToggleExpandMenu());
         collapseIcon.setOnMouseClicked(e -> controller.onToggleExpandMenu());
-        navigationTargetSubscription = EasyBind.subscribe(model.getNavigationTarget(), navigationTarget -> {
+        navigationTargetSubscription = EasyBind.subscribe(model.getSelectedNavigationTarget(), navigationTarget -> {
             if (navigationTarget != null) {
                 controller.findTabButton(navigationTarget).ifPresent(toggleGroup::selectToggle);
                 maybeAnimateMark();

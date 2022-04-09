@@ -157,6 +157,15 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         tabs.getChildren().addAll(tabButton);
     }
 
+    //todo 
+    protected void removeTab(NavigationTarget navigationTarget) {
+        controller.findTabButton(navigationTarget).ifPresent(tabButton -> {
+            controller.onTabButtonRemoved(tabButton);
+            tabs.getChildren().remove(tabButton);
+        });
+
+    }
+
     private void maybeAnimateMark() {
         TabButton selectedTabButton = model.getSelectedTabButton().get();
         if (selectedTabButton == null) {

@@ -42,7 +42,14 @@ public abstract class TabController<T extends TabModel> extends NavigationContro
         model.getTabButtons().add(tabButton);
     }
 
-    private Optional<TabButton> findTabButton(NavigationTarget navigationTarget) {
+    void onTabButtonRemoved(TabButton tabButton) {
+        model.getTabButtons().remove(tabButton);
+        if (model.getSelectedTabButton().get().getNavigationTarget() == tabButton.getNavigationTarget()) {
+            model.getSelectedTabButton().set(null);
+        }
+    }
+
+    Optional<TabButton> findTabButton(NavigationTarget navigationTarget) {
         return model.getTabButtons().stream()
                 .filter(tabButton -> navigationTarget == tabButton.getNavigationTarget())
                 .findAny();

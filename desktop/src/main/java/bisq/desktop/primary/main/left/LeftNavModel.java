@@ -41,7 +41,11 @@ import java.util.Set;
 @Getter
 public class LeftNavModel implements Model {
     private final NetworkService networkService;
-    private final ObjectProperty<NavigationTarget> navigationTarget = new SimpleObjectProperty<>();
+    private final Set<NavigationTarget> navigationTargets = new HashSet<>();
+    private final List<NavigationButton> navigationButtons = new ArrayList<>();
+    private final ObjectProperty<NavigationTarget> selectedNavigationTarget = new SimpleObjectProperty<>();
+    private final ObjectProperty<NavigationButton> selectedNavigationButton = new SimpleObjectProperty<>();
+    
     private final StringProperty clearNetNumConnections = new SimpleStringProperty("0");
     private final StringProperty clearNetNumTargetConnections = new SimpleStringProperty("0");
     private final BooleanProperty clearNetIsVisible = new SimpleBooleanProperty(false);
@@ -52,9 +56,7 @@ public class LeftNavModel implements Model {
     private final StringProperty i2pNumTargetConnections = new SimpleStringProperty("0");
     private final BooleanProperty i2pIsVisible = new SimpleBooleanProperty(false);
     private final BooleanProperty menuExpanded = new SimpleBooleanProperty(true);
-    private final Set<NavigationTarget> navigationTargets = new HashSet<>();
-    private final ObjectProperty<NavigationButton> selectedNavigationButton = new SimpleObjectProperty<>();
-    private final List<NavigationButton> navigationButtons = new ArrayList<>();
+ 
     
     public LeftNavModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();

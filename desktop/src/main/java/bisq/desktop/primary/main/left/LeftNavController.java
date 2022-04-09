@@ -50,7 +50,7 @@ public class LeftNavController implements Controller {
         }
         supportedNavigationTarget.ifPresent(target->{
             findTabButton(target).ifPresent(navigationButton -> model.getSelectedNavigationButton().set(navigationButton));
-            model.getNavigationTarget().set(target);  
+            model.getSelectedNavigationTarget().set(target);  
         });
     }
 
@@ -64,7 +64,7 @@ public class LeftNavController implements Controller {
 
     void onNavigationTargetSelected(NavigationTarget navigationTarget) {
         findTabButton(navigationTarget).ifPresent(navigationButton -> model.getSelectedNavigationButton().set(navigationButton));
-        model.getNavigationTarget().set(navigationTarget);
+        model.getSelectedNavigationTarget().set(navigationTarget);
         Navigation.navigateTo(navigationTarget);
     }
 
