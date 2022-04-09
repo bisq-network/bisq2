@@ -29,6 +29,7 @@ public abstract class TabController<T extends TabModel> extends NavigationContro
 
     public TabController(T model, NavigationTarget host) {
         super(host);
+        
         this.model = model;
     }
 

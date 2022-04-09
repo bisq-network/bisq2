@@ -31,12 +31,12 @@ import java.util.Optional;
 public class PortfolioController extends TabController<PortfolioModel> {
 
     private final DefaultApplicationService applicationService;
-   
+
     @Getter
     private final PortfolioView view;
 
     public PortfolioController(DefaultApplicationService applicationService) {
-        super(new PortfolioModel(),NavigationTarget.PORTFOLIO);
+        super(new PortfolioModel(), NavigationTarget.PORTFOLIO);
 
         this.applicationService = applicationService;
         view = new PortfolioView(model, this);

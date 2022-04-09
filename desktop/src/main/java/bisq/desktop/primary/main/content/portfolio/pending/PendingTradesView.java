@@ -18,12 +18,10 @@
 package bisq.desktop.primary.main.content.portfolio.pending;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,17 +34,13 @@ public class PendingTradesView extends View<VBox, PendingTradesModel, PendingTra
         super(new VBox(), model, controller);
 
         root.setSpacing(30);
-        root.setPadding(new Insets(20, 0, 0, 0));
-
-        Label headline = new BisqLabel(Res.get("pendingTrades.headline"));
-        headline.getStyleClass().add("titled-group-bg-label-active");
 
         tableView = new BisqTableView<>(model.getSortedItems());
         tableView.setMinHeight(200);
         tableView.setPadding(new Insets(-20, 0, 0, 0));
         configDataTableView();
 
-        this.root.getChildren().addAll(headline, tableView);
+        this.root.getChildren().addAll(tableView);
     }
 
     @Override

@@ -60,6 +60,7 @@ public abstract class TabView<M extends TabModel, C extends TabController> exten
         content.setFitToHeight(true);
         content.setFitToWidth(true);
 
+
         line = new Region();
         line.setStyle("-fx-background-color: -bisq-dark-bg;");
         double lineHeight = 1.5;
@@ -76,7 +77,10 @@ public abstract class TabView<M extends TabModel, C extends TabController> exten
 
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
-                content.setContent(newValue.getRoot());
+                Region childRoot = newValue.getRoot();
+                childRoot.setStyle("-fx-background-color: -fx-base;");
+                childRoot.setPadding(new Insets(50, 0, 0, 0));
+                content.setContent(childRoot);
             }
         };
     }
@@ -101,7 +105,6 @@ public abstract class TabView<M extends TabModel, C extends TabController> exten
                 tabButton.setOnAction(() -> controller.onTabSelected(tabButton.getNavigationTarget())));
         selectedTabButtonSubscription = EasyBind.subscribe(model.getSelectedTabButton(), tabButton -> {
             if (tabButton != null) {
-               // tabButton.setSelected(true);
                 toggleGroup.selectToggle(tabButton);
                 selectionMarker.setLayoutX(tabButton.getBoundsInParent().getMinX());
                 selectionMarker.setPrefWidth(tabButton.getWidth());

@@ -26,7 +26,7 @@ import java.util.List;
 
 public abstract class TabModel extends NavigationModel {
     @Getter
-   private final ObjectProperty<TabButton> selectedTabButton = new SimpleObjectProperty<>();
+    private final ObjectProperty<TabButton> selectedTabButton = new SimpleObjectProperty<>();
     @Getter
     private final List<TabButton> tabButtons = new ArrayList<>();
 }
