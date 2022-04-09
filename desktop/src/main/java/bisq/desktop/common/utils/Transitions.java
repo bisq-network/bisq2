@@ -259,6 +259,9 @@ public class Transitions {
                 }
             });
         } else {
+            if (newView instanceof TransitionedView transitionedView) {
+                transitionedView.onStartTransition();
+            }
             Transitions.fadeIn(nodeIn,
                     DEFAULT_DURATION,
                     () -> {

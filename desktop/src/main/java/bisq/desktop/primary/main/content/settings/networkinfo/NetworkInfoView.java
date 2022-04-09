@@ -17,37 +17,49 @@
 
 package bisq.desktop.primary.main.content.settings.networkinfo;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.FxNavigationTargetTab;
-import bisq.desktop.common.view.FxTabView;
+import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
-import com.jfoenix.controls.JFXTabPane;
-import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.control.Accordion;
+import javafx.scene.control.Label;
+import javafx.scene.control.TitledPane;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
+
 @Slf4j
-public class NetworkInfoView extends FxTabView<JFXTabPane, NetworkInfoModel, NetworkInfoController> {
+public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoController> {
 
-    public NetworkInfoView(NetworkInfoModel model, NetworkInfoController controller) {
-        super(new JFXTabPane(), model, controller);
+    private final Accordion accordion;
 
-        root.setPadding(new Insets(20,0,0,0));
+    public NetworkInfoView(NetworkInfoModel model, NetworkInfoController controller,
+                           Optional<Node> clear,
+                           Optional<Node> tor,
+                           Optional<Node> i2p) {
+        super(new VBox(), model, controller);
 
-    }
 
-    @Override
-    protected void createAndAddTabs() {
-        FxNavigationTargetTab clearNetTab = createTab(Res.get("clearNet"), NavigationTarget.CLEAR_NET);
-        FxNavigationTargetTab torTab = createTab("Tor", NavigationTarget.TOR);
-        FxNavigationTargetTab i2pTab = createTab("I2P", NavigationTarget.I2P);
-        root.getTabs().setAll(clearNetTab, torTab, i2pTab);
-    }
+        root.setFillWidth(true);
+        root.setSpacing(20);
+        accordion = new Accordion();
+        clear.ifPresent(childRoot -> {
+            TitledPane titledPane = new TitledPane(Res.get("clearNet"), childRoot);
+            accordion.getPanes().add(titledPane);
+        });
+        tor.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("tor"), childRoot)));
+        i2p.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("i2p"), childRoot)));
 
-    @Override
-    protected FxNavigationTargetTab createTab(String title, NavigationTarget navigationTarget) {
-        FxNavigationTargetTab tab = super.createTab(title, navigationTarget);
-        tab.setDisable(model.isDisabled(navigationTarget));
-        return tab;
+        // todo when expanded it hides the lines at that tabs, no idea why..
+     /*   if (!accordion.getPanes().isEmpty()) {
+            UIThread.runOnNextRenderFrame(() -> accordion.getPanes().get(0).setExpanded(true));
+        }*/
+
+        Label label = new Label(Res.get("networkInfo"));
+        label.setStyle("-fx-text-fill: -bisq-text;  -fx-font-size: 2em;");
+        //HBox.setMargin(label, new Insets(-8, 0, 31, -3));
+        root.getChildren().addAll(label, accordion);
     }
 
     @Override

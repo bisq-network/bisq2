@@ -18,9 +18,9 @@
 package bisq.desktop.primary.main.content.settings;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.FxTabController;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.settings.networkinfo.NetworkInfoController;
 import bisq.desktop.primary.main.content.settings.networkinfo.about.AboutController;
 import bisq.desktop.primary.main.content.settings.networkinfo.preferences.PreferencesController;
@@ -30,18 +30,15 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class SettingsController extends FxTabController {
+public class SettingsController extends TabController<SettingsModel> {
     private final DefaultApplicationService applicationService;
-    @Getter
-    private final SettingsModel model;
     @Getter
     private final SettingsView view;
 
     public SettingsController(DefaultApplicationService applicationService) {
-        super(NavigationTarget.SETTINGS);
+        super(new SettingsModel(applicationService), NavigationTarget.SETTINGS);
 
         this.applicationService = applicationService;
-        model = new SettingsModel(applicationService);
         view = new SettingsView(model, this);
     }
 

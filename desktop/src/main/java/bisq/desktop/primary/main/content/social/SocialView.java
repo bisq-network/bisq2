@@ -18,24 +18,20 @@
 package bisq.desktop.primary.main.content.social;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.FxNavigationTargetTab;
-import bisq.desktop.common.view.FxTabView;
+import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
-import com.jfoenix.controls.JFXTabPane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SocialView extends FxTabView<JFXTabPane, SocialModel, SocialController> {
+public class SocialView extends TabView<SocialModel, SocialController> {
 
     public SocialView(SocialModel model, SocialController controller) {
-        super(new JFXTabPane(), model, controller);
-    }
+        super(model, controller);
 
-    @Override
-    protected void createAndAddTabs() {
-        FxNavigationTargetTab chatTab = createTab(Res.get("social.chat"), NavigationTarget.CHAT);
-        FxNavigationTargetTab userProfileTab = createTab(Res.get("social.userProfile"), NavigationTarget.USER_PROFILE);
-        root.getTabs().setAll(chatTab, userProfileTab);
+        label.setText(Res.get("social"));
+
+        addTab(Res.get("social.chat"), NavigationTarget.CHAT);
+        addTab(Res.get("social.userProfile"), NavigationTarget.USER_PROFILE);
     }
 
     @Override

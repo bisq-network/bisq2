@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.settings.networkinfo;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.FxTabModel;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.transport.Transport;
@@ -33,11 +33,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
-public class NetworkInfoModel extends FxTabModel {
+public class NetworkInfoModel implements Model {
     private final NetworkService networkService;
 
     private final BooleanProperty clearNetDisabled = new SimpleBooleanProperty(false);
@@ -45,7 +44,7 @@ public class NetworkInfoModel extends FxTabModel {
     private final BooleanProperty i2pDisabled = new SimpleBooleanProperty(false);
     // private final ObjectProperty<Optional<TransportTypeView>> transportTypeView = new SimpleObjectProperty<>();
     private final Set<Transport.Type> supportedTransportTypes;
-    private final Set<NavigationTarget> supportedNavigationTarget;
+  //  private final Set<NavigationTarget> supportedNavigationTarget;
     // private final Optional<Transport.Type> selectedTransportType = Optional.empty();
 
     private final KeyPairService keyPairService;
@@ -55,14 +54,14 @@ public class NetworkInfoModel extends FxTabModel {
         networkService = applicationService.getNetworkService();
         NavigationTarget persistedNavigationTarget = NavigationTarget.valueOf(
                 applicationService.getSettingsService().getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET));
-        if (persistedNavigationTarget.getParent().filter(parent -> parent == NavigationTarget.NETWORK_INFO).isPresent()) {
+       /* if (persistedNavigationTarget.getParent().filter(parent -> parent == NavigationTarget.NETWORK_INFO).isPresent()) {
             navigationTarget = persistedNavigationTarget;
-        }
+        }*/
 
         supportedTransportTypes = networkService.getSupportedTransportTypes();
-        supportedNavigationTarget = supportedTransportTypes.stream()
+      /*  supportedNavigationTarget = supportedTransportTypes.stream()
                 .map(this::getNavigationTargetFromTransportType)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toSet());*/
 
         clearNetDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.CLEAR));
         torDisabled.set(!networkService.isTransportTypeSupported(Transport.Type.TOR));
@@ -71,7 +70,7 @@ public class NetworkInfoModel extends FxTabModel {
         keyPairService = applicationService.getKeyPairService();
     }
 
-    @Override
+   /* @Override
     public NavigationTarget getDefaultNavigationTarget() {
         if (supportedTransportTypes == null) {
             return NavigationTarget.CLEAR_NET;
@@ -81,17 +80,17 @@ public class NetworkInfoModel extends FxTabModel {
                 .map(this::getNavigationTargetFromTransportType)
                 .orElse(NavigationTarget.CLEAR_NET);
     }
-
-    boolean isDisabled(NavigationTarget navigationTarget) {
+*/
+ /*   boolean isDisabled(NavigationTarget navigationTarget) {
         return !supportedNavigationTarget.contains(navigationTarget);
-    }
+    }*/
 
-    private NavigationTarget getNavigationTargetFromTransportType(Transport.Type type) {
+/*    private NavigationTarget getNavigationTargetFromTransportType(Transport.Type type) {
         return switch (type) {
             case CLEAR -> NavigationTarget.CLEAR_NET;
             case TOR -> NavigationTarget.TOR;
             case I2P -> NavigationTarget.I2P;
         };
-    }
+    }*/
 
 }

@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.social;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.FxTabModel;
+import bisq.desktop.common.view.TabModel;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.ObjectProperty;
@@ -26,7 +26,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
 @Getter
-public class SocialModel extends FxTabModel {
+public class SocialModel extends TabModel {
     private final UserProfileService userProfileService;
     private final ObjectProperty<UserProfile> selectedUserProfile = new SimpleObjectProperty<>();
 

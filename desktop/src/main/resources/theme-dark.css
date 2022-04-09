@@ -14,7 +14,8 @@ Taken from Bisq. Might need some clean up
     /* javafx elements */
    /* -fx-accent: #25b135;*/
     -fx-box-border: transparent;
-    -fx-focus-color: #2ea33c;
+   /* -fx-focus-color: #2ea33c;*/
+    -fx-focus-color: transparent;
     -fx-faint-focus-color: #2ea33c;
     -fx-selection-bar: #1a6e1e;
     -fx-selection-bar-non-focused: #2a7e2e;
