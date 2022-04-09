@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.left;
 
+import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -79,15 +80,20 @@ class NavigationButton extends Pane implements Toggle {
         setOnMouseClicked(e -> handler.run());
     }
 
-    public void setMenuExpanded(boolean menuExpanded, int width) {
-        setMinWidth(width);
-        setMaxWidth(width);
-        label.setVisible(menuExpanded);
-        label.setManaged(menuExpanded);
+    public void setMenuExpanded(boolean menuExpanded, int width, int duration) {
+        //setPrefWidth(width);
+
         if (menuExpanded) {
             Tooltip.uninstall(this, tooltip);
+            label.setVisible(true);
+            label.setManaged(true);
+            Transitions.fadeIn(label, duration);
         } else {
             Tooltip.install(this, tooltip);
+            Transitions.fadeOut(label, duration, () -> {
+                label.setVisible(false);
+                label.setManaged(false);
+            });
         }
     }
 

@@ -63,7 +63,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         content.setFitToHeight(true);
         content.setFitToWidth(true);
 
-
         line = new Region();
         line.setStyle("-fx-background-color: -bisq-dark-bg;");
         double lineHeight = 1.5;
@@ -86,13 +85,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
                 content.setContent(childRoot);
             }
         };
-    }
-
-
-    protected void addTab(String text, NavigationTarget navigationTarget) {
-        TabButton tabButton = new TabButton(text, toggleGroup, navigationTarget);
-        controller.onTabButtonCreated(tabButton);
-        tabs.getChildren().addAll(tabButton);
     }
 
     @Override
@@ -145,6 +137,26 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     public void onTransitionCompleted() {
     }
 
+    @Override
+    void onViewDetachedInternal() {
+        super.onViewDetachedInternal();
+
+        line.prefWidthProperty().unbind();
+        selectedTabButtonSubscription.unsubscribe();
+        rootWidthSubscription.unsubscribe();
+        if (layoutDoneSubscription != null) {
+            layoutDoneSubscription.unsubscribe();
+        }
+        model.getTabButtons().forEach(tabButton -> tabButton.setOnAction(null));
+        model.getView().removeListener(viewChangeListener);
+    }
+
+    protected void addTab(String text, NavigationTarget navigationTarget) {
+        TabButton tabButton = new TabButton(text, toggleGroup, navigationTarget);
+        controller.onTabButtonCreated(tabButton);
+        tabs.getChildren().addAll(tabButton);
+    }
+
     private void maybeAnimateMark() {
         TabButton selectedTabButton = model.getSelectedTabButton().get();
         if (selectedTabButton == null) {
@@ -170,17 +182,4 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         });
     }
 
-    @Override
-    void onViewDetachedInternal() {
-        super.onViewDetachedInternal();
-
-        line.prefWidthProperty().unbind();
-        selectedTabButtonSubscription.unsubscribe();
-        rootWidthSubscription.unsubscribe();
-        if (layoutDoneSubscription != null) {
-            layoutDoneSubscription.unsubscribe();
-        }
-        model.getTabButtons().forEach(tabButton -> tabButton.setOnAction(null));
-        model.getView().removeListener(viewChangeListener);
-    }
 }

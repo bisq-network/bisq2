@@ -389,6 +389,42 @@ public class Transitions {
         }
     }
 
+    public static void moveLeft(Region node, int targetX, int duration) {
+        if (displaySettings.isUseAnimations()) {
+            Timeline timeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            double startX = node.getLayoutX();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(node.layoutXProperty(), startX, Interpolator.LINEAR)
+            ));
+            keyFrames.add(new KeyFrame(Duration.millis(duration),
+                    new KeyValue(node.layoutXProperty(), targetX, Interpolator.EASE_OUT)
+            ));
+            timeline.play();
+        } else {
+            node.setLayoutX(targetX);
+        }
+    }
+
+    public static void animateLeftNavigationWidth(Region node, double targetWidth, int duration) {
+        if (displaySettings.isUseAnimations()) {
+            double startWidth = node.getWidth();
+            Interpolator interpolator = startWidth > targetWidth ? Interpolator.EASE_IN : Interpolator.EASE_OUT;
+            Timeline timeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(node.prefWidthProperty(), startWidth, Interpolator.LINEAR)
+            ));
+
+            keyFrames.add(new KeyFrame(Duration.millis(duration),
+                    new KeyValue(node.prefWidthProperty(), targetWidth, interpolator)
+            ));
+            timeline.play();
+        } else {
+            node.setPrefWidth(targetWidth);
+        }
+    }
+
     public static void animateNavigationButtonMarks(Region node, double targetHeight, double targetY) {
         double startY = node.getLayoutY();
         if (displaySettings.isUseAnimations() || startY == 0) {

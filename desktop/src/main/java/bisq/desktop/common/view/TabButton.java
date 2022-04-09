@@ -40,11 +40,11 @@ public class TabButton extends Pane implements Toggle {
         this.navigationTarget = navigationTarget;
 
         setCursor(Cursor.HAND);
-
+        
         setToggleGroup(toggleGroup);
         toggleGroup.getToggles().add(this);
+        
         selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
-
 
         label = new Label(title.toUpperCase());
         label.setPadding(new Insets(12, 0, 0, 0));
