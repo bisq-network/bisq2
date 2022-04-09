@@ -35,13 +35,15 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<VBox, M, C> {
+public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<VBox, M, C>
+        implements TransitionedView {
     protected final Label label;
     protected final HBox tabs;
     private final Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
     protected final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
     private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
+    private boolean transitionStarted;
 
     public TabView(M model, C controller) {
         super(new VBox(), model, controller);
@@ -86,14 +88,18 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         };
     }
 
+
     protected void addTab(String text, NavigationTarget navigationTarget) {
         TabButton tabButton = new TabButton(text, toggleGroup, navigationTarget);
-        model.getTabButtons().add(tabButton);
+        controller.onTabButtonCreated(tabButton);
         tabs.getChildren().addAll(tabButton);
     }
 
     @Override
     void onViewAttachedInternal() {
+        selectionMarker.setLayoutX(0);
+        selectionMarker.setPrefWidth(0);
+        transitionStarted = false;
         UIThread.runOnNextRenderFrame(() -> {
             NavigationTarget navigationTarget = model.getNavigationTarget();
             if (navigationTarget != null) {
@@ -114,7 +120,10 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         selectedTabButtonSubscription = EasyBind.subscribe(model.getSelectedTabButton(), selectedTabButton -> {
             if (selectedTabButton != null) {
                 toggleGroup.selectToggle(selectedTabButton);
-                maybeAnimateMark();
+
+                if (transitionStarted) {
+                    maybeAnimateMark();
+                }
             }
         });
 
@@ -123,11 +132,17 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         UIThread.runOnNextRenderFrame(() -> {
             controller.onTabSelected(model.getNavigationTarget());
         });
-
-        maybeAnimateMark();
-
         onViewAttached();
+    }
 
+    @Override
+    public void onStartTransition() {
+        this.transitionStarted = true;
+        UIThread.runOnNextRenderFrame(this::maybeAnimateMark);
+    }
+
+    @Override
+    public void onTransitionCompleted() {
     }
 
     private void maybeAnimateMark() {
@@ -138,10 +153,12 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         if (layoutDoneSubscription != null) {
             layoutDoneSubscription.unsubscribe();
         }
+
+        //todo maybe listen to transition animation from outer container to start animation after view is visible
         layoutDoneSubscription = EasyBind.subscribe(model.getSelectedTabButton().get().layoutXProperty(), x -> {
             // At the time when x is available the width is available as well
             if (x.doubleValue() > 0) {
-                Transitions.slideHorizontal(selectionMarker, selectedTabButton.getWidth(),
+                Transitions.animateTabButtonMarks(selectionMarker, selectedTabButton.getWidth(),
                         selectedTabButton.getBoundsInParent().getMinX());
                 UIThread.runOnNextRenderFrame(() -> {
                     if (layoutDoneSubscription != null) {

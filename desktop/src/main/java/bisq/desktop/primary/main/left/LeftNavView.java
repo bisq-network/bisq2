@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.left;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Transitions;
@@ -42,10 +43,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
 @Slf4j
 public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavController> {
     private final static int EXPANDED_WIDTH = 330;
@@ -55,7 +52,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final ToggleGroup toggleGroup = new ToggleGroup();
     @Getter
     private final NetworkInfoBox networkInfoBox;
-    private final Map<NavigationTarget, NavigationButton> buttonsMap = new HashMap<>();
     private final Label expandIcon, collapseIcon;
     private final ImageView logoExpanded, logoCollapsed;
     private final Region selectionMarker;
@@ -107,10 +103,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         networkInfoBox = new NetworkInfoBox(model,
                 () -> controller.onNavigationTargetSelected(NavigationTarget.NETWORK_INFO));
-       // Layout.pinToAnchorPane(networkInfoBox, null, null, 26, 20);
+        // Layout.pinToAnchorPane(networkInfoBox, null, null, 26, 20);
         Layout.pinToAnchorPane(networkInfoBox, null, null, 0, 0);
 
-        model.addNavigationTarget(NavigationTarget.NETWORK_INFO);
+        // controller.onNavigationButtonCreated(NavigationTarget.NETWORK_INFO);
 
         expandIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_RIGHT, "22");
         expandIcon.setCursor(Cursor.HAND);
@@ -138,8 +134,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setStyle("-fx-background-color: -fx-accent;");
         selectionMarker.setPrefWidth(4.5);
         selectionMarker.setPrefHeight(NavigationButton.HEIGHT);
-
-        selectionMarker.setLayoutY(menuTop);
         vBox.getChildren().addAll(trade, portfolio, education, social, events, markets, wallet, settings);
         vBox.setLayoutY(menuTop);
         root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, vBox, collapseIcon, expandIcon, networkInfoBox);
@@ -151,22 +145,24 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         collapseIcon.setOnMouseClicked(e -> controller.onToggleExpandMenu());
         navigationTargetSubscription = EasyBind.subscribe(model.getNavigationTarget(), navigationTarget -> {
             if (navigationTarget != null) {
-                Optional.ofNullable(buttonsMap.get(navigationTarget)).ifPresent(toggleGroup::selectToggle);
+                controller.findTabButton(navigationTarget).ifPresent(toggleGroup::selectToggle);
+                maybeAnimateMark();
             }
         });
         menuExpandedSubscription = EasyBind.subscribe(model.getMenuExpanded(), menuExpanded -> {
             int width = menuExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
             vBox.setPrefWidth(width);
-           // vBox.setMinWidth(width);
+            // vBox.setMinWidth(width);
 
             root.setPrefWidth(width + MARKER_WIDTH);
-          //  root.setMinWidth(width + MARKER_WIDTH);
+            //  root.setMinWidth(width + MARKER_WIDTH);
 
-            buttonsMap.values().forEach(e -> e.setMenuExpanded(menuExpanded, width));
+            model.getNavigationButtons().forEach(e -> e.setMenuExpanded(menuExpanded, width));
 
-            networkInfoBox.setPrefWidth(width+ MARKER_WIDTH);
-           // networkInfoBox.setMinWidth(width+ MARKER_WIDTH);
-            
+
+            networkInfoBox.setPrefWidth(width + MARKER_WIDTH);
+            // networkInfoBox.setMinWidth(width+ MARKER_WIDTH);
+
             networkInfoBox.setVisible(menuExpanded);
             networkInfoBox.setManaged(menuExpanded);
 
@@ -189,6 +185,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             Transitions.fadeOut(expandIcon);
             Transitions.fadeOut(collapseIcon);
         });
+
+        maybeAnimateMark();
     }
 
     @Override
@@ -202,20 +200,32 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     }
 
     private NavigationButton createNavigationButton(String title, ImageView icon, NavigationTarget navigationTarget) {
-        NavigationButton button = new NavigationButton(title, icon, toggleGroup);
+        NavigationButton button = new NavigationButton(title, icon, toggleGroup, navigationTarget);
         button.setOnAction(() -> {
             controller.onNavigationTargetSelected(navigationTarget);
-            selectionMarker.setLayoutY(menuTop + button.getBoundsInParent().getMinY());
+            maybeAnimateMark();
+            //  selectionMarker.setLayoutY(menuTop + button.getBoundsInParent().getMinY());
         });
-        buttonsMap.put(navigationTarget, button);
-        model.addNavigationTarget(navigationTarget);
+        controller.onNavigationButtonCreated(button);
         return button;
+    }
+
+    private void maybeAnimateMark() {
+        NavigationButton selectedNavigationButton = model.getSelectedNavigationButton().get();
+        if (selectedNavigationButton == null) {
+            return;
+        }
+        UIThread.runOnNextRenderFrame(()->{
+            Transitions.animateNavigationButtonMarks(selectionMarker, selectedNavigationButton.getHeight(),
+                    menuTop + selectedNavigationButton.getBoundsInParent().getMinY());
+          //  selectionMarker.setLayoutY(menuTop + selectedNavigationButton.getBoundsInParent().getMinY());
+        });
     }
 
     private static class NetworkInfoBox extends VBox {
         private NetworkInfoBox(LeftNavModel model, Runnable handler) {
             setSpacing(5);
-           
+
             setOnMouseClicked(e -> handler.run());
 
             HBox clearNetBox = getTransportTypeBox("clear-net",
@@ -245,7 +255,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             VBox.setMargin(clearNetBox, insets);
             VBox.setMargin(torBox, insets);
             VBox.setMargin(i2pBox, insets);
-            getChildren().addAll(line,clearNetBox, torBox, i2pBox);
+            getChildren().addAll(line, clearNetBox, torBox, i2pBox);
         }
 
         private HBox getTransportTypeBox(String iconId,
@@ -263,14 +273,14 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             Label peers = new Label(Res.get("peers"));
             String style = "-fx-text-fill: -bisq-text-medium; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.2em";
             peers.setStyle(style);
-           
+
             Label numConnectionsLabel = new Label();
             peers.setStyle(style);
             numConnectionsLabel.textProperty().bind(numConnections);
 
             Label separator = new Label("|");
             separator.setStyle(style);
-            
+
             Label numTargetConnectionsLabel = new Label();
             numTargetConnectionsLabel.setStyle(style);
             numTargetConnectionsLabel.textProperty().bind(numTargetConnections);

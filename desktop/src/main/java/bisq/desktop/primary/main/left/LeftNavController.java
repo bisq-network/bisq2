@@ -24,6 +24,9 @@ import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+import java.util.Set;
+
 @Slf4j
 public class LeftNavController implements Controller {
     private final LeftNavModel model;
@@ -36,7 +39,19 @@ public class LeftNavController implements Controller {
     }
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {
-        model.select(navigationTarget);
+        Optional<NavigationTarget> supportedNavigationTarget;
+        Set<NavigationTarget> navigationTargets = model.getNavigationTargets();
+        if (navigationTargets.contains(navigationTarget)) {
+            supportedNavigationTarget = Optional.of(navigationTarget);
+        } else {
+            supportedNavigationTarget = navigationTarget.getPath().stream()
+                    .filter(navigationTargets::contains)
+                    .findAny();
+        }
+        supportedNavigationTarget.ifPresent(target->{
+            findTabButton(target).ifPresent(navigationButton -> model.getSelectedNavigationButton().set(navigationButton));
+            model.getNavigationTarget().set(target);  
+        });
     }
 
     @Override
@@ -47,13 +62,24 @@ public class LeftNavController implements Controller {
     public void onDeactivate() {
     }
 
-
     void onNavigationTargetSelected(NavigationTarget navigationTarget) {
-        model.select(navigationTarget);
+        findTabButton(navigationTarget).ifPresent(navigationButton -> model.getSelectedNavigationButton().set(navigationButton));
+        model.getNavigationTarget().set(navigationTarget);
         Navigation.navigateTo(navigationTarget);
     }
 
-    public void onToggleExpandMenu() {
+    void onToggleExpandMenu() {
         model.getMenuExpanded().set(!model.getMenuExpanded().get());
+    }
+
+    void onNavigationButtonCreated(NavigationButton navigationButton) {
+        model.getNavigationButtons().add(navigationButton);
+        model.getNavigationTargets().add(navigationButton.getNavigationTarget());
+    }
+
+    Optional<NavigationButton> findTabButton(NavigationTarget navigationTarget) {
+        return model.getNavigationButtons().stream()
+                .filter(navigationButton -> navigationTarget == navigationButton.getNavigationTarget())
+                .findAny();
     }
 }

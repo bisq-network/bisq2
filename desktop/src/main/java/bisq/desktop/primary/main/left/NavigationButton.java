@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.left;
 
+import bisq.desktop.common.view.NavigationTarget;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -29,19 +30,23 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class NavigationButton extends Pane implements Toggle {
     static final int HEIGHT = 70;
+    @Getter
+    private final NavigationTarget navigationTarget;
     private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
     private final BooleanProperty selectedProperty = new SimpleBooleanProperty();
     private final Label label;
     private final Tooltip tooltip;
     private final ImageView icon;
 
-    NavigationButton(String title, ImageView icon, ToggleGroup toggleGroup) {
+    NavigationButton(String title, ImageView icon, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
         this.icon = icon;
+        this.navigationTarget = navigationTarget;
         setMinHeight(HEIGHT);
         setMaxHeight(HEIGHT);
 
@@ -65,9 +70,10 @@ class NavigationButton extends Pane implements Toggle {
         setStyle("-fx-background-color: -bisq-dark-bg;");
         label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.78em;");
         icon.setOpacity(0.6);
-        
+
         getChildren().addAll(icon, label);
     }
+
 
     public final void setOnAction(Runnable handler) {
         setOnMouseClicked(e -> handler.run());

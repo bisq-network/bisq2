@@ -29,16 +29,20 @@ public abstract class TabController<T extends TabModel> extends NavigationContro
 
     public TabController(T model, NavigationTarget host) {
         super(host);
-        
+
         this.model = model;
     }
 
-    public void onTabSelected(NavigationTarget navigationTarget) {
+    void onTabSelected(NavigationTarget navigationTarget) {
         findTabButton(navigationTarget).ifPresent(tabButton -> model.getSelectedTabButton().set(tabButton));
         Navigation.navigateTo(navigationTarget);
     }
 
-    Optional<TabButton> findTabButton(NavigationTarget navigationTarget) {
+    void onTabButtonCreated(TabButton tabButton) {
+        model.getTabButtons().add(tabButton);
+    }
+
+    private Optional<TabButton> findTabButton(NavigationTarget navigationTarget) {
         return model.getTabButtons().stream()
                 .filter(tabButton -> navigationTarget == tabButton.getNavigationTarget())
                 .findAny();

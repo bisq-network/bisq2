@@ -15,20 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content;
+package bisq.desktop.common.view;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.NavigationModel;
-import lombok.extern.slf4j.Slf4j;
+/**
+ * Interface for views which want to get notified if a transition was applied to it (usually by some outer container)
+ * This is helpful for cascaded animations. 
+ * E.g. ContentView fades in the PortfolioView after a short delay, the PortfolioView listens to onStartTransition to 
+ * start its tabButton animation when fadein has started.
+ */
+public interface TransitionedView {
+    void onTransitionCompleted();
 
-@Slf4j
-
-public class ContentModel extends NavigationModel {
-    public ContentModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.SETTINGS;
-    }
+    void onStartTransition();
 }
