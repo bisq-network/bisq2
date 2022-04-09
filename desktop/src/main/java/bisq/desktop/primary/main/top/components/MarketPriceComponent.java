@@ -78,34 +78,49 @@ public class MarketPriceComponent {
             this.marketPriceService = marketPriceService;
             model = new Model();
             view = new View(model, this);
-            marketPriceService.addListener(this);
         }
 
         @Override
         public void onActivate() {
+            marketPriceService.addListener(this);
+            applyMarketPriceMap();
+            applySelectedMarket();
         }
 
         @Override
         public void onDeactivate() {
+            marketPriceService.removeListener(this);
         }
 
         @Override
         public void onMarketPriceUpdate(Map<Market, MarketPrice> map) {
-            UIThread.run(() -> model.applyMarketPriceMap(map));
+            applyMarketPriceMap();
         }
+
 
         @Override
         public void onMarketSelected(Market selectedMarket) {
-            UIThread.run(() -> model.items.stream()
-                    .filter(e -> e.marketPrice.getMarket().equals(selectedMarket))
-                    .findAny()
-                    .ifPresent(model.selected::set));
+            applySelectedMarket();
         }
 
         private void onSelect(ListItem selectedItem) {
             if (selectedItem != null) {
                 marketPriceService.select(selectedItem.marketPrice.getMarket());
             }
+        }
+
+        private void applySelectedMarket() {
+            marketPriceService.getSelectedMarket()
+                    .ifPresent(selectedMarket ->
+                            UIThread.run(() -> model.items.stream()
+                                    .filter(e -> e.marketPrice.getMarket().equals(selectedMarket))
+                                    .findAny()
+                                    .ifPresent(model.selected::set))
+                    );
+        }
+
+        private void applyMarketPriceMap() {
+            UIThread.run(() -> model.applyMarketPriceMap(marketPriceService.getMarketPriceByCurrencyMap()));
         }
     }
 

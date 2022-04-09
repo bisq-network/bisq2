@@ -21,9 +21,10 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.settings.networkinfo.NetworkInfoController;
-import bisq.desktop.primary.main.content.settings.networkinfo.about.AboutController;
-import bisq.desktop.primary.main.content.settings.networkinfo.preferences.PreferencesController;
+import bisq.desktop.primary.main.content.settings.networkInfo.NetworkInfoController;
+import bisq.desktop.primary.main.content.settings.about.AboutController;
+import bisq.desktop.primary.main.content.settings.preferences.PreferencesController;
+import bisq.desktop.primary.main.content.settings.userProfile.UserProfileController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,6 +53,9 @@ public class SettingsController extends TabController<SettingsModel> {
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
+            case USER_PROFILE -> {
+                return Optional.of(new UserProfileController(applicationService));
+            }
             case PREFERENCES -> {
                 return Optional.of(new PreferencesController(applicationService));
             }

@@ -23,8 +23,9 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
+import bisq.desktop.primary.main.content.social.education.EducationController;
+import bisq.desktop.primary.main.content.social.events.EventsController;
 import bisq.desktop.primary.main.content.social.chat.ChatController;
-import bisq.desktop.primary.main.content.social.profile.UserProfileController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,10 +63,13 @@ public class SocialController extends TabController<SocialModel> {
         switch (navigationTarget) {
             case CHAT -> {
                 return Optional.of(new ChatController(applicationService));
+            } case EDUCATION -> {
+                return Optional.of(new EducationController(applicationService));
             }
-            case USER_PROFILE -> {
-                return Optional.of(new UserProfileController(applicationService));
+            case EVENTS -> {
+                return Optional.of(new EventsController(applicationService));
             }
+           
             default -> {
                 return Optional.empty();
             }

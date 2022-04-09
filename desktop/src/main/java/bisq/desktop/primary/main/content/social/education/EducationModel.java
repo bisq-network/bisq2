@@ -15,20 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content;
+package bisq.desktop.primary.main.content.social.education;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.NavigationModel;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.common.view.Model;
 
-@Slf4j
-
-public class ContentModel extends NavigationModel {
-    public ContentModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.EDUCATION;
-    }
+public class EducationModel implements Model {
 }

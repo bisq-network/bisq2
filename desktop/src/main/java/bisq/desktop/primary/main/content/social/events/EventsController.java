@@ -15,23 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.top;
+package bisq.desktop.primary.main.content.social.events;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.top.components.MarketPriceComponent;
-import bisq.desktop.primary.main.top.components.WalletBalanceComponent;
 import lombok.Getter;
 
-public class TopPanelController implements Controller {
+public class EventsController implements Controller {
+    private final EventsModel model;
     @Getter
-    private final TopPanelView view;
+    private final EventsView view;
 
-    public TopPanelController(DefaultApplicationService applicationService) {
-        TopPanelModel model = new TopPanelModel();
-        MarketPriceComponent marketPriceComponent = new MarketPriceComponent(applicationService.getMarketPriceService());
-        WalletBalanceComponent walletBalanceComponent = new WalletBalanceComponent(applicationService.getWalletService());
-        view = new TopPanelView(model, this, marketPriceComponent.getRootPane(), walletBalanceComponent.getRootPane());
+    public EventsController(DefaultApplicationService applicationService) {
+        model = new EventsModel();
+        view = new EventsView(model, this);
     }
 
     @Override

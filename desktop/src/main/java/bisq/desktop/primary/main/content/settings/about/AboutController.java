@@ -15,23 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.top;
+package bisq.desktop.primary.main.content.settings.about;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.top.components.MarketPriceComponent;
-import bisq.desktop.primary.main.top.components.WalletBalanceComponent;
 import lombok.Getter;
 
-public class TopPanelController implements Controller {
-    @Getter
-    private final TopPanelView view;
+public class AboutController implements Controller {
 
-    public TopPanelController(DefaultApplicationService applicationService) {
-        TopPanelModel model = new TopPanelModel();
-        MarketPriceComponent marketPriceComponent = new MarketPriceComponent(applicationService.getMarketPriceService());
-        WalletBalanceComponent walletBalanceComponent = new WalletBalanceComponent(applicationService.getWalletService());
-        view = new TopPanelView(model, this, marketPriceComponent.getRootPane(), walletBalanceComponent.getRootPane());
+    private final AboutModel model;
+    @Getter
+    private final AboutView view;
+
+    public AboutController(DefaultApplicationService applicationService) {
+        model = new AboutModel(applicationService);
+        view = new AboutView(model, this);
     }
 
     @Override

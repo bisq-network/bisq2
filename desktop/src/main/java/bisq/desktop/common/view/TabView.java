@@ -26,10 +26,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -70,10 +67,11 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
         selectionMarker = new Region();
         selectionMarker.setStyle("-fx-background-color: -fx-accent;");
-        selectionMarker.setPrefHeight(lineHeight);
+        selectionMarker.setMinHeight(lineHeight);
 
         Pane lineAndMarker = new Pane();
         lineAndMarker.getChildren().addAll(line, selectionMarker);
+        lineAndMarker.setMinHeight(lineHeight);
 
         root.getChildren().addAll(tabs, lineAndMarker, content);
 

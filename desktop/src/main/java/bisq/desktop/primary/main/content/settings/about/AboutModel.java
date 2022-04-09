@@ -15,31 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social;
+package bisq.desktop.primary.main.content.settings.about;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabView;
-import bisq.i18n.Res;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Model;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SocialView extends TabView<SocialModel, SocialController> {
+@Getter
+public class AboutModel implements Model {
 
-    public SocialView(SocialModel model, SocialController controller) {
-        super(model, controller);
-
-        label.setText(Res.get("social"));
-
-        addTab(Res.get("social.chat"), NavigationTarget.CHAT);
-        addTab(Res.get("education"), NavigationTarget.EDUCATION);
-        addTab(Res.get("events"), NavigationTarget.EVENTS);
-    }
-
-    @Override
-    protected void onViewAttached() {
-    }
-
-    @Override
-    protected void onViewDetached() {
+    public AboutModel(DefaultApplicationService applicationService) {
     }
 }

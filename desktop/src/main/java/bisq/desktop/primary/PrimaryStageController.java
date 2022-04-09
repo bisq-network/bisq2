@@ -78,6 +78,7 @@ public class PrimaryStageController extends NavigationController {
         onStageReadyHandler.run();
 
         String persisted = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
+        log.error("persisted "+persisted);
         if (persisted != null) {
             Navigation.navigateTo(NavigationTarget.valueOf(persisted));
         } else {
@@ -109,7 +110,7 @@ public class PrimaryStageController extends NavigationController {
 
     @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        if (navigationTarget.isAllowPersistence()) {
+        if (navigationTarget.isAllowPersistence()) { log.error("onNavigate "+navigationTarget);
             settingsService.getPersistableStore().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
             settingsService.persist();
         }

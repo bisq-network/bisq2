@@ -15,24 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social;
+package bisq.desktop.primary.main.content.support;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabView;
-import bisq.i18n.Res;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.common.view.View;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 
-@Slf4j
-public class SocialView extends TabView<SocialModel, SocialController> {
+public class SupportView extends View<VBox, SupportModel, SupportController> {
+    public SupportView(SupportModel model, SupportController controller) {
+        super(new VBox(), model, controller);
 
-    public SocialView(SocialModel model, SocialController controller) {
-        super(model, controller);
-
-        label.setText(Res.get("social"));
-
-        addTab(Res.get("social.chat"), NavigationTarget.CHAT);
-        addTab(Res.get("education"), NavigationTarget.EDUCATION);
-        addTab(Res.get("events"), NavigationTarget.EVENTS);
+        root.setAlignment(Pos.CENTER);
+        Label label = new Label("WIP");
+        label.setStyle("-fx-text-fill: -bisq-text-dark; -fx-font-size: 30em");
+        Label small = new Label(getClass().getSimpleName());
+        small.setStyle("-fx-text-fill: -bisq-text-dark; -fx-font-size: 2em");
+        root.getChildren().addAll(label, small);
     }
 
     @Override
