@@ -15,28 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.networkinfo.about;
+package bisq.desktop.primary.main.content.settings.about;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class AboutController implements Controller {
+@Slf4j
+@Getter
+public class AboutModel implements Model {
 
-    private final AboutModel model;
-    @Getter
-    private final AboutView view;
-
-    public AboutController(DefaultApplicationService applicationService) {
-        model = new AboutModel(applicationService);
-        view = new AboutView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
+    public AboutModel(DefaultApplicationService applicationService) {
     }
 }

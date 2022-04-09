@@ -31,7 +31,8 @@ public class SocialView extends TabView<SocialModel, SocialController> {
         label.setText(Res.get("social"));
 
         addTab(Res.get("social.chat"), NavigationTarget.CHAT);
-        addTab(Res.get("social.userProfile"), NavigationTarget.USER_PROFILE);
+        addTab(Res.get("education"), NavigationTarget.EDUCATION);
+        addTab(Res.get("events"), NavigationTarget.EVENTS);
     }
 
     @Override

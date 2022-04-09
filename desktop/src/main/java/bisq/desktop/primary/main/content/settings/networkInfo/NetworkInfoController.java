@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.networkinfo;
+package bisq.desktop.primary.main.content.settings.networkInfo;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.settings.networkinfo.transport.TransportTypeController;
+import bisq.desktop.primary.main.content.settings.networkInfo.transport.TransportTypeController;
 import bisq.network.p2p.node.transport.Transport;
 import javafx.scene.Node;
 import lombok.Getter;

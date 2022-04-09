@@ -73,27 +73,29 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         vBox = new VBox();
         Layout.pinToAnchorPane(vBox, menuTop, 0, 0, MARKER_WIDTH);
 
+        NavigationButton social = createNavigationButton(Res.get("social"),
+                ImageUtil.getImageViewById("governance"),//todo missing icon
+                NavigationTarget.SOCIAL);
+       /* NavigationButton events = createNavigationButton(Res.get("events"),
+                ImageUtil.getImageViewById("home"),//todo missing icon
+                NavigationTarget.EVENTS);*/
         NavigationButton trade = createNavigationButton(Res.get("trade"),
                 ImageUtil.getImageViewById("sell"),  //todo missing icon
                 NavigationTarget.TRADE);
         NavigationButton portfolio = createNavigationButton(Res.get("portfolio"),
                 ImageUtil.getImageViewById("portfolio"),
                 NavigationTarget.PORTFOLIO);
-        NavigationButton education = createNavigationButton(Res.get("education"),
-                ImageUtil.getImageViewById("support"), //todo missing icon
-                NavigationTarget.EDUCATION);
-        NavigationButton social = createNavigationButton(Res.get("social"),
-                ImageUtil.getImageViewById("governance"),//todo missing icon
-                NavigationTarget.SOCIAL);
-        NavigationButton events = createNavigationButton(Res.get("events"),
-                ImageUtil.getImageViewById("home"),//todo missing icon
-                NavigationTarget.EVENTS);
         NavigationButton markets = createNavigationButton(Res.get("markets"),
                 ImageUtil.getImageViewById("market"),
                 NavigationTarget.MARKETS);
+
+        //todo lower prio menu add design
         NavigationButton wallet = createNavigationButton(Res.get("wallet"),
                 ImageUtil.getImageViewById("wallet"),
                 NavigationTarget.WALLET);
+        NavigationButton support = createNavigationButton(Res.get("support"),
+                ImageUtil.getImageViewById("support"),
+                NavigationTarget.SUPPORT);
         NavigationButton settings = createNavigationButton(Res.get("settings"),
                 ImageUtil.getImageViewById("settings"),
                 NavigationTarget.SETTINGS);
@@ -136,7 +138,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setStyle("-fx-background-color: -fx-accent;");
         selectionMarker.setPrefWidth(4.5);
         selectionMarker.setPrefHeight(NavigationButton.HEIGHT);
-        vBox.getChildren().addAll(trade, portfolio, education, social, events, markets, wallet, settings);
+        vBox.getChildren().addAll(social, trade, portfolio, markets, wallet, support, settings);
         vBox.setLayoutY(menuTop);
         root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, vBox, expandIcon, collapseIcon, networkInfoBox);
     }

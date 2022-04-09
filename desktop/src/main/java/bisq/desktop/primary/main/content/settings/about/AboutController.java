@@ -15,21 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.networkinfo.preferences;
+package bisq.desktop.primary.main.content.settings.about;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-public class PreferencesController implements Controller {
+public class AboutController implements Controller {
 
-    private final PreferencesModel model;
+    private final AboutModel model;
     @Getter
-    private final PreferencesView view;
+    private final AboutView view;
 
-    public PreferencesController(DefaultApplicationService applicationService) {
-        model = new PreferencesModel(applicationService);
-        view = new PreferencesView(model, this);
+    public AboutController(DefaultApplicationService applicationService) {
+        model = new AboutModel(applicationService);
+        view = new AboutView(model, this);
     }
 
     @Override

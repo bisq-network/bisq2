@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.networkinfo;
+package bisq.desktop.primary.main.content.settings.networkInfo;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;

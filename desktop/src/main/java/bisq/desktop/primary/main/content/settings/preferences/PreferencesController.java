@@ -15,17 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.networkinfo.preferences;
+package bisq.desktop.primary.main.content.settings.preferences;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@Getter
-public class PreferencesModel implements Model {
+public class PreferencesController implements Controller {
 
-    public PreferencesModel(DefaultApplicationService applicationService) {
+    private final PreferencesModel model;
+    @Getter
+    private final PreferencesView view;
+
+    public PreferencesController(DefaultApplicationService applicationService) {
+        model = new PreferencesModel(applicationService);
+        view = new PreferencesView(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
     }
 }

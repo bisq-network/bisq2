@@ -15,30 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.networkinfo.transport;
+package bisq.desktop.primary.main.content.settings.preferences;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import bisq.network.p2p.node.transport.Transport;
+import bisq.desktop.common.view.Model;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class TransportTypeController implements Controller {
-    private final TransportTypeModel model;
-    @Getter
-    private final TransportTypeView view;
+@Slf4j
+@Getter
+public class PreferencesModel implements Model {
 
-    public TransportTypeController(DefaultApplicationService applicationService, Transport.Type transportType) {
-        model = new TransportTypeModel(applicationService, transportType);
-        view = new TransportTypeView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-        model.updateLists();
-    }
-
-    @Override
-    public void onDeactivate() {
-        model.cleanup();
+    public PreferencesModel(DefaultApplicationService applicationService) {
     }
 }

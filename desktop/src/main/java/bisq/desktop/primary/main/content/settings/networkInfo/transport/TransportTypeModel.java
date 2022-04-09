@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.networkinfo.transport;
+package bisq.desktop.primary.main.content.settings.networkInfo.transport;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.data.Pair;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.profile.components;
+package bisq.desktop.primary.main.content.settings.userProfile.components;
 
 import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;

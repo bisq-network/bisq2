@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.profile;
+package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.networkinfo.about;
+package bisq.desktop.primary.main.content.settings.preferences;
 
 import bisq.desktop.common.view.View;
 import javafx.geometry.Pos;
@@ -24,11 +24,11 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AboutView extends View<VBox, AboutModel, AboutController> {
+public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
 
-    public AboutView(AboutModel model, AboutController controller) {
+    public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(), model, controller);
-
+        
         root.setAlignment(Pos.CENTER);
         Label label = new Label("WIP");
         label.setStyle("-fx-text-fill: -bisq-text-dark; -fx-font-size: 30em");
