@@ -86,7 +86,12 @@ shadowDistTar.enabled = false
 
 tasks.jpackage {
     dependsOn rootProject.clean
-    dependsOn tasks.build, tasks.shadowJar
+    dependsOn tasks.clean // Ensure fresh buildDir for every jpackager binary build
+    dependsOn tasks.jar, tasks.shadowJar
+
+    // The jpackageTempDir stores temp files used by jpackage for building the installers
+    // It can be inspected in order to troubleshoot the packaging process
+    File jpackageTempDir = new File(buildDir, "jpackage-temp")
 
     appName = "Bisq 2"
     // Remove the -SNAPSHOT suffix from the version string (originally defined in build.gradle)
@@ -97,13 +102,14 @@ tasks.jpackage {
     vendor = 'Bisq'
     mainClass = "bisq.desktopapp.Main"
     mainJar = jar.archiveFileName.get()
-    verbose = true
+    verbose = false
 //    arguments = --arguments <main class arguments>
     destination = "$buildDir/$distsDirName"
     input  = "$buildDir/$libsDirName"
     licenseFile = "../LICENSE"
 //    resourceDir = --resource-dir <resource dir path> // TODO
     runtimeImage = System.getProperty("java.home")
+    temp = jpackageTempDir
 //    launchers = --add-launcher <name>=<property file> // TODO add multiple launchers? desktopapp / satoshiapp
 
     winMenu = true
@@ -138,8 +144,9 @@ tasks.jpackage {
     }
 
     linux {
-        // Had issues when using package-manager-installed-jdk
-        // Worked well when using IntelliJ IDEA SDKs (File > Project Structure > SDKs > + sign > Download JDK
+        // Setting runtimeImage to java.home failed when using JDK from package manager (user vs root ownership of files?)
+        // runtimeImage can alternatively be set to a downloaded and extracted JDK
+        // Worked well when using IntelliJ IDEA SDKs (File > Project Structure > SDKs > + > Download JDK)
         runtimeImage = "/home/user/.jdks/openjdk-17.0.2"
 //        icon = "icons/icons.ico" // TODO
     }
@@ -154,6 +161,10 @@ tasks.jpackage {
             '-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000',
             '-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001'
     ]
+
+    doFirst() {
+        jpackageTempDir.mkdirs()
+    }
 
     doLast() {
         File binariesFolderPath = new File("$buildDir/$distsDirName")

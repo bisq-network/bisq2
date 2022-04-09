@@ -64,6 +64,8 @@ Platform-specific binaries and installers can be generated with
 ./gradlew :desktopapp:jpackage
 ```
 
+Optionally add the `--info` flag at the end for a more verbose output.
+
 Requirements[^7] for building on:
 - Fedora: `rpm-build`
 - Debian: `fakeroot`
