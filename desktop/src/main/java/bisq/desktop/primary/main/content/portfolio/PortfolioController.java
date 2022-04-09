@@ -28,7 +28,7 @@ import lombok.Getter;
 
 import java.util.Optional;
 
-public class PortfolioController extends TabController<PortfolioModel> {
+public class PortfolioController extends TabController<PortfolioModel>/* implements CachingController*/ {
 
     private final DefaultApplicationService applicationService;
 

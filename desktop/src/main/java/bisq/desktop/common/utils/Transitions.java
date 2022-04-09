@@ -346,4 +346,33 @@ public class Transitions {
             onFinishedHandler.run();
         }
     }
+
+    public static void slideHorizontal(Region node, double targetWidth, double targetX) {
+        if (displaySettings.isUseAnimations()) {
+            double duration = getDuration(DEFAULT_DURATION / 2);
+            Timeline timeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            double startWidth = node.getWidth();
+            double startX = node.getLayoutX();
+            log.error("startWidth {}",startWidth);
+            log.error("startX {}",startX);
+            log.error("targetWidth {}",targetWidth);
+            log.error("targetX {}",targetX);
+           // node.setLayoutX(startX);
+           // node.setPrefWidth(startWidth);
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(node.layoutXProperty(), startX, Interpolator.LINEAR),
+                    new KeyValue(node.prefWidthProperty(), startWidth, Interpolator.LINEAR)
+            ));
+            keyFrames.add(new KeyFrame(Duration.millis(duration),
+                    new KeyValue(node.layoutXProperty(), targetX, Interpolator.EASE_OUT),
+                    new KeyValue(node.prefWidthProperty(), targetWidth, Interpolator.EASE_OUT)
+            ));
+
+            timeline.play();
+        } else {
+            node.setLayoutX(targetX);
+            node.setPrefWidth(targetWidth);
+        }
+    }
 }

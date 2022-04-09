@@ -136,10 +136,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         selectionMarker = new Region();
         selectionMarker.setStyle("-fx-background-color: -fx-accent;");
-        selectionMarker.setMinWidth(4);
-        selectionMarker.setMaxWidth(4);
-        selectionMarker.setMinHeight(NavigationButton.HEIGHT);
-        selectionMarker.setMaxHeight(NavigationButton.HEIGHT);
+        selectionMarker.setPrefWidth(4.5);
+        selectionMarker.setPrefHeight(NavigationButton.HEIGHT);
 
         selectionMarker.setLayoutY(menuTop);
         vBox.getChildren().addAll(trade, portfolio, education, social, events, markets, wallet, settings);
@@ -158,16 +156,16 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         });
         menuExpandedSubscription = EasyBind.subscribe(model.getMenuExpanded(), menuExpanded -> {
             int width = menuExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
-            vBox.setMaxWidth(width);
-            vBox.setMinWidth(width);
+            vBox.setPrefWidth(width);
+           // vBox.setMinWidth(width);
 
-            root.setMinWidth(width + MARKER_WIDTH);
-            root.setMinWidth(width + MARKER_WIDTH);
+            root.setPrefWidth(width + MARKER_WIDTH);
+          //  root.setMinWidth(width + MARKER_WIDTH);
 
             buttonsMap.values().forEach(e -> e.setMenuExpanded(menuExpanded, width));
 
-            networkInfoBox.setMaxWidth(width+ MARKER_WIDTH);
-            networkInfoBox.setMinWidth(width+ MARKER_WIDTH);
+            networkInfoBox.setPrefWidth(width+ MARKER_WIDTH);
+           // networkInfoBox.setMinWidth(width+ MARKER_WIDTH);
             
             networkInfoBox.setVisible(menuExpanded);
             networkInfoBox.setManaged(menuExpanded);
@@ -263,7 +261,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             hBox.visibleProperty().bind(isVisible);
 
             Label peers = new Label(Res.get("peers"));
-            String style = "-fx-text-fill: -bisq-text-medium; -fx-font-size: 1.2em";
+            String style = "-fx-text-fill: -bisq-text-medium; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.2em";
             peers.setStyle(style);
            
             Label numConnectionsLabel = new Label();

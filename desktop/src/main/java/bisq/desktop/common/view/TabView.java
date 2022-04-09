@@ -18,6 +18,7 @@
 package bisq.desktop.common.view;
 
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -34,13 +35,13 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class TabView<M extends TabModel, C extends TabController> extends NavigationView<VBox, M, C> {
+public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<VBox, M, C> {
     protected final Label label;
     protected final HBox tabs;
     private final Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
     protected final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
-    private Subscription selectedTabButtonSubscription;
+    private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
 
     public TabView(M model, C controller) {
         super(new VBox(), model, controller);
@@ -103,20 +104,54 @@ public abstract class TabView<M extends TabModel, C extends TabController> exten
         line.prefWidthProperty().bind(root.widthProperty());
         model.getTabButtons().forEach(tabButton ->
                 tabButton.setOnAction(() -> controller.onTabSelected(tabButton.getNavigationTarget())));
-        selectedTabButtonSubscription = EasyBind.subscribe(model.getSelectedTabButton(), tabButton -> {
-            if (tabButton != null) {
-                toggleGroup.selectToggle(tabButton);
-                selectionMarker.setLayoutX(tabButton.getBoundsInParent().getMinX());
-                selectionMarker.setPrefWidth(tabButton.getWidth());
+
+        rootWidthSubscription = EasyBind.subscribe(root.widthProperty(), w -> {
+            if (model.getSelectedTabButton().get() != null) {
+                selectionMarker.setLayoutX(model.getSelectedTabButton().get().getLayoutX());
             }
         });
+
+        selectedTabButtonSubscription = EasyBind.subscribe(model.getSelectedTabButton(), selectedTabButton -> {
+            if (selectedTabButton != null) {
+                toggleGroup.selectToggle(selectedTabButton);
+                maybeAnimateMark();
+            }
+        });
+
         model.getView().addListener(viewChangeListener);
 
-        UIThread.runOnNextRenderFrame(() -> controller.onTabSelected(model.getNavigationTarget()));
+        UIThread.runOnNextRenderFrame(() -> {
+            controller.onTabSelected(model.getNavigationTarget());
+        });
+
+        maybeAnimateMark();
 
         onViewAttached();
+
     }
 
+    private void maybeAnimateMark() {
+        TabButton selectedTabButton = model.getSelectedTabButton().get();
+        if (selectedTabButton == null) {
+            return;
+        }
+        if (layoutDoneSubscription != null) {
+            layoutDoneSubscription.unsubscribe();
+        }
+        layoutDoneSubscription = EasyBind.subscribe(model.getSelectedTabButton().get().layoutXProperty(), x -> {
+            // At the time when x is available the width is available as well
+            if (x.doubleValue() > 0) {
+                Transitions.slideHorizontal(selectionMarker, selectedTabButton.getWidth(),
+                        selectedTabButton.getBoundsInParent().getMinX());
+                UIThread.runOnNextRenderFrame(() -> {
+                    if (layoutDoneSubscription != null) {
+                        layoutDoneSubscription.unsubscribe();
+                        layoutDoneSubscription = null;
+                    }
+                });
+            }
+        });
+    }
 
     @Override
     void onViewDetachedInternal() {
@@ -124,6 +159,10 @@ public abstract class TabView<M extends TabModel, C extends TabController> exten
 
         line.prefWidthProperty().unbind();
         selectedTabButtonSubscription.unsubscribe();
+        rootWidthSubscription.unsubscribe();
+        if (layoutDoneSubscription != null) {
+            layoutDoneSubscription.unsubscribe();
+        }
         model.getTabButtons().forEach(tabButton -> tabButton.setOnAction(null));
         model.getView().removeListener(viewChangeListener);
     }
