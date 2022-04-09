@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.networkinfo;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.scene.Node;
@@ -40,7 +41,6 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
                            Optional<Node> i2p) {
         super(new VBox(), model, controller);
 
-
         root.setFillWidth(true);
         root.setSpacing(20);
         accordion = new Accordion();
@@ -51,14 +51,12 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
         tor.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("tor"), childRoot)));
         i2p.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("i2p"), childRoot)));
 
-        // todo when expanded it hides the lines at that tabs, no idea why..
-     /*   if (!accordion.getPanes().isEmpty()) {
+        if (!accordion.getPanes().isEmpty()) {
             UIThread.runOnNextRenderFrame(() -> accordion.getPanes().get(0).setExpanded(true));
-        }*/
+        }
 
         Label label = new Label(Res.get("networkInfo"));
-        label.setStyle("-fx-text-fill: -bisq-text;  -fx-font-size: 2em;");
-        //HBox.setMargin(label, new Insets(-8, 0, 31, -3));
+        label.setStyle("-fx-text-fill: -bisq-text;  -fx-font-size: 2.1em; -fx-font-family: \"IBM Plex Sans Light\";");
         root.getChildren().addAll(label, accordion);
     }
 

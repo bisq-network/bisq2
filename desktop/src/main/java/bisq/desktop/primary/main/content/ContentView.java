@@ -33,7 +33,7 @@ public class ContentView extends NavigationView<AnchorPane, ContentModel, Conten
         root.setPadding(new Insets(50, 100, 100, 100));
         model.getView().addListener((observable, oldValue, newValue) -> {
             Layout.pinToAnchorPane(newValue.getRoot(), 0, 0, 0, 0);
-            this.root.getChildren().add(newValue.getRoot());
+            root.getChildren().add(newValue.getRoot());
             Transitions.transitContentViews(oldValue, newValue);
         });
     }

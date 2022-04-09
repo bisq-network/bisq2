@@ -32,7 +32,8 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
                         Pane walletBalanceBox) {
         super(new HBox(), model, controller);
 
-        root.setPrefHeight(HEIGHT);
+        root.setMinHeight(HEIGHT);
+        root.setMaxHeight(HEIGHT);
         root.setSpacing(28);
         root.setStyle("-fx-background-color: -bisq-dark-bg;");
         root.setPadding(new Insets(28, 100, 0, 100));
