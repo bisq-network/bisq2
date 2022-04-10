@@ -101,7 +101,7 @@ public class ChatUser implements Proto {
     private DerivedData getDerivedData() {
         if (derivedData == null) {
             // todo sometimes we get derivedData = null. not clear why...
-            log.warn("derivedData is null. we call getDerivedData()");
+            //log.warn("derivedData is null. we call getDerivedData()");
             derivedData = ChatUser.getDerivedData(networkId.getPubKey().publicKey().getEncoded());
         }
         return derivedData;
