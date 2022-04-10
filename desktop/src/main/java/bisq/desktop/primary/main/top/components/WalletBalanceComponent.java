@@ -85,11 +85,11 @@ public class WalletBalanceComponent {
             root.setSpacing(13);
 
             Label label = new Label(Res.get("wallet.availableBalance").toUpperCase());
-            label.setStyle("-fx-text-fill: -bisq-text-medium; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.25em");
+            label.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.25em");
             label.setPadding(new Insets(4,0,0,0));
             
             balance = new Label();
-            balance.setStyle("-fx-text-fill: -bisq-text; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.55em");
+            balance.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.55em");
            
             root.getChildren().addAll(label,balance );
         }

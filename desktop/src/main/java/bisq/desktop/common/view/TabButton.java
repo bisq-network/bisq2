@@ -50,7 +50,7 @@ public class TabButton extends Pane implements Toggle {
         label.setPadding(new Insets(12, 0, 0, 0));
         label.setMouseTransparent(true);
 
-        label.setStyle("-fx-text-fill: -bisq-text-dark; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.4em;");
+        label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.4em;");
 
         getChildren().addAll(label);
     }
@@ -96,7 +96,7 @@ public class TabButton extends Pane implements Toggle {
         if (selected) {
             label.setStyle("-fx-text-fill: -bisq-green; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.4em;");
         } else {
-            label.setStyle("-fx-text-fill: -bisq-text-dark; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.4em;");
+            label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.4em;");
         }
     }
 }

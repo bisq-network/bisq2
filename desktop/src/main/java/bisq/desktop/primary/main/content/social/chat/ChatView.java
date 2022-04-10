@@ -107,7 +107,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
         filterBox = new FilterBox(model.getFilteredChatMessages());
         filterBoxRoot = filterBox.getRoot();
-        filterBoxRoot.setStyle("-fx-background-color: -bisq-dark-bg");
+        filterBoxRoot.setStyle("-fx-background-color: -bisq-grey-1");
         HBox.setHgrow(filterBoxRoot, Priority.ALWAYS);
         HBox.setMargin(filterBoxRoot, new Insets(0, 0, 0, 10));
 
@@ -141,7 +141,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         sideBar.setAlignment(Pos.TOP_RIGHT);
         sideBar.setPadding(new Insets(10, 20, 20, 20));
         sideBar.setFillWidth(true);
-        sideBar.setStyle("-fx-background-color: -bisq-dark-bg");
+        sideBar.setStyle("-fx-background-color: -bisq-grey-1");
 
         // messagesListAndSideBar
         messagesListAndSideBar = Layout.hBoxWith(messagesAndInput, sideBar);
@@ -290,8 +290,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                 moreOptionsButton);
                         reactionsBox.setSpacing(5);
                         reactionsBox.setVisible(false);
-                        reactionsBox.setStyle("-fx-background-color: -bisq-dark-bg-selected; -fx-background-radius: 3px");
-                        // reactionsBox.setStyle("-fx-background-color: -bisq-dark-bg");
+                        reactionsBox.setStyle("-fx-background-color: -bisq-grey-2; -fx-background-radius: 3px");
+                        // reactionsBox.setStyle("-fx-background-color: -bisq-grey-1");
 
                         editedMessageField = new BisqTextArea();
                         editedMessageField.setVisible(false);
@@ -328,17 +328,17 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                         quotedMessage.pubKeyHash() != null &&
                                         quotedMessage.message() != null) {
                                     Region verticalLine = new Region();
-                                    verticalLine.setStyle("-fx-background-color: -bisq-text-medium");
+                                    verticalLine.setStyle("-fx-background-color: -bisq-grey-9");
                                     verticalLine.setMinWidth(3);
                                     verticalLine.setMinHeight(25);
                                     HBox.setMargin(verticalLine, new Insets(0, 0, 0, 5));
                                    
                                     quotedMessageField.setText(quotedMessage.message());
-                                    quotedMessageField.setStyle("-fx-fill: -bisq-text-medium");
+                                    quotedMessageField.setStyle("-fx-fill: -bisq-grey-9");
                                    
                                     BisqLabel userName = new BisqLabel(quotedMessage.userName());
                                     userName.setPadding(new Insets(4, 0, 0, 0));
-                                    userName.setStyle("-fx-text-fill: -bisq-text-medium");
+                                    userName.setStyle("-fx-text-fill: -bisq-grey-9");
                                    
                                     ImageView roboIconImageView = new ImageView();
                                     roboIconImageView.setFitWidth(25);
@@ -387,8 +387,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             setOnMouseEntered(e -> {
                                 time.setVisible(true);
                                 reactionsBox.setVisible(true);
-                                messageBox.setStyle("-fx-background-color: -bisq-dark-bg");
-                                setStyle("-fx-background-color: -bisq-dark-bg;");
+                                messageBox.setStyle("-fx-background-color: -bisq-grey-1");
+                                setStyle("-fx-background-color: -bisq-grey-1;");
                             });
                             setOnMouseExited(e -> {
                                 time.setVisible(false);

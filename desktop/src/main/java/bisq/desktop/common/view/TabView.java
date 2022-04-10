@@ -52,7 +52,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         root.setPadding(new Insets(0, -100, 0, 0));
 
         label = new Label();
-        label.setStyle("-fx-text-fill: -bisq-text;  -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 2.8em;");
+        label.setStyle("-fx-text-fill: -fx-light-text-color;  -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 2.8em;");
         HBox.setMargin(label, new Insets(-8, 0, 31, -3));
 
         tabs = new HBox();
@@ -67,7 +67,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
 
         line = new Region();
-        line.setStyle("-fx-background-color: -bisq-dark-bg;");
+        line.setStyle("-fx-background-color: -bisq-grey-1;");
         double lineHeight = 1.5;
         line.setMinHeight(lineHeight);
 
