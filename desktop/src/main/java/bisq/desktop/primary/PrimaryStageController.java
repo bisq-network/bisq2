@@ -76,13 +76,14 @@ public class PrimaryStageController extends NavigationController {
     @Override
     public void onActivate() {
         onStageReadyHandler.run();
-
-        String persisted = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
+        Navigation.navigateTo(NavigationTarget.SPLASH);
+        
+      /*  String persisted = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
         if (persisted != null) {
             Navigation.navigateTo(NavigationTarget.valueOf(persisted));
         } else {
             Navigation.navigateTo(NavigationTarget.SPLASH);
-        }
+        }*/
     }
 
     @Override

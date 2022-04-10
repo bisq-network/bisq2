@@ -1,5 +1,13 @@
 
 .root {
+    /* COLORS applied to moderna */
+    -fx-base: -bisq-grey-4;
+    -fx-accent: -bisq-green;
+
+    -fx-dark-text-color: black;
+    -fx-mid-text-color: -bisq-grey-9;
+    -fx-light-text-color: white;
+
     /* Colors */
     -bisq-green: #25b135;
     -bisq-dark-green: #2ea33c;
@@ -17,7 +25,6 @@
     -bisq-grey-10: #a9a9a9;
     -bisq-grey-11: #C9C9C9;
 
-
     /* Background colors */
     -bisq-background-color-darkest: -bisq-grey-2;
     -bisq-background-color-dark: -bisq-grey-4;
@@ -30,32 +37,6 @@
     /* Text colors */
     -bisq-text-color-white: white;
     -bisq-text-color-2: -bisq-grey-4;
-
-    /* Fonts 
-    -bisq-font: "IBM Plex Sans";
-    -bisq-font-bold: "IBM Plex Sans Bold";
-    -bisq-font-medium: "IBM Plex Sans Medium";
-    -bisq-font-light: "IBM Plex Sans Light";
-    -bisq-font-mono: "IBM Plex Mono";
-     */
-
-    /* Font sizes 
-    -bisq-font-size-1: 1.2em;
-    -bisq-font-size-2: 1.4em;
-    -bisq-font-size-3: 1.5em;
-    -bisq-font-size-4: 2em;
-    -bisq-font-size-5: 2.8em;
-    -bisq-font-size-6: 3em;
-    -bisq-font-size-7: 4em;
-    */
-
-    /* COLORS applied to moderna */
-    -fx-base: -bisq-grey-4;
-    -fx-accent: -bisq-green;
-
-    -fx-dark-text-color: black;
-    -fx-mid-text-color: -bisq-grey-9;
-    -fx-light-text-color: white;
 }
 
 /* Button */
@@ -100,7 +81,7 @@
 
 
 .content-pane {
-    -fx-background-color: -fx-base;
+    -fx-background-color: -bisq-background-color-dark;
 }
 
 .accordion > .titled-pane > .title > .arrow-button > .arrow {
