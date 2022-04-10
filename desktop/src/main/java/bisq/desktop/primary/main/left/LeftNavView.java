@@ -74,11 +74,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         Layout.pinToAnchorPane(vBox, menuTop, 0, 0, MARKER_WIDTH);
 
         NavigationButton social = createNavigationButton(Res.get("social"),
-                ImageUtil.getImageViewById("governance"),//todo missing icon
-                NavigationTarget.SOCIAL);
-       /* NavigationButton events = createNavigationButton(Res.get("events"),
                 ImageUtil.getImageViewById("home"),//todo missing icon
-                NavigationTarget.EVENTS);*/
+                NavigationTarget.SOCIAL);
         NavigationButton trade = createNavigationButton(Res.get("trade"),
                 ImageUtil.getImageViewById("sell"),  //todo missing icon
                 NavigationTarget.TRADE);
