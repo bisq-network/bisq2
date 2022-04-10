@@ -153,16 +153,16 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         }
     }
 
-    public CompletableFuture<Identity> createNewInitializedIdentity(String domainId, String keyId, KeyPair keyPair) {
+    public CompletableFuture<Identity> createNewInitializedIdentity(String profileId, String keyId, KeyPair keyPair) {
         keyPairService.persistKeyPair(keyId, keyPair);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
         return networkService.getInitializedNetworkId(nodeId, pubKey)
                 .thenApply(networkId -> {
-                    Identity identity = new Identity(domainId, networkId, keyPair);
+                    Identity identity = new Identity(profileId, networkId, keyPair);
                     synchronized (lock) {
                         persistableStore.getPool().add(identity);
-                        persistableStore.getActiveIdentityByDomainId().put(domainId, identity);
+                        persistableStore.getActiveIdentityByDomainId().put(profileId, identity);
                     }
                     persist();
                     return identity;

@@ -99,7 +99,9 @@ public class CreateUserProfile {
             model.generateNewIdentityButtonDisable.set(true);
             model.feedback.set(Res.get("social.createUserProfile.prepare"));
             String useName = model.userName.get();
+            //todo we added a nickname
             userProfileService.createNewInitializedUserProfile(useName,
+                            "TODO",
                             model.tempKeyId,
                             model.tempKeyPair,
                             new HashSet<>(entitlementSelection.getVerifiedEntitlements()))

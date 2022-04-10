@@ -93,14 +93,14 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
 
     private void addHeaderBox() {
         Text headlineLabel = new Text(Res.get("social.education.headline"));
-        headlineLabel.getStyleClass().add("-bisq-text-headline-1");
+        headlineLabel.getStyleClass().add("bisq-text-headline-1");
 
         Text contentLabel = new Text(Res.get("social.education.content"));
-        contentLabel.getStyleClass().add("-bisq-text-1");
+        contentLabel.getStyleClass().add("bisq-text-1");
 
         VBox box = new VBox();
         box.setSpacing(TEXT_SPACE);
-        box.getStyleClass().add("-bisq-box-1");
+        box.getStyleClass().add("bisq-box-1");
         box.setPadding(new Insets(MARGIN - 16, 0, MARGIN - 6, MARGIN));
         box.getChildren().addAll(headlineLabel, contentLabel);
         root.getChildren().add(box);
@@ -132,17 +132,17 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
 
     private VBox getWidgetBox(String headline, String content, String buttonLabel) {
         Text headlineLabel = new Text(headline);
-        headlineLabel.getStyleClass().add("-bisq-text-headline-1");
+        headlineLabel.getStyleClass().add("bisq-text-headline-1");
 
         Text contentLabel = new Text(content);
-        contentLabel.getStyleClass().add("-bisq-text-1");
+        contentLabel.getStyleClass().add("bisq-text-1");
 
         Button button = new Button(buttonLabel);
-        button.getStyleClass().add("-bisq-button-1");
+        button.getStyleClass().add("bisq-button-1");
         
         VBox box = Layout.vBoxWith(headlineLabel, contentLabel, button);
         box.setSpacing(TEXT_SPACE);
-        box.getStyleClass().add("-bisq-box-1");
+        box.getStyleClass().add("bisq-box-1");
         box.setPadding(new Insets(MARGIN - 16, 0, MARGIN - 6, MARGIN));
         subscriptions.add(EasyBind.subscribe(root.widthProperty(), w -> {
             double value = (w.doubleValue() - root.getPadding().getRight() - MARGIN + SCROLLBAR_WIDTH) / 2;

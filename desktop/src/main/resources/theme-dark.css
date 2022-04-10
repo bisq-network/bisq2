@@ -152,6 +152,9 @@ Taken from Bisq. Might need some clean up
 
     /* Monero orange color code */
     -xmr-orange: #f26822;
+
+    /*disable nasty focus color until its found where to disable it*/
+    /*-fx-faint-focus-color: transparent;*/
 }
 
 /* Bisq 2 - does not work inside bisq2.css ...*/

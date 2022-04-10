@@ -86,25 +86,4 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         }
         progressBar.setProgress(0);
     }
-
-    
-   /* public SplashView(SplashModel model, SplashController controller) {
-        super(new VBox(), model, controller);
-
-        // root.getStyleClass().add("content-pane");
-        root.setAlignment(Pos.CENTER);
-
-        ImageView logo = new ImageView();
-        logo.setId("image-splash-logo");
-        // logo.setId("satoshisquare-splash");
-
-     
-       
-
-        root.getChildren().addAll(
-                logo,
-                Spacer.height(50),
-                statusLabel
-        );
-    }*/
 }

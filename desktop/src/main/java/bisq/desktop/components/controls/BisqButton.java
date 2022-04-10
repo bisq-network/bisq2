@@ -17,15 +17,11 @@
 
 package bisq.desktop.components.controls;
 
-import com.jfoenix.controls.JFXButton;
-import com.jfoenix.skins.JFXButtonSkin;
 import javafx.scene.Node;
-import javafx.scene.control.Skin;
-
-import static bisq.desktop.common.utils.TooltipUtil.showTooltipIfTruncated;
+import javafx.scene.control.Button;
 
 
-public class BisqButton extends JFXButton {
+public class BisqButton extends Button {
 
     public BisqButton() {
         super();
@@ -39,10 +35,10 @@ public class BisqButton extends JFXButton {
         super(text, graphic);
     }
 
-    @Override
+ /*   @Override
     protected Skin<?> createDefaultSkin() {
         return new AutoTooltipButtonSkin(this);
-    }
+    }*/
 
     public void setFixWidth(double value) {
         setMinWidth(value);
@@ -53,7 +49,7 @@ public class BisqButton extends JFXButton {
         super.setDefaultButton(value);
         getStyleClass().add("action-button");
     }
-
+/*
     private static class AutoTooltipButtonSkin extends JFXButtonSkin {
         public AutoTooltipButtonSkin(JFXButton button) {
             super(button);
@@ -64,5 +60,5 @@ public class BisqButton extends JFXButton {
             super.layoutChildren(x, y, w, h);
             showTooltipIfTruncated(this, getSkinnable());
         }
-    }
+    }*/
 }

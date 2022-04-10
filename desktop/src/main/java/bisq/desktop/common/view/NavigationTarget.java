@@ -46,6 +46,7 @@ public enum NavigationTarget {
    
     SOCIAL(CONTENT),
 
+    EXCHANGE(SOCIAL),
     CHAT(SOCIAL),
     MEET(SOCIAL),
     EDUCATION(SOCIAL),

@@ -76,14 +76,8 @@ public class PrimaryStageController extends NavigationController {
     @Override
     public void onActivate() {
         onStageReadyHandler.run();
+
         Navigation.navigateTo(NavigationTarget.SPLASH);
-        
-      /*  String persisted = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
-        if (persisted != null) {
-            Navigation.navigateTo(NavigationTarget.valueOf(persisted));
-        } else {
-            Navigation.navigateTo(NavigationTarget.SPLASH);
-        }*/
     }
 
     @Override
@@ -121,7 +115,12 @@ public class PrimaryStageController extends NavigationController {
         if (applicationService.getUserProfileService().isDefaultUserProfileMissing()) {
             Navigation.navigateTo(NavigationTarget.ONBOARDING);
         } else {
-            Navigation.navigateTo(NavigationTarget.MAIN);
+            String persisted = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
+            if (persisted != null && NavigationTarget.valueOf(persisted) != NavigationTarget.SPLASH) {
+                Navigation.navigateTo(NavigationTarget.valueOf(persisted));
+            } else {
+                Navigation.navigateTo(NavigationTarget.MAIN);
+            }
         }
     }
 
