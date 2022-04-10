@@ -17,14 +17,13 @@
 
 package bisq.desktop.primary.splash;
 
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
 @Getter
 public class SplashModel implements Model {
-
-    private final StringProperty status = new SimpleStringProperty();
-
+    private final ObjectProperty<DefaultApplicationService.State> state = new SimpleObjectProperty<>();
 }

@@ -100,11 +100,13 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<UserProfile> createNewInitializedUserProfile(String domainId,
+    //todo we added a nickname
+    public CompletableFuture<UserProfile> createNewInitializedUserProfile(String profileId,
+                                                                          String nickName,
                                                                           String keyId,
                                                                           KeyPair keyPair,
                                                                           Set<Entitlement> entitlements) {
-        return identityService.createNewInitializedIdentity(domainId, keyId, keyPair)
+        return identityService.createNewInitializedIdentity(profileId, keyId, keyPair)
                 .thenApply(identity -> {
                     UserProfile userProfile = new UserProfile(identity, entitlements);
                     synchronized (lock) {
@@ -269,7 +271,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         byte[] pubKeyBytes = keyPair.getPublic().getEncoded();
         byte[] pubKeyHash = DigestUtil.hash(pubKeyBytes);
         String useName = UserNameGenerator.fromHash(pubKeyHash);
-        return createNewInitializedUserProfile(useName, keyId, keyPair, new HashSet<>())
+        //todo we added a nickname
+        return createNewInitializedUserProfile(useName,"TODO", keyId, keyPair, new HashSet<>())
                 .thenApply(userProfile -> true);
     }
 

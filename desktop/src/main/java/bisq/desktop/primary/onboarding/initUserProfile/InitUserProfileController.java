@@ -20,11 +20,11 @@ package bisq.desktop.primary.onboarding.initUserProfile;
 import bisq.application.DefaultApplicationService;
 import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.security.DigestUtil;
@@ -34,6 +34,8 @@ import bisq.social.user.UserNameGenerator;
 import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.HashSet;
 
@@ -47,6 +49,7 @@ public class InitUserProfileController implements Controller {
     private final UserProfileService userProfileService;
     private final KeyPairService keyPairService;
     private final ChatService chatService;
+    private Subscription nickNameSubscription;
 
     public InitUserProfileController(DefaultApplicationService applicationService) {
         keyPairService = applicationService.getKeyPairService();
@@ -61,26 +64,29 @@ public class InitUserProfileController implements Controller {
     public void onActivate() {
         model.feedback.set("");
         onCreateTempIdentity();
+        nickNameSubscription = EasyBind.subscribe(model.nickName, e -> model.createProfileButtonDisable.set(e == null || e.isEmpty()));
     }
 
     @Override
     public void onDeactivate() {
         model.createProfileButtonDisable.unbind();
+        nickNameSubscription.unsubscribe();
     }
 
     void onCreateUserProfile() {
         model.createProfileButtonDisable.set(true);
         model.feedback.set(Res.get("social.createUserProfile.prepare"));
-        String useName = model.userName.get();
-        userProfileService.createNewInitializedUserProfile(useName,
+        String profileId = model.profileId.get();
+        userProfileService.createNewInitializedUserProfile(profileId,
+                        model.getNickName().get(),
                         model.tempKeyId,
                         model.tempKeyPair,
                         new HashSet<>())
                 .thenAccept(userProfile -> {
                     UIThread.run(() -> {
                         chatService.maybeAddDummyChannels();
-                        checkArgument(userProfile.identity().domainId().equals(useName));
-                        model.feedback.set(Res.get("social.createUserProfile.success", useName));
+                        checkArgument(userProfile.identity().domainId().equals(profileId));
+                        model.feedback.set(Res.get("social.createUserProfile.success", profileId));
                         UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget.SELECT_USER_TYPE)).after(100);
                     });
                 });
@@ -91,6 +97,6 @@ public class InitUserProfileController implements Controller {
         model.tempKeyPair = keyPairService.generateKeyPair();
         byte[] hash = DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded());
         model.roboHashNode.set(RoboHash.getImage(new ByteArray(hash)));
-        model.userName.set(UserNameGenerator.fromHash(hash));
+        model.profileId.set(UserNameGenerator.fromHash(hash));
     }
 }

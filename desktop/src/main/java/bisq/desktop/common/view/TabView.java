@@ -26,7 +26,10 @@ import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -46,22 +49,25 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         super(new VBox(), model, controller);
 
         root.setFillWidth(true);
+        root.setPadding(new Insets(0, -100, 0, 0));
 
         label = new Label();
-        label.setStyle("-fx-text-fill: -bisq-text;  -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 2.8em;");
+        label.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 2.8em;");
         HBox.setMargin(label, new Insets(-8, 0, 31, -3));
 
         tabs = new HBox();
         tabs.setFillHeight(true);
         tabs.setSpacing(46);
         tabs.getChildren().addAll(label, Spacer.fillHBox());
+        tabs.setPadding(new Insets(0, 100, 0, 0));
 
-        ScrollPane content = new ScrollPane();
-        content.setFitToHeight(true);
-        content.setFitToWidth(true);
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(true);
+
 
         line = new Region();
-        line.setStyle("-fx-background-color: -bisq-dark-bg;");
+        line.setStyle("-fx-background-color: -bisq-grey-1;");
         double lineHeight = 1.5;
         line.setMinHeight(lineHeight);
 
@@ -72,15 +78,16 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         Pane lineAndMarker = new Pane();
         lineAndMarker.getChildren().addAll(line, selectionMarker);
         lineAndMarker.setMinHeight(lineHeight);
+        lineAndMarker.setPadding(new Insets(0, 100, 0, 0));
 
-        root.getChildren().addAll(tabs, lineAndMarker, content);
+        root.getChildren().addAll(tabs, lineAndMarker, scrollPane);
 
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
                 childRoot.setStyle("-fx-background-color: -fx-base;");
-                childRoot.setPadding(new Insets(50, 0, 0, 0));
-                content.setContent(childRoot);
+                childRoot.setPadding(new Insets(50, 100, 0, 0));
+                scrollPane.setContent(childRoot);
             }
         };
     }

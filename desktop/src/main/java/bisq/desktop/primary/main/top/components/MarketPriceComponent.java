@@ -167,15 +167,15 @@ public class MarketPriceComponent {
                 protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
                     {
-                        setStyle("-fx-background-color: -bisq-dark-bg");
+                        setStyle("-fx-background-color: -bisq-grey-1");
                     }
                     if (item != null && !empty) {
                         Label market = new Label(item.marketPrice.getMarket().toString().toUpperCase());
-                        market.setStyle("-fx-text-fill: -bisq-text-medium; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.25em");
+                        market.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.25em");
                         market.setPadding(new Insets(4, 0, 0, 0));
 
                         Label quote = new Label(QuoteFormatter.format(item.marketPrice.quote()));
-                        quote.setStyle("-fx-text-fill: -bisq-text; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.55em");
+                        quote.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.55em");
                         HBox box = Layout.hBoxWith(market, quote);
                         box.setSpacing(13);
                         setGraphic(box);
@@ -189,15 +189,15 @@ public class MarketPriceComponent {
                 protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
                     {
-                        setStyle("-fx-background-color: -bisq-dark-bg");
+                        setStyle("-fx-background-color: -bisq-grey-1");
                     }
                     if (item != null && !empty) {
                         Label market = new Label(item.marketPrice.getMarket().toString().toUpperCase());
-                        market.setStyle("-fx-text-fill: -bisq-text-medium; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.25em");
+                        market.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.25em");
                         market.setPadding(new Insets(4, 0, 0, 0));
 
                         Label quote = new Label(QuoteFormatter.format(item.marketPrice.quote()));
-                        quote.setStyle("-fx-text-fill: -bisq-text; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.55em");
+                        quote.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.55em");
                         HBox box = Layout.hBoxWith(market, quote);
                         box.setSpacing(13);
                         setGraphic(box);

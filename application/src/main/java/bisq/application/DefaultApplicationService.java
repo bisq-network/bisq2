@@ -23,6 +23,7 @@ import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.SepaAccount;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LocaleRepository;
+import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.i18n.Res;
@@ -57,12 +58,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.common.util.OsUtils.EXIT_FAILURE;
 import static bisq.common.util.OsUtils.EXIT_SUCCESS;
@@ -80,6 +78,19 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 @Slf4j
 public class DefaultApplicationService extends ServiceProvider {
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("DefaultApplicationService.dispatcher");
+
+    public enum State {
+        CREATED,
+        SECURITY_SERVICE_INITIALIZED,
+        NETWORK_BOOTSTRAPPED,
+        IDENTITY_SERVICE_INITIALIZED,
+        DAO_BRIDGE_SERVICE_INITIALIZED,
+        MARKET_PRICE_SERVICE_INITIALIZED,
+        ACCOUNT_AGE_WITNESS_SERVICE_INITIALIZED,
+        PROTOCOL_SERVICE_INITIALIZED,
+        INIT_COMPLETE,
+        INIT_FAILED
+    }
 
     private final NetworkService networkService;
     private final OpenOfferService openOfferService;
@@ -100,26 +111,7 @@ public class DefaultApplicationService extends ServiceProvider {
     private final SecurityService securityService;
     private final DaoBridgeService daoBridgeService;
     private final AccountAgeWitnessService accountAgeWitnessService;
-
-    public interface Listener {
-        void onStateChanged(State state);
-    }
-
-    public enum State {
-        CREATED,
-        SECURITY_SERVICE_INITIALIZED,
-        NETWORK_BOOTSTRAPPED,
-        IDENTITY_SERVICE_INITIALIZED,
-        DAO_BRIDGE_SERVICE_INITIALIZED,
-        MARKET_PRICE_SERVICE_INITIALIZED,
-        ACCOUNT_AGE_WITNESS_SERVICE_INITIALIZED,
-        PROTOCOL_SERVICE_INITIALIZED,
-        INIT_COMPLETE,
-        INIT_FAILED
-    }
-
-    public AtomicReference<State> state = new AtomicReference<>(State.CREATED);
-    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Observable<State> state = new Observable<>(State.CREATED);
 
     public DefaultApplicationService(String[] args) {
         super("Bisq");
@@ -280,7 +272,6 @@ public class DefaultApplicationService extends ServiceProvider {
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);
-        runAsync(() -> listeners.forEach(e -> e.onStateChanged(newState)), DISPATCHER);
 
         return CompletableFuture.completedFuture(true);
     }
@@ -291,13 +282,5 @@ public class DefaultApplicationService extends ServiceProvider {
 
     private CompletableFuture<Boolean> setStateAfterList(CompletableFuture<List<Boolean>> initTaskList, State stateAfter) {
         return initTaskList.thenCompose(result -> setState(stateAfter));
-    }
-
-    public void addListener(Listener listener) {
-        listeners.add(listener);
-    }
-
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
     }
 }

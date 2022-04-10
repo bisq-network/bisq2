@@ -18,9 +18,9 @@
 package bisq.desktop.primary.splash;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.threading.UIThread;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,23 +29,22 @@ public class SplashController implements Controller {
     private final SplashModel model;
     @Getter
     private final SplashView view;
+    private final DefaultApplicationService applicationService;
+    private Pin pin;
 
     public SplashController(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
         model = new SplashModel();
         view = new SplashView(model, this);
-
-        applicationService.addListener(new DefaultApplicationService.Listener() {
-            @Override
-            public void onStateChanged(DefaultApplicationService.State state) {
-                UIThread.run(() ->  model.getStatus().setValue(
-                        Res.get("defaultApplicationService.state." + state.name())));
-            }
-        });
     }
 
     @Override
-    public void onActivate() { }
+    public void onActivate() {
+        pin = FxBindings.bind(model.getState()).to(applicationService.getState());
+    }
 
     @Override
-    public void onDeactivate() { }
+    public void onDeactivate() {
+        pin.unbind();
+    }
 }

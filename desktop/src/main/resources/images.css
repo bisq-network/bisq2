@@ -18,6 +18,13 @@
     -fx-image: url("images/satoshisquare_splash.png");
 }
 
+#logo_splash_grey {
+    -fx-image: url("images/logo_splash_grey.png");
+}
+#logo_white {
+    -fx-image: url("images/logo_white.png");
+}
+
 #logo-small {
     -fx-image: url("images/logo_small.png");
 }

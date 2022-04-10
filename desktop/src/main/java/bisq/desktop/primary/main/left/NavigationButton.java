@@ -68,7 +68,7 @@ class NavigationButton extends Pane implements Toggle {
         label.setLayoutY(20);
         label.setMouseTransparent(true);
 
-        setStyle("-fx-background-color: -bisq-dark-bg;");
+        setStyle("-fx-background-color: -bisq-grey-1;");
         label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.78em;");
         icon.setOpacity(0.6);
 
@@ -132,11 +132,11 @@ class NavigationButton extends Pane implements Toggle {
         selectedProperty.set(selected);
 
         if (selected) {
-            setStyle("-fx-background-color: -bisq-dark-bg-selected;");
+            setStyle("-fx-background-color: -bisq-grey-2;");
             label.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.8em;");
             icon.setOpacity(1);
         } else {
-            setStyle("-fx-background-color: -bisq-dark-bg;");
+            setStyle("-fx-background-color: -bisq-grey-1;");
             label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.8em;");
             icon.setOpacity(0.6);
         }

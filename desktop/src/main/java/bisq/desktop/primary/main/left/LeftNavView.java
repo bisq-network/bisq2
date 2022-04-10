@@ -66,7 +66,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
         super(new AnchorPane(), model, controller);
 
-        root.setStyle("-fx-background-color: -bisq-dark-bg;");
+        root.setStyle("-fx-background-color: -bisq-grey-1;");
 
         menuTop = TopPanelView.HEIGHT;
 
@@ -291,7 +291,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
             Region line = new Region();
             line.setMinHeight(1);
-            line.setStyle("-fx-background-color: -bisq-controls-bg-disabled");
+            line.setStyle("-fx-background-color: -bisq-grey-6");
             setMinHeight(NavigationButton.HEIGHT);
             setMaxHeight(NavigationButton.HEIGHT);
             Insets insets = new Insets(18, 0, 0, 44);
@@ -314,11 +314,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             hBox.visibleProperty().bind(isVisible);
 
             Label peers = new Label(Res.get("peers"));
-            String style = "-fx-text-fill: -bisq-text-medium; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.2em";
+            String style = "-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.2em";
             peers.setStyle(style);
 
             Label numConnectionsLabel = new Label();
-            peers.setStyle(style);
+            numConnectionsLabel.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.2em");
             numConnectionsLabel.textProperty().bind(numConnections);
 
             Label separator = new Label("|");

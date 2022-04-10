@@ -18,103 +18,141 @@
 package bisq.desktop.primary.main.content.social.education;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
-public class EducationView extends View<AnchorPane, EducationModel, EducationController> {
+import javax.annotation.Nullable;
+import java.util.HashSet;
+import java.util.Set;
+
+@Slf4j
+public class EducationView extends View<VBox, EducationModel, EducationController> {
+    private static final int MARGIN = 66;
+    private static final int TEXT_SPACE = 22;
+    private static final int SCROLLBAR_WIDTH = 12;
+
+    private final Set<Subscription> subscriptions = new HashSet<>();
+    @Nullable
+    private ChangeListener<Number> widthListener;
+    @Nullable
+    private Parent parent;
+
     public EducationView(EducationModel model, EducationController controller) {
-        super(new AnchorPane(), model, controller);
+        super(new VBox(), model, controller);
 
-        Pane headerBox = new Pane();
-        Layout.pinToAnchorPane(headerBox, -8, 70, 0, 0);
-        headerBox.setStyle("-fx-background-color: -bisq-dark-bg");
-
-        Label headline = new Label(Res.get("social.education.headline"));
-        headline.setWrapText(true);
-        headline.setStyle("-fx-text-fill: -bisq-text; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 6.3em");
-        headline.setPadding(new Insets(40, 66, 0, 66));
-
-        Label content = new Label(Res.get("social.education.content"));
-        content.setWrapText(true);
-        content.setStyle("-fx-text-fill: -bisq-text; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 2em");
-        content.setPadding(new Insets(0, 66, 0, 66));
-        EasyBind.subscribe(headline.heightProperty(), h -> {
-            content.setLayoutY(h.doubleValue() + headline.getLayoutY() + 66);
-        });
-
-        EasyBind.subscribe(headerBox.widthProperty(), w -> {
-            headline.setPrefWidth(w.doubleValue());
-            content.setPrefWidth(w.doubleValue());
-        });
-        headerBox.setPadding(new Insets(0, 0, 70, 0));
-        headerBox.getChildren().addAll(headline, content);
-
-        VBox bisq = getWidgetBox(Res.get("social.education.wallets.headline"),
-                Res.get("social.education.wallets.content"),
-                Res.get("social.education.wallets.button"));
-        VBox bitcoin = getWidgetBox(Res.get("social.education.wallets.headline"),
-                Res.get("social.education.wallets.content"),
-                Res.get("social.education.wallets.button"));
-        HBox line1Box = Layout.hBoxWith(bisq, bitcoin);
-        line1Box.setSpacing(60);
-
-        VBox security = getWidgetBox(Res.get("social.education.wallets.headline"),
-                Res.get("social.education.wallets.content"),
-                Res.get("social.education.wallets.button"));
-        VBox privacy = getWidgetBox(Res.get("social.education.wallets.headline"),
-                Res.get("social.education.wallets.content"),
-                Res.get("social.education.wallets.button"));
-        HBox line2Box = Layout.hBoxWith(security, privacy);
-        line1Box.setSpacing(60);
-
-        VBox wallets = getWidgetBox(Res.get("social.education.wallets.headline"),
-                Res.get("social.education.wallets.content"),
-                Res.get("social.education.wallets.button"));
-        VBox foss = getWidgetBox(Res.get("social.education.wallets.headline"),
-                Res.get("social.education.wallets.content"),
-                Res.get("social.education.wallets.button"));
-        HBox line3Box = Layout.hBoxWith(wallets, foss);
-        line1Box.setSpacing(60);
-
-        root.getChildren().addAll(headerBox/*, line1Box, line2Box, line3Box*/);
-    }
-
-    //todo layout is screwed
-    private VBox getWidgetBox(String headline, String content, String buttonLabel) {
-        VBox box = new VBox();
-        box.setStyle("-fx-background-color: -bisq-dark-bg");
-        box.setSpacing(67);
-        Label headlineLabel = new Label(headline);
-        headlineLabel.setStyle("-fx-text-fill: -bisq-text; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 3em");
-        VBox.setMargin(headlineLabel, new Insets(67, 0, 0, 0));
-
-        TextArea textArea = new BisqTextArea(content);
-        textArea.setStyle("-fx-text-fill: -bisq-text; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 2em");
-        // VBox.setMargin(headline, new Insets(0, 0, 74, 0));
-        VBox.setMargin(headlineLabel, new Insets(0, 0, 71, 0));
-
-        Button button = new BisqButton(buttonLabel);
-        // textArea.setStyle("-fx-text-fill: -bisq-text; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.46em");
-        box.getChildren().addAll(headlineLabel, textArea, button);
-        return box;
+        root.setSpacing(MARGIN);
     }
 
     @Override
     protected void onViewAttached() {
+        addHeaderBox();
+        addSmallBox("bisq", "bitcoin");
+        addSmallBox("security", "privacy");
+        addSmallBox("wallets", "foss");
+
+        // As we have scroll pane as parent container our root grows when increasing width but does not shrink anymore.
+        // If anyone finds a better solution would be nice to get rid of that hack...
+        parent = root.getParent();
+        if (parent != null) {
+            int maxIterations = 10;
+            int iterations = 0;
+            while (parent != null && !(parent instanceof VBox) && iterations < maxIterations) {
+                parent = parent.getParent();
+                iterations++;
+            }
+            if (iterations < maxIterations) {
+                widthListener = (observable, oldValue, newValue) -> {
+                    double value = newValue.doubleValue() - MARGIN;
+                    root.setMinWidth(value);
+                };
+                if (parent instanceof VBox vBox) {
+                    vBox.widthProperty().addListener(widthListener);
+                }
+            }
+        }
     }
 
     @Override
     protected void onViewDetached() {
+        subscriptions.forEach(Subscription::unsubscribe);
+
+        if (widthListener != null && parent instanceof VBox vBox) {
+            vBox.widthProperty().removeListener(widthListener);
+        }
+    }
+
+    private void addHeaderBox() {
+        Text headlineLabel = new Text(Res.get("social.education.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-1");
+
+        Text contentLabel = new Text(Res.get("social.education.content"));
+        contentLabel.getStyleClass().add("bisq-text-1");
+
+        VBox box = new VBox();
+        box.setSpacing(TEXT_SPACE);
+        box.getStyleClass().add("bisq-box-1");
+        box.setPadding(new Insets(MARGIN - 16, 0, MARGIN - 6, MARGIN));
+        box.getChildren().addAll(headlineLabel, contentLabel);
+        root.getChildren().add(box);
+        subscriptions.add(EasyBind.subscribe(root.widthProperty(), w -> {
+            double right = root.getPadding().getRight();
+            double value = w.doubleValue() - right + SCROLLBAR_WIDTH;
+            double wrappingWidth = value - box.getPadding().getLeft() - box.getPadding().getRight();
+            contentLabel.setWrappingWidth(wrappingWidth);
+            headlineLabel.setWrappingWidth(wrappingWidth);
+            box.setPrefWidth(value);
+            box.setMinWidth(value);
+            box.setMaxWidth(value);
+        }));
+    }
+
+    private void addSmallBox(String leftTopic, String rightTopic) {
+        VBox leftBox = getWidgetBox(Res.get("social.education." + leftTopic + ".headline"),
+                Res.get("social.education." + leftTopic + ".content"),
+                Res.get("social.education." + leftTopic + ".button"));
+
+        VBox rightBox = getWidgetBox(Res.get("social.education." + rightTopic + ".headline"),
+                Res.get("social.education." + rightTopic + ".content"),
+                Res.get("social.education." + rightTopic + ".button"));
+
+        HBox box = Layout.hBoxWith(leftBox, rightBox);
+        box.setSpacing(MARGIN);
+        root.getChildren().add(box);
+    }
+
+    private VBox getWidgetBox(String headline, String content, String buttonLabel) {
+        Text headlineLabel = new Text(headline);
+        headlineLabel.getStyleClass().add("bisq-text-headline-1");
+
+        Text contentLabel = new Text(content);
+        contentLabel.getStyleClass().add("bisq-text-1");
+
+        Button button = new Button(buttonLabel);
+        button.getStyleClass().add("bisq-button-1");
+        
+        VBox box = Layout.vBoxWith(headlineLabel, contentLabel, button);
+        box.setSpacing(TEXT_SPACE);
+        box.getStyleClass().add("bisq-box-1");
+        box.setPadding(new Insets(MARGIN - 16, 0, MARGIN - 6, MARGIN));
+        subscriptions.add(EasyBind.subscribe(root.widthProperty(), w -> {
+            double value = (w.doubleValue() - root.getPadding().getRight() - MARGIN + SCROLLBAR_WIDTH) / 2;
+            double wrappingWidth = value - box.getPadding().getLeft() - box.getPadding().getRight();
+            headlineLabel.setWrappingWidth(wrappingWidth);
+            contentLabel.setWrappingWidth(wrappingWidth);
+            box.setPrefWidth(value);
+            box.setMinWidth(value);
+            box.setMaxWidth(value);
+        }));
+        return box;
     }
 }
