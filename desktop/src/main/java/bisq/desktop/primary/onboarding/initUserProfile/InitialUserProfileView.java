@@ -86,7 +86,9 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         nickNameLabelPrompt.setLayoutY(33);
         nickNameLabelPrompt.setLayoutX(14);
         nickNameLabelPrompt.setCursor(Cursor.TEXT);
-
+        nickNameLabelPrompt.setMinWidth(width);
+        nickNameLabelPrompt.setMaxWidth(width);
+        
         nickNameTextField = new TextField();
         nickNameTextField.setLayoutY(28);
         nickNameTextField.setLayoutX(6);

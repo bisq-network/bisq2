@@ -61,7 +61,7 @@ public class Navigation {
         history.add(navigationTarget);
         listeners.forEach((key, value) -> {
             if (navigationTarget.getPath().contains(key)) {
-                value.forEach(l -> l.onNavigate2(navigationTarget, Optional.empty()));
+                value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.empty()));
             }
         });
     }
@@ -71,7 +71,7 @@ public class Navigation {
     public static void navigateTo(NavigationTarget navigationTarget, Object data) {
         listeners.forEach((key, value) -> {
             if (navigationTarget.getPath().contains(key)) {
-                value.forEach(l -> l.onNavigate2(navigationTarget, Optional.of(data)));
+                value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.of(data)));
             }
         });
     }
@@ -84,7 +84,7 @@ public class Navigation {
         alt.add(navigationTarget);
         listeners.forEach((key, value) -> {
             if (navigationTarget.getPath().contains(key)) {
-                value.forEach(l -> l.onNavigate2(navigationTarget, Optional.empty()));
+                value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.empty()));
             }
         });
     }
@@ -97,7 +97,7 @@ public class Navigation {
         history.add(navigationTarget);
         listeners.forEach((key, value) -> {
             if (navigationTarget.getPath().contains(key)) {
-                value.forEach(l -> l.onNavigate2(navigationTarget, Optional.empty()));
+                value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.empty()));
             }
         });
     }

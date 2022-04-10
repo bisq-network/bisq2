@@ -34,8 +34,7 @@ public abstract class NavigationController implements Controller {
         this.host = host;
     }
 
-    //todo
-    void onNavigate2(NavigationTarget navigationTarget, Optional<Object> data) {
+    void processNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
         this.onNavigate(navigationTarget, data);
         Optional<NavigationTarget> candidate = Optional.of(navigationTarget);
         while (candidate.isPresent()) {
