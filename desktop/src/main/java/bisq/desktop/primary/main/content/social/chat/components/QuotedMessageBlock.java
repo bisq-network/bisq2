@@ -131,7 +131,7 @@ public class QuotedMessageBlock {
             super(new VBox(), model, controller);
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
-            root.setStyle("-fx-background-color: -bisq-grey-1;");
+            root.setStyle("-fx-background-color: -bisq-grey-left-nav-bg;");
 
             BisqLabel headline = new BisqLabel(Res.get("social.reply.headline"));
             headline.setStyle("-fx-text-fill: -bisq-grey-9");
@@ -139,7 +139,7 @@ public class QuotedMessageBlock {
             VBox.setMargin(removeButton, new Insets(0, 0, 0, 0));
             HBox topBox = Layout.hBoxWith(headline, Spacer.fillHBox(), removeButton);
             topBox.setAlignment(Pos.CENTER);
-            // topBox.setStyle("-fx-background-color: -bisq-grey-1");
+            // topBox.setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
             topBox.setPadding(new Insets(5, 5, 5, 5));
 
             userName = new BisqLabel();

@@ -49,7 +49,7 @@ public class LeftNavController implements Controller {
                     .findAny();
         }
         supportedNavigationTarget.ifPresent(target->{
-            findTabButton(target).ifPresent(navigationButton -> model.getSelectedNavigationButton().set(navigationButton));
+            findTabButton(target).ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
             model.getSelectedNavigationTarget().set(target);  
         });
     }
@@ -63,7 +63,7 @@ public class LeftNavController implements Controller {
     }
 
     void onNavigationTargetSelected(NavigationTarget navigationTarget) {
-        findTabButton(navigationTarget).ifPresent(navigationButton -> model.getSelectedNavigationButton().set(navigationButton));
+        findTabButton(navigationTarget).ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
         model.getSelectedNavigationTarget().set(navigationTarget);
         Navigation.navigateTo(navigationTarget);
     }
@@ -72,14 +72,14 @@ public class LeftNavController implements Controller {
         model.getMenuExpanded().set(!model.getMenuExpanded().get());
     }
 
-    void onNavigationButtonCreated(NavigationButton navigationButton) {
-        model.getNavigationButtons().add(navigationButton);
-        model.getNavigationTargets().add(navigationButton.getNavigationTarget());
+    void onNavigationButtonCreated(LeftNavButton leftNavButton) {
+        model.getLeftNavButtons().add(leftNavButton);
+        model.getNavigationTargets().add(leftNavButton.getNavigationTarget());
     }
 
-    Optional<NavigationButton> findTabButton(NavigationTarget navigationTarget) {
-        return model.getNavigationButtons().stream()
-                .filter(navigationButton -> navigationTarget == navigationButton.getNavigationTarget())
+    Optional<LeftNavButton> findTabButton(NavigationTarget navigationTarget) {
+        return model.getLeftNavButtons().stream()
+                .filter(leftNavButton -> navigationTarget == leftNavButton.getNavigationTarget())
                 .findAny();
     }
 }

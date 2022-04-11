@@ -37,7 +37,7 @@ import java.util.Set;
 
 @Slf4j
 public class EducationView extends View<VBox, EducationModel, EducationController> {
-    private static final int MARGIN = 66;
+    private static final int MARGIN = 67;
     private static final int TEXT_SPACE = 22;
     private static final int SCROLLBAR_WIDTH = 12;
 

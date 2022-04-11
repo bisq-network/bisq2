@@ -35,7 +35,7 @@ public class TradeView extends TabView<TradeModel, TradeController> {
         addTab(Res.get("trade.offerbook"), NavigationTarget.OFFERBOOK);
 
 
-        label.setText(Res.get("trade"));
+        headlineLabel.setText(Res.get("trade"));
     }
 
     @Override

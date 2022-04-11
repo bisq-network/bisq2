@@ -107,7 +107,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
         filterBox = new FilterBox(model.getFilteredChatMessages());
         filterBoxRoot = filterBox.getRoot();
-        filterBoxRoot.setStyle("-fx-background-color: -bisq-grey-1");
+        filterBoxRoot.setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
         HBox.setHgrow(filterBoxRoot, Priority.ALWAYS);
         HBox.setMargin(filterBoxRoot, new Insets(0, 0, 0, 10));
 
@@ -141,7 +141,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         sideBar.setAlignment(Pos.TOP_RIGHT);
         sideBar.setPadding(new Insets(10, 20, 20, 20));
         sideBar.setFillWidth(true);
-        sideBar.setStyle("-fx-background-color: -bisq-grey-1");
+        sideBar.setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
 
         // messagesListAndSideBar
         messagesListAndSideBar = Layout.hBoxWith(messagesAndInput, sideBar);
@@ -290,8 +290,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                 moreOptionsButton);
                         reactionsBox.setSpacing(5);
                         reactionsBox.setVisible(false);
-                        reactionsBox.setStyle("-fx-background-color: -bisq-grey-2; -fx-background-radius: 3px");
-                        // reactionsBox.setStyle("-fx-background-color: -bisq-grey-1");
+                        reactionsBox.setStyle("-fx-background-color: -bisq-grey-left-nav-selected-bg; -fx-background-radius: 3px");
+                        // reactionsBox.setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
 
                         editedMessageField = new BisqTextArea();
                         editedMessageField.setVisible(false);
@@ -387,8 +387,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             setOnMouseEntered(e -> {
                                 time.setVisible(true);
                                 reactionsBox.setVisible(true);
-                                messageBox.setStyle("-fx-background-color: -bisq-grey-1");
-                                setStyle("-fx-background-color: -bisq-grey-1;");
+                                messageBox.setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
+                                setStyle("-fx-background-color: -bisq-grey-left-nav-bg;");
                             });
                             setOnMouseExited(e -> {
                                 time.setVisible(false);

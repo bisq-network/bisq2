@@ -167,7 +167,7 @@ public class MarketPriceComponent {
                 protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
                     {
-                        setStyle("-fx-background-color: -bisq-grey-1");
+                        setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
                     }
                     if (item != null && !empty) {
                         Label market = new Label(item.marketPrice.getMarket().toString().toUpperCase());
@@ -189,7 +189,7 @@ public class MarketPriceComponent {
                 protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
                     {
-                        setStyle("-fx-background-color: -bisq-grey-1");
+                        setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
                     }
                     if (item != null && !empty) {
                         Label market = new Label(item.marketPrice.getMarket().toString().toUpperCase());

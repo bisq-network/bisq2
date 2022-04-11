@@ -37,7 +37,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<VBox, M, C>
         implements TransitionedView {
-    protected final Label label;
+    protected final Label headlineLabel;
     protected final HBox tabs;
     private final Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
@@ -49,44 +49,43 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         super(new VBox(), model, controller);
 
         root.setFillWidth(true);
-        root.setPadding(new Insets(0, -100, 0, 0));
+        root.setPadding(new Insets(0, -67, 0, 0));
 
-        label = new Label();
-        label.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 2.8em;");
-        HBox.setMargin(label, new Insets(-8, 0, 31, -3));
+        headlineLabel = new Label();
+        headlineLabel.getStyleClass().add("bisq-content-headline-label");
+        HBox.setMargin(headlineLabel, new Insets(-5, 0, 20, -2));
 
         tabs = new HBox();
         tabs.setFillHeight(true);
         tabs.setSpacing(46);
-        tabs.getChildren().addAll(label, Spacer.fillHBox());
-        tabs.setPadding(new Insets(0, 100, 0, 0));
+        tabs.getChildren().addAll(headlineLabel, Spacer.fillHBox());
+        tabs.setPadding(new Insets(0, 67, 2, 0));
 
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
 
-
         line = new Region();
-        line.setStyle("-fx-background-color: -bisq-grey-1;");
+        line.getStyleClass().add("bisq-darkest-bg");
         double lineHeight = 1.5;
         line.setMinHeight(lineHeight);
 
         selectionMarker = new Region();
-        selectionMarker.setStyle("-fx-background-color: -fx-accent;");
+        selectionMarker.getStyleClass().add("bisq-green");
         selectionMarker.setMinHeight(lineHeight);
 
         Pane lineAndMarker = new Pane();
         lineAndMarker.getChildren().addAll(line, selectionMarker);
         lineAndMarker.setMinHeight(lineHeight);
-        lineAndMarker.setPadding(new Insets(0, 100, 0, 0));
+        lineAndMarker.setPadding(new Insets(0, 67, 0, 0));
 
         root.getChildren().addAll(tabs, lineAndMarker, scrollPane);
 
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
-                childRoot.setStyle("-fx-background-color: -fx-base;");
-                childRoot.setPadding(new Insets(50, 100, 0, 0));
+                childRoot.getStyleClass().add("bisq-content-bg");
+                childRoot.setPadding(new Insets(33, 67, 0, 0));
                 scrollPane.setContent(childRoot);
             }
         };
@@ -195,5 +194,4 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
             }
         });
     }
-
 }

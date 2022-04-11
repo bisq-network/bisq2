@@ -35,8 +35,8 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
         root.setMinHeight(HEIGHT);
         root.setMaxHeight(HEIGHT);
         root.setSpacing(28);
-        root.setStyle("-fx-background-color: -bisq-grey-1;");
-        root.setPadding(new Insets(20, 66, 0, 66));
+        root.setStyle("-fx-background-color: -bisq-grey-left-nav-bg;");
+        root.setPadding(new Insets(20, 67, 0, 67));
         marketPriceBox.setPadding(new Insets(-4.5, 0, 0, 0));
         root.getChildren().addAll(marketPriceBox, Spacer.fillHBox(), walletBalanceBox);
     }

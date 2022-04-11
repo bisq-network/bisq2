@@ -154,7 +154,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             VBox.setMargin(roboIconImageView, new Insets(0, 0, 0, 0));
 
             userName = new BisqLabel();
-            userName.setStyle("-fx-background-color: -bisq-grey-2;-fx-text-fill: -fx-light-text-color;");
+            userName.setStyle("-fx-background-color: -bisq-grey-left-nav-selected-bg;-fx-text-fill: -fx-light-text-color;");
             userName.setMaxWidth(300);
             userName.setMinWidth(300);
             userName.setPadding(new Insets(7, 7, 7, 7));

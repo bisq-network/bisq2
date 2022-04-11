@@ -47,8 +47,8 @@ public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageMod
 
         this.stage = stage;
 
-        root.getStyleClass().add("content-pane");
-
+        root.getStyleClass().add("bisq-content-bg");
+        
         scene = new Scene(root); // takes about  50 ms
         try {
             stage.setTitle(model.getTitle());

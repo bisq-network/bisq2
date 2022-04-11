@@ -42,9 +42,9 @@ import java.util.Set;
 public class LeftNavModel implements Model {
     private final NetworkService networkService;
     private final Set<NavigationTarget> navigationTargets = new HashSet<>();
-    private final List<NavigationButton> navigationButtons = new ArrayList<>();
+    private final List<LeftNavButton> leftNavButtons = new ArrayList<>();
     private final ObjectProperty<NavigationTarget> selectedNavigationTarget = new SimpleObjectProperty<>();
-    private final ObjectProperty<NavigationButton> selectedNavigationButton = new SimpleObjectProperty<>();
+    private final ObjectProperty<LeftNavButton> selectedNavigationButton = new SimpleObjectProperty<>();
     
     private final StringProperty torNumConnections = new SimpleStringProperty("0");
     private final StringProperty torNumTargetConnections = new SimpleStringProperty("0");

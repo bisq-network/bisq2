@@ -31,7 +31,7 @@ public class SettingsView extends TabView<SettingsModel, SettingsController> {
         addTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
         addTab(Res.get("settings.about"), NavigationTarget.ABOUT);
 
-        label.setText(Res.get("settings"));
+        headlineLabel.setText(Res.get("settings"));
     }
 
     @Override

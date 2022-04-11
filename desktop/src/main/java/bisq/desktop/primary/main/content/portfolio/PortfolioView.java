@@ -32,7 +32,7 @@ public class PortfolioView extends TabView<PortfolioModel, PortfolioController> 
         addTab(Res.get("portfolio.pending"), NavigationTarget.PENDING_TRADES);
         addTab(Res.get("portfolio.closed"), NavigationTarget.CLOSED_TRADES);
    
-        label.setText(Res.get("portfolio"));
+        headlineLabel.setText(Res.get("portfolio"));
     }
 
     @Override

@@ -74,27 +74,27 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         vBox.setSpacing(6);
         Layout.pinToAnchorPane(vBox, menuTop, 0, 0, MARKER_WIDTH);
 
-        NavigationButton social = createNavigationButton(Res.get("social"),
+        LeftNavButton social = createNavigationButton(Res.get("social"),
                 ImageUtil.getImageViewById("home"),//todo missing icon
                 NavigationTarget.SOCIAL);
-        NavigationButton trade = createNavigationButton(Res.get("trade"),
+        LeftNavButton trade = createNavigationButton(Res.get("trade"),
                 ImageUtil.getImageViewById("sell"),  //todo missing icon
                 NavigationTarget.TRADE);
-        NavigationButton portfolio = createNavigationButton(Res.get("portfolio"),
+        LeftNavButton portfolio = createNavigationButton(Res.get("portfolio"),
                 ImageUtil.getImageViewById("portfolio"),
                 NavigationTarget.PORTFOLIO);
-        NavigationButton markets = createNavigationButton(Res.get("markets"),
+        LeftNavButton markets = createNavigationButton(Res.get("markets"),
                 ImageUtil.getImageViewById("market"),
                 NavigationTarget.MARKETS);
 
         //todo lower prio menu add design
-        NavigationButton wallet = createNavigationButton(Res.get("wallet"),
+        LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
                 ImageUtil.getImageViewById("wallet"),
                 NavigationTarget.WALLET);
-        NavigationButton support = createNavigationButton(Res.get("support"),
+        LeftNavButton support = createNavigationButton(Res.get("support"),
                 ImageUtil.getImageViewById("support"),
                 NavigationTarget.SUPPORT);
-        NavigationButton settings = createNavigationButton(Res.get("settings"),
+        LeftNavButton settings = createNavigationButton(Res.get("settings"),
                 ImageUtil.getImageViewById("settings"),
                 NavigationTarget.SETTINGS);
 
@@ -137,7 +137,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker = new Region();
         selectionMarker.getStyleClass().add("bisq-green");
         selectionMarker.setPrefWidth(3);
-        selectionMarker.setPrefHeight(NavigationButton.HEIGHT);
+        selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
         vBox.getChildren().addAll(social, trade, portfolio, markets, wallet, support, settings);
         vBox.setLayoutY(menuTop);
         root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, vBox, expandIcon, collapseIcon, networkInfoBox);
@@ -164,7 +164,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
             AtomicInteger duration = new AtomicInteger(400);
             if (menuExpanding) {
-                UIScheduler.run(() -> model.getNavigationButtons()
+                UIScheduler.run(() -> model.getLeftNavButtons()
                                 .forEach(e -> e.setMenuExpanded(menuExpanding, width, duration.get() / 2)))
                         .after(duration.get() / 2);
                 Transitions.animateLeftNavigationWidth(vBox, EXPANDED_WIDTH, duration.get());
@@ -196,7 +196,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 expandIcon.setOpacity(0);
                 expandIcon.setVisible(true);
                 expandIcon.setManaged(true);
-                model.getNavigationButtons().forEach(e -> e.setMenuExpanded(menuExpanding, width, duration.get() / 2));
+                model.getLeftNavButtons().forEach(e -> e.setMenuExpanded(menuExpanding, width, duration.get() / 2));
                 UIScheduler.run(() -> {
                             Transitions.animateLeftNavigationWidth(vBox, COLLAPSED_WIDTH, duration.get());
                             collapseIcon.setVisible(false);
@@ -247,8 +247,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         root.setOnMouseExited(null);
     }
 
-    private NavigationButton createNavigationButton(String title, ImageView icon, NavigationTarget navigationTarget) {
-        NavigationButton button = new NavigationButton(title, icon, toggleGroup, navigationTarget);
+    private LeftNavButton createNavigationButton(String title, ImageView icon, NavigationTarget navigationTarget) {
+        LeftNavButton button = new LeftNavButton(title, icon, toggleGroup, navigationTarget);
         button.setOnAction(() -> {
             controller.onNavigationTargetSelected(navigationTarget);
             maybeAnimateMark();
@@ -258,13 +258,13 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     }
 
     private void maybeAnimateMark() {
-        NavigationButton selectedNavigationButton = model.getSelectedNavigationButton().get();
-        if (selectedNavigationButton == null) {
+        LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
+        if (selectedLeftNavButton == null) {
             return;
         }
         UIThread.runOnNextRenderFrame(() -> {
-            Transitions.animateNavigationButtonMarks(selectionMarker, selectedNavigationButton.getHeight(),
-                    menuTop + selectedNavigationButton.getBoundsInParent().getMinY());
+            Transitions.animateNavigationButtonMarks(selectionMarker, selectedLeftNavButton.getHeight(),
+                    menuTop + selectedLeftNavButton.getBoundsInParent().getMinY());
         });
     }
 
@@ -282,8 +282,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             Region line = new Region();
             line.setMinHeight(1);
             line.getStyleClass().add("bisq-grey-line");
-            setMinHeight(NavigationButton.HEIGHT);
-            setMaxHeight(NavigationButton.HEIGHT);
+            setMinHeight(LeftNavButton.HEIGHT);
+            setMaxHeight(LeftNavButton.HEIGHT);
             Insets insets = new Insets(21, 0, 0, 35);
             VBox.setMargin(clearNetBox, insets);
             getChildren().addAll(line, clearNetBox);

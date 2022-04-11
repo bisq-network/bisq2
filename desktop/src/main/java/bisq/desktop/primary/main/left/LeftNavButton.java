@@ -35,7 +35,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class NavigationButton extends Pane implements Toggle {
+class LeftNavButton extends Pane implements Toggle {
     static final int HEIGHT = 40;
     @Getter
     private final NavigationTarget navigationTarget;
@@ -45,7 +45,7 @@ class NavigationButton extends Pane implements Toggle {
     private final Tooltip tooltip;
     private final ImageView icon;
 
-    NavigationButton(String title, ImageView icon, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
+    LeftNavButton(String title, ImageView icon, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
         this.icon = icon;
         this.navigationTarget = navigationTarget;
 
@@ -63,12 +63,12 @@ class NavigationButton extends Pane implements Toggle {
 
         icon.setMouseTransparent(true);
         icon.setLayoutX(25);
-        icon.setLayoutY(14);
+        icon.setLayoutY(10.5);
         icon.setOpacity(0.5);
 
         label = new Label(title);
         label.setLayoutX(56);
-        label.setLayoutY(14);
+        label.setLayoutY(9.5);
         label.setMouseTransparent(true);
         label.getStyleClass().add("bisq-nav-label");
 
@@ -133,7 +133,7 @@ class NavigationButton extends Pane implements Toggle {
             getStyleClass().remove("bisq-darkest-bg");
             getStyleClass().add("bisq-dark-bg");
 
-            // setStyle("-fx-background-color: -bisq-grey-2;");
+            // setStyle("-fx-background-color: -bisq-grey-left-nav-selected-bg;");
 
             // label.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");
             label.getStyleClass().remove("bisq-nav-label");
@@ -142,7 +142,7 @@ class NavigationButton extends Pane implements Toggle {
 
             icon.setOpacity(1);
         } else {
-            //setStyle("-fx-background-color: -bisq-grey-1;");
+            //setStyle("-fx-background-color: -bisq-grey-left-nav-bg;");
             getStyleClass().remove("bisq-dark-bg");
             getStyleClass().add("bisq-darkest-bg");
             //label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");

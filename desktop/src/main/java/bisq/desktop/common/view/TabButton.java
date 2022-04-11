@@ -40,18 +40,17 @@ public class TabButton extends Pane implements Toggle {
         this.navigationTarget = navigationTarget;
 
         setCursor(Cursor.HAND);
-        
+
         setToggleGroup(toggleGroup);
         toggleGroup.getToggles().add(this);
-        
+
         selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
 
         label = new Label(title.toUpperCase());
-        label.setPadding(new Insets(12, 0, 0, 0));
+        label.setPadding(new Insets(7, 0, 0, 0));
         label.setMouseTransparent(true);
 
-        label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.4em;");
-
+        label.getStyleClass().add("bisq-tab-button-label");
         getChildren().addAll(label);
     }
 
@@ -94,9 +93,11 @@ public class TabButton extends Pane implements Toggle {
         selectedProperty.set(selected);
 
         if (selected) {
-            label.setStyle("-fx-text-fill: -bisq-green; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.4em;");
+            label.getStyleClass().remove("bisq-tab-button-label");
+            label.getStyleClass().add("bisq-tab-button-label-selected");
         } else {
-            label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.4em;");
+            label.getStyleClass().remove("bisq-tab-button-label-selected");
+            label.getStyleClass().add("bisq-tab-button-label");
         }
     }
 }
