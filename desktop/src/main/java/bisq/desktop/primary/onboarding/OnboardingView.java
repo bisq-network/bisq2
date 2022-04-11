@@ -36,55 +36,49 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
     public OnboardingView(OnboardingModel model, OnboardingController controller) {
         super(new VBox(), model, controller);
 
-        // root.getStyleClass().add("content-pane");
-
-     /*   ImageView logo = ImageUtil.getImageViewById("logo-small");
-        VBox.setMargin(logo, new Insets(20, 20, 10, 20));
-
-        Pane pane = new Pane();
-        root.getChildren().addAll(logo, pane);
-*/
-        // root.setAlignment(Pos.TOP_CENTER);
         root.getStyleClass().add("content-pane");
 
         Label step1 = new Label("1. " + Res.get("onboarding.step1").toUpperCase());
-        step1.setStyle("-fx-text-fill: white;-fx-font-size: 1.4em;-fx-font-family: \"IBM Plex Sans Light\";");
+        step1.getStyleClass().add("bisq-small-light-label");
 
         Region line1 = new Region();
         line1.setMaxHeight(1);
         line1.setPrefWidth(50);
-        line1.setStyle("-fx-background-color: #4E4E4E");
+        line1.getStyleClass().add("bisq-grey-dimmed");
         HBox.setMargin(line1, new Insets(12, 0, 0, 0));
 
         Label step2 = new Label("2. " + Res.get("onboarding.step2").toUpperCase());
-        step2.setStyle("-fx-text-fill: #4E4E4E;-fx-font-size: 1.4em;-fx-font-family: \"IBM Plex Sans Light\";");
+        step2.getStyleClass().add("bisq-small-light-label-dimmed");
 
         Region line2 = new Region();
         line2.setMaxHeight(1);
         line2.setPrefWidth(50);
-        line2.setStyle("-fx-background-color: #4E4E4E");
+        line2.getStyleClass().add("bisq-grey-dimmed");
         HBox.setMargin(line2, new Insets(12, 0, 0, 0));
 
         Label step3 = new Label("3. " + Res.get("onboarding.step3").toUpperCase());
-        step3.setStyle("-fx-text-fill: #4E4E4E;-fx-font-size: 1.4em;-fx-font-family: \"IBM Plex Sans Light\";");
+        step3.getStyleClass().add("bisq-small-light-label-dimmed");
 
         HBox box = Layout.hBoxWith(Spacer.fillHBox(), step1, line1, step2, line2, step3, Spacer.fillHBox());
         box.getStyleClass().add("content-pane");
         box.setSpacing(15);
-        VBox.setMargin(box, new Insets(70, 0, 0, 0));
+        VBox.setMargin(box, new Insets(47, 0, 0, 0));
         root.getChildren().add(box);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
-            // newValue.getRoot().setPadding(new Insets(0, 20, 20, 20));
             root.getChildren().add(newValue.getRoot());
             if (oldValue != null) {
                 if (newValue instanceof SelectUserTypeView) {
-                    step1.setStyle("-fx-text-fill: #4E4E4E");
-                    step2.setStyle("-fx-text-fill: white");
+                    step1.getStyleClass().remove("bisq-small-light-label");
+                    step1.getStyleClass().add("bisq-small-light-label-dimmed");
+                    step2.getStyleClass().remove("bisq-small-light-label-dimmed");
+                    step2.getStyleClass().add("bisq-small-light-label");
                 }
                 if (newValue instanceof OnboardNewbieView) {
-                    step2.setStyle("-fx-text-fill: #4E4E4E");
-                    step3.setStyle("-fx-text-fill: white");
+                    step2.getStyleClass().remove("bisq-small-light-label");
+                    step2.getStyleClass().add("bisq-small-light-label-dimmed");
+                    step3.getStyleClass().remove("bisq-small-light-label-dimmed");
+                    step3.getStyleClass().add("bisq-small-light-label");
                 }
                 Transitions.transitHorizontal(newValue.getRoot(), oldValue.getRoot());
             } else {

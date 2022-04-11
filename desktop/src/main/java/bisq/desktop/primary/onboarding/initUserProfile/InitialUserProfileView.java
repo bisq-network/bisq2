@@ -19,168 +19,137 @@ package bisq.desktop.primary.onboarding.initUserProfile;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.BisqLabel;
+import bisq.desktop.components.controls.LargeRoboIconWithId;
+import bisq.desktop.components.controls.TextInputBox;
+import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
+import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+@Slf4j
 public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileModel, InitUserProfileController> {
-    private final ImageView roboIconImageView;
-    private final BisqButton createUserButton;
-    private final BisqLabel processingLabel;
-    private final Label generatedUserName;
+    private final Button createUserButton;
     private final VBox vBox;
-    private final TextField nickNameTextField;
-    private Subscription roboHashNodeSubscription, userIdSubscription;
+    private final TextInputBox nicknameTextInputBox;
+    private final LargeRoboIconWithId roboIconWithId;
+    private Subscription roboHashNodeSubscription, vBoxHeightSubscription;
+    private Popup processingPopup;
 
     public InitialUserProfileView(InitialUserProfileModel model, InitUserProfileController controller) {
         super(new ScrollPane(), model, controller);
 
         vBox = new VBox();
-        root.setContent(vBox);
-        root.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        root.setFitToWidth(true);
-
         vBox.setAlignment(Pos.TOP_CENTER);
         vBox.setSpacing(50);
         vBox.getStyleClass().add("content-pane");
 
+        root.setContent(vBox);
+        root.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        root.setFitToWidth(true);
+        // We must set setFitToHeight false as otherwise text wrapping does not work at labels
+        // We need to apply prefViewportHeight once we know our vbox height.
+        root.setFitToHeight(false);
+        root.getStyleClass().add("content-pane");
+
         Label headLineLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.headline"));
         headLineLabel.setWrapText(true);
-        headLineLabel.setStyle("-fx-text-fill:-bisq-text-color-white;-fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 4em;");
-        VBox.setMargin(headLineLabel, new Insets(85, 200, 0, 200));
+        headLineLabel.getStyleClass().add("bisq-big-light-headline-label");
+        VBox.setMargin(headLineLabel, new Insets(48, 200, 0, 200));
         VBox.setVgrow(headLineLabel, Priority.ALWAYS);
 
         Label subTitleLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.subTitle"));
         subTitleLabel.setWrapText(true);
         subTitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subTitleLabel.getStyleClass().add("sub-title-label");
-        VBox.setMargin(subTitleLabel, new Insets(-24, 200, 0, 200));
+        subTitleLabel.getStyleClass().add("bisq-sub-title-label");
+        VBox.setMargin(subTitleLabel, new Insets(-33, 200, 0, 200));
         VBox.setVgrow(subTitleLabel, Priority.ALWAYS);
 
-        // nickname
-        int width = 520;
-        Pane nickNameInput = new Pane();
-        nickNameInput.setStyle("-fx-background-color: #2E2E2E; -fx-background-radius: 5");
+        nicknameTextInputBox = new TextInputBox(Res.get("satoshisquareapp.setDefaultUserProfile.nickName"),
+                Res.get("satoshisquareapp.setDefaultUserProfile.nickName.prompt"));
+        nicknameTextInputBox.setPrefWidth(520);
 
-        Label nickNameLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.nickName").toUpperCase());
-        nickNameLabel.setStyle("-fx-text-fill: #737373; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.4em;");
-        nickNameLabel.setLayoutY(10);
-        nickNameLabel.setLayoutX(14);
-
-        Label nickNameLabelPrompt = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.nickName.prompt"));
-        nickNameLabelPrompt.setStyle("-fx-text-fill: #4E4E4E; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.9em;");
-        nickNameLabelPrompt.setLayoutY(33);
-        nickNameLabelPrompt.setLayoutX(14);
-        nickNameLabelPrompt.setCursor(Cursor.TEXT);
-        nickNameLabelPrompt.setMinWidth(width);
-        nickNameLabelPrompt.setMaxWidth(width);
-        
-        nickNameTextField = new TextField();
-        nickNameTextField.setLayoutY(28);
-        nickNameTextField.setLayoutX(6);
-        nickNameTextField.setMinWidth(width);
-        nickNameTextField.setMaxWidth(width);
-        nickNameTextField.setStyle("-fx-faint-focus-color: transparent; -fx-font-family: \"IBM Plex Sans Light\"; -fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 1.9em;");
-        nickNameTextField.setVisible(false);
-        nickNameInput.setOnMousePressed(e -> {
-            nickNameTextField.setVisible(true);
-            nickNameLabelPrompt.setVisible(false);
-            UIThread.runOnNextRenderFrame(() -> nickNameTextField.requestFocus());
-        });
-
-        nickNameInput.setMinWidth(width);
-        nickNameInput.setMaxWidth(width);
-        nickNameInput.setMinHeight(75);
-        nickNameInput.setMaxHeight(75);
-        nickNameInput.getChildren().addAll(nickNameLabel, nickNameTextField, nickNameLabelPrompt);
-
-
-        roboIconImageView = new ImageView();
-        Tooltip.install(roboIconImageView, new Tooltip(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.button")));
-        roboIconImageView.setCursor(Cursor.HAND);
-
-        generatedUserName = new Label();
-        generatedUserName.setMaxWidth(300);
-        generatedUserName.setMinWidth(300);
-        generatedUserName.setTextAlignment(TextAlignment.CENTER);
-        generatedUserName.setPadding(new Insets(7, 7, 7, 7));
-        generatedUserName.setStyle("-fx-background-color: -bisq-grey-6; -fx-text-fill: white; -fx-font-size: 1.1em");
-        VBox.setMargin(generatedUserName, new Insets(-50, 0, 0, 0));
+        roboIconWithId = new LargeRoboIconWithId();
+        Tooltip.install(roboIconWithId, new Tooltip(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.button")));
 
         Label tryOtherInfoLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.info"));
+        tryOtherInfoLabel.setWrapText(true);
         tryOtherInfoLabel.setTextAlignment(TextAlignment.CENTER);
-        tryOtherInfoLabel.getStyleClass().add("sub-title-label");
+        tryOtherInfoLabel.getStyleClass().add("bisq-sub-title-label");
+        VBox.setVgrow(tryOtherInfoLabel, Priority.ALWAYS);
         VBox.setMargin(tryOtherInfoLabel, new Insets(-10, 0, -10, 0));
 
-
-        createUserButton = new BisqButton(Res.get("satoshisquareapp.setDefaultUserProfile.done"));
+        createUserButton = new Button(Res.get("satoshisquareapp.setDefaultUserProfile.done"));
         createUserButton.getStyleClass().add("bisq-button-2");
-        //15px
-        //  createUserButton.setStyle("-fx-text-fill: white; -fx-background-color: #2E2E2E; -fx-background-radius: 4; -fx-font-size: 1.2em; -fx-padding: 15 47 15 47");
+        VBox.setMargin(createUserButton, new Insets(0, 0, 100, 0));
 
-        // createUserButton.getStyleClass().add("action-button");
-
-        processingLabel = new BisqLabel();
-        processingLabel.setWrapText(true);
-
-    /*    BisqLabel infoLabel = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.info"));
-        infoLabel.setWrapText(true);
-        VBox.setMargin(infoLabel, new Insets(50, 0, 0, 0));
-        infoLabel.setStyle("-fx-font-size: 0.9em; -fx-text-fill: -fx-light-text-color;");
-      */
         vBox.getChildren().addAll(
                 headLineLabel,
                 subTitleLabel,
-                nickNameInput,
-                roboIconImageView,
-                generatedUserName,
+                nicknameTextInputBox,
+                roboIconWithId,
                 tryOtherInfoLabel,
-                createUserButton,
-                processingLabel
+                createUserButton
         );
     }
 
     @Override
     protected void onViewAttached() {
         createUserButton.disableProperty().bind(model.createProfileButtonDisable);
-        userIdSubscription = EasyBind.subscribe(model.profileId, userName -> generatedUserName.setText("ID: " + userName));
-        processingLabel.textProperty().bind(model.feedback);
-        nickNameTextField.textProperty().bindBidirectional(model.nickName);
+        roboIconWithId.textProperty().bind(model.profileId);
+        nicknameTextInputBox.textProperty().bindBidirectional(model.nickName);
 
-        roboIconImageView.setOnMousePressed(e -> controller.onCreateTempIdentity());
+        roboIconWithId.setOnAction(controller::onCreateTempIdentity);
         createUserButton.setOnAction(e -> controller.onCreateUserProfile());
 
+        // As we must set setFitToHeight false we need to apply prefViewportHeight once we know our vbox height.
+        vBoxHeightSubscription = EasyBind.subscribe(vBox.heightProperty(), h -> {
+            double height = h.doubleValue();
+            if (height > 0) {
+                root.setPrefViewportHeight(height);
+                UIThread.runOnNextRenderFrame(() -> {
+                    vBoxHeightSubscription.unsubscribe();
+                    vBoxHeightSubscription = null;
+                });
+            }
+        });
         roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
             if (roboIcon != null) {
-                roboIconImageView.setImage(roboIcon);
+                roboIconWithId.setImage(roboIcon);
             }
-            roboIconImageView.setVisible(roboIcon != null);
+            roboIconWithId.setVisible(roboIcon != null);
+        });
+
+        EasyBind.subscribe(model.showProcessingPopup, show -> {
+            if (show) {
+                processingPopup = new Popup().information(Res.get("social.createUserProfile.prepare"));
+                processingPopup.show();
+            } else if (processingPopup != null) {
+                processingPopup.hide();
+                processingPopup = null;
+            }
         });
     }
 
     @Override
     protected void onViewDetached() {
         createUserButton.disableProperty().unbind();
-        processingLabel.textProperty().unbind();
-        nickNameTextField.textProperty().unbindBidirectional(model.nickName);
-        roboIconImageView.setOnMousePressed(null);
+        nicknameTextInputBox.textProperty().unbindBidirectional(model.nickName);
+        roboIconWithId.textProperty().unbind();
+        roboIconWithId.setOnAction(null);
         createUserButton.setOnAction(null);
-
+        if (vBoxHeightSubscription != null) {
+            vBoxHeightSubscription.unsubscribe();
+        }
         roboHashNodeSubscription.unsubscribe();
-        userIdSubscription.unsubscribe();
     }
 }

@@ -46,6 +46,9 @@ public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageMod
         super(new AnchorPane(), model, controller);
 
         this.stage = stage;
+
+        root.getStyleClass().add("bisq-content-bg");
+        
         scene = new Scene(root); // takes about  50 ms
         try {
             stage.setTitle(model.getTitle());
@@ -60,7 +63,7 @@ public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageMod
                 controller.onQuit();
             });
 
-            root.setStyle("-fx-background-color: -fx-base;");
+
             model.getView().addListener((observable, oldValue, newValue) -> {
                 Layout.pinToAnchorPane(newValue.getRoot(), 0, 0, 0, 0);
                 root.getChildren().add(newValue.getRoot());

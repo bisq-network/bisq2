@@ -27,10 +27,10 @@ import java.security.KeyPair;
 @Getter
 public class InitialUserProfileModel implements Model {
     final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
-    final StringProperty feedback = new SimpleStringProperty();
     final StringProperty profileId = new SimpleStringProperty();
     final StringProperty nickName = new SimpleStringProperty();
     final BooleanProperty createProfileButtonDisable = new SimpleBooleanProperty();
+    final BooleanProperty showProcessingPopup = new SimpleBooleanProperty();
 
     KeyPair tempKeyPair = null;
     String tempKeyId;
