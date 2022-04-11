@@ -36,15 +36,6 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
     public OnboardingView(OnboardingModel model, OnboardingController controller) {
         super(new VBox(), model, controller);
 
-        // root.getStyleClass().add("content-pane");
-
-     /*   ImageView logo = ImageUtil.getImageViewById("logo-small");
-        VBox.setMargin(logo, new Insets(20, 20, 10, 20));
-
-        Pane pane = new Pane();
-        root.getChildren().addAll(logo, pane);
-*/
-        // root.setAlignment(Pos.TOP_CENTER);
         root.getStyleClass().add("content-pane");
 
         Label step1 = new Label("1. " + Res.get("onboarding.step1").toUpperCase());
@@ -75,7 +66,6 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
         root.getChildren().add(box);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
-            // newValue.getRoot().setPadding(new Insets(0, 20, 20, 20));
             root.getChildren().add(newValue.getRoot());
             if (oldValue != null) {
                 if (newValue instanceof SelectUserTypeView) {

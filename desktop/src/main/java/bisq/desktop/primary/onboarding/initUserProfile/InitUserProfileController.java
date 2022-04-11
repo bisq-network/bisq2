@@ -26,7 +26,6 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.i18n.Res;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.social.chat.ChatService;
@@ -62,7 +61,6 @@ public class InitUserProfileController implements Controller {
 
     @Override
     public void onActivate() {
-        model.feedback.set("");
         onCreateTempIdentity();
         nickNameSubscription = EasyBind.subscribe(model.nickName, e -> model.createProfileButtonDisable.set(e == null || e.isEmpty()));
     }
@@ -75,7 +73,7 @@ public class InitUserProfileController implements Controller {
 
     void onCreateUserProfile() {
         model.createProfileButtonDisable.set(true);
-        model.feedback.set(Res.get("social.createUserProfile.prepare"));
+        model.showProcessingPopup.set(true);
         String profileId = model.profileId.get();
         userProfileService.createNewInitializedUserProfile(profileId,
                         model.getNickName().get(),
@@ -86,7 +84,7 @@ public class InitUserProfileController implements Controller {
                     UIThread.run(() -> {
                         chatService.maybeAddDummyChannels();
                         checkArgument(userProfile.identity().domainId().equals(profileId));
-                        model.feedback.set(Res.get("social.createUserProfile.success", profileId));
+                        model.showProcessingPopup.set(false);
                         UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget.SELECT_USER_TYPE)).after(100);
                     });
                 });
