@@ -37,7 +37,7 @@ import java.util.Set;
 
 @Slf4j
 public class EducationView extends View<VBox, EducationModel, EducationController> {
-    private static final int MARGIN = 67;
+    private static final int MARGIN = 44;
     private static final int TEXT_SPACE = 22;
     private static final int SCROLLBAR_WIDTH = 12;
 
@@ -108,8 +108,8 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
             double right = root.getPadding().getRight();
             double value = w.doubleValue() - right + SCROLLBAR_WIDTH;
             double wrappingWidth = value - box.getPadding().getLeft() - box.getPadding().getRight();
-            contentLabel.setWrappingWidth(wrappingWidth);
-            headlineLabel.setWrappingWidth(wrappingWidth);
+            contentLabel.setWrappingWidth(wrappingWidth-MARGIN);
+            headlineLabel.setWrappingWidth(wrappingWidth-MARGIN);
             box.setPrefWidth(value);
             box.setMinWidth(value);
             box.setMaxWidth(value);
@@ -132,7 +132,7 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
 
     private VBox getWidgetBox(String headline, String content, String buttonLabel) {
         Text headlineLabel = new Text(headline);
-        headlineLabel.getStyleClass().add("bisq-text-headline-1");
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Text contentLabel = new Text(content);
         contentLabel.getStyleClass().add("bisq-text-1");
@@ -147,8 +147,8 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
         subscriptions.add(EasyBind.subscribe(root.widthProperty(), w -> {
             double value = (w.doubleValue() - root.getPadding().getRight() - MARGIN + SCROLLBAR_WIDTH) / 2;
             double wrappingWidth = value - box.getPadding().getLeft() - box.getPadding().getRight();
-            headlineLabel.setWrappingWidth(wrappingWidth);
-            contentLabel.setWrappingWidth(wrappingWidth);
+            headlineLabel.setWrappingWidth(wrappingWidth-MARGIN);
+            contentLabel.setWrappingWidth(wrappingWidth-MARGIN);
             box.setPrefWidth(value);
             box.setMinWidth(value);
             box.setMaxWidth(value);

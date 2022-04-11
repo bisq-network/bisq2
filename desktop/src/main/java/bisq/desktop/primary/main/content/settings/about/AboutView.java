@@ -31,7 +31,7 @@ public class AboutView extends View<VBox, AboutModel, AboutController> {
 
         root.setAlignment(Pos.CENTER);
         Label label = new Label("WIP");
-        label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 30em");
+        label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 20em");
         Label small = new Label(getClass().getSimpleName());
         small.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 2em");
         root.getChildren().addAll(label, small);
