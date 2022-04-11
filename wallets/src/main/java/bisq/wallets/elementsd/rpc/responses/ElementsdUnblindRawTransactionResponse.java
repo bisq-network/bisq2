@@ -15,7 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq;
+package bisq.wallets.elementsd.rpc.responses;
 
-public record BitcoindZeroMqMessage(BitcoindZeroMqTopic topic, byte[] secondPart, byte[] thirdPart) {
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class ElementsdUnblindRawTransactionResponse {
+    private String hex;
 }

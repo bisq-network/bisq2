@@ -17,21 +17,5 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.util.List;
-
-@Getter
-@Setter
-public class BitcoindVin {
-    private String coinbase;
-    @JsonProperty("txid")
-    private String txId;
-    private int vout;
-    private BitcoindScriptSig scriptSig;
-    @JsonProperty("txinwitness")
-    private List<String> txInWitness;
-    private long sequence;
+public class BitcoindVin extends AbstractVin {
 }

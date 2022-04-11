@@ -45,6 +45,7 @@ public class ElementsdProcess extends BitcoindProcess {
     @Override
     public ProcessConfig createProcessConfig() {
         RpcConfig bitcoindRpcConfig = elementsdConfig.bitcoindRpcConfig();
+        int zmqPort = NetworkUtils.findFreeSystemPort();
         return new ProcessConfig(
                 "elementsd",
                 List.of(
@@ -64,6 +65,9 @@ public class ElementsdProcess extends BitcoindProcess {
                         "-mainchainrpcport=" + bitcoindRpcConfig.port(),
                         "-mainchainrpcuser=" + bitcoindRpcConfig.user(),
                         "-mainchainrpcpassword=" + bitcoindRpcConfig.password(),
+
+                        "-zmqpubhashblock=tcp://127.0.0.1:" + zmqPort,
+                        "-zmqpubrawtx=tcp://127.0.0.1:" + zmqPort,
 
                         "-fallbackfee=0.00000001",
                         "-txindex=1")

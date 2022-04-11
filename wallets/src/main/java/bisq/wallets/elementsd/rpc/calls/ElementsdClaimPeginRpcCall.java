@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 
-public class ElementsdClaimPegin extends WalletRpcCall<ElementsdClaimPegin.Request, String> {
+public class ElementsdClaimPeginRpcCall extends WalletRpcCall<ElementsdClaimPeginRpcCall.Request, String> {
     @Builder
     @Getter
     public static class Request {
@@ -32,7 +32,7 @@ public class ElementsdClaimPegin extends WalletRpcCall<ElementsdClaimPegin.Reque
         private final String txOutProof;
     }
 
-    public ElementsdClaimPegin(Request request) {
+    public ElementsdClaimPeginRpcCall(Request request) {
         super(request);
     }
 

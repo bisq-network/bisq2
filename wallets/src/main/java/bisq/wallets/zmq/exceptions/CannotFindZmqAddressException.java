@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq.exceptions;
+package bisq.wallets.zmq.exceptions;
 
-public class CannotFindZmqTopicException extends RuntimeException {
-    public CannotFindZmqTopicException(String message) {
+public class CannotFindZmqAddressException extends RuntimeException {
+    public CannotFindZmqAddressException(String message) {
         super(message);
     }
 }

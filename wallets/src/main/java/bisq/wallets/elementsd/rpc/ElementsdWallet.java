@@ -23,10 +23,7 @@ import bisq.wallets.bitcoind.rpc.calls.BitcoindSignMessageRpcCall;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindVerifyMessageRpcCall;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindWalletPassphraseRpcCall;
 import bisq.wallets.elementsd.rpc.calls.*;
-import bisq.wallets.elementsd.rpc.responses.ElementsdGetPeginAddressResponse;
-import bisq.wallets.elementsd.rpc.responses.ElementsdIssueAssetResponse;
-import bisq.wallets.elementsd.rpc.responses.ElementsdListTransactionsResponseEntry;
-import bisq.wallets.elementsd.rpc.responses.ElementsdListUnspentResponseEntry;
+import bisq.wallets.elementsd.rpc.responses.*;
 import bisq.wallets.rpc.RpcClient;
 
 import java.util.Arrays;
@@ -41,11 +38,11 @@ public class ElementsdWallet {
     }
 
     public String claimPegin(String bitcoinTxId, String txOutProof) {
-        var request = ElementsdClaimPegin.Request.builder()
+        var request = ElementsdClaimPeginRpcCall.Request.builder()
                 .bitcoinTxId(bitcoinTxId)
                 .txOutProof(txOutProof)
                 .build();
-        var rpcCall = new ElementsdClaimPegin(request);
+        var rpcCall = new ElementsdClaimPeginRpcCall(request);
         return rpcClient.invokeAndValidate(rpcCall);
     }
 
@@ -56,6 +53,12 @@ public class ElementsdWallet {
     public double getAssetBalance(String assetLabel) {
         var request = new ElementsdGetBalanceRpcCall.Request(assetLabel);
         var rpcCall = new ElementsdGetBalanceRpcCall(request);
+        return rpcClient.invokeAndValidate(rpcCall);
+    }
+
+    public ElementsdGetAddressInfoResponse getAddressInfo(String address) {
+        var request = new ElementsdGetAddressInfoRpcCall.Request(address);
+        var rpcCall = new ElementsdGetAddressInfoRpcCall(request);
         return rpcClient.invokeAndValidate(rpcCall);
     }
 
@@ -118,6 +121,12 @@ public class ElementsdWallet {
                 .build();
         var rpcCall = new BitcoindSignMessageRpcCall(request);
         return rpcClient.invokeAndValidate(rpcCall);
+    }
+
+    public String unblindRawTransaction(String rawTxInHex) {
+        var request = new ElementsdUnblindRawTransactionRpcCall.Request(rawTxInHex);
+        var rpcCall = new ElementsdUnblindRawTransactionRpcCall(request);
+        return rpcClient.invokeAndValidate(rpcCall).getHex();
     }
 
     public boolean verifyMessage(String address, String signature, String message) {

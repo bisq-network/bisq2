@@ -17,6 +17,7 @@
 
 package bisq.wallets;
 
+import bisq.common.observable.ObservableSet;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
 
@@ -31,6 +32,8 @@ public interface Wallet {
     double getBalance();
 
     String getNewAddress(AddressType addressType, String label);
+
+    ObservableSet<String> getReceiveAddresses();
 
     List<? extends Transaction> listTransactions();
 

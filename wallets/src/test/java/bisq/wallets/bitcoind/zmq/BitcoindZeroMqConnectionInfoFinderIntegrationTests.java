@@ -15,8 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq.listeners;
+package bisq.wallets.bitcoind.zmq;
 
-public interface NewBlockMinedListener {
-    void onNewBlock(String blockHash);
+import bisq.wallets.bitcoind.SharedBitcoindInstanceTests;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class BitcoindZeroMqConnectionInfoFinderIntegrationTests extends SharedBitcoindInstanceTests {
+    @Test
+    void findConnectionInfo() {
+        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = daemon.getZmqNotifications();
+        assertThat(zmqNotifications).isNotEmpty();
+    }
 }

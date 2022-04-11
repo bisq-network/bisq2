@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq;
+package bisq.wallets.bitcoind.zmq;
 
 import lombok.Getter;
 
 @Getter
-public enum BitcoindZeroMqTopic {
+public enum BitcoindZmqTopic {
     TOPIC_HASHBLOCK("hashblock"),
     TOPIC_RAWTX("rawtx");
 
@@ -29,14 +29,14 @@ public enum BitcoindZeroMqTopic {
 
     private final String topicName;
 
-    BitcoindZeroMqTopic(String topicName) {
+    BitcoindZmqTopic(String topicName) {
         this.topicName = topicName;
     }
 
-    public static BitcoindZeroMqTopic parse(String topicName) {
+    public static BitcoindZmqTopic parse(String topicName) {
         return switch (topicName) {
-            case BitcoindZeroMqTopic.HASHBLOCK_TOPIC_NAME -> TOPIC_HASHBLOCK;
-            case BitcoindZeroMqTopic.RAWTX_TOPIC_NAME -> TOPIC_RAWTX;
+            case BitcoindZmqTopic.HASHBLOCK_TOPIC_NAME -> TOPIC_HASHBLOCK;
+            case BitcoindZmqTopic.RAWTX_TOPIC_NAME -> TOPIC_RAWTX;
             default -> throw new IllegalStateException("Unknown ZMQ topic: " + topicName);
         };
     }

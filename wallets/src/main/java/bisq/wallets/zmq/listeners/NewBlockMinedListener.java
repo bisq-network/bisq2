@@ -15,10 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.zeromq.listeners;
+package bisq.wallets.zmq.listeners;
 
-import java.util.Set;
-
-public interface TransactionOutputAddressesListener {
-    void onNewTransaction(Set<String> addressesInOutput);
+public interface NewBlockMinedListener {
+    void onNewBlock(String blockHash);
 }
