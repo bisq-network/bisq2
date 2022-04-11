@@ -23,6 +23,7 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
@@ -104,7 +105,12 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         }
     }
 
-    public PeerGroupService(PersistenceService persistenceService, Node node, BanList banList, Config config, Set<Address> seedNodeAddresses) {
+    public PeerGroupService(PersistenceService persistenceService,
+                            Node node,
+                            BanList banList,
+                            Config config,
+                            Set<Address> seedNodeAddresses,
+                            Transport.Type transportType) {
         this.node = node;
         this.banList = banList;
         this.config = config;
@@ -115,7 +121,8 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy, this);
         keepAliveService = new KeepAliveService(node, peerGroup, config.keepAliveServiceConfig());
         addressValidationService = new AddressValidationService(node, banList);
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        String fileName = persistableStore.getClass().getSimpleName() + "_" + transportType.name();
+        persistence = persistenceService.getOrCreatePersistence(this, "db", fileName, persistableStore);
     }
 
     public void start() {

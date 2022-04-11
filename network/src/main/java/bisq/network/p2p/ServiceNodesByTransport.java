@@ -82,7 +82,8 @@ public class ServiceNodesByTransport {
                     dataService,
                     keyPairService,
                     persistenceService,
-                    seedAddresses);
+                    seedAddresses,
+                    transportType);
             map.put(transportType, serviceNode);
         });
     }

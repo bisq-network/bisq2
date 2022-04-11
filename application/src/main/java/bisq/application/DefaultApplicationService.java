@@ -116,7 +116,7 @@ public class DefaultApplicationService extends ServiceProvider {
     public DefaultApplicationService(String[] args) {
         super("Bisq");
 
-        this.applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
+        applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
 
         Locale locale = applicationConfig.getLocale();
         LocaleRepository.initialize(locale);
