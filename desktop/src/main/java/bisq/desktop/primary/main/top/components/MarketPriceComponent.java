@@ -148,7 +148,7 @@ public class MarketPriceComponent {
             comboBox.setVisibleRowCount(12);
             comboBox.setFocusTraversable(false);
             comboBox.setId("price-feed-combo");
-            comboBox.setPadding(new Insets(0, -4, -4, 0));
+            comboBox.setPadding(new Insets(0, -3, -3, 0));
             comboBox.setItems(model.items);
             comboBox.setOnAction(e -> controller.onSelect(comboBox.getSelectionModel().getSelectedItem()));
             comboBox.setConverter(new StringConverter<>() {
@@ -171,13 +171,13 @@ public class MarketPriceComponent {
                     }
                     if (item != null && !empty) {
                         Label market = new Label(item.marketPrice.getMarket().toString().toUpperCase());
-                        market.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.25em");
-                        market.setPadding(new Insets(4, 0, 0, 0));
+                        market.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 0.8em");
+                        market.setPadding(new Insets(3, 0, 0, 0));
 
                         Label quote = new Label(QuoteFormatter.format(item.marketPrice.quote()));
-                        quote.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.55em");
+                        quote.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.05em");
                         HBox box = Layout.hBoxWith(market, quote);
-                        box.setSpacing(13);
+                        box.setSpacing(8);
                         setGraphic(box);
                     } else {
                         setGraphic(null);
@@ -193,11 +193,11 @@ public class MarketPriceComponent {
                     }
                     if (item != null && !empty) {
                         Label market = new Label(item.marketPrice.getMarket().toString().toUpperCase());
-                        market.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.25em");
-                        market.setPadding(new Insets(4, 0, 0, 0));
+                        market.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 0.8em");
+                        market.setPadding(new Insets(3, 0, 0, 0));
 
                         Label quote = new Label(QuoteFormatter.format(item.marketPrice.quote()));
-                        quote.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.55em");
+                        quote.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.05em");
                         HBox box = Layout.hBoxWith(market, quote);
                         box.setSpacing(13);
                         setGraphic(box);
@@ -209,7 +209,7 @@ public class MarketPriceComponent {
 
             Label marketPriceLabel = new Label();
             marketPriceLabel.getStyleClass().add("nav-balance-label");
-            marketPriceLabel.setPadding(new Insets(-2, 0, 4, 9));
+            marketPriceLabel.setPadding(new Insets(-1, 0, 3, 6));
             //todo add provider info to marketPriceLabel
 
             root.getChildren().addAll(comboBox, marketPriceLabel);

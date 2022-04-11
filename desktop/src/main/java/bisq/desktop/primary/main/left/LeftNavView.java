@@ -48,10 +48,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavController> {
-    private final static int EXPANDED_WIDTH = 330;
-    private final static int COLLAPSED_WIDTH = 110;
-    private final static int MARKER_WIDTH = 4;
-    private final static int EXPAND_ICON_SIZE = 28;
+    private final static int EXPANDED_WIDTH = 220;
+    private final static int COLLAPSED_WIDTH = 70;
+    private final static int MARKER_WIDTH = 3;
+    private final static int EXPAND_ICON_SIZE = 18;
 
     private final ToggleGroup toggleGroup = new ToggleGroup();
     @Getter
@@ -71,6 +71,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         menuTop = TopPanelView.HEIGHT;
 
         vBox = new VBox();
+        vBox.setSpacing(6);
         Layout.pinToAnchorPane(vBox, menuTop, 0, 0, MARKER_WIDTH);
 
         NavigationButton social = createNavigationButton(Res.get("social"),
@@ -106,34 +107,36 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         networkInfoBox = new NetworkInfoBox(model,
                 () -> controller.onNavigationTargetSelected(NavigationTarget.NETWORK_INFO));
-        Layout.pinToAnchorPane(networkInfoBox, null, null, 0, 0);
+        Layout.pinToAnchorPane(networkInfoBox, null, null, 18, 0);
 
         // controller.onNavigationButtonCreated(NavigationTarget.NETWORK_INFO);
 
-        expandIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_RIGHT, "22");
+        expandIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_RIGHT, "16");
         expandIcon.setCursor(Cursor.HAND);
-        collapseIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_LEFT, "22");
-        collapseIcon.setCursor(Cursor.HAND);
-
-        collapseIcon.setLayoutY(menuTop - EXPAND_ICON_SIZE);
-        collapseIcon.setLayoutX(MARKER_WIDTH + EXPANDED_WIDTH - EXPAND_ICON_SIZE);
-        collapseIcon.setOpacity(0);
-        expandIcon.setLayoutY(menuTop - EXPAND_ICON_SIZE);
+        expandIcon.setLayoutY(menuTop - EXPAND_ICON_SIZE - 3);
         expandIcon.setLayoutX(MARKER_WIDTH + COLLAPSED_WIDTH - EXPAND_ICON_SIZE);
         expandIcon.setOpacity(0);
 
-        logoExpanded = ImageUtil.getImageViewById("bisq-logo");
-        logoCollapsed = ImageUtil.getImageViewById("bisq-logo-mark");
+        collapseIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_LEFT, "16");
+        collapseIcon.setCursor(Cursor.HAND);
+        collapseIcon.setLayoutY(menuTop - EXPAND_ICON_SIZE - 3);
+        collapseIcon.setLayoutX(MARKER_WIDTH + EXPANDED_WIDTH - EXPAND_ICON_SIZE);
+        collapseIcon.setOpacity(0);
+
+
+        logoExpanded = ImageUtil.getImageViewById("logo-grey");
         VBox.setMargin(logoExpanded, new Insets(0, 0, 0, 11));
+        logoExpanded.setLayoutX(28);
+        logoExpanded.setLayoutY(20);
+
+        logoCollapsed = ImageUtil.getImageViewById("logo-mark-grey");
         VBox.setMargin(logoCollapsed, new Insets(0, 0, 0, 11));
-        logoExpanded.setLayoutX(47);
         logoCollapsed.setLayoutX(logoExpanded.getLayoutX());
-        logoExpanded.setLayoutY(26);
         logoCollapsed.setLayoutY(logoExpanded.getLayoutY());
 
         selectionMarker = new Region();
         selectionMarker.setStyle("-fx-background-color: -fx-accent;");
-        selectionMarker.setPrefWidth(4.5);
+        selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(NavigationButton.HEIGHT);
         vBox.getChildren().addAll(social, trade, portfolio, markets, wallet, support, settings);
         vBox.setLayoutY(menuTop);
@@ -267,73 +270,65 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     private static class NetworkInfoBox extends VBox {
         private NetworkInfoBox(LeftNavModel model, Runnable handler) {
-            setSpacing(5);
-
             setOnMouseClicked(e -> handler.run());
 
-            HBox clearNetBox = getTransportTypeBox("clear-net",
-                    model.getClearNetNumConnections(),
-                    model.getClearNetNumTargetConnections(),
-                    model.getClearNetIsVisible(),
-                    new Insets(1, 0, 5, 3));
-
-            HBox torBox = getTransportTypeBox("tor",
+            HBox clearNetBox = getTransportTypeBox(
                     model.getTorNumConnections(),
-                    model.getTorNumTargetConnections(),
-                    model.getTorIsVisible(),
-                    new Insets(-6, 0, 5, 1));
-
-            HBox i2pBox = getTransportTypeBox("i2p",
                     model.getI2pNumConnections(),
-                    model.getI2pNumTargetConnections(),
-                    model.getI2pIsVisible(),
-                    new Insets(0, 0, 5, 0));
+                    model.getTorEnabled(),
+                    model.getI2pEnabled()
+            );
 
             Region line = new Region();
             line.setMinHeight(1);
             line.setStyle("-fx-background-color: -bisq-grey-6");
             setMinHeight(NavigationButton.HEIGHT);
             setMaxHeight(NavigationButton.HEIGHT);
-            Insets insets = new Insets(18, 0, 0, 44);
+            Insets insets = new Insets(21, 0, 0, 35);
             VBox.setMargin(clearNetBox, insets);
-            VBox.setMargin(torBox, insets);
-            VBox.setMargin(i2pBox, insets);
-            getChildren().addAll(line, clearNetBox, torBox, i2pBox);
+            getChildren().addAll(line, clearNetBox);
         }
 
-        private HBox getTransportTypeBox(String iconId,
-                                         StringProperty numConnections,
-                                         StringProperty numTargetConnections,
-                                         BooleanProperty isVisible,
-                                         Insets iconMargin) {
+        private HBox getTransportTypeBox(StringProperty numConnectionsTor,
+                                         StringProperty numConnectionsI2p,
+                                         BooleanProperty torEnabled,
+                                         BooleanProperty i2pEnabled) {
             HBox hBox = new HBox();
             hBox.setSpacing(5);
             hBox.setMinHeight(20);
             hBox.setMaxHeight(hBox.getMinHeight());
-            hBox.managedProperty().bind(isVisible);
-            hBox.visibleProperty().bind(isVisible);
 
             Label peers = new Label(Res.get("peers"));
-            String style = "-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.2em";
+            String style = "-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans\"; -fx-font-size: 0.73em";
             peers.setStyle(style);
 
-            Label numConnectionsLabel = new Label();
-            numConnectionsLabel.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.2em");
-            numConnectionsLabel.textProperty().bind(numConnections);
+            Label numConnectionsTorLabel = new Label();
+            numConnectionsTorLabel.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans\"; -fx-font-size: 0.73em");
+            numConnectionsTorLabel.textProperty().bind(numConnectionsTor);
 
             Label separator = new Label("|");
             separator.setStyle(style);
+            Label separator2 = new Label("|");
+            separator2.setStyle(style);
 
-            Label numTargetConnectionsLabel = new Label();
-            numTargetConnectionsLabel.setStyle(style);
-            numTargetConnectionsLabel.textProperty().bind(numTargetConnections);
+            Label numConnectionsI2pLabel = new Label();
+            numConnectionsI2pLabel.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans\"; -fx-font-size: 0.73em");
+            numConnectionsI2pLabel.textProperty().bind(numConnectionsI2p);
 
-            ImageView icon = new ImageView();
-            icon.setId(iconId);
+            ImageView torIcon = new ImageView();
+            torIcon.setId("tor");
+            ImageView i2pIcon = new ImageView();
+            i2pIcon.setId("i2p");
 
-            HBox.setMargin(icon, iconMargin);
+            EasyBind.subscribe(torEnabled, value -> {
+                torIcon.setOpacity(value ? 1 : 0.15);
+            });
+            EasyBind.subscribe(i2pEnabled, value -> {
+                i2pIcon.setOpacity(value ? 0.7 : 0.1);
+            });
 
-            hBox.getChildren().addAll(peers, numConnectionsLabel, separator, numTargetConnectionsLabel, icon);
+            HBox.setMargin(torIcon, new Insets(0, 0, 0, 10));
+            hBox.getChildren().addAll(peers, numConnectionsTorLabel, separator, numConnectionsI2pLabel, torIcon, separator2, i2pIcon);
             return hBox;
         }
     }

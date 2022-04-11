@@ -46,24 +46,20 @@ public class LeftNavModel implements Model {
     private final ObjectProperty<NavigationTarget> selectedNavigationTarget = new SimpleObjectProperty<>();
     private final ObjectProperty<NavigationButton> selectedNavigationButton = new SimpleObjectProperty<>();
     
-    private final StringProperty clearNetNumConnections = new SimpleStringProperty("0");
-    private final StringProperty clearNetNumTargetConnections = new SimpleStringProperty("0");
-    private final BooleanProperty clearNetIsVisible = new SimpleBooleanProperty(false);
     private final StringProperty torNumConnections = new SimpleStringProperty("0");
     private final StringProperty torNumTargetConnections = new SimpleStringProperty("0");
-    private final BooleanProperty torIsVisible = new SimpleBooleanProperty(false);
+    private final BooleanProperty torEnabled = new SimpleBooleanProperty(false);
     private final StringProperty i2pNumConnections = new SimpleStringProperty("0");
     private final StringProperty i2pNumTargetConnections = new SimpleStringProperty("0");
-    private final BooleanProperty i2pIsVisible = new SimpleBooleanProperty(false);
+    private final BooleanProperty i2pEnabled = new SimpleBooleanProperty(false);
     private final BooleanProperty menuExpanded = new SimpleBooleanProperty(true);
  
     
     public LeftNavModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
 
-        clearNetIsVisible.set(networkService.isTransportTypeSupported(Transport.Type.CLEAR));
-        torIsVisible.set(networkService.isTransportTypeSupported(Transport.Type.TOR));
-        i2pIsVisible.set(networkService.isTransportTypeSupported(Transport.Type.I2P));
+        torEnabled.set(networkService.isTransportTypeSupported(Transport.Type.TOR));
+        i2pEnabled.set(networkService.isTransportTypeSupported(Transport.Type.I2P));
 
         networkService.getSupportedTransportTypes().forEach(type ->
                 networkService.getServiceNodesByTransport().findServiceNode(type).ifPresent(serviceNode -> {
@@ -72,7 +68,6 @@ public class LeftNavModel implements Model {
                         switch (type) {
                             case TOR -> torNumTargetConnections.set(String.valueOf(peerGroup.getTargetNumConnectedPeers()));
                             case I2P -> i2pNumTargetConnections.set(String.valueOf(peerGroup.getTargetNumConnectedPeers()));
-                            case CLEAR -> clearNetNumTargetConnections.set(String.valueOf(peerGroup.getTargetNumConnectedPeers()));
                         }
 
                         Node defaultNode = serviceNode.getDefaultNode();
@@ -101,7 +96,6 @@ public class LeftNavModel implements Model {
             switch (type) {
                 case TOR -> torNumConnections.set(String.valueOf(peerGroup.getNumConnections()));
                 case I2P -> i2pNumConnections.set(String.valueOf(peerGroup.getNumConnections()));
-                case CLEAR -> clearNetNumConnections.set(String.valueOf(peerGroup.getNumConnections()));
             }
         });
     }

@@ -24,7 +24,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 
 public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> {
-    public static final int HEIGHT = 85;
+    public static final int HEIGHT = 57;
 
     public TopPanelView(TopPanelModel model,
                         TopPanelController controller,
@@ -36,8 +36,8 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
         root.setMaxHeight(HEIGHT);
         root.setSpacing(28);
         root.setStyle("-fx-background-color: -bisq-grey-1;");
-        root.setPadding(new Insets(28, 100, 0, 100));
-        marketPriceBox.setPadding(new Insets(-16, 0, 0, 0));
+        root.setPadding(new Insets(20, 66, 0, 66));
+        marketPriceBox.setPadding(new Insets(-4.5, 0, 0, 0));
         root.getChildren().addAll(marketPriceBox, Spacer.fillHBox(), walletBalanceBox);
     }
 

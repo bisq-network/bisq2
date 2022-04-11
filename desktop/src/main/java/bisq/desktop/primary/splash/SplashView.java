@@ -44,7 +44,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         root.getStyleClass().add("content-pane");
         
         ImageView logo = new ImageView();
-        logo.setId("logo_grey");
+        logo.setId("logo-splash");
         VBox.setMargin(logo, new Insets(-52, 0, 83, 0)); 
 
         statusLabel = new Label("");

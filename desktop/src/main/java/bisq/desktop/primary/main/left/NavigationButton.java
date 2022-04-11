@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class NavigationButton extends Pane implements Toggle {
-    static final int HEIGHT = 70;
+    static final int HEIGHT = 40;
     @Getter
     private final NavigationTarget navigationTarget;
     private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
@@ -60,17 +60,18 @@ class NavigationButton extends Pane implements Toggle {
         selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
 
         icon.setMouseTransparent(true);
-        icon.setLayoutX(40);
-        icon.setLayoutY(20);
-
+        icon.setLayoutX(25);
+        icon.setLayoutY(14);
+        icon.setOpacity(0.5);
+        
         label = new Label(title);
-        label.setLayoutX(94);
-        label.setLayoutY(20);
+        label.setLayoutX(56);
+        label.setLayoutY(14);
         label.setMouseTransparent(true);
 
         setStyle("-fx-background-color: -bisq-grey-1;");
-        label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.78em;");
-        icon.setOpacity(0.6);
+        label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");
+       
 
         getChildren().addAll(icon, label);
     }
@@ -81,8 +82,6 @@ class NavigationButton extends Pane implements Toggle {
     }
 
     public void setMenuExpanded(boolean menuExpanded, int width, int duration) {
-        //setPrefWidth(width);
-
         if (menuExpanded) {
             Tooltip.uninstall(this, tooltip);
             label.setVisible(true);
@@ -133,11 +132,11 @@ class NavigationButton extends Pane implements Toggle {
 
         if (selected) {
             setStyle("-fx-background-color: -bisq-grey-2;");
-            label.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.8em;");
+            label.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");
             icon.setOpacity(1);
         } else {
             setStyle("-fx-background-color: -bisq-grey-1;");
-            label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.8em;");
+            label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");
             icon.setOpacity(0.6);
         }
     }
