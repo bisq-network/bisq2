@@ -25,10 +25,11 @@
     -bisq-grey-10: #a9a9a9;
     -bisq-grey-11: #C9C9C9;
     -bisq-grey-12: #2E2E2E;
+    -bisq-grey-13: #6A6A6A;
 
     /* Background colors */
     -bisq-background-color-darkest: -bisq-grey-2;
-    -bisq-background-color-dark: -bisq-grey-4;
+    -bisq-background-color-dark: -bisq-grey-1;
     -bisq-background-color-gray: -bisq-grey-5;
 
     /* Border colors */
@@ -44,13 +45,13 @@
 .bisq-text-headline-1 {
     -fx-fill: -bisq-text-color-white;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 4em;
+    -fx-font-size: 2em;
 }
 
 .bisq-text-1 {
     -fx-fill: -bisq-text-color-white;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 2em;
+    -fx-font-size: 1em;
 }
 
 
@@ -66,45 +67,58 @@
 .bisq-headline-1-label {
     -fx-text-fill: -bisq-text-color-white;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 4em; /* 76 */
+    -fx-font-size: 2.51em; 
 }
 
 .bisq-sub-title-label {
     -fx-text-fill: -bisq-text-color-white;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 2.26em; /* 43 */
+    -fx-font-size: 1.44em; 
 }
 
 .bisq-large-profile-id-label {
     -fx-background-color: -bisq-grey-6;
     -fx-text-fill: white;
-    -fx-font-size: 1.1em;
+    -fx-font-size: 1em;
 }
+
+.bisq-label-1 {
+    -fx-font-size: 0.89em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.bisq-label-1-dimmed {
+    -fx-font-size: 0.89em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-grey-13;
+}
+
 
 /* TextInputBox */
 .bisq-input-box-top-pane {
     -fx-background-color: #2E2E2E;
-    -fx-background-radius: 5;
+    -fx-background-radius: 4;
 }
 
 .bisq-input-box-top-label {
     -fx-text-fill: #737373;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.4em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-size: 0.89em;
 }
 
 .bisq-input-box-prompt-label {
     -fx-text-fill: #4E4E4E;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.9em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-size: 1.15em;
 }
 
 .bisq-input-box-text-input {
     -fx-faint-focus-color: transparent;
-    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-family: "IBM Plex Sans";
     -fx-background-color: transparent;
     -fx-text-fill: white;
-    -fx-font-size: 1.9em;
+    -fx-font-size: 1.15em;
 }
 
 
@@ -113,14 +127,14 @@
 /* Dark grey button with light grey border */
 .bisq-button-1 {
     -fx-background-color: -bisq-background-color-dark;
-    -fx-background-radius: 5;
+    -fx-background-radius: 2.5;
     -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.4em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-size: 1em;
     -fx-border-color: -bisq-border-color-grey;
-    -fx-border-width: 1.5;
-    -fx-border-radius: 5;
-    -fx-padding: 10 65 10 65;
+    -fx-border-width: 0.75;
+    -fx-border-radius: 2.5;
+    -fx-padding: 5 33 5 33;
     -fx-cursor: hand;
 }
 
@@ -131,12 +145,12 @@
 
 .bisq-button-2 {
     -fx-background-color: -bisq-dark-green;
-    -fx-background-radius: 4;
+    -fx-background-radius: 2.5;
     -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.4em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-size: 1em;
     -fx-border-style: none;
-    -fx-padding: 10 65 10 65;
+    -fx-padding: 5 33 5 33;
     -fx-cursor: hand;
 }
 
@@ -155,6 +169,9 @@
     -fx-background-radius: 5;
 }
 
+.bisq-grey-dimmed {
+    -fx-text-fill: -bisq-grey-13;
+}
 
 .content-pane {
     -fx-background-color: -bisq-background-color-dark;
@@ -178,7 +195,7 @@
 }
 
 .accordion > .titled-pane > .title {
-    -fx-font-size: 1.5em;
+    -fx-font-size: 1em;
 }
 
 .accordion > .titled-pane {

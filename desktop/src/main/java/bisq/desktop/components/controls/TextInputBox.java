@@ -33,18 +33,18 @@ public class TextInputBox extends Pane {
 
         Label topLabel = new Label(title.toUpperCase());
         topLabel.getStyleClass().add("bisq-input-box-top-label");
-        topLabel.setLayoutY(10);
-        topLabel.setLayoutX(14);
+        topLabel.setLayoutY(7);
+        topLabel.setLayoutX(9);
 
         Label promptLabel = new Label(prompt);
         promptLabel.getStyleClass().add("bisq-input-box-prompt-label");
-        promptLabel.setLayoutY(33);
-        promptLabel.setLayoutX(14);
+        promptLabel.setLayoutY(24);
+        promptLabel.setLayoutX(9);
         promptLabel.setCursor(Cursor.TEXT);
 
         inputTextField = new TextField();
-        inputTextField.setLayoutY(28);
-        inputTextField.setLayoutX(6);
+        inputTextField.setLayoutY(19.5);
+        inputTextField.setLayoutX(0.5);
 
         inputTextField.getStyleClass().add("bisq-input-box-text-input");
         inputTextField.setVisible(false);
@@ -54,8 +54,8 @@ public class TextInputBox extends Pane {
             UIThread.runOnNextRenderFrame(inputTextField::requestFocus);
         });
 
-        setMinHeight(75);
-        setMaxHeight(75);
+        setMinHeight(50);
+        setMaxHeight(50);
         getChildren().addAll(topLabel, inputTextField, promptLabel);
         EasyBind.subscribe(prefWidthProperty(), w -> {
             double width = w.doubleValue();

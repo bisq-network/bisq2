@@ -21,8 +21,8 @@
 #logo_splash_grey {
     -fx-image: url("images/logo_splash_grey.png");
 }
-#logo_white {
-    -fx-image: url("images/logo_white.png");
+#logo_grey {
+    -fx-image: url("images/logo_grey.png");
 }
 
 #logo-small {

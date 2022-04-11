@@ -42,31 +42,25 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
 
         root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("content-pane");
-
+        
         ImageView logo = new ImageView();
-        logo.setId("logo_white");
-        logo.setOpacity(0.25);
-        VBox.setMargin(logo, new Insets(-65, 0, 0, 0));
-
-        Label logoSub = new Label("Exchange, Decentralized ");
-        logoSub.setStyle("-fx-font-size: 3em; -fx-font-family: \"IBM Plex Sans Light\"; -fx-text-fill: #4F4F4F;");
-        logoSub.setTextAlignment(TextAlignment.CENTER);
-        VBox.setMargin(logoSub, new Insets(15, 0, 133, 0));
+        logo.setId("logo_grey");
+        VBox.setMargin(logo, new Insets(-52, 0, 83, 0)); 
 
         statusLabel = new Label("");
-        statusLabel.setStyle("-fx-font-size: 1.3em;  -fx-text-fill: -fx-light-text-color;");
+        statusLabel.getStyleClass().add("bisq-label-1");
         statusLabel.setTextAlignment(TextAlignment.CENTER);
 
         progressBar = new BisqProgressBar(-1);
-        progressBar.setMinHeight(5);
-        progressBar.setMaxHeight(5);
+        progressBar.setMinHeight(3.5);
+        progressBar.setMaxHeight(3.5);
         progressBar.setMinWidth(535);
-        VBox.setMargin(progressBar, new Insets(28, 0, 28, 0));
+        VBox.setMargin(progressBar, new Insets(16, 0, 16, 0));
 
         Label connectingTitle = new BisqLabel(Res.get("satoshisquareapp.splash.connecting").toUpperCase());
-        connectingTitle.setStyle("-fx-font-size: 1.3em; -fx-text-fill: #6A6A6A;");
+        connectingTitle.getStyleClass().add("bisq-label-1-dimmed");
 
-        root.getChildren().addAll(logo, logoSub, statusLabel, progressBar, connectingTitle);
+        root.getChildren().addAll(logo,  statusLabel, progressBar, connectingTitle);
     }
 
     @Override

@@ -21,6 +21,8 @@ import bisq.i18n.Res;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -32,12 +34,11 @@ public class LargeRoboIconWithId extends VBox {
     private final ImageView imageView;
     private final Label profileId;
     private final StringProperty textProperty = new SimpleStringProperty();
-    
+
     public LargeRoboIconWithId() {
         imageView = new ImageView();
-       // Tooltip.install(imageView, new Tooltip(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.button")));
-      // imageView.setCursor(Cursor.HAND);
-
+        imageView.setCursor(Cursor.HAND);
+        setAlignment(Pos.CENTER);
         profileId = new Label();
         profileId.setMaxWidth(300);
         profileId.setMinWidth(300);
@@ -46,8 +47,12 @@ public class LargeRoboIconWithId extends VBox {
         profileId.getStyleClass().add("bisq-large-profile-id-label");
 
         getChildren().addAll(imageView, profileId);
-        
+
         EasyBind.subscribe(textProperty, this::setText);
+    }
+
+    public void setOnAction(Runnable handler) {
+        imageView.setOnMousePressed(e -> handler.run());
     }
 
     public void setImage(Image roboIconImage) {

@@ -25,7 +25,6 @@ import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -65,14 +64,14 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         Label headLineLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.headline"));
         headLineLabel.setWrapText(true);
         headLineLabel.getStyleClass().add("bisq-headline-1-label");
-        VBox.setMargin(headLineLabel, new Insets(85, 200, 0, 200));
+        VBox.setMargin(headLineLabel, new Insets(48, 200, 0, 200));
         VBox.setVgrow(headLineLabel, Priority.ALWAYS);
 
         Label subTitleLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.subTitle"));
         subTitleLabel.setWrapText(true);
         subTitleLabel.setTextAlignment(TextAlignment.CENTER);
         subTitleLabel.getStyleClass().add("bisq-sub-title-label");
-        VBox.setMargin(subTitleLabel, new Insets(-24, 200, 0, 200));
+        VBox.setMargin(subTitleLabel, new Insets(-33, 200, 0, 200));
         VBox.setVgrow(subTitleLabel, Priority.ALWAYS);
 
         nicknameTextInputBox = new TextInputBox(Res.get("satoshisquareapp.setDefaultUserProfile.nickName"),
@@ -80,9 +79,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         nicknameTextInputBox.setPrefWidth(520);
 
         roboIconWithId = new LargeRoboIconWithId();
-        roboIconWithId.setAlignment(Pos.CENTER);
         Tooltip.install(roboIconWithId, new Tooltip(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.button")));
-        roboIconWithId.setCursor(Cursor.HAND);
 
         Label tryOtherInfoLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.info"));
         tryOtherInfoLabel.setWrapText(true);
@@ -111,7 +108,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         roboIconWithId.textProperty().bind(model.profileId);
         nicknameTextInputBox.textProperty().bindBidirectional(model.nickName);
 
-        roboIconWithId.setOnMousePressed(e -> controller.onCreateTempIdentity());
+        roboIconWithId.setOnAction(controller::onCreateTempIdentity);
         createUserButton.setOnAction(e -> controller.onCreateUserProfile());
 
         // As we must set setFitToHeight false we need to apply prefViewportHeight once we know our vbox height.
@@ -148,7 +145,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         createUserButton.disableProperty().unbind();
         nicknameTextInputBox.textProperty().unbindBidirectional(model.nickName);
         roboIconWithId.textProperty().unbind();
-        roboIconWithId.setOnMousePressed(null);
+        roboIconWithId.setOnAction(null);
         createUserButton.setOnAction(null);
         if (vBoxHeightSubscription != null) {
             vBoxHeightSubscription.unsubscribe();

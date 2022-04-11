@@ -633,10 +633,6 @@ tree-table-view:focused {
 #base-content-container {
     -fx-background-color: -bs-background-gray;
 }
-/*
-.content-pane {
-    -fx-background-color: linear-gradient(-bs-content-pane-bg-top 0%, -bs-content-pane-bg-bottom 100%);
-}*/
 
 #footer-pane {
     -fx-background-color: -bs-footer-pane-background;
