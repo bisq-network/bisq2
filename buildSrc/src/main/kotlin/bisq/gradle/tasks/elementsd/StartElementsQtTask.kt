@@ -39,6 +39,7 @@ abstract class StartElementsQtTask : DefaultTask() {
     }
 
     private fun spawnElementsQtProcess(elementsdDataDir: File) {
+        val zmqPort = Network.findFreeSystemPort()
         ProcessBuilder(
             listOf(
                 "elements-qt",
@@ -58,6 +59,9 @@ abstract class StartElementsQtTask : DefaultTask() {
                 "-mainchainrpcport=18443",
                 "-mainchainrpcuser=bisq",
                 "-mainchainrpcpassword=bisq",
+
+                "-zmqpubhashblock=tcp://127.0.0.1:$zmqPort",
+                "-zmqpubrawtx=tcp://127.0.0.1:$zmqPort",
 
                 "-fallbackfee=0.00000001",
                 "-txindex=1"
