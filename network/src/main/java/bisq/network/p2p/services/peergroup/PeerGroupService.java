@@ -61,7 +61,6 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
     private final Node node;
     private final BanList banList;
     private final Config config;
-    private final Transport.Type transportType;
     @Getter
     private final PeerGroup peerGroup;
     private final PeerExchangeService peerExchangeService;
@@ -106,16 +105,15 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         }
     }
 
-    public PeerGroupService(PersistenceService persistenceService, 
-                            Node node, 
-                            BanList banList, 
-                            Config config, 
-                            Set<Address> seedNodeAddresses, 
+    public PeerGroupService(PersistenceService persistenceService,
+                            Node node,
+                            BanList banList,
+                            Config config,
+                            Set<Address> seedNodeAddresses,
                             Transport.Type transportType) {
         this.node = node;
         this.banList = banList;
         this.config = config;
-        this.transportType = transportType;
         peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, banList, this);
         PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup,
                 config.peerExchangeConfig(),
@@ -123,7 +121,8 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy, this);
         keepAliveService = new KeepAliveService(node, peerGroup, config.keepAliveServiceConfig());
         addressValidationService = new AddressValidationService(node, banList);
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        String fileName = persistableStore.getClass().getSimpleName() + "_" + transportType.name();
+        persistence = persistenceService.getOrCreatePersistence(this, "db", fileName, persistableStore);
     }
 
     public void start() {
