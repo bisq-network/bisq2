@@ -39,7 +39,7 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
         root.getStyleClass().add("content-pane");
 
         Label step1 = new Label("1. " + Res.get("onboarding.step1").toUpperCase());
-        step1.getStyleClass().add("bisq-label-1");
+        step1.getStyleClass().add("bisq-small-light-label");
 
         Region line1 = new Region();
         line1.setMaxHeight(1);
@@ -48,7 +48,7 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
         HBox.setMargin(line1, new Insets(12, 0, 0, 0));
 
         Label step2 = new Label("2. " + Res.get("onboarding.step2").toUpperCase());
-        step2.getStyleClass().add("bisq-label-1-dimmed");
+        step2.getStyleClass().add("bisq-small-light-label-dimmed");
 
         Region line2 = new Region();
         line2.setMaxHeight(1);
@@ -57,7 +57,7 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
         HBox.setMargin(line2, new Insets(12, 0, 0, 0));
 
         Label step3 = new Label("3. " + Res.get("onboarding.step3").toUpperCase());
-        step3.getStyleClass().add("bisq-label-1-dimmed");
+        step3.getStyleClass().add("bisq-small-light-label-dimmed");
 
         HBox box = Layout.hBoxWith(Spacer.fillHBox(), step1, line1, step2, line2, step3, Spacer.fillHBox());
         box.getStyleClass().add("content-pane");
@@ -69,16 +69,16 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
             root.getChildren().add(newValue.getRoot());
             if (oldValue != null) {
                 if (newValue instanceof SelectUserTypeView) {
-                    step1.getStyleClass().remove("bisq-label-1");
-                    step1.getStyleClass().add("bisq-label-1-dimmed");
-                    step2.getStyleClass().remove("bisq-label-1-dimmed");
-                    step2.getStyleClass().add("bisq-label-1");
+                    step1.getStyleClass().remove("bisq-small-light-label");
+                    step1.getStyleClass().add("bisq-small-light-label-dimmed");
+                    step2.getStyleClass().remove("bisq-small-light-label-dimmed");
+                    step2.getStyleClass().add("bisq-small-light-label");
                 }
                 if (newValue instanceof OnboardNewbieView) {
-                    step2.getStyleClass().remove("bisq-label-1");
-                    step2.getStyleClass().add("bisq-label-1-dimmed");
-                    step3.getStyleClass().remove("bisq-label-1-dimmed");
-                    step3.getStyleClass().add("bisq-label-1");
+                    step2.getStyleClass().remove("bisq-small-light-label");
+                    step2.getStyleClass().add("bisq-small-light-label-dimmed");
+                    step3.getStyleClass().remove("bisq-small-light-label-dimmed");
+                    step3.getStyleClass().add("bisq-small-light-label");
                 }
                 Transitions.transitHorizontal(newValue.getRoot(), oldValue.getRoot());
             } else {

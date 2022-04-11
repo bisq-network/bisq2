@@ -48,7 +48,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         VBox.setMargin(logo, new Insets(-52, 0, 83, 0)); 
 
         statusLabel = new Label("");
-        statusLabel.getStyleClass().add("bisq-label-1");
+        statusLabel.getStyleClass().add("bisq-small-light-label");
         statusLabel.setTextAlignment(TextAlignment.CENTER);
 
         progressBar = new BisqProgressBar(-1);
@@ -58,7 +58,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         VBox.setMargin(progressBar, new Insets(16, 0, 16, 0));
 
         Label connectingTitle = new BisqLabel(Res.get("satoshisquareapp.splash.connecting").toUpperCase());
-        connectingTitle.getStyleClass().add("bisq-label-1-dimmed");
+        connectingTitle.getStyleClass().add("bisq-small-light-label-dimmed");
 
         root.getChildren().addAll(logo,  statusLabel, progressBar, connectingTitle);
     }

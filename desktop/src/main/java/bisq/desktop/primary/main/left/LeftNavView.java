@@ -66,7 +66,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
         super(new AnchorPane(), model, controller);
 
-        root.setStyle("-fx-background-color: -bisq-grey-1;");
+        root.getStyleClass().add("bisq-darkest-bg");
 
         menuTop = TopPanelView.HEIGHT;
 
@@ -135,7 +135,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         logoCollapsed.setLayoutY(logoExpanded.getLayoutY());
 
         selectionMarker = new Region();
-        selectionMarker.setStyle("-fx-background-color: -fx-accent;");
+        selectionMarker.getStyleClass().add("bisq-green");
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(NavigationButton.HEIGHT);
         vBox.getChildren().addAll(social, trade, portfolio, markets, wallet, support, settings);
@@ -281,7 +281,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
             Region line = new Region();
             line.setMinHeight(1);
-            line.setStyle("-fx-background-color: -bisq-grey-6");
+            line.getStyleClass().add("bisq-grey-line");
             setMinHeight(NavigationButton.HEIGHT);
             setMaxHeight(NavigationButton.HEIGHT);
             Insets insets = new Insets(21, 0, 0, 35);
@@ -299,20 +299,19 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             hBox.setMaxHeight(hBox.getMinHeight());
 
             Label peers = new Label(Res.get("peers"));
-            String style = "-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans\"; -fx-font-size: 0.73em";
-            peers.setStyle(style);
+            peers.getStyleClass().add("bisq-small-dimmed-label");
 
             Label numConnectionsTorLabel = new Label();
-            numConnectionsTorLabel.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans\"; -fx-font-size: 0.73em");
+            numConnectionsTorLabel.getStyleClass().add("bisq-smaller-label");
             numConnectionsTorLabel.textProperty().bind(numConnectionsTor);
 
             Label separator = new Label("|");
-            separator.setStyle(style);
+            separator.getStyleClass().add("bisq-small-dimmed-label");
             Label separator2 = new Label("|");
-            separator2.setStyle(style);
+            separator2.getStyleClass().add("bisq-small-dimmed-label");
 
             Label numConnectionsI2pLabel = new Label();
-            numConnectionsI2pLabel.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans\"; -fx-font-size: 0.73em");
+            numConnectionsI2pLabel.getStyleClass().add("bisq-smaller-label");
             numConnectionsI2pLabel.textProperty().bind(numConnectionsI2p);
 
             ImageView torIcon = new ImageView();

@@ -48,30 +48,29 @@ class NavigationButton extends Pane implements Toggle {
     NavigationButton(String title, ImageView icon, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
         this.icon = icon;
         this.navigationTarget = navigationTarget;
+
         setMinHeight(HEIGHT);
         setMaxHeight(HEIGHT);
-
+        getStyleClass().add("bisq-darkest-bg");
         setCursor(Cursor.HAND);
-        tooltip = new Tooltip(title);
-        tooltip.setShowDelay(Duration.millis(200));
 
         setToggleGroup(toggleGroup);
         toggleGroup.getToggles().add(this);
         selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
 
+        tooltip = new Tooltip(title);
+        tooltip.setShowDelay(Duration.millis(200));
+
         icon.setMouseTransparent(true);
         icon.setLayoutX(25);
         icon.setLayoutY(14);
         icon.setOpacity(0.5);
-        
+
         label = new Label(title);
         label.setLayoutX(56);
         label.setLayoutY(14);
         label.setMouseTransparent(true);
-
-        setStyle("-fx-background-color: -bisq-grey-1;");
-        label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");
-       
+        label.getStyleClass().add("bisq-nav-label");
 
         getChildren().addAll(icon, label);
     }
@@ -131,12 +130,25 @@ class NavigationButton extends Pane implements Toggle {
         selectedProperty.set(selected);
 
         if (selected) {
-            setStyle("-fx-background-color: -bisq-grey-2;");
-            label.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");
+            getStyleClass().remove("bisq-darkest-bg");
+            getStyleClass().add("bisq-dark-bg");
+
+            // setStyle("-fx-background-color: -bisq-grey-2;");
+
+            // label.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");
+            label.getStyleClass().remove("bisq-nav-label");
+            label.getStyleClass().add("bisq-nav-label-selected");
+
+
             icon.setOpacity(1);
         } else {
-            setStyle("-fx-background-color: -bisq-grey-1;");
-            label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");
+            //setStyle("-fx-background-color: -bisq-grey-1;");
+            getStyleClass().remove("bisq-dark-bg");
+            getStyleClass().add("bisq-darkest-bg");
+            //label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");
+            label.getStyleClass().remove("bisq-nav-label-selected");
+            label.getStyleClass().add("bisq-nav-label");
+
             icon.setOpacity(0.6);
         }
     }

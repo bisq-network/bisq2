@@ -63,7 +63,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
 
         Label headLineLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.headline"));
         headLineLabel.setWrapText(true);
-        headLineLabel.getStyleClass().add("bisq-headline-1-label");
+        headLineLabel.getStyleClass().add("bisq-big-light-headline-label");
         VBox.setMargin(headLineLabel, new Insets(48, 200, 0, 200));
         VBox.setVgrow(headLineLabel, Priority.ALWAYS);
 
