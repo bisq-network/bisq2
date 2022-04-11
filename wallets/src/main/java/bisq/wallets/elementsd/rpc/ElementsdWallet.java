@@ -123,6 +123,12 @@ public class ElementsdWallet {
         return rpcClient.invokeAndValidate(rpcCall);
     }
 
+    public String unblindRawTransaction(String rawTxInHex) {
+        var request = new ElementsdUnblindRawTransactionRpcCall.Request(rawTxInHex);
+        var rpcCall = new ElementsdUnblindRawTransactionRpcCall(request);
+        return rpcClient.invokeAndValidate(rpcCall).getHex();
+    }
+
     public boolean verifyMessage(String address, String signature, String message) {
         var request = BitcoindVerifyMessageRpcCall.Request.builder()
                 .address(address)
