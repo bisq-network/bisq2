@@ -26,6 +26,7 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
+import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataNetworkService;
@@ -39,8 +40,7 @@ import bisq.security.KeyPairService;
 import bisq.security.PubKey;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyPair;
@@ -59,9 +59,8 @@ import static java.util.concurrent.CompletableFuture.runAsync;
  * Creates nodeRepository and a default node
  * Creates services according to services defined in Config
  */
+@Slf4j
 public class ServiceNode {
-    private static final Logger log = LoggerFactory.getLogger(ServiceNode.class);
-
     public static record Config(Set<Service> services) {
     }
 
@@ -111,14 +110,20 @@ public class ServiceNode {
                        Optional<DataService> dataService,
                        KeyPairService keyPairService,
                        PersistenceService persistenceService,
-                       Set<Address> seedNodeAddresses) {
+                       Set<Address> seedNodeAddresses, 
+                       Transport.Type transportType) {
         BanList banList = new BanList();
         nodesById = new NodesById(banList, nodeConfig);
         defaultNode = nodesById.getDefaultNode();
         Set<Service> services = config.services();
 
         if (services.contains(Service.PEER_GROUP)) {
-            PeerGroupService peerGroupService = new PeerGroupService(persistenceService, defaultNode, banList, peerGroupServiceConfig, seedNodeAddresses);
+            PeerGroupService peerGroupService = new PeerGroupService(persistenceService, 
+                    defaultNode, 
+                    banList,
+                    peerGroupServiceConfig, 
+                    seedNodeAddresses,
+                    transportType);
             this.peerGroupService = Optional.of(peerGroupService);
 
             if (services.contains(Service.DATA)) {

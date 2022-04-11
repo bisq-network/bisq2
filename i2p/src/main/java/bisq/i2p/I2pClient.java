@@ -318,6 +318,7 @@ public class I2pClient {
         try {
             return new Destination(peer); // If peer is in base64 format
         } catch (DataFormatException e) {
+            log.warn("Unexpected format for destination {}", peer);
             throw new IOException("Unexpected destination format", e);
         }
 

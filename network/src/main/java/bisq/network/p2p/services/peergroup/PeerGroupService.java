@@ -23,6 +23,7 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
@@ -60,6 +61,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
     private final Node node;
     private final BanList banList;
     private final Config config;
+    private final Transport.Type transportType;
     @Getter
     private final PeerGroup peerGroup;
     private final PeerExchangeService peerExchangeService;
@@ -104,10 +106,16 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         }
     }
 
-    public PeerGroupService(PersistenceService persistenceService, Node node, BanList banList, Config config, Set<Address> seedNodeAddresses) {
+    public PeerGroupService(PersistenceService persistenceService, 
+                            Node node, 
+                            BanList banList, 
+                            Config config, 
+                            Set<Address> seedNodeAddresses, 
+                            Transport.Type transportType) {
         this.node = node;
         this.banList = banList;
         this.config = config;
+        this.transportType = transportType;
         peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, banList, this);
         PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup,
                 config.peerExchangeConfig(),
