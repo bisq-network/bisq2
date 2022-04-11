@@ -38,11 +38,11 @@ public class ElementsdWallet {
     }
 
     public String claimPegin(String bitcoinTxId, String txOutProof) {
-        var request = ElementsdClaimPegin.Request.builder()
+        var request = ElementsdClaimPeginRpcCall.Request.builder()
                 .bitcoinTxId(bitcoinTxId)
                 .txOutProof(txOutProof)
                 .build();
-        var rpcCall = new ElementsdClaimPegin(request);
+        var rpcCall = new ElementsdClaimPeginRpcCall(request);
         return rpcClient.invokeAndValidate(rpcCall);
     }
 
