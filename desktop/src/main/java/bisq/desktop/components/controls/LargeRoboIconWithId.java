@@ -48,14 +48,14 @@ public class LargeRoboIconWithId extends VBox {
 
         getChildren().addAll(imageView, profileId);
 
-        EasyBind.subscribe(textProperty, this::setText);
+        EasyBind.subscribe(textProperty, this::setProfileId);
     }
 
     public void setOnAction(Runnable handler) {
         imageView.setOnMousePressed(e -> handler.run());
     }
 
-    public void setImage(Image roboIconImage) {
+    public void setRoboHashImage(Image roboIconImage) {
         imageView.setImage(roboIconImage);
     }
 
@@ -63,7 +63,7 @@ public class LargeRoboIconWithId extends VBox {
         return textProperty;
     }
 
-    public void setText(String id) {
+    public void setProfileId(String id) {
         profileId.setText(Res.get("largeRoboIconWithId.id", id));
     }
 }

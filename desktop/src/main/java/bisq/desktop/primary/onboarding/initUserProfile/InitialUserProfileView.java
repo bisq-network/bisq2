@@ -124,7 +124,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         });
         roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
             if (roboIcon != null) {
-                roboIconWithId.setImage(roboIcon);
+                roboIconWithId.setRoboHashImage(roboIcon);
             }
             roboIconWithId.setVisible(roboIcon != null);
         });
