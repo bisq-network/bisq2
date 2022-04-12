@@ -41,7 +41,7 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
 
         vBox = new VBox();
         vBox.setAlignment(Pos.TOP_CENTER);
-        vBox.setSpacing(50);
+        vBox.setSpacing(30);
         vBox.getStyleClass().add("content-pane");
 
         root.setContent(vBox);
@@ -55,16 +55,25 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         Label headLineLabel = new Label(Res.get("satoshisquareapp.selectTraderType.headline"));
         headLineLabel.setWrapText(true);
         headLineLabel.getStyleClass().add("bisq-big-light-headline-label");
-        VBox.setMargin(headLineLabel, new Insets(48, 200, -10, 200));
+        VBox.setMargin(headLineLabel, new Insets(50, 200, 0, 200));
         VBox.setVgrow(headLineLabel, Priority.ALWAYS);
 
+        Label subTitleLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.subTitle"));
+        subTitleLabel.setWrapText(true);
+        subTitleLabel.setTextAlignment(TextAlignment.CENTER);
+        int inputWidth = 450;
+        subTitleLabel.setMaxWidth(inputWidth);
+        subTitleLabel.getStyleClass().add("bisq-small-light-label-dimmed");
+        VBox.setMargin(subTitleLabel, new Insets(0, 200, 0, 200));
+        VBox.setVgrow(subTitleLabel, Priority.ALWAYS);
+        
         info = new Label();
         info.setWrapText(true);
         info.setMaxWidth(450);
         info.setTextAlignment(TextAlignment.CENTER);
         info.getStyleClass().add("bisq-sub-title-label");
         VBox.setVgrow(info, Priority.ALWAYS);
-        VBox.setMargin(info, new Insets(-10, 0, -10, 0));
+        VBox.setMargin(info, new Insets(0, 0, 0, 0));
 
         userTypeBox = new BisqComboBox<>();
         userTypeBox.setItems(model.getUserTypes());
@@ -82,10 +91,11 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
 
         nextButton = new Button(Res.get("shared.nextStep"));
         nextButton.getStyleClass().add("bisq-button-2");
-        VBox.setMargin(nextButton, new Insets(0, 0, 100, 0));
+        VBox.setMargin(nextButton, new Insets(0, 0, 50, 0));
 
         vBox.getChildren().addAll(
                 headLineLabel,
+                subTitleLabel,
                 userTypeBox,
                 info,
                 nextButton
