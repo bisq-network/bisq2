@@ -1,8 +1,8 @@
 package bisq.gradle.elementsd
 
-import bisq.gradle.tasks.elementsd.ElementsdCreateOrLoadWalletTask
-import bisq.gradle.tasks.elementsd.ElementsdPeginTask
-import bisq.gradle.tasks.elementsd.StartElementsQtTask
+import bisq.gradle.elementsd.tasks.ElementsdCreateOrLoadWalletTask
+import bisq.gradle.elementsd.tasks.ElementsdPeginTask
+import bisq.gradle.elementsd.tasks.StartElementsQtTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider

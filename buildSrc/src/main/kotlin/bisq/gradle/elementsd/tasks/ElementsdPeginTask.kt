@@ -1,4 +1,4 @@
-package bisq.gradle.tasks.elementsd
+package bisq.gradle.elementsd.tasks
 
 import bisq.gradle.bitcoind.BitcoindRpcClient
 import bisq.gradle.elementsd.ElementsdRpcClient

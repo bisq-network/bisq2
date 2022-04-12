@@ -1,19 +1,19 @@
-package bisq.gradle.tasks.bitcoind
+package bisq.gradle.elementsd.tasks
 
 import bisq.gradle.Network
-import bisq.gradle.bitcoind.BitcoindRpcClient
+import bisq.gradle.elementsd.ElementsdRpcClient
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.StopExecutionException
 import org.gradle.api.tasks.TaskAction
 
-abstract class BitcoindStopTask : DefaultTask() {
+abstract class ElementsdStopTask : DefaultTask() {
     @get:Input
     abstract val port: Property<Int>
 
     init {
-        port.convention(StartBitcoinQtTask.DEFAULT_BITCOIND_RPC_PORT)
+        port.convention(StartElementsQtTask.DEFAULT_ELEMENTSD_RPC_PORT)
     }
 
     @TaskAction
@@ -22,7 +22,7 @@ abstract class BitcoindStopTask : DefaultTask() {
             throw StopExecutionException("bitcoind is not running.")
         }
 
-        BitcoindRpcClient.daemonRpcCall(
+        ElementsdRpcClient.daemonRpcCall(
             listOf("stop")
         )
     }

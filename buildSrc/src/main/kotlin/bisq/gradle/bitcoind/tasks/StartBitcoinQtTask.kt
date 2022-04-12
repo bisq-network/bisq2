@@ -1,4 +1,4 @@
-package bisq.gradle.tasks.bitcoind
+package bisq.gradle.bitcoind.tasks
 
 import bisq.gradle.Network
 import bisq.gradle.bitcoind.BitcoindRpcClient

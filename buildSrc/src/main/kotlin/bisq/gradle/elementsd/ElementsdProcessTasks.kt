@@ -1,9 +1,9 @@
 package bisq.gradle.elementsd
 
 import bisq.gradle.bitcoind.BitcoindProcessTasks
-import bisq.gradle.tasks.bitcoind.BitcoindMineToWallet
-import bisq.gradle.tasks.elementsd.ElementsdStopTask
-import bisq.gradle.tasks.elementsd.StartElementsQtTask
+import bisq.gradle.bitcoind.tasks.BitcoindMineToWallet
+import bisq.gradle.elementsd.tasks.ElementsdStopTask
+import bisq.gradle.elementsd.tasks.StartElementsQtTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.TaskContainer

@@ -2,7 +2,7 @@ package bisq.gradle.elementsd
 
 import bisq.gradle.bitcoind.BitcoindProcessTasks
 import bisq.gradle.bitcoind.BitcoindWalletCreationTasks
-import bisq.gradle.tasks.ApplicationRunTaskFactory
+import bisq.gradle.ApplicationRunTaskFactory
 import org.gradle.api.Project
 import java.io.File
 

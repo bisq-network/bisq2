@@ -1,4 +1,4 @@
-package bisq.gradle.tasks
+package bisq.gradle
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project

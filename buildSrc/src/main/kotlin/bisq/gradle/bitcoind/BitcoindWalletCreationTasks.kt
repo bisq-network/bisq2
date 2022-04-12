@@ -1,8 +1,8 @@
 package bisq.gradle.bitcoind
 
-import bisq.gradle.tasks.bitcoind.BitcoindCreateOrLoadWalletTask
-import bisq.gradle.tasks.bitcoind.BitcoindMineToWallet
-import bisq.gradle.tasks.bitcoind.StartBitcoinQtTask
+import bisq.gradle.bitcoind.tasks.BitcoindCreateOrLoadWalletTask
+import bisq.gradle.bitcoind.tasks.BitcoindMineToWallet
+import bisq.gradle.bitcoind.tasks.StartBitcoinQtTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
