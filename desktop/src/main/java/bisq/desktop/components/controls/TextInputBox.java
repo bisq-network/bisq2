@@ -17,58 +17,89 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.validation.MonetaryValidator;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
+import lombok.Setter;
 import org.fxmisc.easybind.EasyBind;
 
 public class TextInputBox extends Pane {
     private final TextField inputTextField;
+    private final Label descriptionLabel;
+    @Setter
+    private String prompt;
+    private final StringProperty descriptionTextProperty = new SimpleStringProperty();
 
-    public TextInputBox(String title, String prompt) {
+    //  private final Label promptLabel;
+    public TextInputBox(String description, String prompt) {
+        this();
+
+        this.prompt = prompt;
+        descriptionTextProperty.set(description);
+        inputTextField.setPromptText(this.prompt);
+    }
+
+    public TextInputBox() {
         getStyleClass().add("bisq-input-box-top-pane");
 
-        Label topLabel = new Label(title.toUpperCase());
-        topLabel.getStyleClass().add("bisq-input-box-top-label");
-        topLabel.setLayoutY(7);
-        topLabel.setLayoutX(9);
-
-        Label promptLabel = new Label(prompt);
-        promptLabel.getStyleClass().add("bisq-input-box-prompt-label");
-        promptLabel.setLayoutY(24);
-        promptLabel.setLayoutX(9);
-        promptLabel.setCursor(Cursor.TEXT);
+        descriptionLabel = new Label();
+        descriptionLabel.getStyleClass().add("bisq-input-box-description-label");
+        descriptionLabel.setLayoutY(6);
+        descriptionLabel.setLayoutX(9);
 
         inputTextField = new TextField();
-        inputTextField.setLayoutY(19.5);
+        inputTextField.setLayoutY(17);
         inputTextField.setLayoutX(0.5);
-
         inputTextField.getStyleClass().add("bisq-input-box-text-input");
-        inputTextField.setVisible(false);
-        setOnMousePressed(e -> {
-            inputTextField.setVisible(true);
-            promptLabel.setVisible(false);
-            UIThread.runOnNextRenderFrame(inputTextField::requestFocus);
-        });
 
         setMinHeight(50);
         setMaxHeight(50);
-        getChildren().addAll(topLabel, inputTextField, promptLabel);
+        getChildren().addAll(descriptionLabel, inputTextField);
         EasyBind.subscribe(prefWidthProperty(), w -> {
             double width = w.doubleValue();
-            promptLabel.setMinWidth(width - 50);
-            promptLabel.setMaxWidth(width - 50);
             inputTextField.setMinWidth(width - 50);
             inputTextField.setMaxWidth(width - 50);
             setMinWidth(width);
             setMaxWidth(width);
         });
+
+        setPrefWidth(300);
+        EasyBind.subscribe(descriptionTextProperty, description -> {
+            if (description != null) {
+               descriptionLabel.setText(description.toUpperCase());
+            }
+        });
+    }
+
+    public final StringProperty promptTextProperty() {
+        return inputTextField.promptTextProperty();
+    }
+
+    public final StringProperty descriptionTextProperty() {
+        return descriptionTextProperty;
     }
 
     public final StringProperty textProperty() {
         return inputTextField.textProperty();
+    }
+    
+    public  ReadOnlyBooleanProperty inputTextFieldFocusedProperty() {
+        return inputTextField.focusedProperty();
+    }
+    
+    public String getText() {
+        return inputTextField.getText();
+    }
+
+    public void setText(String value) {
+        inputTextField.setText(value);
+    }
+
+    public void setValidator(MonetaryValidator validator) {
+        //todo
     }
 }

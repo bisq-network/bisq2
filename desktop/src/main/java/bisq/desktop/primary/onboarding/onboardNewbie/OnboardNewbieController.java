@@ -114,7 +114,6 @@ public class OnboardNewbieController implements Controller {
                 });
 
         paymentMethodsSelection.getSelectedPaymentMethods().addListener(paymentMethodsSelectionListener);
-
         model.getSelectedPaymentMethods().setAll(paymentMethodsSelection.getSelectedPaymentMethods());
         model.getTerms().set(Res.get("satoshisquareapp.createOffer.defaultTerms"));
 

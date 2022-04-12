@@ -25,6 +25,7 @@
     -bisq-grey-11: #C9C9C9;
     -bisq-grey-12: #2E2E2E;
     -bisq-grey-13: #6A6A6A;
+    -bisq-grey-14: #474747;
 
     /* Background colors */
     -bisq-background-color-darkest: -bisq-grey-left-nav-selected-bg;
@@ -46,6 +47,7 @@
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 4.1em;
 }
+
 .bisq-text-headline-2 {
     -fx-fill: -bisq-text-color-white;
     -fx-font-family: "IBM Plex Sans Light";
@@ -62,7 +64,7 @@
 /*.robo-hash-user-name-label{
     -fx-text-fill: -bisq-text-color-white;
    !* -fx-font-family: "IBM Plex Sans Light";*!
-    -fx-font-size: 1.2em;
+    -fx-font-size: 1.25em;
     -fx-fill: red;
     
 }*/
@@ -87,13 +89,13 @@
 }
 
 .bisq-small-light-label {
-    -fx-font-size: 0.86em;
+    -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -fx-light-text-color;
 }
 
 .bisq-small-light-label-dimmed {
-    -fx-font-size: 0.86em;
+    -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-grey-13;
 }
@@ -105,13 +107,13 @@
 }
 
 .bisq-tab-button-label {
-    -fx-font-size: 0.86em;
+    -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-grey-8;
 }
 
 .bisq-tab-button-label-selected {
-    -fx-font-size: 0.86em;
+    -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-green;
 }
@@ -128,41 +130,45 @@
 
 .bisq-nav-label {
     -fx-text-fill: -fx-mid-text-color;
-    -fx-font-size: 1.15em;
+    -fx-font-size: 1.25em;
 }
 
 .bisq-nav-label-selected {
     -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1.15em;
+    -fx-font-size: 1.25em;
 }
 
 .bisq-grey-dimmed {
     -fx-text-fill: -bisq-grey-13;
 }
 
+
 /* TextInputBox */
 .bisq-input-box-top-pane {
-    -fx-background-color: #2E2E2E;
+    -fx-background-color: -bisq-grey-12;
     -fx-background-radius: 4;
 }
 
-.bisq-input-box-top-label {
-    -fx-text-fill: #737373;
-    -fx-font-size: 0.86em;
-}
-
-.bisq-input-box-prompt-label {
-    -fx-text-fill: #4E4E4E;
-    -fx-font-size: 1.15em;
+.bisq-input-box-description-label {
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-input-box-text-input {
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
     -fx-text-fill: white;
-    -fx-font-size: 1.15em;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
+/* AmountInput */
+.bisq-amount-input-code-label {
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
 
 /* Button */
 
@@ -224,6 +230,7 @@
 .bisq-grey-line {
     -fx-background-color: -bisq-grey-6;
 }
+
 .bisq-content-bg {
     -fx-background-color: -bisq-grey-content-bg;
 }
@@ -431,10 +438,6 @@ New css for bisq2.
     -fx-font-size: 0.85em;
 }
 
-#small-info-label {
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 0.85em;
-}
 
 .keyword-tradeTags {
     -fx-fill: -bs-buy-hover;

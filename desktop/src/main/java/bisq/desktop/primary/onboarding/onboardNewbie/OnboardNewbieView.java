@@ -19,30 +19,24 @@ package bisq.desktop.primary.onboarding.onboardNewbie;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.BisqScrollPane;
-import bisq.desktop.components.containers.SectionBox;
-import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.BisqTaggableTextArea;
-import bisq.desktop.components.controls.BisqTextArea;
-import bisq.desktop.layout.Layout;
-import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
-import javafx.scene.layout.HBox;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, OnboardNewbieController> {
-    private final BisqTaggableTextArea offerPreview;
-    private final BisqTextArea terms;
-    private final BisqButton publishButton, skipButton;
-    private final ChangeListener<Boolean> termsEditableListener;
+    /*    private final BisqTaggableTextArea offerPreview;
+        private final BisqTextArea terms;
+        private final BisqButton publishButton, skipButton;
+        private final ChangeListener<Boolean> termsEditableListener;*/
+    private final VBox vBox;
     private Subscription offerPreviewSubscription;
 
     public OnboardNewbieView(OnboardNewbieModel model,
@@ -52,14 +46,32 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
                              PaymentMethodsSelection paymentMethods) {
         super(new BisqScrollPane(), model, controller);
 
-        // Place content within a VBox, within a ScrollPane, to show scrollbars if window size is too small
-        VBox vBox = new VBox();
+        vBox = new VBox();
+        vBox.setAlignment(Pos.TOP_CENTER);
+        vBox.setSpacing(30);
         vBox.getStyleClass().add("content-pane");
-        vBox.setSpacing(20);
-        vBox.setFillWidth(true);
-        vBox.setPadding(new Insets(0, 20, 20, 20));
-        root.setContent(vBox);
 
+        root.setContent(vBox);
+        root.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        root.setFitToWidth(true);
+        // We must set setFitToHeight false as otherwise text wrapping does not work at labels
+        // We need to apply prefViewportHeight once we know our vbox height.
+        root.setFitToHeight(false);
+        root.getStyleClass().add("content-pane");
+
+        Label headLineLabel = new Label(Res.get("satoshisquareapp.createOffer.headline"));
+        headLineLabel.setWrapText(true);
+        headLineLabel.getStyleClass().add("bisq-big-light-headline-label");
+        VBox.setMargin(headLineLabel, new Insets(50, 200, 0, 200));
+        VBox.setVgrow(headLineLabel, Priority.ALWAYS);
+
+        int width = 600;
+        amountPrice.setMaxWidth(width);
+        marketSelection.setMaxWidth(width);
+        paymentMethods.getRoot().setMaxWidth(width);
+        vBox.getChildren().addAll(headLineLabel, marketSelection, amountPrice, paymentMethods.getRoot());
+        //  vBox.getChildren().addAll(headLineLabel, marketSelection, amountPrice, paymentMethods.getRoot());
+/*
         double width = 560;
         paymentMethods.setWidth(width / 2 - 30);
         SectionBox leftBox = new SectionBox(Res.get("satoshisquareapp.createOffer.section1.headline"));
@@ -99,12 +111,12 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
                         .warning(Res.get("satoshisquareapp.createOffer.termsTooLong", OnboardNewbieModel.MAX_INPUT_TERMS))
                         .show();
             }
-        };
+        };*/
     }
 
     @Override
     public void onViewAttached() {
-        terms.textProperty().bindBidirectional(model.getTerms());
+      /*  terms.textProperty().bindBidirectional(model.getTerms());
         terms.editableProperty().bind(model.getTermsEditable());
         publishButton.visibleProperty().bind(model.getCreateOfferButtonVisibleProperty());
         publishButton.managedProperty().bind(model.getCreateOfferButtonVisibleProperty());
@@ -118,12 +130,12 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
             }
         });
         
-        terms.editableProperty().addListener(termsEditableListener);
+        terms.editableProperty().addListener(termsEditableListener);*/
     }
 
     @Override
     public void onViewDetached() {
-        terms.textProperty().unbindBidirectional(model.getTerms());
+ /*       terms.textProperty().unbindBidirectional(model.getTerms());
         terms.editableProperty().unbind();
         publishButton.visibleProperty().unbind();
         publishButton.managedProperty().unbind();
@@ -131,6 +143,6 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
         publishButton.setOnAction(null);
         skipButton.setOnAction(null);
         offerPreviewSubscription.unsubscribe();
-        terms.editableProperty().removeListener(termsEditableListener);
+        terms.editableProperty().removeListener(termsEditableListener);*/
     }
 }

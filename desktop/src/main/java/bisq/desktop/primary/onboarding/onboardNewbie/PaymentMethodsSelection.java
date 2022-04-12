@@ -172,10 +172,10 @@ public class PaymentMethodsSelection {
 
             description = new BisqLabel();
             description.setPadding(new Insets(0, 0, 2, 0));
-            description.setId("small-info-label");
+            description.getStyleClass().add("bisq-small-light-label-dimmed");
             maxPaymentMethods = new BisqLabel(Res.get("satoshisquareapp.createOffer.paymentMethods.max"));
             maxPaymentMethods.setPadding(new Insets(3, 0, 0, 0));
-            maxPaymentMethods.setId("small-info-label");
+            maxPaymentMethods.getStyleClass().add("bisq-small-light-label-dimmed");
             maxPaymentMethods.setAlignment(Pos.CENTER_RIGHT);
             maxPaymentMethods.setPadding(new Insets(3, 5, 0, 0));
 
