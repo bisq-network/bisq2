@@ -46,4 +46,13 @@ public class OutboundConnection extends Connection {
     public boolean isPeerAddressVerified() {
         return true;
     }
+
+    /**
+     * @return Peer address used when connecting to the peer, NOT the address reported by the peer. This matters when
+     * connecting to a clearnet seed, because the reported seed address will always be 127.0.0.1.
+     */
+    @Override
+    public Address getPeerAddress() {
+        return address;
+    }
 }

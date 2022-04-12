@@ -311,8 +311,13 @@ public class Node implements Connection.Handler {
             connectionHandshakes.remove(connectionHandshake.getId());
             log.debug("Outbound handshake completed: Initiated by {} to {}", myCapability.address(), address);
             log.debug("Create new outbound connection to {}", address);
-            checkArgument(address.equals(result.capability().address()),
-                    "Peers reported address must match address we used to connect");
+            if (! address.isClearNetAddress()) {
+                // For clearnet this check doesn't make sense because:
+                // - the peer binds to 127.0.0.1, therefore reports 127.0.0.1 in the handshake
+                // - we use the peer's public IP to connect to him
+                checkArgument(address.equals(result.capability().address()),
+                        "Peers reported address must match address we used to connect");
+            }
 
             // As time passed we check again if connection is still not available
             if (outboundConnectionsByAddress.containsKey(address)) {
