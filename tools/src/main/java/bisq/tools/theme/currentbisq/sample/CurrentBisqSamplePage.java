@@ -394,17 +394,17 @@ public class CurrentBisqSamplePage extends GridPane {
                 cb6);*/
 
 
-        ComboBox<String> c1 = new BisqComboBox<String>(sampleItems());
+        ComboBox<String> c1 = new BisqComboBoxOld<String>(sampleItems());
         c1.setValue("Item A");
-        ComboBox<String> c2 = new BisqComboBox<String>(choiceBoxLongList);
+        ComboBox<String> c2 = new BisqComboBoxOld<String>(choiceBoxLongList);
         c2.setValue("Long List");
-        ComboBox<String> c3 = new BisqComboBox<String>(sampleItems());
+        ComboBox<String> c3 = new BisqComboBoxOld<String>(sampleItems());
         c3.setValue("Item B");
-        ComboBox<String> c4 = new BisqComboBox<String>(sampleItems());
+        ComboBox<String> c4 = new BisqComboBoxOld<String>(sampleItems());
         c4.setValue("Item B");
-        ComboBox<String> c5 = new BisqComboBox<String>(sampleItems());
+        ComboBox<String> c5 = new BisqComboBoxOld<String>(sampleItems());
         c5.setValue("Item B");
-        ComboBox<String> c6 = new BisqComboBox<String>(sampleItems());
+        ComboBox<String> c6 = new BisqComboBoxOld<String>(sampleItems());
         c6.setValue("Item C");
         c6.setDisable(true);
         newSection(
@@ -413,23 +413,23 @@ public class CurrentBisqSamplePage extends GridPane {
                 withState(c4, "showing"),
                 withState(c5, "focused"),
                 c6);
-        ComboBox<String> com1 = new BisqComboBox<String>(sampleItems());
+        ComboBox<String> com1 = new BisqComboBoxOld<String>(sampleItems());
         com1.setValue("Item A");
         com1.setEditable(true);
-        ComboBox<String> com2 = new BisqComboBox<String>(sampleItems());
+        ComboBox<String> com2 = new BisqComboBoxOld<String>(sampleItems());
         com2.setValue("Item B");
         com2.setEditable(true);
-        ComboBox<String> com3 = new BisqComboBox<String>(sampleItems());
+        ComboBox<String> com3 = new BisqComboBoxOld<String>(sampleItems());
         com3.setValue("Item B");
         com3.setEditable(true);
         newSection(
                 "ComboBox\nEditable:", com1,
                 withState(com2, "editable", ".arrow-button", "hover"),
                 withState(com3, "editable", ".arrow-button", "pressed"));
-        ComboBox<String> co1 = new BisqComboBox<String>(sampleItems());
+        ComboBox<String> co1 = new BisqComboBoxOld<String>(sampleItems());
         co1.setValue("Item B");
         co1.setEditable(true);
-        ComboBox<String> co2 = new BisqComboBox<String>(sampleItems());
+        ComboBox<String> co2 = new BisqComboBoxOld<String>(sampleItems());
         co2.setValue("Item C");
         co2.setEditable(true);
         co2.setDisable(true);

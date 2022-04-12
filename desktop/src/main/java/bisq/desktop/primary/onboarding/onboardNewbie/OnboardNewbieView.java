@@ -67,7 +67,8 @@ public class OnboardNewbieView extends View<BisqScrollPane, OnboardNewbieModel, 
 
         int width = 600;
         amountPrice.setMaxWidth(width);
-        marketSelection.setMaxWidth(width);
+        marketSelection.setMaxWidth((width) / 2d);
+        VBox.setMargin(marketSelection, new Insets(0,0,0,-300));
         paymentMethods.getRoot().setMaxWidth(width);
         vBox.getChildren().addAll(headLineLabel, marketSelection, amountPrice, paymentMethods.getRoot());
         //  vBox.getChildren().addAll(headLineLabel, marketSelection, amountPrice, paymentMethods.getRoot());

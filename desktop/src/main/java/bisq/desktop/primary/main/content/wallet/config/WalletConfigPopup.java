@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.wallet.config;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.BisqGridPane;
-import bisq.desktop.components.controls.BisqComboBox;
+import bisq.desktop.components.controls.BisqComboBoxOld;
 import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.wallets.NetworkType;
@@ -176,7 +176,7 @@ public class WalletConfigPopup extends Popup {
             gridPane.addButton(Res.get("wallet.config.selectWalletPath"), controller::onSelectWalletPath);
             gridPane.addTextField(Res.get("wallet.config.walletsDataDirPath"), model.walletsDataDirPathProperty);
 
-            BisqComboBox<WalletBackend> walletBackendComboBox = gridPane.addComboBox(model.walletBackends);
+            BisqComboBoxOld<WalletBackend> walletBackendComboBox = gridPane.addComboBox(model.walletBackends);
             walletBackendComboBox.setPromptText(Res.get("wallet.config.selectWallet"));
             walletBackendComboBox.valueProperty().bindBidirectional(model.selectedWalletBackend);
 

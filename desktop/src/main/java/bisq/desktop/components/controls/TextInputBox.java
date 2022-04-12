@@ -17,17 +17,24 @@
 
 package bisq.desktop.components.controls;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.event.EventHandler;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
+@Slf4j
 public class TextInputBox extends Pane {
+    @Getter
     private final TextField inputTextField;
     private final Label descriptionLabel;
     @Setter
@@ -70,9 +77,15 @@ public class TextInputBox extends Pane {
         setPrefWidth(300);
         EasyBind.subscribe(descriptionTextProperty, description -> {
             if (description != null) {
-               descriptionLabel.setText(description.toUpperCase());
+                descriptionLabel.setText(description.toUpperCase());
             }
         });
+        UIThread.runOnNextRenderFrame(this::requestFocus);
+    }
+
+    public void setOnMousePressedHandler(EventHandler<? super MouseEvent>  handler) {
+        setOnMousePressed(handler);
+        inputTextField.setOnMousePressed(handler);
     }
 
     public final StringProperty promptTextProperty() {
@@ -86,11 +99,11 @@ public class TextInputBox extends Pane {
     public final StringProperty textProperty() {
         return inputTextField.textProperty();
     }
-    
-    public  ReadOnlyBooleanProperty inputTextFieldFocusedProperty() {
+
+    public ReadOnlyBooleanProperty inputTextFieldFocusedProperty() {
         return inputTextField.focusedProperty();
     }
-    
+
     public String getText() {
         return inputTextField.getText();
     }

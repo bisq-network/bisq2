@@ -371,7 +371,7 @@ Taken from Bisq. Might need some clean up
     -fx-background-color: -bs-combobox-hover;
     -fx-text-fill: -bs-text-color;
 }
-
+/*
 .list-view .list-cell:odd, .list-view .list-cell:even {
     -fx-background-color: -bs-background-color;
     -fx-border-width: 0;
@@ -391,7 +391,7 @@ Taken from Bisq. Might need some clean up
 .list-view .list-cell, .list-view .list-cell:focused {
     -fx-border-color: transparent;
     -fx-border-width: 0;
-}
+}*/
 
 .jfx-text-field {
     -fx-background-radius: 4;

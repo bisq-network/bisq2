@@ -21,7 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.BisqComboBox;
+import bisq.desktop.components.controls.BisqComboBoxOld;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.layout.Layout;
@@ -105,11 +105,11 @@ public class UserProfileComboBox {
 
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<BisqComboBox<ListItem>, Model, Controller> {
+    public static class View extends bisq.desktop.common.view.View<BisqComboBoxOld<ListItem>, Model, Controller> {
         private Subscription subscription;
 
         private View(Model model, Controller controller) {
-            super(new BisqComboBox<>(model.userProfiles), model, controller);
+            super(new BisqComboBoxOld<>(model.userProfiles), model, controller);
 
             root.setButtonCell(getListCell());
             root.setCellFactory(param -> getListCell());

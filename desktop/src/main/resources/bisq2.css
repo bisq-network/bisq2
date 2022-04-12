@@ -26,6 +26,9 @@
     -bisq-grey-12: #2E2E2E;
     -bisq-grey-13: #6A6A6A;
     -bisq-grey-14: #474747;
+    -bisq-grey-15: #292929;
+    -bisq-grey-16: #393939;
+    
 
     /* Background colors */
     -bisq-background-color-darkest: -bisq-grey-left-nav-selected-bg;
@@ -219,6 +222,10 @@
     -fx-background-color: -bisq-grey-left-nav-bg;
 }
 
+#bisq-darkest-bg1 {
+    -fx-background-color: -bisq-grey-left-nav-bg;
+}
+
 .bisq-dark-bg {
     -fx-background-color: -bisq-grey-left-nav-selected-bg;
 }
@@ -233,6 +240,59 @@
 
 .bisq-content-bg {
     -fx-background-color: -bisq-grey-content-bg;
+}
+
+/* ListView */
+
+.list-view {
+    -fx-background-color: -bisq-grey-15;
+    -fx-border-color: -bisq-grey-left-nav-bg;;
+    -fx-border-width: 1;
+    -fx-border-insets: 0 0 0 0;
+    -fx-padding: 0 0 0 0;
+    -fx-background-insets: 0 0 0 0;
+}
+
+.list-view .list-cell:odd, .list-view .list-cell:even {
+    -fx-background-color: -bisq-grey-left-nav-bg;
+    -fx-font-size: 1.05em;
+    -fx-padding: 0 0 0 22;
+    -fx-background-insets: 0 0 1 0;
+    -fx-pref-height: 40px;
+}
+
+.list-view .list-cell:selected,
+.table-view .table-cell:selected {
+    -fx-background-color: -bisq-grey-16;
+}
+
+.list-view, .list-view:focused {
+}
+
+.list-view .list-cell, .list-view .list-cell:focused {
+}
+
+.list-view:focused,
+.tree-view:focused,
+.table-view:focused,
+.tree-table-view:focused,
+.table-view:focused,
+tree-table-view:focused {
+    -fx-background-insets: 0;
+    -fx-border-color: -bisq-grey-left-nav-bg;
+}
+
+.list-view:focused {
+}
+
+/* Selected rows */
+.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected,
+.tree-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-cell:filled:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell:filled:selected,
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell:filled:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell .table-cell:selected,
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell .tree-table-cell:selected {
+    -fx-background-insets: 0;
 }
 
 .content-pane {

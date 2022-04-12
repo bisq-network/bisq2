@@ -15,12 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.components;
+package bisq.desktop.components.controls;
 
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
-import bisq.desktop.components.controls.TextInputBox;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import bisq.presentation.formatters.AmountFormatter;
@@ -184,9 +183,6 @@ public class AmountInput {
             codeLabel.setLayoutY(11);
             codeLabel.getStyleClass().add("bisq-amount-input-code-label");
 
-            // codeLabel.setStyle("-fx-background-color: blue");
-            //  textInputBox.setStyle("-fx-background-color: green");
-            // root.setStyle("-fx-background-color: red");
             root.getChildren().addAll(textInputBox, codeLabel);
 
             //  Listeners on view component events

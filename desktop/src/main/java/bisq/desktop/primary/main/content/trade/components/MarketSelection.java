@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.common.monetary.Market;
 import bisq.desktop.components.controls.BisqComboBox;
-import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import javafx.beans.property.ObjectProperty;
@@ -27,8 +26,8 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
@@ -98,15 +97,15 @@ public class MarketSelection {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqComboBox<Market> comboBox;
         private final ChangeListener<Market> selectedMarketListener;
+        private final ListChangeListener<Market> marketsListener;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-            Label headline = new BisqLabel(Res.get("createOffer.selectMarket"));
-            headline.getStyleClass().add("titled-group-bg-label-active");
 
             comboBox = new BisqComboBox<>();
+            comboBox.setDescription(Res.get("markets"));
             comboBox.setVisibleRowCount(12);
             comboBox.setItems(model.markets);
             comboBox.setConverter(new StringConverter<>() {
@@ -121,23 +120,27 @@ public class MarketSelection {
                 }
             });
 
-            root.getChildren().addAll(headline, comboBox);
+            root.getChildren().addAll(comboBox.getRoot());
 
             // From model
-            selectedMarketListener = (o, old, newValue) -> comboBox.getSelectionModel().select(newValue);
+            selectedMarketListener = (o, old, newValue) -> comboBox.selectItem(newValue);
+
+            marketsListener = c -> comboBox.setItems(model.markets);
         }
 
         @Override
         protected void onViewAttached() {
-            comboBox.setOnAction(e -> controller.onSelectMarket(comboBox.getSelectionModel().getSelectedItem()));
+            comboBox.setOnAction(() -> controller.onSelectMarket(comboBox.getSelectedItem()));
             model.selectedMarket.addListener(selectedMarketListener);
-            comboBox.getSelectionModel().select(model.selectedMarket.get());
+            comboBox.selectItem(model.selectedMarket.get());
+            model.markets.addListener(marketsListener);
         }
 
         @Override
         protected void onViewDetached() {
             comboBox.setOnAction(null);
-            model.selectedMarket.addListener(selectedMarketListener);
+            model.selectedMarket.removeListener(selectedMarketListener);
+            model.markets.removeListener(marketsListener);
         }
     }
 }

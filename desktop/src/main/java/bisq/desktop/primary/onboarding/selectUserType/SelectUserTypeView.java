@@ -18,7 +18,7 @@
 package bisq.desktop.primary.onboarding.selectUserType;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqComboBox;
+import bisq.desktop.components.controls.BisqComboBoxOld;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -33,7 +33,7 @@ import javafx.util.StringConverter;
 public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, SelectUserTypeController> {
     private final VBox vBox;
     private final Button nextButton;
-    private final BisqComboBox<SelectUserTypeModel.Type> userTypeBox;
+    private final BisqComboBoxOld<SelectUserTypeModel.Type> userTypeBox;
     private final Label info;
 
     public SelectUserTypeView(SelectUserTypeModel model, SelectUserTypeController controller) {
@@ -75,7 +75,7 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         VBox.setVgrow(info, Priority.ALWAYS);
         VBox.setMargin(info, new Insets(0, 0, 0, 0));
 
-        userTypeBox = new BisqComboBox<>();
+        userTypeBox = new BisqComboBoxOld<>();
         userTypeBox.setItems(model.getUserTypes());
         userTypeBox.setConverter(new StringConverter<>() {
             @Override

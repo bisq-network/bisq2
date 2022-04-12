@@ -75,9 +75,9 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public abstract class Overlay<T extends Overlay<T>> {
-    private static Region owner;
+    public static Region owner;
     private static String baseDir;
-    private static DisplaySettings displaySettings;
+    public static DisplaySettings displaySettings;
     private static Runnable shutdownHandler;
 
     protected final static double DEFAULT_WIDTH = 668;

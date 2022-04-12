@@ -19,7 +19,7 @@ package bisq.desktop.primary.onboarding.onboardNewbie;
 
 import bisq.common.monetary.Market;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.components.controls.BisqComboBox;
+import bisq.desktop.components.controls.BisqComboBoxOld;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
@@ -160,7 +160,7 @@ public class PaymentMethodsSelection {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqComboBox<String> comboBox;
+        private final BisqComboBoxOld<String> comboBox;
         private final ListChangeListener<String> selectedPaymentMethodsListener;
         private final HBox box;
         private final BisqLabel description;
@@ -179,7 +179,7 @@ public class PaymentMethodsSelection {
             maxPaymentMethods.setAlignment(Pos.CENTER_RIGHT);
             maxPaymentMethods.setPadding(new Insets(3, 5, 0, 0));
 
-            comboBox = new BisqComboBox<>();
+            comboBox = new BisqComboBoxOld<>();
             comboBox.setItems(model.paymentMethods);
 
             box = new HBox();

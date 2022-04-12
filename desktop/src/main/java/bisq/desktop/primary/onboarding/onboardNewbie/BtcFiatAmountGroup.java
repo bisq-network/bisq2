@@ -23,7 +23,7 @@ import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqLabel;
-import bisq.desktop.primary.main.content.trade.components.AmountInput;
+import bisq.desktop.components.controls.AmountInput;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import bisq.oracle.marketprice.MarketPrice;
