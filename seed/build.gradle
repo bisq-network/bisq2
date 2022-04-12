@@ -1,6 +1,7 @@
 plugins {
     id 'bisq.java-library'
     id 'application'
+    alias(libs.plugins.shadow)
 }
 
 apply from: '../buildSrc/bisq-version.gradle'
