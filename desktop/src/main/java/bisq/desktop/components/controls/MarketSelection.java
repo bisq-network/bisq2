@@ -15,15 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.components;
+package bisq.desktop.components.controls;
 
 import bisq.common.monetary.Market;
-import bisq.desktop.components.controls.BisqComboBox;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -54,6 +51,10 @@ public class MarketSelection {
 
     public void setSelectedMarket(Market market) {
         controller.model.selectedMarket.set(market);
+    }
+
+    public void setPrefWidth(double prefWidth) {
+        controller.model.prefWidth.set(prefWidth);
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -87,6 +88,7 @@ public class MarketSelection {
         private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
         private final ObservableList<Market> markets = FXCollections.observableArrayList();
         private final SettingsService settingsService;
+        private final DoubleProperty prefWidth = new SimpleDoubleProperty(250);
 
         public Model(SettingsService settingsService) {
             this.settingsService = settingsService;
@@ -103,10 +105,11 @@ public class MarketSelection {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
+            root.setMaxWidth(model.prefWidth.get());
 
             comboBox = new BisqComboBox<>();
             comboBox.setDescription(Res.get("markets"));
-            comboBox.setItems(model.markets);
+            comboBox.setPrefWidth(model.prefWidth.get());
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(@Nullable Market value) {
@@ -133,6 +136,7 @@ public class MarketSelection {
             model.selectedMarket.addListener(selectedMarketListener);
             comboBox.selectItem(model.selectedMarket.get());
             model.markets.addListener(marketsListener);
+            comboBox.setItems(model.markets);
         }
 
         @Override

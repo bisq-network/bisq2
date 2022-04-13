@@ -26,6 +26,7 @@ import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
@@ -156,18 +157,15 @@ public class AmountInput {
     }
 
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
-        private final static int WIDTH = 300;
+        private final static int WIDTH = 250;
         private final static int CODE_LABEL_WIDTH = 60;
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
         private final ChangeListener<Monetary> amountListener;
-        private final Label codeLabel;
-        // private final BisqLabel descriptionLabel;
+        private final Label rightLabel;
         private final TextInputBox textInputBox;
 
-        private View(Model model,
-                     Controller controller,
-                     MonetaryValidator validator) {
+        private View(Model model, Controller controller, MonetaryValidator validator) {
             super(new Pane(), model, controller);
 
             textInputBox = new TextInputBox(Res.get("satoshisquareapp.createOffer.maxAmount"),
@@ -175,15 +173,16 @@ public class AmountInput {
             textInputBox.setPrefWidth(WIDTH);
             textInputBox.setValidator(validator);
 
-            codeLabel = new Label();
-            codeLabel.setMinHeight(42);
-            codeLabel.setMinWidth(CODE_LABEL_WIDTH);
-            codeLabel.setMaxWidth(CODE_LABEL_WIDTH);
-            codeLabel.setLayoutX(WIDTH - CODE_LABEL_WIDTH + 25);
-            codeLabel.setLayoutY(11);
-            codeLabel.getStyleClass().add("bisq-amount-input-code-label");
+            rightLabel = new Label();
+            rightLabel.setMinHeight(42);
+            rightLabel.setAlignment(Pos.CENTER_RIGHT);
+            rightLabel.setMinWidth(CODE_LABEL_WIDTH);
+            rightLabel.setMaxWidth(CODE_LABEL_WIDTH);
+            rightLabel.setLayoutX(WIDTH - CODE_LABEL_WIDTH - 13);
+            rightLabel.setLayoutY(11);
+            rightLabel.getStyleClass().add("bisq-amount-input-code-label");
 
-            root.getChildren().addAll(textInputBox, codeLabel);
+            root.getChildren().addAll(textInputBox, rightLabel);
 
             //  Listeners on view component events
             focusListener = (o, old, newValue) -> {
@@ -197,10 +196,6 @@ public class AmountInput {
             amountListener = (o, old, newValue) -> applyAmount(newValue);
         }
 
-        private void applyAmount(Monetary newValue) {
-            textInputBox.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
-        }
-
         @Override
         protected void onViewAttached() {
             if (model.isCreateOffer) {
@@ -212,7 +207,7 @@ public class AmountInput {
             }
             textInputBox.promptTextProperty().bind(model.prompt);
             textInputBox.descriptionTextProperty().bind(model.description);
-            codeLabel.textProperty().bind(model.code);
+            rightLabel.textProperty().bind(model.code);
             model.amount.addListener(amountListener);
             applyAmount(model.amount.get());
         }
@@ -226,8 +221,13 @@ public class AmountInput {
             textInputBox.promptTextProperty().unbind();
             textInputBox.descriptionTextProperty().unbind();
 
-            codeLabel.textProperty().unbind();
+            rightLabel.textProperty().unbind();
             model.amount.removeListener(amountListener);
         }
+
+        private void applyAmount(Monetary newValue) {
+            textInputBox.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
+        }
+
     }
 }

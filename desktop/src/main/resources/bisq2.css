@@ -9,8 +9,9 @@
     -fx-light-text-color: white;
 
     /* Colors */
-    -bisq-green: #25b135;
+    -bisq-green: #56ae48;
     -bisq-dark-green: #2ea33c;
+    -bisq-logo-green: #25b135;
 
     /* Greys */
     -bisq-grey-left-nav-bg: #212121;
@@ -246,7 +247,7 @@
     -fx-background-color: -bisq-grey-left-nav-selected-bg;
 }
 
-.bisq-green {
+.bisq-green-line {
     -fx-background-color: -bisq-green;
 }
 
@@ -280,7 +281,6 @@
     -fx-background-color: -bisq-grey-16;
 }
 
-
 .list-view:focused,
 .tree-view:focused,
 .table-view:focused,
@@ -304,9 +304,52 @@ tree-table-view:focused {
     -fx-background-insets: 0;
 }
 
+/* ScrollPane */
+.scroll-pane {
+    -fx-background-color: -bisq-grey-content-bg;
+}
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:horizontal .thumb:hover,
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: -bs-color-gray-5;
+}
+
+.scroll-bar:horizontal .thumb:pressed,
+.scroll-bar:vertical .thumb:pressed {
+    -fx-background-color: -bs-color-gray-4;
+}
+
+.scroll-bar:vertical:focused,
+.scroll-bar:horizontal:focused {
+    -fx-background-color: transparent, -bs-color-gray-4, -bs-color-gray-4;
+}
+
 .content-pane {
     -fx-background-color: -bisq-grey-content-bg;
 }
+
+#buy-button {
+    -fx-background-color: -bs-buy;
+    -fx-text-fill: -bs-white;
+    -fx-background-insets: 0 0 0 0;
+}
+
+#sell-button {
+    -fx-background-color: -bs-sell;
+    -fx-text-fill: -bs-white;
+    -fx-background-insets: 0 0 0 0;
+}
+
+#button-inactive {
+    -fx-background-color: -bs-color-gray-3;
+    -fx-text-fill: -bs-white;
+    -fx-background-insets: 0 0 0 0;
+}
+
 
 .accordion > .titled-pane > .title > .arrow-button > .arrow {
     -fx-background-color: -bisq-grey-9;

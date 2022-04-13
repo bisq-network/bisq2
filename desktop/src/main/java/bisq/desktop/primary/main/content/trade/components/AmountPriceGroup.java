@@ -21,20 +21,17 @@ import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.Icons;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.AmountInput;
-import bisq.desktop.components.controls.BisqLabel;
-import bisq.i18n.Res;
+import bisq.desktop.components.controls.PriceInput;
 import bisq.offer.spec.Direction;
 import bisq.oracle.marketprice.MarketPriceService;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.scene.control.Label;
+import javafx.geometry.Insets;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -182,8 +179,8 @@ public class AmountPriceGroup {
         private boolean isCreateOffer = true;
 
         private Model(ReadOnlyObjectProperty<Monetary> baseSideAmount,
-                     ReadOnlyObjectProperty<Monetary> quoteSideAmount,
-                     ReadOnlyObjectProperty<Quote> fixPrice) {
+                      ReadOnlyObjectProperty<Monetary> quoteSideAmount,
+                      ReadOnlyObjectProperty<Quote> fixPrice) {
             this.baseSideAmount = baseSideAmount;
             this.quoteSideAmount = quoteSideAmount;
             this.fixPrice = fixPrice;
@@ -191,40 +188,26 @@ public class AmountPriceGroup {
     }
 
     @Slf4j
-    private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqLabel headline;
+    private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
 
         private View(Model model,
-                    Controller controller,
-                    Pane baseAmount,
-                    Pane price,
-                    Pane quoteAmount) {
-            super(new VBox(), model, controller);
+                     Controller controller,
+                     Pane baseAmount,
+                     Pane price,
+                     Pane quoteAmount) {
+            super(new HBox(), model, controller);
 
-            root.setSpacing(0);
+            ImageView crossIcon = ImageUtil.getImageViewById("cross");
+            HBox.setMargin(crossIcon, new Insets(22, 16, 0, 16));
 
-            headline = new BisqLabel(Res.get("createOffer.setAmountAndPrice"));
-            headline.getStyleClass().add("titled-group-bg-label-active");
+            ImageView equalsIcon = ImageUtil.getImageViewById("equals");
+            HBox.setMargin(equalsIcon, new Insets(22, 16, 0, 16));
 
-            Label xLabel = new Label();
-            xLabel.getStyleClass().add("opaque-icon-character");
-            Text xIcon = Icons.getIconForLabel(MaterialDesignIcon.CLOSE, "2em", xLabel);
-            xIcon.getStyleClass().add("opaque-icon");
-
-            Label resultLabel = new Label("=");
-            resultLabel.getStyleClass().add("opaque-icon-character");
-
-            HBox hBox = new HBox();
-            hBox.getChildren().addAll(headline, baseAmount, xLabel, price, resultLabel, quoteAmount);
-
-            root.getChildren().addAll(headline, hBox);
+            root.getChildren().addAll(baseAmount, crossIcon, price, equalsIcon, quoteAmount);
         }
 
         @Override
         protected void onViewAttached() {
-            if (!model.isCreateOffer) {
-                headline.setText(Res.get("takeOffer.amountAndPrice"));
-            }
         }
 
         @Override

@@ -291,28 +291,7 @@ Taken from Bisq. Might need some clean up
 }
 
 /* scrollbars */
-.scroll-pane {
-    -fx-background-color: -bs-scroll-pane-background;
-}
 
-.scroll-bar {
-    -fx-background-color: transparent;
-}
-
-.scroll-bar:horizontal .thumb:hover,
-.scroll-bar:vertical .thumb:hover {
-    -fx-background-color: -bs-color-gray-5;
-}
-
-.scroll-bar:horizontal .thumb:pressed,
-.scroll-bar:vertical .thumb:pressed {
-    -fx-background-color: -bs-color-gray-4;
-}
-
-.scroll-bar:vertical:focused,
-.scroll-bar:horizontal:focused {
-    -fx-background-color: transparent, -bs-color-gray-4, -bs-color-gray-4;
-}
 
 .small-icon-label {
     -fx-fill: -bs-color-gray-11;

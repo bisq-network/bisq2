@@ -31,7 +31,6 @@ public class MainView extends NavigationView<HBox, MainModel, MainController> {
         super(new HBox(), model, controller);
 
         root.setFillHeight(true);
-        
         VBox topPanelAndContentBox = new VBox();
         topPanelAndContentBox.setFillWidth(true);
         topPanelAndContentBox.getChildren().add(topPanelView);

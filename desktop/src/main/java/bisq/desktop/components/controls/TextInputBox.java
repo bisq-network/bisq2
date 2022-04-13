@@ -18,7 +18,7 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.validation.MonetaryValidator;
+import bisq.desktop.common.utils.validation.InputValidator;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -112,7 +112,7 @@ public class TextInputBox extends Pane {
         inputTextField.setText(value);
     }
 
-    public void setValidator(MonetaryValidator validator) {
+    public void setValidator(InputValidator validator) {
         //todo
     }
 }

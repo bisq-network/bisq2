@@ -27,8 +27,17 @@
 #logo-mark-grey {
     -fx-image: url("images/logo_mark_grey.png");
 }
+
 #arrow-down {
     -fx-image: url("images/arrow-down.png");
+}
+
+#cross {
+    -fx-image: url("images/cross.png");
+}
+
+#equals {
+    -fx-image: url("images/equals.png");
 }
 
 #light_close {
@@ -39,10 +48,20 @@
     -fx-image: url("images/trust.png");
 }
 
+#image-buy-white {
+    -fx-image: url("images/buy_white.png");
+}
+
+#image-sell-white {
+    -fx-image: url("images/sell_white.png");
+}
+
+
 /*Left nav*/
 #home {
     -fx-image: url("images/navigation/home.png");
 }
+
 #buy {
     -fx-image: url("images/navigation/buy.png");
 }
@@ -74,6 +93,7 @@
 #accounts {
     -fx-image: url("images/navigation/accounts.png");
 }
+
 #governance {
     -fx-image: url("images/navigation/governance.png");
 }

@@ -509,10 +509,10 @@
     -fx-background-color: -bs-color-primary-dark;
 }
 
-.scroll-bar {
+/*.scroll-bar {
     -fx-background-color: -bs-background-color;
     -fx-background-radius: 0;
-}
+}*/
 
 .scroll-bar:horizontal .track,
 .scroll-bar:vertical .track {
@@ -1803,7 +1803,7 @@ textfield */
     -fx-background-color: -bs-buy;
     -fx-text-fill: -bs-white;
 }
-
+/*
 #buy-button {
     -fx-background-color: -bs-buy;
     -fx-text-fill: -bs-white;
@@ -1812,7 +1812,7 @@ textfield */
 #button-inactive {
     -fx-background-color: -bs-color-gray-3;
     -fx-text-fill: -bs-white;
-}
+}*/
 
 #buy-button-big:hover, #buy-button:hover,
 #buy-button-big:focused, #buy-button:focused {
@@ -1824,11 +1824,13 @@ textfield */
     -fx-text-fill: -bs-white;
     -fx-font-size: 1em;
 }
+/*
 
 #sell-button {
     -fx-background-color: -bs-sell;
     -fx-text-fill: -bs-white;
 }
+*/
 
 #sell-button-big:hover, #sell-button:hover,
 #sell-button-big:focused, #sell-button:focused {

@@ -28,7 +28,7 @@ import bisq.desktop.common.view.CachingController;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
-import bisq.desktop.primary.main.content.trade.components.MarketSelection;
+import bisq.desktop.components.controls.MarketSelection;
 import bisq.desktop.primary.main.content.trade.create.CreateOfferController;
 import bisq.desktop.primary.main.content.trade.take.TakeOfferController;
 import bisq.i18n.Res;

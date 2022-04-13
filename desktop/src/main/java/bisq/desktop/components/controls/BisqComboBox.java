@@ -183,7 +183,7 @@ public class BisqComboBox<T> {
             // log.error("onSelectItem selectItem={} / model={}", selectItem, model.selectedItem.get());
             model.reactOnTextChange = false;
             model.selectedItem.set(selectItem);
-            model.onActionHandler.ifPresent(e->e.run());
+            model.onActionHandler.ifPresent(e -> e.run());
             model.reactOnTextChange = true;
         }
 
@@ -207,7 +207,7 @@ public class BisqComboBox<T> {
         private boolean reactOnTextChange;
         private boolean hasFocus;
         private final BooleanProperty showListView = new SimpleBooleanProperty();
-        private final DoubleProperty prefWidth = new SimpleDoubleProperty(300);
+        private final DoubleProperty prefWidth = new SimpleDoubleProperty(250);
         private final StringProperty description = new SimpleStringProperty("");
         private final StringProperty prompt = new SimpleStringProperty("");
         private final StringProperty text = new SimpleStringProperty();

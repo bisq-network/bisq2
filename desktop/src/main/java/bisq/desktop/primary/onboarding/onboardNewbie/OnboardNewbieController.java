@@ -26,7 +26,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyWordDetection;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.Popup;
-import bisq.desktop.primary.main.content.trade.components.MarketSelection;
+import bisq.desktop.components.controls.MarketSelection;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import bisq.presentation.formatters.AmountFormatter;
