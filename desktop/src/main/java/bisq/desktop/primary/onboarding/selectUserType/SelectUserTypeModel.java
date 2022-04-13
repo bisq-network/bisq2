@@ -17,17 +17,12 @@
 
 package bisq.desktop.primary.onboarding.selectUserType;
 
-import bisq.common.data.ByteArray;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.social.user.ChatUser;
-import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.image.Image;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -36,25 +31,25 @@ public class SelectUserTypeModel implements Model {
     public enum Type {
         NEWBIE(Res.get("satoshisquareapp.selectTraderType.newbie")),
         PRO_TRADER(Res.get("satoshisquareapp.selectTraderType.proTrader"));
-        @Getter
+
         private final String displayString;
 
         Type(String displayString) {
             this.displayString = displayString;
         }
+
+        @Override
+        public String toString() {
+            return displayString;
+        }
     }
 
-    private final String chatUserName;
-    private final Image roboHashImage;
     private final ObservableList<Type> userTypes = FXCollections.observableArrayList();
     private final StringProperty info = new SimpleStringProperty();
     private final StringProperty buttonText = new SimpleStringProperty();
     @Setter
     private SelectUserTypeModel.Type selectedType;
 
-    public SelectUserTypeModel(UserProfileService userProfileService) {
-        ChatUser chatUser = userProfileService.getPersistableStore().getSelectedUserProfile().get().chatUser();
-        chatUserName = chatUser.getUserName();
-        roboHashImage = RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash()));
+    public SelectUserTypeModel() {
     }
 }

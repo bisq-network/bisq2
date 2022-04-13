@@ -2,21 +2,20 @@
 <configuration>
     <appender name="CONSOLE_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%white(%d{HH:mm:ss.SSS}) %highlight(%-5level) %yellow([%thread]) %boldYellow(%logger{10}:)
-                %highlight(%msg %xEx%n)
+            <pattern>%white(%d{HH:mm:ss.SSS}) %highlight(%-5level) %yellow([%thread]) %boldYellow(%logger{10}:) %highlight(%msg %xEx%n)
             </pattern>
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <root level="ERROR">
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="bisq.desktop" level="INFO"/>
+  <!--  <logger name="bisq.desktop" level="INFO"/>
     <logger name="bisq.protocol" level="INFO"/>
     <logger name="bisq.network" level="DEBUG"/>
     <logger name="bisq.persistence" level="WARN"/>
     <logger name="bisq.tor" level="INFO"/>
-    <logger name="bisq.i2p" level="INFO"/>
+    <logger name="bisq.i2p" level="INFO"/>-->
 </configuration>
         

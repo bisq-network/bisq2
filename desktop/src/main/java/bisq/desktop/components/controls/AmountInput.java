@@ -15,25 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.components;
+package bisq.desktop.components.controls;
 
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
-import bisq.desktop.components.controls.BisqInputTextField;
-import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.layout.HBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -161,68 +156,58 @@ public class AmountInput {
         }
     }
 
-    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqInputTextField textInput;
+    public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
+        private final static int WIDTH = 250;
+        private final static int CODE_LABEL_WIDTH = 60;
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
         private final ChangeListener<Monetary> amountListener;
-        private final BisqLabel code;
-        private final BisqLabel descriptionLabel;
+        private final Label rightLabel;
+        private final TextInputBox textInputBox;
 
-        private View(Model model,
-                     Controller controller,
-                     MonetaryValidator validator) {
-            super(new VBox(), model, controller);
+        private View(Model model, Controller controller, MonetaryValidator validator) {
+            super(new Pane(), model, controller);
 
-            textInput = new BisqInputTextField(60);
-            textInput.setMaxWidth(Double.MAX_VALUE);
-            textInput.setValidator(validator);
+            textInputBox = new TextInputBox(Res.get("satoshisquareapp.createOffer.maxAmount"),
+                    Res.get("satoshisquareapp.setDefaultUserProfile.nickName.prompt"));
+            textInputBox.setPrefWidth(WIDTH);
+            textInputBox.setValidator(validator);
 
-            code = new BisqLabel();
-            code.setMinHeight(42);
-            code.setFixWidth(60);
-            code.setAlignment(Pos.CENTER);
+            rightLabel = new Label();
+            rightLabel.setMinHeight(42);
+            rightLabel.setAlignment(Pos.CENTER_RIGHT);
+            rightLabel.setMinWidth(CODE_LABEL_WIDTH);
+            rightLabel.setMaxWidth(CODE_LABEL_WIDTH);
+            rightLabel.setLayoutX(WIDTH - CODE_LABEL_WIDTH - 13);
+            rightLabel.setLayoutY(11);
+            rightLabel.getStyleClass().add("bisq-amount-input-code-label");
 
-            HBox hBox = new HBox();
-            hBox.getStyleClass().add("input-with-border");
-            HBox.setHgrow(textInput, Priority.ALWAYS);
-            hBox.getChildren().addAll(textInput, code);
-
-            descriptionLabel = new BisqLabel();
-            descriptionLabel.setId("input-description-label");
-            descriptionLabel.setPrefWidth(190);
-
-            root.setPadding(new Insets(10, 0, 0, 0));
-            root.setSpacing(2);
-            root.getChildren().addAll(descriptionLabel, hBox);
+            root.getChildren().addAll(textInputBox, rightLabel);
 
             //  Listeners on view component events
             focusListener = (o, old, newValue) -> {
+                log.error("old {}, newValue={}", old, newValue);
                 controller.onFocusChange(newValue);
-                controller.onAmount(textInput.getText());
+                controller.onAmount(textInputBox.getText());
             };
-            textInputListener = (o, old, newValue) -> controller.onAmount(textInput.getText());
+            textInputListener = (o, old, newValue) -> controller.onAmount(textInputBox.getText());
 
             // Listeners on model change
             amountListener = (o, old, newValue) -> applyAmount(newValue);
         }
 
-        private void applyAmount(Monetary newValue) {
-            textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
-        }
-
         @Override
         protected void onViewAttached() {
             if (model.isCreateOffer) {
-                textInput.textProperty().addListener(textInputListener);
-                textInput.focusedProperty().addListener(focusListener);
+                textInputBox.textProperty().addListener(textInputListener);
+                textInputBox.inputTextFieldFocusedProperty().addListener(focusListener);
             } else {
                 // editable/disable changes style. setMouseTransparent is just for prototyping now
-                textInput.setMouseTransparent(true);
+                textInputBox.setMouseTransparent(true);
             }
-            textInput.promptTextProperty().bind(model.prompt);
-            descriptionLabel.textProperty().bind(model.description);
-            code.textProperty().bind(model.code);
+            textInputBox.promptTextProperty().bind(model.prompt);
+            textInputBox.descriptionTextProperty().bind(model.description);
+            rightLabel.textProperty().bind(model.code);
             model.amount.addListener(amountListener);
             applyAmount(model.amount.get());
         }
@@ -230,13 +215,19 @@ public class AmountInput {
         @Override
         protected void onViewDetached() {
             if (model.isCreateOffer) {
-                textInput.textProperty().removeListener(textInputListener);
-                textInput.focusedProperty().removeListener(focusListener);
+                textInputBox.textProperty().removeListener(textInputListener);
+                textInputBox.inputTextFieldFocusedProperty().removeListener(focusListener);
             }
-            textInput.promptTextProperty().unbind();
-            descriptionLabel.textProperty().unbind();
-            code.textProperty().unbind();
+            textInputBox.promptTextProperty().unbind();
+            textInputBox.descriptionTextProperty().unbind();
+
+            rightLabel.textProperty().unbind();
             model.amount.removeListener(amountListener);
         }
+
+        private void applyAmount(Monetary newValue) {
+            textInputBox.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
+        }
+
     }
 }

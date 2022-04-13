@@ -18,12 +18,12 @@
 package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.common.monetary.Market;
-import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
+import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -124,7 +124,7 @@ public class DirectionSelection {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqButton buy, sell;
+        private final Button buy, sell;
         private final ChangeListener<String> baseCodeListener;
         private final ChangeListener<Direction> directionListener;
         private final BisqLabel headline;
@@ -136,15 +136,17 @@ public class DirectionSelection {
             headline = new BisqLabel(Res.get("createOffer.selectOfferType"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
-            buy = new BisqButton();
+            buy = new Button();
             ImageView buyIcon = new ImageView();
             buyIcon.setId("image-buy-white");
             buy.setGraphic(buyIcon);
+            buy.setStyle("-fx-background-radius: 5 0 0 5;");
 
             ImageView sellIcon = new ImageView();
             sellIcon.setId("image-sell-white");
-            sell = new BisqButton();
+            sell = new Button();
             sell.setGraphic(sellIcon);
+            sell.setStyle("-fx-background-radius: 0 5 5 0;");
 
             HBox hBox = new HBox();
             hBox.getChildren().addAll(buy, sell);

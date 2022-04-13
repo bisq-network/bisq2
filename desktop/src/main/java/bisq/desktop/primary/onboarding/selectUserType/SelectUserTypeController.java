@@ -18,9 +18,9 @@
 package bisq.desktop.primary.onboarding.selectUserType;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ public class SelectUserTypeController implements Controller {
     private final SelectUserTypeView view;
 
     public SelectUserTypeController(DefaultApplicationService applicationService) {
-        model = new SelectUserTypeModel(applicationService.getUserProfileService());
+        model = new SelectUserTypeModel();
         view = new SelectUserTypeView(model, this);
 
         model.getUserTypes().addAll(SelectUserTypeModel.Type.NEWBIE, SelectUserTypeModel.Type.PRO_TRADER);

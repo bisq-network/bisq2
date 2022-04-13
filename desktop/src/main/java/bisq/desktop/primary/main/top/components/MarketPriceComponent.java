@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.top.components;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.BisqComboBox;
+import bisq.desktop.components.controls.BisqComboBoxOld;
 import bisq.desktop.layout.Layout;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -144,7 +144,7 @@ public class MarketPriceComponent {
             super(new VBox(), model, controller);
             root.setAlignment(Pos.CENTER_LEFT);
 
-            ComboBox<ListItem> comboBox = new BisqComboBox<>();
+            ComboBox<ListItem> comboBox = new BisqComboBoxOld<>();
             comboBox.setVisibleRowCount(12);
             comboBox.setFocusTraversable(false);
             comboBox.setId("price-feed-combo");

@@ -83,7 +83,7 @@ public class OpenOffersView extends View<VBox, OpenOffersModel, OpenOffersContro
                 .valueSupplier(OpenOfferListItem::getOptions)
                 .build());*/
         tableView.getColumns().add(new BisqTableColumn.Builder<OpenOfferListItem>()
-                .fixWidth(100)
+                .fixWidth(150)
                 .value(Res.get("remove"))
                 .cellFactory(BisqTableColumn.CellFactory.BUTTON)
                 .buttonClass(BisqIconButton.class)

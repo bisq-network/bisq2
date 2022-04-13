@@ -25,6 +25,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.InitWithDataController;
+import bisq.desktop.components.controls.MarketSelection;
 import bisq.desktop.primary.main.content.trade.components.*;
 import bisq.offer.OpenOfferService;
 import bisq.offer.spec.Direction;

@@ -153,13 +153,10 @@ tasks.jpackage {
 
     additionalParameters = ['--verbose']
 
-    // TODO Choose sane defaults
     javaOptions = [
-            '-Dfile.encoding=UTF-8',
-            '-Dbisq.application.appName=bisq_Alice',
-            '-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR',
-            '-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000',
-            '-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001'
+            '--add-exports', 'javafx.controls/com.sun.javafx.scene.control.behavior=ALL-UNNAMED',
+            '--add-exports', 'javafx.controls/com.sun.javafx.scene.control=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED'
     ]
 
     doFirst() {

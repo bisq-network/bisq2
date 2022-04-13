@@ -64,6 +64,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
+    
 
         line = new Region();
         line.getStyleClass().add("bisq-darkest-bg");
@@ -71,7 +72,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         line.setMinHeight(lineHeight);
 
         selectionMarker = new Region();
-        selectionMarker.getStyleClass().add("bisq-green");
+        selectionMarker.getStyleClass().add("bisq-green-line");
         selectionMarker.setMinHeight(lineHeight);
 
         Pane lineAndMarker = new Pane();

@@ -50,7 +50,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
 
         vBox = new VBox();
         vBox.setAlignment(Pos.TOP_CENTER);
-        vBox.setSpacing(50);
+        vBox.setSpacing(30);
         vBox.getStyleClass().add("content-pane");
 
         root.setContent(vBox);
@@ -64,33 +64,37 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         Label headLineLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.headline"));
         headLineLabel.setWrapText(true);
         headLineLabel.getStyleClass().add("bisq-big-light-headline-label");
-        VBox.setMargin(headLineLabel, new Insets(48, 200, 0, 200));
+        VBox.setMargin(headLineLabel, new Insets(50, 200, 0, 200));
         VBox.setVgrow(headLineLabel, Priority.ALWAYS);
 
         Label subTitleLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.subTitle"));
         subTitleLabel.setWrapText(true);
         subTitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subTitleLabel.getStyleClass().add("bisq-sub-title-label");
-        VBox.setMargin(subTitleLabel, new Insets(-33, 200, 0, 200));
+        int inputWidth = 450;
+        subTitleLabel.setMaxWidth(inputWidth);
+        subTitleLabel.getStyleClass().add("bisq-small-light-label-dimmed");
+        VBox.setMargin(subTitleLabel, new Insets(0, 200, 0, 200));
         VBox.setVgrow(subTitleLabel, Priority.ALWAYS);
 
         nicknameTextInputBox = new TextInputBox(Res.get("satoshisquareapp.setDefaultUserProfile.nickName"),
                 Res.get("satoshisquareapp.setDefaultUserProfile.nickName.prompt"));
-        nicknameTextInputBox.setPrefWidth(520);
+        nicknameTextInputBox.setPrefWidth(inputWidth);
 
         roboIconWithId = new LargeRoboIconWithId();
         Tooltip.install(roboIconWithId, new Tooltip(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.button")));
 
         Label tryOtherInfoLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.info"));
         tryOtherInfoLabel.setWrapText(true);
+        tryOtherInfoLabel.setMaxWidth(inputWidth);
+        tryOtherInfoLabel.setAlignment(Pos.CENTER);
         tryOtherInfoLabel.setTextAlignment(TextAlignment.CENTER);
-        tryOtherInfoLabel.getStyleClass().add("bisq-sub-title-label");
+        tryOtherInfoLabel.getStyleClass().add("bisq-small-light-label-dimmed");
         VBox.setVgrow(tryOtherInfoLabel, Priority.ALWAYS);
-        VBox.setMargin(tryOtherInfoLabel, new Insets(-10, 0, -10, 0));
+        VBox.setMargin(tryOtherInfoLabel, new Insets(0, 0, 0, 0));
 
         createUserButton = new Button(Res.get("satoshisquareapp.setDefaultUserProfile.done"));
-        createUserButton.getStyleClass().add("bisq-button-2");
-        VBox.setMargin(createUserButton, new Insets(0, 0, 100, 0));
+        createUserButton.getStyleClass().add("bisq-button");
+        VBox.setMargin(createUserButton, new Insets(0, 0, 50, 0));
 
         vBox.getChildren().addAll(
                 headLineLabel,
@@ -124,7 +128,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         });
         roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
             if (roboIcon != null) {
-                roboIconWithId.setImage(roboIcon);
+                roboIconWithId.setRoboHashImage(roboIcon);
             }
             roboIconWithId.setVisible(roboIcon != null);
         });

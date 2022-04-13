@@ -15,14 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.components;
+package bisq.desktop.components.controls;
 
 import bisq.common.monetary.Market;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.PriceValidator;
-import bisq.desktop.components.controls.BisqInputTextField;
-import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -30,12 +28,9 @@ import bisq.presentation.formatters.QuoteFormatter;
 import bisq.presentation.parser.PriceParser;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.layout.HBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -166,76 +161,69 @@ public class PriceInput {
         }
     }
 
-    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqInputTextField textInput;
+    public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
+        private final static int WIDTH = 250;
+        private final static int CODE_LABEL_WIDTH = 60;
+        private final TextInputBox textInputBox;
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
         private final ChangeListener<Quote> fixPriceListener;
-        private final BisqLabel marketLabel;
-        private final BisqLabel descriptionLabel;
+        private final Label rightLabel;
 
-        private View(Model model,
-                     Controller controller,
-                     PriceValidator validator) {
-            super(new VBox(), model, controller);
+        private View(Model model, Controller controller, PriceValidator validator) {
+            super(new Pane(), model, controller);
 
-            textInput = new BisqInputTextField(60);
-            textInput.setPromptText(Res.get("createOffer.price.fix.prompt"));
-            textInput.setMaxWidth(Double.MAX_VALUE);
-            textInput.setValidator(validator);
+            textInputBox = new TextInputBox(model.description.get(), Res.get("createOffer.price.fix.prompt"));
+            textInputBox.setPrefWidth(WIDTH);
+            textInputBox.setValidator(validator);
 
-            marketLabel = new BisqLabel();
-            marketLabel.setMinHeight(42);
-            marketLabel.setFixWidth(100);
-            marketLabel.setAlignment(Pos.CENTER);
+            rightLabel = new Label();
+            rightLabel.setMinHeight(42);
+            rightLabel.setAlignment(Pos.CENTER_RIGHT);
+            rightLabel.setMinWidth(CODE_LABEL_WIDTH);
+            rightLabel.setMaxWidth(CODE_LABEL_WIDTH);
+            rightLabel.setLayoutX(WIDTH - CODE_LABEL_WIDTH - 13);
+            rightLabel.setLayoutY(11);
+            rightLabel.getStyleClass().add("bisq-amount-input-code-label");
 
-            HBox hBox = new HBox();
-            hBox.getStyleClass().add("input-with-border");
-            HBox.setHgrow(textInput, Priority.ALWAYS);
-            hBox.getChildren().addAll(textInput, marketLabel);
+            root.getChildren().addAll(textInputBox, rightLabel);
 
-            descriptionLabel = new BisqLabel();
-            descriptionLabel.setId("input-description-label");
-            descriptionLabel.setPrefWidth(190);
-
-            root.setPadding(new Insets(10, 0, 0, 0));
-            root.setSpacing(2);
-            root.getChildren().addAll(descriptionLabel, hBox);
 
             //  Listeners on view component events
             focusListener = (o, old, newValue) -> {
                 controller.onFocusChange(newValue);
-                controller.onFixPriceInput(textInput.getText());
+                controller.onFixPriceInput(textInputBox.getText());
             };
-            textInputListener = (o, old, newValue) -> controller.onFixPriceInput(textInput.getText());
+            textInputListener = (o, old, newValue) -> controller.onFixPriceInput(textInputBox.getText());
 
             // Listeners on model change
-            fixPriceListener = (o, old, newValue) -> textInput.setText(newValue == null ? "" : QuoteFormatter.format(newValue));
+            fixPriceListener = (o, old, newValue) -> textInputBox.setText(newValue == null ? "" : QuoteFormatter.format(newValue));
         }
 
         @Override
         protected void onViewAttached() {
             if (model.isCreateOffer) {
-                textInput.textProperty().addListener(textInputListener);
-                textInput.focusedProperty().addListener(focusListener);
+                textInputBox.textProperty().addListener(textInputListener);
+                textInputBox.focusedProperty().addListener(focusListener);
             } else {
                 // editable/disable changes style. setMouseTransparent is just for prototyping now
-                textInput.setMouseTransparent(true);
+                textInputBox.setMouseTransparent(true);
             }
-            marketLabel.textProperty().bind(model.marketString);
-            descriptionLabel.textProperty().bind(model.description);
+            rightLabel.textProperty().bind(model.marketString);
+
+            textInputBox.descriptionTextProperty().bind(model.description);
             model.fixPrice.addListener(fixPriceListener);
-            textInput.setText(model.fixPrice.get() == null ? "" : QuoteFormatter.format(model.fixPrice.get()));
+            textInputBox.setText(model.fixPrice.get() == null ? "" : QuoteFormatter.format(model.fixPrice.get()));
         }
 
         @Override
         protected void onViewDetached() {
             if (model.isCreateOffer) {
-                textInput.textProperty().removeListener(textInputListener);
-                textInput.focusedProperty().removeListener(focusListener);
+                textInputBox.textProperty().removeListener(textInputListener);
+                textInputBox.focusedProperty().removeListener(focusListener);
             }
-            marketLabel.textProperty().unbind();
-            descriptionLabel.textProperty().unbind();
+            rightLabel.textProperty().unbind();
+            textInputBox.descriptionTextProperty().unbind();
             model.fixPrice.removeListener(fixPriceListener);
         }
     }

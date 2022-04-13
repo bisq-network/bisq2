@@ -34,9 +34,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -162,75 +162,80 @@ public class PaymentMethodsSelection {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqComboBox<String> comboBox;
         private final ListChangeListener<String> selectedPaymentMethodsListener;
-        private final HBox box;
-        private final BisqLabel description;
+        private final FlowPane selectedPaymentMethodsBox;
         private final ChangeListener<String> selectedItemListener;
         private final BisqLabel maxPaymentMethods;
+        private final ListChangeListener<String> paymentMethodsListener;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
 
-            description = new BisqLabel();
-            description.setPadding(new Insets(0, 0, 2, 0));
-            description.setId("small-info-label");
             maxPaymentMethods = new BisqLabel(Res.get("satoshisquareapp.createOffer.paymentMethods.max"));
             maxPaymentMethods.setPadding(new Insets(3, 0, 0, 0));
-            maxPaymentMethods.setId("small-info-label");
+            maxPaymentMethods.getStyleClass().add("bisq-small-light-label-dimmed");
             maxPaymentMethods.setAlignment(Pos.CENTER_RIGHT);
             maxPaymentMethods.setPadding(new Insets(3, 5, 0, 0));
 
             comboBox = new BisqComboBox<>();
-            comboBox.setItems(model.paymentMethods);
+            comboBox.setDescription(model.description.get());
 
-            box = new HBox();
-            box.setSpacing(10);
-            box.setPadding(new Insets(10, 0, 0, 0));
-            root.getChildren().addAll(description, comboBox, maxPaymentMethods, box);
+            selectedPaymentMethodsBox = new FlowPane();
+            selectedPaymentMethodsBox.setHgap(10);
+            selectedPaymentMethodsBox.setVgap(10);
+            selectedPaymentMethodsBox.setPadding(new Insets(10, 0, 0, 0));
+
+            root.getChildren().addAll(comboBox.getRoot(), maxPaymentMethods, selectedPaymentMethodsBox);
 
             selectedPaymentMethodsListener = c -> {
                 c.next();
-                box.getChildren().clear();
+                selectedPaymentMethodsBox.getChildren().clear();
                 model.selectedPaymentMethods.forEach(paymentMethod -> {
-                    box.getChildren().add(getPaymentMethodItem(paymentMethod));
+                    selectedPaymentMethodsBox.getChildren().add(getPaymentMethodItem(paymentMethod));
                 });
             };
-            selectedItemListener = (observable, oldValue, newValue) -> controller.onAddPaymentMethod(comboBox.getSelectionModel().getSelectedItem());
-        }
-
-        private Node getPaymentMethodItem(String paymentMethod) {
-            ImageView icon = ImageUtil.getImageViewById("light_close");
-            Label label = new Label(paymentMethod);
-            label.setStyle("-fx-text-fill: #222");
-            label.setPadding(new Insets(3, 5, 3, 10));
-            Button button = new Button();
-            button.setCursor(Cursor.HAND);
-            button.setStyle("-fx-background-color: transparent");
-            button.setPadding(new Insets(2, 4, 0, 0));
-            button.setGraphic(icon);
-            button.setOnAction(e -> controller.onRemovePaymentMethod(paymentMethod));
-            HBox hBox = Layout.hBoxWith(label, button);
-            hBox.setStyle("-fx-background-color: #eee; -fx-background-radius: 7");
-            return hBox;
+            selectedItemListener = (observable, oldValue, newValue) -> {
+                controller.onAddPaymentMethod(comboBox.getSelectedItem());
+                comboBox.selectItem(null);
+            };
+            paymentMethodsListener = c -> comboBox.setItems(model.paymentMethods);
         }
 
         @Override
         protected void onViewAttached() {
-            comboBox.disableProperty().bind(model.selectPaymentMethodsDisabled);
-            description.textProperty().bind(model.description);
-            comboBox.prefWidthProperty().bind(model.width);
-            comboBox.getSelectionModel().selectedItemProperty().addListener(selectedItemListener);
+            comboBox.getRoot().disableProperty().bind(model.selectPaymentMethodsDisabled);
+            comboBox.descriptionProperty().bind(model.description);
+            comboBox.getRoot().prefWidthProperty().bind(model.width);
+            maxPaymentMethods.prefWidthProperty().bind(comboBox.getRoot().widthProperty());
+            
+            comboBox.selectedItemProperty().addListener(selectedItemListener);
             model.selectedPaymentMethods.addListener(selectedPaymentMethodsListener);
-            maxPaymentMethods.prefWidthProperty().bind(comboBox.widthProperty());
+            model.paymentMethods.addListener(paymentMethodsListener);
+            
+            comboBox.setItems(model.paymentMethods);
         }
 
         @Override
         protected void onViewDetached() {
-            comboBox.disableProperty().unbind();
-            description.textProperty().unbind();
-            comboBox.prefWidthProperty().unbind();
-            comboBox.getSelectionModel().selectedItemProperty().removeListener(selectedItemListener);
-            model.selectedPaymentMethods.removeListener(selectedPaymentMethodsListener);
+            comboBox.getRoot().disableProperty().unbind();
+            comboBox.descriptionProperty().unbind();
+            comboBox.getRoot().prefWidthProperty().unbind();
             maxPaymentMethods.prefWidthProperty().unbind();
+            
+            comboBox.selectedItemProperty().removeListener(selectedItemListener);
+            model.selectedPaymentMethods.removeListener(selectedPaymentMethodsListener);
+            model.paymentMethods.removeListener(paymentMethodsListener);
+        }
+
+        private Node getPaymentMethodItem(String paymentMethod) {
+            Label label = new Label(paymentMethod);
+            label.getStyleClass().add("payment-methods-label");
+            ImageView icon = ImageUtil.getImageViewById("light_close");
+            icon.setCursor(Cursor.HAND);
+            HBox.setMargin(icon, new Insets(3, 3, 0, 0));
+            icon.setOnMousePressed(e -> controller.onRemovePaymentMethod(paymentMethod));
+            HBox hBox = Layout.hBoxWith(label, icon);
+            hBox.getStyleClass().add("payment-methods-icon-button-bg");
+            return hBox;
         }
     }
 }

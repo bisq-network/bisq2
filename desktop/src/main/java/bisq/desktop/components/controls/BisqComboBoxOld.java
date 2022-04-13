@@ -15,20 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content;
+package bisq.desktop.components.controls;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.NavigationModel;
-import lombok.extern.slf4j.Slf4j;
+import com.jfoenix.controls.JFXComboBox;
+import javafx.collections.ObservableList;
 
-@Slf4j
-
-public class ContentModel extends NavigationModel {
-    public ContentModel() {
+public class BisqComboBoxOld<T> extends JFXComboBox<T> {
+    public BisqComboBoxOld(String title) {
+        this();
+        setPromptText(title);
     }
 
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.CHAT;
+    public BisqComboBoxOld(ObservableList<T> items) {
+        this();
+        setItems(items);
+    }
+
+    public BisqComboBoxOld() {
+        setLabelFloat(true);
     }
 }

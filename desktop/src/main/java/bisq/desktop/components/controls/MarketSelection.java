@@ -15,20 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.components;
+package bisq.desktop.components.controls;
 
 import bisq.common.monetary.Market;
-import bisq.desktop.components.controls.BisqComboBox;
-import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
@@ -55,6 +51,10 @@ public class MarketSelection {
 
     public void setSelectedMarket(Market market) {
         controller.model.selectedMarket.set(market);
+    }
+
+    public void setPrefWidth(double prefWidth) {
+        controller.model.prefWidth.set(prefWidth);
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -88,6 +88,7 @@ public class MarketSelection {
         private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
         private final ObservableList<Market> markets = FXCollections.observableArrayList();
         private final SettingsService settingsService;
+        private final DoubleProperty prefWidth = new SimpleDoubleProperty(250);
 
         public Model(SettingsService settingsService) {
             this.settingsService = settingsService;
@@ -98,17 +99,17 @@ public class MarketSelection {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqComboBox<Market> comboBox;
         private final ChangeListener<Market> selectedMarketListener;
+        private final ListChangeListener<Market> marketsListener;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-            Label headline = new BisqLabel(Res.get("createOffer.selectMarket"));
-            headline.getStyleClass().add("titled-group-bg-label-active");
+            root.setMaxWidth(model.prefWidth.get());
 
             comboBox = new BisqComboBox<>();
-            comboBox.setVisibleRowCount(12);
-            comboBox.setItems(model.markets);
+            comboBox.setDescription(Res.get("markets"));
+            comboBox.setPrefWidth(model.prefWidth.get());
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(@Nullable Market value) {
@@ -121,23 +122,28 @@ public class MarketSelection {
                 }
             });
 
-            root.getChildren().addAll(headline, comboBox);
+            root.getChildren().addAll(comboBox.getRoot());
 
             // From model
-            selectedMarketListener = (o, old, newValue) -> comboBox.getSelectionModel().select(newValue);
+            selectedMarketListener = (o, old, newValue) -> comboBox.selectItem(newValue);
+
+            marketsListener = c -> comboBox.setItems(model.markets);
         }
 
         @Override
         protected void onViewAttached() {
-            comboBox.setOnAction(e -> controller.onSelectMarket(comboBox.getSelectionModel().getSelectedItem()));
+            comboBox.setOnAction(() -> controller.onSelectMarket(comboBox.getSelectedItem()));
             model.selectedMarket.addListener(selectedMarketListener);
-            comboBox.getSelectionModel().select(model.selectedMarket.get());
+            comboBox.selectItem(model.selectedMarket.get());
+            model.markets.addListener(marketsListener);
+            comboBox.setItems(model.markets);
         }
 
         @Override
         protected void onViewDetached() {
             comboBox.setOnAction(null);
-            model.selectedMarket.addListener(selectedMarketListener);
+            model.selectedMarket.removeListener(selectedMarketListener);
+            model.markets.removeListener(marketsListener);
         }
     }
 }

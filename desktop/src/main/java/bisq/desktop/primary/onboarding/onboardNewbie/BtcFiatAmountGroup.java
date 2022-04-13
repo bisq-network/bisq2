@@ -23,7 +23,7 @@ import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqLabel;
-import bisq.desktop.primary.main.content.trade.components.AmountInput;
+import bisq.desktop.components.controls.AmountInput;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import bisq.oracle.marketprice.MarketPrice;
@@ -187,7 +187,7 @@ class BtcFiatAmountGroup {
     }
 
     @Slf4j
-    private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+    private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final BisqLabel maxAmountLabel, marketPriceLabel;
         private final Pane baseAmount, quoteAmount;
 
@@ -195,22 +195,17 @@ class BtcFiatAmountGroup {
                      Controller controller,
                      Pane baseAmount,
                      Pane quoteAmount) {
-            super(new VBox(), model, controller);
+            super(new HBox(), model, controller);
 
             this.baseAmount = baseAmount;
             this.quoteAmount = quoteAmount;
-
-            root.setSpacing(0);
             
-            BisqLabel headline = new BisqLabel(Res.get("satoshisquareapp.createOffer.setAmount"));
-            headline.getStyleClass().add("titled-group-bg-label-active");
-
             VBox baseAmountBox = new VBox();
             baseAmountBox.setSpacing(3);
             maxAmountLabel = new BisqLabel(Res.get("satoshisquareapp.createOffer.maxAmount"));
             maxAmountLabel.setAlignment(Pos.CENTER_RIGHT);
             maxAmountLabel.setPadding(new Insets(0, 5, 0, 0));
-            maxAmountLabel.setId("small-info-label");
+            maxAmountLabel.getStyleClass().add("bisq-small-light-label-dimmed");
             baseAmountBox.getChildren().addAll(baseAmount, maxAmountLabel);
 
             VBox quoteAmountBox = new VBox();
@@ -218,13 +213,10 @@ class BtcFiatAmountGroup {
             marketPriceLabel = new BisqLabel();
             marketPriceLabel.setAlignment(Pos.CENTER_RIGHT);
             marketPriceLabel.setPadding(new Insets(0, 5, 0, 0));
-            marketPriceLabel.setId("small-info-label");
+            marketPriceLabel.getStyleClass().add("bisq-small-light-label-dimmed");
             quoteAmountBox.getChildren().addAll(quoteAmount, marketPriceLabel);
 
-            HBox hBox = new HBox();
-            hBox.getChildren().addAll(headline, baseAmountBox, Spacer.width(20), quoteAmountBox);
-
-            root.getChildren().addAll(headline, hBox);
+            root.getChildren().addAll(baseAmountBox, Spacer.width(20), quoteAmountBox);
         }
 
         @Override

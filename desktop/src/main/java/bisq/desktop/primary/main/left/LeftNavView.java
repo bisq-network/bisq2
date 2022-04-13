@@ -135,7 +135,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         logoCollapsed.setLayoutY(logoExpanded.getLayoutY());
 
         selectionMarker = new Region();
-        selectionMarker.getStyleClass().add("bisq-green");
+        selectionMarker.getStyleClass().add("bisq-green-line");
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
         vBox.getChildren().addAll(social, trade, portfolio, markets, wallet, support, settings);

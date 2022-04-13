@@ -9,8 +9,9 @@
     -fx-light-text-color: white;
 
     /* Colors */
-    -bisq-green: #25b135;
+    -bisq-green: #56ae48;
     -bisq-dark-green: #2ea33c;
+    -bisq-logo-green: #25b135;
 
     /* Greys */
     -bisq-grey-left-nav-bg: #212121;
@@ -25,6 +26,11 @@
     -bisq-grey-11: #C9C9C9;
     -bisq-grey-12: #2E2E2E;
     -bisq-grey-13: #6A6A6A;
+    -bisq-grey-14: #474747;
+    -bisq-grey-15: #292929;
+    -bisq-grey-16: #393939;
+    -bisq-grey-17: #2f2f2f;
+
 
     /* Background colors */
     -bisq-background-color-darkest: -bisq-grey-left-nav-selected-bg;
@@ -46,6 +52,7 @@
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 4.1em;
 }
+
 .bisq-text-headline-2 {
     -fx-fill: -bisq-text-color-white;
     -fx-font-family: "IBM Plex Sans Light";
@@ -62,7 +69,7 @@
 /*.robo-hash-user-name-label{
     -fx-text-fill: -bisq-text-color-white;
    !* -fx-font-family: "IBM Plex Sans Light";*!
-    -fx-font-size: 1.2em;
+    -fx-font-size: 1.25em;
     -fx-fill: red;
     
 }*/
@@ -87,13 +94,13 @@
 }
 
 .bisq-small-light-label {
-    -fx-font-size: 0.86em;
+    -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -fx-light-text-color;
 }
 
 .bisq-small-light-label-dimmed {
-    -fx-font-size: 0.86em;
+    -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-grey-13;
 }
@@ -105,13 +112,13 @@
 }
 
 .bisq-tab-button-label {
-    -fx-font-size: 0.86em;
+    -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-grey-8;
 }
 
 .bisq-tab-button-label-selected {
-    -fx-font-size: 0.86em;
+    -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-green;
 }
@@ -128,41 +135,45 @@
 
 .bisq-nav-label {
     -fx-text-fill: -fx-mid-text-color;
-    -fx-font-size: 1.15em;
+    -fx-font-size: 1.25em;
 }
 
 .bisq-nav-label-selected {
     -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1.15em;
+    -fx-font-size: 1.25em;
 }
 
 .bisq-grey-dimmed {
     -fx-text-fill: -bisq-grey-13;
 }
 
+
 /* TextInputBox */
 .bisq-input-box-top-pane {
-    -fx-background-color: #2E2E2E;
+    -fx-background-color: -bisq-grey-12;
     -fx-background-radius: 4;
 }
 
-.bisq-input-box-top-label {
-    -fx-text-fill: #737373;
-    -fx-font-size: 0.86em;
-}
-
-.bisq-input-box-prompt-label {
-    -fx-text-fill: #4E4E4E;
-    -fx-font-size: 1.15em;
+.bisq-input-box-description-label {
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-input-box-text-input {
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
     -fx-text-fill: white;
-    -fx-font-size: 1.15em;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
+/* AmountInput */
+.bisq-amount-input-code-label {
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
 
 /* Button */
 
@@ -184,9 +195,9 @@
     -fx-background-color: -bisq-background-color-gray;
 }
 
-.bisq-button-2 {
-    -fx-background-color: -bisq-dark-green;
-    -fx-background-radius: 2.5;
+.button {
+    -fx-background-color: -bisq-grey-17;
+    -fx-background-radius: 3;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
     -fx-border-style: none;
@@ -194,14 +205,29 @@
     -fx-cursor: hand;
 }
 
-.bisq-button-2:hover {
+.button:default {
+    -fx-background-color: -bisq-dark-green;
+}
+
+.button:hover {
     -fx-background-color: -bisq-green;
 }
 
-.bisq-button-2:disabled {
+.button:disabled {
     -fx-background-color: -bisq-grey-12;
 }
 
+/* PaymentMethodItem */
+
+.payment-methods-icon-button-bg {
+    -fx-background-color: #eee;
+    -fx-background-radius: 7;
+}
+
+.payment-methods-label {
+    -fx-text-fill: #222;
+    -fx-padding: 5 4 5 10
+}
 
 /* Containers */
 .bisq-box-1 {
@@ -213,24 +239,117 @@
     -fx-background-color: -bisq-grey-left-nav-bg;
 }
 
+#bisq-darkest-bg1 {
+    -fx-background-color: -bisq-grey-left-nav-bg;
+}
+
 .bisq-dark-bg {
     -fx-background-color: -bisq-grey-left-nav-selected-bg;
 }
 
-.bisq-green {
+.bisq-green-line {
     -fx-background-color: -bisq-green;
 }
 
 .bisq-grey-line {
     -fx-background-color: -bisq-grey-6;
 }
+
 .bisq-content-bg {
     -fx-background-color: -bisq-grey-content-bg;
+}
+
+/* Combo-box ListView */
+.bisq-combo-box-list-view {
+    -fx-background-color: -bisq-grey-15;
+    -fx-border-color: -bisq-grey-left-nav-bg;;
+    -fx-border-width: 1;
+    -fx-border-insets: 0 0 0 0;
+    -fx-padding: 0 0 0 0;
+    -fx-background-insets: 0 0 0 0;
+}
+
+.bisq-combo-box-list-view .list-cell:odd, .bisq-combo-box-list-view .list-cell:even {
+    -fx-background-color: -bisq-grey-left-nav-bg;
+    -fx-font-size: 1.05em;
+    -fx-padding: 0 0 0 22;
+    -fx-background-insets: 0 0 1 0;
+    -fx-pref-height: 40px;
+}
+
+.bisq-combo-box-list-view .list-cell:selected {
+    -fx-background-color: -bisq-grey-16;
+}
+
+.list-view:focused,
+.tree-view:focused,
+.table-view:focused,
+.tree-table-view:focused,
+.table-view:focused,
+tree-table-view:focused {
+    -fx-background-insets: 0;
+    -fx-border-color: -bisq-grey-left-nav-bg;
+}
+
+.list-view:focused {
+}
+
+/* Selected rows */
+.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected,
+.tree-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-cell:filled:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell:filled:selected,
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell:filled:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell .table-cell:selected,
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell .tree-table-cell:selected {
+    -fx-background-insets: 0;
+}
+
+/* ScrollPane */
+.scroll-pane {
+    -fx-background-color: -bisq-grey-content-bg;
+}
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:horizontal .thumb:hover,
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: -bs-color-gray-5;
+}
+
+.scroll-bar:horizontal .thumb:pressed,
+.scroll-bar:vertical .thumb:pressed {
+    -fx-background-color: -bs-color-gray-4;
+}
+
+.scroll-bar:vertical:focused,
+.scroll-bar:horizontal:focused {
+    -fx-background-color: transparent, -bs-color-gray-4, -bs-color-gray-4;
 }
 
 .content-pane {
     -fx-background-color: -bisq-grey-content-bg;
 }
+
+#buy-button {
+    -fx-background-color: -bs-buy;
+    -fx-text-fill: -bs-white;
+    -fx-background-insets: 0 0 0 0;
+}
+
+#sell-button {
+    -fx-background-color: -bs-sell;
+    -fx-text-fill: -bs-white;
+    -fx-background-insets: 0 0 0 0;
+}
+
+#button-inactive {
+    -fx-background-color: -bs-color-gray-3;
+    -fx-text-fill: -bs-white;
+    -fx-background-insets: 0 0 0 0;
+}
+
 
 .accordion > .titled-pane > .title > .arrow-button > .arrow {
     -fx-background-color: -bisq-grey-9;
@@ -431,10 +550,6 @@ New css for bisq2.
     -fx-font-size: 0.85em;
 }
 
-#small-info-label {
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 0.85em;
-}
 
 .keyword-tradeTags {
     -fx-fill: -bs-buy-hover;

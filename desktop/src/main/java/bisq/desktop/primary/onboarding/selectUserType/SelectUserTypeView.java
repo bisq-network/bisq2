@@ -18,89 +18,108 @@
 package bisq.desktop.primary.onboarding.selectUserType;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.SectionBox;
-import bisq.desktop.components.controls.BisqButton;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqComboBox;
-import bisq.desktop.components.controls.BisqLabel;
+import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.ComboBox;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.StringConverter;
+import javafx.scene.text.TextAlignment;
+import lombok.extern.slf4j.Slf4j;
 
-public class SelectUserTypeView extends View<HBox, SelectUserTypeModel, SelectUserTypeController> {
-    private final ComboBox<SelectUserTypeModel.Type> userTypeBox;
-    private final BisqLabel info;
-    private final BisqButton button;
+@Slf4j
+public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, SelectUserTypeController> {
+    private final VBox vBox;
+    private final Button nextButton;
+    private final BisqComboBox<SelectUserTypeModel.Type> userTypeBox;
+    private final Label info;
 
     public SelectUserTypeView(SelectUserTypeModel model, SelectUserTypeController controller) {
-        super(new HBox(), model, controller);
+        super(new ScrollPane(), model, controller);
 
-        root.setAlignment(Pos.TOP_CENTER);
-        // root.getStyleClass().add("content-pane");
-        root.setFillHeight(false);
+        vBox = new VBox();
+        vBox.setAlignment(Pos.TOP_CENTER);
+        vBox.setSpacing(30);
+        vBox.getStyleClass().add("content-pane");
 
-        ImageView roboIconImageView = new ImageView();
-        roboIconImageView.setImage(model.getRoboHashImage());
-        VBox.setMargin(roboIconImageView, new Insets(10, 0, 0, 0));
+        root.setContent(vBox);
+        root.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        root.setFitToWidth(true);
+        // We must set setFitToHeight false as otherwise text wrapping does not work at labels
+        // We need to apply prefViewportHeight once we know our vbox height.
+        root.setFitToHeight(false);
+        root.getStyleClass().add("content-pane");
 
-        Label userName = new Label(model.getChatUserName());
-        userName.setStyle("-fx-background-color: -bs-content-background-gray;-fx-text-fill: -fx-dark-text-color;");
-        userName.setMaxWidth(300);
-        userName.setMinWidth(300);
-        userName.setAlignment(Pos.CENTER);
-        userName.setPadding(new Insets(7, 7, 7, 7));
-        VBox.setMargin(userName, new Insets(-30, 0, 0, 0));
+        Label headLineLabel = new Label(Res.get("satoshisquareapp.selectTraderType.headline"));
+        headLineLabel.setWrapText(true);
+        headLineLabel.getStyleClass().add("bisq-big-light-headline-label");
+        VBox.setMargin(headLineLabel, new Insets(50, 200, 0, 200));
+        VBox.setVgrow(headLineLabel, Priority.ALWAYS);
+
+        Label subTitleLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.subTitle"));
+        subTitleLabel.setWrapText(true);
+        subTitleLabel.setTextAlignment(TextAlignment.CENTER);
+        int width = 450;
+        subTitleLabel.setMaxWidth(width);
+        subTitleLabel.getStyleClass().add("bisq-small-light-label-dimmed");
+        VBox.setMargin(subTitleLabel, new Insets(0, 200, 0, 200));
+        VBox.setVgrow(subTitleLabel, Priority.ALWAYS);
+
+        info = new Label();
+        info.setWrapText(true);
+        info.setMaxWidth(width);
+        info.setTextAlignment(TextAlignment.CENTER);
+        info.getStyleClass().add("bisq-sub-title-label");
+        VBox.setVgrow(info, Priority.ALWAYS);
+        VBox.setMargin(info, new Insets(0, 0, 0, 0));
 
         userTypeBox = new BisqComboBox<>();
-        userTypeBox.setItems(model.getUserTypes());
-        userTypeBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(SelectUserTypeModel.Type value) {
-                return value != null ? value.getDisplayString() : "";
-            }
+        userTypeBox.setDescription(Res.get("satoshisquareapp.selectTraderType.description"));
+        userTypeBox.setPrefWidth(width);
+        
+        nextButton = new Button(Res.get("shared.nextStep"));
+        nextButton.setDefaultButton(true);
+        VBox.setMargin(nextButton, new Insets(0, 0, 50, 0));
 
-            @Override
-            public SelectUserTypeModel.Type fromString(String string) {
-                return null;
-            }
-        });
+        Pane userTypeBoxRoot = userTypeBox.getRoot();
+        VBox.setMargin(userTypeBoxRoot, new Insets(0, 0, 50, userTypeBoxRoot.getWidth()));
 
-        info = new BisqLabel(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.info"));
-        info.setWrapText(true);
-
-        button = new BisqButton();
-        button.setActionButton(true);
-
-        SectionBox sectionBox = new SectionBox(Res.get("satoshisquareapp.selectTraderType.headline"));
-        sectionBox.setPrefWidth(450);
-        sectionBox.getChildren().addAll(roboIconImageView, userName, userTypeBox, info, button);
-
-        root.getChildren().addAll(sectionBox);
+        // todo remove that hack once design is final
+        HBox vBox = Layout.hBoxWith(Spacer.fillHBox(), userTypeBoxRoot, Spacer.fillHBox());
+        this.vBox.getChildren().addAll(
+                headLineLabel,
+                subTitleLabel,
+                vBox,
+                info,
+                nextButton
+        );
     }
 
     @Override
     protected void onViewAttached() {
         info.textProperty().bind(model.getInfo());
-        button.textProperty().bind(model.getButtonText());
-        
-        userTypeBox.getSelectionModel().select(0);
-        userTypeBox.setOnAction(e -> controller.onSelect(userTypeBox.getSelectionModel().getSelectedItem()));
-        
-        button.setOnAction(e -> controller.onAction());
+        nextButton.textProperty().bind(model.getButtonText());
+
+        userTypeBox.setItems(model.getUserTypes());
+        userTypeBox.selectItem(model.getUserTypes().get(0));
+        userTypeBox.setOnAction(() -> controller.onSelect(userTypeBox.getSelectedItem()));
+
+        nextButton.setOnAction(e -> controller.onAction());
     }
 
     @Override
     protected void onViewDetached() {
         info.textProperty().unbind();
-        button.textProperty().unbind();
-        
-        userTypeBox.setOnAction(null);
-        button.setOnAction(null);
-    }
+        nextButton.textProperty().unbind();
 
+        userTypeBox.setOnAction(null);
+        nextButton.setOnAction(null);
+    }
 }

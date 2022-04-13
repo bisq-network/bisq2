@@ -249,7 +249,7 @@
 
 
 /* list view */
-.list-view .list-cell {
+/*.list-view .list-cell {
     -fx-background-color: -bs-background-color;
 }
 .list-view .list-cell:odd {
@@ -265,34 +265,12 @@
     -fx-background: -fx-accent;
     -fx-background-color: -fx-selection-bar;
     -fx-border-color: -fx-selection-bar;
-}
+}*/
 
 .number-column.table-cell {
     -fx-background-color: -bs-background-color;
 }
 
-.list-view:focused,
-.tree-view:focused,
-.table-view:focused,
-.tree-table-view:focused,
-.table-view:focused,
-tree-table-view:focused {
-    -fx-background-insets: 0;
-}
-.list-view:focused {
-    -fx-background-color: -bs-color-primary;
-    -fx-background-insets: 0;
-}
-
-/* Selected rows */
-.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected,
-.tree-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-cell:filled:selected,
-.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell:filled:selected,
-.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell:filled:selected,
-.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell .table-cell:selected,
-.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell .tree-table-cell:selected {
-    -fx-background-insets: 0;
-}
 
 /* Selected when control is not focused */
 .list-cell:filled:selected,
@@ -531,10 +509,10 @@ tree-table-view:focused {
     -fx-background-color: -bs-color-primary-dark;
 }
 
-.scroll-bar {
+/*.scroll-bar {
     -fx-background-color: -bs-background-color;
     -fx-background-radius: 0;
-}
+}*/
 
 .scroll-bar:horizontal .track,
 .scroll-bar:vertical .track {
@@ -1825,7 +1803,7 @@ textfield */
     -fx-background-color: -bs-buy;
     -fx-text-fill: -bs-white;
 }
-
+/*
 #buy-button {
     -fx-background-color: -bs-buy;
     -fx-text-fill: -bs-white;
@@ -1834,7 +1812,7 @@ textfield */
 #button-inactive {
     -fx-background-color: -bs-color-gray-3;
     -fx-text-fill: -bs-white;
-}
+}*/
 
 #buy-button-big:hover, #buy-button:hover,
 #buy-button-big:focused, #buy-button:focused {
@@ -1846,11 +1824,13 @@ textfield */
     -fx-text-fill: -bs-white;
     -fx-font-size: 1em;
 }
+/*
 
 #sell-button {
     -fx-background-color: -bs-sell;
     -fx-text-fill: -bs-white;
 }
+*/
 
 #sell-button-big:hover, #sell-button:hover,
 #sell-button-big:focused, #sell-button:focused {

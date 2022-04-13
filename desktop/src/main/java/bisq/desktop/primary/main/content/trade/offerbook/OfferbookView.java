@@ -48,11 +48,11 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         this.marketSelection = marketSelection;
 
         root.setSpacing(30);
-        root.setPadding(new Insets(20,0,0,0));
+        root.setPadding(new Insets(40,0,0,0));
 
         showAllMarkets = new BisqToggleButton();
         showAllMarkets.setText(Res.get("offerbook.showAllMarkets"));
-        showAllMarkets.setPadding(new Insets(23, 0, -10, 0));
+        showAllMarkets.setPadding(new Insets(6, 0, 0, 0));
 
         createOfferButton = new BisqButton(Res.get("createOffer.createOffer.button"));
         createOfferButton.getStyleClass().add("action-button");
@@ -67,7 +67,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         tableView.setPadding(new Insets(-20, 0, 0, 0));
         configDataTableView();
 
-        this.root.getChildren().addAll(Layout.hBoxWith(marketSelection, showAllMarkets),
+        root.getChildren().addAll(Layout.hBoxWith(marketSelection, showAllMarkets),
                 Layout.hBoxWith(directionSelection, Spacer.fillHBox(), createOfferButton),
                 headline,
                 tableView);
@@ -78,6 +78,8 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         showAllMarkets.setOnAction(e -> controller.onShowAllMarketsChanged(showAllMarkets.isSelected()));
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
         marketSelection.disableProperty().bind(model.marketSelectionDisabled);
+
+        root.requestFocus();
     }
 
     @Override

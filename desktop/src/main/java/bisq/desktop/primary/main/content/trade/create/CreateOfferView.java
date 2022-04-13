@@ -49,7 +49,10 @@ public class CreateOfferView extends View<ScrollPane, CreateOfferModel, CreateOf
         VBox vBox = new VBox();
         vBox.setSpacing(30);
         root.setContent(vBox);
-        root.setPadding(new Insets(20,0,0,0));
+        root.setFitToWidth(true);
+        vBox.setPadding(new Insets(40, 0, 0, 0));
+       
+        vBox.getStyleClass().add("bisq-content-bg");
 
         amountPrice.setPadding(new Insets(0, 0, -5, 0));
 
@@ -66,6 +69,10 @@ public class CreateOfferView extends View<ScrollPane, CreateOfferModel, CreateOf
         publishButton.setOnAction(e -> controller.onPublishOffer());
         publishButton.setVisible(false);
 
+        protocol.setMaxWidth(845);
+        settlement.setMaxWidth(845);
+        offerSummary.setMaxWidth(845);
+        
         vBox.getChildren().addAll(
                 marketSelection,
                 direction,
@@ -93,6 +100,7 @@ public class CreateOfferView extends View<ScrollPane, CreateOfferModel, CreateOf
         createOfferButton.managedProperty().bind(model.createOfferButtonVisibleProperty());
 
         offerSummary.clear();
+        root.requestFocus();
     }
 
     @Override
