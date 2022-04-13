@@ -42,14 +42,14 @@ public class Layout {
 
     public static HBox hBoxWith(Node... nodes) {
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(15);
         hBox.getChildren().addAll(nodes);
         return hBox;
     }
 
     public static VBox vBoxWith(Node... nodes) {
         VBox vBox = new VBox();
-        vBox.setSpacing(10);
+        vBox.setSpacing(15);
         vBox.getChildren().addAll(nodes);
         return vBox;
     }

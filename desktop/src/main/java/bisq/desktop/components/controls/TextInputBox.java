@@ -83,7 +83,7 @@ public class TextInputBox extends Pane {
         UIThread.runOnNextRenderFrame(this::requestFocus);
     }
 
-    public void setOnMousePressedHandler(EventHandler<? super MouseEvent>  handler) {
+    public void setOnMousePressedHandler(EventHandler<? super MouseEvent> handler) {
         setOnMousePressed(handler);
         inputTextField.setOnMousePressed(handler);
     }

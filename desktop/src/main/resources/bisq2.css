@@ -28,7 +28,8 @@
     -bisq-grey-14: #474747;
     -bisq-grey-15: #292929;
     -bisq-grey-16: #393939;
-    
+    -bisq-grey-17: #2f2f2f;
+
 
     /* Background colors */
     -bisq-background-color-darkest: -bisq-grey-left-nav-selected-bg;
@@ -193,9 +194,9 @@
     -fx-background-color: -bisq-background-color-gray;
 }
 
-.bisq-button-2 {
-    -fx-background-color: -bisq-dark-green;
-    -fx-background-radius: 2.5;
+.button {
+    -fx-background-color: -bisq-grey-17;
+    -fx-background-radius: 3;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
     -fx-border-style: none;
@@ -203,14 +204,29 @@
     -fx-cursor: hand;
 }
 
-.bisq-button-2:hover {
+.button:default {
+    -fx-background-color: -bisq-dark-green;
+}
+
+.button:hover {
     -fx-background-color: -bisq-green;
 }
 
-.bisq-button-2:disabled {
+.button:disabled {
     -fx-background-color: -bisq-grey-12;
 }
 
+/* PaymentMethodItem */
+
+.payment-methods-icon-button-bg {
+    -fx-background-color: #eee;
+    -fx-background-radius: 7;
+}
+
+.payment-methods-label {
+    -fx-text-fill: #222;
+    -fx-padding: 5 4 5 10
+}
 
 /* Containers */
 .bisq-box-1 {

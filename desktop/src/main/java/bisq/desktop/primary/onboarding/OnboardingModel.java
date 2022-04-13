@@ -36,6 +36,6 @@ public class OnboardingModel extends NavigationModel {
     public NavigationTarget getDefaultNavigationTarget() {
         return userProfileService.isDefaultUserProfileMissing() ?
                 NavigationTarget.INIT_USER_PROFILE :
-                NavigationTarget.ONBOARD_NEWBIE;
+                NavigationTarget.CHAT;
     }
 }

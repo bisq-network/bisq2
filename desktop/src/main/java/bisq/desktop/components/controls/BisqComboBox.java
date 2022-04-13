@@ -18,7 +18,6 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -82,7 +81,7 @@ public class BisqComboBox<T> {
     }
 
     public void setVisibleRowCount(int visibleRowCount) {
-        controller.model.visibleRowCount.set(visibleRowCount);
+        controller.model.visibleRowCount = visibleRowCount;
     }
 
     public final void setConverter(StringConverter<T> stringConverter) {
@@ -99,6 +98,14 @@ public class BisqComboBox<T> {
 
     public void selectItem(T selectItem) {
         controller.selectItem(selectItem);
+    }
+
+    public ReadOnlyObjectProperty<T> selectedItemProperty() {
+        return controller.model.selectedItem;
+    }
+
+    public StringProperty descriptionProperty() {
+        return controller.model.description;
     }
 
     private static class Controller<T> implements bisq.desktop.common.view.Controller {
@@ -124,9 +131,9 @@ public class BisqComboBox<T> {
                 }
             });
             selectedItemSub = EasyBind.subscribe(model.selectedItem, selectItem -> {
-                if (selectItem != null) {
-                    model.text.set(getConvertedText(model.selectedItem.get()));
-                }
+                model.reactOnTextChange = false;
+                model.text.set(getConvertedText(selectItem));
+                model.reactOnTextChange = true;
             });
         }
 
@@ -156,7 +163,7 @@ public class BisqComboBox<T> {
 
         private void onTextChanged(String text) {
             //  log.error("model.hasFocus ={}, applyFilter={}", model.hasFocus, model.useFilter);
-            if (model.hasFocus && model.useFilter && text != null) {
+            if (model.hasFocus && model.reactOnTextChange && text != null) {
                 boolean wasListViewVisible = model.showListView.get();
                 if (!wasListViewVisible) {
                     model.text.set("");
@@ -174,9 +181,10 @@ public class BisqComboBox<T> {
 
         private void onSelectItem(T selectItem) {
             // log.error("onSelectItem selectItem={} / model={}", selectItem, model.selectedItem.get());
-            model.useFilter = false;
+            model.reactOnTextChange = false;
             model.selectedItem.set(selectItem);
-            model.useFilter = true;
+            model.onActionHandler.ifPresent(e->e.run());
+            model.reactOnTextChange = true;
         }
 
         private void doToggleListView() {
@@ -196,7 +204,7 @@ public class BisqComboBox<T> {
     }
 
     private static class Model<T> implements bisq.desktop.common.view.Model {
-        private boolean useFilter;
+        private boolean reactOnTextChange;
         private boolean hasFocus;
         private final BooleanProperty showListView = new SimpleBooleanProperty();
         private final DoubleProperty prefWidth = new SimpleDoubleProperty(300);
@@ -206,7 +214,7 @@ public class BisqComboBox<T> {
         private final ObservableList<T> items = FXCollections.observableArrayList();
         private final SortedList<T> sortedList = new SortedList<>(items);
         private final FilteredList<T> filteredItems = new FilteredList<>(sortedList);
-        private final IntegerProperty visibleRowCount = new SimpleIntegerProperty();
+        private int visibleRowCount = 10;
         private final ObjectProperty<T> selectedItem = new SimpleObjectProperty<>();
 
         private Optional<StringConverter<T>> stringConverter = Optional.empty();
@@ -253,6 +261,7 @@ public class BisqComboBox<T> {
                     comboBoxList = new ComboBoxList<>(root,
                             model.filteredItems,
                             controller::onSelectItem);
+                    comboBoxList.setVisibleRowCount(model.visibleRowCount);
                     comboBoxList.show();
                 } else if (comboBoxList != null) {
                     comboBoxList.close();
@@ -288,26 +297,38 @@ public class BisqComboBox<T> {
 
     @Slf4j
     public static class ComboBoxList<T> extends Pane {
+        private static final double x = 25;
+        private static final double y = 25;
+        private static final double listOffset = 8;
+        // relative to visible top-left point 
+        private static final double arrowX_l = 22;
+        private static final double arrowX_m = 31.5;
+        private static final double arrowY_m = 17.5;
+        private static final double arrowX_r = 41;
+
         private final Region owner;
         private final Scene rootScene;
-        private final ObservableList<T> items;
         private Window window;
         private Scene scene;
         @Getter
         private final ListView<T> listView;
-        private final ListChangeListener<T> numItemsListener;
+        private final ObservableList<T> items;
         private final Polygon background = new Polygon();
         @Setter
-        private int maxRows = 10;
+        private int visibleRowCount = 10;
         private final Stage stage = new Stage();
+        private final ListChangeListener<T> numItemsListener;
         private final ChangeListener<Number> positionListener;
+        private final ChangeListener<T> selectedItemListener;
         private UIScheduler fixPositionsScheduler;
-        private double x, y, listOffset, width, arrowX_l, arrowX_m, arrowY_m, arrowX_r;
+        private final double width;
 
         public ComboBoxList(Region owner, ObservableList<T> items, Consumer<T> selectionHandler) {
             this.owner = owner;
             rootScene = owner.getScene();
             this.items = items;
+
+            width = owner.getWidth() - 10;
 
             // On Linux the owner stage does not move the child stage as it does on Mac
             // So we need to apply centerPopup. Further, with fast movements the handler loses
@@ -334,23 +355,19 @@ public class BisqComboBox<T> {
             listView.setLayoutY(y + listOffset);
             listView.setItems(items);
             listView.setPrefWidth(width);
-            listView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<T>() {
-                @Override
-                public void changed(ObservableValue<? extends T> observable, T oldValue, T newValue) {
-                    log.error("newValue " + newValue);
-                    selectionHandler.accept(newValue);
-                }
-            });
+            selectedItemListener = (observable, oldValue, newValue) -> {
+                // log.error("newValue " + newValue);
+                selectionHandler.accept(newValue);
+            };
+            listView.getSelectionModel().selectedItemProperty().addListener(selectedItemListener);
             numItemsListener = c -> updateHeight();
             items.addListener(numItemsListener);
             getChildren().addAll(background, listView);
-            // getChildren().addAll(listView);
-
-            updatePosition();
-            UIThread.runOnNextRenderFrame(this::updateHeight);
         }
 
         public void show() {
+            updatePosition();
+            updateHeight();
             stage.show();  // The new stage receives the focus. But we want to give focus back to search field input
             window.requestFocus();
         }
@@ -360,20 +377,14 @@ public class BisqComboBox<T> {
             cleanup();
         }
 
-        public T getSelectItem() {
-            return listView.getSelectionModel().getSelectedItem();
-        }
-
         public void selectNext() {
-            log.error("selectNext");
             int selectedIndex = listView.getSelectionModel().getSelectedIndex();
-            if (selectedIndex == -1) {
-                log.error("selectNext 0");
+            if (selectedIndex == -1 && !items.isEmpty()) {
                 listView.getSelectionModel().select(0);
             } else if (selectedIndex < items.size() - 1) {
                 listView.getSelectionModel().selectNext();
-                int currentIndex = selectedIndex + 1;
-                if (currentIndex >= maxRows) {
+                int currentIndex = listView.getSelectionModel().getSelectedIndex();
+                if (currentIndex >= visibleRowCount) {
                     listView.scrollTo(currentIndex);
                 }
             }
@@ -383,10 +394,8 @@ public class BisqComboBox<T> {
             int selectedIndex = listView.getSelectionModel().getSelectedIndex();
             if (selectedIndex > 0) {
                 listView.getSelectionModel().selectPrevious();
-                int currentIndex = selectedIndex - 1;
-                if (currentIndex <= maxRows) {
-                    listView.scrollTo(currentIndex);
-                }
+                int currentIndex = listView.getSelectionModel().getSelectedIndex();
+                listView.scrollTo(currentIndex);
             }
         }
 
@@ -413,16 +422,6 @@ public class BisqComboBox<T> {
         }
 
         private void setupBackground() {
-            x = 25;
-            y = 25;
-            listOffset = 8;
-            width = owner.getWidth() - 10;
-            // relative to visible top-left point 
-            arrowX_l = 22;
-            arrowX_m = 31.5;
-            arrowY_m = 17.5;
-            arrowX_r = 41;
-
             // We use a 25px offset for dropshadow
             DropShadow dropShadow = new DropShadow();
             dropShadow.setBlurType(BlurType.GAUSSIAN);
@@ -441,7 +440,7 @@ public class BisqComboBox<T> {
                 background.getPoints().clear();
                 stage.setHeight(height);
             } else {
-                height = Math.min(maxRows, items.size()) * 40 + listOffset;
+                height = Math.min(visibleRowCount, items.size()) * 40 + listOffset;
                 background.getPoints().setAll(
                         x, y,
                         x + arrowX_l, y,
@@ -452,7 +451,7 @@ public class BisqComboBox<T> {
                         x, y + height);
                 stage.setHeight(height + 50);
             }
-            listView.setPrefHeight(height - listOffset);
+            listView.setPrefHeight(height - listOffset + 2);
         }
 
         private void updatePosition() {
@@ -464,6 +463,7 @@ public class BisqComboBox<T> {
             if (fixPositionsScheduler != null) {
                 fixPositionsScheduler.stop();
             }
+            listView.getSelectionModel().selectedItemProperty().removeListener(selectedItemListener);
             items.removeListener(numItemsListener);
             window.xProperty().removeListener(positionListener);
             window.yProperty().removeListener(positionListener);

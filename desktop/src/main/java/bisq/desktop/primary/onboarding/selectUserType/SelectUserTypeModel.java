@@ -31,11 +31,16 @@ public class SelectUserTypeModel implements Model {
     public enum Type {
         NEWBIE(Res.get("satoshisquareapp.selectTraderType.newbie")),
         PRO_TRADER(Res.get("satoshisquareapp.selectTraderType.proTrader"));
-        @Getter
+
         private final String displayString;
 
         Type(String displayString) {
             this.displayString = displayString;
+        }
+
+        @Override
+        public String toString() {
+            return displayString;
         }
     }
 

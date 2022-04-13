@@ -93,7 +93,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         VBox.setMargin(tryOtherInfoLabel, new Insets(0, 0, 0, 0));
 
         createUserButton = new Button(Res.get("satoshisquareapp.setDefaultUserProfile.done"));
-        createUserButton.getStyleClass().add("bisq-button-2");
+        createUserButton.getStyleClass().add("bisq-button");
         VBox.setMargin(createUserButton, new Insets(0, 0, 50, 0));
 
         vBox.getChildren().addAll(

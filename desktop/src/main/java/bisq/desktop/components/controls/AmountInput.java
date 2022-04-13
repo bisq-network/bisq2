@@ -187,6 +187,7 @@ public class AmountInput {
 
             //  Listeners on view component events
             focusListener = (o, old, newValue) -> {
+                log.error("old {}, newValue={}", old, newValue);
                 controller.onFocusChange(newValue);
                 controller.onAmount(textInputBox.getText());
             };

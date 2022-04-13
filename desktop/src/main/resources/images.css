@@ -31,6 +31,9 @@
     -fx-image: url("images/arrow-down.png");
 }
 
+#light_close {
+    -fx-image: url("images/light_close.png");
+}
 
 #chat-trust {
     -fx-image: url("images/trust.png");

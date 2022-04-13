@@ -106,7 +106,6 @@ public class MarketSelection {
 
             comboBox = new BisqComboBox<>();
             comboBox.setDescription(Res.get("markets"));
-            comboBox.setVisibleRowCount(12);
             comboBox.setItems(model.markets);
             comboBox.setConverter(new StringConverter<>() {
                 @Override
