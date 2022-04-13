@@ -1,43 +1,43 @@
 package bisq.gradle.elementsd
 
-import bisq.gradle.tasks.elementsd.ElementsdCreateOrLoadWalletTask
-import bisq.gradle.tasks.elementsd.ElementsdPeginTask
-import bisq.gradle.tasks.elementsd.StartElementsQtTask
+import bisq.gradle.elementsd.tasks.ElementsdCreateOrLoadWalletTask
+import bisq.gradle.elementsd.tasks.ElementsdPeginTask
+import bisq.gradle.elementsd.tasks.StartElementsQtTask
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
-import java.io.File
 
 class ElementsdWalletCreationTasks(
     project: Project,
-    bisqDataDir: File
+    private val walletDirectory: Provider<Directory>
 ) {
 
     private val tasks: TaskContainer = project.tasks
-    private val walletDirectory: File = bisqDataDir.resolve("wallets/elementsd")
 
-    private lateinit var createWalletTask: TaskProvider<ElementsdCreateOrLoadWalletTask>
+    private lateinit var createOrLoadWalletTask: TaskProvider<ElementsdCreateOrLoadWalletTask>
     lateinit var peginTask: TaskProvider<ElementsdPeginTask>
 
     fun registerTasks(
         startElementsQtTask: TaskProvider<StartElementsQtTask>,
-        bitcoinWalletDirectory: File
+        bitcoinWalletDirectory: Provider<Directory>
     ) {
-        createWalletTask = registerCreatePeginWalletTask(startElementsQtTask)
+        createOrLoadWalletTask = registerCreateOrLoadWalletTask(startElementsQtTask)
         peginTask = registerPeginTask(bitcoinWalletDirectory)
     }
 
-    private fun registerCreatePeginWalletTask(startElementsQtTask: TaskProvider<StartElementsQtTask>):
+    private fun registerCreateOrLoadWalletTask(startElementsQtTask: TaskProvider<StartElementsQtTask>):
             TaskProvider<ElementsdCreateOrLoadWalletTask> =
         tasks.register<ElementsdCreateOrLoadWalletTask>("elementsdCreatePeginWallet") {
             dependsOn(startElementsQtTask)
             walletDirectory.set(this@ElementsdWalletCreationTasks.walletDirectory)
         }
 
-    private fun registerPeginTask(bitcoinWalletDirectory: File): TaskProvider<ElementsdPeginTask> =
+    private fun registerPeginTask(bitcoinWalletDirectory: Provider<Directory>): TaskProvider<ElementsdPeginTask> =
         tasks.register<ElementsdPeginTask>("elementsdRegtestPegin") {
-            dependsOn(createWalletTask)
+            dependsOn(createOrLoadWalletTask)
             onlyIf { getBlockCount() == 0 }
 
             bitcoindWalletDirectory.set(bitcoinWalletDirectory)

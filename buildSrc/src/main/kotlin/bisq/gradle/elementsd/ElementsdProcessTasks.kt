@@ -1,19 +1,20 @@
 package bisq.gradle.elementsd
 
 import bisq.gradle.bitcoind.BitcoindProcessTasks
-import bisq.gradle.tasks.bitcoind.BitcoindMineToWallet
-import bisq.gradle.tasks.elementsd.ElementsdStopTask
-import bisq.gradle.tasks.elementsd.StartElementsQtTask
+import bisq.gradle.bitcoind.tasks.BitcoindMineToWallet
+import bisq.gradle.elementsd.tasks.ElementsdStopTask
+import bisq.gradle.elementsd.tasks.StartElementsQtTask
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
-import java.io.File
 
 class ElementsdProcessTasks(
     project: Project,
-    private val elementsdDataDir: File
+    private val elementsdDataDir: Provider<Directory>
 ) {
 
     private val tasks: TaskContainer = project.tasks
@@ -46,6 +47,6 @@ class ElementsdProcessTasks(
     private fun registerCleanTask(): TaskProvider<Delete> =
         tasks.register<Delete>("cleanElementsdRegtest") {
             dependsOn(elementsdStopTask)
-            delete = setOf(elementsdDataDir.absolutePath)
+            delete = setOf(elementsdDataDir)
         }
 }

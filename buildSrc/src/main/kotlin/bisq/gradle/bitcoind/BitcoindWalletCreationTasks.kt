@@ -1,23 +1,23 @@
 package bisq.gradle.bitcoind
 
-import bisq.gradle.tasks.bitcoind.BitcoindCreateOrLoadWalletTask
-import bisq.gradle.tasks.bitcoind.BitcoindMineToWallet
-import bisq.gradle.tasks.bitcoind.StartBitcoinQtTask
+import bisq.gradle.bitcoind.tasks.BitcoindCreateOrLoadWalletTask
+import bisq.gradle.bitcoind.tasks.BitcoindMineToWallet
+import bisq.gradle.bitcoind.tasks.StartBitcoinQtTask
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
-import java.io.File
-
 
 class BitcoindWalletCreationTasks(
     project: Project,
-    bisqDataDir: File,
+    regtestConfig: BitcoindRegtestConfig,
     private val taskNameSuffix: String = ""
 ) {
 
     private val tasks: TaskContainer = project.tasks
-    val walletDirectory: File = bisqDataDir.resolve("wallets/bitcoind")
+    val walletDirProvider: Provider<Directory> = regtestConfig.bitcoindWalletDir
 
     private lateinit var createWalletTask: TaskProvider<BitcoindCreateOrLoadWalletTask>
     lateinit var mineInitialRegtestBlocksTask: TaskProvider<BitcoindMineToWallet>
@@ -31,7 +31,7 @@ class BitcoindWalletCreationTasks(
             TaskProvider<BitcoindCreateOrLoadWalletTask> =
         tasks.register<BitcoindCreateOrLoadWalletTask>("bitcoindCreateMinerWallet$taskNameSuffix") {
             dependsOn(startBitcoinQtTask)
-            walletDirectory.set(this@BitcoindWalletCreationTasks.walletDirectory)
+            walletDirectory.set(walletDirProvider)
         }
 
     private fun registerMineInitialRegtestBlocksTask(): TaskProvider<BitcoindMineToWallet> =
@@ -39,7 +39,7 @@ class BitcoindWalletCreationTasks(
             dependsOn(createWalletTask)
             onlyIf { getBlockCount() == 0 }
 
-            walletDirectory.set(this@BitcoindWalletCreationTasks.walletDirectory)
+            walletDirectory.set(walletDirProvider)
             numberOfBlocks.set(101)
         }
 

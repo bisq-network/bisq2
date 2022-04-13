@@ -1,13 +1,13 @@
-package bisq.gradle.tasks.bitcoind
+package bisq.gradle.elementsd.tasks
 
-import bisq.gradle.bitcoind.BitcoindRpcClient
+import bisq.gradle.elementsd.ElementsdRpcClient
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
-abstract class BitcoindCreateOrLoadWalletTask : DefaultTask() {
+abstract class ElementsdCreateOrLoadWalletTask : DefaultTask() {
     @get:Input
     abstract val walletDirectory: DirectoryProperty
 
@@ -22,18 +22,17 @@ abstract class BitcoindCreateOrLoadWalletTask : DefaultTask() {
     }
 
     private fun createWallet(walletFile: File) {
-        BitcoindRpcClient.daemonRpcCall(
+        ElementsdRpcClient.daemonRpcCall(
             listOf(
                 "--named",
                 "createwallet",
-
                 "wallet_name=${walletFile.absolutePath}",
             )
         )
     }
 
     private fun loadWallet(walletFile: File) {
-        BitcoindRpcClient.daemonRpcCall(
+        ElementsdRpcClient.daemonRpcCall(
             listOf(
                 "loadwallet",
                 walletFile.absolutePath,
