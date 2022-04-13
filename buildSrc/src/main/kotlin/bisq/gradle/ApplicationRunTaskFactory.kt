@@ -2,6 +2,7 @@ package bisq.gradle
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.JavaApplication
 import org.gradle.api.plugins.JavaPlugin
@@ -25,6 +26,7 @@ object ApplicationRunTaskFactory {
         taskName: String,
         description: String,
         cmdLineArgs: List<String>,
+        dataDir: Provider<Directory>,
         dependentTask: TaskProvider<out DefaultTask>?
     ) {
         val desktopProject: Project = project.project("desktopapp")
@@ -37,6 +39,7 @@ object ApplicationRunTaskFactory {
                 "-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000",
                 "-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001"
             ),
+            dataDir = dataDir,
             dependentTask = dependentTask
         )
     }
@@ -47,6 +50,7 @@ object ApplicationRunTaskFactory {
         descriptionText: String,
         cmdLineArgs: List<String>,
         jvmArgs: List<String>,
+        dataDir: Provider<Directory>,
         dependentTask: TaskProvider<out DefaultTask>?
     ) {
         project.tasks.register<JavaExec>(taskName) {
@@ -54,10 +58,18 @@ object ApplicationRunTaskFactory {
                 dependsOn(dependentTask)
             }
 
+            doFirst {
+                // Create Bisq wallets directory
+                dataDir.get().asFile
+                    .resolve("wallets").mkdirs()
+            }
+
             group = "Regtest"
             description = descriptionText
 
-            argumentProviders.add(CommandLineArgumentProvider { cmdLineArgs })
+            argumentProviders.add(CommandLineArgumentProvider {
+                cmdLineArgs + "--data-dir=${dataDir.get().asFile.absolutePath}"
+            })
             classpath = computeRuntimeClasspath(project, mainModule)
 
             val javaApplication: JavaApplication = project.extensions["application"] as JavaApplication

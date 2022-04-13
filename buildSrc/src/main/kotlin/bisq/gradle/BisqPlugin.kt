@@ -1,32 +1,38 @@
 package bisq.gradle
 
+import bisq.gradle.bitcoind.BitcoindRegtestConfig
 import bisq.gradle.bitcoind.BitcoindRegtestTasks
+import bisq.gradle.elementsd.ElementsRegtestConfig
 import bisq.gradle.elementsd.ElementsdRegtestTasks
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import java.io.File
 
 
 class BisqPlugin : Plugin<Project> {
-    override fun apply(project: Project) {
-        val regtestRootDataDir = project.buildDir.resolve("regtest")
-        regtestRootDataDir.mkdirs()
-
-        registerBitcoindRegtestTasks(project, regtestRootDataDir)
-        registerElementsdRegtestTasks(project, regtestRootDataDir)
+    companion object {
+        const val REGTEST_ROOT_DIR = "regtest"
     }
 
-    private fun registerBitcoindRegtestTasks(project: Project, regtestRootDataDir: File) {
-        val bitcoindDataDir: File = regtestRootDataDir.resolve("bitcoind_regtest")
-        val bitcoindRegtestTasks = BitcoindRegtestTasks(project, bitcoindDataDir)
+    override fun apply(project: Project) {
+        registerBitcoindRegtestTasks(project)
+        registerElementsdRegtestTasks(project)
+    }
+
+    private fun registerBitcoindRegtestTasks(project: Project) {
+        val regtestConfig = BitcoindRegtestConfig(
+            project = project,
+            regtestDir = "$REGTEST_ROOT_DIR/bitcoind_regtest"
+        )
+        val bitcoindRegtestTasks = BitcoindRegtestTasks(project, regtestConfig)
         bitcoindRegtestTasks.registerTasks()
     }
 
-    private fun registerElementsdRegtestTasks(project: Project, regtestRootDataDir: File) {
-        val elementsdDataDir: File = regtestRootDataDir.resolve("elementsd_regtest")
-        val elementsdRegtestTasks = ElementsdRegtestTasks(project, elementsdDataDir)
+    private fun registerElementsdRegtestTasks(project: Project) {
+        val regtestConfig = ElementsRegtestConfig(
+            project = project,
+            regtestDir = "$REGTEST_ROOT_DIR/elementsd_regtest"
+        )
+        val elementsdRegtestTasks = ElementsdRegtestTasks(project, regtestConfig)
         elementsdRegtestTasks.registerTasks()
     }
-
-
 }

@@ -26,7 +26,6 @@ abstract class ElementsdCreateOrLoadWalletTask : DefaultTask() {
             listOf(
                 "--named",
                 "createwallet",
-
                 "wallet_name=${walletFile.absolutePath}",
             )
         )
