@@ -351,6 +351,7 @@ public class BisqComboBox<T> {
             setPrefWidth(width + 50);
 
             listView = new ListView<>();
+            listView.getStyleClass().add("bisq-combo-box-list-view");
             listView.setLayoutX(x);
             listView.setLayoutY(y + listOffset);
             listView.setItems(items);
@@ -479,7 +480,6 @@ public class BisqComboBox<T> {
             });
 
             owner.getScene().setOnKeyPressed(e -> {
-                log.error("e.getCode() " + e.getCode());
                 close();
             });
         }

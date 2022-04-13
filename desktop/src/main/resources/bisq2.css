@@ -258,9 +258,8 @@
     -fx-background-color: -bisq-grey-content-bg;
 }
 
-/* ListView */
-
-.list-view {
+/* Combo-box ListView */
+.bisq-combo-box-list-view {
     -fx-background-color: -bisq-grey-15;
     -fx-border-color: -bisq-grey-left-nav-bg;;
     -fx-border-width: 1;
@@ -269,7 +268,7 @@
     -fx-background-insets: 0 0 0 0;
 }
 
-.list-view .list-cell:odd, .list-view .list-cell:even {
+.bisq-combo-box-list-view .list-cell:odd, .bisq-combo-box-list-view .list-cell:even {
     -fx-background-color: -bisq-grey-left-nav-bg;
     -fx-font-size: 1.05em;
     -fx-padding: 0 0 0 22;
@@ -277,16 +276,10 @@
     -fx-pref-height: 40px;
 }
 
-.list-view .list-cell:selected,
-.table-view .table-cell:selected {
+.bisq-combo-box-list-view .list-cell:selected {
     -fx-background-color: -bisq-grey-16;
 }
 
-.list-view, .list-view:focused {
-}
-
-.list-view .list-cell, .list-view .list-cell:focused {
-}
 
 .list-view:focused,
 .tree-view:focused,
