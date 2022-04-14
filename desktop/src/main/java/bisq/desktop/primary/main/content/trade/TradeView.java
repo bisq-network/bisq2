@@ -17,38 +17,121 @@
 
 package bisq.desktop.primary.main.content.trade;
 
-import bisq.desktop.common.view.FxNavigationTargetTab;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabView;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.overlay.OverlayWindow;
 import bisq.i18n.Res;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
+import javafx.beans.value.ChangeListener;
+import javafx.geometry.Insets;
+import javafx.scene.Parent;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 
-public class TradeView extends TabView<TradeModel, TradeController> {
-
-    private FxNavigationTargetTab offerbook, createOffer, takeOffer;
-    private Subscription createOfferTabVisibleSubscription, takeOfferTabVisibleSubscription;
+public class TradeView extends NavigationView<VBox, TradeModel, TradeController> {
+    private final Label headlineLabel;
+    private final Region line;
+    protected final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
+    private final Button createOfferButton;
+    private OverlayWindow overlayWindow;
 
     public TradeView(TradeModel model, TradeController controller) {
-        super(model, controller);
-        addTab(Res.get("trade.offerbook"), NavigationTarget.OFFERBOOK);
+        super(new VBox(), model, controller);
 
-        headlineLabel.setText(Res.get("trade"));
+        root.setFillWidth(true);
+        root.setPadding(new Insets(0, -67, 0, 0));
+
+        headlineLabel = new Label(Res.get("offerbook"));
+        headlineLabel.getStyleClass().add("bisq-content-headline-label");
+
+        createOfferButton = new Button(Res.get("createOffer.createOffer.button"));
+        createOfferButton.getStyleClass().add("bisq-border-button");
+        HBox.setMargin(createOfferButton, new Insets(-5, 0, 0, 0));
+
+        HBox topBox = new HBox();
+        topBox.setFillHeight(true);
+        topBox.setSpacing(46);
+        topBox.getChildren().addAll(headlineLabel, Spacer.fillHBox(), createOfferButton);
+        topBox.setPadding(new Insets(0, 67, 2, 0));
+
+        HBox.setMargin(headlineLabel, new Insets(-5, 0, 20, -2));
+
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(true);
+
+
+        line = new Region();
+        line.getStyleClass().add("bisq-darkest-bg");
+        double lineHeight = 1.5;
+        line.setMinHeight(lineHeight);
+
+        Pane lineAndMarker = new Pane();
+        lineAndMarker.getChildren().addAll(line);
+        lineAndMarker.setMinHeight(lineHeight);
+        lineAndMarker.setPadding(new Insets(0, 67, 0, 0));
+
+        root.getChildren().addAll(topBox, lineAndMarker, scrollPane);
+
+        viewChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                Region childRoot = newValue.getRoot();
+                if (overlayWindow != null) {
+                    overlayWindow.close();
+                    overlayWindow = null;
+                }
+                if (model.showCreateOffer.get()) {
+                    overlayWindow = new OverlayWindow(getRoot(), childRoot, controller::onCloseCreateOffer);
+                    overlayWindow.show();
+                } else if (model.showTakeOffer.get()) {
+                    overlayWindow = new OverlayWindow(getRoot(), childRoot, controller::onCloseTakeOffer);
+                    overlayWindow.show();
+                } else {
+                    childRoot.getStyleClass().add("bisq-content-bg");
+                    childRoot.setPadding(new Insets(33, 67, 0, 0));
+                    scrollPane.setContent(childRoot);
+                }
+
+            }
+        };
+
+
+        // addTab(Res.get("trade.offerbook"), NavigationTarget.OFFERBOOK);
+
+        //   headlineLabel.setText(Res.get("trade"));
     }
 
     @Override
     protected void onViewAttached() {
-        createOfferTabVisibleSubscription = EasyBind.subscribe(model.createOfferTabVisible, this::onCreateOfferTabVisibleChange);
-        takeOfferTabVisibleSubscription = EasyBind.subscribe(model.takeOfferTabVisible, this::onTakeOfferTabVisibleChange);
+      /*  UIThread.runOnNextRenderFrame(() -> {
+            NavigationTarget navigationTarget = model.getNavigationTarget();
+            if (navigationTarget != null) {
+                Navigation.navigateTo(navigationTarget);
+            }
+        });*/
+        createOfferButton.setOnAction(e -> controller.onOpenCreateOffer());
+        line.prefWidthProperty().bind(root.widthProperty());
+        model.getView().addListener(viewChangeListener);
     }
 
     @Override
     protected void onViewDetached() {
-        createOfferTabVisibleSubscription.unsubscribe();
-        takeOfferTabVisibleSubscription.unsubscribe();
+        createOfferButton.setOnAction(null);
+        line.prefWidthProperty().unbind();
+        model.getView().removeListener(viewChangeListener);
+
+        // createOfferTabVisibleSubscription.unsubscribe();
+        //  takeOfferTabVisibleSubscription.unsubscribe();
     }
 
-    private void onCreateOfferTabVisibleChange(boolean value) {
+/*    private void onCreateOfferTabVisibleChange(boolean value) {
         if (value) {
             addTab(Res.get("trade.createOffer"), NavigationTarget.CREATE_OFFER);
         } else {
@@ -62,5 +145,5 @@ public class TradeView extends TabView<TradeModel, TradeController> {
         } else {
             removeTab(NavigationTarget.TAKE_OFFER);
         }
-    }
+    }*/
 }

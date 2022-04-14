@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.trade.create;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.layout.Layout;
@@ -25,13 +26,15 @@ import bisq.i18n.Res;
 import bisq.offer.Offer;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CreateOfferView extends View<ScrollPane, CreateOfferModel, CreateOfferController> {
+public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferController> {
+    private final static double MARGIN = 66;
     private final ChangeListener<Offer> offerListener;
     private final BisqButton createOfferButton;
     private final BisqTextArea offerSummary;
@@ -43,16 +46,21 @@ public class CreateOfferView extends View<ScrollPane, CreateOfferModel, CreateOf
                            Pane amountPrice,
                            Pane protocol,
                            Pane settlement) {
-        super(new ScrollPane(), model, controller);
+        super(new VBox(), model, controller);
 
         // Place content within a VBox, within a ScrollPane, to show scrollbars if window size is too small
-        VBox vBox = new VBox();
-        vBox.setSpacing(30);
-        root.setContent(vBox);
-        root.setFitToWidth(true);
-        vBox.setPadding(new Insets(40, 0, 0, 0));
-       
-        vBox.getStyleClass().add("bisq-content-bg");
+        // VBox root = new VBox();
+        root.setSpacing(30);
+      /*  root.setContent(root);
+        root.setFitToWidth(true);*/
+        root.setPadding(new Insets(MARGIN, MARGIN, MARGIN, MARGIN));
+
+        root.getStyleClass().add("bisq-darkest-bg");
+
+        Label headlineLabel = new Label(Res.get("trade.createOffer"));
+        headlineLabel.getStyleClass().add("bisq-content-headline-label");
+        HBox headLineBox = Layout.hBoxWith(Spacer.fillHBox(), headlineLabel, Spacer.fillHBox());
+        VBox.setMargin(headLineBox, new Insets(-27, 0, 0, 0));
 
         amountPrice.setPadding(new Insets(0, 0, -5, 0));
 
@@ -72,8 +80,10 @@ public class CreateOfferView extends View<ScrollPane, CreateOfferModel, CreateOf
         protocol.setMaxWidth(845);
         settlement.setMaxWidth(845);
         offerSummary.setMaxWidth(845);
-        
-        vBox.getChildren().addAll(
+
+
+        root.getChildren().addAll(
+                headLineBox,
                 marketSelection,
                 direction,
                 amountPrice,

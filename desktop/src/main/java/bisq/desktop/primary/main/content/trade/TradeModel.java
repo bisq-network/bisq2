@@ -17,16 +17,16 @@
 
 package bisq.desktop.primary.main.content.trade;
 
+import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
-public class TradeModel extends TabModel {
-    public BooleanProperty createOfferTabVisible = new SimpleBooleanProperty();
-    public BooleanProperty takeOfferTabVisible = new SimpleBooleanProperty();
+public class TradeModel extends NavigationModel {
+    public BooleanProperty showCreateOffer = new SimpleBooleanProperty();
+    public BooleanProperty showTakeOffer = new SimpleBooleanProperty();
 
-    public TradeModel( ) {
+    public TradeModel() {
     }
 
     @Override

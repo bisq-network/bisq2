@@ -178,7 +178,7 @@
 /* Button */
 
 /* Dark grey button with light grey border */
-.bisq-button-1 {
+.bisq-border-dark-bg-button {
     -fx-background-color: -bisq-background-color-dark;
     -fx-background-radius: 2.5;
     -fx-text-fill: -fx-light-text-color;
@@ -190,9 +190,26 @@
     -fx-cursor: hand;
 }
 
-.bisq-button-1:hover {
+.bisq-border-dark-bg-button:hover {
     -fx-border-color: -bisq-border-color-grey-hover;
     -fx-background-color: -bisq-background-color-gray;
+}
+
+.bisq-border-button {
+    -fx-background-color: -bisq-grey-content-bg;
+    -fx-background-radius: 2.5;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
+    -fx-border-color: -bisq-border-color-grey;
+    -fx-border-width: 0.75;
+    -fx-border-radius: 2.5;
+    -fx-padding: 5 33 5 33;
+    -fx-cursor: hand;
+}
+
+.bisq-border-button:hover {
+    -fx-border-color: -bisq-border-color-grey-hover;
+    -fx-background-color: -bisq-grey-content-bg;
 }
 
 .button {
@@ -239,9 +256,6 @@
     -fx-background-color: -bisq-grey-left-nav-bg;
 }
 
-#bisq-darkest-bg1 {
-    -fx-background-color: -bisq-grey-left-nav-bg;
-}
 
 .bisq-dark-bg {
     -fx-background-color: -bisq-grey-left-nav-selected-bg;
@@ -306,7 +320,11 @@ tree-table-view:focused {
 
 /* ScrollPane */
 .scroll-pane {
-    -fx-background-color: -bisq-grey-content-bg;
+    -fx-background-color: transparent;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
 }
 
 .scroll-bar {

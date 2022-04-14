@@ -40,6 +40,17 @@ public class Layout {
         if (left != null) AnchorPane.setLeftAnchor(node, (double) left);
     }
 
+    public static void pinToAnchorPane(Node node,
+                                       @Nullable Double top,
+                                       @Nullable Double right,
+                                       @Nullable Double bottom,
+                                       @Nullable Double left) {
+        if (top != null) AnchorPane.setTopAnchor(node, top);
+        if (right != null) AnchorPane.setRightAnchor(node, right);
+        if (bottom != null) AnchorPane.setBottomAnchor(node, bottom);
+        if (left != null) AnchorPane.setLeftAnchor(node, left);
+    }
+
     public static HBox hBoxWith(Node... nodes) {
         HBox hBox = new HBox();
         hBox.setSpacing(15);
