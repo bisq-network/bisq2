@@ -75,6 +75,13 @@ public class InitUserProfileController implements Controller {
         model.createProfileButtonDisable.set(true);
         model.showProcessingPopup.set(true);
         String profileId = model.profileId.get();
+        // Notes on the first run, when a new user profile is created at startup:
+        // Unfortunately the new profile can only be initialized after the network is fully initialized, which is after
+        // all supported network types have a local address. This translates to longer display times for the processing
+        // popup ("Preparing network node for new identity...").
+        // The good news is, the user is likely to spend some time on the Create Profile popup before clicking Next,
+        // which triggers the new profile initialization. The network layer is being initialized in parallel. This means
+        // in practice, the processing popup won't be shown for long.
         userProfileService.createNewInitializedUserProfile(profileId,
                         model.getNickName().get(),
                         model.tempKeyId,
