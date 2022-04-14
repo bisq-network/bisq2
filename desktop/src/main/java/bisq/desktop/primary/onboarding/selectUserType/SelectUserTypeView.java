@@ -82,7 +82,7 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
 
         userTypeBox = new BisqComboBox<>();
         userTypeBox.setDescription(Res.get("satoshisquareapp.selectTraderType.description"));
-        userTypeBox.setPrefWidth(width);
+        userTypeBox.getRoot().setPrefWidth(width);
 
         backButton = new Button(Res.get("back"));
         nextButton = new Button(Res.get("shared.nextStep"));

@@ -26,6 +26,7 @@ import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.social.chat.ChatController;
 import bisq.desktop.primary.main.content.social.education.EducationController;
 import bisq.desktop.primary.main.content.social.events.EventsController;
+import bisq.desktop.primary.main.content.social.exchange.ExchangeController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,7 +63,7 @@ public class SocialController extends TabController<SocialModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case EXCHANGE -> {
-                return Optional.of(new ChatController(applicationService));
+                return Optional.of(new ExchangeController(applicationService));
             }
             case CHAT -> {
                 return Optional.of(new ChatController(applicationService));

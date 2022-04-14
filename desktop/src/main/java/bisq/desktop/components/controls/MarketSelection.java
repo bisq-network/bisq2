@@ -53,9 +53,9 @@ public class MarketSelection {
         controller.model.selectedMarket.set(market);
     }
 
-    public void setPrefWidth(double prefWidth) {
+ /*   public void setPrefWidth(double prefWidth) {
         controller.model.prefWidth.set(prefWidth);
-    }
+    }*/
 
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
@@ -109,7 +109,7 @@ public class MarketSelection {
 
             comboBox = new BisqComboBox<>();
             comboBox.setDescription(Res.get("markets"));
-            comboBox.setPrefWidth(model.prefWidth.get());
+          //  comboBox.setPrefWidth(model.prefWidth.get());
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(@Nullable Market value) {

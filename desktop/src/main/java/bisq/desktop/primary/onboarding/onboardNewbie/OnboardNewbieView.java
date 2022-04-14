@@ -51,7 +51,7 @@ public class OnboardNewbieView extends View<VBox, OnboardNewbieModel, OnboardNew
         VBox.setMargin(headLineLabel, new Insets(50, 200, 0, 200));
         VBox.setVgrow(headLineLabel, Priority.ALWAYS);
 
-        int width = 600;
+        int width = 500;
         amountPrice.setMaxWidth(width);
         
         double leftWidth = (width) / 2d;

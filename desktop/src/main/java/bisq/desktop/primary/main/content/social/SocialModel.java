@@ -36,6 +36,6 @@ public class SocialModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.CHAT;
+        return NavigationTarget.EXCHANGE;
     }
 }

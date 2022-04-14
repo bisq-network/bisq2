@@ -272,6 +272,61 @@
 .bisq-content-bg {
     -fx-background-color: -bisq-grey-content-bg;
 }
+/* Badge*/
+.bisq-badge {
+    -fx-padding: 0 20 0 0;
+   
+}
+
+.bisq-badge .badge-pane {
+    -fx-background-color: -bisq-grey-6;
+    -fx-background-radius: 15;
+ /*   -fx-pref-width: 15;*/
+    -fx-pref-height: 15;
+}
+
+.bisq-badge .badge-label {
+    -fx-font-size: 0.85em;
+    -fx-text-fill: white;
+    
+}
+
+.bisq-badge.market-channel-badge {
+   /* -fx-padding: 0 10 0 0;*/
+}
+
+
+.tooltip {
+    -fx-background: -bisq-grey-11;
+    -fx-text-fill: black;
+    -fx-background-color: -bisq-grey-11;
+    -fx-background-radius: 6px;
+    -fx-background-insets: 0;
+    -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.5) , 10, 0.0 , 0 , 3 );
+    -fx-font-size: 1em;
+   /* -fx-font-family: "IBM Plex Sans Light";*/
+}
+
+/*
+
+.bisq-badge.new .badge-pane {
+    -fx-pref-width: 30;
+}
+
+.bisq-badge.auto-conf .badge-pane {
+    -fx-background-color: -xmr-orange;
+    -fx-pref-width: -1;
+    -fx-padding: -1 10 0 10;
+}
+
+.bisq-badge .badge-pane .label {
+    -fx-font-weight: bold;
+    -fx-font-size: 0.692em;
+    -fx-text-fill: -bs-background-color;
+}
+*/
+
 
 /* Combo-box ListView */
 .bisq-combo-box-list-view {
@@ -570,15 +625,15 @@ New css for bisq2.
 
 
 .keyword-tradeTags {
-    -fx-fill: -bs-buy-hover;
+    -fx-fill: -bs-turquoise;
 }
 
 .keyword-btc {
-    -fx-fill: -bs-buy-hover;
+    -fx-fill: -bs-turquoise;
 }
 
 .keyword-amountTag {
-    -fx-fill: -bs-buy-hover;
+    -fx-fill: -bs-turquoise;
 }
 
 .keyword-currencyTags {
@@ -590,7 +645,7 @@ New css for bisq2.
 }
 
 .keyword-customTags {
-    -fx-fill: -bs-yellow;
+    -fx-fill: -bs-turquoise;
 }
 
 .keyword-none {

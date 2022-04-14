@@ -28,6 +28,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.Scene;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
@@ -42,6 +43,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.Setter;
@@ -72,9 +74,9 @@ public class BisqComboBox<T> {
         controller.model.description.set(description);
     }
 
-    public void setPrefWidth(double prefWidth) {
-        controller.model.prefWidth.set(prefWidth);
-    }
+   /* public void setPrefWidth(double prefWidth) {
+        controller.model.prefWidth=prefWidth;
+    }*/
 
     public void setPrompt(String prompt) {
         controller.model.prompt.set(prompt);
@@ -90,6 +92,14 @@ public class BisqComboBox<T> {
 
     public final void setOnAction(Runnable onActionHandler) {
         controller.model.onActionHandler = Optional.ofNullable(onActionHandler);
+    }
+
+    public void setCellFactory(Callback<ListView<T>, ListCell<T>> value) {
+        controller.model.cellFactory = Optional.of(value);
+    }
+
+    public void setButtonCell(ListCell<T> value) {
+        controller.model.buttonCell = Optional.of(value);
     }
 
     public T getSelectedItem() {
@@ -183,7 +193,7 @@ public class BisqComboBox<T> {
             // log.error("onSelectItem selectItem={} / model={}", selectItem, model.selectedItem.get());
             model.reactOnTextChange = false;
             model.selectedItem.set(selectItem);
-            model.onActionHandler.ifPresent(e -> e.run());
+            model.onActionHandler.ifPresent(Runnable::run);
             model.reactOnTextChange = true;
         }
 
@@ -207,7 +217,7 @@ public class BisqComboBox<T> {
         private boolean reactOnTextChange;
         private boolean hasFocus;
         private final BooleanProperty showListView = new SimpleBooleanProperty();
-        private final DoubleProperty prefWidth = new SimpleDoubleProperty(250);
+        /* private  double prefWidth = 250;*/
         private final StringProperty description = new SimpleStringProperty("");
         private final StringProperty prompt = new SimpleStringProperty("");
         private final StringProperty text = new SimpleStringProperty();
@@ -219,6 +229,8 @@ public class BisqComboBox<T> {
 
         private Optional<StringConverter<T>> stringConverter = Optional.empty();
         private Optional<Runnable> onActionHandler = Optional.empty();
+        private Optional<Callback<ListView<T>, ListCell<T>>> cellFactory = Optional.empty();
+        private Optional<ListCell<T>> buttonCell = Optional.empty();
 
         private Model() {
         }
@@ -227,19 +239,19 @@ public class BisqComboBox<T> {
     public static class View<T> extends bisq.desktop.common.view.View<Pane, Model<T>, Controller<T>> {
         private final ChangeListener<Boolean> focusListener;
         private final TextInputBox textInputBox;
+        private final ImageView arrow;
         private ComboBoxList<T> comboBoxList;
-        private Subscription subscription;
+        private Subscription showListViewSubscription, widthSubscription;
 
         private View(Model<T> model, Controller<T> controller) {
             super(new Pane(), model, controller);
 
             textInputBox = new TextInputBox(model.description.get(), model.prompt.get());
-            double prefWidth = model.prefWidth.get();
+          /*  double prefWidth = model.prefWidth;
             textInputBox.setPrefWidth(prefWidth);
-            root.setPrefWidth(prefWidth);
+            root.setPrefWidth(prefWidth);*/
 
-            ImageView arrow = ImageUtil.getImageViewById("arrow-down");
-            arrow.setLayoutX(prefWidth - 22);
+            arrow = ImageUtil.getImageViewById("arrow-down");
             arrow.setLayoutY(22);
             arrow.setMouseTransparent(true);
 
@@ -252,8 +264,17 @@ public class BisqComboBox<T> {
 
         @Override
         protected void onViewAttached() {
+            widthSubscription = EasyBind.subscribe(root.widthProperty(), w -> {
+                double width = w.doubleValue();
+                arrow.setLayoutX(width - 22);
+                textInputBox.setPrefWidth(width);
+            });
+            model.buttonCell.ifPresent(e -> {
+                //todo
+            });
+
             textInputBox.setOnMousePressedHandler(e -> controller.onToggleListView());
-            subscription = EasyBind.subscribe(model.showListView, visible -> {
+            showListViewSubscription = EasyBind.subscribe(model.showListView, visible -> {
                 if (visible) {
                     if (comboBoxList != null) {
                         comboBoxList.close();
@@ -262,6 +283,7 @@ public class BisqComboBox<T> {
                             model.filteredItems,
                             controller::onSelectItem);
                     comboBoxList.setVisibleRowCount(model.visibleRowCount);
+                    model.cellFactory.ifPresent(e -> comboBoxList.setCellFactory(e));
                     comboBoxList.show();
                 } else if (comboBoxList != null) {
                     comboBoxList.close();
@@ -286,7 +308,8 @@ public class BisqComboBox<T> {
         @Override
         protected void onViewDetached() {
             textInputBox.setOnMousePressedHandler(null);
-            subscription.unsubscribe();
+            showListViewSubscription.unsubscribe();
+            widthSubscription.unsubscribe();
             textInputBox.textProperty().unbindBidirectional(model.text);
             textInputBox.promptTextProperty().unbind();
             textInputBox.descriptionTextProperty().unbind();
@@ -376,6 +399,10 @@ public class BisqComboBox<T> {
         public void close() {
             stage.hide();
             cleanup();
+        }
+
+        public void setCellFactory(Callback<ListView<T>, ListCell<T>> value) {
+            listView.setCellFactory(value);
         }
 
         public void selectNext() {

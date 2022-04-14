@@ -93,15 +93,15 @@ New css for bisq2.
 }
 
 .keyword-tradeTags {
-    -fx-fill: -bs-buy-hover;
+    -fx-fill: -bs-turquoise;
 }
 
 .keyword-btc {
-    -fx-fill: -bs-buy-hover;
+    -fx-fill: -bs-turquoise;
 }
 
 .keyword-amountTag {
-    -fx-fill: -bs-buy-hover;
+    -fx-fill: -bs-turquoise;
 }
 
 .keyword-currencyTags {
@@ -113,7 +113,7 @@ New css for bisq2.
 }
 
 .keyword-customTags {
-    -fx-fill: -bs-yellow;
+    -fx-fill: -bs-turquoise;
 }
 
 .keyword-none {
