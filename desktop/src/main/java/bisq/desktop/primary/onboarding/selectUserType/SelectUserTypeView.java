@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, SelectUserTypeController> {
     private final VBox vBox;
-    private final Button nextButton;
+    private final Button nextButton, backButton;
     private final BisqComboBox<SelectUserTypeModel.Type> userTypeBox;
     private final Label info;
 
@@ -83,11 +83,13 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         userTypeBox = new BisqComboBox<>();
         userTypeBox.setDescription(Res.get("satoshisquareapp.selectTraderType.description"));
         userTypeBox.setPrefWidth(width);
-        
+
+        backButton = new Button(Res.get("back"));
         nextButton = new Button(Res.get("shared.nextStep"));
         nextButton.setDefaultButton(true);
-        VBox.setMargin(nextButton, new Insets(0, 0, 50, 0));
-
+        HBox buttons = Layout.hBoxWith(backButton, nextButton);
+        buttons.setAlignment(Pos.CENTER);
+        VBox.setMargin(buttons, new Insets(0, 0, 50, 0));
         Pane userTypeBoxRoot = userTypeBox.getRoot();
         VBox.setMargin(userTypeBoxRoot, new Insets(0, 0, 50, userTypeBoxRoot.getWidth()));
 
@@ -97,21 +99,23 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
                 headLineLabel,
                 subTitleLabel,
                 vBox,
-                info,
-                nextButton
+               /* info,*/
+                buttons
         );
     }
 
     @Override
     protected void onViewAttached() {
         info.textProperty().bind(model.getInfo());
-        nextButton.textProperty().bind(model.getButtonText());
+       // nextButton.textProperty().bind(model.getButtonText());
 
         userTypeBox.setItems(model.getUserTypes());
         userTypeBox.selectItem(model.getUserTypes().get(0));
         userTypeBox.setOnAction(() -> controller.onSelect(userTypeBox.getSelectedItem()));
 
         nextButton.setOnAction(e -> controller.onAction());
+        backButton.setOnAction(e -> controller.onGoBack());
+
     }
 
     @Override

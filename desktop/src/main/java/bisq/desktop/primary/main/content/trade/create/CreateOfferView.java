@@ -48,13 +48,8 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
                            Pane settlement) {
         super(new VBox(), model, controller);
 
-        // Place content within a VBox, within a ScrollPane, to show scrollbars if window size is too small
-        // VBox root = new VBox();
         root.setSpacing(30);
-      /*  root.setContent(root);
-        root.setFitToWidth(true);*/
         root.setPadding(new Insets(MARGIN, MARGIN, MARGIN, MARGIN));
-
         root.getStyleClass().add("bisq-darkest-bg");
 
         Label headlineLabel = new Label(Res.get("trade.createOffer"));

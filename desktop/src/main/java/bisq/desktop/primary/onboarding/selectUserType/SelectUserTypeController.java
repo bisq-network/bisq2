@@ -71,4 +71,8 @@ public class SelectUserTypeController implements Controller {
             }
         }
     }
+
+    void onGoBack() {
+        Navigation.navigateTo(NavigationTarget.INIT_USER_PROFILE);
+    }
 }

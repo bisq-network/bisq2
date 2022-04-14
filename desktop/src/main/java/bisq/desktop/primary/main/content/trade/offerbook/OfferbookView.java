@@ -41,10 +41,10 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
                          Pane marketSelection,
                          Pane directionSelection) {
         super(new VBox(), model, controller);
+        
         this.marketSelection = marketSelection;
-        log.warn("OfferbookView");
-        root.setSpacing(30);
        
+        root.setSpacing(30);
         root.setPadding(new Insets(40,0,0,0));
 
         showAllMarkets = new BisqToggleButton();
@@ -112,7 +112,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
                 .valueSupplier(OfferListItem::getOptions)
                 .build());*/
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
-                .fixWidth(220)
+                .fixWidth(200)
                 .title(Res.get("offerbook.table.header.action"))
                 .valueSupplier(model::getActionButtonTitle)
                 .cellFactory(BisqTableColumn.CellFactory.BUTTON)

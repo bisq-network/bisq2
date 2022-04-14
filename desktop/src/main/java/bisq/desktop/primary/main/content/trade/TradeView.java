@@ -52,7 +52,8 @@ public class TradeView extends NavigationView<VBox, TradeModel, TradeController>
         headlineLabel.getStyleClass().add("bisq-content-headline-label");
 
         createOfferButton = new Button(Res.get("createOffer.createOffer.button"));
-        createOfferButton.getStyleClass().add("bisq-border-button");
+        createOfferButton.setDefaultButton(true);
+       // createOfferButton.getStyleClass().add("bisq-border-dark-bg-button");
         HBox.setMargin(createOfferButton, new Insets(-5, 0, 0, 0));
 
         HBox topBox = new HBox();

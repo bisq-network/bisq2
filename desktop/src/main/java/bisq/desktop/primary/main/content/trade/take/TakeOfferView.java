@@ -18,17 +18,20 @@
 package bisq.desktop.primary.main.content.trade.take;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferController> {
+public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferController> {    private final static double MARGIN = 66;
     private final BisqButton takeOfferButton;
     private final BisqLabel protocolLabel;
 
@@ -38,8 +41,16 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
                          Pane amountPrice,
                          Pane settlement) {
         super(new VBox(), model, controller);
+
         root.setSpacing(30);
-        root.setPadding(new Insets(20,0,0,0));
+        root.setPadding(new Insets(MARGIN, MARGIN, MARGIN, MARGIN));
+        root.getStyleClass().add("bisq-darkest-bg");
+
+        Label headlineLabel = new Label(Res.get("trade.takeOffer"));
+        headlineLabel.getStyleClass().add("bisq-content-headline-label");
+        HBox headLineBox = Layout.hBoxWith(Spacer.fillHBox(), headlineLabel, Spacer.fillHBox());
+        VBox.setMargin(headLineBox, new Insets(-27, 0, 0, 0));
+
         
         protocolLabel = new BisqLabel();
         protocolLabel.getStyleClass().add("titled-group-bg-label-active");
@@ -53,6 +64,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
         cancelButton.setOnAction(e -> controller.onCancel());
 
         root.getChildren().addAll(
+                headLineBox,
                 directionSelection,
                 protocolLabel,
                 amountPrice,
