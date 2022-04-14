@@ -111,7 +111,8 @@ public class ServiceNodesByTransport {
     }
 
     public CompletableFuture<Boolean> bootstrapToNetwork(Map<Transport.Type, Integer> portByTransport, String nodeId) {
-        return CompletableFutureUtils.allOf(map.entrySet().stream()
+        return CompletableFutureUtils.anyOf( // We use anyOf to complete as soon as any network bootstraps
+                map.entrySet().stream()
                 .map(entry -> {
                     int port = portByTransport.get(entry.getKey());
                     ServiceNode serviceNode = entry.getValue();

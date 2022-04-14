@@ -82,7 +82,13 @@ public class TorTransport implements Transport {
     }
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
-        return Optional.of(tor.getSocks5Proxy(null));
+        try {
+            return Optional.of(tor.getSocks5Proxy(null));
+        }
+        catch (IllegalArgumentException e) {
+            // Happens during bootstrap, because this is called before tor is initialized
+            return Optional.empty();
+        }
     }
 
     @Override

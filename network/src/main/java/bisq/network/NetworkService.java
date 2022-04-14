@@ -208,12 +208,13 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         log.info("bootstrapToNetwork");
         String nodeId = Node.DEFAULT;
         return serviceNodesByTransport.bootstrapToNetwork(getDefaultPortByTransport(), nodeId)
-                .whenComplete((result, throwable) -> {
+                .thenApply(result -> { // We use thenApply to return a future that completes after this function
                     // If networkNode has not been created we create now one with the default pubKey (default keyId)
                     // and persist it.
-                    if (throwable == null) {
+                    if (result == false) {
                         persistNetworkId(nodeId, keyPairService.getDefaultPubKey());
                     }
+                    return result;
                 });
     }
 
