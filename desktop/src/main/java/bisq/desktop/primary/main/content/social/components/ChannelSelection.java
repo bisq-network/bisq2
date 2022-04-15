@@ -1,4 +1,4 @@
-package bisq.desktop.primary.main.content.social.chat.components;
+package bisq.desktop.primary.main.content.social.components;
 
 import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;

@@ -24,6 +24,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.Notification;
 import bisq.desktop.primary.main.content.social.chat.components.*;
+import bisq.desktop.primary.main.content.social.components.*;
 import bisq.i18n.Res;
 import bisq.social.chat.*;
 import bisq.social.user.ChatUser;

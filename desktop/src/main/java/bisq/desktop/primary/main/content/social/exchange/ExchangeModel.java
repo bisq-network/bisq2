@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.social.exchange;
 
 import bisq.desktop.common.view.Model;
-import bisq.desktop.primary.main.content.social.chat.components.ChatUserDetails;
+import bisq.desktop.primary.main.content.social.components.ChatUserDetails;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.social.chat.Channel;

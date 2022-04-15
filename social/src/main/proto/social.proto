@@ -113,7 +113,8 @@ enum NotificationSetting {
 
 message UserProfile {
   identity.Identity identity = 1;
-  repeated Entitlement entitlements = 2;
+  string nickName = 2;
+  repeated Entitlement entitlements = 3;
 }
 
 // Channels

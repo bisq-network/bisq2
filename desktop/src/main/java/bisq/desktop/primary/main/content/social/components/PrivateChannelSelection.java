@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.chat.components;
+package bisq.desktop.primary.main.content.social.components;
 
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;

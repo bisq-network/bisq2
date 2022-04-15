@@ -25,7 +25,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.overlay.Notification;
-import bisq.desktop.primary.main.content.social.chat.components.*;
+import bisq.desktop.primary.main.content.social.components.*;
 import bisq.i18n.Res;
 import bisq.social.chat.*;
 import bisq.social.user.ChatUser;

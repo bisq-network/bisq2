@@ -108,7 +108,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                                                                           Set<Entitlement> entitlements) {
         return identityService.createNewInitializedIdentity(profileId, keyId, keyPair)
                 .thenApply(identity -> {
-                    UserProfile userProfile = new UserProfile(identity, entitlements);
+                    UserProfile userProfile = new UserProfile(identity, nickName, entitlements);
                     synchronized (lock) {
                         persistableStore.getUserProfiles().add(userProfile);
                         persistableStore.getSelectedUserProfile().set(userProfile);

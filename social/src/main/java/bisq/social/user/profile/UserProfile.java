@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 /**
  * Local user profile. Not shared over network.
  */
-public record UserProfile(Identity identity, Set<Entitlement> entitlements) implements Proto {
+public record UserProfile(Identity identity, String nickName, Set<Entitlement> entitlements) implements Proto {
     public ChatUser chatUser() {
         return new ChatUser(identity.networkId(), entitlements);
     }
@@ -38,12 +38,14 @@ public record UserProfile(Identity identity, Set<Entitlement> entitlements) impl
     public bisq.social.protobuf.UserProfile toProto() {
         return bisq.social.protobuf.UserProfile.newBuilder()
                 .setIdentity(identity.toProto())
+                .setNickName(nickName)
                 .addAllEntitlements(entitlements.stream().map(Entitlement::toProto).collect(Collectors.toList()))
                 .build();
     }
 
     public static UserProfile fromProto(bisq.social.protobuf.UserProfile proto) {
         return new UserProfile(Identity.fromProto(proto.getIdentity()),
+                proto.getNickName(),
                 proto.getEntitlementsList().stream().map(Entitlement::fromProto).collect(Collectors.toSet()));
     }
 

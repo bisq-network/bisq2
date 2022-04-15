@@ -335,9 +335,11 @@ Taken from Bisq. Might need some clean up
     -fx-background-color: -bs-background-color;
 }*/
 
+/*
 .jfx-combo-box > .arrow-button > .arrow {
     -fx-border-color: -bs-color-gray-13;
 }
+*/
 
 /*.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
     -fx-background: -bs-combobox-selected;
