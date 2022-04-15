@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.social.exchange;
 
-import bisq.common.currency.CurrencyRepository;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyWordDetection;
@@ -32,9 +31,7 @@ import bisq.i18n.Res;
 import bisq.social.chat.ChatMessage;
 import bisq.social.chat.QuotedMessage;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -46,11 +43,10 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.Duration;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import java.util.stream.Collectors;
 
 @Slf4j
 public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeController> {
@@ -60,10 +56,11 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
     private final BisqTextArea inputField;
     private final BisqLabel selectedChannelLabel;
     private final Button searchButton, notificationsButton, infoButton, closeButton;
-    private final Pane userProfileComboBox;
+    private final Pane userProfileSelection;
     private final VBox left, sideBar;
     private final FilterBox filterBox;
     private final BisqInputTextField filterBoxRoot;
+    private final MarketChannelSelection marketChannelSelection;
     private final Pane notificationsSettings;
     private final Pane channelInfo;
     private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
@@ -74,7 +71,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
 
     public ExchangeView(ExchangeModel model,
                         ExchangeController controller,
-                        Pane userProfileComboBox,
+                        Pane userProfileSelection,
                         MarketChannelSelection marketChannelSelection,
                         Pane publicChannelSelection,
                         Pane privateChannelSelection,
@@ -82,81 +79,21 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
                         Pane channelInfo,
                         Pane reply) {
         super(new SplitPane(), model, controller);
-
+        this.marketChannelSelection = marketChannelSelection;
 
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
-        this.userProfileComboBox = userProfileComboBox;
+        this.userProfileSelection = userProfileSelection;
 
         root.setPadding(new Insets(20, 0, 0, 0));
         root.setStyle("-fx-background-color: -fx-base");
         root.getStyleClass().add("hide-focus");
 
         // Left 
-        userProfileComboBox.setPadding(new Insets(10, 10, 10, 10));
-        marketChannelSelection.getRoot().prefWidthProperty().bind(root.widthProperty());
-        marketChannelSelection.setCellFactory(new Callback<>() {
-            @Override
-            public ListCell<MarketChannelSelection.MarketChannelItem> call(ListView<MarketChannelSelection.MarketChannelItem> list) {
-                return new ListCell<>() {
-                    @Override
-                    public void updateItem(final MarketChannelSelection.MarketChannelItem item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            Label market = new Label(item.toString());
-                            HBox hBox = new HBox();
-                            hBox.setAlignment(Pos.CENTER_LEFT);
-                            hBox.getChildren().addAll(market, Spacer.fillHBox());
+        marketChannelSelection.setCellFactory(getMarketChannelCellFactory());
 
-                            Badge badge = new Badge(hBox);
-                            badge.setTooltip(Res.get("social.marketChannels.numMessages"));
-                            badge.setPosition(Pos.CENTER_RIGHT);
-                            int numMessages = item.getNumMessages();
-                            if (numMessages > 0) {
-                                badge.setText(String.valueOf(numMessages));
-                            }
-                            setGraphic(badge);
-                        } else {
-                            setGraphic(null);
-                        }
-                    }
-                };
-            }
-        });
-
-     /*   ComboBox<String> comboBox = new ComboBox<>();
-        ObservableList<String> list = FXCollections.observableArrayList();
-        list.addAll(List.of("a","bbb","cccc","dddd","aa"));
-        comboBox.setItems(list);
-        
-        comboBox.setEditable(true);
-        TextFields.bindAutoCompletion(comboBox.getEditor(), comboBox.getItems());*/
-
-
-   /*     AutocompleteComboBox<String> comboBox = new AutocompleteComboBox<>();
-        ObservableList<String> list = FXCollections.observableArrayList();
-        list.addAll(List.of("aaaa","bbb","ccc sdfaaaaac","dddd","aaaa safsdsfda"));
-        comboBox.setAutocompleteItems(list);*/
-
-       /* comboBox.setEditable(true);
-        TextFields.bindAutoCompletion(comboBox.getEditor(), comboBox.getItems());
-*/
-
-    
-       // comboBox.setEditable(true);
-        ObservableList<String> list = FXCollections.observableArrayList();
-        list.addAll(CurrencyRepository.getAllCurrencies().stream().map(e -> e.getName()).collect(Collectors.toList()));
-        MyComboBox<String> comboBox = new MyComboBox<>(list);
-        comboBox.setPrefWidth(300);
-        AutocompleteComboBox<String> autocompleteComboBox = new AutocompleteComboBox<>(list);
-        autocompleteComboBox.setPrefWidth(300);
-
-        left = Layout.vBoxWith(/*userProfileComboBox,*/
-                /*  marketChannelSelection.getRoot(),*/
-                comboBox,
-            /*    autocompleteComboBox,*/
-              /*  publicChannelSelection,
-                privateChannelSelection,*/
+        left = Layout.vBoxWith(userProfileSelection,
+                marketChannelSelection.getRoot(),
                 Spacer.fillVBox()
         );
         left.setMinWidth(250);
@@ -226,9 +163,42 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         messagesListener = c -> messagesListView.scrollTo(model.getFilteredChatMessages().size() - 1);
     }
 
+    @NonNull
+    private Callback<ListView<MarketChannelSelection.MarketChannelItem>, ListCell<MarketChannelSelection.MarketChannelItem>> getMarketChannelCellFactory() {
+        return new Callback<>() {
+            @Override
+            public ListCell<MarketChannelSelection.MarketChannelItem> call(ListView<MarketChannelSelection.MarketChannelItem> list) {
+                return new ListCell<>() {
+                    @Override
+                    public void updateItem(final MarketChannelSelection.MarketChannelItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            Label market = new Label(item.toString());
+                            HBox hBox = new HBox();
+                            hBox.setAlignment(Pos.CENTER_LEFT);
+                            hBox.getChildren().addAll(market, Spacer.fillHBox());
+
+                            Badge badge = new Badge(hBox);
+                            badge.setTooltip(Res.get("social.marketChannels.numMessages"));
+                            badge.setPosition(Pos.CENTER_RIGHT);
+                            int numMessages = item.getNumMessages();
+                            if (numMessages > 0) {
+                                badge.setText(String.valueOf(numMessages));
+                            }
+                            setGraphic(badge);
+                        } else {
+                            setGraphic(null);
+                        }
+                    }
+                };
+            }
+        };
+    }
+
     @Override
     protected void onViewAttached() {
-        userProfileComboBox.prefWidthProperty().bind(left.widthProperty());
+        userProfileSelection.prefWidthProperty().bind(root.widthProperty());
+        marketChannelSelection.getRoot().prefWidthProperty().bind(root.widthProperty());
         selectedChannelLabel.textProperty().bind(model.getSelectedChannelAsString());
         filterBoxRoot.visibleProperty().bind(model.getFilterBoxVisible());
         notificationsSettings.visibleProperty().bind(model.getNotificationsVisible());
@@ -278,7 +248,8 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
 
     @Override
     protected void onViewDetached() {
-        userProfileComboBox.prefWidthProperty().unbind();
+        userProfileSelection.prefWidthProperty().unbind();
+        marketChannelSelection.getRoot().prefWidthProperty().unbind();
         selectedChannelLabel.textProperty().unbind();
         filterBoxRoot.visibleProperty().unbind();
         notificationsSettings.visibleProperty().unbind();

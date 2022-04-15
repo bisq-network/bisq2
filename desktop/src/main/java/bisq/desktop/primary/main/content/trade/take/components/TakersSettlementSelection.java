@@ -24,7 +24,7 @@ import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.BisqComboBoxOld;
+import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
@@ -340,8 +340,8 @@ public class TakersSettlementSelection {
 
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final BisqLabel baseSideLabel, quoteSideLabel;
-        private final BisqComboBoxOld<AccountListItem> baseSideAccountsComboBox, quoteSideAccountsComboBox;
-        private final BisqComboBoxOld<SettlementListItem> baseSideSettlementComboBox, quoteSideSettlementComboBox;
+        private final AutoCompleteComboBox<AccountListItem> baseSideAccountsComboBox, quoteSideAccountsComboBox;
+        private final AutoCompleteComboBox<SettlementListItem> baseSideSettlementComboBox, quoteSideSettlementComboBox;
         private final VBox baseSideBox, quoteSideBox;
 
         private View(Model model,
@@ -352,11 +352,11 @@ public class TakersSettlementSelection {
             baseSideLabel = new BisqLabel();
             baseSideLabel.getStyleClass().add("titled-group-bg-label-active");
 
-            baseSideAccountsComboBox = new BisqComboBoxOld<>(model.baseSideAccountSortedList);
+            baseSideAccountsComboBox = new AutoCompleteComboBox<>(model.baseSideAccountSortedList);
             setupAccountStringConverter(baseSideAccountsComboBox);
             VBox.setMargin(baseSideAccountsComboBox, new Insets(0, 0, 20, 0));
 
-            baseSideSettlementComboBox = new BisqComboBoxOld<>(model.baseSideSettlementSortedList);
+            baseSideSettlementComboBox = new AutoCompleteComboBox<>(model.baseSideSettlementSortedList);
             setupSettlementStringConverter(baseSideSettlementComboBox);
             VBox.setMargin(baseSideSettlementComboBox, new Insets(0, 0, 20, 0));
 
@@ -367,11 +367,11 @@ public class TakersSettlementSelection {
             quoteSideLabel = new BisqLabel();
             quoteSideLabel.getStyleClass().add("titled-group-bg-label-active");
 
-            quoteSideAccountsComboBox = new BisqComboBoxOld<>(model.quoteSideAccountSortedList);
+            quoteSideAccountsComboBox = new AutoCompleteComboBox<>(model.quoteSideAccountSortedList);
             setupAccountStringConverter(quoteSideAccountsComboBox);
             VBox.setMargin(quoteSideAccountsComboBox, new Insets(0, 0, 20, 0));
 
-            quoteSideSettlementComboBox = new BisqComboBoxOld<>(model.quoteSideSettlementSortedList);
+            quoteSideSettlementComboBox = new AutoCompleteComboBox<>(model.quoteSideSettlementSortedList);
             setupSettlementStringConverter(quoteSideSettlementComboBox);
             VBox.setMargin(quoteSideSettlementComboBox, new Insets(0, 0, 20, 0));
 
@@ -448,7 +448,7 @@ public class TakersSettlementSelection {
             quoteSideSettlementComboBox.managedProperty().unbind();
         }
 
-        private void setupAccountStringConverter(BisqComboBoxOld<AccountListItem> comboBox) {
+        private void setupAccountStringConverter(AutoCompleteComboBox<AccountListItem> comboBox) {
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(AccountListItem item) {
@@ -462,7 +462,7 @@ public class TakersSettlementSelection {
             });
         }
 
-        private void setupSettlementStringConverter(BisqComboBoxOld<SettlementListItem> comboBox) {
+        private void setupSettlementStringConverter(AutoCompleteComboBox<SettlementListItem> comboBox) {
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(SettlementListItem item) {

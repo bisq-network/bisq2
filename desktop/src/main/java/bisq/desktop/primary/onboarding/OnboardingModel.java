@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.onboarding;
 
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +36,6 @@ public class OnboardingModel extends NavigationModel {
     public NavigationTarget getDefaultNavigationTarget() {
         return userProfileService.isDefaultUserProfileMissing() ?
                 NavigationTarget.INIT_USER_PROFILE :
-                NavigationTarget.CHAT;
+                NavigationTarget.EXCHANGE;
     }
 }

@@ -19,14 +19,14 @@ package bisq.desktop.primary.onboarding.onboardNewbie;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyWordDetection;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.overlay.Popup;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.MarketSelection;
+import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import bisq.presentation.formatters.AmountFormatter;

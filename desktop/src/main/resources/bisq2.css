@@ -407,16 +407,15 @@
     -fx-font-family: "IBM Plex Sans Medium";
 }
 
-.combo-box-popup > .list-view {
+/*.combo-box-popup > .list-view {
     -fx-background-color: -bisq-grey-15;
     -fx-border-color: -bisq-grey-left-nav-bg;;
     -fx-border-width: 1;
     -fx-border-insets: 0 0 0 0;
     -fx-padding: 0 0 0 0;
     -fx-background-insets: 0 0 0 0;
-}
+}*/
 
-/* OWN */
 /* Combo-box ListView */
 .bisq-combo-box-list-view {
     -fx-background-color: -bisq-grey-15;

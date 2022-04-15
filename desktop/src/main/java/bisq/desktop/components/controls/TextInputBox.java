@@ -39,18 +39,16 @@ public class TextInputBox extends Pane {
     private final Label descriptionLabel;
     @Setter
     private String prompt;
-    private final StringProperty descriptionTextProperty = new SimpleStringProperty();
+    private final StringProperty descriptionProperty = new SimpleStringProperty();
 
     //  private final Label promptLabel;
     public TextInputBox(String description, String prompt) {
         this();
 
         this.prompt = prompt;
-        descriptionTextProperty.set(description);
+        descriptionProperty.set(description);
         inputTextField.setPromptText(this.prompt);
     }
-    
-    
 
     public TextInputBox() {
         getStyleClass().add("bisq-input-box-top-pane");
@@ -77,7 +75,7 @@ public class TextInputBox extends Pane {
         });
 
         setPrefWidth(300);
-        EasyBind.subscribe(descriptionTextProperty, description -> {
+        EasyBind.subscribe(descriptionProperty, description -> {
             if (description != null) {
                 descriptionLabel.setText(description.toUpperCase());
             }
@@ -94,8 +92,8 @@ public class TextInputBox extends Pane {
         return inputTextField.promptTextProperty();
     }
 
-    public final StringProperty descriptionTextProperty() {
-        return descriptionTextProperty;
+    public final StringProperty descriptionProperty() {
+        return descriptionProperty;
     }
 
     public final StringProperty textProperty() {
@@ -116,5 +114,9 @@ public class TextInputBox extends Pane {
 
     public void setValidator(InputValidator validator) {
         //todo
+    }
+
+    public void setDescription(String description) {
+        descriptionProperty.set(description);
     }
 }

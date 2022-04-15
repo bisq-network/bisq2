@@ -20,16 +20,18 @@ package bisq.desktop.components.controls;
 import bisq.common.monetary.Market;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
@@ -53,10 +55,6 @@ public class MarketSelection {
         controller.model.selectedMarket.set(market);
     }
 
- /*   public void setPrefWidth(double prefWidth) {
-        controller.model.prefWidth.set(prefWidth);
-    }*/
-
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
@@ -64,12 +62,13 @@ public class MarketSelection {
 
         private Controller(SettingsService settingsService) {
             model = new Model(settingsService);
+            model.markets.setAll(model.settingsService.getMarkets());
             view = new View(model, this);
         }
 
         @Override
         public void onActivate() {
-            model.markets.setAll(model.settingsService.getMarkets());
+
             model.selectedMarket.set(model.settingsService.getSelectedMarket());
         }
 
@@ -88,7 +87,6 @@ public class MarketSelection {
         private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
         private final ObservableList<Market> markets = FXCollections.observableArrayList();
         private final SettingsService settingsService;
-        private final DoubleProperty prefWidth = new SimpleDoubleProperty(250);
 
         public Model(SettingsService settingsService) {
             this.settingsService = settingsService;
@@ -97,19 +95,16 @@ public class MarketSelection {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqComboBox<Market> comboBox;
+        private final AutoCompleteComboBox<Market> comboBox;
         private final ChangeListener<Market> selectedMarketListener;
-        private final ListChangeListener<Market> marketsListener;
+        private Subscription maxWidthSubscription;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
-            root.setSpacing(10);
 
-            root.setMaxWidth(model.prefWidth.get());
+            comboBox = new AutoCompleteComboBox<>(model.markets, Res.get("markets"));
+            root.getChildren().addAll(comboBox);
 
-            comboBox = new BisqComboBox<>();
-            comboBox.setDescription(Res.get("markets"));
-          //  comboBox.setPrefWidth(model.prefWidth.get());
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(@Nullable Market value) {
@@ -122,28 +117,30 @@ public class MarketSelection {
                 }
             });
 
-            root.getChildren().addAll(comboBox.getRoot());
-
             // From model
-            selectedMarketListener = (o, old, newValue) -> comboBox.select(newValue);
-
-            marketsListener = c -> comboBox.setItems(model.markets);
+            selectedMarketListener = (o, old, newValue) -> comboBox.getSelectionModel().select(newValue);
         }
 
         @Override
         protected void onViewAttached() {
-            comboBox.setOnAction(() -> controller.onSelectMarket(comboBox.getSelectedItem()));
+            comboBox.setOnAction(e -> controller.onSelectMarket(comboBox.getSelectionModel().getSelectedItem()));
             model.selectedMarket.addListener(selectedMarketListener);
-            comboBox.select(model.selectedMarket.get());
-            model.markets.addListener(marketsListener);
-            comboBox.setItems(model.markets);
+            comboBox.getSelectionModel().select(model.selectedMarket.get());
+            comboBox.maxWidthProperty().bind(root.maxWidthProperty());
+            comboBox.minWidthProperty().bind(root.minWidthProperty());
+            comboBox.prefWidthProperty().bind(root.prefWidthProperty());
         }
 
         @Override
         protected void onViewDetached() {
             comboBox.setOnAction(null);
             model.selectedMarket.removeListener(selectedMarketListener);
-            model.markets.removeListener(marketsListener);
+            if (maxWidthSubscription != null) {
+                maxWidthSubscription.unsubscribe();
+            }
+            comboBox.maxWidthProperty().unbind();
+            comboBox.minWidthProperty().unbind();
+            comboBox.prefWidthProperty().unbind();
         }
     }
 }

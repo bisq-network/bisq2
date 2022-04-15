@@ -33,9 +33,8 @@ public class SelectUserTypeController implements Controller {
 
     public SelectUserTypeController(DefaultApplicationService applicationService) {
         model = new SelectUserTypeModel();
-        view = new SelectUserTypeView(model, this);
-
         model.getUserTypes().addAll(SelectUserTypeModel.Type.NEWBIE, SelectUserTypeModel.Type.PRO_TRADER);
+        view = new SelectUserTypeView(model, this);
     }
 
     @Override
@@ -49,14 +48,16 @@ public class SelectUserTypeController implements Controller {
 
     public void onSelect(SelectUserTypeModel.Type selectedType) {
         model.setSelectedType(selectedType);
-        switch (selectedType) {
-            case NEWBIE -> {
-                model.getInfo().set(Res.get("satoshisquareapp.selectTraderType.newbie.info"));
-                model.getButtonText().set(Res.get("satoshisquareapp.selectTraderType.newbie.button"));
-            }
-            case PRO_TRADER -> {
-                model.getInfo().set(Res.get("satoshisquareapp.selectTraderType.proTrader.info"));
-                model.getButtonText().set(Res.get("satoshisquareapp.selectTraderType.proTrader.button"));
+        if (selectedType != null) {
+            switch (selectedType) {
+                case NEWBIE -> {
+                    model.getInfo().set(Res.get("satoshisquareapp.selectTraderType.newbie.info"));
+                    model.getButtonText().set(Res.get("satoshisquareapp.selectTraderType.newbie.button"));
+                }
+                case PRO_TRADER -> {
+                    model.getInfo().set(Res.get("satoshisquareapp.selectTraderType.proTrader.info"));
+                    model.getButtonText().set(Res.get("satoshisquareapp.selectTraderType.proTrader.button"));
+                }
             }
         }
     }

@@ -52,6 +52,8 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         root.setPadding(new Insets(MARGIN, MARGIN, MARGIN, MARGIN));
         root.getStyleClass().add("bisq-darkest-bg");
 
+        marketSelection.setMinWidth(280);
+        
         Label headlineLabel = new Label(Res.get("trade.createOffer"));
         headlineLabel.getStyleClass().add("bisq-content-headline-label");
         HBox headLineBox = Layout.hBoxWith(Spacer.fillHBox(), headlineLabel, Spacer.fillHBox());

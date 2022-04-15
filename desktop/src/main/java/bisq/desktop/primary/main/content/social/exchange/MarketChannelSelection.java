@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.social.exchange;
 
 import bisq.common.monetary.Market;
 import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.components.controls.BisqComboBox;
+import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import javafx.beans.property.*;
@@ -58,10 +58,6 @@ public class MarketChannelSelection {
 
     public void setSelectedMarket(MarketChannelItem market) {
         controller.model.selectedMarketChannelItem.set(market);
-    }
-
-    public void setPrefWidth(double prefWidth) {
-        controller.model.prefWidth.set(prefWidth);
     }
 
     public void setCellFactory(Callback<ListView<MarketChannelItem>, ListCell<MarketChannelItem>> value) {
@@ -106,7 +102,6 @@ public class MarketChannelSelection {
         private final ObjectProperty<MarketChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
         private final ObservableList<MarketChannelItem> marketChannelItems = FXCollections.observableArrayList();
         private final SettingsService settingsService;
-        private final DoubleProperty prefWidth = new SimpleDoubleProperty(250);
         private Optional<Callback<ListView<MarketChannelItem>, ListCell<MarketChannelItem>>> cellFactory = Optional.empty();
         private Optional<ListCell<MarketChannelItem>> buttonCell = Optional.empty();
 
@@ -117,7 +112,7 @@ public class MarketChannelSelection {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqComboBox<MarketChannelItem> comboBox;
+        private final AutoCompleteComboBox<MarketChannelItem> comboBox;
         private final ChangeListener<MarketChannelItem> selectedMarketListener;
         private final ListChangeListener<MarketChannelItem> marketsListener;
 
@@ -125,11 +120,9 @@ public class MarketChannelSelection {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-           // root.setPrefWidth(model.prefWidth.get());
 
-            comboBox = new BisqComboBox<>();
-            comboBox.setDescription(Res.get("social.marketChannels"));
-          //  comboBox.setPrefWidth(model.prefWidth.get());
+            comboBox = new AutoCompleteComboBox<>(model.marketChannelItems,Res.get("social.marketChannels"));
+            comboBox.setMinWidth(200);
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(@Nullable MarketChannelItem value) {
@@ -142,10 +135,10 @@ public class MarketChannelSelection {
                 }
             });
 
-            root.getChildren().addAll(comboBox.getRoot());
+            root.getChildren().addAll(comboBox);
 
             // From model
-            selectedMarketListener = (o, old, newValue) -> comboBox.select(newValue);
+            selectedMarketListener = (o, old, newValue) -> comboBox.getSelectionModel().select(newValue);
 
             marketsListener = c -> comboBox.setItems(model.marketChannelItems);
         }
@@ -153,17 +146,16 @@ public class MarketChannelSelection {
         @Override
         protected void onViewAttached() {
             model.cellFactory.ifPresent(comboBox::setCellFactory);
-            comboBox.setOnAction(() -> controller.onSelectMarket(comboBox.getSelectedItem()));
+            comboBox.setOnChangeConfirmed(e -> controller.onSelectMarket(comboBox.getSelectionModel().getSelectedItem()));
             model.selectedMarketChannelItem.addListener(selectedMarketListener);
-            comboBox.select(model.selectedMarketChannelItem.get());
+            comboBox.getSelectionModel().select(model.selectedMarketChannelItem.get());
             model.marketChannelItems.addListener(marketsListener);
-            comboBox.setItems(model.marketChannelItems);
-            comboBox.getRoot().prefWidthProperty().bind(root.widthProperty());
+            comboBox.prefWidthProperty().bind(root.widthProperty());
         }
 
         @Override
         protected void onViewDetached() {
-            comboBox.setOnAction(null);
+            comboBox.setOnChangeConfirmed(null);
             model.selectedMarketChannelItem.removeListener(selectedMarketListener);
             model.marketChannelItems.removeListener(marketsListener);
         }

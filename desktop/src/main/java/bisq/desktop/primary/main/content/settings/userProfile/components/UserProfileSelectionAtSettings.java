@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.settings.userProfile.components;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.BisqComboBoxOld;
+import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.i18n.Res;
 import bisq.social.user.profile.UserProfile;
@@ -39,12 +39,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+//todo replace with UserProfileSelection
 @Slf4j
-public class UserProfileSelection {
+public class UserProfileSelectionAtSettings {
 
     private final Controller controller;
 
-    public UserProfileSelection(UserProfileService userProfileService) {
+    public UserProfileSelectionAtSettings(UserProfileService userProfileService) {
         controller = new Controller(userProfileService);
     }
 
@@ -99,7 +100,7 @@ public class UserProfileSelection {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqComboBoxOld<UserProfile> comboBox;
+        private final AutoCompleteComboBox<UserProfile> comboBox;
         private Subscription subscription;
 
         private View(Model model, Controller controller) {
@@ -109,7 +110,7 @@ public class UserProfileSelection {
             Label headline = new BisqLabel(Res.get("social.userProfileSelection.headline"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
-            comboBox = new BisqComboBoxOld<>(model.userProfiles);
+            comboBox = new AutoCompleteComboBox<>(model.userProfiles);
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(UserProfile userProfile) {

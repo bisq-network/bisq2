@@ -21,7 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.BisqComboBox;
+import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.layout.Layout;
@@ -41,16 +41,15 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class UserProfileComboBox {
+public class UserProfileSelection {
     private final Controller controller;
 
-    public UserProfileComboBox(UserProfileService userProfileService) {
+    public UserProfileSelection(UserProfileService userProfileService) {
         controller = new Controller(userProfileService);
     }
 
@@ -80,8 +79,6 @@ public class UserProfileComboBox {
             userProfilesPin = FxBindings.<UserProfile, ListItem>bind(model.userProfiles)
                     .map(ListItem::new)
                     .to(userProfileService.getPersistableStore().getUserProfiles());
-
-            log.error("onActivate model.userProfiles "+model.userProfiles);
         }
 
         @Override
@@ -110,34 +107,30 @@ public class UserProfileComboBox {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqComboBox<ListItem> bisqComboBox;
+        private final AutoCompleteComboBox<ListItem> bisqComboBox;
         private Subscription subscription;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
 
-            bisqComboBox = new BisqComboBox<>();
-            bisqComboBox.setDescription(Res.get("social.userProfile.comboBox.description").toUpperCase());
-            bisqComboBox.setItems(model.userProfiles);
-            log.error("model.userProfiles "+model.userProfiles);
+            bisqComboBox = new AutoCompleteComboBox<>(model.userProfiles,
+                    Res.get("social.userProfile.comboBox.description"));
+            bisqComboBox.setMinWidth(200);
             // bisqComboBox.setButtonCell(getListCell());
             //bisqComboBox.setCellFactory(param -> getListCell());
-            root.getChildren().add(bisqComboBox.getRoot());
+            root.getChildren().add(bisqComboBox);
         }
 
         @Override
         protected void onViewAttached() {
-            log.error("onViewAttached model.userProfiles " + model.userProfiles.size());
-            bisqComboBox.setOnAction(() -> controller.onSelected(bisqComboBox.getSelectedItem()));
+            bisqComboBox.setOnChangeConfirmed(e -> controller.onSelected(bisqComboBox.getSelectionModel().getSelectedItem()));
             subscription = EasyBind.subscribe(model.selectedUserProfile,
-                    selected -> UIThread.runOnNextRenderFrame(() -> bisqComboBox.select(selected)));
-
-
+                    selected -> UIThread.runOnNextRenderFrame(() -> bisqComboBox.getSelectionModel().select(selected)));
         }
 
         @Override
         protected void onViewDetached() {
-            bisqComboBox.setOnAction(null);
+            bisqComboBox.setOnChangeConfirmed(null);
             subscription.unsubscribe();
         }
 
@@ -163,7 +156,6 @@ public class UserProfileComboBox {
         }
     }
 
-    @ToString
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     public static class ListItem {
         private final UserProfile userProfile;

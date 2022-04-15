@@ -292,7 +292,7 @@ public class BisqComboBox<T> {
             });
             textInputBox.textProperty().bindBidirectional(model.text);
             textInputBox.promptTextProperty().bind(model.prompt);
-            textInputBox.descriptionTextProperty().bind(model.description);
+            textInputBox.descriptionProperty().bind(model.description);
             textInputBox.inputTextFieldFocusedProperty().addListener(focusListener);
             textInputBox.getInputTextField().setOnKeyPressed(e -> {
                 if (comboBoxList != null) {
@@ -312,7 +312,7 @@ public class BisqComboBox<T> {
             widthSubscription.unsubscribe();
             textInputBox.textProperty().unbindBidirectional(model.text);
             textInputBox.promptTextProperty().unbind();
-            textInputBox.descriptionTextProperty().unbind();
+            textInputBox.descriptionProperty().unbind();
             textInputBox.inputTextFieldFocusedProperty().removeListener(focusListener);
             textInputBox.getInputTextField().setOnKeyPressed(null);
         }

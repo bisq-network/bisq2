@@ -19,7 +19,7 @@ package bisq.desktop.primary.onboarding.selectUserType;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqComboBox;
+import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -28,7 +28,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -38,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, SelectUserTypeController> {
     private final VBox vBox;
     private final Button nextButton, backButton;
-    private final BisqComboBox<SelectUserTypeModel.Type> userTypeBox;
+    private final AutoCompleteComboBox<SelectUserTypeModel.Type> userTypeBox;
     private final Label info;
 
     public SelectUserTypeView(SelectUserTypeModel model, SelectUserTypeController controller) {
@@ -80,9 +79,8 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         VBox.setVgrow(info, Priority.ALWAYS);
         VBox.setMargin(info, new Insets(0, 0, 0, 0));
 
-        userTypeBox = new BisqComboBox<>();
-        userTypeBox.setDescription(Res.get("satoshisquareapp.selectTraderType.description"));
-        userTypeBox.getRoot().setPrefWidth(width);
+        userTypeBox = new AutoCompleteComboBox<>(model.getUserTypes(),Res.get("satoshisquareapp.selectTraderType.description"));
+        userTypeBox.setPrefWidth(width);
 
         backButton = new Button(Res.get("back"));
         nextButton = new Button(Res.get("shared.nextStep"));
@@ -90,11 +88,10 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         HBox buttons = Layout.hBoxWith(backButton, nextButton);
         buttons.setAlignment(Pos.CENTER);
         VBox.setMargin(buttons, new Insets(0, 0, 50, 0));
-        Pane userTypeBoxRoot = userTypeBox.getRoot();
-        VBox.setMargin(userTypeBoxRoot, new Insets(0, 0, 50, userTypeBoxRoot.getWidth()));
+        VBox.setMargin(userTypeBox, new Insets(0, 0, 50, userTypeBox.getWidth()));
 
         // todo remove that hack once design is final
-        HBox vBox = Layout.hBoxWith(Spacer.fillHBox(), userTypeBoxRoot, Spacer.fillHBox());
+        HBox vBox = Layout.hBoxWith(Spacer.fillHBox(), userTypeBox, Spacer.fillHBox());
         this.vBox.getChildren().addAll(
                 headLineLabel,
                 subTitleLabel,
@@ -109,13 +106,11 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         info.textProperty().bind(model.getInfo());
        // nextButton.textProperty().bind(model.getButtonText());
 
-        userTypeBox.setItems(model.getUserTypes());
-        userTypeBox.select(model.getUserTypes().get(0));
-        userTypeBox.setOnAction(() -> controller.onSelect(userTypeBox.getSelectedItem()));
+        userTypeBox.getSelectionModel().select(model.getUserTypes().get(0));
+        userTypeBox.setOnAction(e -> controller.onSelect(userTypeBox.getSelectionModel().getSelectedItem()));
 
         nextButton.setOnAction(e -> controller.onAction());
         backButton.setOnAction(e -> controller.onGoBack());
-
     }
 
     @Override

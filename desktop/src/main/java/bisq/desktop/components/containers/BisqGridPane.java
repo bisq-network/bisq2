@@ -191,8 +191,8 @@ public class BisqGridPane extends GridPane {
         getChildren().add(tableView);
     }
 
-    public <T> BisqComboBoxOld<T> addComboBox(ObservableList<T> items) {
-        BisqComboBoxOld<T> comboBox = new BisqComboBoxOld<>(items);
+    public <T> AutoCompleteComboBox<T> addComboBox(ObservableList<T> items) {
+        AutoCompleteComboBox<T> comboBox = new AutoCompleteComboBox<>(items);
         GridPane.setRowIndex(comboBox, getRowCount());
         GridPane.setColumnIndex(comboBox, 0);
         getChildren().add(comboBox);

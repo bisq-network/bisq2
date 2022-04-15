@@ -211,7 +211,7 @@ public class PriceInput {
             }
             rightLabel.textProperty().bind(model.marketString);
 
-            textInputBox.descriptionTextProperty().bind(model.description);
+            textInputBox.descriptionProperty().bind(model.description);
             model.fixPrice.addListener(fixPriceListener);
             textInputBox.setText(model.fixPrice.get() == null ? "" : QuoteFormatter.format(model.fixPrice.get()));
         }
@@ -223,7 +223,7 @@ public class PriceInput {
                 textInputBox.focusedProperty().removeListener(focusListener);
             }
             rightLabel.textProperty().unbind();
-            textInputBox.descriptionTextProperty().unbind();
+            textInputBox.descriptionProperty().unbind();
             model.fixPrice.removeListener(fixPriceListener);
         }
     }

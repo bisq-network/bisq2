@@ -37,12 +37,14 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     private final BisqToggleButton showAllMarkets;
     private final Pane marketSelection;
 
-    public OfferbookView(OfferbookModel model, OfferbookController controller,
+    public OfferbookView(OfferbookModel model, 
+                         OfferbookController controller,
                          Pane marketSelection,
                          Pane directionSelection) {
         super(new VBox(), model, controller);
         
         this.marketSelection = marketSelection;
+        marketSelection.setMinWidth(280);
        
         root.setSpacing(30);
         root.setPadding(new Insets(40,0,0,0));

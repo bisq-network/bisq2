@@ -64,14 +64,14 @@ public class ChatController implements Controller {
 
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
-        UserProfileComboBox userProfileComboBox = new UserProfileComboBox(userProfileService);
+        UserProfileSelection userProfileSelection = new UserProfileSelection(userProfileService);
         publicChannelSelection = new PublicChannelSelection(chatService);
         privateChannelSelection = new PrivateChannelSelection(chatService);
         quotedMessageBlock = new QuotedMessageBlock();
         model = new ChatModel(chatService, userProfileService);
         view = new ChatView(model,
                 this,
-                userProfileComboBox.getRoot(),
+                userProfileSelection.getRoot(),
                 publicChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 notificationsSettings.getRoot(),

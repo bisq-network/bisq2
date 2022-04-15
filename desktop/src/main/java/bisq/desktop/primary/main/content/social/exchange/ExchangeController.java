@@ -22,8 +22,6 @@ import bisq.common.observable.ObservableSet;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.overlay.Notification;
 import bisq.desktop.primary.main.content.social.chat.components.*;
 import bisq.i18n.Res;
@@ -54,6 +52,7 @@ public class ExchangeController implements Controller {
     private final NotificationsSettings notificationsSettings;
     private final QuotedMessageBlock quotedMessageBlock;
     private final MarketChannelSelection marketChannelSelection;
+    private final UserProfileSelection userProfileDisplay;
     private Pin chatMessagesPin, selectedChannelPin, tradeTagsPin, currencyTagsPin, paymentMethodTagsPin, customTagsPin;
 
     private Subscription notificationSettingSubscription;
@@ -63,10 +62,10 @@ public class ExchangeController implements Controller {
         chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
 
+         userProfileDisplay = new UserProfileSelection(userProfileService);
         marketChannelSelection = new MarketChannelSelection(applicationService.getSettingsService());
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
-        UserProfileComboBox userProfileDisplay = new UserProfileComboBox(userProfileService);
         publicChannelSelection = new PublicChannelSelection(chatService);
         privateChannelSelection = new PrivateChannelSelection(chatService);
         quotedMessageBlock = new QuotedMessageBlock();
@@ -344,6 +343,7 @@ public class ExchangeController implements Controller {
     }
 
     public void onCreateOffer() {
-        Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
+        //todo
+        //Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
     }
 }

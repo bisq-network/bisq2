@@ -19,7 +19,7 @@ package bisq.desktop.primary.onboarding.onboardNewbie;
 
 import bisq.common.monetary.Market;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.components.controls.BisqComboBox;
+import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
@@ -42,6 +42,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.stream.Collectors;
 
@@ -69,8 +70,8 @@ public class PaymentMethodsSelection {
         return controller.model.selectedPaymentMethods;
     }
 
-    public void setWidth(double width) {
-        controller.model.width.set(width);
+    public void setPrefWidth(double prefWidth) {
+        controller.model.prefWidth.set(prefWidth);
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -150,7 +151,7 @@ public class PaymentMethodsSelection {
         private final ObservableList<String> selectedPaymentMethods = FXCollections.observableArrayList();
         private final BooleanProperty selectPaymentMethodsDisabled = new SimpleBooleanProperty();
         private final StringProperty description = new SimpleStringProperty();
-        private final DoubleProperty width = new SimpleDoubleProperty(Double.MAX_VALUE);
+        private final DoubleProperty prefWidth = new SimpleDoubleProperty(Double.MAX_VALUE);
         private Market selectedMarket;
         private Direction direction;
 
@@ -160,12 +161,12 @@ public class PaymentMethodsSelection {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqComboBox<String> comboBox;
+        private final AutoCompleteComboBox<String> comboBox;
         private final ListChangeListener<String> selectedPaymentMethodsListener;
         private final FlowPane selectedPaymentMethodsBox;
         private final ChangeListener<String> selectedItemListener;
         private final BisqLabel maxPaymentMethods;
-        private final ListChangeListener<String> paymentMethodsListener;
+        private Subscription maxWidthSubscription;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
@@ -176,15 +177,14 @@ public class PaymentMethodsSelection {
             maxPaymentMethods.setAlignment(Pos.CENTER_RIGHT);
             maxPaymentMethods.setPadding(new Insets(3, 5, 0, 0));
 
-            comboBox = new BisqComboBox<>();
-            comboBox.setDescription(model.description.get());
-
+            comboBox = new AutoCompleteComboBox<>(model.paymentMethods, model.description.get());
+          
             selectedPaymentMethodsBox = new FlowPane();
             selectedPaymentMethodsBox.setHgap(10);
             selectedPaymentMethodsBox.setVgap(10);
             selectedPaymentMethodsBox.setPadding(new Insets(10, 0, 0, 0));
 
-            root.getChildren().addAll(comboBox.getRoot(), maxPaymentMethods, selectedPaymentMethodsBox);
+            root.getChildren().addAll(comboBox, maxPaymentMethods, selectedPaymentMethodsBox);
 
             selectedPaymentMethodsListener = c -> {
                 c.next();
@@ -194,36 +194,38 @@ public class PaymentMethodsSelection {
                 });
             };
             selectedItemListener = (observable, oldValue, newValue) -> {
-                controller.onAddPaymentMethod(comboBox.getSelectedItem());
-                comboBox.select(null);
+                controller.onAddPaymentMethod(comboBox.getSelectionModel().getSelectedItem());
+                comboBox.getSelectionModel().select(null);
             };
-            paymentMethodsListener = c -> comboBox.setItems(model.paymentMethods);
         }
 
         @Override
         protected void onViewAttached() {
-            comboBox.getRoot().disableProperty().bind(model.selectPaymentMethodsDisabled);
+            comboBox.disableProperty().bind(model.selectPaymentMethodsDisabled);
             comboBox.descriptionProperty().bind(model.description);
-            comboBox.getRoot().prefWidthProperty().bind(model.width);
-            maxPaymentMethods.prefWidthProperty().bind(comboBox.getRoot().widthProperty());
-            
-            comboBox.selectedItemProperty().addListener(selectedItemListener);
+            maxPaymentMethods.prefWidthProperty().bind(comboBox.widthProperty());
+
+            comboBox.getSelectionModel().selectedItemProperty().addListener(selectedItemListener);
             model.selectedPaymentMethods.addListener(selectedPaymentMethodsListener);
-            model.paymentMethods.addListener(paymentMethodsListener);
-            
-            comboBox.setItems(model.paymentMethods);
+
+            comboBox.maxWidthProperty().bind(root.maxWidthProperty());
+            comboBox.minWidthProperty().bind(root.minWidthProperty());
+            comboBox.prefWidthProperty().bind(root.prefWidthProperty());
         }
 
         @Override
         protected void onViewDetached() {
-            comboBox.getRoot().disableProperty().unbind();
+            comboBox.disableProperty().unbind();
             comboBox.descriptionProperty().unbind();
-            comboBox.getRoot().prefWidthProperty().unbind();
             maxPaymentMethods.prefWidthProperty().unbind();
-            
-            comboBox.selectedItemProperty().removeListener(selectedItemListener);
+
+            comboBox.getSelectionModel().selectedItemProperty().removeListener(selectedItemListener);
             model.selectedPaymentMethods.removeListener(selectedPaymentMethodsListener);
-            model.paymentMethods.removeListener(paymentMethodsListener);
+            maxWidthSubscription.unsubscribe();
+
+            comboBox.maxWidthProperty().unbind();
+            comboBox.minWidthProperty().unbind();
+            comboBox.prefWidthProperty().unbind();
         }
 
         private Node getPaymentMethodItem(String paymentMethod) {
