@@ -51,7 +51,7 @@ public class I2pClient {
     public final static String DEFAULT_HOST = "127.0.0.1";
     public final static int DEFAULT_PORT = 7656;
     // Sockets expected to be created after the router is operational, so no need to have a large value that accommodates for router startup time
-    public final static long DEFAULT_SOCKET_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
+    public final static long DEFAULT_SOCKET_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
     private final static Map<String, I2pClient> I2P_CLIENT_BY_APP = new ConcurrentHashMap<>();
 
     private Router router;
