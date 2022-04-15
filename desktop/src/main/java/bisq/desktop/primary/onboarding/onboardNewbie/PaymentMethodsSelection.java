@@ -195,7 +195,7 @@ public class PaymentMethodsSelection {
             };
             selectedItemListener = (observable, oldValue, newValue) -> {
                 controller.onAddPaymentMethod(comboBox.getSelectedItem());
-                comboBox.selectItem(null);
+                comboBox.select(null);
             };
             paymentMethodsListener = c -> comboBox.setItems(model.paymentMethods);
         }

@@ -73,7 +73,7 @@ public class ExchangeController implements Controller {
         model = new ExchangeModel(chatService, userProfileService);
         view = new ExchangeView(model,
                 this,
-                userProfileDisplay.getComboBox(),
+                userProfileDisplay.getRoot(),
                 marketChannelSelection,
                 publicChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),

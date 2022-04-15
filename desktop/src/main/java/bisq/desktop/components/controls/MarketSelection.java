@@ -125,7 +125,7 @@ public class MarketSelection {
             root.getChildren().addAll(comboBox.getRoot());
 
             // From model
-            selectedMarketListener = (o, old, newValue) -> comboBox.selectItem(newValue);
+            selectedMarketListener = (o, old, newValue) -> comboBox.select(newValue);
 
             marketsListener = c -> comboBox.setItems(model.markets);
         }
@@ -134,7 +134,7 @@ public class MarketSelection {
         protected void onViewAttached() {
             comboBox.setOnAction(() -> controller.onSelectMarket(comboBox.getSelectedItem()));
             model.selectedMarket.addListener(selectedMarketListener);
-            comboBox.selectItem(model.selectedMarket.get());
+            comboBox.select(model.selectedMarket.get());
             model.markets.addListener(marketsListener);
             comboBox.setItems(model.markets);
         }

@@ -20,10 +20,10 @@ package bisq.desktop.primary.main.content.social.chat;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.ObservableSet;
 import bisq.common.observable.Pin;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.overlay.Notification;
 import bisq.desktop.primary.main.content.social.chat.components.*;
 import bisq.i18n.Res;
@@ -31,7 +31,6 @@ import bisq.social.chat.*;
 import bisq.social.user.ChatUser;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
-import com.google.common.base.Joiner;
 import javafx.collections.ListChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -65,14 +64,14 @@ public class ChatController implements Controller {
 
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
-        UserProfileComboBox userProfileDisplay = new UserProfileComboBox(userProfileService);
+        UserProfileComboBox userProfileComboBox = new UserProfileComboBox(userProfileService);
         publicChannelSelection = new PublicChannelSelection(chatService);
         privateChannelSelection = new PrivateChannelSelection(chatService);
         quotedMessageBlock = new QuotedMessageBlock();
         model = new ChatModel(chatService, userProfileService);
         view = new ChatView(model,
                 this,
-                userProfileDisplay.getComboBox(),
+                userProfileComboBox.getRoot(),
                 publicChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 notificationsSettings.getRoot(),

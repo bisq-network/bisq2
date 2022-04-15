@@ -27,7 +27,6 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.content.social.chat.components.ChatUserIcon;
-import bisq.desktop.primary.main.content.social.chat.components.UserProfileComboBox;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatMessage;
 import bisq.social.chat.QuotedMessage;
@@ -56,7 +55,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
     private final BisqTextArea inputField;
     private final BisqLabel selectedChannelLabel;
     private final Button searchButton, notificationsButton, infoButton, closeButton;
-    private final ComboBox<UserProfileComboBox.ListItem> userProfileComboBox;
+    private final Pane userProfileComboBox;
     private final VBox left, sideBar;
     private final FilterBox filterBox;
     private final BisqInputTextField filterBoxRoot;
@@ -70,7 +69,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
     public ChatView(ChatModel model,
                     ChatController controller,
-                    ComboBox<UserProfileComboBox.ListItem> userProfileComboBox,
+                    Pane userProfileComboBox,
                     Pane publicChannelSelection,
                     Pane privateChannelSelection,
                     Pane notificationsSettings,

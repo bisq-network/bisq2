@@ -21,10 +21,11 @@ import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.BisqComboBoxOld;
+import bisq.desktop.components.controls.BisqComboBox;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.layout.Layout;
+import bisq.i18n.Res;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.ObjectProperty;
@@ -32,11 +33,12 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -52,7 +54,7 @@ public class UserProfileComboBox {
         controller = new Controller(userProfileService);
     }
 
-    public ComboBox<ListItem> getComboBox() {
+    public Pane getRoot() {
         return controller.view.getRoot();
     }
 
@@ -78,6 +80,8 @@ public class UserProfileComboBox {
             userProfilesPin = FxBindings.<UserProfile, ListItem>bind(model.userProfiles)
                     .map(ListItem::new)
                     .to(userProfileService.getPersistableStore().getUserProfiles());
+
+            log.error("onActivate model.userProfiles "+model.userProfiles);
         }
 
         @Override
@@ -96,8 +100,8 @@ public class UserProfileComboBox {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        ObjectProperty<ListItem> selectedUserProfile = new SimpleObjectProperty<>();
-        ObservableList<ListItem> userProfiles = FXCollections.observableArrayList();
+        private final ObjectProperty<ListItem> selectedUserProfile = new SimpleObjectProperty<>();
+        private final ObservableList<ListItem> userProfiles = FXCollections.observableArrayList();
 
         private Model() {
         }
@@ -105,27 +109,35 @@ public class UserProfileComboBox {
 
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<BisqComboBoxOld<ListItem>, Model, Controller> {
+    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+        private final BisqComboBox<ListItem> bisqComboBox;
         private Subscription subscription;
 
         private View(Model model, Controller controller) {
-            super(new BisqComboBoxOld<>(model.userProfiles), model, controller);
+            super(new VBox(), model, controller);
 
-            root.setButtonCell(getListCell());
-            root.setCellFactory(param -> getListCell());
-           // root.setStyle("-fx-background-color: -fx-base");
+            bisqComboBox = new BisqComboBox<>();
+            bisqComboBox.setDescription(Res.get("social.userProfile.comboBox.description").toUpperCase());
+            bisqComboBox.setItems(model.userProfiles);
+            log.error("model.userProfiles "+model.userProfiles);
+            // bisqComboBox.setButtonCell(getListCell());
+            //bisqComboBox.setCellFactory(param -> getListCell());
+            root.getChildren().add(bisqComboBox.getRoot());
         }
 
         @Override
         protected void onViewAttached() {
-            root.setOnAction(e -> controller.onSelected(root.getSelectionModel().getSelectedItem()));
+            log.error("onViewAttached model.userProfiles " + model.userProfiles.size());
+            bisqComboBox.setOnAction(() -> controller.onSelected(bisqComboBox.getSelectedItem()));
             subscription = EasyBind.subscribe(model.selectedUserProfile,
-                    selected -> UIThread.runOnNextRenderFrame(() -> root.getSelectionModel().select(selected)));
+                    selected -> UIThread.runOnNextRenderFrame(() -> bisqComboBox.select(selected)));
+
+
         }
 
         @Override
         protected void onViewDetached() {
-            root.setOnAction(null);
+            bisqComboBox.setOnAction(null);
             subscription.unsubscribe();
         }
 
@@ -164,6 +176,11 @@ public class UserProfileComboBox {
             userName = userProfile.identity().domainId();
 
             roboHashNode = RoboHash.getImage(new ByteArray(userProfile.chatUser().getPubKeyHash()));
+        }
+
+        @Override
+        public String toString() {
+            return userName;
         }
     }
 }

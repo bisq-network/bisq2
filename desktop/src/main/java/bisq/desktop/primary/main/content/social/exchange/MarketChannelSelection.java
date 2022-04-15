@@ -145,7 +145,7 @@ public class MarketChannelSelection {
             root.getChildren().addAll(comboBox.getRoot());
 
             // From model
-            selectedMarketListener = (o, old, newValue) -> comboBox.selectItem(newValue);
+            selectedMarketListener = (o, old, newValue) -> comboBox.select(newValue);
 
             marketsListener = c -> comboBox.setItems(model.marketChannelItems);
         }
@@ -155,7 +155,7 @@ public class MarketChannelSelection {
             model.cellFactory.ifPresent(comboBox::setCellFactory);
             comboBox.setOnAction(() -> controller.onSelectMarket(comboBox.getSelectedItem()));
             model.selectedMarketChannelItem.addListener(selectedMarketListener);
-            comboBox.selectItem(model.selectedMarketChannelItem.get());
+            comboBox.select(model.selectedMarketChannelItem.get());
             model.marketChannelItems.addListener(marketsListener);
             comboBox.setItems(model.marketChannelItems);
             comboBox.getRoot().prefWidthProperty().bind(root.widthProperty());

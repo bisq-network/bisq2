@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.social.exchange;
 
+import bisq.common.currency.CurrencyRepository;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyWordDetection;
@@ -27,12 +28,13 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.content.social.chat.components.ChatUserIcon;
-import bisq.desktop.primary.main.content.social.chat.components.UserProfileComboBox;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatMessage;
 import bisq.social.chat.QuotedMessage;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -48,6 +50,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.stream.Collectors;
+
 @Slf4j
 public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeController> {
     public final static String EDITED_POST_FIX = " " + Res.get("social.message.wasEdited");
@@ -56,7 +60,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
     private final BisqTextArea inputField;
     private final BisqLabel selectedChannelLabel;
     private final Button searchButton, notificationsButton, infoButton, closeButton;
-    private final ComboBox<UserProfileComboBox.ListItem> userProfileComboBox;
+    private final Pane userProfileComboBox;
     private final VBox left, sideBar;
     private final FilterBox filterBox;
     private final BisqInputTextField filterBoxRoot;
@@ -70,7 +74,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
 
     public ExchangeView(ExchangeModel model,
                         ExchangeController controller,
-                        ComboBox<UserProfileComboBox.ListItem> userProfileComboBox,
+                        Pane userProfileComboBox,
                         MarketChannelSelection marketChannelSelection,
                         Pane publicChannelSelection,
                         Pane privateChannelSelection,
@@ -105,10 +109,12 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
                             hBox.getChildren().addAll(market, Spacer.fillHBox());
 
                             Badge badge = new Badge(hBox);
-                            badge.getStyleClass().add("market-channel-badge");
                             badge.setTooltip(Res.get("social.marketChannels.numMessages"));
                             badge.setPosition(Pos.CENTER_RIGHT);
-                            badge.setText(String.valueOf(item.getNumMessages()));
+                            int numMessages = item.getNumMessages();
+                            if (numMessages > 0) {
+                                badge.setText(String.valueOf(numMessages));
+                            }
                             setGraphic(badge);
                         } else {
                             setGraphic(null);
@@ -118,8 +124,37 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
             }
         });
 
-        left = Layout.vBoxWith(userProfileComboBox,
-                marketChannelSelection.getRoot(),
+     /*   ComboBox<String> comboBox = new ComboBox<>();
+        ObservableList<String> list = FXCollections.observableArrayList();
+        list.addAll(List.of("a","bbb","cccc","dddd","aa"));
+        comboBox.setItems(list);
+        
+        comboBox.setEditable(true);
+        TextFields.bindAutoCompletion(comboBox.getEditor(), comboBox.getItems());*/
+
+
+   /*     AutocompleteComboBox<String> comboBox = new AutocompleteComboBox<>();
+        ObservableList<String> list = FXCollections.observableArrayList();
+        list.addAll(List.of("aaaa","bbb","ccc sdfaaaaac","dddd","aaaa safsdsfda"));
+        comboBox.setAutocompleteItems(list);*/
+
+       /* comboBox.setEditable(true);
+        TextFields.bindAutoCompletion(comboBox.getEditor(), comboBox.getItems());
+*/
+
+    
+       // comboBox.setEditable(true);
+        ObservableList<String> list = FXCollections.observableArrayList();
+        list.addAll(CurrencyRepository.getAllCurrencies().stream().map(e -> e.getName()).collect(Collectors.toList()));
+        MyComboBox<String> comboBox = new MyComboBox<>(list);
+        comboBox.setPrefWidth(300);
+        AutocompleteComboBox<String> autocompleteComboBox = new AutocompleteComboBox<>(list);
+        autocompleteComboBox.setPrefWidth(300);
+
+        left = Layout.vBoxWith(/*userProfileComboBox,*/
+                /*  marketChannelSelection.getRoot(),*/
+                comboBox,
+            /*    autocompleteComboBox,*/
               /*  publicChannelSelection,
                 privateChannelSelection,*/
                 Spacer.fillVBox()

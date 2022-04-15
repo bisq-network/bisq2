@@ -49,6 +49,8 @@ public class TextInputBox extends Pane {
         descriptionTextProperty.set(description);
         inputTextField.setPromptText(this.prompt);
     }
+    
+    
 
     public TextInputBox() {
         getStyleClass().add("bisq-input-box-top-pane");

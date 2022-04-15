@@ -349,26 +349,28 @@ Taken from Bisq. Might need some clean up
     -fx-text-fill: -bs-text-color;
 }
 
-.list-view .list-cell:odd, .list-view .list-cell:even {
+/*.list-view .list-cell:odd, .list-view .list-cell:even {
     -fx-background-color: -bs-background-color;
     -fx-border-width: 0;
-}
+}*/
 
-.list-view .list-cell:selected,
+/*.list-view .list-cell:selected,
 .table-view .table-cell:selected {
     -fx-border-color: transparent;
     -fx-border-width: 0;
-}
+}*/
 
-.list-view, .list-view:focused {
+/*.list-view, .list-view:focused {
     -fx-border-color: -bs-content-background-gray;
     -fx-border-width: 1;
-}
+}*/
 
+/*
 .list-view .list-cell, .list-view .list-cell:focused {
     -fx-border-color: transparent;
     -fx-border-width: 0;
 }
+*/
 
 .jfx-text-field {
     -fx-background-radius: 4;

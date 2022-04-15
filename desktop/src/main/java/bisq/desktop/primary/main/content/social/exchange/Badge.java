@@ -34,6 +34,7 @@ import javafx.util.Duration;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+// Derived from JfxBadge
 @Slf4j
 @DefaultProperty(value = "control")
 public class Badge extends StackPane {
@@ -89,14 +90,17 @@ public class Badge extends StackPane {
 
     public void refreshBadge() {
         badge.getChildren().clear();
-        if (enabled) {
-            Label labelControl = new Label(text.getValue());
+        int textLength = text.get().length();
+        if (enabled && textLength > 0) {
+            Label labelControl = new Label(text.get());
             labelControl.getStyleClass().add("badge-label");
 
             StackPane badgePane = new StackPane();
             badgePane.getStyleClass().add("badge-pane");
             badgePane.getChildren().add(labelControl);
-            badgePane.setPrefWidth(text.get().length() * 15d);
+            badgePane.setPrefWidth(textLength * 15d);
+
+            //todo not working yet ?
             if (tooltip != null) {
                 Tooltip.uninstall(badgePane, new Tooltip(tooltip));
             }
@@ -128,7 +132,7 @@ public class Badge extends StackPane {
         this.position.set(position);
     }
 
-    private SimpleStringProperty text = new SimpleStringProperty();
+    private SimpleStringProperty text = new SimpleStringProperty("");
 
     public final String getText() {
         return text.get();

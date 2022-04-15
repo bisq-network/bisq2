@@ -106,7 +106,7 @@ public class BisqComboBox<T> {
         return controller.model.selectedItem.get();
     }
 
-    public void selectItem(T selectItem) {
+    public void select(T selectItem) {
         controller.selectItem(selectItem);
     }
 
@@ -340,7 +340,7 @@ public class BisqComboBox<T> {
         @Setter
         private int visibleRowCount = 10;
         private final Stage stage = new Stage();
-        private final ListChangeListener<T> numItemsListener;
+        private final ListChangeListener<T> itemsListener;
         private final ChangeListener<Number> positionListener;
         private final ChangeListener<T> selectedItemListener;
         private UIScheduler fixPositionsScheduler;
@@ -384,14 +384,14 @@ public class BisqComboBox<T> {
                 selectionHandler.accept(newValue);
             };
             listView.getSelectionModel().selectedItemProperty().addListener(selectedItemListener);
-            numItemsListener = c -> updateHeight();
-            items.addListener(numItemsListener);
+            itemsListener = c -> onItemsChanged();
+            items.addListener(itemsListener);
             getChildren().addAll(background, listView);
         }
 
         public void show() {
             updatePosition();
-            updateHeight();
+            onItemsChanged();
             stage.show();  // The new stage receives the focus. But we want to give focus back to search field input
             window.requestFocus();
         }
@@ -462,7 +462,7 @@ public class BisqComboBox<T> {
             background.setEffect(dropShadow);
         }
 
-        private void updateHeight() {
+        private void onItemsChanged() {
             double height = 0;
             if (items.isEmpty()) {
                 background.getPoints().clear();
@@ -492,7 +492,7 @@ public class BisqComboBox<T> {
                 fixPositionsScheduler.stop();
             }
             listView.getSelectionModel().selectedItemProperty().removeListener(selectedItemListener);
-            items.removeListener(numItemsListener);
+            items.removeListener(itemsListener);
             window.xProperty().removeListener(positionListener);
             window.yProperty().removeListener(positionListener);
             window.widthProperty().removeListener(positionListener);
