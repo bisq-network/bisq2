@@ -190,21 +190,8 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
                     event.getCode() == KeyCode.UP ||
                     event.getCode() == KeyCode.ENTER) {
                 event.consume();
-
-                // does forward event to listview but closes popup a first selection
-                //   skin.listView.fireEvent(event);
             }
         });
-
-  /*      skin.textInputBox.addEventHandler(KeyEvent.ANY, (KeyEvent event) -> {
-            if (event.getCode() == KeyCode.DOWN) {
-                skin.listView.getSelectionModel().selectNext();
-                event.consume();
-            } else if (event.getCode() == KeyCode.UP) {
-                skin.listView.getSelectionModel().selectPrevious();
-                event.consume();
-            }
-        });*/
     }
 
     private void filterBy(String query) {
@@ -281,8 +268,6 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         private final ComboBox<T> comboBox;
         private final Pane buttonPane;
         private ListView<T> listView;
-        private final Pane popupContentBackground = new Pane();
-        private Polygon listViewBackgroundPolygon;
 
 
         public Skin(ComboBox<T> control, String description, String prompt) {
@@ -353,86 +338,26 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
                     this.listView.getStyleClass().add("bisq-combo-box-list-view");
 
+                    // Hack to get access to background and insert our polygon
+                    //todo make weak reference or remove listener
                     listView.parentProperty().addListener(new ChangeListener<Parent>() {
                         @Override
                         public void changed(ObservableValue<? extends Parent> observable, Parent oldValue, Parent newValue) {
-                            if (newValue != null) {
-                                Parent parent = listView.getParent();
-                                log.error("parent {}", parent);
-                                if (parent instanceof Pane pane) {
-                                    log.error("pane {}", pane);
-                                    log.error("pane.getChildren() {}", pane.getChildren());
-                                    if (!pane.getChildren().isEmpty()) {
-                                        if (pane.getChildren().get(0) instanceof Polygon polygon) {
-                                            listViewBackgroundPolygon = polygon;
-                                            DropShadow dropShadow = new DropShadow();
-                                            dropShadow.setBlurType(BlurType.GAUSSIAN);
-                                            dropShadow.setRadius(25);
-                                            dropShadow.setSpread(0.65);
-                                            dropShadow.setColor(Color.rgb(0, 0, 0, 0.4));
-                                            dropShadow.setColor(Color.rgb(0, 255, 0, 0.94));
-
-                                            listViewBackgroundPolygon.setFill(Paint.valueOf("#212121"));
-                                            listViewBackgroundPolygon.setFill(Paint.valueOf("#ff0000"));
-                                            listViewBackgroundPolygon.setEffect(dropShadow);
-                                        }
-                                    }
+                            if (newValue != null && listView.getParent() != null) {
+                                Parent rootPopup = listView.getParent().getParent();
+                                log.error("rootPopup "+ ((Pane)rootPopup).getChildren().size());
+                                if (rootPopup instanceof Pane pane && pane.getChildren().size() == 1) {
+                                    pane.getChildren().add(0, listBackground);
                                 }
-
                             }
                         }
                     });
-                  /*  UIScheduler.run(()->{
-                        log.error("p1 {}", listView.getParent());
-                        Polygon polygon = (Polygon) ((Pane)listView.getParent()).getChildren().get(0);
-                        log.error("polygon {}",polygon);
-                        log.error("p2 {}", listView.getParent().getChildrenUnmodifiable());
-                        log.error("p2 {}", ((Pane)listView.getParent()).getChildren().get(0));
-                        log.error("p2 {}", ((Pane)listView.getParent()).getChildren().size());
-                    }).after(1000);*/
-
-                   /* listView.addEventHandler(KeyEvent.KEY_RELEASED, (KeyEvent event) -> {
-                        if (event.getCode() == KeyCode.DOWN) {
-                            log.error("## {}", event);
-                            comboBox.getSelectionModel().selectNext();
-                        } else if (event.getCode() == KeyCode.UP) {
-                            log.error("## {}", event);
-                            comboBox.getSelectionModel().selectPrevious();
-                        }
-                    });*/
-
-                    // popupContentBackground.getChildren().addAll(listBackground, listView);
                 } else {
                     throw new RuntimeException("node expected to be ListView");
                 }
             }
             return listView;
         }
-
-
-        // this version works but does not draw the arrow. did not find a way to access background to change shape
-   /*     @Override
-        public Node getPopupContent() {
-            // Hack to get listView from base class and put it into a container with the listBackground below.
-            if (this.listView == null) {
-                Node node = super.getPopupContent();
-                if (node instanceof ListView listView) {
-                    this.listView = listView;
-                    DropShadow dropShadow = new DropShadow();
-                    dropShadow.setBlurType(BlurType.GAUSSIAN);
-                    dropShadow.setRadius(25);
-                    dropShadow.setSpread(0.65);
-                    dropShadow.setColor(Color.rgb(0, 0, 0, 0.4));
-                    listView.setEffect(dropShadow);
-
-                    listView.getStyleClass().add("bisq-combo-box-list-view");
-                } else {
-                    throw new RuntimeException("node exptected to be ListView");
-                }
-            }
-            return listView;
-        }*/
-
 
         @Override
         protected void layoutChildren(final double x, final double y,
@@ -467,17 +392,6 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
                         x + width, y + height,
                         x, y + height);
 
-                if (listViewBackgroundPolygon != null) {
-
-                    listViewBackgroundPolygon.getPoints().setAll(
-                            x, y,
-                            x + arrowX_l, y,
-                            x + arrowX_m, arrowY_m,
-                            x + arrowX_r, y,
-                            x + width, y,
-                            x + width, y + height,
-                            x, y + height);
-                }
                 listBackground.setLayoutX(0);
                 buttonPane.setLayoutX(0);
                 listView.setLayoutX(5);

@@ -301,124 +301,38 @@
     -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0.0, 0, 3);
     -fx-font-size: 1em;
-    /* -fx-font-family: "IBM Plex Sans Light";*/
 }
 
-/*
 
-.bisq-badge.new .badge-pane {
-    -fx-pref-width: 30;
-}
-
-.bisq-badge.auto-conf .badge-pane {
-    -fx-background-color: -xmr-orange;
-    -fx-pref-width: -1;
-    -fx-padding: -1 10 0 10;
-}
-
-.bisq-badge .badge-pane .label {
-    -fx-font-weight: bold;
-    -fx-font-size: 0.692em;
-    -fx-text-fill: -bs-background-color;
-}
-*/
-
-
-/* OLD */
-
-
-.combo-box-editor-bold {
+/*.combo-box-editor-bold {
     -fx-font-weight: bold;
     -fx-padding: 5 8 5 8 !important;
     -fx-text-fill: -bs-text-color;
     -fx-font-family: "IBM Plex Sans Medium";
-}
-
-
-.jfx-combo-box > .arrow-button > .arrow {
-    -fx-background-color: null;
-    -fx-border-color: -jfx-unfocus-color;
-    -fx-shape: "M 0 0 l 3.5 4 l 3.5 -4";
-}
+}*/
 
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
-    /*   -fx-background: -fx-selection-bar;
-       -fx-background-color: -fx-selection-bar;*/
-    /* -fx-background: transparent;*/
     -fx-background-color: transparent;
 }
 
-
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
-    /* -fx-background: -fx-accent;
-     -fx-background-color: -fx-selection-bar;*/
 
-    /* -fx-background-color: transparent;*/
+    -fx-background-color: -bisq-grey-16;
     -fx-background: transparent;
 }
 
 .combo-box-base,
 .combo-box-base:editable > .arrow-button {
-    /* -fx-background: transparent;*/
     -fx-background-color: transparent;
-    /* -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-     -fx-background-radius: 3px, 3px, 2px, 1px;
-     -fx-padding: 0.333333em 0.666667em 0.333333em 0.666667em; !* 4 8 4 8 *!
-     -fx-text-fill: -fx-text-base-color;
-     -fx-alignment: CENTER;
-     -fx-content-display: LEFT;*/
 }
 
 .combo-box-base:editable > .arrow {
     -fx-background-color: transparent;
 }
 
-/*
-.combo-box-base,
-.combo-box-base:editable > .arrow-button {
-    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 3px, 3px, 2px, 1px;
-    -fx-padding: 0.333333em 0.666667em 0.333333em 0.666667em; !* 4 8 4 8 *!
-    -fx-text-fill: -fx-text-base-color;
-    -fx-alignment: CENTER;
-    -fx-content-display: LEFT;
-}
-*/
-
-
-/* NEW */
-.jfx-combo-box {
-    -jfx-focus-color: -bs-color-primary;
-    -jfx-unfocus-color: -bs-color-gray-line;
-    /*  -fx-background-color: -bs-background-color;*/
-
-    -fx-background-color: -bisq-grey-12;
-    -fx-background-radius: 4;
-
-    -fx-text-fill: -bisq-grey-9;
-    -fx-font-size: 0.9em;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.jfx-combo-box > .list-cell {
-    -fx-text-fill: -bs-text-color;
-    -fx-font-family: "IBM Plex Sans Medium";
-}
-
-/*.combo-box-popup > .list-view {
-    -fx-background-color: -bisq-grey-15;
-    -fx-border-color: -bisq-grey-left-nav-bg;;
-    -fx-border-width: 1;
-    -fx-border-insets: 0 0 0 0;
-    -fx-padding: 0 0 0 0;
-    -fx-background-insets: 0 0 0 0;
-}*/
-
-/* Combo-box ListView */
 .bisq-combo-box-list-view {
-    -fx-background-color: -bisq-grey-15;
+    -fx-background-color: -bisq-grey-16;
     -fx-border-color: -bisq-grey-left-nav-bg;;
     -fx-border-width: 1;
     -fx-border-insets: 0 0 0 0;
