@@ -22,7 +22,10 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyWordDetection;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.*;
+import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqInputTextField;
+import bisq.desktop.components.controls.BisqTaggableTextArea;
+import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.layout.Layout;
@@ -53,7 +56,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
 
     private final ListView<ChatMessageListItem<? extends ChatMessage>> messagesListView;
     private final BisqTextArea inputField;
-    private final BisqLabel selectedChannelLabel;
+    private final Label selectedChannelLabel;
     private final Button searchButton, notificationsButton, infoButton, closeButton;
     private final Pane userProfileSelection;
     private final VBox left, sideBar;
@@ -64,9 +67,10 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
     private final Pane channelInfo;
     private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
     private final HBox messagesListAndSideBar;
-    private final BisqButton createOfferButton;
+    private final Button createOfferButton;
     private Subscription chatUserOverviewRootSubscription;
     private Pane chatUserOverviewRoot;
+    private Subscription widthSubscription;
 
     public ExchangeView(ExchangeModel model,
                         ExchangeController controller,
@@ -83,22 +87,21 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
         this.userProfileSelection = userProfileSelection;
-
-        root.setPadding(new Insets(20, 0, 0, 0));
-        root.setStyle("-fx-background-color: -fx-base");
-        root.getStyleClass().add("hide-focus");
+      //  userProfileSelection.setPrefWidth(300);
 
         // Left 
         marketChannelSelection.setCellFactory(getMarketChannelCellFactory());
+       // marketChannelSelection.getRoot().setPrefWidth(300);
 
         left = Layout.vBoxWith(userProfileSelection,
-              /*  marketChannelSelection.getRoot(),*/
+                marketChannelSelection.getRoot(),
                 Spacer.fillVBox()
         );
-        left.setMinWidth(250);
-
+        left.setPadding(new Insets(0, 20, 0, 0));
+        left.setPrefWidth(300);
+        
         // Center toolbar
-        selectedChannelLabel = new BisqLabel();
+        selectedChannelLabel = new Label();
         selectedChannelLabel.getStyleClass().add("headline-label");
 
         filterBox = new FilterBox(model.getFilteredChatMessages());
@@ -126,8 +129,8 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         inputField.setPromptText(Res.get("social.chat.input.prompt"));
         inputField.setStyle("-fx-background-color: -fx-base");
 
-        createOfferButton = new BisqButton(Res.get("satoshisquareapp.chat.createOffer.button"));
-        createOfferButton.setActionButton(true);
+        createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
+        createOfferButton.setDefaultButton(true);
         HBox.setMargin(createOfferButton, new Insets(5, -30, 0, 0));
 
         HBox bottomBox = Layout.hBoxWith(inputField, createOfferButton);
@@ -155,9 +158,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         messagesListAndSideBar.setPadding(new Insets(10, 10, 10, 10));
         messagesListAndSideBar.setStyle("-fx-background-color: -fx-base");
 
-        root.setDividerPosition(0, model.getDefaultLeftDividerPosition());
         root.getItems().addAll(left, center);
-        // root.getItems().addAll(left);
 
         messagesListener = c -> messagesListView.scrollTo(model.getFilteredChatMessages().size() - 1);
     }
@@ -196,8 +197,6 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
 
     @Override
     protected void onViewAttached() {
-        userProfileSelection.prefWidthProperty().bind(root.widthProperty());
-        marketChannelSelection.getRoot().prefWidthProperty().bind(root.widthProperty());
         selectedChannelLabel.textProperty().bind(model.getSelectedChannelAsString());
         filterBoxRoot.visibleProperty().bind(model.getFilterBoxVisible());
         notificationsSettings.visibleProperty().bind(model.getNotificationsVisible());
@@ -243,12 +242,22 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
                         chatUserOverviewRoot = pane;
                     }
                 });
+        widthSubscription = EasyBind.subscribe(root.widthProperty(), w -> {
+            double width = w.doubleValue();
+            if (width > 0) {
+                double prefWidth = left.getPrefWidth();
+                log.error("prefWidth "+prefWidth);
+                root.setDividerPosition(0, prefWidth / width);
+                UIThread.runOnNextRenderFrame(() -> {
+                    widthSubscription.unsubscribe();
+                    widthSubscription = null;
+                });
+            }
+        });
     }
 
     @Override
     protected void onViewDetached() {
-        userProfileSelection.prefWidthProperty().unbind();
-        marketChannelSelection.getRoot().prefWidthProperty().unbind();
         selectedChannelLabel.textProperty().unbind();
         filterBoxRoot.visibleProperty().unbind();
         notificationsSettings.visibleProperty().unbind();
@@ -268,6 +277,10 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         createOfferButton.setOnAction(null);
         model.getFilteredChatMessages().removeListener(messagesListener);
         chatUserOverviewRootSubscription.unsubscribe();
+        if (widthSubscription != null) {
+            widthSubscription.unsubscribe();
+            widthSubscription = null;
+        }
     }
 
     private Callback<ListView<ChatMessageListItem<? extends ChatMessage>>, ListCell<ChatMessageListItem<? extends ChatMessage>>> getCellFactory() {
@@ -276,12 +289,12 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
             @Override
             public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                 return new ListCell<>() {
-                    private final BisqButton saveEditButton, cancelEditButton;
+                    private final Button saveEditButton, cancelEditButton;
                     private final BisqTextArea editedMessageField;
                     private final Button emojiButton1, emojiButton2, openEmojiSelectorButton, replyButton,
                             pmButton, editButton, deleteButton, moreOptionsButton;
-                    private final BisqLabel userName = new BisqLabel();
-                    private final BisqLabel time = new BisqLabel();
+                    private final Label nickNameLabel = new Label();
+                    private final Label time = new Label();
                     private final BisqTaggableTextArea message = new BisqTaggableTextArea();
                     private final Text quotedMessageField = new Text();
                     private final HBox hBox, reactionsBox, editControlsBox, quotedMessageBox;
@@ -291,8 +304,8 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
                     Subscription widthSubscription;
 
                     {
-                        userName.setId("chat-user-name");
-                        userName.setPadding(new Insets(2, 0, -8, 0));
+                        nickNameLabel.setId("chat-user-name");
+                        nickNameLabel.setPadding(new Insets(2, 0, -8, 0));
                         time.getStyleClass().add("message-header");
                         time.setPadding(new Insets(-6, 0, 0, 0));
                         time.setVisible(false);
@@ -334,8 +347,8 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
                         editedMessageField.setVisible(false);
                         editedMessageField.setManaged(false);
 
-                        saveEditButton = new BisqButton(Res.get("shared.save"));
-                        cancelEditButton = new BisqButton(Res.get("shared.cancel"));
+                        saveEditButton = new Button(Res.get("shared.save"));
+                        cancelEditButton = new Button(Res.get("shared.cancel"));
 
                         editControlsBox = Layout.hBoxWith(Spacer.fillHBox(), cancelEditButton, saveEditButton);
                         editControlsBox.setVisible(false);
@@ -349,7 +362,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
                                 editControlsBox,
                                 Layout.hBoxWith(Spacer.fillHBox(), reactionsBox));
                         VBox.setVgrow(messageBox, Priority.ALWAYS);
-                        vBox = Layout.vBoxWith(userName, messageBox);
+                        vBox = Layout.vBoxWith(nickNameLabel, messageBox);
                         HBox.setHgrow(vBox, Priority.ALWAYS);
                         hBox = Layout.hBoxWith(Layout.vBoxWith(chatUserIcon, time), vBox);
                         setStyle("-fx-background-color: -fx-base");
@@ -373,7 +386,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
                                     quotedMessageField.setText(quotedMessage.message());
                                     quotedMessageField.setStyle("-fx-fill: -bisq-grey-9");
 
-                                    BisqLabel userName = new BisqLabel(quotedMessage.userName());
+                                    Label userName = new Label(quotedMessage.userName());
                                     userName.setPadding(new Insets(4, 0, 0, 0));
                                     userName.setStyle("-fx-text-fill: -bisq-grey-9");
 
@@ -414,8 +427,8 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
                             dateTooltip = new Tooltip(item.getDate());
                             Tooltip.install(time, dateTooltip);
 
-                            userName.setText(item.getAuthorUserName());
-                            userName.setOnMouseClicked(e -> controller.onUserNameClicked(item.getAuthorUserName()));
+                            nickNameLabel.setText(item.getAuthorUserName());
+                            nickNameLabel.setOnMouseClicked(e -> controller.onUserNameClicked(item.getAuthorUserName()));
 
                             chatUserIcon.setChatUser(item.getAuthor(), model.getUserProfileService());
                             chatUserIcon.setCursor(Cursor.HAND);
@@ -464,7 +477,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
                             if (widthSubscription != null) {
                                 widthSubscription.unsubscribe();
                             }
-                            userName.setOnMouseClicked(null);
+                            nickNameLabel.setOnMouseClicked(null);
                             chatUserIcon.setOnMouseClicked(null);
                             hBox.setOnMouseEntered(null);
                             hBox.setOnMouseExited(null);

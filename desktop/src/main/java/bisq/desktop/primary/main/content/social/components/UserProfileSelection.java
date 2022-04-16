@@ -120,7 +120,10 @@ public class UserProfileSelection {
 
             comboBox = new UserProfileComboBox(model.userProfiles,
                     Res.get("social.userProfile.comboBox.description"));
-            root.getChildren().add(comboBox);
+            root.getChildren().addAll(comboBox);
+            // comboBox.autosize();
+            // root.autosize();
+
         }
 
         @Override
@@ -226,6 +229,14 @@ public class UserProfileSelection {
                                     new Tooltip(Res.get("roboIconWithId.id", userProfile.getProfileId())));
                         }
                     }).get());
+        }
+
+        @Override
+        protected void layoutChildren(final double x, final double y,
+                                      final double w, final double h) {
+            super.layoutChildren(x, y, w, h);
+
+            textInputBox.setPrefWidth(w - 50);
         }
 
         @Override

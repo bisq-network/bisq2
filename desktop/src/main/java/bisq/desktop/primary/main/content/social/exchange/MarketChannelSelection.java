@@ -120,9 +120,8 @@ public class MarketChannelSelection {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-
             comboBox = new AutoCompleteComboBox<>(model.marketChannelItems,Res.get("social.marketChannels"));
-            comboBox.setMinWidth(200);
+           // comboBox.setMinWidth(200);
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(@Nullable MarketChannelItem value) {
