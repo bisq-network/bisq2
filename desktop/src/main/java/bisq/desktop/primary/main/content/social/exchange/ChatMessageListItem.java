@@ -54,7 +54,7 @@ public class ChatMessageListItem<T extends ChatMessage> implements Comparable<Ch
         message = chatMessage.getText() + editPostFix;
         quotedMessage = chatMessage.getQuotedMessage();
         author = chatMessage.getAuthor();
-        authorUserName = author.getUserName();
+        authorUserName = author.getProfileId();
         time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
         date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));
         byte[] pubKeyHash = DigestUtil.hash(author.getNetworkId().getPubKey().publicKey().getEncoded());

@@ -83,7 +83,7 @@ public class InitUserProfileController implements Controller {
                 .thenAccept(userProfile -> {
                     UIThread.run(() -> {
                         chatService.maybeAddDummyChannels();
-                        checkArgument(userProfile.identity().domainId().equals(profileId));
+                        checkArgument(userProfile.getIdentity().domainId().equals(profileId));
                         model.showProcessingPopup.set(false);
                         UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget.SELECT_USER_TYPE)).after(100);
                     });

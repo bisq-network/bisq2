@@ -19,7 +19,7 @@ package bisq.desktop.primary.onboarding.initUserProfile;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.LargeRoboIconWithId;
+import bisq.desktop.components.controls.RoboIconWithId;
 import bisq.desktop.components.controls.TextInputBox;
 import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
@@ -41,7 +41,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
     private final Button nextButton;
     private final VBox vBox;
     private final TextInputBox nicknameTextInputBox;
-    private final LargeRoboIconWithId roboIconWithId;
+    private final RoboIconWithId roboIconWithId;
     private Subscription roboHashNodeSubscription, vBoxHeightSubscription;
     private Popup processingPopup;
 
@@ -80,7 +80,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
                 Res.get("satoshisquareapp.setDefaultUserProfile.nickName.prompt"));
         nicknameTextInputBox.setPrefWidth(inputWidth);
 
-        roboIconWithId = new LargeRoboIconWithId();
+        roboIconWithId = new RoboIconWithId(300);
         Tooltip.install(roboIconWithId, new Tooltip(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.button")));
 
         Label tryOtherInfoLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.info"));

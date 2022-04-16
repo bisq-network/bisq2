@@ -42,7 +42,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
-import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -374,7 +373,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             cancelEditButton.setOnAction(e -> onCloseEditMessage());
 
                             dateTooltip = new Tooltip(item.getDate());
-                            dateTooltip.setShowDelay(Duration.millis(100));
                             Tooltip.install(time, dateTooltip);
 
                             userName.setText(item.getAuthorUserName());

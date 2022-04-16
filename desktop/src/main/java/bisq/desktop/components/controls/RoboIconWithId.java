@@ -30,18 +30,20 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import org.fxmisc.easybind.EasyBind;
 
-public class LargeRoboIconWithId extends VBox {
+public class RoboIconWithId extends VBox {
     private final ImageView imageView;
     private final Label profileId;
     private final StringProperty textProperty = new SimpleStringProperty();
 
-    public LargeRoboIconWithId() {
+    public RoboIconWithId(double size) {
         imageView = new ImageView();
         imageView.setCursor(Cursor.HAND);
+        imageView.setFitWidth(size);
+        imageView.setFitHeight(size);
         setAlignment(Pos.CENTER);
         profileId = new Label();
-        profileId.setMaxWidth(300);
-        profileId.setMinWidth(300);
+        profileId.setMaxWidth(size);
+        profileId.setMinWidth(size);
         profileId.setTextAlignment(TextAlignment.CENTER);
         profileId.setPadding(new Insets(7, 7, 7, 7));
         profileId.getStyleClass().add("bisq-large-profile-id-label");
@@ -64,6 +66,6 @@ public class LargeRoboIconWithId extends VBox {
     }
 
     public void setProfileId(String id) {
-        profileId.setText(Res.get("largeRoboIconWithId.id", id));
+        profileId.setText(Res.get("roboIconWithId.id", id));
     }
 }

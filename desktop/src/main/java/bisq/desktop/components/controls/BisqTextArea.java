@@ -20,6 +20,8 @@ package bisq.desktop.components.controls;
 import bisq.desktop.common.threading.UIThread;
 import com.jfoenix.controls.JFXTextArea;
 import javafx.beans.InvalidationListener;
+import javafx.beans.value.ChangeListener;
+import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Skin;
 import javafx.scene.text.Text;
@@ -27,7 +29,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.ref.WeakReference;
-import java.util.Objects;
 
 /**
  * TextArea does not support of adjustment of height based on the text content.
@@ -56,18 +57,17 @@ public class BisqTextArea extends JFXTextArea {
         setStyle("-fx-background-color: -bisq-grey-5; -fx-border-color: -bisq-grey-5; -fx-text-fill: -fx-light-text-color;");
 
         // We use a weakReference for the sceneChangeListener to avoid leaking when our instance is gone
-        Objects.requireNonNull(new WeakReference<>(this).get()).sceneProperty()
-                .addListener((observable, oldValue, newValue) -> {
-                    if (newValue == null) {
-                        // When we get removed from the display graph we remove the textChangeListener. 
-                        // We delay that to the next render frame to avoid potential ConcurrentModificationExceptions 
-                        // at the listener collections.
-                        UIThread.runOnNextRenderFrame(() -> textProperty().removeListener(textChangeListener));
-                    } else {
-                        initialized = false;
-                        layoutChildren();
-                    }
-                });
+        sceneProperty().addListener(new WeakReference<>((ChangeListener<Scene>) (observable, oldValue, newValue) -> {
+            if (newValue == null) {
+                // When we get removed from the display graph we remove the textChangeListener. 
+                // We delay that to the next render frame to avoid potential ConcurrentModificationExceptions 
+                // at the listener collections.
+                UIThread.runOnNextRenderFrame(() -> textProperty().removeListener(textChangeListener));
+            } else {
+                initialized = false;
+                layoutChildren();
+            }
+        }).get());
     }
 
     public BisqTextArea(String text) {

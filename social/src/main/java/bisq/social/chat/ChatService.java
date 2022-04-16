@@ -153,15 +153,15 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         Set<String> tradeTags = getTradeTags();
         Set<String> paymentMethodTags = getPaymentMethodTags();
         Set<String> customTags = getCustomTags();
-        return userProfile.entitlements().stream()
+        return userProfile.getEntitlements().stream()
                 .filter(entitlement -> entitlement.entitlementType() == Entitlement.Type.CHANNEL_ADMIN)
                 .filter(entitlement -> entitlement.proof() instanceof Entitlement.BondedRoleProof)
                 .map(entitlement -> (Entitlement.BondedRoleProof) entitlement.proof())
                 .map(bondedRoleProof -> userProfileService.verifyBondedRole(bondedRoleProof.txId(),
                         bondedRoleProof.signature(),
-                        userProfile.chatUser().getId()))
+                        userProfile.getChatUser().getId()))
                 .map(future -> future.thenApply(optionalProof -> optionalProof.map(e -> {
-                            ChatUser chatUser = new ChatUser(userProfile.identity().networkId(), userProfile.entitlements());
+                            ChatUser chatUser = new ChatUser(userProfile.getIdentity().networkId(), userProfile.getEntitlements());
                             PublicChannel publicChannel = new PublicChannel(StringUtils.createUid(),
                                     channelName,
                                     description,
@@ -239,26 +239,26 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                          PublicChannel publicChannel,
                                          UserProfile userProfile) {
         PublicChatMessage chatMessage = new PublicChatMessage(publicChannel.getId(),
-                userProfile.chatUser(),
+                userProfile.getChatUser(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
                 false);
         networkService.publishAuthenticatedData(chatMessage,
-                userProfile.identity().getNodeIdAndKeyPair());
+                userProfile.getIdentity().getNodeIdAndKeyPair());
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishEditedPublicChatMessage(PublicChatMessage originalChatMessage,
                                                                                              String editedText,
                                                                                              UserProfile userProfile) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.identity().getNodeIdAndKeyPair();
+        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
         checkArgument(originalChatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
                 "NetworkId must match");
         return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         PublicChatMessage newChatMessage = new PublicChatMessage(originalChatMessage.getChannelId(),
-                                userProfile.chatUser(),
+                                userProfile.getChatUser(),
                                 editedText,
                                 originalChatMessage.getQuotedMessage(),
                                 originalChatMessage.getDate(),
@@ -271,7 +271,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public void deletePublicChatMessage(PublicChatMessage chatMessage, UserProfile userProfile) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.identity().getNodeIdAndKeyPair();
+        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
         checkArgument(chatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
                 "NetworkId must match");
         networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair)
@@ -289,12 +289,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                                                                       PublicChannel publicChannel,
                                                                                       UserProfile userProfile) {
         TradeChatMessage chatMessage = new TradeChatMessage(publicChannel.getId(),
-                userProfile.chatUser(),
+                userProfile.getChatUser(),
                 tradeIntent,
                 new Date().getTime(),
                 false);
         return networkService.publishAuthenticatedData(chatMessage,
-                userProfile.identity().getNodeIdAndKeyPair());
+                userProfile.getIdentity().getNodeIdAndKeyPair());
     }
 
     public void sendPrivateChatMessage(String text, Optional<QuotedMessage> quotedMessage,
@@ -302,14 +302,14 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         String channelId = privateChannel.getId();
         UserProfile userProfile = privateChannel.getMyProfile();
         PrivateChatMessage chatMessage = new PrivateChatMessage(channelId,
-                userProfile.chatUser(),
+                userProfile.getChatUser(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
                 false);
         addPrivateChatMessage(chatMessage, privateChannel);
         NetworkId receiverNetworkId = privateChannel.getPeer().getNetworkId();
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = userProfile.identity().getNodeIdAndKeyPair();
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
         networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair)
                 .whenComplete((resultMap, throwable2) -> {
                     if (throwable2 != null) {
@@ -360,7 +360,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public boolean isMyMessage(ChatMessage chatMessage) {
         String chatId = chatMessage.getAuthor().getId();
         return userProfileService.getPersistableStore().getUserProfiles().stream()
-                .anyMatch(userprofile -> userprofile.chatUser().getId().equals(chatId));
+                .anyMatch(userprofile -> userprofile.getChatUser().getId().equals(chatId));
     }
 
     public void maybeAddDummyChannels() {
@@ -373,9 +373,9 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         Set<String> tradeTags = getTradeTags();
         Set<String> paymentMethodTags = getPaymentMethodTags();
         Set<String> customTags = getCustomTags();
-        ChatUser dummyChannelAdmin = new ChatUser(userProfile.identity().networkId());
+        ChatUser dummyChannelAdmin = new ChatUser(userProfile.getIdentity().networkId());
         Set<ChatUser> dummyChannelModerators = userProfileService.getPersistableStore().getUserProfiles().stream()
-                .map(p -> new ChatUser(p.identity().networkId()))
+                .map(p -> new ChatUser(p.getIdentity().networkId()))
                 .collect(Collectors.toSet());
 
         PublicChannel defaultChannel = new PublicChannel("BTC-EUR Market",

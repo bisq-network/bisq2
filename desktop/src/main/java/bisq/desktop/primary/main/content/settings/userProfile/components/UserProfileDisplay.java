@@ -68,12 +68,12 @@ public class UserProfileDisplay {
         public void onActivate() {
             pin = FxBindings.subscribe(userProfileService.getPersistableStore().getSelectedUserProfile(),
                     userProfile -> {
-                        model.userName.set(userProfile.identity().domainId());
-                        model.id.set(Res.get("social.createUserProfile.id", userProfile.chatUser().getId()));
-                        String entitledRoles = userProfile.entitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
+                        model.userName.set(userProfile.getIdentity().domainId());
+                        model.id.set(Res.get("social.createUserProfile.id", userProfile.getChatUser().getId()));
+                        String entitledRoles = userProfile.getEntitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
                         model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
-                        model.entitlementsVisible.set(!userProfile.entitlements().isEmpty());
-                        model.roboHashNode.set(RoboHash.getImage(new ByteArray(userProfile.chatUser().getPubKeyHash())));
+                        model.entitlementsVisible.set(!userProfile.getEntitlements().isEmpty());
+                        model.roboHashNode.set(RoboHash.getImage(new ByteArray(userProfile.getChatUser().getPubKeyHash())));
                     });
         }
 

@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 /**
  * Publicly shared chat user data
- * We cache pubKey hash, id and generated userName.
+ * We cache pubKey hash, id and generated profileId.
  * ChatUser is part of the ChatMessage so we have many instances from the same chat user and want to avoid
  * costs from hashing and the userame generation. We could also try to restructure the domain model to avoid that
  * the chat user is part of the message (e.g. use an id and reference to p2p network data for chat user).
@@ -86,8 +86,8 @@ public class ChatUser implements Proto {
         return getDerivedData().id();
     }
 
-    public String getUserName() {
-        return getDerivedData().userName;
+    public String getProfileId() {
+        return getDerivedData().profileId;
     }
 
     public byte[] getPubKeyHash() {
@@ -112,14 +112,14 @@ public class ChatUser implements Proto {
         if (!CACHE.containsKey(mapKey)) {
             byte[] pubKeyHash = DigestUtil.hash(pubKeyBytes);
             String id = Hex.encode(pubKeyHash);
-            String userName = UserNameGenerator.fromHash(pubKeyHash);
-            DerivedData derivedData = new DerivedData(new ByteArray(pubKeyHash), id, userName);
+            String profileId = UserNameGenerator.fromHash(pubKeyHash);
+            DerivedData derivedData = new DerivedData(new ByteArray(pubKeyHash), id, profileId);
             CACHE.put(mapKey, derivedData);
         }
         return CACHE.get(mapKey);
     }
 
-    private static record DerivedData(ByteArray pubKeyHash, String id, String userName) {
+    private static record DerivedData(ByteArray pubKeyHash, String id, String profileId) {
     }
 
     public static record BurnInfo(long totalBsqBurned, long firstBurnDate) {

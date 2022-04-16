@@ -77,22 +77,22 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
         if (chatNames.length != 2) {
             throw new RuntimeException("malformed channel id"); // TODO figure out how error handling works here
         }
-        String peerName = peer.getUserName();
+        String peerName = peer.getProfileId();
         if (!peerName.equals(chatNames[0]) && !peerName.equals(chatNames[1])) {
-            throw new RuntimeException("channel id and peer's userName dont fit");
+            throw new RuntimeException("channel id and peer's profileId dont fit");
         }
         String myName = peerName.equals(chatNames[0]) ? chatNames[1] : chatNames[0];
         // now go through all my identities and get the one with the right Name
         // it should be ensured by the NameGenerator that  they are unique!
         return userProfileService.getPersistableStore().getUserProfiles().stream()
-                .filter(up -> up.userName().equals(myName))
+                .filter(up -> up.getProfileId().equals(myName))
                 .findAny()
                 .orElseThrow(); // TODO how to report errors
     }
 
     public static String createChannelId(ChatUser peer, UserProfile senderProfile) {
-        String peerName = peer.getUserName();
-        String myName = senderProfile.userName();
+        String peerName = peer.getProfileId();
+        String myName = senderProfile.getProfileId();
         if (peerName.compareTo(myName) < 0) {
             return peerName + CHANNEL_DELIMITER + myName;
         } else { // need to have an ordering here, otherwise there would be 2 channelIDs for the same participants
@@ -101,6 +101,6 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
     }
 
     public String getChannelName() {
-        return peer.getUserName();
+        return peer.getProfileId();
     }
 }

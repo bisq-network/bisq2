@@ -44,6 +44,13 @@
     /* Text colors */
     -bisq-text-color-white: white;
     -bisq-text-color-2: -bisq-grey-content-bg;
+
+   
+}
+
+.tooltip {
+    /* Global Tooltip show delay */
+    -fx-show-delay: 300ms
 }
 
 /* Text */

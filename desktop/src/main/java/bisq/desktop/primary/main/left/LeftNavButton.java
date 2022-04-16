@@ -30,7 +30,6 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
-import javafx.util.Duration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,7 +58,6 @@ class LeftNavButton extends Pane implements Toggle {
         selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
 
         tooltip = new Tooltip(title);
-        tooltip.setShowDelay(Duration.millis(200));
 
         icon.setMouseTransparent(true);
         icon.setLayoutX(25);

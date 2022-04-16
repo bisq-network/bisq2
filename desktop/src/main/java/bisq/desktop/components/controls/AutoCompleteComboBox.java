@@ -21,7 +21,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -43,19 +42,23 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Polygon;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class AutoCompleteComboBox<T> extends ComboBox<T> {
-    private List<? extends T> list;
-    private List<? extends T> extendedList;
-    private List<T> matchingList;
-    private final Skin<T> skin;
-    private final TextField editor;
+    protected final String description;
+    protected final String prompt;
+    protected List<? extends T> list;
+    protected List<? extends T> extendedList;
+    protected List<T> matchingList;
+    protected Skin<T> skin;
+    protected TextField editor;
 
     public AutoCompleteComboBox() {
         this(FXCollections.observableArrayList());
@@ -71,22 +74,24 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
     public AutoCompleteComboBox(ObservableList<T> items, String description, String prompt) {
         super(items);
+        this.description = description;
+        this.prompt = prompt;
 
-        skin = new Skin<>(this, description, prompt);
-        editor = skin.textInputBox.getInputTextField();
-        // setPadding(new Insets(0, 20, 0, 20));
+        createDefaultSkin();
+
         setButtonCell(new ListCell<>() {
             @Override
             protected void updateItem(T item, boolean empty) {
                 super.updateItem(item, empty);
                 if (item != null && !empty) {
-                    editor.setText(item.toString());
+                    editor.setText(asString(item));
                     if (getParent() != null) {
                         getParent().requestFocus();
                     }
                 } else {
                     editor.setText("");
                 }
+
             }
         });
         setAutocompleteItems(items);
@@ -94,14 +99,18 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         registerKeyHandlers();
         reactToQueryChanges();
 
-        //todo does not update items when we change list so add a handler here for a quick fix
-        // need to figure out why its not updating and if we leave that remove the handler or make it weak reference
-        items.addListener(new ListChangeListener<T>() {
-            @Override
-            public void onChanged(Change<? extends T> c) {
-                setAutocompleteItems(items);
-            }
-        });
+        // todo does not update items when we change list so add a handler here for a quick fix
+        // need to figure out why its not updating
+        items.addListener(new WeakReference<>((ListChangeListener<T>) c -> setAutocompleteItems(items)).get());
+    }
+
+    @Override
+    protected javafx.scene.control.Skin<?> createDefaultSkin() {
+        if (skin == null) {
+            skin = new Skin<>(this, description, prompt);
+            editor = skin.getTextInputBox().getInputTextField();
+        }
+        return skin;
     }
 
     public void setDescription(String description) {
@@ -110,11 +119,6 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
     public final StringProperty descriptionProperty() {
         return skin.descriptionProperty();
-    }
-
-    @Override
-    protected ComboBoxListViewSkin<?> createDefaultSkin() {
-        return skin;
     }
 
     /**
@@ -168,36 +172,43 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     // wants - to have a blank slate for a new search. The primary motivation though
     // was to work around UX glitches related to (starting) editing text when combobox
     // had specific item selected.
-    private void clearOnFocus() {
-        editor.focusedProperty().addListener((observableValue, hadFocus, hasFocus) -> {
-            if (!hadFocus && hasFocus) {
+    protected void clearOnFocus() {
+        editor.focusedProperty().addListener(new WeakReference<>((ChangeListener<Boolean>) (observable, oldValue, newValue) -> {
+            if (!oldValue && newValue) {
                 removeFilter();
                 forceRedraw();
             }
-        });
+        }).get());
     }
 
-    private void registerKeyHandlers() {
-        // By default pressing [SPACE] caused editor text to reset. The solution
+    protected void registerKeyHandlers() {
+        // By default, pressing [SPACE] caused editor text to reset. The solution
         // is to suppress relevant event on the underlying ListViewSkin.
-        skin.getPopupContent().addEventFilter(KeyEvent.ANY, (KeyEvent event) -> {
-            if (event.getCode() == KeyCode.SPACE)
+        EventHandler<KeyEvent> weakEventFilter = new WeakReference<>((EventHandler<KeyEvent>) event -> {
+            if (event.getCode() == KeyCode.SPACE) {
                 event.consume();
-        });
+            }
+        }).get();
+        if (weakEventFilter != null) {
+            skin.getPopupContent().addEventFilter(KeyEvent.ANY, weakEventFilter);
+        }
 
-        skin.textInputBox.addEventFilter(KeyEvent.ANY, (KeyEvent event) -> {
+        EventHandler<KeyEvent> weakEventFilter2 = new WeakReference<>((EventHandler<KeyEvent>) event -> {
             if (event.getCode() == KeyCode.DOWN ||
                     event.getCode() == KeyCode.UP ||
                     event.getCode() == KeyCode.ENTER) {
                 event.consume();
             }
-        });
+        }).get();
+        if (weakEventFilter2 != null) {
+            skin.textInputBox.addEventFilter(KeyEvent.ANY, weakEventFilter2);
+        }
     }
 
-    private void filterBy(String query) {
+    protected void filterBy(String query) {
         matchingList = (extendedList != null && query.length() > 0 ? extendedList : list)
                 .stream()
-                .filter(item -> item.toString().toLowerCase().contains(query.toLowerCase()))
+                .filter(item -> asString(item).toLowerCase().contains(query.toLowerCase()))
                 .collect(Collectors.toList());
 
         setValue(null);
@@ -211,24 +222,26 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         editor.positionCaret(pos);
     }
 
-    private void reactToQueryChanges() {
-        editor.addEventHandler(KeyEvent.KEY_RELEASED, (KeyEvent event) -> {
-            UIThread.runOnNextRenderFrame(() -> {
-                String query = editor.getText();
-                boolean exactMatch = list.stream().anyMatch(item -> asString(item).equalsIgnoreCase(query));
-                if (!exactMatch) {
-                    if (query.isEmpty()) {
-                        removeFilter();
-                    } else {
-                        filterBy(query);
+    protected void reactToQueryChanges() {
+        EventHandler<KeyEvent> weakEventHandler = new WeakReference<>((EventHandler<KeyEvent>) event ->
+                UIThread.runOnNextRenderFrame(() -> {
+                    String query = editor.getText();
+                    boolean exactMatch = list.stream().anyMatch(item -> asString(item).equalsIgnoreCase(query));
+                    if (!exactMatch) {
+                        if (query.isEmpty()) {
+                            removeFilter();
+                        } else {
+                            filterBy(query);
+                        }
+                        forceRedraw();
                     }
-                    forceRedraw();
-                }
-            });
-        });
+                })).get();
+        if (weakEventHandler != null) {
+            editor.addEventFilter(KeyEvent.KEY_RELEASED, weakEventHandler);
+        }
     }
 
-    private void removeFilter() {
+    protected void removeFilter() {
         matchingList = new ArrayList<>(list);
         setValue(null);
         getSelectionModel().clearSelection();
@@ -236,7 +249,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         editor.setText("");
     }
 
-    private void forceRedraw() {
+    protected void forceRedraw() {
         adjustVisibleRowCount();
         if (matchingListSize() > 0) {
             skin.getPopupContent().autosize();
@@ -247,33 +260,35 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         }
     }
 
-    private void adjustVisibleRowCount() {
+    protected void adjustVisibleRowCount() {
         setVisibleRowCount(Math.min(10, matchingListSize()));
     }
 
-    private String asString(T item) {
+    protected String asString(T item) {
         return getConverter().toString(item);
     }
 
-    private int matchingListSize() {
+    protected int matchingListSize() {
         return matchingList.size();
     }
 
-
-    private static class Skin<T> extends ComboBoxListViewSkin<T> {
-        private final TextInputBox textInputBox;
-        private final ImageView arrow;
-        private final Polygon listBackground = new Polygon();
-        private final ObservableList<T> items;
-        private final ComboBox<T> comboBox;
-        private final Pane buttonPane;
-        private ListView<T> listView;
-
+    @Getter
+    @Slf4j
+    public static class Skin<T> extends ComboBoxListViewSkin<T> {
+        protected final TextInputBox textInputBox;
+        protected final ImageView arrow;
+        protected final Polygon listBackground = new Polygon();
+        protected final ObservableList<T> items;
+        protected final ComboBox<T> comboBox;
+        protected final Pane buttonPane;
+        protected ListView<T> listView;
 
         public Skin(ComboBox<T> control, String description, String prompt) {
             super(control);
-            textInputBox = new TextInputBox(description, prompt);
             comboBox = control;
+            items = comboBox.getItems();
+
+            textInputBox = new TextInputBox(description, prompt);
 
             arrow = ImageUtil.getImageViewById("arrow-down");
             arrow.setLayoutY(22);
@@ -282,6 +297,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             buttonPane = new Pane();
             buttonPane.getChildren().setAll(textInputBox, arrow);
             getChildren().setAll(buttonPane);
+            buttonPane.autosize();
 
             // The list pane has a 5x left and right padding. To not exceed clipping area we use dropshadow
             // of 5 as well. Design had 25 but that would complicate layouts where comboBoxes would require 
@@ -297,28 +313,16 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
             listBackground.setFill(Paint.valueOf("#212121"));
             listBackground.setEffect(dropShadow);
-            listBackground.setManaged(false);
-            listBackground.setVisible(false);
-
-            items = comboBox.getItems();
-            comboBox.setOnShown(e -> {
-                listBackground.setManaged(true);
-                listBackground.setVisible(true);
-            });
-            comboBox.setOnHidden(e -> {
-                listBackground.setManaged(false);
-                listBackground.setVisible(false);
-            });
         }
 
         @Override
         protected double computePrefHeight(double width, double topInset, double rightInset, double bottomInset, double leftInset) {
             // another hack...
             double computed = super.computePrefHeight(width, topInset, rightInset, bottomInset, leftInset);
-            return Math.max(computed, textInputBox.getHeight());
+            return Math.max(computed, buttonPane.getHeight());
         }
 
-        private void setDescription(String description) {
+        protected void setDescription(String description) {
             textInputBox.setDescription(description);
         }
 
@@ -326,34 +330,28 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             return textInputBox.descriptionProperty();
         }
 
-        //todo does not work as we lose the key navigation support when listView is packed into a pane
-
         @Override
         public Node getPopupContent() {
             // Hack to get listView from base class and put it into a container with the listBackground below.
-            if (this.listView == null) {
+            if (listView == null) {
                 Node node = super.getPopupContent();
                 if (node instanceof ListView _listView) {
-                    this.listView = _listView;
-
-                    this.listView.getStyleClass().add("bisq-combo-box-list-view");
+                    //noinspection unchecked
+                    listView = _listView;
+                    listView.getStyleClass().add("bisq-combo-box-list-view");
 
                     // Hack to get access to background and insert our polygon
-                    //todo make weak reference or remove listener
-                    listView.parentProperty().addListener(new ChangeListener<Parent>() {
-                        @Override
-                        public void changed(ObservableValue<? extends Parent> observable, Parent oldValue, Parent newValue) {
-                            if (newValue != null && listView.getParent() != null) {
-                                Parent rootPopup = listView.getParent().getParent();
-                                log.error("rootPopup "+ ((Pane)rootPopup).getChildren().size());
-                                if (rootPopup instanceof Pane pane && pane.getChildren().size() == 1) {
-                                    pane.getChildren().add(0, listBackground);
+                    listView.parentProperty().addListener(new WeakReference<>(
+                            (ChangeListener<Parent>) (observable, oldValue, newValue) -> {
+                                if (newValue != null && listView.getParent() != null) {
+                                    Parent rootPopup = listView.getParent().getParent();
+                                    if (rootPopup instanceof Pane pane && pane.getChildren().size() == 1) {
+                                        pane.getChildren().add(0, listBackground);
+                                    }
                                 }
-                            }
-                        }
-                    });
+                            }).get());
                 } else {
-                    throw new RuntimeException("node expected to be ListView");
+                    log.error("Node is expected to be of type ListView. node={}", node);
                 }
             }
             return listView;
@@ -368,18 +366,17 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             layoutListView();
         }
 
-        private static final double x = 5;
-        private static final double listOffset = 8;
-        // relative to visible top-left point 
-        private static final double arrowX_l = 22;
-        private static final double arrowX_m = 31.5;
-        private static final double arrowX_r = 41;
-
-        private void layoutListView() {
+        protected void layoutListView() {
             if (items.isEmpty()) {
                 listBackground.getPoints().clear();
             } else {
-                double height = Math.min(comboBox.getVisibleRowCount(), items.size()) * 40 + listOffset;
+                double x = 5;
+                double listOffset = 8;
+                // relative to visible top-left point 
+                double arrowX_l = 22;
+                double arrowX_m = 31.5;
+                double arrowX_r = 41;
+                double height = Math.min(comboBox.getVisibleRowCount(), items.size()) * getRowHeight() + listOffset;
                 double width = comboBox.getWidth() - 10;
                 double y = textInputBox.getHeight() - 25;
                 double arrowY_m = y - 7.5;
@@ -401,6 +398,9 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
                 listView.autosize();
             }
         }
-    }
 
+        protected int getRowHeight() {
+            return 40;
+        }
+    }
 }

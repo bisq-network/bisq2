@@ -114,7 +114,7 @@ public class UserProfileSelectionAtSettings {
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(UserProfile userProfile) {
-                    return userProfile != null ? userProfile.identity().domainId() : "";
+                    return userProfile != null ? userProfile.getIdentity().domainId() : "";
                 }
 
                 @Override

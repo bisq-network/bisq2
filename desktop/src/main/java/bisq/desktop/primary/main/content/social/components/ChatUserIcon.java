@@ -30,7 +30,6 @@ import bisq.social.user.profile.UserProfileService;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
-import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -41,7 +40,6 @@ public class ChatUserIcon extends Pane {
 
     public ChatUserIcon(double size) {
         tooltip = new Tooltip();
-        tooltip.setShowDelay(Duration.millis(100));
         tooltip.setId("proof-of-burn-tooltip");
         roboIcon = new ImageView();
         roboIcon.setFitWidth(size);

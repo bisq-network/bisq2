@@ -22,19 +22,22 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
-import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Pos;
+import javafx.geometry.Insets;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
-import javafx.scene.image.Image;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -44,6 +47,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import java.lang.ref.WeakReference;
 
 @Slf4j
 public class UserProfileSelection {
@@ -107,72 +112,130 @@ public class UserProfileSelection {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final AutoCompleteComboBox<ListItem> bisqComboBox;
+        private final UserProfileComboBox comboBox;
         private Subscription subscription;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
 
-            bisqComboBox = new AutoCompleteComboBox<>(model.userProfiles,
+            comboBox = new UserProfileComboBox(model.userProfiles,
                     Res.get("social.userProfile.comboBox.description"));
-            bisqComboBox.setMinWidth(200);
-            // bisqComboBox.setButtonCell(getListCell());
-            //bisqComboBox.setCellFactory(param -> getListCell());
-            root.getChildren().add(bisqComboBox);
+            root.getChildren().add(comboBox);
         }
 
         @Override
         protected void onViewAttached() {
-            bisqComboBox.setOnChangeConfirmed(e -> controller.onSelected(bisqComboBox.getSelectionModel().getSelectedItem()));
+            comboBox.prefWidthProperty().bind(root.widthProperty());
+            comboBox.setOnChangeConfirmed(e -> controller.onSelected(comboBox.getSelectionModel().getSelectedItem()));
             subscription = EasyBind.subscribe(model.selectedUserProfile,
-                    selected -> UIThread.runOnNextRenderFrame(() -> bisqComboBox.getSelectionModel().select(selected)));
+                    selected -> UIThread.runOnNextRenderFrame(() -> comboBox.getSelectionModel().select(selected)));
         }
 
         @Override
         protected void onViewDetached() {
-            bisqComboBox.setOnChangeConfirmed(null);
+            comboBox.prefWidthProperty().unbind();
+            comboBox.setOnChangeConfirmed(null);
             subscription.unsubscribe();
         }
+    }
 
-        private ListCell<ListItem> getListCell() {
-            return new ListCell<>() {
+    @EqualsAndHashCode
+    public static class ListItem {
+        private final UserProfile userProfile;
+
+        private ListItem(UserProfile userProfile) {
+            this.userProfile = userProfile;
+        }
+
+        @Override
+        public String toString() {
+            return userProfile.getNickName();
+        }
+    }
+
+    private static class UserProfileComboBox extends AutoCompleteComboBox<ListItem> {
+        public UserProfileComboBox(ObservableList<ListItem> items, String description) {
+            super(items, description);
+
+            setCellFactory(param -> new ListCell<>() {
+                private final ImageView imageView;
+                private final Label label;
+                private final HBox hBox;
+
+                {
+                    label = new Label();
+                    label.setMouseTransparent(true);
+                    label.getStyleClass().add("bisq-input-box-text-input");
+                    HBox.setMargin(label, new Insets(14, 0, 0, 10));
+
+                    imageView = new ImageView();
+                    imageView.setFitWidth(50);
+                    imageView.setFitHeight(50);
+                    setStyle("-fx-pref-height: 50; -fx-padding: 0 0 0 0");
+
+                    hBox = new HBox();
+                    hBox.getChildren().addAll(imageView, label);
+                }
+
                 @Override
                 protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
-                        BisqLabel userName = new BisqLabel(item.userName);
-                        ImageView roboIconImageView = new ImageView(item.roboHashNode);
-                        roboIconImageView.setFitWidth(25);
-                        roboIconImageView.setFitHeight(25);
-                        HBox hBox = Layout.hBoxWith(roboIconImageView, userName);
-                        hBox.setAlignment(Pos.CENTER_LEFT);
+                        imageView.setImage(RoboHash.getImage(new ByteArray(item.userProfile.getPubKeyHash())));
+                        label.setText(item.userProfile.getNickName());
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);
                     }
                 }
-            };
-        }
-    }
-
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    public static class ListItem {
-        private final UserProfile userProfile;
-        @EqualsAndHashCode.Include
-        private final String userName;
-        private final Image roboHashNode;
-
-        private ListItem(UserProfile userProfile) {
-            this.userProfile = userProfile;
-            userName = userProfile.identity().domainId();
-
-            roboHashNode = RoboHash.getImage(new ByteArray(userProfile.chatUser().getPubKeyHash()));
+            });
         }
 
         @Override
-        public String toString() {
-            return userName;
+        protected Skin<?> createDefaultSkin() {
+            if (skin == null) {
+                skin = new UserProfileSkin(this, description, prompt);
+                editor = skin.getTextInputBox().getInputTextField();
+            }
+            return skin;
+        }
+    }
+
+    private static class UserProfileSkin extends AutoCompleteComboBox.Skin<ListItem> {
+        public UserProfileSkin(ComboBox<ListItem> control, String description, String prompt) {
+            super(control, description, prompt);
+
+            ImageView imageView = new ImageView();
+            imageView.setFitWidth(50);
+            imageView.setFitHeight(50);
+
+            arrow.setLayoutY(23);
+            textInputBox.setLayoutX(50);
+            textInputBox.setMouseTransparent(true);
+            buttonPane.getChildren().add(imageView);
+            buttonPane.setCursor(Cursor.HAND);
+
+            control.getSelectionModel().selectedItemProperty().addListener(new WeakReference<>(
+                    (ChangeListener<ListItem>) (observable, oldValue, newValue) -> {
+                        if (newValue != null) {
+                            UserProfile userProfile = newValue.userProfile;
+                            imageView.setImage(RoboHash.getImage(new ByteArray(userProfile.getPubKeyHash())));
+                            textInputBox.setText(userProfile.getNickName());
+                            Tooltip.install(buttonPane,
+                                    new Tooltip(Res.get("roboIconWithId.id", userProfile.getProfileId())));
+                        }
+                    }).get());
+        }
+
+        @Override
+        protected int getRowHeight() {
+            return 50;
+        }
+
+        @Override
+        public Node getDisplayNode() {
+            return null;
         }
     }
 }

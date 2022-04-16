@@ -23,6 +23,8 @@ import bisq.security.DigestUtil;
 import bisq.social.user.ChatUser;
 import bisq.social.user.Entitlement;
 import bisq.social.user.UserNameGenerator;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,9 +32,25 @@ import java.util.stream.Collectors;
 /**
  * Local user profile. Not shared over network.
  */
-public record UserProfile(Identity identity, String nickName, Set<Entitlement> entitlements) implements Proto {
-    public ChatUser chatUser() {
-        return new ChatUser(identity.networkId(), entitlements);
+@EqualsAndHashCode
+@Getter
+public class UserProfile implements Proto {
+    private final Identity identity;
+    private final String nickName;
+    private final Set<Entitlement> entitlements;
+    private final String profileId;
+    private final ChatUser chatUser;
+
+    public UserProfile(Identity identity, String nickName, Set<Entitlement> entitlements) {
+        this.identity = identity;
+        this.nickName = nickName;
+        this.entitlements = entitlements;
+        profileId = UserNameGenerator.fromHash(DigestUtil.hash(identity.networkId().getPubKey().publicKey().getEncoded()));
+        chatUser = new ChatUser(identity.networkId(), entitlements);
+    }
+
+    public byte[] getPubKeyHash() {
+        return chatUser.getPubKeyHash();
     }
 
     public bisq.social.protobuf.UserProfile toProto() {
@@ -47,9 +65,5 @@ public record UserProfile(Identity identity, String nickName, Set<Entitlement> e
         return new UserProfile(Identity.fromProto(proto.getIdentity()),
                 proto.getNickName(),
                 proto.getEntitlementsList().stream().map(Entitlement::fromProto).collect(Collectors.toSet()));
-    }
-
-    public String userName() {
-        return UserNameGenerator.fromHash(DigestUtil.hash(identity.networkId().getPubKey().publicKey().getEncoded()));
     }
 }

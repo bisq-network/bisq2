@@ -124,7 +124,7 @@ public class ChatController implements Controller {
             // settings tab then in the notifications component).
             // We look up all our usernames, not only the selected one
             Set<String> myUserNames = userProfileService.getPersistableStore().getUserProfiles().stream()
-                    .map(userProfile -> userProfile.chatUser().getUserName())
+                    .map(userProfile -> userProfile.getChatUser().getProfileId())
                     .collect(Collectors.toSet());
             messageListener = c -> {
                 c.next();
@@ -239,7 +239,7 @@ public class ChatController implements Controller {
             log.info("onSendPrivateMessage {}", chatUser);
         });
         chatUserDetails.setOnIgnoreChatUser(this::refreshMessages);
-        chatUserDetails.setOnMentionUser(chatUser -> mentionUser(chatUser.getUserName()));
+        chatUserDetails.setOnMentionUser(chatUser -> mentionUser(chatUser.getProfileId()));
         model.setChatUserDetails(Optional.of(chatUserDetails));
         model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
     }

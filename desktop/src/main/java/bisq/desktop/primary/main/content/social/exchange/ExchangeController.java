@@ -23,7 +23,6 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.overlay.Notification;
-import bisq.desktop.primary.main.content.social.chat.components.*;
 import bisq.desktop.primary.main.content.social.components.*;
 import bisq.i18n.Res;
 import bisq.social.chat.*;
@@ -129,7 +128,7 @@ public class ExchangeController implements Controller {
             // settings tab then in the notifications component).
             // We look up all our usernames, not only the selected one
             Set<String> myUserNames = userProfileService.getPersistableStore().getUserProfiles().stream()
-                    .map(userProfile -> userProfile.chatUser().getUserName())
+                    .map(userProfile -> userProfile.getChatUser().getProfileId())
                     .collect(Collectors.toSet());
             messageListener = c -> {
                 c.next();
@@ -244,7 +243,7 @@ public class ExchangeController implements Controller {
             log.info("onSendPrivateMessage {}", chatUser);
         });
         chatUserDetails.setOnIgnoreChatUser(this::refreshMessages);
-        chatUserDetails.setOnMentionUser(chatUser -> mentionUser(chatUser.getUserName()));
+        chatUserDetails.setOnMentionUser(chatUser -> mentionUser(chatUser.getProfileId()));
         model.setChatUserDetails(Optional.of(chatUserDetails));
         model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
     }

@@ -67,7 +67,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
     @Override
     public int compareTo(ChatUserDetails o) {
-        return controller.model.chatUser.getUserName().compareTo(o.controller.model.chatUser.getUserName());
+        return controller.model.chatUser.getProfileId().compareTo(o.controller.model.chatUser.getProfileId());
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -89,7 +89,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             }
 
             model.id.set(Res.get("social.createUserProfile.id", chatUser.getId()));
-            model.userName.set(chatUser.getUserName());
+            model.userName.set(chatUser.getProfileId());
             model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
             String entitledRoles = chatUser.getEntitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
             model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));

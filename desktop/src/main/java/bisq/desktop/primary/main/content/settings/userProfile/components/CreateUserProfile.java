@@ -69,7 +69,7 @@ public class CreateUserProfile {
         private final UserProfileService userProfileService;
         private final KeyPairService keyPairService;
         private final EntitlementSelection entitlementSelection;
-        
+
         private Controller(ChatService chatService, UserProfileService userProfileService, KeyPairService keyPairService) {
             this.chatService = chatService;
             this.userProfileService = userProfileService;
@@ -86,8 +86,10 @@ public class CreateUserProfile {
             model.feedback.set("");
             onCreateIdentity();
 
-            model.createProfileButtonDisable.bind(EasyBind.combine(model.userName, model.roboHashNode,
-                    (userName, roboHashNode) -> userName == null || userName.isEmpty() || roboHashNode == null));
+            model.createProfileButtonDisable.bind(EasyBind.combine(model.nickName, model.profileId, model.roboHashNode,
+                    (nickName, profileId, roboHashNode) -> nickName == null || nickName.isEmpty() ||
+                            profileId == null || profileId.isEmpty() ||
+                            roboHashNode == null));
         }
 
         @Override
@@ -98,19 +100,18 @@ public class CreateUserProfile {
         private void onCreateUserProfile() {
             model.generateNewIdentityButtonDisable.set(true);
             model.feedback.set(Res.get("social.createUserProfile.prepare"));
-            String useName = model.userName.get();
-            //todo we added a nickname
-            userProfileService.createNewInitializedUserProfile(useName,
-                            "TODO",
+            String profileId = model.profileId.get();
+            userProfileService.createNewInitializedUserProfile(profileId,
+                            model.nickName.get(),
                             model.tempKeyId,
                             model.tempKeyPair,
                             new HashSet<>(entitlementSelection.getVerifiedEntitlements()))
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
                             chatService.maybeAddDummyChannels();
-                            checkArgument(userProfile.identity().domainId().equals(useName));
+                            checkArgument(userProfile.getIdentity().domainId().equals(profileId));
                             reset();
-                            model.feedback.set(Res.get("social.createUserProfile.success", useName));
+                            //model.feedback.set(Res.get("social.createUserProfile.success", profileId));
                         });
                     });
         }
@@ -120,11 +121,12 @@ public class CreateUserProfile {
             model.tempKeyPair = keyPairService.generateKeyPair();
             byte[] hash = DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded());
             model.roboHashNode.set(RoboHash.getImage(new ByteArray(hash)));
-            model.userName.set(UserNameGenerator.fromHash(hash));
+            model.profileId.set(UserNameGenerator.fromHash(hash));
         }
 
         private void reset() {
-            model.userName.set("");
+            model.nickName.set("");
+            model.profileId.set("");
             model.generateNewIdentityButtonDisable.set(false);
             model.entitlementSelectionVisible.set(false);
             model.tempKeyId = null;
@@ -142,7 +144,8 @@ public class CreateUserProfile {
     private static class Model implements bisq.desktop.common.view.Model {
         final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         final StringProperty feedback = new SimpleStringProperty();
-        final StringProperty userName = new SimpleStringProperty();
+        final StringProperty nickName = new SimpleStringProperty();
+        final StringProperty profileId = new SimpleStringProperty();
         final BooleanProperty generateNewIdentityButtonDisable = new SimpleBooleanProperty();
         final BooleanProperty createProfileButtonDisable = new SimpleBooleanProperty();
         private final BooleanProperty entitlementSelectionVisible = new SimpleBooleanProperty();
@@ -158,7 +161,7 @@ public class CreateUserProfile {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
         private final BisqButton generateNewIdentityButton, entitlementButton, createUserButton;
-        private final BisqTextField userNameInputField;
+        private final BisqTextField nickNameInputField, profileIdInputField;
         private final BisqLabel feedbackLabel;
         private Subscription roboHashNodeSubscription;
 
@@ -170,12 +173,17 @@ public class CreateUserProfile {
             headline.getStyleClass().add("titled-group-bg-label-active");
             headline.setPadding(new Insets(0, 0, 10, 0));
 
-            userNameInputField = new BisqTextField();
+            nickNameInputField = new BisqTextField();
             double minWidth = 300;
-            userNameInputField.setMinWidth(minWidth);
-            userNameInputField.setEditable(false);
-            userNameInputField.setFocusTraversable(false);
-            userNameInputField.setPromptText(Res.get("social.createUserProfile.userName.prompt"));
+            nickNameInputField.setMinWidth(minWidth);
+            nickNameInputField.setFocusTraversable(false);
+            nickNameInputField.setPromptText(Res.get("social.createUserProfile.nickName.prompt"));
+
+            profileIdInputField = new BisqTextField();
+            profileIdInputField.setMinWidth(minWidth);
+            profileIdInputField.setEditable(false);
+            profileIdInputField.setFocusTraversable(false);
+            profileIdInputField.setPromptText(Res.get("social.createUserProfile.profileId.prompt"));
 
             generateNewIdentityButton = new BisqButton(Res.get("social.createUserProfile.generateNewIdentity"));
             generateNewIdentityButton.setMinWidth(minWidth);
@@ -185,12 +193,12 @@ public class CreateUserProfile {
 
             createUserButton = new BisqButton(Res.get("social.createUserProfile.createButton"));
             createUserButton.setMinWidth(minWidth);
-            createUserButton.disableProperty().bind(userNameInputField.textProperty().isEmpty());
+            createUserButton.disableProperty().bind(profileIdInputField.textProperty().isEmpty());
             createUserButton.getStyleClass().add("action-button");
 
             VBox vBox = new VBox();
             vBox.setSpacing(Layout.SPACING);
-            vBox.getChildren().addAll(userNameInputField, generateNewIdentityButton, entitlementButton);
+            vBox.getChildren().addAll(nickNameInputField, profileIdInputField, generateNewIdentityButton, entitlementButton);
 
             HBox hBox = new HBox();
             hBox.setSpacing(Layout.SPACING);
@@ -212,7 +220,8 @@ public class CreateUserProfile {
             entitlementButton.visibleProperty().bind(model.entitlementSelectionVisible.not());
             entitlementButton.managedProperty().bind(model.entitlementSelectionVisible.not());
             createUserButton.disableProperty().bind(model.createProfileButtonDisable);
-            userNameInputField.textProperty().bindBidirectional(model.userName);
+            nickNameInputField.textProperty().bindBidirectional(model.nickName);
+            profileIdInputField.textProperty().bindBidirectional(model.profileId);
             feedbackLabel.textProperty().bind(model.feedback);
 
             generateNewIdentityButton.setOnAction(e -> controller.onCreateIdentity());
@@ -233,7 +242,8 @@ public class CreateUserProfile {
             entitlementButton.visibleProperty().unbind();
             entitlementButton.managedProperty().unbind();
             createUserButton.disableProperty().unbind();
-            userNameInputField.textProperty().unbindBidirectional(model.userName);
+            nickNameInputField.textProperty().unbindBidirectional(model.nickName);
+            profileIdInputField.textProperty().unbindBidirectional(model.profileId);
             feedbackLabel.textProperty().unbind();
 
             generateNewIdentityButton.setOnAction(null);
