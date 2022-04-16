@@ -41,7 +41,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -111,12 +110,12 @@ public class UserProfileSelection {
 
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+    public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
         private final UserProfileComboBox comboBox;
         private Subscription subscription;
 
         private View(Model model, Controller controller) {
-            super(new VBox(), model, controller);
+            super(new Pane(), model, controller);
 
             comboBox = new UserProfileComboBox(model.userProfiles,
                     Res.get("social.userProfile.comboBox.description"));

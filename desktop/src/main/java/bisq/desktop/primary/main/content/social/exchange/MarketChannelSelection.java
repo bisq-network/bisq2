@@ -22,18 +22,20 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -80,11 +82,11 @@ public class MarketChannelSelection {
 
         @Override
         public void onActivate() {
+            model.sortedList.setComparator(MarketChannelItem::compareTo);
             FxBindings.<Market, MarketChannelItem>bind(model.marketChannelItems)
                     .map(MarketChannelItem::new)
                     .to(model.settingsService.getMarkets());
-            // model.marketChannelItems.setAll(model.settingsService.getMarkets());
-            //  model.selectedMarketChannelItem.set(model.settingsService.getSelectedMarket());
+            findMarketChannelItem(model.settingsService.getSelectedMarket()).ifPresent(model.selectedMarketChannelItem::set);
         }
 
         @Override
@@ -96,11 +98,17 @@ public class MarketChannelSelection {
                 model.selectedMarketChannelItem.set(selected);
             }
         }
+
+        private Optional<MarketChannelItem> findMarketChannelItem(Market market) {
+            return model.marketChannelItems.stream().filter(e -> e.getMarket().equals(market)).findAny();
+        }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<MarketChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
         private final ObservableList<MarketChannelItem> marketChannelItems = FXCollections.observableArrayList();
+        private final SortedList<MarketChannelItem> sortedList = new SortedList<>(marketChannelItems);
+
         private final SettingsService settingsService;
         private Optional<Callback<ListView<MarketChannelItem>, ListCell<MarketChannelItem>>> cellFactory = Optional.empty();
         private Optional<ListCell<MarketChannelItem>> buttonCell = Optional.empty();
@@ -111,17 +119,14 @@ public class MarketChannelSelection {
     }
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+    public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
         private final AutoCompleteComboBox<MarketChannelItem> comboBox;
         private final ChangeListener<MarketChannelItem> selectedMarketListener;
-        private final ListChangeListener<MarketChannelItem> marketsListener;
 
         private View(Model model, Controller controller) {
-            super(new VBox(), model, controller);
-            root.setSpacing(10);
+            super(new Pane(), model, controller);
 
-            comboBox = new AutoCompleteComboBox<>(model.marketChannelItems,Res.get("social.marketChannels"));
-           // comboBox.setMinWidth(200);
+            comboBox = new AutoCompleteComboBox<>(model.sortedList, Res.get("social.marketChannels"));
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(@Nullable MarketChannelItem value) {
@@ -138,8 +143,6 @@ public class MarketChannelSelection {
 
             // From model
             selectedMarketListener = (o, old, newValue) -> comboBox.getSelectionModel().select(newValue);
-
-            marketsListener = c -> comboBox.setItems(model.marketChannelItems);
         }
 
         @Override
@@ -148,7 +151,6 @@ public class MarketChannelSelection {
             comboBox.setOnChangeConfirmed(e -> controller.onSelectMarket(comboBox.getSelectionModel().getSelectedItem()));
             model.selectedMarketChannelItem.addListener(selectedMarketListener);
             comboBox.getSelectionModel().select(model.selectedMarketChannelItem.get());
-            model.marketChannelItems.addListener(marketsListener);
             comboBox.prefWidthProperty().bind(root.widthProperty());
         }
 
@@ -156,12 +158,11 @@ public class MarketChannelSelection {
         protected void onViewDetached() {
             comboBox.setOnChangeConfirmed(null);
             model.selectedMarketChannelItem.removeListener(selectedMarketListener);
-            model.marketChannelItems.removeListener(marketsListener);
         }
     }
 
     @Getter
-    public final static class MarketChannelItem {
+    public final static class MarketChannelItem implements Comparable<MarketChannelItem> {
         private final Market market;
         private int numMessages = new Random().nextInt(100);
 
@@ -172,6 +173,11 @@ public class MarketChannelSelection {
         @Override
         public String toString() {
             return market.toString();
+        }
+
+        @Override
+        public int compareTo(@NonNull MarketChannelSelection.MarketChannelItem o) {
+            return Integer.compare(o.numMessages, numMessages);
         }
     }
 }

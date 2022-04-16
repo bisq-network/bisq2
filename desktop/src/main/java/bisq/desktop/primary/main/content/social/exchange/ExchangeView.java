@@ -87,11 +87,10 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
         this.userProfileSelection = userProfileSelection;
-      //  userProfileSelection.setPrefWidth(300);
+        //  userProfileSelection.setPrefWidth(300);
 
         // Left 
         marketChannelSelection.setCellFactory(getMarketChannelCellFactory());
-       // marketChannelSelection.getRoot().setPrefWidth(300);
 
         left = Layout.vBoxWith(userProfileSelection,
                 marketChannelSelection.getRoot(),
@@ -99,7 +98,8 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         );
         left.setPadding(new Insets(0, 20, 0, 0));
         left.setPrefWidth(300);
-        
+
+
         // Center toolbar
         selectedChannelLabel = new Label();
         selectedChannelLabel.getStyleClass().add("headline-label");
@@ -245,9 +245,9 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         widthSubscription = EasyBind.subscribe(root.widthProperty(), w -> {
             double width = w.doubleValue();
             if (width > 0) {
-                double prefWidth = left.getPrefWidth();
-                log.error("prefWidth "+prefWidth);
-                root.setDividerPosition(0, prefWidth / width);
+                root.setDividerPosition(0, left.getPrefWidth() / width);
+                // lock to that initial position
+                SplitPane.setResizableWithParent(left, false);
                 UIThread.runOnNextRenderFrame(() -> {
                     widthSubscription.unsubscribe();
                     widthSubscription = null;
