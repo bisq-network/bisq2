@@ -28,8 +28,6 @@ import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 @Slf4j
 @Getter
@@ -53,12 +50,9 @@ public class ExchangeModel implements Model {
     private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();
     private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
 
-    private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
-    private final SortedList<ChatMessageListItem<? extends ChatMessage>> sortedChatMessages = new SortedList<>(chatMessages);
-    private final FilteredList<ChatMessageListItem<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(sortedChatMessages);
-    private final StringProperty textInput = new SimpleStringProperty("");
+  
     private final ChatService chatService;
-    private final Predicate<ChatMessageListItem<? extends ChatMessage>> ignoredChatUserPredicate;
+   
     private final UserProfileService userProfileService;
     @Setter
     private Optional<ChatUserDetails> chatUserDetails = Optional.empty();
@@ -69,9 +63,8 @@ public class ExchangeModel implements Model {
     
     public ExchangeModel(ChatService chatService, UserProfileService userProfileService) {
         this.chatService = chatService;
-        ignoredChatUserPredicate = item -> !chatService.getPersistableStore().getIgnoredChatUserIds().contains(item.getChatUserId());
         this.userProfileService = userProfileService;
-        filteredChatMessages.setPredicate(ignoredChatUserPredicate);
+      
     }
 
     void setSendMessageResult(String channelId, ConfidentialMessageService.Result result, BroadcastResult broadcastResult) {

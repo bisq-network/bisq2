@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.observable.ObservableSet;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
@@ -97,11 +96,11 @@ public class ChatController implements Controller {
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
             }
-            chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
+          /*  chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
                     .map(ChatMessageListItem::new) // only Public or PrivatChatmessage possible here
-                    .to((ObservableSet<ChatMessage>) channel.getChatMessages());
+                    .to((ObservableSet<ChatMessage>) channel.getChatMessages());*/
 
-            model.getSelectedChannelAsString().set(channel.getChannelName());
+           // model.getSelectedChannelAsString().set(channel.getMarket());
             model.getSelectedChannel().set(channel);
             if (model.getChannelInfoVisible().get()) {
                 channelInfo.setChannel(channel);
@@ -273,9 +272,10 @@ public class ChatController implements Controller {
 
     private void refreshMessages() {
         chatMessagesPin.unbind();
-        chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
+      /*  chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
                 .map(ChatMessageListItem::new)
-                .to((ObservableSet<ChatMessage>) model.getSelectedChannel().get().getChatMessages()); //todo expected type <? extends ChatMessage> does not work ;-(
+                .to((ObservableSet<ChatMessage>) model.getSelectedChannel().get().getChatMessages()); */
+        //todo expected type <? extends ChatMessage> does not work ;-(
     }
 
     public void onOpenEmojiSelector(ChatMessage chatMessage) {

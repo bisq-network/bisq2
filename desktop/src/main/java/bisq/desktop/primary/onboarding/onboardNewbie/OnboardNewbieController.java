@@ -31,7 +31,7 @@ import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.social.chat.ChatService;
-import bisq.social.intent.TradeIntentService;
+import bisq.social.offer.MarketChatOfferService;
 import com.google.common.base.Joiner;
 import javafx.beans.InvalidationListener;
 import lombok.Getter;
@@ -50,7 +50,7 @@ public class OnboardNewbieController implements Controller {
     private final BtcFiatAmountGroup btcFiatAmountGroup;
     private final PaymentMethodsSelection paymentMethodsSelection;
     private final ChatService chatService;
-    private final TradeIntentService tradeIntentService;
+    private final MarketChatOfferService marketChatOfferService;
     private Pin tradeTagsPin, currencyTagsPin, paymentMethodTagsPin, customTagsPin;
 
     private Subscription selectedMarketSubscription, baseSideAmountSubscription;
@@ -58,7 +58,7 @@ public class OnboardNewbieController implements Controller {
     private Subscription termsDisabledSubscription;
 
     public OnboardNewbieController(DefaultApplicationService applicationService) {
-        tradeIntentService = applicationService.getTradeIntentService();
+        marketChatOfferService = applicationService.getMarketChatOfferService();
         chatService = applicationService.getChatService();
         model = new OnboardNewbieModel(applicationService.getUserProfileService().getPersistableStore().getSelectedUserProfile().get().getProfileId());
 
@@ -135,18 +135,19 @@ public class OnboardNewbieController implements Controller {
     }
 
     void onCreateOffer() {
-        tradeIntentService.publishTradeIntent(model.getSelectedMarket(),
+        marketChatOfferService.publishMarketChatOffer(model.getSelectedMarket(),
                         model.getBaseSideAmount().getValue(),
                         new HashSet<>(model.getSelectedPaymentMethods()),
                         model.getTerms().get())
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
-                        String channelName = chatService.findPublicChannelForMarket(model.getSelectedMarket()).orElseThrow().getChannelName();
+                        Navigation.navigateTo(NavigationTarget.EXCHANGE);
+                       /* String channelName = chatService.findPublicChannelForMarket(model.getSelectedMarket()).orElseThrow().getMarket();
                         new Popup().confirmation(Res.get("satoshisquareapp.createOffer.publish.success", channelName))
                                 .actionButtonText(Res.get("satoshisquareapp.createOffer.publish.goToChat", channelName))
                                 .onAction(() -> Navigation.navigateTo(NavigationTarget.CHAT))
                                 .hideCloseButton()
-                                .show();
+                                .show();*/
                     } else {
                         //todo
                         new Popup().error(throwable.toString()).show();

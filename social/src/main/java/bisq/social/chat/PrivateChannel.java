@@ -17,12 +17,14 @@
 
 package bisq.social.chat;
 
+import bisq.common.observable.ObservableSet;
 import bisq.social.user.ChatUser;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,6 +35,7 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
     private static final String CHANNEL_DELIMITER = "@PC@";
     private final ChatUser peer;
     private final UserProfile myProfile;
+    private final ObservableSet<PrivateChatMessage> chatMessages = new ObservableSet<>();
 
     public PrivateChannel(String id, ChatUser peer, UserProfile myProfile) {
         this(id, peer, myProfile, NotificationSetting.ALL, new HashSet<>());
@@ -43,15 +46,17 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
                            UserProfile myProfile,
                            NotificationSetting notificationSetting,
                            Set<PrivateChatMessage> chatMessages) {
-        super(id, notificationSetting, chatMessages);
+        super(id, notificationSetting);
         this.peer = peer;
         this.myProfile = myProfile;
+        this.chatMessages.addAll(chatMessages);
     }
 
     public bisq.social.protobuf.Channel toProto() {
         return getChannelBuilder().setPrivateChannel(bisq.social.protobuf.PrivateChannel.newBuilder()
                         .setPeer(peer.toProto())
-                        .setMyProfile(myProfile.toProto()))
+                        .setMyProfile(myProfile.toProto())
+                        .addAllChatMessages(chatMessages.stream().map(this::getChatMessageProto).collect(Collectors.toList())))
                 .build();
     }
 
@@ -62,7 +67,7 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
                 ChatUser.fromProto(proto.getPeer()),
                 UserProfile.fromProto(proto.getMyProfile()),
                 NotificationSetting.fromProto(baseProto.getNotificationSetting()),
-                baseProto.getChatMessagesList().stream()
+                proto.getChatMessagesList().stream()
                         .map(PrivateChatMessage::fromProto)
                         .collect(Collectors.toSet()));
     }
@@ -71,6 +76,22 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
     protected bisq.social.protobuf.ChatMessage getChatMessageProto(PrivateChatMessage chatMessage) {
         return chatMessage.toChatMessageProto();
     }
+
+    @Override
+    public void addChatMessage(PrivateChatMessage chatMessage) {
+        chatMessages.add(chatMessage);
+    }
+
+    @Override
+    public void removeChatMessage(PrivateChatMessage chatMessage) {
+        chatMessages.remove(chatMessage);
+    }
+
+    @Override
+    public void removeChatMessages(Collection<PrivateChatMessage> removeMessages) {
+        chatMessages.removeAll(removeMessages);
+    }
+
 
     public static UserProfile findMyProfileFromChannelId(String id, ChatUser peer, UserProfileService userProfileService) {
         String[] chatNames = id.split(CHANNEL_DELIMITER);
@@ -100,7 +121,7 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
         }
     }
 
-    public String getChannelName() {
+    public String getMarket() {
         return peer.getProfileId();
     }
 }

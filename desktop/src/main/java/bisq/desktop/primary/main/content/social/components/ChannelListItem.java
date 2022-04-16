@@ -15,21 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat;
+package bisq.desktop.primary.main.content.social.components;
 
-import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.social.chat.Channel;
+import bisq.social.chat.ChatMessage;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-public enum ChannelType implements ProtoEnum {
-    PUBLIC,
-    PRIVATE;
+@EqualsAndHashCode
+@Getter
+public class ChannelListItem<T extends Channel<? extends ChatMessage>> {
+    protected final T channel;
 
-    @Override
-    public bisq.social.protobuf.ChannelType toProto() {
-        return bisq.social.protobuf.ChannelType.valueOf(name());
-    }
-
-    public static ChannelType fromProto(bisq.social.protobuf.ChannelType proto) {
-        return ProtobufUtils.enumFromProto(ChannelType.class, proto.name());
+    public ChannelListItem(T channel) {
+        this.channel = channel;
     }
 }

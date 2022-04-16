@@ -19,43 +19,48 @@ package bisq.social.chat;
 
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.social.offer.MarketChatOffer;
 import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-/**
- * PublicChatMessage is added as public data to the distributed network storage.
- */
+@Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class PublicChatMessage extends ChatMessage implements DistributedData {
-    public PublicChatMessage(String channelId,
+public class MarketChatMessage extends PublicChatMessage implements DistributedData {
+    private final Optional<MarketChatOffer> marketChatOffer;
+
+    public MarketChatMessage(String channelId,
                              ChatUser sender,
-                             String text,
+                             Optional<MarketChatOffer> marketChatOffer,
+                             Optional<String> text,
                              Optional<QuotedMessage> quotedMessage,
                              long date,
                              boolean wasEdited) {
         this(channelId,
                 sender,
-                Optional.of(text),
+                marketChatOffer,
+                text,
                 quotedMessage,
                 date,
                 wasEdited,
-                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PublicChatMessage.class.getSimpleName()));
+                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, MarketChatMessage.class.getSimpleName()));
     }
 
-    protected PublicChatMessage(String channelId,
-                                ChatUser sender,
-                                Optional<String> text,
-                                Optional<QuotedMessage> quotedMessage,
-                                long date,
-                                boolean wasEdited,
-                                MetaData metaData) {
+    public MarketChatMessage(String channelId,
+                              ChatUser sender,
+                              Optional<MarketChatOffer> marketChatOffer,
+                              Optional<String> text,
+                              Optional<QuotedMessage> quotedMessage,
+                              long date,
+                              boolean wasEdited,
+                              MetaData metaData) {
         super(channelId,
                 sender,
                 text,
@@ -63,20 +68,30 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
                 date,
                 wasEdited,
                 metaData);
+        this.marketChatOffer = marketChatOffer;
     }
 
     public bisq.social.protobuf.ChatMessage toProto() {
-        return getChatMessageBuilder().setPublicChatMessage(bisq.social.protobuf.PublicChatMessage.newBuilder()).build();
+        bisq.social.protobuf.MarketChatMessage.Builder builder = bisq.social.protobuf.MarketChatMessage.newBuilder();
+        marketChatOffer.ifPresent(marketChatOffer -> builder.setMarketChatOffer(marketChatOffer.toProto()));
+        return getChatMessageBuilder().setMarketChatMessage(builder).build();
     }
 
-    public static PublicChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
+    public static MarketChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
         Optional<QuotedMessage> quotedMessage = baseProto.hasQuotedMessage() ?
                 Optional.of(QuotedMessage.fromProto(baseProto.getQuotedMessage())) :
                 Optional.empty();
-        return new PublicChatMessage(
+        Optional<String> text = baseProto.hasText() ?
+                Optional.of(baseProto.getText()) :
+                Optional.empty();
+        Optional<MarketChatOffer> marketChatOffer = baseProto.getMarketChatMessage().hasMarketChatOffer() ?
+                Optional.of(MarketChatOffer.fromProto(baseProto.getMarketChatMessage().getMarketChatOffer())) :
+                Optional.empty();
+        return new MarketChatMessage(
                 baseProto.getChannelId(),
                 ChatUser.fromProto(baseProto.getAuthor()),
-                Optional.of(baseProto.getText()),
+                marketChatOffer,
+                text,
                 quotedMessage,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
@@ -85,7 +100,7 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
 
     @Override
     public String getText() {
-        return optionalText.get();
+        return marketChatOffer.map(MarketChatOffer::getChatMessageText).orElse(optionalText.orElse(""));
     }
 
     @Override

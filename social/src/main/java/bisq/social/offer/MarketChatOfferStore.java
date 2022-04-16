@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.intent;
+package bisq.social.offer;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -24,25 +24,25 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeIntentStore implements PersistableStore<TradeIntentStore> {
-    public TradeIntentStore() {
+public class MarketChatOfferStore implements PersistableStore<MarketChatOfferStore> {
+    public MarketChatOfferStore() {
     }
 
     @Override
-    public bisq.social.protobuf.TradeIntentStore toProto() {
-        return bisq.social.protobuf.TradeIntentStore.newBuilder()
+    public bisq.social.protobuf.MarketChatOfferStore toProto() {
+        return bisq.social.protobuf.MarketChatOfferStore.newBuilder()
                 .build();
     }
 
-    public static TradeIntentStore fromProto(bisq.social.protobuf.TradeIntentStore proto) {
-        return new TradeIntentStore();
+    public static MarketChatOfferStore fromProto(bisq.social.protobuf.MarketChatOfferStore proto) {
+        return new MarketChatOfferStore();
     }
 
     @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.social.protobuf.TradeIntentStore.class));
+                return fromProto(any.unpack(bisq.social.protobuf.MarketChatOfferStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -50,11 +50,11 @@ public class TradeIntentStore implements PersistableStore<TradeIntentStore> {
     }
 
     @Override
-    public void applyPersisted(TradeIntentStore chatStore) {
+    public void applyPersisted(MarketChatOfferStore chatStore) {
     }
 
     @Override
-    public TradeIntentStore getClone() {
-        return new TradeIntentStore();
+    public MarketChatOfferStore getClone() {
+        return new MarketChatOfferStore();
     }
 }

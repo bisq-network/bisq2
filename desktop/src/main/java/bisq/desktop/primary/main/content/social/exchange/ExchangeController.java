@@ -18,26 +18,20 @@
 package bisq.desktop.primary.main.content.social.exchange;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.observable.ObservableSet;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.overlay.Notification;
+import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.social.components.*;
-import bisq.i18n.Res;
-import bisq.social.chat.*;
-import bisq.social.user.ChatUser;
-import bisq.social.user.profile.UserProfile;
+import bisq.social.chat.ChatService;
+import bisq.social.chat.PublicChannel;
 import bisq.social.user.profile.UserProfileService;
-import javafx.collections.ListChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class ExchangeController implements Controller {
@@ -46,47 +40,53 @@ public class ExchangeController implements Controller {
     @Getter
     private final ExchangeView view;
     private final UserProfileService userProfileService;
-    private final PublicChannelSelection publicChannelSelection;
     private final PrivateChannelSelection privateChannelSelection;
     private final ChannelInfo channelInfo;
     private final NotificationsSettings notificationsSettings;
     private final QuotedMessageBlock quotedMessageBlock;
     private final MarketChannelSelection marketChannelSelection;
     private final UserProfileSelection userProfileDisplay;
-    private Pin chatMessagesPin, selectedChannelPin, tradeTagsPin, currencyTagsPin, paymentMethodTagsPin, customTagsPin;
+    private final ChatMessagesComponent chatMessagesComponent;
+    private Pin selectedChannelPin, tradeTagsPin, currencyTagsPin, paymentMethodTagsPin, customTagsPin;
 
     private Subscription notificationSettingSubscription;
-    private ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messageListener;
 
     public ExchangeController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
 
-         userProfileDisplay = new UserProfileSelection(userProfileService);
-        marketChannelSelection = new MarketChannelSelection(applicationService.getSettingsService());
+        userProfileDisplay = new UserProfileSelection(userProfileService);
+        marketChannelSelection = new MarketChannelSelection(chatService, applicationService.getSettingsService());
+        privateChannelSelection = new PrivateChannelSelection(chatService);
+        chatMessagesComponent = new ChatMessagesComponent(chatService, userProfileService);
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
-        publicChannelSelection = new PublicChannelSelection(chatService);
-        privateChannelSelection = new PrivateChannelSelection(chatService);
         quotedMessageBlock = new QuotedMessageBlock();
+        FilterBox filterBox = new FilterBox(chatMessagesComponent.getFilteredChatMessages());
         model = new ExchangeModel(chatService, userProfileService);
         view = new ExchangeView(model,
                 this,
                 userProfileDisplay.getRoot(),
                 marketChannelSelection,
-                publicChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
+                chatMessagesComponent.getRoot(),
                 notificationsSettings.getRoot(),
                 channelInfo.getRoot(),
-                quotedMessageBlock.getRoot());
-
-        model.getSortedChatMessages().setComparator(ChatMessageListItem::compareTo);
+                filterBox);
     }
 
     @Override
     public void onActivate() {
-       // marketSelection.setSelectedMarket(data.market());
-        
+        //  chatMessagesComponent.selectedChannelListItemProperty().bind(marketChannelSelection.selectedMarketProperty());
+
+        EasyBind.subscribe(marketChannelSelection.selectedMarketProperty(), item -> {
+            if (item != null) {
+                model.getSelectedChannelAsString().set(item.getChannel().getId());
+                chatMessagesComponent.setSelectedChannelListItem(item);
+            }
+        });
+        // marketSelection.setSelectedMarket(data.market());
+
         notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
                 value -> chatService.setNotificationSetting(chatService.getPersistableStore().getSelectedChannel().get(), value));
 
@@ -98,14 +98,16 @@ public class ExchangeController implements Controller {
                 customTagsPin = FxBindings.<String, String>bind(model.getCustomTags()).map(String::toUpperCase).to(publicChannel.getCustomTags());
             }
 
-            if (chatMessagesPin != null) {
+         /*   if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
-            }
-            chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
+            }*/
+            
+          /*  chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
                     .map(ChatMessageListItem::new) // only Public or PrivatChatmessage possible here
                     .to((ObservableSet<ChatMessage>) channel.getChatMessages());
 
-            model.getSelectedChannelAsString().set(channel.getChannelName());
+            model.getSelectedChannelAsString().set(channel.getMarket());*/
+
             model.getSelectedChannel().set(channel);
             if (model.getChannelInfoVisible().get()) {
                 channelInfo.setChannel(channel);
@@ -118,52 +120,7 @@ public class ExchangeController implements Controller {
                 notificationsSettings.setChannel(channel);
             }
 
-            if (messageListener != null) {
-                model.getChatMessages().removeListener(messageListener);
-            }
 
-            // Notifications implementation is very preliminary. Not sure if another concept like its used in Element 
-            // would be better. E.g. Show all past notifications in the sidebar. When a new notification arrives, dont
-            // show the popup but only highlight the notifications icon (we would need to add a notification 
-            // settings tab then in the notifications component).
-            // We look up all our usernames, not only the selected one
-            Set<String> myUserNames = userProfileService.getPersistableStore().getUserProfiles().stream()
-                    .map(userProfile -> userProfile.getChatUser().getProfileId())
-                    .collect(Collectors.toSet());
-            messageListener = c -> {
-                c.next();
-                // At init, we get full list, but we don't want to show notifications in that event.
-                if (c.getAddedSubList().equals(model.getChatMessages())) {
-                    return;
-                }
-                if (channel.getNotificationSetting().get() == NotificationSetting.ALL) {
-                    String messages = c.getAddedSubList().stream()
-                                    .map(item -> item.getAuthorUserName() + ": " + item.getChatMessage().getText())
-                                    .distinct()
-                                    .collect(Collectors.joining("\n"));
-                    if (!messages.isEmpty()) {
-                        new Notification().headLine(messages).autoClose().hideCloseButton().show();
-                    }
-                } else if (channel.getNotificationSetting().get() == NotificationSetting.MENTION) {
-                    // TODO
-                    // - Match only if mentioned username matches exactly (e.g. split item.getMessage() 
-                    // in space separated tokens and compare those)
-                    // - show user icon of sender (requires extending Notification to support custom graphics)
-                    // 
-                    String messages = c.getAddedSubList().stream()
-                                    .filter(item -> myUserNames.stream().anyMatch(myUserName -> item.getMessage().contains("@" + myUserName)))
-                                    .filter(item -> !myUserNames.contains(item.getAuthorUserName()))
-                                    .map(item -> Res.get("social.notification.getMentioned",
-                                            item.getAuthorUserName(),
-                                            item.getChatMessage().getText()))
-                                    .distinct()
-                                    .collect(Collectors.joining("\n"));
-                    if (!messages.isEmpty()) {
-                        new Notification().headLine(messages).autoClose().hideCloseButton().show();
-                    }
-                }
-            };
-            model.getChatMessages().addListener(messageListener);
         });
     }
 
@@ -171,11 +128,7 @@ public class ExchangeController implements Controller {
     public void onDeactivate() {
         notificationSettingSubscription.unsubscribe();
         selectedChannelPin.unbind();
-        chatMessagesPin.unbind();
-
-        if (messageListener != null) {
-            model.getChatMessages().removeListener(messageListener);
-        }
+       // chatMessagesPin.unbind();
 
         if (tradeTagsPin != null) {
             tradeTagsPin.unbind();
@@ -185,21 +138,6 @@ public class ExchangeController implements Controller {
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // UI
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void onSendMessage(String text) {
-        Channel<? extends ChatMessage> channel = chatService.getPersistableStore().getSelectedChannel().get();
-        UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
-        if (channel instanceof PublicChannel publicChannel) {
-            chatService.publishPublicChatMessage(text, quotedMessageBlock.getQuotedMessage(), publicChannel, userProfile);
-        } else if (channel instanceof PrivateChannel privateChannel) {
-            chatService.sendPrivateChatMessage(text, quotedMessageBlock.getQuotedMessage(), privateChannel);
-        }
-        quotedMessageBlock.close();
-    }
 
     public void onToggleFilterBox() {
         boolean visible = !model.getFilterBoxVisible().get();
@@ -232,24 +170,13 @@ public class ExchangeController implements Controller {
         }
     }
 
-    public void onShowChatUserDetails(ChatMessage chatMessage) {
-        model.getSideBarVisible().set(true);
-        model.getChannelInfoVisible().set(false);
-        model.getNotificationsVisible().set(false);
 
-        ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(), chatMessage.getAuthor());
-        chatUserDetails.setOnSendPrivateMessage(chatUser -> {
-            // todo
-            log.info("onSendPrivateMessage {}", chatUser);
-        });
-        chatUserDetails.setOnIgnoreChatUser(this::refreshMessages);
-        chatUserDetails.setOnMentionUser(chatUser -> mentionUser(chatUser.getProfileId()));
-        model.setChatUserDetails(Optional.of(chatUserDetails));
-        model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
-    }
-
-    public void onUserNameClicked(String userName) {
-        mentionUser(userName);
+    private void refreshMessages() {
+        //chatMessagesPin.unbind();
+      /*  chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
+                .map(ChatMessageListItem::new)
+                .to((ObservableSet<ChatMessage>) model.getSelectedChannel().get().getChatMessages()); */
+        //todo expected type <? extends ChatMessage> does not work ;-(
     }
 
     public void onCloseSideBar() {
@@ -267,83 +194,5 @@ public class ExchangeController implements Controller {
         model.getChatUserDetailsRoot().set(null);
     }
 
-    private void mentionUser(String userName) {
-        String existingText = model.getTextInput().get();
-        if (!existingText.isEmpty() && !existingText.endsWith(" ")) {
-            existingText += " ";
-        }
-        model.getTextInput().set(existingText + "@" + userName + " ");
-    }
 
-    private void refreshMessages() {
-        chatMessagesPin.unbind();
-        chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
-                .map(ChatMessageListItem::new)
-                .to((ObservableSet<ChatMessage>) model.getSelectedChannel().get().getChatMessages()); //todo expected type <? extends ChatMessage> does not work ;-(
-    }
-
-    public void onOpenEmojiSelector(ChatMessage chatMessage) {
-
-    }
-
-    public void onReply(ChatMessage chatMessage) {
-        if (!chatService.isMyMessage(chatMessage)) {
-            quotedMessageBlock.reply(chatMessage);
-        }
-    }
-
-    /**
-     * open a private channel to specified user. Automatically select it so user is ready to type the message to send.
-     *
-     * @param chatMessage
-     */
-    public void onOpenPrivateChannel(ChatMessage chatMessage) {
-        if (chatService.isMyMessage(chatMessage)) {
-            return; // should never happen as the button for opening the channel should not appear
-            // but kept here for double safety
-        }
-        ChatUser peer = chatMessage.getAuthor();
-        String channelId = PrivateChannel.createChannelId(peer, userProfileService.getPersistableStore().getSelectedUserProfile().get());
-        PrivateChannel channel = chatService.getOrCreatePrivateChannel(channelId, peer);
-        chatService.selectChannel(channel);
-    }
-
-    public void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
-        if (!chatService.isMyMessage(chatMessage)) {
-            return;
-        }
-        if (chatMessage instanceof PublicChatMessage publicChatMessage) {
-            UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
-            chatService.publishEditedPublicChatMessage(publicChatMessage, editedText, userProfile)
-                    .whenComplete((r, t) -> {
-                        // todo maybe show spinner while deleting old msg and hide it once done?
-                    });
-        } else {
-            //todo private message
-        }
-    }
-
-    public void onDeleteMessage(ChatMessage chatMessage) {
-        if (chatService.isMyMessage(chatMessage)) {
-            if (chatMessage instanceof PublicChatMessage publicChatMessage) {
-                UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
-                chatService.deletePublicChatMessage(publicChatMessage, userProfile);
-            } else {
-                //todo delete private message
-            }
-        }
-    }
-
-    public void onOpenMoreOptions(ChatMessage chatMessage) {
-
-    }
-
-    public void onAddEmoji(String emojiId) {
-
-    }
-
-    public void onCreateOffer() {
-        //todo
-        //Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
-    }
 }

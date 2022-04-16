@@ -45,8 +45,6 @@ public abstract class ChatMessage {
     @Getter
     protected final long date;
     @Getter
-    protected final ChannelType channelType;
-    @Getter
     protected final boolean wasEdited;
     @Getter
     protected final MetaData metaData;
@@ -56,7 +54,6 @@ public abstract class ChatMessage {
                           Optional<String> text,
                           Optional<QuotedMessage> quotedMessage,
                           long date,
-                          ChannelType channelType,
                           boolean wasEdited,
                           MetaData metaData) {
         this.channelId = channelId;
@@ -64,7 +61,6 @@ public abstract class ChatMessage {
         this.optionalText = text;
         this.quotedMessage = quotedMessage;
         this.date = date;
-        this.channelType = channelType;
         this.wasEdited = wasEdited;
         this.metaData = metaData;
     }
@@ -76,7 +72,6 @@ public abstract class ChatMessage {
                 .setChannelId(channelId)
                 .setAuthor(author.toProto())
                 .setDate(date)
-                .setChannelType(channelType.toProto())
                 .setWasEdited(wasEdited)
                 .setMetaData(metaData.toProto());
         quotedMessage.ifPresent(quotedMessage -> builder.setQuotedMessage(quotedMessage.toProto()));
@@ -92,8 +87,8 @@ public abstract class ChatMessage {
             case PUBLICCHATMESSAGE -> {
                 return PublicChatMessage.fromProto(proto);
             }
-            case TRADECHATMESSAGE -> {
-                return TradeChatMessage.fromProto(proto);
+            case MARKETCHATMESSAGE -> {
+                return MarketChatMessage.fromProto(proto);
             }
             case MESSAGE_NOT_SET -> {
                 throw new UnresolvableProtobufMessageException(proto);
@@ -110,8 +105,8 @@ public abstract class ChatMessage {
                     case PUBLICCHATMESSAGE -> {
                         return PublicChatMessage.fromProto(proto);
                     }
-                    case TRADECHATMESSAGE -> {
-                        return TradeChatMessage.fromProto(proto);
+                    case MARKETCHATMESSAGE -> {
+                        return MarketChatMessage.fromProto(proto);
                     }
                     case MESSAGE_NOT_SET -> {
                         throw new UnresolvableProtobufMessageException(proto);

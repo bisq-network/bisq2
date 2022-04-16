@@ -108,7 +108,7 @@ public class CreateUserProfile {
                             new HashSet<>(entitlementSelection.getVerifiedEntitlements()))
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
-                            chatService.maybeAddDummyChannels();
+                            chatService.maybeAddDefaultChannels();
                             checkArgument(userProfile.getIdentity().domainId().equals(profileId));
                             reset();
                             //model.feedback.set(Res.get("social.createUserProfile.success", profileId));

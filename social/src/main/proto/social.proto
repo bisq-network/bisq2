@@ -71,23 +71,18 @@ message QuotedMessage {
   string message = 3;
 }
 
-enum ChannelType {
-  PUBLIC = 0;
-  PRIVATE = 1;
-}
-
 message PrivateChatMessage {
 }
 message PublicChatMessage {
 }
-message TradeIntent {
+message MarketChatOffer {
   uint64 btcAmount = 1;
   string quoteCurrencyCode = 2;
   repeated string paymentMethods = 3;
   string makersTradeTerms = 5;
 }
-message TradeChatMessage {
-  TradeIntent tradeIntent = 1;
+message MarketChatMessage {
+  optional MarketChatOffer marketChatOffer = 1;
 }
 message ChatMessage {
   string channelId = 1;
@@ -95,13 +90,12 @@ message ChatMessage {
   ChatUser author = 3;
   optional QuotedMessage quotedMessage = 4;
   uint64 date = 5;
-  ChannelType channelType = 6;
-  bool wasEdited = 7;
-  network.MetaData metaData = 8;
+  bool wasEdited = 6;
+  network.MetaData metaData = 7;
   oneof message {
     PrivateChatMessage privateChatMessage = 20;
     PublicChatMessage publicChatMessage = 21;
-    TradeChatMessage tradeChatMessage = 22;
+    MarketChatMessage marketChatMessage = 22;
   }
 }
 
@@ -121,6 +115,10 @@ message UserProfile {
 message PrivateChannel {
   ChatUser peer = 1;
   UserProfile myProfile = 2;
+  repeated ChatMessage chatMessages = 3;
+}
+message MarketChannel {
+  common.Market market = 1;
 }
 message PublicChannel {
   string channelName = 1;
@@ -135,10 +133,10 @@ message PublicChannel {
 message Channel {
   string id = 1;
   NotificationSetting notificationSetting = 2;
-  repeated ChatMessage chatMessages = 3;
   oneof message{
     PrivateChannel privateChannel = 10;
-    PublicChannel publicChannel = 11;
+    MarketChannel marketChannel = 11;
+    PublicChannel publicChannel = 12;
   }
 }
 
@@ -152,9 +150,10 @@ message UserProfileStore {
 message ChatStore {
   repeated Channel privateChannels = 1;
   repeated Channel publicChannels = 2;
-  Channel selectedChannel = 3;
-  repeated string ignoredChatUserIds = 4;
+  repeated Channel marketChannels = 3;
+  Channel selectedChannel = 4;
+  repeated string ignoredChatUserIds = 5;
 }
 
-message TradeIntentStore {
+message MarketChatOfferStore {
 }

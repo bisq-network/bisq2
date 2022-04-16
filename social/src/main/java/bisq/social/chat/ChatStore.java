@@ -38,6 +38,8 @@ public class ChatStore implements PersistableStore<ChatStore> {
     @Getter
     private final ObservableSet<PublicChannel> publicChannels = new ObservableSet<>();
     @Getter
+    private final ObservableSet<MarketChannel> marketChannels = new ObservableSet<>();
+    @Getter
     private final Observable<Channel<? extends ChatMessage>> selectedChannel = new Observable<>();
     @Getter
     private final ObservableSet<String> ignoredChatUserIds = new ObservableSet<>();
@@ -47,10 +49,12 @@ public class ChatStore implements PersistableStore<ChatStore> {
 
     private ChatStore(Set<PrivateChannel> privateChannels,
                       Set<PublicChannel> publicChannels,
+                      Set<MarketChannel> marketChannels,
                       Channel<? extends ChatMessage> selectedChannel,
                       Set<String> ignoredChatUserIds) {
         setAll(privateChannels,
                 publicChannels,
+                marketChannels,
                 selectedChannel,
                 ignoredChatUserIds);
     }
@@ -60,18 +64,25 @@ public class ChatStore implements PersistableStore<ChatStore> {
         return bisq.social.protobuf.ChatStore.newBuilder()
                 .addAllPrivateChannels(privateChannels.stream().map(PrivateChannel::toProto).collect(Collectors.toSet()))
                 .addAllPublicChannels(publicChannels.stream().map(PublicChannel::toProto).collect(Collectors.toSet()))
+                .addAllMarketChannels(marketChannels.stream().map(MarketChannel::toProto).collect(Collectors.toSet()))
                 .setSelectedChannel(selectedChannel.get().toProto())
                 .addAllIgnoredChatUserIds(ignoredChatUserIds)
                 .build();
     }
 
     public static ChatStore fromProto(bisq.social.protobuf.ChatStore proto) {
-        return new ChatStore(proto.getPrivateChannelsList().stream()
+        Set<PrivateChannel> privateChannels = proto.getPrivateChannelsList().stream()
                 .map(e -> (PrivateChannel) PrivateChannel.fromProto(e))
-                .collect(Collectors.toSet()),
-                proto.getPublicChannelsList().stream()
-                        .map(e -> (PublicChannel) PublicChannel.fromProto(e))
-                        .collect(Collectors.toSet()),
+                .collect(Collectors.toSet());
+        Set<PublicChannel> publicChannels = proto.getPublicChannelsList().stream()
+                .map(e -> (PublicChannel) PublicChannel.fromProto(e))
+                .collect(Collectors.toSet());
+        Set<MarketChannel> marketChannels = proto.getMarketChannelsList().stream()
+                .map(e -> (MarketChannel) MarketChannel.fromProto(e))
+                .collect(Collectors.toSet());
+        return new ChatStore(privateChannels,
+                publicChannels,
+                marketChannels,
                 Channel.fromProto(proto.getSelectedChannel()),
                 new HashSet<>(proto.getIgnoredChatUserIdsList())
         );
@@ -92,6 +103,7 @@ public class ChatStore implements PersistableStore<ChatStore> {
     public void applyPersisted(ChatStore chatStore) {
         setAll(chatStore.privateChannels,
                 chatStore.publicChannels,
+                chatStore.marketChannels,
                 chatStore.selectedChannel.get(),
                 chatStore.ignoredChatUserIds);
     }
@@ -100,18 +112,22 @@ public class ChatStore implements PersistableStore<ChatStore> {
     public ChatStore getClone() {
         return new ChatStore(privateChannels,
                 publicChannels,
+                marketChannels,
                 selectedChannel.get(),
                 ignoredChatUserIds);
     }
 
     public void setAll(Set<PrivateChannel> privateChannels,
                        Set<PublicChannel> publicChannels,
+                       Set<MarketChannel> marketChannels,
                        Channel<? extends ChatMessage> selectedChannel,
                        Set<String> ignoredChatUserIds) {
         this.privateChannels.clear();
         this.privateChannels.addAll(privateChannels);
         this.publicChannels.clear();
         this.publicChannels.addAll(publicChannels);
+        this.marketChannels.clear();
+        this.marketChannels.addAll(marketChannels);
         this.selectedChannel.set(selectedChannel);
         this.ignoredChatUserIds.clear();
         this.ignoredChatUserIds.addAll(ignoredChatUserIds);

@@ -108,14 +108,15 @@ public class ChannelInfo {
         }
 
         private void setChannel(Channel<? extends ChatMessage> channel) {
-            channelName = channel.getChannelName();
             Set<String> ignoredChatUserIds = new HashSet<>(chatService.getPersistableStore().getIgnoredChatUserIds());
+          /*  channelName = channel.getMarket();
             members.setAll(channel.getChatMessages().stream()
                     .map(ChatMessage::getAuthor)
                     .distinct()
                     .map((chatUser -> new ChatUserOverview(chatUser, ignoredChatUserIds.contains(chatUser.getId()))))
                     .sorted()
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList()));*/
+            
             if (channel instanceof PublicChannel publicChannel) {
                 description = Optional.of(publicChannel.getDescription());
                 adminProfile = Optional.of(new ChatUserOverview(publicChannel.getChannelAdmin()));

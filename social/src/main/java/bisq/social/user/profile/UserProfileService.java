@@ -59,6 +59,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     // For dev testing we use hard coded txId and a pubkeyhash to get real data from Bisq explorer
     private static final boolean USE_DEV_TEST_POB_VALUES = true;
 
+
     public static record Config(List<String> btcMempoolProviders,
                                 List<String> bsqMempoolProviders) {
         public static Config from(com.typesafe.config.Config typeSafeConfig) {
@@ -272,7 +273,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         byte[] pubKeyHash = DigestUtil.hash(pubKeyBytes);
         String useName = UserNameGenerator.fromHash(pubKeyHash);
         //todo we added a nickname
-        return createNewInitializedUserProfile(useName,"TODO", keyId, keyPair, new HashSet<>())
+        return createNewInitializedUserProfile(useName, "TODO", keyId, keyPair, new HashSet<>())
                 .thenApply(userProfile -> true);
     }
 
@@ -284,6 +285,10 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
             case CHANNEL_MODERATOR -> 10000;
             default -> 0;
         };
+    }
+
+    public UserProfile getSelectedUserProfile() {
+        return persistableStore.getSelectedUserProfile().get();
     }
 
     private BaseHttpClient getApiHttpClient(List<String> providerUrls) {

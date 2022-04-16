@@ -21,12 +21,19 @@ import bisq.common.proto.Proto;
 import lombok.Setter;
 
 public record Market(String baseCurrencyCode, String quoteCurrencyCode) implements Proto {
+
     public bisq.common.protobuf.Market toProto() {
         return bisq.common.protobuf.Market.newBuilder()
                 .setBaseCurrencyCode(baseCurrencyCode)
                 .setQuoteCurrencyCode(quoteCurrencyCode)
                 .build();
     }
+
+    public static Market from(String marketString) {
+        String[] tokens = marketString.split(QUOTE_SEPARATOR);
+        return new Market(tokens[0], tokens[1]);
+    }
+
 
     public static Market fromProto(bisq.common.protobuf.Market proto) {
         return new Market(proto.getBaseCurrencyCode(), proto.getQuoteCurrencyCode());

@@ -33,8 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Comparator;
-
 @Slf4j
 public abstract class ChannelSelection {
     protected final ChannelSelection.Controller controller;
@@ -91,7 +89,7 @@ public abstract class ChannelSelection {
         SortedList<Channel<?>> sortedList = new SortedList<>(channels);
 
         protected Model() {
-            sortedList.setComparator(Comparator.comparing(Channel::getChannelName));
+           // sortedList.setComparator(Comparator.comparing(Channel::getMarket));
         }
     }
 
@@ -144,7 +142,7 @@ public abstract class ChannelSelection {
                                     hBox.getChildren().add(roboIcon);
                                 }
                                 hBox.getChildren().add(label);
-                                label.setText(item.getChannelName());
+                               // label.setText(item.getMarket());
 
                                 if (item.equals(model.selectedChannel.get())) {
                                     hBox.setStyle("-fx-background-color: -bisq-grey-left-nav-selected-bg; -fx-background-radius: 3px");

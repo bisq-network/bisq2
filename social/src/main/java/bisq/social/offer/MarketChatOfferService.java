@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.intent;
+package bisq.social.offer;
 
 import bisq.common.monetary.Market;
 import bisq.identity.IdentityService;
@@ -25,6 +25,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.social.chat.ChatService;
+import bisq.social.chat.MarketChannel;
 import bisq.social.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,17 +35,17 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class TradeIntentService implements PersistenceClient<TradeIntentStore> {
+public class MarketChatOfferService implements PersistenceClient<MarketChatOfferStore> {
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final ChatService chatService;
-    private final TradeIntentStore persistableStore = new TradeIntentStore();
-    private final Persistence<TradeIntentStore> persistence;
+    private final MarketChatOfferStore persistableStore = new MarketChatOfferStore();
+    private final Persistence<MarketChatOfferStore> persistence;
 
-    public TradeIntentService(NetworkService networkService,
-                              IdentityService identityService,
-                              ChatService chatService,
-                              PersistenceService persistenceService) {
+    public MarketChatOfferService(NetworkService networkService,
+                                  IdentityService identityService,
+                                  ChatService chatService,
+                                  PersistenceService persistenceService) {
         this.networkService = networkService;
         this.identityService = identityService;
         this.chatService = chatService;
@@ -53,22 +54,18 @@ public class TradeIntentService implements PersistenceClient<TradeIntentStore> {
     }
 
     public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
         return CompletableFuture.completedFuture(true);
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishTradeIntent(Market selectedMarket,
-                                                                                 long baseSideAmount,
-                                                                                 Set<String> selectedPaymentMethods,
-                                                                                 String makersTradeTerms) {
-        return chatService.findPublicChannelForMarket(selectedMarket)
-                .map(publicChannel -> {
-                    UserProfile userProfile = chatService.getUserProfileService().getPersistableStore().getSelectedUserProfile().get();
-                    TradeIntent tradeIntent = new TradeIntent(baseSideAmount,
-                            selectedMarket.quoteCurrencyCode(),
-                            selectedPaymentMethods,
-                            makersTradeTerms);
-                    return chatService.publishTradeChatMessage(tradeIntent, publicChannel, userProfile);
-                }).orElseThrow();
+    public CompletableFuture<DataService.BroadCastDataResult> publishMarketChatOffer(Market selectedMarket,
+                                                                                     long baseSideAmount,
+                                                                                     Set<String> selectedPaymentMethods,
+                                                                                     String makersTradeTerms) {
+        UserProfile userProfile = chatService.getUserProfileService().getSelectedUserProfile();
+        MarketChatOffer marketChatOffer = new MarketChatOffer(baseSideAmount,
+                selectedMarket.quoteCurrencyCode(),
+                selectedPaymentMethods,
+                makersTradeTerms);
+        return chatService.publishMarketChatOffer(marketChatOffer, new MarketChannel(selectedMarket), userProfile);
     }
 }

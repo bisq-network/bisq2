@@ -23,6 +23,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -39,6 +40,7 @@ public class PublicChannel extends Channel<PublicChatMessage> {
     private final ObservableSet<String> currencyTags = new ObservableSet<>();
     private final ObservableSet<String> paymentMethodTags = new ObservableSet<>();
     private final ObservableSet<String> customTags = new ObservableSet<>();
+    private transient final ObservableSet<PublicChatMessage> chatMessages = new ObservableSet<>();
 
     public PublicChannel(String id,
                          String channelName,
@@ -55,7 +57,6 @@ public class PublicChannel extends Channel<PublicChatMessage> {
                 channelAdmin,
                 channelModerators,
                 NotificationSetting.MENTION,
-                new HashSet<>(),
                 tradeTags,
                 currencyTags,
                 paymentMethodTags,
@@ -63,18 +64,17 @@ public class PublicChannel extends Channel<PublicChatMessage> {
         );
     }
 
-    public PublicChannel(String id,
-                         String channelName,
-                         String description,
-                         ChatUser channelAdmin,
-                         Set<ChatUser> channelModerators,
-                         NotificationSetting notificationSetting,
-                         Set<PublicChatMessage> chatMessages,
-                         Set<String> tradeTags,
-                         Set<String> currencyTags,
-                         Set<String> paymentMethodTags,
-                         Set<String> customTags) {
-        super(id, notificationSetting, chatMessages);
+    private PublicChannel(String id,
+                          String channelName,
+                          String description,
+                          ChatUser channelAdmin,
+                          Set<ChatUser> channelModerators,
+                          NotificationSetting notificationSetting,
+                          Set<String> tradeTags,
+                          Set<String> currencyTags,
+                          Set<String> paymentMethodTags,
+                          Set<String> customTags) {
+        super(id, notificationSetting);
 
         this.channelName = channelName;
         this.description = description;
@@ -109,9 +109,6 @@ public class PublicChannel extends Channel<PublicChatMessage> {
                 ChatUser.fromProto(proto.getChannelAdmin()),
                 proto.getChannelModeratorsList().stream().map(ChatUser::fromProto).collect(Collectors.toSet()),
                 NotificationSetting.fromProto(baseProto.getNotificationSetting()),
-                baseProto.getChatMessagesList().stream()
-                        .map(PublicChatMessage::fromProto)
-                        .collect(Collectors.toSet()),
                 new HashSet<>(proto.getTradeTagsList()),
                 new HashSet<>(proto.getCurrencyTagsList()),
                 new HashSet<>(proto.getPaymentMethodTagsList()),
@@ -122,5 +119,20 @@ public class PublicChannel extends Channel<PublicChatMessage> {
     @Override
     protected bisq.social.protobuf.ChatMessage getChatMessageProto(PublicChatMessage chatMessage) {
         return chatMessage.toProto();
+    }
+
+    @Override
+    public void addChatMessage(PublicChatMessage chatMessage) {
+        chatMessages.add(chatMessage);
+    }
+
+    @Override
+    public void removeChatMessage(PublicChatMessage chatMessage) {
+        chatMessages.remove(chatMessage);
+    }
+
+    @Override
+    public void removeChatMessages(Collection<PublicChatMessage> removeMessages) {
+        chatMessages.removeAll(removeMessages);
     }
 }

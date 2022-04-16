@@ -44,7 +44,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Slf4j
 public class PaymentMethodsSelection {
@@ -138,11 +138,13 @@ public class PaymentMethodsSelection {
         }
 
         private void updatePaymentMethods() {
-            chatService.findPublicChannelForMarket(model.selectedMarket).ifPresent(publicChannel -> {
+            //todo
+            model.paymentMethods.addAll(List.of("SEPA", "BANK-TRANSFER", "ZELLE", "REVOLUT"));
+         /*   chatService.findPublicChannelForMarket(model.selectedMarket).ifPresent(publicChannel -> {
                 model.paymentMethods.addAll(publicChannel.getPaymentMethodTags().stream()
                         .map(String::toUpperCase)
                         .collect(Collectors.toList()));
-            });
+            });*/
         }
     }
 
