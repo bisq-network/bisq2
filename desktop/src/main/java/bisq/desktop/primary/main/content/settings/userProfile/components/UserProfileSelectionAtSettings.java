@@ -21,7 +21,6 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
-import javafx.scene.control.Label;
 import bisq.i18n.Res;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
@@ -114,7 +113,7 @@ public class UserProfileSelectionAtSettings {
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(UserProfile userProfile) {
-                    return userProfile != null ? userProfile.getIdentity().domainId() : "";
+                    return userProfile != null ? userProfile.getChatUser().getUserName() : "";
                 }
 
                 @Override

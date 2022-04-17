@@ -46,6 +46,7 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
 
         showCreateUserProfileButton = new Button(Res.get("social.createUserProfile.headline"));
         showCreateUserProfileButton.setMinWidth(300);
+        userProfileSelection.setMinWidth(600);
         root.getChildren().addAll(userProfileSelection,
                 userProfile,
                 showCreateUserProfileButton,
