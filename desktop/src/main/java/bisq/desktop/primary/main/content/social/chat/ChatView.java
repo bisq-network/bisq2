@@ -23,6 +23,8 @@ import bisq.desktop.common.utils.KeyWordDetection;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
+import bisq.desktop.components.controls.jfx.BisqInputTextField;
+import bisq.desktop.components.controls.jfx.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.layout.Layout;

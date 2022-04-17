@@ -19,8 +19,8 @@ package bisq.desktop.components.containers;
 
 import bisq.common.data.Pair;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
-import bisq.desktop.components.controls.BisqTextArea;
-import bisq.desktop.components.controls.BisqTextField;
+import bisq.desktop.components.controls.jfx.BisqTextArea;
+import bisq.desktop.components.controls.jfx.BisqTextField;
 import bisq.desktop.components.controls.BisqTextFieldWithCopyIcon;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;

@@ -18,6 +18,7 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
+import bisq.desktop.components.controls.jfx.BisqInputTextField;
 import bisq.desktop.components.overlay.PopOverWrapper;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;

@@ -21,7 +21,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.BisqInputTextField;
+import bisq.desktop.components.controls.jfx.BisqInputTextField;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.layout.Layout;
 import de.jensd.fx.fontawesome.AwesomeIcon;

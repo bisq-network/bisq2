@@ -1,19 +1,17 @@
-package bisq.desktop.components.controls;
+package bisq.desktop.components.controls.jfx;
 
 import com.jfoenix.controls.JFXToggleButton;
 import com.jfoenix.skins.JFXToggleButtonSkin;
 import javafx.scene.control.Skin;
 
-import static bisq.desktop.common.utils.TooltipUtil.showTooltipIfTruncated;
-
-public class AutoTooltipSlideToggleButton extends JFXToggleButton {
-    public AutoTooltipSlideToggleButton() {
+public class BisqToggleButton extends JFXToggleButton {
+    public BisqToggleButton() {
         super();
     }
 
-    public AutoTooltipSlideToggleButton(String label) {
+    public BisqToggleButton(String text) {
         super();
-        setText(label);
+        setText(text);
     }
 
     @Override
@@ -29,7 +27,7 @@ public class AutoTooltipSlideToggleButton extends JFXToggleButton {
         @Override
         protected void layoutChildren(double x, double y, double w, double h) {
             super.layoutChildren(x, y, w, h);
-            showTooltipIfTruncated(this, getSkinnable());
+            // showTooltipIfTruncated(this, getSkinnable());
         }
     }
 }

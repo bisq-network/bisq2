@@ -21,7 +21,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;
 import javafx.scene.control.Label;
-import bisq.desktop.components.controls.BisqTextField;
+import bisq.desktop.components.controls.jfx.BisqTextField;
 import bisq.desktop.components.controls.BisqTextFieldWithCopyIcon;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;

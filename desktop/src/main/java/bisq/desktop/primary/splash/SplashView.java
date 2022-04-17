@@ -19,11 +19,10 @@ package bisq.desktop.primary.splash;
 
 import bisq.desktop.common.view.View;
 import javafx.scene.control.Label;
-import bisq.desktop.components.controls.BisqProgressBar;
+import bisq.desktop.components.controls.jfx.BisqProgressBar;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;

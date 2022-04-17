@@ -18,7 +18,7 @@
 package bisq.desktop.components.table;
 
 import javafx.scene.control.Button;
-import bisq.desktop.components.controls.BisqInputTextField;
+import bisq.desktop.components.controls.jfx.BisqInputTextField;
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
 import bisq.desktop.components.overlay.PopOverWrapper;
 import de.jensd.fx.fontawesome.AwesomeDude;

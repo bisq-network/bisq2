@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.wallet.send;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqTextField;
+import bisq.desktop.components.controls.jfx.BisqTextField;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

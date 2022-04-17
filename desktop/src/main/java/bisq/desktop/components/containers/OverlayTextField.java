@@ -18,7 +18,7 @@
 package bisq.desktop.components.containers;
 
 import bisq.desktop.common.utils.StageUtil;
-import bisq.desktop.components.controls.BisqTextField;
+import bisq.desktop.components.controls.jfx.BisqTextField;
 import javafx.stage.Stage;
 
 public class OverlayTextField extends BisqTextField {

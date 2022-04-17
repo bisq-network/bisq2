@@ -18,6 +18,7 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.components.controls.jfx.BisqTextField;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;

@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.controls;
+package bisq.desktop.components.controls.jfx;
 
 
 import bisq.desktop.common.utils.validation.InputValidator;
-import bisq.desktop.common.utils.validation.JFXInputValidator;
 import com.jfoenix.controls.JFXTextField;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -138,6 +137,6 @@ public class BisqInputTextField extends JFXTextField {
     }
 
     protected Skin<?> createDefaultSkin() {
-        return new JFXTextFieldSkinBisqStyle<>(this, inputLineExtension);
+        return new BisqTextField.JFXTextFieldSkinBisqStyle<>(this, inputLineExtension);
     }
 }

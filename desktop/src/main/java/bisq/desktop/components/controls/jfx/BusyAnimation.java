@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.controls;
+package bisq.desktop.components.controls.jfx;
 
 import com.jfoenix.controls.JFXSpinner;
 import javafx.beans.property.BooleanProperty;

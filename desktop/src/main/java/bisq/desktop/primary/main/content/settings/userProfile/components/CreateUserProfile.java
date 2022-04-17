@@ -22,7 +22,7 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import bisq.desktop.components.controls.BisqTextField;
+import bisq.desktop.components.controls.jfx.BisqTextField;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;

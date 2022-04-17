@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.trade.create;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import javafx.scene.control.Button;
-import bisq.desktop.components.controls.BisqTextArea;
+import bisq.desktop.components.controls.jfx.BisqTextArea;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.offer.Offer;

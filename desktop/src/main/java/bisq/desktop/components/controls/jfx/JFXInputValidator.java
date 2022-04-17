@@ -1,5 +1,6 @@
-package bisq.desktop.common.utils.validation;
+package bisq.desktop.components.controls.jfx;
 
+import bisq.desktop.common.utils.validation.InputValidator;
 import com.jfoenix.validation.base.ValidatorBase;
 
 public class JFXInputValidator extends ValidatorBase {

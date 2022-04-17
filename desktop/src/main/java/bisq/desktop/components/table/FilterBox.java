@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.table;
 
-import bisq.desktop.components.controls.BisqInputTextField;
+import bisq.desktop.components.controls.jfx.BisqInputTextField;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.transformation.FilteredList;
