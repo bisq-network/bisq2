@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.social.components;
 
 import bisq.common.data.ByteArray;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqButton;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
@@ -141,7 +141,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
         private final Label userName, id, entitlements;
-        private final BisqButton openPrivateMessageButton, mentionButton, ignoreButton, reportButton;
+        private final Button openPrivateMessageButton, mentionButton, ignoreButton, reportButton;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
@@ -170,10 +170,10 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
             //todo add reputation data. need more concept work
 
-            openPrivateMessageButton = new BisqButton(Res.get("social.sendPrivateMessage"));
-            mentionButton = new BisqButton(Res.get("social.mention"));
-            ignoreButton = new BisqButton(Res.get("social.ignore"));
-            reportButton = new BisqButton(Res.get("social.report"));
+            openPrivateMessageButton = new Button(Res.get("social.sendPrivateMessage"));
+            mentionButton = new Button(Res.get("social.mention"));
+            ignoreButton = new Button(Res.get("social.ignore"));
+            reportButton = new Button(Res.get("social.report"));
 
             root.getChildren().addAll(roboIconImageView,userName, id, entitlements, Spacer.height(10),
                     openPrivateMessageButton, mentionButton, ignoreButton, reportButton);

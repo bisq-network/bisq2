@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.settings.userProfile.components;
 
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.components.controls.BisqButton;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import bisq.desktop.components.controls.BisqTextField;
 import bisq.i18n.Res;
@@ -109,7 +109,7 @@ public class ChannelAdmin {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqButton addChannelButton;
+        private final Button addChannelButton;
         private final BisqTextField channelNameField;
         private final BisqTextField descriptionField;
 
@@ -122,7 +122,7 @@ public class ChannelAdmin {
 
             channelNameField = new BisqTextField();
             descriptionField = new BisqTextField();
-            addChannelButton = new BisqButton(Res.get("social.channelAdmin.addChannel"));
+            addChannelButton = new Button(Res.get("social.channelAdmin.addChannel"));
 
             root.getChildren().addAll(headline, channelNameField, descriptionField, addChannelButton);
         }

@@ -23,7 +23,7 @@ import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
-import bisq.desktop.components.controls.BisqButton;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -293,7 +293,7 @@ public class SettlementSelection {
         private final Label baseSideLabel, quoteSideLabel;
         private final BisqTableView<AccountListItem> baseSideAccountsTableView, quoteSideAccountsTableView;
         private final BisqTableView<SettlementListItem> baseSideSettlementTableView, quoteSideSettlementTableView;
-        private final BisqButton baseSideButton, quoteSideButton;
+        private final Button baseSideButton, quoteSideButton;
         private final VBox baseSideBox, quoteSideBox;
 
         private View(Model model,
@@ -309,7 +309,7 @@ public class SettlementSelection {
             baseSideAccountsTableView.setFixHeight(tableHeight);
             configAccountTableView(baseSideAccountsTableView, true);
             VBox.setMargin(baseSideAccountsTableView, new Insets(0, 0, 20, 0));
-            baseSideButton = new BisqButton(Res.get("createOffer.account.createNew"));
+            baseSideButton = new Button(Res.get("createOffer.account.createNew"));
             VBox baseSidePlaceHolderBox = createPlaceHolderBox(baseSideButton);
             baseSideAccountsTableView.setPlaceholder(baseSidePlaceHolderBox);
 
@@ -329,7 +329,7 @@ public class SettlementSelection {
             quoteSideAccountsTableView.setFixHeight(tableHeight);
             configAccountTableView(quoteSideAccountsTableView, false);
             VBox.setMargin(quoteSideAccountsTableView, new Insets(0, 0, 20, 0));
-            quoteSideButton = new BisqButton(Res.get("createOffer.account.createNew"));
+            quoteSideButton = new Button(Res.get("createOffer.account.createNew"));
             VBox quoteSidePlaceHolderBox = createPlaceHolderBox(quoteSideButton);
             quoteSideAccountsTableView.setPlaceholder(quoteSidePlaceHolderBox);
 
@@ -391,7 +391,7 @@ public class SettlementSelection {
             quoteSideSettlementTableView.managedProperty().unbind();
         }
 
-        private VBox createPlaceHolderBox(BisqButton baseSideButton) {
+        private VBox createPlaceHolderBox(Button baseSideButton) {
             Label placeholderLabel = new Label(Res.get("createOffer.account.placeholder.noAccounts"));
             VBox vBox = new VBox();
             vBox.setSpacing(10);

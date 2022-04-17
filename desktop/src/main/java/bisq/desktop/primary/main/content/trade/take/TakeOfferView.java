@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.take;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqButton;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferController> {    private final static double MARGIN = 66;
-    private final BisqButton takeOfferButton;
+    private final Button takeOfferButton;
     private final Label protocolLabel;
 
     public TakeOfferView(TakeOfferModel model,
@@ -57,10 +57,10 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
 
         amountPrice.setPadding(new Insets(0, 0, -5, 0));
 
-        takeOfferButton = new BisqButton(Res.get("takeOffer.button"));
+        takeOfferButton = new Button(Res.get("takeOffer.button"));
         takeOfferButton.getStyleClass().add("action-button");
 
-        BisqButton cancelButton = new BisqButton(Res.get("cancel"));
+        Button cancelButton = new Button(Res.get("cancel"));
         cancelButton.setOnAction(e -> controller.onCancel());
 
         root.getChildren().addAll(

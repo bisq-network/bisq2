@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.settings.userProfile.components;
 import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.BisqButton;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import bisq.desktop.components.controls.BisqTextField;
 import bisq.desktop.components.robohash.RoboHash;
@@ -160,7 +160,7 @@ public class CreateUserProfile {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final BisqButton generateNewIdentityButton, entitlementButton, createUserButton;
+        private final Button generateNewIdentityButton, entitlementButton, createUserButton;
         private final BisqTextField nickNameInputField, profileIdInputField;
         private final Label feedbackLabel;
         private Subscription roboHashNodeSubscription;
@@ -185,13 +185,13 @@ public class CreateUserProfile {
             profileIdInputField.setFocusTraversable(false);
             profileIdInputField.setPromptText(Res.get("social.createUserProfile.profileId.prompt"));
 
-            generateNewIdentityButton = new BisqButton(Res.get("social.createUserProfile.generateNewIdentity"));
+            generateNewIdentityButton = new Button(Res.get("social.createUserProfile.generateNewIdentity"));
             generateNewIdentityButton.setMinWidth(minWidth);
 
-            entitlementButton = new BisqButton(Res.get("social.createUserProfile.entitlement.headline"));
+            entitlementButton = new Button(Res.get("social.createUserProfile.entitlement.headline"));
             entitlementButton.setMinWidth(minWidth);
 
-            createUserButton = new BisqButton(Res.get("social.createUserProfile.createButton"));
+            createUserButton = new Button(Res.get("social.createUserProfile.createButton"));
             createUserButton.setMinWidth(minWidth);
             createUserButton.disableProperty().bind(profileIdInputField.textProperty().isEmpty());
             createUserButton.getStyleClass().add("action-button");

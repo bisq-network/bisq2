@@ -62,7 +62,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
     private final Pane channelInfo;
     private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
     private final HBox messagesListAndSideBar;
-    private final BisqButton createOfferButton;
+    private final Button createOfferButton;
     private Subscription chatUserOverviewRootSubscription;
     private Pane chatUserOverviewRoot;
 
@@ -88,8 +88,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         // Left 
         userProfileComboBox.setPadding(new Insets(10, 10, 10, 10));
 
-        createOfferButton = new BisqButton(Res.get("satoshisquareapp.chat.createOffer.button"));
-        createOfferButton.setActionButton(true);
+        createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
+        createOfferButton.setDefaultButton(true);
         VBox.setMargin(createOfferButton, new Insets(0, 20, 20, 20));
         createOfferButton.setPrefWidth(1000);
         left = Layout.vBoxWith(userProfileComboBox,
@@ -237,7 +237,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
             @Override
             public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                 return new ListCell<>() {
-                    private final BisqButton saveEditButton, cancelEditButton;
+                    private final Button saveEditButton, cancelEditButton;
                     private final BisqTextArea editedMessageField;
                     private final Button emojiButton1, emojiButton2, openEmojiSelectorButton, replyButton,
                             pmButton, editButton, deleteButton, moreOptionsButton;
@@ -295,8 +295,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         editedMessageField.setVisible(false);
                         editedMessageField.setManaged(false);
 
-                        saveEditButton = new BisqButton(Res.get("shared.save"));
-                        cancelEditButton = new BisqButton(Res.get("shared.cancel"));
+                        saveEditButton = new Button(Res.get("shared.save"));
+                        cancelEditButton = new Button(Res.get("shared.cancel"));
 
                         editControlsBox = Layout.hBoxWith(Spacer.fillHBox(), cancelEditButton, saveEditButton);
                         editControlsBox.setVisible(false);

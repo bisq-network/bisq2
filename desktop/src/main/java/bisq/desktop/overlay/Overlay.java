@@ -27,7 +27,7 @@ import bisq.desktop.common.utils.DontShowAgainLookup;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.BisqGridPane;
-import bisq.desktop.components.controls.BisqButton;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import bisq.desktop.components.controls.BusyAnimation;
 import bisq.i18n.Res;
@@ -168,7 +168,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     private String headlineStyle;
     protected Button actionButton, secondaryActionButton;
     private HBox buttonBox;
-    protected BisqButton closeButton;
+    protected Button closeButton;
 
     private HPos buttonAlignment = HPos.RIGHT;
 
@@ -831,14 +831,14 @@ public abstract class Overlay<T extends Overlay<T>> {
     private void addReportErrorButtons() {
         messageLabel.setText(Res.get("popup.reportError", truncatedMessage));
 
-        Button logButton = new BisqButton(Res.get("popup.reportError.log"));
+        Button logButton = new Button(Res.get("popup.reportError.log"));
         GridPane.setMargin(logButton, new Insets(20, 0, 0, 0));
         GridPane.setHalignment(logButton, HPos.LEFT);
         GridPane.setRowIndex(logButton, gridPane.getRowCount());
         gridPane.getChildren().add(logButton);
         logButton.setOnAction(event -> OsUtils.open(new File(baseDir, "bisq.log")));
 
-        Button gitHubButton = new BisqButton(Res.get("popup.reportError.gitHub"));
+        Button gitHubButton = new Button(Res.get("popup.reportError.gitHub"));
         GridPane.setHalignment(gitHubButton, HPos.RIGHT);
         GridPane.setRowIndex(gitHubButton, gridPane.getRowCount());
         gridPane.getChildren().add(gitHubButton);
@@ -882,7 +882,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected void addButtons() {
         if (!hideCloseButton) {
-            closeButton = new BisqButton(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
+            closeButton = new Button(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
             closeButton.getStyleClass().add("compact-button");
             closeButton.setOnAction(event -> doClose());
             closeButton.setMinWidth(70);
@@ -905,7 +905,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         gridPane.getChildren().add(buttonBox);
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
-            actionButton = new BisqButton(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
+            actionButton = new Button(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
 
             if (!disableActionButton)
                 actionButton.setDefaultButton(true);
@@ -937,7 +937,7 @@ public abstract class Overlay<T extends Overlay<T>> {
             buttonBox.getChildren().addAll(actionButton);
 
             if (secondaryActionButtonText != null && secondaryActionHandlerOptional.isPresent()) {
-                secondaryActionButton = new BisqButton(secondaryActionButtonText);
+                secondaryActionButton = new Button(secondaryActionButtonText);
                 secondaryActionButton.setOnAction(event -> {
                     if (doCloseOnSecondaryAction) {
                         hide();

@@ -25,7 +25,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.CachingController;
-import bisq.desktop.components.controls.BisqButton;
+import javafx.scene.control.Button;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.components.controls.MarketSelection;
@@ -157,10 +157,11 @@ public class OfferbookController implements CachingController {
         }
     }
 
-    void onUpdateItemWithButton(OfferListItem item, BisqButton button) {
+    void onUpdateItemWithButton(OfferListItem item, Button button) {
         if (item != null && button instanceof BisqIconButton bisqIconButton) {
             boolean isMyOffer = model.isMyOffer(item);
-            bisqIconButton.setFixWidth(200);
+            bisqIconButton.setMinWidth(200);
+            bisqIconButton.setMaxWidth(200);
             if (isMyOffer) {
                 bisqIconButton.getIcon().setId("image-remove");
                 bisqIconButton.setId("button-inactive");

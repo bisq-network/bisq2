@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.create;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqButton;
+import javafx.scene.control.Button;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferController> {
     private final static double MARGIN = 66;
     private final ChangeListener<Offer> offerListener;
-    private final BisqButton createOfferButton;
+    private final Button createOfferButton;
     private final BisqTextArea offerSummary;
 
     public CreateOfferView(CreateOfferModel model,
@@ -61,16 +61,16 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
 
         amountPrice.setPadding(new Insets(0, 0, -5, 0));
 
-        createOfferButton = new BisqButton(Res.get("createOffer.button"));
+        createOfferButton = new Button(Res.get("createOffer.button"));
         createOfferButton.getStyleClass().add("action-button");
-        BisqButton cancelButton = new BisqButton(Res.get("cancel"));
+        Button cancelButton = new Button(Res.get("cancel"));
         cancelButton.setOnAction(e -> controller.onCancel());
 
         //todo temp
         offerSummary = new BisqTextArea();
         offerSummary.setVisible(false);
 
-        BisqButton publishButton = new BisqButton(Res.get("publishOffer.button"));
+        Button publishButton = new Button(Res.get("publishOffer.button"));
         publishButton.setOnAction(e -> controller.onPublishOffer());
         publishButton.setVisible(false);
 
