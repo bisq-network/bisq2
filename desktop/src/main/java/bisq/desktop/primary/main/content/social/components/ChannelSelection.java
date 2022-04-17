@@ -3,7 +3,6 @@ package bisq.desktop.primary.main.content.social.components;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.robohash.RoboHash;
@@ -62,8 +61,6 @@ public abstract class ChannelSelection {
 
         @Override
         public void onActivate() {
-            selectedChannelPin = FxBindings.subscribe(chatService.getSelectedChannel(),
-                    channel -> model.selectedChannel.set(channel));
         }
 
         @Override
@@ -74,7 +71,7 @@ public abstract class ChannelSelection {
 
         protected void onSelected(Channel<?> channel) {
             if (channel == null) return;
-            chatService.selectChannel(channel);
+            chatService.setSelectedChannel(channel);
         }
     }
 

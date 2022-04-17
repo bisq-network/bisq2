@@ -33,6 +33,13 @@ public class PublicChannelSelection extends ChannelSelection {
                 super.onActivate();
                 channelsPin = FxBindings.<PublicChannel, Channel<?>>bind(model.channels)
                         .to(chatService.getPublicChannels());
+
+                selectedChannelPin = FxBindings.subscribe(chatService.getSelectedChannel(),
+                        channel -> {
+                            if (channel instanceof PublicChannel) {
+                                model.selectedChannel.set(channel);
+                            }
+                        });
             }
         });
     }

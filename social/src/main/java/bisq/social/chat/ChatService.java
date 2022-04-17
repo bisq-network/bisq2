@@ -174,20 +174,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 .orElse(CompletableFuture.completedFuture(Optional.empty()));
     }
 
-    public Optional<PublicChannel> findPublicChannelForMarket(Market selectedMarket) {
-        return Optional.empty();
-        /*
-        if (selectedMarket == null) {
-            return Optional.empty();
-        }
-        ObservableSet<PublicChannel> publicChannels = getPersistableStore().getPublicChannels();
-        return Optional.of(publicChannels.stream()
-                .filter(e -> e.getMarket().toLowerCase().contains(selectedMarket.quoteCurrencyCode().toLowerCase()))
-                .findAny()
-                .orElse(publicChannels.stream()
-                        .filter(e -> e.getMarket().toLowerCase().contains("other")) //todo 
-                        .findAny()
-                        .orElseThrow()));*/
+    public Optional<MarketChannel> findMarketChannel(Market selectedMarket) {
+        return persistableStore.getMarketChannels().stream().filter(e->e.getMarket().equals(selectedMarket)).findAny();
     }
 
     public PrivateChannel getOrCreatePrivateChannel(String id, ChatUser peer) {
@@ -210,7 +198,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         }
     }
 
-    public void selectChannel(Channel<? extends ChatMessage> channel) {
+    public void setSelectedChannel(Channel<? extends ChatMessage> channel) {
         if (channel instanceof PrivateChannel privateChannel) {
             // remove expired messages
             purgeExpired(privateChannel);
@@ -385,7 +373,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         persistableStore.getMarketChannels().add(defaultChannel);
         persistableStore.getMarketChannels().add(new MarketChannel(MarketRepository.getBsqMarket()));
         persistableStore.getMarketChannels().add(new MarketChannel(MarketRepository.getXmrMarket()));
-        persistableStore.getSelectedChannel().set(defaultChannel);
+        setSelectedChannel(defaultChannel);
 
         ChatUser dummyChannelAdmin = new ChatUser(userProfile.getNickName(), userProfile.getIdentity().networkId());
         Set<ChatUser> dummyChannelModerators = userProfileService.getPersistableStore().getUserProfiles().stream()

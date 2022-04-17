@@ -288,7 +288,7 @@ public class ChatController implements Controller {
         ChatUser peer = chatMessage.getAuthor();
         String channelId = PrivateChannel.createChannelId(peer, userProfileService.getPersistableStore().getSelectedUserProfile().get());
         PrivateChannel channel = chatService.getOrCreatePrivateChannel(channelId, peer);
-        chatService.selectChannel(channel);
+        chatService.setSelectedChannel(channel);
     }
 
     public void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {

@@ -66,6 +66,7 @@ public class MarketChatOfferService implements PersistenceClient<MarketChatOffer
                 selectedMarket.quoteCurrencyCode(),
                 selectedPaymentMethods,
                 makersTradeTerms);
-        return chatService.publishMarketChatOffer(marketChatOffer, new MarketChannel(selectedMarket), userProfile);
+        MarketChannel marketChannel = chatService.findMarketChannel(selectedMarket).orElseThrow();
+        return chatService.publishMarketChatOffer(marketChatOffer, marketChannel, userProfile);
     }
 }

@@ -33,7 +33,7 @@ public class MarketChannel extends Channel<MarketChatMessage> {
 
     private transient final ObservableSet<MarketChatMessage> chatMessages = new ObservableSet<>();
 
-    public MarketChannel(Market market) {
+    MarketChannel(Market market) {
         this(market.toString(), market);
     }
 

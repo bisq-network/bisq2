@@ -37,7 +37,7 @@ public class PublicChannel extends Channel<PublicChatMessage> {
     private final Set<ChatUser> channelModerators;
     private transient final ObservableSet<PublicChatMessage> chatMessages = new ObservableSet<>();
 
-    public PublicChannel(String id,
+    PublicChannel(String id,
                          String channelName,
                          String description,
                          ChatUser channelAdmin,

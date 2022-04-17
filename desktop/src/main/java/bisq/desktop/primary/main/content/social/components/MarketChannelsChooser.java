@@ -106,7 +106,7 @@ public class MarketChannelsChooser {
         private void onSelectMarket(MarketChannelItem selected) {
             if (selected != null) {
                 model.selectedMarketChannelItem.set(selected);
-                chatService.selectChannel(selected.channel);
+                chatService.setSelectedChannel(selected.channel);
             }
         }
 
