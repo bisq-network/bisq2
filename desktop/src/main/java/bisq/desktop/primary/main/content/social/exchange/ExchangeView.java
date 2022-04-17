@@ -84,16 +84,11 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         peersRoboIconView = new ImageView();
         peersRoboIconView.setFitWidth(50);
         peersRoboIconView.setFitHeight(50);
-        HBox.setMargin(peersRoboIconView, new Insets(0,-20,0,12));
-        
+        HBox.setMargin(peersRoboIconView, new Insets(0, -20, 0, 12));
+
         selectedChannelLabel = new Label();
         selectedChannelLabel.setId("chat-messages-headline");
         HBox.setMargin(selectedChannelLabel, new Insets(1, 0, 0, 20));
-
-        filterBoxRoot = filterBox.getRoot();
-        filterBoxRoot.setStyle("-fx-background-color: -bisq-grey-left-nav-selected-bg;");
-        HBox.setHgrow(filterBoxRoot, Priority.ALWAYS);
-        HBox.setMargin(filterBoxRoot, new Insets(0, 10, 0, 10));
 
         searchButton = BisqIconButton.createIconButton(AwesomeIcon.SEARCH);
         searchButton.setOpacity(0.4);
@@ -102,7 +97,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         infoButton = BisqIconButton.createIconButton(AwesomeIcon.INFO_SIGN);
         infoButton.setOpacity(0.4);
 
-        HBox centerToolbar = Layout.hBoxWith(peersRoboIconView,selectedChannelLabel, filterBoxRoot, searchButton, notificationsButton, infoButton);
+        HBox centerToolbar = Layout.hBoxWith(peersRoboIconView, selectedChannelLabel, Spacer.fillHBox(), searchButton, notificationsButton, infoButton);
         centerToolbar.setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
         centerToolbar.setAlignment(Pos.CENTER);
         // centerToolbar.setPadding(new Insets(10,10,0,20));
@@ -122,12 +117,17 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         sideBar.setFillWidth(true);
         sideBar.setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
 
+        filterBoxRoot = filterBox.getRoot();
+        filterBoxRoot.setStyle("-fx-background-color: -bisq-grey-left-nav-bg;");
+        VBox.setMargin(filterBoxRoot, new Insets(0, 0, 0, 10));
+        
         HBox.setMargin(chatMessagesComponent, new Insets(0, 0, 10, 10));
-        messagesListAndSideBar = Layout.hBoxWith(chatMessagesComponent, sideBar);
         HBox.setHgrow(chatMessagesComponent, Priority.ALWAYS);
+        messagesListAndSideBar = Layout.hBoxWith(chatMessagesComponent, sideBar);
+        
         VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);
 
-        VBox center = Layout.vBoxWith(centerToolbar, messagesListAndSideBar);
+        VBox center = Layout.vBoxWith(centerToolbar, filterBoxRoot, messagesListAndSideBar);
         center.setStyle("-fx-background-color: transparent");
         messagesListAndSideBar.setStyle("-fx-background-color: transparent");
 
@@ -141,6 +141,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         peersRoboIconView.imageProperty().bind(model.getPeersRoboIconImage());
         selectedChannelLabel.textProperty().bind(model.getSelectedChannelAsString());
         filterBoxRoot.visibleProperty().bind(model.getFilterBoxVisible());
+        filterBoxRoot.managedProperty().bind(model.getFilterBoxVisible());
         notificationsSettings.visibleProperty().bind(model.getNotificationsVisible());
         notificationsSettings.managedProperty().bind(model.getNotificationsVisible());
         channelInfo.visibleProperty().bind(model.getChannelInfoVisible());
@@ -186,6 +187,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         peersRoboIconView.imageProperty().unbind();
         selectedChannelLabel.textProperty().unbind();
         filterBoxRoot.visibleProperty().unbind();
+        filterBoxRoot.managedProperty().unbind();
         notificationsSettings.visibleProperty().unbind();
         notificationsSettings.managedProperty().unbind();
         channelInfo.visibleProperty().unbind();
