@@ -84,11 +84,6 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
     }
 
     @Override
-    public String getText() {
-        return optionalText.get();
-    }
-
-    @Override
     public MetaData getMetaData() {
         return metaData;
     }

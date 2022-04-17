@@ -75,4 +75,8 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
     abstract public void removeChatMessage(T chatMessage);
 
     abstract public void removeChatMessages(Collection<T> removeMessages);
+
+    public String getDisplayString() {
+        return id;
+    }
 }

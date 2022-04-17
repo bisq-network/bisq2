@@ -92,6 +92,10 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
         chatMessages.removeAll(removeMessages);
     }
 
+    @Override
+    public String getDisplayString() {
+        return peer.getUserName();
+    }
 
     public static UserProfile findMyProfileFromChannelId(String id, ChatUser peer, UserProfileService userProfileService) {
         String[] chatNames = id.split(CHANNEL_DELIMITER);

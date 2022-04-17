@@ -18,11 +18,14 @@
 package bisq.desktop.primary.main.content.social.exchange;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.social.components.*;
 import bisq.social.chat.ChatService;
+import bisq.social.chat.PrivateChannel;
 import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +63,7 @@ public class ExchangeController implements Controller {
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
         quotedMessageBlock = new QuotedMessageBlock();
-        
+
         //todo
         FilterBox filterBox = new FilterBox(chatMessagesComponent.getFilteredChatMessages());
         model = new ExchangeModel(chatService, userProfileService);
@@ -81,8 +84,16 @@ public class ExchangeController implements Controller {
                 value -> chatService.setNotificationSetting(chatService.getSelectedChannel().get(), value));
 
         selectedChannelPin = chatService.getSelectedChannel().addObserver(channel -> {
-            model.getSelectedChannelAsString().set(channel.getId());
+            model.getSelectedChannelAsString().set(channel.getDisplayString());
             model.getSelectedChannel().set(channel);
+
+            if (channel instanceof PrivateChannel privateChannel) {
+                model.getPeersRoboIconImage().set(RoboHash.getImage(new ByteArray(privateChannel.getPeer().getPubKeyHash())));
+                model.getPeersRoboIconVisible().set(true);
+            } else {
+                model.getPeersRoboIconVisible().set(false);
+            }
+        
 
           /*  if (model.getChannelInfoVisible().get()) {
                 channelInfo.setChannel(channel);

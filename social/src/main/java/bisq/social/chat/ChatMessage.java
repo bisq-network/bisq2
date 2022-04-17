@@ -19,6 +19,7 @@ package bisq.social.chat;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.user.ChatUser;
@@ -65,8 +66,10 @@ public abstract class ChatMessage {
         this.metaData = metaData;
     }
 
-    abstract public String getText();
-
+    public String getText() {
+        return optionalText.orElse(Res.get("shared.na"));
+    }
+    
     bisq.social.protobuf.ChatMessage.Builder getChatMessageBuilder() {
         bisq.social.protobuf.ChatMessage.Builder builder = bisq.social.protobuf.ChatMessage.newBuilder()
                 .setChannelId(channelId)

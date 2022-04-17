@@ -517,28 +517,17 @@
 }
 
 .titled-pane:focused {
-    /*  -fx-color: -fx-base;*/
 }
 
 .titled-pane > .title {
     -fx-background-color: -bisq-grey-12;
     -fx-border-color: -bisq-grey-left-nav-bg;;
-    -fx-text-fill: -bisq-text-color-white;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-pref-height: 50;
-
-    /* -fx-padding: -20 0 5 0;*/
-    /* -fx-background-insets: 0, 1, 2;
-     -fx-background-radius: 3 3 0 0, 2 2 0 0, 1 1 0 0;
-     -fx-padding: 0.3333em 0.75em 0.3333em 0.75em; !* 4 9 4 9 *!*/
 }
 
-/* focus purely on the arrow */
 .titled-pane:focused > .title > .arrow-button > .arrow {
-    /*  -fx-background-color: -fx-focus-color, -fx-mark-color;
-      -fx-background-insets: -1, 0;*/
-    /*-fx-effect: dropshadow(two-pass-box , -fx-focus-color, 5, 0.2 , 0, 0);*/
 }
 
 .titled-pane > .title > .arrow-button {
@@ -559,16 +548,11 @@
     -fx-color: -fx-hover-base;
 }
 
-/* alternative content using a border and a grad to transparent background - why should TitledPane content have a colour? */
 .titled-pane > *.content {
-    /* -fx-border-color: -fx-box-border;
-     -fx-border-insets: -1 0 0 0;*/
-    /* -fx-background-color: linear-gradient(from 0px 0px to 0px 5px, derive(-fx-background, -6%), -fx-background);*/
+    -fx-padding: 0 0 -10 0;
 }
 
 .titled-pane > .content > .scroll-pane > .scroll-bar {
-    -fx-background-insets: 0;
-    -fx-padding: 0;
 }
 
 .list-view:focused,
@@ -651,10 +635,6 @@ tree-table-view:focused {
     -fx-background-insets: -1, 0;
 }
 
-/*.titled-pane:focused > .title > .arrow-button > .arrow {
-    -fx-background-color: -bisq-grey-9;
-    -fx-background-insets: -1, 0;
-}*/
 
 .accordion > .titled-pane > .title {
     -fx-background-color: -bisq-grey-content-bg;
@@ -671,6 +651,7 @@ tree-table-view:focused {
     -fx-text-fill: -bisq-grey-9;
 }
 
+/*
 .accordion > .titled-pane > .
 .jfx-button, .action-button {
     -fx-background-color: -bisq-grey-5;
@@ -688,6 +669,7 @@ tree-table-view:focused {
     -fx-background-color: derive(-bisq-grey-5, -10%);
 }
 
+*/
 
 .accent-headline {
     -fx-font-size: 1.1em;
@@ -734,37 +716,4 @@ tree-table-view:focused {
 .keyword-none {
     -fx-fill: -fx-light-text-color;
 }
-
-/*
-.jfx-badge .badge-pane {
-    -fx-background-color: -bs-red;
-    -fx-background-radius: 15;
-    -fx-pref-width: 15;
-    -fx-pref-height: 15;
-}
-
-.jfx-badge.new .badge-pane {
-    -fx-pref-width: 30;
-}
-
-.jfx-badge.auto-conf .badge-pane {
-    -fx-background-color: -xmr-orange;
-    -fx-pref-width: -1;
-    -fx-padding: -1 10 0 10;
-}
-
-.jfx-badge .badge-pane .label {
-    -fx-font-weight: bold;
-    -fx-font-size: 0.692em;
-    -fx-text-fill: -bs-background-color;
-}
-
-.jfx-badge {
-    -fx-padding: -3 0 0 0;
-}
-
-.jfx-badge > .navigation-button {
-    -fx-translate-y: 1;
-}
-*/
 

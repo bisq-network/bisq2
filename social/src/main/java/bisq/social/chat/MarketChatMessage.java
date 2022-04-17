@@ -54,13 +54,13 @@ public class MarketChatMessage extends PublicChatMessage implements DistributedD
     }
 
     public MarketChatMessage(String channelId,
-                              ChatUser sender,
-                              Optional<MarketChatOffer> marketChatOffer,
-                              Optional<String> text,
-                              Optional<QuotedMessage> quotedMessage,
-                              long date,
-                              boolean wasEdited,
-                              MetaData metaData) {
+                             ChatUser sender,
+                             Optional<MarketChatOffer> marketChatOffer,
+                             Optional<String> text,
+                             Optional<QuotedMessage> quotedMessage,
+                             long date,
+                             boolean wasEdited,
+                             MetaData metaData) {
         super(channelId,
                 sender,
                 text,
@@ -100,7 +100,7 @@ public class MarketChatMessage extends PublicChatMessage implements DistributedD
 
     @Override
     public String getText() {
-        return marketChatOffer.map(MarketChatOffer::getChatMessageText).orElse(optionalText.orElse(""));
+        return marketChatOffer.map(MarketChatOffer::getChatMessageText).orElse(super.getText());
     }
 
     @Override

@@ -17,6 +17,7 @@
 
 package bisq.social.user;
 
+import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -48,12 +49,7 @@ public class UserNameLookup {
         if (profileIds.size() == 1) {
             return nickName;
         } else {
-            if (maxProfileIdLength < profileId.length()) {
-                String truncatedProfileId = profileId.substring(0, maxProfileIdLength);
-                return nickName + separatorStart + truncatedProfileId + "..." + separatorEnd;
-            } else {
-                return nickName + separatorStart + profileId + separatorEnd;
-            }
+            return nickName + separatorStart + StringUtils.truncate(profileId, maxProfileIdLength) + separatorEnd;
         }
     }
 }

@@ -26,6 +26,7 @@ import bisq.social.chat.ChatMessage;
 import bisq.social.chat.ChatService;
 import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,6 +50,9 @@ public class ExchangeModel implements Model {
     private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();
     private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
+    private final BooleanProperty peersRoboIconVisible = new SimpleBooleanProperty();
+    private final ObjectProperty<Image> peersRoboIconImage = new SimpleObjectProperty<>();
+    
     @Setter
     private Optional<ChatUserDetails> chatUserDetails = Optional.empty();
 

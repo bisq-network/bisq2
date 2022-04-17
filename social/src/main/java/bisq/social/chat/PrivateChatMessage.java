@@ -95,11 +95,6 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
                 MetaData.fromProto(baseProto.getMetaData()));
     }
 
-    @Override
-    public String getText() {
-        return optionalText.get();
-    }
-
     // Required for MailboxMessage use case
     @Override
     public MetaData getMetaData() {

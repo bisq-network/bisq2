@@ -30,6 +30,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -49,6 +50,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
     private final Pane channelInfo;
 
     private final HBox messagesListAndSideBar;
+    private final ImageView peersRoboIconView;
     private Subscription chatUserOverviewRootSubscription;
     private Pane chatUserOverviewRoot;
     private Subscription widthSubscription;
@@ -71,12 +73,19 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         // Left 
         left = Layout.vBoxWith(userProfileSelection,
                 marketChannelSelection,
+                privateChannelSelection,
                 Spacer.fillVBox()
         );
         left.setPadding(new Insets(0, 10, 0, 0));
         left.setPrefWidth(300);
 
         // Center toolbar
+        // peersRoboIconView only visible for private channels
+        peersRoboIconView = new ImageView();
+        peersRoboIconView.setFitWidth(50);
+        peersRoboIconView.setFitHeight(50);
+        HBox.setMargin(peersRoboIconView, new Insets(0,-20,0,12));
+        
         selectedChannelLabel = new Label();
         selectedChannelLabel.setId("chat-messages-headline");
         HBox.setMargin(selectedChannelLabel, new Insets(1, 0, 0, 20));
@@ -93,7 +102,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         infoButton = BisqIconButton.createIconButton(AwesomeIcon.INFO_SIGN);
         infoButton.setOpacity(0.4);
 
-        HBox centerToolbar = Layout.hBoxWith(selectedChannelLabel, filterBoxRoot, searchButton, notificationsButton, infoButton);
+        HBox centerToolbar = Layout.hBoxWith(peersRoboIconView,selectedChannelLabel, filterBoxRoot, searchButton, notificationsButton, infoButton);
         centerToolbar.setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
         centerToolbar.setAlignment(Pos.CENTER);
         // centerToolbar.setPadding(new Insets(10,10,0,20));
@@ -127,6 +136,9 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
 
     @Override
     protected void onViewAttached() {
+        peersRoboIconView.managedProperty().bind(model.getPeersRoboIconVisible());
+        peersRoboIconView.visibleProperty().bind(model.getPeersRoboIconVisible());
+        peersRoboIconView.imageProperty().bind(model.getPeersRoboIconImage());
         selectedChannelLabel.textProperty().bind(model.getSelectedChannelAsString());
         filterBoxRoot.visibleProperty().bind(model.getFilterBoxVisible());
         notificationsSettings.visibleProperty().bind(model.getNotificationsVisible());
@@ -169,6 +181,9 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
 
     @Override
     protected void onViewDetached() {
+        peersRoboIconView.managedProperty().unbind();
+        peersRoboIconView.visibleProperty().unbind();
+        peersRoboIconView.imageProperty().unbind();
         selectedChannelLabel.textProperty().unbind();
         filterBoxRoot.visibleProperty().unbind();
         notificationsSettings.visibleProperty().unbind();
