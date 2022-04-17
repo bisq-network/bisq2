@@ -45,10 +45,7 @@ import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -494,5 +491,10 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public Set<String> getCustomTags() {
         return persistableStore.getCustomTags();
+    }
+
+    public ObservableSet<String> getIgnoredChatUserIds() {
+        return persistableStore.getIgnoredChatUserIds();
+        
     }
 }

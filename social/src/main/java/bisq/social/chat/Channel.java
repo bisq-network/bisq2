@@ -33,7 +33,6 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
     protected final String id;
     protected final Observable<NotificationSetting> notificationSetting = new Observable<>();
 
-
     public Channel(String id, NotificationSetting notificationSetting) {
         this.id = id;
         this.notificationSetting.set(notificationSetting);

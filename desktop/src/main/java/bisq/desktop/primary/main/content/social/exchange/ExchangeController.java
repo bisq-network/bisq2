@@ -60,6 +60,8 @@ public class ExchangeController implements Controller {
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
         quotedMessageBlock = new QuotedMessageBlock();
+        
+        //todo
         FilterBox filterBox = new FilterBox(chatMessagesComponent.getFilteredChatMessages());
         model = new ExchangeModel(chatService, userProfileService);
         view = new ExchangeView(model,

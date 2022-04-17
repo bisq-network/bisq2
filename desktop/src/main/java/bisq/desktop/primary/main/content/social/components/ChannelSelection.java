@@ -112,7 +112,7 @@ public abstract class ChannelSelection {
         protected void onViewAttached() {
             listViewSelectedChannelSubscription = EasyBind.subscribe(listView.getSelectionModel().selectedItemProperty(),
                     channel -> {
-                        if (channel != null && !channel.equals(model.selectedChannel.get())) {
+                        if (channel != null) {
                             controller.onSelected(channel);
                         }
                     });

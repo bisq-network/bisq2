@@ -70,7 +70,6 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Date;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static bisq.desktop.primary.main.content.social.components.ChatMessagesComponent.View.EDITED_POST_FIX;
 
@@ -94,10 +93,11 @@ public class ChatMessagesComponent {
         return controller.model.selectedChannelListItem;
     }*/
 
-    public void setSelectedChannelListItem(ChannelListItem<?> item) {
-        controller.model.selectedChannelListItem.set(item);
-    }
+  /*  public void setSelectedChannelListItem(ChannelListItem<?> item) {
+        controller.model.selectedChannel.set(item);
+    }*/
 
+    //todo
     public FilteredList<ChatMessageListItem<? extends ChatMessage>> getFilteredChatMessages() {
         return controller.model.getFilteredChatMessages();
     }
@@ -110,7 +110,7 @@ public class ChatMessagesComponent {
         private final UserProfileService userProfileService;
         private final QuotedMessageBlock quotedMessageBlock;
         private ListChangeListener<ChatMessagesComponent.ChatMessageListItem<? extends ChatMessage>> messageListener;
-        private Pin chatMessagesPin, selectedChannelPin, tradeTagsPin, currencyTagsPin, paymentMethodTagsPin, customTagsPin;
+        private Pin selectedChannelPin, chatMessagesPin;
 
         private Controller(ChatService chatService, UserProfileService userProfileService) {
             this.chatService = chatService;
@@ -125,49 +125,30 @@ public class ChatMessagesComponent {
         public void onActivate() {
             model.getSortedChatMessages().setComparator(ChatMessagesComponent.ChatMessageListItem::compareTo);
             model.customTags.addAll(chatService.getCustomTags());
-            chatService.getSelectedChannel().addObserver(channel -> {
-                model.selectedChannelListItem.set(new ChannelListItem<>(channel));
-                model.chatMessages.setAll(channel.getChatMessages().stream()
-                        .map(ChatMessageListItem::new)
-                        .collect(Collectors.toSet()));
-
-
-
-               /* model.chatMessages.addListener(new ListChangeListener<ChatMessageListItem<? extends ChatMessage>>() {
-                    @Override
-                    public void onChanged(Change<? extends ChatMessageListItem<? extends ChatMessage>> c) {
-                        c.next();
-                        log.error("mes" + c.getAddedSubList());
-                    }
-                });*/
-
+            selectedChannelPin = chatService.getSelectedChannel().addObserver(channel -> {
+                model.selectedChannel.set(channel);
                 if (channel instanceof MarketChannel marketChannel) {
-                    FxBindings.<MarketChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                    chatMessagesPin = FxBindings.<MarketChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                             .map(ChatMessageListItem::new)
                             .to(marketChannel.getChatMessages());
-
                 } else if (channel instanceof PublicChannel publicChannel) {
-
+                    chatMessagesPin = FxBindings.<PublicChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                            .map(ChatMessageListItem::new)
+                            .to(publicChannel.getChatMessages());
                 } else if (channel instanceof PrivateChannel privateChannel) {
-
+                    chatMessagesPin = FxBindings.<PrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                            .map(ChatMessageListItem::new)
+                            .to(privateChannel.getChatMessages());
                 }
             });
-           /* Observable<Channel<? extends ChatMessage>> selectedChannel = chatService.getSelectedChannel();
-            EasyBind.subscribe(selectedChannel, channel -> {
-                if (channel != null) {
-                    log.error("getChatMessages {}",channel.getChatMessages());
-                    model.chatMessages.setAll(channel.getChatMessages().stream()
-                            .map(ChatMessageListItem::new)
-                            .collect(Collectors.toSet()));
-                }
-            });*/
+            
+       
 
           /*  selectedChannelPin = chatService.getPersistableStore().getSelectedChannel().addObserver(channel -> {
                 if (channel instanceof PublicChannel publicChannel) {
                     if (messageListener != null) {
                         model.getChatMessages().removeListener(messageListener);
                     }
-                   
 
                     messageListener = c -> {
                         c.next();
@@ -223,6 +204,10 @@ public class ChatMessagesComponent {
             if (messageListener != null) {
                 model.getChatMessages().removeListener(messageListener);
             }
+            selectedChannelPin.unbind();
+            if (chatMessagesPin != null) {
+                chatMessagesPin.unbind();
+            }
         }
 
 
@@ -231,7 +216,7 @@ public class ChatMessagesComponent {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         void onSendMessage(String text) {
-            Channel<? extends ChatMessage> channel = model.selectedChannelListItem.get().getChannel();
+            Channel<? extends ChatMessage> channel = model.selectedChannel.get();
             UserProfile userProfile = userProfileService.getSelectedUserProfile();
             if (channel instanceof MarketChannel marketChannel) {
                 chatService.publishMarketChatTextMessage(text, quotedMessageBlock.getQuotedMessage(), marketChannel, userProfile);
@@ -342,7 +327,7 @@ public class ChatMessagesComponent {
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatService chatService;
         private final UserProfileService userProfileService;
-        private final ObjectProperty<ChannelListItem<?>> selectedChannelListItem = new SimpleObjectProperty<>();
+        private final ObjectProperty<Channel<?>> selectedChannel = new SimpleObjectProperty<>();
         private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
         private final FilteredList<ChatMessageListItem<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(chatMessages);
         private final SortedList<ChatMessageListItem<? extends ChatMessage>> sortedChatMessages = new SortedList<>(filteredChatMessages);
@@ -353,7 +338,7 @@ public class ChatMessagesComponent {
         private Model(ChatService chatService, UserProfileService userProfileService) {
             this.chatService = chatService;
             this.userProfileService = userProfileService;
-            ignoredChatUserPredicate = item -> !chatService.getPersistableStore().getIgnoredChatUserIds().contains(item.getChatUserId());
+            ignoredChatUserPredicate = item -> !chatService.getIgnoredChatUserIds().contains(item.getChatUserId());
             filteredChatMessages.setPredicate(ignoredChatUserPredicate);
         }
 
