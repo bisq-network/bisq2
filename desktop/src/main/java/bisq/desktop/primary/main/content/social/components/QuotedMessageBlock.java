@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.social.components;
 import bisq.common.data.ByteArray;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
@@ -122,7 +122,7 @@ public class QuotedMessageBlock {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final BisqLabel userName;
+        private final Label userName;
         private final Button removeButton;
         private final Text quotedMessage;
         private Subscription roboHashNodeSubscription;
@@ -133,7 +133,7 @@ public class QuotedMessageBlock {
             root.setAlignment(Pos.CENTER_LEFT);
             root.setStyle("-fx-background-color: -bisq-grey-left-nav-bg;");
 
-            BisqLabel headline = new BisqLabel(Res.get("social.reply.headline"));
+            Label headline = new Label(Res.get("social.reply.headline"));
             headline.setStyle("-fx-text-fill: -bisq-grey-9");
             removeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
             VBox.setMargin(removeButton, new Insets(0, 0, 0, 0));
@@ -142,7 +142,7 @@ public class QuotedMessageBlock {
             // topBox.setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
             topBox.setPadding(new Insets(5, 5, 5, 5));
 
-            userName = new BisqLabel();
+            userName = new Label();
             userName.setPadding(new Insets(3, 0, 0, -3));
             userName.setStyle("-fx-text-fill: -bisq-grey-9");
             roboIconImageView = new ImageView();

@@ -52,7 +52,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
     private final ListView<ChatMessageListItem<? extends ChatMessage>> messagesListView;
     private final BisqTextArea inputField;
-    private final BisqLabel selectedChannelLabel;
+    private final Label selectedChannelLabel;
     private final Button searchButton, notificationsButton, infoButton, closeButton;
     private final Pane userProfileComboBox;
     private final VBox left, sideBar;
@@ -100,7 +100,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         left.setMinWidth(250);
 
         // Center toolbar
-        selectedChannelLabel = new BisqLabel();
+        selectedChannelLabel = new Label();
         selectedChannelLabel.getStyleClass().add("headline-label");
 
         filterBox = new FilterBox(model.getFilteredChatMessages());
@@ -241,8 +241,8 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                     private final BisqTextArea editedMessageField;
                     private final Button emojiButton1, emojiButton2, openEmojiSelectorButton, replyButton,
                             pmButton, editButton, deleteButton, moreOptionsButton;
-                    private final BisqLabel userName = new BisqLabel();
-                    private final BisqLabel time = new BisqLabel();
+                    private final Label userName = new Label();
+                    private final Label time = new Label();
                     private final BisqTaggableTextArea message = new BisqTaggableTextArea();
                     private final Text quotedMessageField = new Text();
                     private final HBox hBox, reactionsBox, editControlsBox, quotedMessageBox;
@@ -334,7 +334,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                     quotedMessageField.setText(quotedMessage.message());
                                     quotedMessageField.setStyle("-fx-fill: -bisq-grey-9");
                                    
-                                    BisqLabel userName = new BisqLabel(quotedMessage.profileId());
+                                    Label userName = new Label(quotedMessage.profileId());
                                     userName.setPadding(new Insets(4, 0, 0, 0));
                                     userName.setStyle("-fx-text-fill: -bisq-grey-9");
                                    

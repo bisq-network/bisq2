@@ -24,7 +24,7 @@ import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
 import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
@@ -290,7 +290,7 @@ public class SettlementSelection {
     }
 
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        private final BisqLabel baseSideLabel, quoteSideLabel;
+        private final Label baseSideLabel, quoteSideLabel;
         private final BisqTableView<AccountListItem> baseSideAccountsTableView, quoteSideAccountsTableView;
         private final BisqTableView<SettlementListItem> baseSideSettlementTableView, quoteSideSettlementTableView;
         private final BisqButton baseSideButton, quoteSideButton;
@@ -301,7 +301,7 @@ public class SettlementSelection {
             super(new HBox(), model, controller);
             root.setSpacing(10);
 
-            baseSideLabel = new BisqLabel();
+            baseSideLabel = new Label();
             baseSideLabel.getStyleClass().add("titled-group-bg-label-active");
 
             baseSideAccountsTableView = new BisqTableView<>(model.baseSideAccountSortedList);
@@ -322,7 +322,7 @@ public class SettlementSelection {
             baseSideBox.setSpacing(10);
             baseSideBox.getChildren().addAll(baseSideLabel, baseSideAccountsTableView, baseSideSettlementTableView);
 
-            quoteSideLabel = new BisqLabel();
+            quoteSideLabel = new Label();
             quoteSideLabel.getStyleClass().add("titled-group-bg-label-active");
 
             quoteSideAccountsTableView = new BisqTableView<>(model.quoteSideAccountSortedList);
@@ -392,7 +392,7 @@ public class SettlementSelection {
         }
 
         private VBox createPlaceHolderBox(BisqButton baseSideButton) {
-            BisqLabel placeholderLabel = new BisqLabel(Res.get("createOffer.account.placeholder.noAccounts"));
+            Label placeholderLabel = new Label(Res.get("createOffer.account.placeholder.noAccounts"));
             VBox vBox = new VBox();
             vBox.setSpacing(10);
             vBox.getChildren().addAll(placeholderLabel, baseSideButton);

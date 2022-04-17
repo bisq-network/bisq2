@@ -28,8 +28,7 @@ import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.BisqCheckBox;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.components.controls.BusyAnimation;
 import bisq.i18n.Res;
 import bisq.settings.DisplaySettings;
@@ -777,7 +776,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         if (headLine != null) {
             HBox hBox = new HBox();
             hBox.setSpacing(7);
-            headLineLabel = new BisqLabel(headLine);
+            headLineLabel = new Label(headLine);
             headlineIcon = new Label();
             headlineIcon.setManaged(false);
             headlineIcon.setVisible(false);
@@ -798,7 +797,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected void addContent() {
         if (message != null) {
-            messageLabel = new BisqLabel(truncatedMessage);
+            messageLabel = new Label(truncatedMessage);
             messageLabel.setMouseTransparent(true);
             messageLabel.setWrapText(true);
             GridPane.setHalignment(messageLabel, HPos.LEFT);
@@ -867,7 +866,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                 dontShowAgainText = Res.get("popup.doNotShowAgain");
             }
 
-            CheckBox dontShowAgainCheckBox = new BisqCheckBox(dontShowAgainText);
+            CheckBox dontShowAgainCheckBox = new CheckBox(dontShowAgainText);
             HBox.setHgrow(dontShowAgainCheckBox, Priority.NEVER);
             buttonBox.getChildren().add(0, dontShowAgainCheckBox);
 

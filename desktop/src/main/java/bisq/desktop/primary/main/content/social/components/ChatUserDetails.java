@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.social.components;
 import bisq.common.data.ByteArray;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
@@ -140,7 +140,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final BisqLabel userName, id, entitlements;
+        private final Label userName, id, entitlements;
         private final BisqButton openPrivateMessageButton, mentionButton, ignoreButton, reportButton;
         private Subscription roboHashNodeSubscription;
 
@@ -153,18 +153,18 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             roboIconImageView = new ImageView();
             VBox.setMargin(roboIconImageView, new Insets(0, 0, 0, 0));
 
-            userName = new BisqLabel();
+            userName = new Label();
             userName.setStyle("-fx-background-color: -bisq-grey-left-nav-selected-bg;-fx-text-fill: -fx-light-text-color;");
             userName.setMaxWidth(300);
             userName.setMinWidth(300);
             userName.setPadding(new Insets(7, 7, 7, 7));
             VBox.setMargin(userName, new Insets(-10, 0, 0, 0));
 
-            id = new BisqLabel();
+            id = new Label();
             id.getStyleClass().add("offer-label-small"); //todo
             id.setPadding(new Insets(-5, 0, 0, 5));
 
-            entitlements = new BisqLabel();
+            entitlements = new Label();
             entitlements.getStyleClass().add("offer-label-small"); //todo
             entitlements.setPadding(new Insets(-5, 0, 0, 0));
 

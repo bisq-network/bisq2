@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.trade.components;
 import bisq.account.protocol.ProtocolType;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.common.monetary.Market;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
@@ -143,7 +143,7 @@ public class ProtocolSelection {
                      Controller controller) {
             super(new VBox(), model, controller);
 
-            Label headline = new BisqLabel(Res.get("createOffer.selectProtocol"));
+            Label headline = new Label(Res.get("createOffer.selectProtocol"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
             tableView = new BisqTableView<>(model.sortedList);

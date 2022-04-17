@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.settings.userProfile.components;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.components.controls.BisqTextField;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
@@ -117,7 +117,7 @@ public class ChannelAdmin {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-            Label headline = new BisqLabel(Res.get("social.channelAdmin.headline"));
+            Label headline = new Label(Res.get("social.channelAdmin.headline"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
             channelNameField = new BisqTextField();

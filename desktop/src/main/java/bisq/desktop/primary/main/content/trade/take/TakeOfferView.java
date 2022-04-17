@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.trade.take;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferController> {    private final static double MARGIN = 66;
     private final BisqButton takeOfferButton;
-    private final BisqLabel protocolLabel;
+    private final Label protocolLabel;
 
     public TakeOfferView(TakeOfferModel model,
                          TakeOfferController controller,
@@ -52,7 +52,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
         VBox.setMargin(headLineBox, new Insets(-27, 0, 0, 0));
 
         
-        protocolLabel = new BisqLabel();
+        protocolLabel = new Label();
         protocolLabel.getStyleClass().add("titled-group-bg-label-active");
 
         amountPrice.setPadding(new Insets(0, 0, -5, 0));

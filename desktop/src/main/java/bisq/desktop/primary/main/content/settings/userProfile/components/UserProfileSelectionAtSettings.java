@@ -21,7 +21,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.i18n.Res;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
@@ -107,7 +107,7 @@ public class UserProfileSelectionAtSettings {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-            Label headline = new BisqLabel(Res.get("social.userProfileSelection.headline"));
+            Label headline = new Label(Res.get("social.userProfileSelection.headline"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
             comboBox = new AutoCompleteComboBox<>(model.userProfiles);

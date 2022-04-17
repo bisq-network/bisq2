@@ -21,7 +21,7 @@ import bisq.common.monetary.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
@@ -167,12 +167,12 @@ public class PaymentMethodsSelection {
         private final ListChangeListener<String> selectedPaymentMethodsListener;
         private final FlowPane selectedPaymentMethodsBox;
         private final ChangeListener<String> selectedItemListener;
-        private final BisqLabel maxPaymentMethods;
+        private final Label maxPaymentMethods;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
 
-            maxPaymentMethods = new BisqLabel(Res.get("satoshisquareapp.createOffer.paymentMethods.max"));
+            maxPaymentMethods = new Label(Res.get("satoshisquareapp.createOffer.paymentMethods.max"));
             maxPaymentMethods.setPadding(new Insets(3, 0, 0, 0));
             maxPaymentMethods.getStyleClass().add("bisq-small-light-label-dimmed");
             maxPaymentMethods.setAlignment(Pos.CENTER_RIGHT);

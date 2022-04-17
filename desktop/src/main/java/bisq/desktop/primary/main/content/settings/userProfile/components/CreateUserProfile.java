@@ -21,7 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.components.controls.BisqTextField;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.layout.Layout;
@@ -162,14 +162,14 @@ public class CreateUserProfile {
         private final ImageView roboIconImageView;
         private final BisqButton generateNewIdentityButton, entitlementButton, createUserButton;
         private final BisqTextField nickNameInputField, profileIdInputField;
-        private final BisqLabel feedbackLabel;
+        private final Label feedbackLabel;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller, Pane entitlementSelection) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-            BisqLabel headline = new BisqLabel(Res.get("social.createUserProfile.headline"));
+            Label headline = new Label(Res.get("social.createUserProfile.headline"));
             headline.getStyleClass().add("titled-group-bg-label-active");
             headline.setPadding(new Insets(0, 0, 10, 0));
 
@@ -207,7 +207,7 @@ public class CreateUserProfile {
             roboIconImageView.setFitHeight(75);
             hBox.getChildren().addAll(vBox, roboIconImageView);
 
-            feedbackLabel = new BisqLabel();
+            feedbackLabel = new Label();
             feedbackLabel.setWrapText(true);
 
             root.getChildren().addAll(headline, hBox, entitlementSelection, createUserButton, feedbackLabel);

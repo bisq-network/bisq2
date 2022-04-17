@@ -25,7 +25,7 @@ import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
@@ -339,7 +339,7 @@ public class TakersSettlementSelection {
     }
 
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        private final BisqLabel baseSideLabel, quoteSideLabel;
+        private final Label baseSideLabel, quoteSideLabel;
         private final AutoCompleteComboBox<AccountListItem> baseSideAccountsComboBox, quoteSideAccountsComboBox;
         private final AutoCompleteComboBox<SettlementListItem> baseSideSettlementComboBox, quoteSideSettlementComboBox;
         private final VBox baseSideBox, quoteSideBox;
@@ -349,7 +349,7 @@ public class TakersSettlementSelection {
             super(new HBox(), model, controller);
             root.setSpacing(10);
 
-            baseSideLabel = new BisqLabel();
+            baseSideLabel = new Label();
             baseSideLabel.getStyleClass().add("titled-group-bg-label-active");
 
             baseSideAccountsComboBox = new AutoCompleteComboBox<>(model.baseSideAccountSortedList);
@@ -364,7 +364,7 @@ public class TakersSettlementSelection {
             baseSideBox.setSpacing(10);
             baseSideBox.getChildren().addAll(baseSideLabel, baseSideAccountsComboBox, baseSideSettlementComboBox);
 
-            quoteSideLabel = new BisqLabel();
+            quoteSideLabel = new Label();
             quoteSideLabel.getStyleClass().add("titled-group-bg-label-active");
 
             quoteSideAccountsComboBox = new AutoCompleteComboBox<>(model.quoteSideAccountSortedList);

@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.offerbook;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.components.controls.BisqToggleButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -53,7 +53,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         showAllMarkets.setText(Res.get("offerbook.showAllMarkets"));
         showAllMarkets.setPadding(new Insets(6, 0, 0, 0));
 
-        Label headline = new BisqLabel(Res.get("offerbook.headline"));
+        Label headline = new Label(Res.get("offerbook.headline"));
         headline.getStyleClass().add("titled-group-bg-label-active");
 
         tableView = new BisqTableView<>(model.getSortedItems());

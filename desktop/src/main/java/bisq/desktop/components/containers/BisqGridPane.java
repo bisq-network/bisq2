@@ -42,8 +42,8 @@ public class BisqGridPane extends GridPane {
         getColumnConstraints().addAll(col1, col2);
     }
 
-    public BisqLabel startSection(String text) {
-        BisqLabel label = new BisqLabel(text);
+    public Label startSection(String text) {
+        Label label = new Label(text);
         label.setLayoutX(4);
         label.setLayoutY(-8);
         label.setPadding(new Insets(0, 7, 0, 5));

@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.settings.userProfile.components;
 import bisq.common.encoding.Hex;
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.components.controls.BisqTextField;
 import bisq.desktop.components.controls.BisqTextFieldWithCopyIcon;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -192,13 +192,13 @@ public class EntitlementSelection {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final BisqTableView<EntitlementItem> tableView;
-        private final BisqLabel headline;
+        private final Label headline;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-            headline = new BisqLabel(Res.get("social.createUserProfile.entitlement.headline"));
+            headline = new Label(Res.get("social.createUserProfile.entitlement.headline"));
             headline.getStyleClass().add("titled-group-bg-label-active");
             headline.setPadding(new Insets(20, 0, 0, 0));
 

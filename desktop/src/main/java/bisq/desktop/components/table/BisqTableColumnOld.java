@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.table;
 
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
 import bisq.desktop.components.overlay.PopOverWrapper;
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -36,7 +36,7 @@ public class BisqTableColumnOld<S, T> extends TableColumn<S, T> {
 
     private Label helpIcon;
     private final PopOverWrapper popoverWrapper = new PopOverWrapper();
-    private final BisqLabel titleLabel = new BisqLabel();
+    private final Label titleLabel = new Label();
 
     public BisqTableColumnOld(String text) {
         super();
@@ -72,7 +72,7 @@ public class BisqTableColumnOld<S, T> extends TableColumn<S, T> {
         helpIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(() -> createInfoPopOver(help)));
         helpIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());
 
-        final BisqLabel label = new BisqLabel(title);
+        final Label label = new Label(title);
         final HBox hBox = new HBox(label, helpIcon);
         hBox.setStyle("-fx-alignment: center-left");
         hBox.setSpacing(4);
