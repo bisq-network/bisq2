@@ -45,7 +45,10 @@ import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -155,7 +158,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                         bondedRoleProof.signature(),
                         userProfile.getChatUser().getId()))
                 .map(future -> future.thenApply(optionalProof -> optionalProof.map(e -> {
-                            ChatUser chatUser = new ChatUser(userProfile.getIdentity().networkId(), userProfile.getEntitlements());
+                            ChatUser chatUser = new ChatUser(userProfile.getNickName(), userProfile.getIdentity().networkId(), userProfile.getEntitlements());
                             PublicChannel publicChannel = new PublicChannel(StringUtils.createUid(),
                                     channelName,
                                     description,
@@ -384,9 +387,9 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         persistableStore.getMarketChannels().add(new MarketChannel(MarketRepository.getXmrMarket()));
         persistableStore.getSelectedChannel().set(defaultChannel);
 
-        ChatUser dummyChannelAdmin = new ChatUser(userProfile.getIdentity().networkId());
+        ChatUser dummyChannelAdmin = new ChatUser(userProfile.getNickName(), userProfile.getIdentity().networkId());
         Set<ChatUser> dummyChannelModerators = userProfileService.getPersistableStore().getUserProfiles().stream()
-                .map(p -> new ChatUser(p.getIdentity().networkId()))
+                .map(profile -> new ChatUser(profile.getNickName(), profile.getIdentity().networkId()))
                 .collect(Collectors.toSet());
 
         persistableStore.getPublicChannels().add(new PublicChannel("Discussions Bisq",
@@ -495,6 +498,6 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public ObservableSet<String> getIgnoredChatUserIds() {
         return persistableStore.getIgnoredChatUserIds();
-        
+
     }
 }

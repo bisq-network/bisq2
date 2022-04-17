@@ -18,6 +18,7 @@
 package bisq.social.user.profile;
 
 import bisq.common.proto.Proto;
+import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.security.DigestUtil;
 import bisq.social.user.ChatUser;
@@ -46,11 +47,15 @@ public class UserProfile implements Proto {
         this.nickName = nickName;
         this.entitlements = entitlements;
         profileId = UserNameGenerator.fromHash(DigestUtil.hash(identity.networkId().getPubKey().publicKey().getEncoded()));
-        chatUser = new ChatUser(identity.networkId(), entitlements);
+        chatUser = new ChatUser(nickName, identity.networkId(), entitlements);
     }
 
     public byte[] getPubKeyHash() {
         return chatUser.getPubKeyHash();
+    }
+
+    public String getTooltipString() {
+        return Res.get("social.chatUser.tooltip", nickName, getProfileId());
     }
 
     public bisq.social.protobuf.UserProfile toProto() {

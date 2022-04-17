@@ -62,13 +62,15 @@ message Entitlement {
 }
 
 message ChatUser {
-  network.NetworkId networkId = 1;
-  repeated Entitlement entitlements = 2;
+  string nickName = 1;
+  network.NetworkId networkId = 2;
+  repeated Entitlement entitlements = 3;
 }
 message QuotedMessage {
-  string userName = 1;
-  common.ByteArray pubKeyHash = 2;
-  string message = 3;
+  string profileId = 1;
+  string nickName = 2;
+  common.ByteArray pubKeyHash = 3;
+  string message = 4;
 }
 
 message PrivateChatMessage {

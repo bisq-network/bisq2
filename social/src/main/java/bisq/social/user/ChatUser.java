@@ -20,6 +20,7 @@ package bisq.social.user;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
+import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.security.DigestUtil;
 import lombok.EqualsAndHashCode;
@@ -46,23 +47,27 @@ import java.util.stream.Collectors;
 public class ChatUser implements Proto {
     private static final transient Map<ByteArray, DerivedData> CACHE = new HashMap<>();
     @Getter
+    private final String nickName;
+    @Getter
     private final NetworkId networkId;
     @Getter
     private final Set<Entitlement> entitlements;
     private transient DerivedData derivedData;
 
-    //todo add nickName
-    public ChatUser(NetworkId networkId) {
-        this(networkId, new HashSet<>());
+    //todo add profileId
+    public ChatUser(String nickName, NetworkId networkId) {
+        this(nickName, networkId, new HashSet<>());
     }
 
-    public ChatUser(NetworkId networkId, Set<Entitlement> entitlements) {
+    public ChatUser(String nickName, NetworkId networkId, Set<Entitlement> entitlements) {
+        this.nickName = nickName;
         this.networkId = networkId;
         this.entitlements = entitlements;
     }
 
     public bisq.social.protobuf.ChatUser toProto() {
         return bisq.social.protobuf.ChatUser.newBuilder()
+                .setNickName(nickName)
                 .setNetworkId(networkId.toProto())
                 .addAllEntitlements(entitlements.stream()
                         .sorted()
@@ -75,7 +80,7 @@ public class ChatUser implements Proto {
         Set<Entitlement> set = proto.getEntitlementsList().stream()
                 .map(Entitlement::fromProto)
                 .collect(Collectors.toSet());
-        return new ChatUser(NetworkId.fromProto(proto.getNetworkId()), set);
+        return new ChatUser(proto.getNickName(), NetworkId.fromProto(proto.getNetworkId()), set);
     }
 
     public boolean hasEntitlementType(Entitlement.Type type) {
@@ -86,11 +91,16 @@ public class ChatUser implements Proto {
     public String getId() {
         return getDerivedData().id();
     }
-
+    public String getTooltipString() {
+        return Res.get("social.chatUser.tooltip", nickName, getProfileId());
+    }
     public String getProfileId() {
         return getDerivedData().profileId;
     }
 
+    public String getUserName() {
+        return UserNameLookup.getUserName(getProfileId(), nickName);
+    }
     public byte[] getPubKeyHash() {
         return getDerivedData().pubKeyHash().getBytes();
     }

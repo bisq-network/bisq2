@@ -2,19 +2,25 @@ package bisq.social.chat;
 
 import bisq.common.data.ByteArray;
 import bisq.common.proto.Proto;
+import bisq.social.user.UserNameLookup;
 
-public record QuotedMessage(String userName, ByteArray pubKeyHash, String message) implements Proto {
+public record QuotedMessage(String profileId, String nickName, ByteArray pubKeyHash, String message) implements Proto {
     public bisq.social.protobuf.QuotedMessage toProto() {
         return bisq.social.protobuf.QuotedMessage.newBuilder()
-                .setUserName(userName)
+                .setProfileId(profileId)
+                .setNickName(nickName)
                 .setPubKeyHash(pubKeyHash.toProto())
                 .setMessage(message)
                 .build();
     }
 
     public static QuotedMessage fromProto(bisq.social.protobuf.QuotedMessage proto) {
-        return new QuotedMessage(proto.getUserName(),
+        return new QuotedMessage(proto.getProfileId(),
+                proto.getNickName(),
                 ByteArray.fromProto(proto.getPubKeyHash()),
                 proto.getMessage());
+    }
+    public  String getUserName() {
+        return UserNameLookup.getUserName(profileId, nickName);
     }
 }

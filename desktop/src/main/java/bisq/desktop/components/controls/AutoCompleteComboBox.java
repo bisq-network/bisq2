@@ -152,9 +152,8 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             String inputText = editor.getText();
 
             // Case 1: fire if input text selects (matches) an item
-            T selectedItem = getSelectionModel().getSelectedItem();
-            T inputTextItem = getConverter().fromString(inputText);
-            if (selectedItem != null && selectedItem.equals(inputTextItem)) {
+            String selectedItemAsString = getConverter().toString(getSelectionModel().getSelectedItem());
+            if (selectedItemAsString != null && selectedItemAsString.equals(inputText)) {
                 eh.handle(e);
                 getParent().requestFocus();
                 return;

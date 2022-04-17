@@ -42,7 +42,7 @@ public class ExchangeController implements Controller {
     private final ChannelInfo channelInfo;
     private final NotificationsSettings notificationsSettings;
     private final QuotedMessageBlock quotedMessageBlock;
-    private final UserProfileSelection userProfileDisplay;
+    private final UserProfileSelection userProfileSelection;
     private final ChatMessagesComponent chatMessagesComponent;
     private final MarketChannelSelection marketChannelSelection;
     private Pin selectedChannelPin, tradeTagsPin, currencyTagsPin, paymentMethodTagsPin, customTagsPin;
@@ -53,7 +53,7 @@ public class ExchangeController implements Controller {
         chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
 
-        userProfileDisplay = new UserProfileSelection(userProfileService);
+        userProfileSelection = new UserProfileSelection(userProfileService);
         privateChannelSelection = new PrivateChannelSelection(chatService);
         marketChannelSelection = new MarketChannelSelection(chatService);
         chatMessagesComponent = new ChatMessagesComponent(chatService, userProfileService);
@@ -66,7 +66,7 @@ public class ExchangeController implements Controller {
         model = new ExchangeModel(chatService, userProfileService);
         view = new ExchangeView(model,
                 this,
-                userProfileDisplay.getRoot(),
+                userProfileSelection.getRoot(),
                 marketChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),

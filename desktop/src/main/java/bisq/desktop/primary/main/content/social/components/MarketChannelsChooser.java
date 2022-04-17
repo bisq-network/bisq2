@@ -146,7 +146,7 @@ public class MarketChannelsChooser {
 
                 @Override
                 public MarketChannelItem fromString(String string) {
-                    return new MarketChannelItem(new MarketChannel(Market.from(string)));
+                    return null;
                 }
             });
             comboBox.setCellFactory(getCellFactory());

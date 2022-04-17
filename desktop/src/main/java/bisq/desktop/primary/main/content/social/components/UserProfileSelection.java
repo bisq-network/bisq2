@@ -225,7 +225,7 @@ public class UserProfileSelection {
                             imageView.setImage(RoboHash.getImage(new ByteArray(userProfile.getPubKeyHash())));
                             textInputBox.setText(userProfile.getNickName());
                             Tooltip.install(buttonPane,
-                                    new Tooltip(Res.get("roboIconWithId.id", userProfile.getProfileId())));
+                                    new Tooltip(userProfile.getTooltipString()));
                         }
                     }).get());
         }

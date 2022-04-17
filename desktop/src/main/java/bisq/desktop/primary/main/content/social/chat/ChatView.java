@@ -322,7 +322,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                         if (item != null && !empty) {
                             if (item.getQuotedMessage().isPresent()) {
                                 QuotedMessage quotedMessage = item.getQuotedMessage().get();
-                                if (quotedMessage.userName() != null &&
+                                if (quotedMessage.profileId() != null &&
                                         quotedMessage.pubKeyHash() != null &&
                                         quotedMessage.message() != null) {
                                     Region verticalLine = new Region();
@@ -334,7 +334,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                                     quotedMessageField.setText(quotedMessage.message());
                                     quotedMessageField.setStyle("-fx-fill: -bisq-grey-9");
                                    
-                                    BisqLabel userName = new BisqLabel(quotedMessage.userName());
+                                    BisqLabel userName = new BisqLabel(quotedMessage.profileId());
                                     userName.setPadding(new Insets(4, 0, 0, 0));
                                     userName.setStyle("-fx-text-fill: -bisq-grey-9");
                                    

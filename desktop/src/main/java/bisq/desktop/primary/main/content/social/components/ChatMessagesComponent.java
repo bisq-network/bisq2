@@ -17,8 +17,6 @@
 
 package bisq.desktop.primary.main.content.social.components;
 
-import bisq.common.data.ByteArray;
-import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
@@ -36,7 +34,6 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
-import bisq.security.DigestUtil;
 import bisq.social.chat.*;
 import bisq.social.user.ChatUser;
 import bisq.social.user.profile.UserProfile;
@@ -338,7 +335,7 @@ public class ChatMessagesComponent {
         private Model(ChatService chatService, UserProfileService userProfileService) {
             this.chatService = chatService;
             this.userProfileService = userProfileService;
-            ignoredChatUserPredicate = item -> !chatService.getIgnoredChatUserIds().contains(item.getChatUserId());
+            ignoredChatUserPredicate = item -> !chatService.getIgnoredChatUserIds().contains(item.getAuthor().getId());
             filteredChatMessages.setPredicate(ignoredChatUserPredicate);
         }
 
@@ -434,7 +431,7 @@ public class ChatMessagesComponent {
                         private final BisqTextArea editedMessageField;
                         private final Button emojiButton1, emojiButton2, openEmojiSelectorButton, replyButton,
                                 pmButton, editButton, deleteButton, moreOptionsButton;
-                        private final Label nickNameLabel = new Label();
+                        private final Label userNameLabel = new Label();
                         private final Label time = new Label();
                         private final BisqTaggableTextArea message = new BisqTaggableTextArea();
                         private final Text quotedMessageField = new Text();
@@ -445,8 +442,8 @@ public class ChatMessagesComponent {
                         Subscription widthSubscription;
 
                         {
-                            nickNameLabel.setId("chat-user-name");
-                            nickNameLabel.setPadding(new Insets(10, 0, 0, 0));
+                            userNameLabel.setId("chat-user-name");
+                            userNameLabel.setPadding(new Insets(10, 0, 0, 0));
                             time.getStyleClass().add("message-header");
                             time.setPadding(new Insets(-6, 0, 0, 0));
                             time.setVisible(false);
@@ -503,7 +500,7 @@ public class ChatMessagesComponent {
                                     editControlsBox,
                                     Layout.hBoxWith(Spacer.fillHBox(), reactionsBox));
                             VBox.setVgrow(messageBox, Priority.ALWAYS);
-                            vBox = Layout.vBoxWith(nickNameLabel, messageBox);
+                            vBox = Layout.vBoxWith(userNameLabel, messageBox);
                             HBox.setHgrow(vBox, Priority.ALWAYS);
                             VBox userIconTimeBox = Layout.vBoxWith(chatUserIcon, time);
                             HBox.setMargin(userIconTimeBox, new Insets(10, 0, 0, -10));
@@ -516,7 +513,8 @@ public class ChatMessagesComponent {
                             if (item != null && !empty) {
                                 if (item.getQuotedMessage().isPresent()) {
                                     QuotedMessage quotedMessage = item.getQuotedMessage().get();
-                                    if (quotedMessage.userName() != null &&
+                                    if (quotedMessage.nickName() != null &&
+                                            quotedMessage.profileId() != null &&
                                             quotedMessage.pubKeyHash() != null &&
                                             quotedMessage.message() != null) {
                                         Region verticalLine = new Region();
@@ -528,7 +526,7 @@ public class ChatMessagesComponent {
                                         quotedMessageField.setText(quotedMessage.message());
                                         quotedMessageField.setStyle("-fx-fill: -bisq-grey-9");
 
-                                        Label userName = new Label(quotedMessage.userName());
+                                        Label userName = new Label(quotedMessage.getUserName());
                                         userName.setPadding(new Insets(4, 0, 0, 0));
                                         userName.setStyle("-fx-text-fill: -bisq-grey-9");
 
@@ -565,12 +563,14 @@ public class ChatMessagesComponent {
                                 dateTooltip = new Tooltip(item.getDate());
                                 Tooltip.install(time, dateTooltip);
 
-                                nickNameLabel.setText(item.getAuthorUserName());
-                                nickNameLabel.setOnMouseClicked(e -> controller.onUserNameClicked(item.getAuthorUserName()));
+                                userNameLabel.setText(item.getAuthor().getUserName());
+                                userNameLabel.setOnMouseClicked(e -> controller.onUserNameClicked(item.getAuthor().getUserName()));
 
                                 chatUserIcon.setChatUser(item.getAuthor(), model.getUserProfileService());
                                 chatUserIcon.setCursor(Cursor.HAND);
                                 chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
+                                Tooltip.install(chatUserIcon, new Tooltip(item.getAuthor().getTooltipString()));
+
                                 setOnMouseEntered(e -> {
                                     time.setVisible(true);
                                     reactionsBox.setVisible(true);
@@ -615,7 +615,7 @@ public class ChatMessagesComponent {
                                 if (widthSubscription != null) {
                                     widthSubscription.unsubscribe();
                                 }
-                                nickNameLabel.setOnMouseClicked(null);
+                                userNameLabel.setOnMouseClicked(null);
                                 chatUserIcon.setOnMouseClicked(null);
                                 hBox.setOnMouseEntered(null);
                                 hBox.setOnMouseExited(null);
@@ -683,26 +683,19 @@ public class ChatMessagesComponent {
     public static class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>>, FilteredListItem {
         private final T chatMessage;
         private final String message;
-        private final String authorUserName;
         private final String time;
         private final String date;
-        private final String chatUserId;
-        private final ByteArray pubKeyHashAsByteArray;
         private final Optional<QuotedMessage> quotedMessage;
         private final ChatUser author;
 
         public ChatMessageListItem(T chatMessage) {
             this.chatMessage = chatMessage;
+            author = chatMessage.getAuthor();
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getText() + editPostFix;
             quotedMessage = chatMessage.getQuotedMessage();
-            author = chatMessage.getAuthor();
-            authorUserName = author.getProfileId();
             time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
             date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));
-            byte[] pubKeyHash = DigestUtil.hash(author.getNetworkId().getPubKey().publicKey().getEncoded());
-            pubKeyHashAsByteArray = new ByteArray(pubKeyHash);
-            chatUserId = Hex.encode(pubKeyHash);
         }
 
         @Override
@@ -715,7 +708,8 @@ public class ChatMessagesComponent {
             return filterString == null ||
                     filterString.isEmpty() ||
                     StringUtils.containsIgnoreCase(message, filterString) ||
-                    StringUtils.containsIgnoreCase(authorUserName, filterString) ||
+                    StringUtils.containsIgnoreCase(author.getProfileId(), filterString) ||
+                    StringUtils.containsIgnoreCase(author.getNickName(), filterString) ||
                     StringUtils.containsIgnoreCase(date, filterString);
         }
     }
