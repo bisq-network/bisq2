@@ -20,6 +20,8 @@ package bisq.social.chat;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
+import bisq.common.monetary.MarketRepository;
+import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
@@ -30,11 +32,12 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.social.intent.TradeIntent;
+import bisq.social.offer.MarketChatOffer;
 import bisq.social.user.ChatUser;
 import bisq.social.user.Entitlement;
 import bisq.social.user.profile.UserProfile;
@@ -83,7 +86,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        maybeAddDummyChannels();
+        maybeAddDefaultChannels();
         setSelectedChannelIfNotSet();
         return CompletableFuture.completedFuture(true);
     }
@@ -111,35 +114,33 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof PublicChatMessage publicChatMessage) {
-            if (publicChatMessage.getChannelType() == ChannelType.PUBLIC) {
-                persistableStore.getPublicChannels().stream()
-                        .filter(publicChannel -> publicChannel.getId().equals(publicChatMessage.getChannelId()))
-                        .findAny()
-                        .ifPresent(publicChannel -> {
-                            synchronized (persistableStore) {
-                                publicChannel.addChatMessage(publicChatMessage);
-                            }
-                            persist();
-                        });
-            }
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof MarketChatMessage marketChatMessage) {
+            persistableStore.getMarketChannels().stream()
+                    .filter(channel -> channel.getId().equals(marketChatMessage.getChannelId()))
+                    .findAny()
+                    .ifPresent(channel -> channel.addChatMessage(marketChatMessage));
+        } else if (distributedData instanceof PublicChatMessage publicChatMessage) {
+            persistableStore.getPublicChannels().stream()
+                    .filter(channel -> channel.getId().equals(publicChatMessage.getChannelId()))
+                    .findAny()
+                    .ifPresent(channel -> channel.addChatMessage(publicChatMessage));
         }
     }
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof PublicChatMessage publicChatMessage) {
-            if (publicChatMessage.getChannelType() == ChannelType.PUBLIC) {
-                persistableStore.getPublicChannels().stream()
-                        .filter(publicChannel -> publicChannel.getId().equals(publicChatMessage.getChannelId()))
-                        .findAny()
-                        .ifPresent(publicChannel -> {
-                            synchronized (persistableStore) {
-                                publicChannel.removeChatMessage(publicChatMessage);
-                            }
-                            persist();
-                        });
-            }
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof MarketChatMessage marketChatMessage) {
+            persistableStore.getMarketChannels().stream()
+                    .filter(channel -> channel.getId().equals(marketChatMessage.getChannelId()))
+                    .findAny()
+                    .ifPresent(channel -> channel.removeChatMessage(marketChatMessage));
+        } else if (distributedData instanceof PublicChatMessage publicChatMessage) {
+            persistableStore.getPublicChannels().stream()
+                    .filter(channel -> channel.getId().equals(publicChatMessage.getChannelId()))
+                    .findAny()
+                    .ifPresent(channel -> channel.removeChatMessage(publicChatMessage));
         }
     }
 
@@ -149,28 +150,20 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Optional<PublicChannel>> addChannel(UserProfile userProfile, String channelName, String description) {
-        Set<String> currencyTags = getFiatCurrencyTags();
-        Set<String> tradeTags = getTradeTags();
-        Set<String> paymentMethodTags = getPaymentMethodTags();
-        Set<String> customTags = getCustomTags();
-        return userProfile.entitlements().stream()
+        return userProfile.getEntitlements().stream()
                 .filter(entitlement -> entitlement.entitlementType() == Entitlement.Type.CHANNEL_ADMIN)
                 .filter(entitlement -> entitlement.proof() instanceof Entitlement.BondedRoleProof)
                 .map(entitlement -> (Entitlement.BondedRoleProof) entitlement.proof())
                 .map(bondedRoleProof -> userProfileService.verifyBondedRole(bondedRoleProof.txId(),
                         bondedRoleProof.signature(),
-                        userProfile.chatUser().getId()))
+                        userProfile.getChatUser().getId()))
                 .map(future -> future.thenApply(optionalProof -> optionalProof.map(e -> {
-                            ChatUser chatUser = new ChatUser(userProfile.identity().networkId(), userProfile.entitlements());
+                            ChatUser chatUser = new ChatUser(userProfile.getNickName(), userProfile.getIdentity().networkId(), userProfile.getEntitlements());
                             PublicChannel publicChannel = new PublicChannel(StringUtils.createUid(),
                                     channelName,
                                     description,
                                     chatUser,
-                                    new HashSet<>(),
-                                    tradeTags,
-                                    currencyTags,
-                                    paymentMethodTags,
-                                    customTags);
+                                    new HashSet<>());
                             persistableStore.getPublicChannels().add(publicChannel);
                             persist();
                             setSelectedChannelIfNotSet();
@@ -181,18 +174,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 .orElse(CompletableFuture.completedFuture(Optional.empty()));
     }
 
-    public Optional<PublicChannel> findPublicChannelForMarket(Market selectedMarket) {
-        if (selectedMarket == null) {
-            return Optional.empty();
-        }
-        ObservableSet<PublicChannel> publicChannels = getPersistableStore().getPublicChannels();
-        return Optional.of(publicChannels.stream()
-                .filter(e -> e.getChannelName().toLowerCase().contains(selectedMarket.quoteCurrencyCode().toLowerCase()))
-                .findAny()
-                .orElse(publicChannels.stream()
-                        .filter(e -> e.getChannelName().toLowerCase().contains("other")) //todo 
-                        .findAny()
-                        .orElseThrow()));
+    public Optional<MarketChannel> findMarketChannel(Market selectedMarket) {
+        return persistableStore.getMarketChannels().stream().filter(e->e.getMarket().equals(selectedMarket)).findAny();
     }
 
     public PrivateChannel getOrCreatePrivateChannel(String id, ChatUser peer) {
@@ -215,7 +198,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         }
     }
 
-    public void selectChannel(Channel<? extends ChatMessage> channel) {
+    public void setSelectedChannel(Channel<? extends ChatMessage> channel) {
         if (channel instanceof PrivateChannel privateChannel) {
             // remove expired messages
             purgeExpired(privateChannel);
@@ -239,26 +222,55 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                          PublicChannel publicChannel,
                                          UserProfile userProfile) {
         PublicChatMessage chatMessage = new PublicChatMessage(publicChannel.getId(),
-                userProfile.chatUser(),
+                userProfile.getChatUser(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
                 false);
         networkService.publishAuthenticatedData(chatMessage,
-                userProfile.identity().getNodeIdAndKeyPair());
+                userProfile.getIdentity().getNodeIdAndKeyPair());
+    }
+
+    public void publishMarketChatTextMessage(String text,
+                                             Optional<QuotedMessage> quotedMessage,
+                                             MarketChannel marketChannel,
+                                             UserProfile userProfile) {
+        MarketChatMessage chatMessage = new MarketChatMessage(marketChannel.getId(),
+                userProfile.getChatUser(),
+                Optional.empty(),
+                Optional.of(text),
+                quotedMessage,
+                new Date().getTime(),
+                false);
+        networkService.publishAuthenticatedData(chatMessage,
+                userProfile.getIdentity().getNodeIdAndKeyPair());
+    }
+
+    public CompletableFuture<DataService.BroadCastDataResult> publishMarketChatOffer(MarketChatOffer marketChatOffer,
+                                                                                     MarketChannel marketChannel,
+                                                                                     UserProfile userProfile) {
+        MarketChatMessage chatMessage = new MarketChatMessage(marketChannel.getId(),
+                userProfile.getChatUser(),
+                Optional.of(marketChatOffer),
+                Optional.empty(),
+                Optional.empty(),
+                new Date().getTime(),
+                false);
+        return networkService.publishAuthenticatedData(chatMessage,
+                userProfile.getIdentity().getNodeIdAndKeyPair());
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishEditedPublicChatMessage(PublicChatMessage originalChatMessage,
                                                                                              String editedText,
                                                                                              UserProfile userProfile) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.identity().getNodeIdAndKeyPair();
+        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
         checkArgument(originalChatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
                 "NetworkId must match");
         return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         PublicChatMessage newChatMessage = new PublicChatMessage(originalChatMessage.getChannelId(),
-                                userProfile.chatUser(),
+                                userProfile.getChatUser(),
                                 editedText,
                                 originalChatMessage.getQuotedMessage(),
                                 originalChatMessage.getDate(),
@@ -270,8 +282,33 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 });
     }
 
+    public CompletableFuture<DataService.BroadCastDataResult> publishEditedMarketChatMessage(MarketChatMessage originalChatMessage,
+                                                                                             String editedText,
+                                                                                             UserProfile userProfile) {
+        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
+        checkArgument(originalChatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
+                "NetworkId must match");
+        return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
+                .whenComplete((result, throwable) -> {
+                    if (throwable == null) {
+                        // We do not support editing the MarketChatOffer directly but remove it and replace it with 
+                        // the edited text.
+                        MarketChatMessage newChatMessage = new MarketChatMessage(originalChatMessage.getChannelId(),
+                                userProfile.getChatUser(),
+                                Optional.empty(),
+                                Optional.of(editedText),
+                                originalChatMessage.getQuotedMessage(),
+                                originalChatMessage.getDate(),
+                                true);
+                        networkService.publishAuthenticatedData(newChatMessage, nodeIdAndKeyPair);
+                    } else {
+                        log.error("Error at deleting old message", throwable);
+                    }
+                });
+    }
+    
     public void deletePublicChatMessage(PublicChatMessage chatMessage, UserProfile userProfile) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.identity().getNodeIdAndKeyPair();
+        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
         checkArgument(chatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
                 "NetworkId must match");
         networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair)
@@ -285,31 +322,19 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 });
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatMessage(TradeIntent tradeIntent,
-                                                                                      PublicChannel publicChannel,
-                                                                                      UserProfile userProfile) {
-        TradeChatMessage chatMessage = new TradeChatMessage(publicChannel.getId(),
-                userProfile.chatUser(),
-                tradeIntent,
-                new Date().getTime(),
-                false);
-        return networkService.publishAuthenticatedData(chatMessage,
-                userProfile.identity().getNodeIdAndKeyPair());
-    }
-
     public void sendPrivateChatMessage(String text, Optional<QuotedMessage> quotedMessage,
                                        PrivateChannel privateChannel) {
         String channelId = privateChannel.getId();
         UserProfile userProfile = privateChannel.getMyProfile();
         PrivateChatMessage chatMessage = new PrivateChatMessage(channelId,
-                userProfile.chatUser(),
+                userProfile.getChatUser(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
                 false);
         addPrivateChatMessage(chatMessage, privateChannel);
         NetworkId receiverNetworkId = privateChannel.getPeer().getNetworkId();
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = userProfile.identity().getNodeIdAndKeyPair();
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
         networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair)
                 .whenComplete((resultMap, throwable2) -> {
                     if (throwable2 != null) {
@@ -359,63 +384,68 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public boolean isMyMessage(ChatMessage chatMessage) {
         String chatId = chatMessage.getAuthor().getId();
-        return userProfileService.getPersistableStore().getUserProfiles().stream()
-                .anyMatch(userprofile -> userprofile.chatUser().getId().equals(chatId));
+        return userProfileService.getUserProfiles().stream()
+                .anyMatch(userprofile -> userprofile.getChatUser().getId().equals(chatId));
     }
 
-    public void maybeAddDummyChannels() {
-        UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
+    public void maybeAddDefaultChannels() {
+        UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
         if (userProfile == null || !persistableStore.getPublicChannels().isEmpty()) {
             return;
         }
 
-        Set<String> currencyTags = getFiatCurrencyTags();
-        Set<String> tradeTags = getTradeTags();
-        Set<String> paymentMethodTags = getPaymentMethodTags();
-        Set<String> customTags = getCustomTags();
-        ChatUser dummyChannelAdmin = new ChatUser(userProfile.identity().networkId());
-        Set<ChatUser> dummyChannelModerators = userProfileService.getPersistableStore().getUserProfiles().stream()
-                .map(p -> new ChatUser(p.identity().networkId()))
+        MarketChannel defaultChannel = new MarketChannel(MarketRepository.getDefault());
+        persistableStore.getMarketChannels().add(defaultChannel);
+        persistableStore.getMarketChannels().add(new MarketChannel(MarketRepository.getBsqMarket()));
+        persistableStore.getMarketChannels().add(new MarketChannel(MarketRepository.getXmrMarket()));
+        setSelectedChannel(defaultChannel);
+
+        ChatUser dummyChannelAdmin = new ChatUser(userProfile.getNickName(), userProfile.getIdentity().networkId());
+        Set<ChatUser> dummyChannelModerators = userProfileService.getUserProfiles().stream()
+                .map(profile -> new ChatUser(profile.getNickName(), profile.getIdentity().networkId()))
                 .collect(Collectors.toSet());
 
-        PublicChannel defaultChannel = new PublicChannel("BTC-EUR Market",
-                "BTC-EUR Market",
-                "Channel for trading Bitcoin with EUR",
+        persistableStore.getPublicChannels().add(new PublicChannel("Discussions Bisq",
+                "Discussions Bisq",
+                "Channel for discussions about Bisq",
                 dummyChannelAdmin,
-                dummyChannelModerators,
-                tradeTags,
-                currencyTags,
-                paymentMethodTags,
-                customTags);
-        persistableStore.getPublicChannels().add(defaultChannel);
-        persistableStore.getPublicChannels().add(new PublicChannel("BTC-USD Market",
-                "BTC-USD Market",
-                "Channel for trading Bitcoin with USD",
+                dummyChannelModerators
+        ));
+        persistableStore.getPublicChannels().add(new PublicChannel("Discussions Bitcoin",
+                "Discussions Bitcoin",
+                "Channel for discussions about Bitcoin",
                 dummyChannelAdmin,
-                dummyChannelModerators,
-                tradeTags,
-                currencyTags,
-                paymentMethodTags,
-                customTags));
-        persistableStore.getPublicChannels().add(new PublicChannel("Other Markets",
-                "Other Markets",
-                "Channel for trading any market",
+                dummyChannelModerators
+        ));
+        persistableStore.getPublicChannels().add(new PublicChannel("Discussions Monero",
+                "Discussions Monero",
+                "Channel for discussions about Monero",
                 dummyChannelAdmin,
-                dummyChannelModerators,
-                tradeTags,
-                currencyTags,
-                paymentMethodTags,
-                customTags));
+                dummyChannelModerators
+        ));
+        persistableStore.getPublicChannels().add(new PublicChannel("Price",
+                "Price",
+                "Channel for discussions about market price",
+                dummyChannelAdmin,
+                dummyChannelModerators
+        ));
+        persistableStore.getPublicChannels().add(new PublicChannel("Economy",
+                "Economy",
+                "Channel for discussions about economy",
+                dummyChannelAdmin,
+                dummyChannelModerators
+        ));
         persistableStore.getPublicChannels().add(new PublicChannel("Off-topic",
                 "Off-topic",
-                "Channel for off topic",
+                "Channel for anything else",
                 dummyChannelAdmin,
-                dummyChannelModerators,
-                tradeTags,
-                currencyTags,
-                paymentMethodTags,
-                customTags));
-        persistableStore.getSelectedChannel().set(defaultChannel);
+                dummyChannelModerators
+        ));
+
+        Set<String> customTags = Set.of("BTC", "Bitcoin", "bank-transfer", "SEPA", "zelle", "revolut", "BUY", "SELL", "WANT", "RECEIVE",
+                "Tor", "I2P", "Trezor", "Ledger", "Wasabi", "Samurai", "Monero");
+        persistableStore.getCustomTags().addAll(customTags);
+        persist();
     }
 
     private void setSelectedChannelIfNotSet() {
@@ -431,23 +461,15 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return Stream.concat(names, codes).collect(Collectors.toSet());
     }
 
-    private Set<String> getCustomTags() {
-        return Set.of("Tor", "I2P", "Trezor", "Ledger", "Wasabi", "Samurai", "Monero");
-    }
-
-    private Set<String> getPaymentMethodTags() {
-        return Set.of("sepa", "bank-transfer", "zelle", "revolut");
-    }
-
-    private Set<String> getTradeTags() {
-        return Set.of("BUY", "SELL", "WANT", "RECEIVE");
-    }
 
     public void removeExpiredPrivateMessages() {
         // will need to go through al channels and check on their messages if they have expired.
-        persistableStore.getPrivateChannels().stream()
-                .forEach(this::purgeExpired);
+        persistableStore.getPrivateChannels().forEach(this::purgeExpired);
     }
+
+/*    private List<MarketChannel> getMarketChannels() {
+        return MarketRepository.getAllMarkets().stream().map(MarketChannel::new).collect(Collectors.toList());
+    }*/
 
     /**
      * PrivateChannels can expire iff their messages have expired or there is no message left for other reasons
@@ -467,4 +489,28 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return privateChannel.getChatMessages().isEmpty();
     }
 
+    public ObservableSet<MarketChannel> getMarketChannels() {
+        return persistableStore.getMarketChannels();
+    }
+
+    public ObservableSet<PublicChannel> getPublicChannels() {
+        return persistableStore.getPublicChannels();
+    }
+
+    public ObservableSet<PrivateChannel> getPrivateChannels() {
+        return persistableStore.getPrivateChannels();
+    }
+
+    public Observable<Channel<? extends ChatMessage>> getSelectedChannel() {
+        return persistableStore.getSelectedChannel();
+    }
+
+    public Set<String> getCustomTags() {
+        return persistableStore.getCustomTags();
+    }
+
+    public ObservableSet<String> getIgnoredChatUserIds() {
+        return persistableStore.getIgnoredChatUserIds();
+
+    }
 }

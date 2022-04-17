@@ -18,20 +18,18 @@
 package bisq.desktop.primary.onboarding.onboardNewbie;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.observable.Pin;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyWordDetection;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.overlay.Popup;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.MarketSelection;
+import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.social.chat.ChatService;
-import bisq.social.intent.TradeIntentService;
+import bisq.social.offer.MarketChatOfferService;
 import com.google.common.base.Joiner;
 import javafx.beans.InvalidationListener;
 import lombok.Getter;
@@ -50,17 +48,16 @@ public class OnboardNewbieController implements Controller {
     private final BtcFiatAmountGroup btcFiatAmountGroup;
     private final PaymentMethodsSelection paymentMethodsSelection;
     private final ChatService chatService;
-    private final TradeIntentService tradeIntentService;
-    private Pin tradeTagsPin, currencyTagsPin, paymentMethodTagsPin, customTagsPin;
+    private final MarketChatOfferService marketChatOfferService;
 
     private Subscription selectedMarketSubscription, baseSideAmountSubscription;
     private final InvalidationListener paymentMethodsSelectionListener;
     private Subscription termsDisabledSubscription;
 
     public OnboardNewbieController(DefaultApplicationService applicationService) {
-        tradeIntentService = applicationService.getTradeIntentService();
+        marketChatOfferService = applicationService.getMarketChatOfferService();
         chatService = applicationService.getChatService();
-        model = new OnboardNewbieModel(applicationService.getUserProfileService().getPersistableStore().getSelectedUserProfile().get().userName());
+        model = new OnboardNewbieModel(applicationService.getUserProfileService().getSelectedUserProfile().get().getProfileId());
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
         btcFiatAmountGroup = new BtcFiatAmountGroup(applicationService.getMarketPriceService());
@@ -84,17 +81,12 @@ public class OnboardNewbieController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getCustomTags().addAll(chatService.getCustomTags());
         selectedMarketSubscription = EasyBind.subscribe(marketSelection.selectedMarketProperty(),
                 selectedMarket -> {
                     model.setSelectedMarket(selectedMarket);
                     btcFiatAmountGroup.setSelectedMarket(selectedMarket);
                     paymentMethodsSelection.setSelectedMarket(selectedMarket);
-                    chatService.findPublicChannelForMarket(selectedMarket).ifPresent(publicChannel -> {
-                        tradeTagsPin = FxBindings.<String, String>bind(model.getTradeTags()).map(String::toUpperCase).to(publicChannel.getTradeTags());
-                        currencyTagsPin = FxBindings.<String, String>bind(model.getCurrencyTags()).map(String::toUpperCase).to(publicChannel.getCurrencyTags());
-                        paymentMethodTagsPin = FxBindings.<String, String>bind(model.getPaymentMethodsTags()).map(String::toUpperCase).to(publicChannel.getPaymentMethodTags());
-                        customTagsPin = FxBindings.<String, String>bind(model.getCustomTags()).map(String::toUpperCase).to(publicChannel.getCustomTags());
-                    });
 
                     updateOfferPreview();
                 });
@@ -126,27 +118,25 @@ public class OnboardNewbieController implements Controller {
         baseSideAmountSubscription.unsubscribe();
         termsDisabledSubscription.unsubscribe();
         paymentMethodsSelection.getSelectedPaymentMethods().removeListener(paymentMethodsSelectionListener);
-        if (tradeTagsPin != null) {
-            tradeTagsPin.unbind();
-            currencyTagsPin.unbind();
-            paymentMethodTagsPin.unbind();
-            customTagsPin.unbind();
-        }
     }
 
     void onCreateOffer() {
-        tradeIntentService.publishTradeIntent(model.getSelectedMarket(),
+        marketChatOfferService.publishMarketChatOffer(model.getSelectedMarket(),
                         model.getBaseSideAmount().getValue(),
                         new HashSet<>(model.getSelectedPaymentMethods()),
                         model.getTerms().get())
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
-                        String channelName = chatService.findPublicChannelForMarket(model.getSelectedMarket()).orElseThrow().getChannelName();
+                        UIThread.run(() -> {
+                            Navigation.navigateTo(NavigationTarget.EXCHANGE);
+                        });
+                        
+                       /* String channelName = chatService.findPublicChannelForMarket(model.getSelectedMarket()).orElseThrow().getMarket();
                         new Popup().confirmation(Res.get("satoshisquareapp.createOffer.publish.success", channelName))
                                 .actionButtonText(Res.get("satoshisquareapp.createOffer.publish.goToChat", channelName))
                                 .onAction(() -> Navigation.navigateTo(NavigationTarget.CHAT))
                                 .hideCloseButton()
-                                .show();
+                                .show();*/
                     } else {
                         //todo
                         new Popup().error(throwable.toString()).show();
@@ -170,11 +160,7 @@ public class OnboardNewbieController implements Controller {
         String paymentMethods = Joiner.on(", ").join(model.getSelectedPaymentMethods());
 
         String previewText = Res.get("satoshisquareapp.createOffer.offerPreview", amount, quoteCurrency, paymentMethods);
-        model.getStyleSpans().set(KeyWordDetection.getStyleSpans(previewText,
-                model.getTradeTags(),
-                model.getCurrencyTags(),
-                model.getPaymentMethodsTags(),
-                model.getCustomTags()));
+        model.getStyleSpans().set(KeyWordDetection.getStyleSpans(previewText, model.getCustomTags()));
         model.getOfferPreview().set(previewText);
     }
 

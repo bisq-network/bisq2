@@ -19,6 +19,8 @@ package bisq.social.user.profile;
 
 import bisq.common.data.Pair;
 import bisq.common.encoding.Hex;
+import bisq.common.observable.Observable;
+import bisq.common.observable.ObservableSet;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
@@ -108,7 +110,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                                                                           Set<Entitlement> entitlements) {
         return identityService.createNewInitializedIdentity(profileId, keyId, keyPair)
                 .thenApply(identity -> {
-                    UserProfile userProfile = new UserProfile(identity, entitlements);
+                    UserProfile userProfile = new UserProfile(identity, nickName, entitlements);
                     synchronized (lock) {
                         persistableStore.getUserProfiles().add(userProfile);
                         persistableStore.getSelectedUserProfile().set(userProfile);
@@ -272,7 +274,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         byte[] pubKeyHash = DigestUtil.hash(pubKeyBytes);
         String useName = UserNameGenerator.fromHash(pubKeyHash);
         //todo we added a nickname
-        return createNewInitializedUserProfile(useName,"TODO", keyId, keyPair, new HashSet<>())
+        return createNewInitializedUserProfile(useName, "TODO", keyId, keyPair, new HashSet<>())
                 .thenApply(userProfile -> true);
     }
 
@@ -284,6 +286,15 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
             case CHANNEL_MODERATOR -> 10000;
             default -> 0;
         };
+    }
+
+
+    public Observable<UserProfile> getSelectedUserProfile() {
+        return persistableStore.getSelectedUserProfile();
+    }
+
+    public ObservableSet<UserProfile> getUserProfiles() {
+        return persistableStore.getUserProfiles();
     }
 
     private BaseHttpClient getApiHttpClient(List<String> providerUrls) {

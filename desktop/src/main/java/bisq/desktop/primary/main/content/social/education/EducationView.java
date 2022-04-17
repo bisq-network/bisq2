@@ -138,7 +138,7 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
         contentLabel.getStyleClass().add("bisq-text-1");
 
         Button button = new Button(buttonLabel);
-        button.getStyleClass().add("bisq-button-1");
+        button.getStyleClass().add("bisq-border-dark-bg-button");
         
         VBox box = Layout.vBoxWith(headlineLabel, contentLabel, button);
         box.setSpacing(TEXT_SPACE);

@@ -19,7 +19,7 @@ package bisq.desktop.primary.onboarding.initUserProfile;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.LargeRoboIconWithId;
+import bisq.desktop.components.controls.RoboIconWithId;
 import bisq.desktop.components.controls.TextInputBox;
 import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
@@ -38,10 +38,10 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileModel, InitUserProfileController> {
-    private final Button createUserButton;
+    private final Button nextButton;
     private final VBox vBox;
     private final TextInputBox nicknameTextInputBox;
-    private final LargeRoboIconWithId roboIconWithId;
+    private final RoboIconWithId roboIconWithId;
     private Subscription roboHashNodeSubscription, vBoxHeightSubscription;
     private Popup processingPopup;
 
@@ -80,7 +80,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
                 Res.get("satoshisquareapp.setDefaultUserProfile.nickName.prompt"));
         nicknameTextInputBox.setPrefWidth(inputWidth);
 
-        roboIconWithId = new LargeRoboIconWithId();
+        roboIconWithId = new RoboIconWithId(300);
         Tooltip.install(roboIconWithId, new Tooltip(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.button")));
 
         Label tryOtherInfoLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.info"));
@@ -92,9 +92,9 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         VBox.setVgrow(tryOtherInfoLabel, Priority.ALWAYS);
         VBox.setMargin(tryOtherInfoLabel, new Insets(0, 0, 0, 0));
 
-        createUserButton = new Button(Res.get("satoshisquareapp.setDefaultUserProfile.done"));
-        createUserButton.getStyleClass().add("bisq-button");
-        VBox.setMargin(createUserButton, new Insets(0, 0, 50, 0));
+        nextButton = new Button(Res.get("shared.nextStep"));
+        nextButton.setDefaultButton(true);
+        VBox.setMargin(nextButton, new Insets(0, 0, 50, 0));
 
         vBox.getChildren().addAll(
                 headLineLabel,
@@ -102,18 +102,18 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
                 nicknameTextInputBox,
                 roboIconWithId,
                 tryOtherInfoLabel,
-                createUserButton
+                nextButton
         );
     }
 
     @Override
     protected void onViewAttached() {
-        createUserButton.disableProperty().bind(model.createProfileButtonDisable);
+        nextButton.disableProperty().bind(model.createProfileButtonDisable);
         roboIconWithId.textProperty().bind(model.profileId);
         nicknameTextInputBox.textProperty().bindBidirectional(model.nickName);
 
         roboIconWithId.setOnAction(controller::onCreateTempIdentity);
-        createUserButton.setOnAction(e -> controller.onCreateUserProfile());
+        nextButton.setOnAction(e -> controller.onCreateUserProfile());
 
         // As we must set setFitToHeight false we need to apply prefViewportHeight once we know our vbox height.
         vBoxHeightSubscription = EasyBind.subscribe(vBox.heightProperty(), h -> {
@@ -146,11 +146,11 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
 
     @Override
     protected void onViewDetached() {
-        createUserButton.disableProperty().unbind();
+        nextButton.disableProperty().unbind();
         nicknameTextInputBox.textProperty().unbindBidirectional(model.nickName);
         roboIconWithId.textProperty().unbind();
         roboIconWithId.setOnAction(null);
-        createUserButton.setOnAction(null);
+        nextButton.setOnAction(null);
         if (vBoxHeightSubscription != null) {
             vBoxHeightSubscription.unsubscribe();
         }

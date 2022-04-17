@@ -17,12 +17,14 @@
 
 package bisq.social.chat;
 
+import bisq.common.observable.ObservableSet;
 import bisq.social.user.ChatUser;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,6 +35,7 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
     private static final String CHANNEL_DELIMITER = "@PC@";
     private final ChatUser peer;
     private final UserProfile myProfile;
+    private final ObservableSet<PrivateChatMessage> chatMessages = new ObservableSet<>();
 
     public PrivateChannel(String id, ChatUser peer, UserProfile myProfile) {
         this(id, peer, myProfile, NotificationSetting.ALL, new HashSet<>());
@@ -43,15 +46,17 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
                            UserProfile myProfile,
                            NotificationSetting notificationSetting,
                            Set<PrivateChatMessage> chatMessages) {
-        super(id, notificationSetting, chatMessages);
+        super(id, notificationSetting);
         this.peer = peer;
         this.myProfile = myProfile;
+        this.chatMessages.addAll(chatMessages);
     }
 
     public bisq.social.protobuf.Channel toProto() {
         return getChannelBuilder().setPrivateChannel(bisq.social.protobuf.PrivateChannel.newBuilder()
                         .setPeer(peer.toProto())
-                        .setMyProfile(myProfile.toProto()))
+                        .setMyProfile(myProfile.toProto())
+                        .addAllChatMessages(chatMessages.stream().map(this::getChatMessageProto).collect(Collectors.toList())))
                 .build();
     }
 
@@ -62,7 +67,7 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
                 ChatUser.fromProto(proto.getPeer()),
                 UserProfile.fromProto(proto.getMyProfile()),
                 NotificationSetting.fromProto(baseProto.getNotificationSetting()),
-                baseProto.getChatMessagesList().stream()
+                proto.getChatMessagesList().stream()
                         .map(PrivateChatMessage::fromProto)
                         .collect(Collectors.toSet()));
     }
@@ -72,27 +77,47 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
         return chatMessage.toChatMessageProto();
     }
 
+    @Override
+    public void addChatMessage(PrivateChatMessage chatMessage) {
+        chatMessages.add(chatMessage);
+    }
+
+    @Override
+    public void removeChatMessage(PrivateChatMessage chatMessage) {
+        chatMessages.remove(chatMessage);
+    }
+
+    @Override
+    public void removeChatMessages(Collection<PrivateChatMessage> removeMessages) {
+        chatMessages.removeAll(removeMessages);
+    }
+
+    @Override
+    public String getDisplayString() {
+        return peer.getUserName();
+    }
+
     public static UserProfile findMyProfileFromChannelId(String id, ChatUser peer, UserProfileService userProfileService) {
         String[] chatNames = id.split(CHANNEL_DELIMITER);
         if (chatNames.length != 2) {
             throw new RuntimeException("malformed channel id"); // TODO figure out how error handling works here
         }
-        String peerName = peer.getUserName();
+        String peerName = peer.getProfileId();
         if (!peerName.equals(chatNames[0]) && !peerName.equals(chatNames[1])) {
-            throw new RuntimeException("channel id and peer's userName dont fit");
+            throw new RuntimeException("channel id and peer's profileId dont fit");
         }
         String myName = peerName.equals(chatNames[0]) ? chatNames[1] : chatNames[0];
         // now go through all my identities and get the one with the right Name
         // it should be ensured by the NameGenerator that  they are unique!
-        return userProfileService.getPersistableStore().getUserProfiles().stream()
-                .filter(up -> up.userName().equals(myName))
+        return userProfileService.getUserProfiles().stream()
+                .filter(up -> up.getProfileId().equals(myName))
                 .findAny()
                 .orElseThrow(); // TODO how to report errors
     }
 
     public static String createChannelId(ChatUser peer, UserProfile senderProfile) {
-        String peerName = peer.getUserName();
-        String myName = senderProfile.userName();
+        String peerName = peer.getProfileId();
+        String myName = senderProfile.getProfileId();
         if (peerName.compareTo(myName) < 0) {
             return peerName + CHANNEL_DELIMITER + myName;
         } else { // need to have an ordering here, otherwise there would be 2 channelIDs for the same participants
@@ -100,7 +125,7 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
         }
     }
 
-    public String getChannelName() {
-        return peer.getUserName();
+    public String getMarket() {
+        return peer.getProfileId();
     }
 }

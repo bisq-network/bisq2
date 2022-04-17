@@ -18,13 +18,17 @@
 package bisq.desktop.components.containers;
 
 import bisq.common.data.Pair;
-import bisq.desktop.components.controls.*;
+import bisq.desktop.components.controls.AutoCompleteComboBox;
+import bisq.desktop.components.controls.jfx.BisqTextArea;
+import bisq.desktop.components.controls.jfx.BisqTextField;
+import bisq.desktop.components.controls.BisqTextFieldWithCopyIcon;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.layout.Layout;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.layout.*;
@@ -42,8 +46,8 @@ public class BisqGridPane extends GridPane {
         getColumnConstraints().addAll(col1, col2);
     }
 
-    public BisqLabel startSection(String text) {
-        BisqLabel label = new BisqLabel(text);
+    public Label startSection(String text) {
+        Label label = new Label(text);
         label.setLayoutX(4);
         label.setLayoutY(-8);
         label.setPadding(new Insets(0, 7, 0, 5));
@@ -147,8 +151,8 @@ public class BisqGridPane extends GridPane {
         return textArea;
     }
 
-    public BisqButton addButton(String text) {
-        BisqButton button = new BisqButton(text);
+    public Button addButton(String text) {
+        Button button = new Button(text);
         GridPane.setRowIndex(button, getRowCount());
         GridPane.setColumnIndex(button, 0);
         getChildren().add(button);
@@ -156,14 +160,14 @@ public class BisqGridPane extends GridPane {
         return button;
     }
 
-    public BisqButton addButton(String label, Runnable handler) {
-        BisqButton button = addButton(label);
+    public Button addButton(String label, Runnable handler) {
+        Button button = addButton(label);
         button.setOnAction(e -> handler.run());
         return button;
     }
 
-    public Pair<BisqButton, Label> addButtonWithLabel(String text) {
-        BisqButton button = new BisqButton(text);
+    public Pair<Button, Label> addButtonWithLabel(String text) {
+        Button button = new Button(text);
         Label label = new Label();
         label.setPadding(new Insets(5, 0, 0, 0));
 
@@ -177,8 +181,8 @@ public class BisqGridPane extends GridPane {
         return new Pair<>(button, label);
     }
 
-    public Pair<BisqButton, Label> addButtonWithLabel(String label, Runnable handler) {
-        Pair<BisqButton, Label> pair = addButtonWithLabel(label);
+    public Pair<Button, Label> addButtonWithLabel(String label, Runnable handler) {
+        Pair<Button, Label> pair = addButtonWithLabel(label);
         pair.first().setOnAction(e -> handler.run());
         return pair;
     }
@@ -191,8 +195,8 @@ public class BisqGridPane extends GridPane {
         getChildren().add(tableView);
     }
 
-    public <T> BisqComboBoxOld<T> addComboBox(ObservableList<T> items) {
-        BisqComboBoxOld<T> comboBox = new BisqComboBoxOld<>(items);
+    public <T> AutoCompleteComboBox<T> addComboBox(ObservableList<T> items) {
+        AutoCompleteComboBox<T> comboBox = new AutoCompleteComboBox<>(items);
         GridPane.setRowIndex(comboBox, getRowCount());
         GridPane.setColumnIndex(comboBox, 0);
         getChildren().add(comboBox);

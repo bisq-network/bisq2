@@ -45,25 +45,22 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
                 Optional.of(text),
                 quotedMessage,
                 date,
-                ChannelType.PUBLIC,
                 wasEdited,
                 new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PublicChatMessage.class.getSimpleName()));
     }
 
     protected PublicChatMessage(String channelId,
-                              ChatUser sender,
-                              Optional<String> text,
-                              Optional<QuotedMessage> quotedMessage,
-                              long date,
-                              ChannelType channelType,
-                              boolean wasEdited,
-                              MetaData metaData) {
+                                ChatUser sender,
+                                Optional<String> text,
+                                Optional<QuotedMessage> quotedMessage,
+                                long date,
+                                boolean wasEdited,
+                                MetaData metaData) {
         super(channelId,
                 sender,
                 text,
                 quotedMessage,
                 date,
-                channelType,
                 wasEdited,
                 metaData);
     }
@@ -82,14 +79,8 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
                 Optional.of(baseProto.getText()),
                 quotedMessage,
                 baseProto.getDate(),
-                ChannelType.fromProto(baseProto.getChannelType()),
                 baseProto.getWasEdited(),
                 MetaData.fromProto(baseProto.getMetaData()));
-    }
-
-    @Override
-    public String getText() {
-        return optionalText.get();
     }
 
     @Override

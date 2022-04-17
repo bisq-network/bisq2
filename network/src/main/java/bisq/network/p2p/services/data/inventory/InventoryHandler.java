@@ -55,8 +55,8 @@ class InventoryHandler implements Connection.Listener {
     }
 
     CompletableFuture<Inventory> request(DataFilter dataFilter) {
-        log.debug("Node {} send GetInventoryRequest to {} with dataFilter {} and nonce {}. Connection={}",
-                node, connection.getPeerAddress(), dataFilter, nonce, connection.getId());
+       // log.debug("Node {} send GetInventoryRequest to {} with dataFilter {} and nonce {}. Connection={}",
+        //        node, connection.getPeerAddress(), dataFilter, nonce, connection.getId());
         ts = System.currentTimeMillis();
         supplyAsync(() -> node.send(new InventoryRequest(dataFilter, nonce), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {

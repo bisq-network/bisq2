@@ -20,12 +20,11 @@ package bisq.satoshisquareapp.primary.splash;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqLabel;
-import bisq.desktop.components.controls.BisqProgressBar;
+import javafx.scene.control.Label;
+import bisq.desktop.components.controls.jfx.BisqProgressBar;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -74,7 +73,7 @@ public class SatoshiSquareSplashView extends View<VBox, SatoshiSquareSplashModel
         progressBar.setMinWidth(400);
         VBox.setMargin(progressBar, new Insets(60, 0, 10, 0));
 
-        Label connectingTitle = new BisqLabel(Res.get("satoshisquareapp.splash.connecting"));
+        Label connectingTitle = new Label(Res.get("satoshisquareapp.splash.connecting"));
         connectingTitle.setStyle("-fx-font-size: 0.9em; -fx-text-fill: -fx-light-text-color;");
         //VBox.setMargin(connectingTitle, new Insets(20, 0, 0, 0));
         Pane slogansPane = new StackPane();
@@ -93,7 +92,7 @@ public class SatoshiSquareSplashView extends View<VBox, SatoshiSquareSplashModel
     }
 
     private Label getSubTitle(String text) {
-        Label label = new BisqLabel(text);
+        Label label = new Label(text);
         label.setStyle("-fx-font-size: 1.2em; -fx-text-fill: -fx-dark-text-color;");
         label.setTextAlignment(TextAlignment.CENTER);
         label.setOpacity(0);

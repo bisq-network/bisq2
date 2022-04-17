@@ -26,7 +26,11 @@ public class StringUtils {
     }
 
     public static String truncate(String value, int maxLength) {
-        return value.substring(0, Math.min(value.length(), maxLength)) + "...";
+        if (maxLength < value.length()) {
+            return value.substring(0, maxLength) + "...";
+        } else {
+            return value;
+        }
     }
 
     public static String createUid() {

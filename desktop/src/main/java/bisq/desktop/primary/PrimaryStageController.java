@@ -112,7 +112,9 @@ public class PrimaryStageController extends NavigationController {
 
     public void onDomainInitialized() {
         // After the domain is initialized we show the application content
-        if (applicationService.getUserProfileService().isDefaultUserProfileMissing()) {
+        Navigation.navigateTo(NavigationTarget.ONBOARDING);
+        //todo
+       /* if (applicationService.getUserProfileService().isDefaultUserProfileMissing()) {
             Navigation.navigateTo(NavigationTarget.ONBOARDING);
         } else {
             String persisted = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
@@ -121,7 +123,7 @@ public class PrimaryStageController extends NavigationController {
             } else {
                 Navigation.navigateTo(NavigationTarget.MAIN);
             }
-        }
+        }*/
     }
 
     public void onUncaughtException(Thread thread, Throwable throwable) {

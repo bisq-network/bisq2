@@ -23,9 +23,10 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.social.chat.ChatController;
+import bisq.desktop.primary.main.content.social.chat.GenericChatController;
 import bisq.desktop.primary.main.content.social.education.EducationController;
 import bisq.desktop.primary.main.content.social.events.EventsController;
+import bisq.desktop.primary.main.content.social.exchange.ExchangeController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,7 +50,7 @@ public class SocialController extends TabController<SocialModel> {
     @Override
     public void onActivate() {
         selectedUserProfilePin = FxBindings.bind(model.getSelectedUserProfile())
-                .to(applicationService.getUserProfileService().getPersistableStore().getSelectedUserProfile());
+                .to(applicationService.getUserProfileService().getSelectedUserProfile());
     }
 
     @Override
@@ -62,10 +63,10 @@ public class SocialController extends TabController<SocialModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case EXCHANGE -> {
-                return Optional.of(new ChatController(applicationService));
+                return Optional.of(new ExchangeController(applicationService));
             }
             case CHAT -> {
-                return Optional.of(new ChatController(applicationService));
+                return Optional.of(new GenericChatController(applicationService));
             }
             case EDUCATION -> {
                 return Optional.of(new EducationController(applicationService));

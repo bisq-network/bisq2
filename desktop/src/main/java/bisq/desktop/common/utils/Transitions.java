@@ -70,7 +70,8 @@ public class Transitions {
             fade.setOnFinished(actionEvent -> finishedHandler.run());
         }
     }
-    public static void fadeIn(Node node, int duration,double targetOpacity, @Nullable Runnable finishedHandler) {
+
+    public static void fadeIn(Node node, int duration, double targetOpacity, @Nullable Runnable finishedHandler) {
         FadeTransition fade = new FadeTransition(Duration.millis(getDuration(duration)), node);
         fade.setFromValue(0);
         fade.setToValue(targetOpacity);
@@ -146,6 +147,14 @@ public class Transitions {
             timeline.setOnFinished(actionEvent -> UIThread.runOnNextRenderFrame(() -> ((Pane) (node.getParent()))
                     .getChildren().remove(node)));
         timeline.play();
+    }
+
+    public static void blurDark(Node node) {
+        blur(node, DEFAULT_DURATION, -0.2, false, 5);
+    }
+
+    public static void darken(Node node) {
+        blur(node, DEFAULT_DURATION, -0.3, false, 0);
     }
 
     public static void darken(Node node, int duration, boolean removeNode) {

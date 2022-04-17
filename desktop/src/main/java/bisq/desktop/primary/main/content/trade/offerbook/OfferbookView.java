@@ -18,18 +18,14 @@
 package bisq.desktop.primary.main.content.trade.offerbook;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqButton;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.BisqLabel;
-import bisq.desktop.components.controls.BisqToggleButton;
+import javafx.scene.control.Label;
+import bisq.desktop.components.controls.jfx.BisqToggleButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -38,15 +34,17 @@ import lombok.extern.slf4j.Slf4j;
 public class OfferbookView extends View<VBox, OfferbookModel, OfferbookController> {
     private final BisqTableView<OfferListItem> tableView;
     private final BisqToggleButton showAllMarkets;
-    private final BisqButton createOfferButton;
     private final Pane marketSelection;
 
-    public OfferbookView(OfferbookModel model, OfferbookController controller,
+    public OfferbookView(OfferbookModel model, 
+                         OfferbookController controller,
                          Pane marketSelection,
                          Pane directionSelection) {
         super(new VBox(), model, controller);
+        
         this.marketSelection = marketSelection;
-
+        marketSelection.setMinWidth(280);
+       
         root.setSpacing(30);
         root.setPadding(new Insets(40,0,0,0));
 
@@ -54,12 +52,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         showAllMarkets.setText(Res.get("offerbook.showAllMarkets"));
         showAllMarkets.setPadding(new Insets(6, 0, 0, 0));
 
-        createOfferButton = new BisqButton(Res.get("createOffer.createOffer.button"));
-        createOfferButton.getStyleClass().add("action-button");
-        createOfferButton.setFixWidth(200);
-        HBox.setMargin(createOfferButton, new Insets(30, 19, 0, 0));
-
-        Label headline = new BisqLabel(Res.get("offerbook.headline"));
+        Label headline = new Label(Res.get("offerbook.headline"));
         headline.getStyleClass().add("titled-group-bg-label-active");
 
         tableView = new BisqTableView<>(model.getSortedItems());
@@ -68,7 +61,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         configDataTableView();
 
         root.getChildren().addAll(Layout.hBoxWith(marketSelection, showAllMarkets),
-                Layout.hBoxWith(directionSelection, Spacer.fillHBox(), createOfferButton),
+                Layout.hBoxWith(directionSelection),
                 headline,
                 tableView);
     }
@@ -76,7 +69,6 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     @Override
     protected void onViewAttached() {
         showAllMarkets.setOnAction(e -> controller.onShowAllMarketsChanged(showAllMarkets.isSelected()));
-        createOfferButton.setOnAction(e -> controller.onCreateOffer());
         marketSelection.disableProperty().bind(model.marketSelectionDisabled);
 
         root.requestFocus();
@@ -85,7 +77,6 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
     @Override
     protected void onViewDetached() {
         showAllMarkets.setOnAction(null);
-        createOfferButton.setOnAction(null);
         marketSelection.disableProperty().unbind();
     }
 
@@ -121,7 +112,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
                 .valueSupplier(OfferListItem::getOptions)
                 .build());*/
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferListItem>()
-                .fixWidth(220)
+                .fixWidth(200)
                 .title(Res.get("offerbook.table.header.action"))
                 .valueSupplier(model::getActionButtonTitle)
                 .cellFactory(BisqTableColumn.CellFactory.BUTTON)

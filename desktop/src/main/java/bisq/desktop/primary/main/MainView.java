@@ -18,10 +18,9 @@
 package bisq.desktop.primary.main;
 
 import bisq.desktop.common.view.NavigationView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import bisq.desktop.layout.Layout;
+import bisq.desktop.primary.main.top.TopPanelView;
+import javafx.scene.layout.*;
 
 public class MainView extends NavigationView<HBox, MainModel, MainController> {
     public MainView(MainModel model,
@@ -31,13 +30,15 @@ public class MainView extends NavigationView<HBox, MainModel, MainController> {
         super(new HBox(), model, controller);
 
         root.setFillHeight(true);
-        VBox topPanelAndContentBox = new VBox();
-        topPanelAndContentBox.setFillWidth(true);
+        AnchorPane topPanelAndContentBox = new AnchorPane();
         topPanelAndContentBox.getChildren().add(topPanelView);
+        Layout.pinToAnchorPane(topPanelView, 0,0,null,0);
 
         model.getView().addListener((observable, oldValue, contentView) -> {
-            HBox.setHgrow(contentView.getRoot(), Priority.ALWAYS);
-            topPanelAndContentBox.getChildren().add(contentView.getRoot());
+            Region child = contentView.getRoot();
+            HBox.setHgrow(child, Priority.ALWAYS);
+            Layout.pinToAnchorPane(child, TopPanelView.HEIGHT,0,0,0);
+            topPanelAndContentBox.getChildren().add(child);
         });
 
         HBox.setHgrow(topPanelAndContentBox, Priority.ALWAYS);

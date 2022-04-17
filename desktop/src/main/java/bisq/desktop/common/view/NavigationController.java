@@ -38,22 +38,25 @@ public abstract class NavigationController implements Controller {
         this.onNavigate(navigationTarget, data);
         Optional<NavigationTarget> candidate = Optional.of(navigationTarget);
         while (candidate.isPresent()) {
+            if (!childControllerClassName.isEmpty() && childControllerClassName.get().equals(candidate.get().name())) {
+                return;
+            }
             Optional<Controller> childController = findController(candidate.get(), data);
             if (childController.isPresent()) {
                 // If that controller is handling that navigationTarget and creates a childController we 
                 // apply the child view to our view.
-                if (childControllerClassName.isEmpty() ||
-                        !childControllerClassName.get().equals(childController.get().getClass().toString())) {
+              /*  if (childControllerClassName.isEmpty() ||
+                        !childControllerClassName.get().equals(childController.get().getClass().toString())) {*/
                     // log.debug("{}: Apply child controller. childController={}",
                     //          this.getClass().getSimpleName(), childController.get().getClass().getSimpleName());
                     getModel().applyChild(candidate.get(), childController.get().getView());
-                    childControllerClassName = Optional.of(childController.get().getClass().toString());
-                } else {
+                    childControllerClassName = Optional.of(candidate.get().name());
+            /*    } else {
                     // We might get called from the navigation event dispatcher when child views gets attached and
                     // apply their default navigationTargets. 
                     // log.debug("{}: We have applied already that child controller. childController={}",
                     //         this.getClass().getSimpleName(), childController.get().getClass().getSimpleName());
-                }
+                }*/
                 break;
             } else {
                 // At NavigationTarget.ROOT we don't have a parent and candidate is not present, exiting the while loop

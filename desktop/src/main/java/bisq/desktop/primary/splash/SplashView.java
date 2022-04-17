@@ -18,12 +18,11 @@
 package bisq.desktop.primary.splash;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqLabel;
-import bisq.desktop.components.controls.BisqProgressBar;
+import javafx.scene.control.Label;
+import bisq.desktop.components.controls.jfx.BisqProgressBar;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -52,12 +51,12 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         statusLabel.setTextAlignment(TextAlignment.CENTER);
 
         progressBar = new BisqProgressBar(-1);
-        progressBar.setMinHeight(3.5);
-        progressBar.setMaxHeight(3.5);
+        progressBar.setMinHeight(3);
+        progressBar.setMaxHeight(3);
         progressBar.setMinWidth(535);
         VBox.setMargin(progressBar, new Insets(16, 0, 16, 0));
 
-        Label connectingTitle = new BisqLabel(Res.get("satoshisquareapp.splash.connecting").toUpperCase());
+        Label connectingTitle = new Label(Res.get("satoshisquareapp.splash.connecting").toUpperCase());
         connectingTitle.getStyleClass().add("bisq-small-light-label-dimmed");
 
         root.getChildren().addAll(logo,  statusLabel, progressBar, connectingTitle);

@@ -12,6 +12,7 @@
     -bisq-green: #56ae48;
     -bisq-dark-green: #2ea33c;
     -bisq-logo-green: #25b135;
+    -bisq-darkest-green: derive(-bisq-logo-green, -50%);
 
     /* Greys */
     -bisq-grey-left-nav-bg: #212121;
@@ -30,7 +31,7 @@
     -bisq-grey-15: #292929;
     -bisq-grey-16: #393939;
     -bisq-grey-17: #2f2f2f;
-
+    -bisq-grey-18: #141414;
 
     /* Background colors */
     -bisq-background-color-darkest: -bisq-grey-left-nav-selected-bg;
@@ -44,6 +45,13 @@
     /* Text colors */
     -bisq-text-color-white: white;
     -bisq-text-color-2: -bisq-grey-content-bg;
+
+
+}
+
+.tooltip {
+    /* Global Tooltip show delay */
+    -fx-show-delay: 300ms
 }
 
 /* Text */
@@ -89,7 +97,7 @@
 
 .bisq-large-profile-id-label {
     -fx-background-color: -bisq-grey-6;
-    -fx-text-fill: white;
+    -fx-text-fill: -bisq-text-color-white;
     -fx-font-size: 1em;
 }
 
@@ -163,7 +171,7 @@
 .bisq-input-box-text-input {
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
-    -fx-text-fill: white;
+    -fx-text-fill: -bisq-text-color-white;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -175,10 +183,14 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-/* Button */
+/*******************************************************************************
+ *                                                                             *
+ * Button                                                                  *
+ *                                                                             *
+ ******************************************************************************/
 
 /* Dark grey button with light grey border */
-.bisq-button-1 {
+.bisq-border-dark-bg-button {
     -fx-background-color: -bisq-background-color-dark;
     -fx-background-radius: 2.5;
     -fx-text-fill: -fx-light-text-color;
@@ -190,9 +202,26 @@
     -fx-cursor: hand;
 }
 
-.bisq-button-1:hover {
+.bisq-border-dark-bg-button:hover {
     -fx-border-color: -bisq-border-color-grey-hover;
     -fx-background-color: -bisq-background-color-gray;
+}
+
+.bisq-border-button {
+    -fx-background-color: -bisq-grey-content-bg;
+    -fx-background-radius: 2.5;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
+    -fx-border-color: -bisq-border-color-grey;
+    -fx-border-width: 0.75;
+    -fx-border-radius: 2.5;
+    -fx-padding: 5 33 5 33;
+    -fx-cursor: hand;
+}
+
+.bisq-border-button:hover {
+    -fx-border-color: -bisq-border-color-grey-hover;
+    -fx-background-color: -bisq-grey-content-bg;
 }
 
 .button {
@@ -239,9 +268,6 @@
     -fx-background-color: -bisq-grey-left-nav-bg;
 }
 
-#bisq-darkest-bg1 {
-    -fx-background-color: -bisq-grey-left-nav-bg;
-}
 
 .bisq-dark-bg {
     -fx-background-color: -bisq-grey-left-nav-selected-bg;
@@ -259,9 +285,77 @@
     -fx-background-color: -bisq-grey-content-bg;
 }
 
-/* Combo-box ListView */
-.bisq-combo-box-list-view {
-    -fx-background-color: -bisq-grey-15;
+
+/*******************************************************************************
+ *                                                                             *
+ * Badge                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-badge {
+    -fx-padding: 0 20 0 0;
+
+}
+
+.bisq-badge .badge-pane {
+    -fx-background-color: -bisq-grey-6;
+    -fx-background-radius: 15;
+    /*   -fx-pref-width: 15;*/
+    -fx-pref-height: 15;
+}
+
+.bisq-badge .badge-label {
+    -fx-font-size: 0.85em;
+    -fx-text-fill: -bisq-text-color-white;
+
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * ToolTip                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.tooltip {
+    -fx-background: -bisq-grey-11;
+    -fx-text-fill: black;
+    -fx-background-color: -bisq-grey-11;
+    -fx-background-radius: 6px;
+    -fx-background-insets: 0;
+    -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0.0, 0, 3);
+    -fx-font-size: 1em;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * ComboBox                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: transparent;
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
+    -fx-background-color: -bisq-grey-16;
+    -fx-background: transparent;
+}
+
+.combo-box-base,
+.combo-box-base:editable > .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.combo-box-base:editable > .arrow {
+    -fx-background-color: transparent;
+}
+
+#bisq-combo-box-list-view {
+    -fx-background-color: -bisq-grey-16;
     -fx-border-color: -bisq-grey-left-nav-bg;;
     -fx-border-width: 1;
     -fx-border-insets: 0 0 0 0;
@@ -269,7 +363,7 @@
     -fx-background-insets: 0 0 0 0;
 }
 
-.bisq-combo-box-list-view .list-cell:odd, .bisq-combo-box-list-view .list-cell:even {
+#bisq-combo-box-list-view .list-cell:odd, #bisq-combo-box-list-view .list-cell:even {
     -fx-background-color: -bisq-grey-left-nav-bg;
     -fx-font-size: 1.05em;
     -fx-padding: 0 0 0 22;
@@ -277,8 +371,200 @@
     -fx-pref-height: 40px;
 }
 
-.bisq-combo-box-list-view .list-cell:selected {
+
+#bisq-combo-box-list-view .list-cell:selected {
     -fx-background-color: -bisq-grey-16;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * TextArea                                                                    *
+ *                                                                             *
+ ******************************************************************************/
+
+.text-area {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: -bisq-grey-12;
+    -fx-background-radius: 4;
+    -fx-border-style: none;;
+    -fx-text-fill: -bisq-text-color-white;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.text-area > .scroll-pane {
+    -fx-background-color: null;
+}
+
+.text-area > .scroll-pane > .scroll-bar:horizontal {
+    -fx-background-radius: 0 0 2 2;
+}
+
+.text-area > .scroll-pane > .scroll-bar:vertical {
+    -fx-background-radius: 0 2 2 0;
+}
+
+.text-area > .scroll-pane > .corner {
+    -fx-background-radius: 0 0 2 0;
+}
+
+.text-area .content {
+    /*the is 1px less top and bottom than TextInput because of scrollpane border */
+    -fx-padding: 0.25em 0.583em 0.25em 0.583em; /* 3 7 3 7 */
+    -fx-cursor: text;
+    -fx-background-color: transparent;
+    -fx-background-radius: 2;
+}
+
+.text-area:focused .content {
+    -fx-background-color: -bisq-grey-content-bg;
+    /*    -fx-background-insets: 0, 0, 2;
+        -fx-background-radius: 2, 1, 0;*/
+}
+
+#chat-messages-list-view {
+    -fx-background-color: transparent;
+}
+
+
+#chat-messages-text-area-input-field {
+    -fx-background-color: -bisq-grey-left-nav-bg;
+    -fx-background-radius: 4;
+    -fx-border-color: -bisq-grey-left-nav-bg;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-faint-focus-color: transparent;
+    -fx-text-fill: -bisq-text-color-white;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+    -fx-padding: 4;
+}
+
+#chat-messages-headline {
+    -fx-text-fill: -bisq-text-color-white;
+    -fx-font-size: 1.78em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+#chat-sidebar-headline {
+    -fx-text-fill: -bisq-text-color-white;
+    -fx-font-size: 1.78em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+#chat-sidebar-text {
+    -fx-text-fill: -bisq-text-color-white;
+    -fx-fill: -bisq-text-color-white;
+    -fx-font-size: 1.05em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * ListView                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.list-view {
+    -fx-background: transparent;
+    -fx-background-color: -bisq-grey-left-nav-bg;
+    -fx-border-width: 0;
+    -fx-border-insets: 0 0 0 0;
+    -fx-padding: 0 0 0 0;
+    -fx-background-insets: 0 0 0 0;
+}
+
+.list-view .list-cell:odd, .list-view .list-cell:even {
+    -fx-background-color: -bisq-grey-left-nav-bg;
+    -fx-font-size: 1.05em;
+    -fx-padding: 0 0 0 22;
+    -fx-background-insets: 0 0 0 0;
+}
+
+
+.list-view .list-cell:selected {
+    -fx-background-color: -bisq-grey-16;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * SplitPane                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.split-pane > .split-pane-divider {
+    -fx-padding: 0 0.15em 0 0.15em; /* 0 3 0 3 */
+}
+
+/* horizontal the two nodes are placed to the left/right of each other. */
+.split-pane:horizontal > .split-pane-divider {
+    /*-fx-background-color: -fx-box-border, -fx-inner-border-horizontal;*/
+    -fx-background-color: -bisq-grey-left-nav-bg;
+    /* -fx-background-color: -bisq-grey-left-nav-selected-bg;*/
+
+    -fx-background-insets: 0, 0 1 0 1;
+}
+
+/* vertical the two nodes are placed on top of each other. */
+.split-pane:vertical > .split-pane-divider {
+    -fx-background-color: -fx-box-border, -fx-inner-border;
+    -fx-background-insets: 0, 1 0 1 0;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * TitledPane                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.titled-pane {
+    -fx-background-color: -bisq-grey-left-nav-bg;
+    -fx-text-fill: -bisq-text-color-white;
+    -fx-label-padding: -30 0 0 0;
+}
+
+.titled-pane:focused {
+}
+
+.titled-pane > .title {
+    -fx-background-color: -bisq-grey-12;
+    -fx-border-color: -bisq-grey-left-nav-bg;;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-pref-height: 50;
+}
+
+.titled-pane:focused > .title > .arrow-button > .arrow {
+}
+
+.titled-pane > .title > .arrow-button {
+    -fx-background-color: null;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0.0em 0.583em 0.0em 0.0em; /* 0 7 0 0 */
+}
+
+.titled-pane > .title > .arrow-button > .arrow {
+    -fx-background-color: -bisq-text-color-white;
+    -fx-background-insets: 1 0 -1 0, 0;
+    -fx-padding: 0.25em 0.3125em 0.25em 0.3125em; /* 3 3.75 3 3.75 */
+    -fx-shape: "M 0 0 h 7 l -3.5 4 z";
+}
+
+.titled-pane > .title:hover {
+    -fx-color: -fx-hover-base;
+}
+
+.titled-pane > *.content {
+    -fx-padding: 0 0 -10 0;
+}
+
+.titled-pane > .content > .scroll-pane > .scroll-bar {
 }
 
 .list-view:focused,
@@ -302,11 +588,16 @@ tree-table-view:focused {
 .table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell .table-cell:selected,
 .tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell .tree-table-cell:selected {
     -fx-background-insets: 0;
+    -fx-background-color: transparent;
 }
 
 /* ScrollPane */
 .scroll-pane {
-    -fx-background-color: -bisq-grey-content-bg;
+    -fx-background-color: transparent;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
 }
 
 .scroll-bar {
@@ -356,10 +647,6 @@ tree-table-view:focused {
     -fx-background-insets: -1, 0;
 }
 
-.titled-pane:focused > .title > .arrow-button > .arrow {
-    -fx-background-color: -bisq-grey-9;
-    -fx-background-insets: -1, 0;
-}
 
 .accordion > .titled-pane > .title {
     -fx-background-color: -bisq-grey-content-bg;
@@ -376,6 +663,7 @@ tree-table-view:focused {
     -fx-text-fill: -bisq-grey-9;
 }
 
+/*
 .accordion > .titled-pane > .
 .jfx-button, .action-button {
     -fx-background-color: -bisq-grey-5;
@@ -393,125 +681,7 @@ tree-table-view:focused {
     -fx-background-color: derive(-bisq-grey-5, -10%);
 }
 
-/*
-New css for bisq2.
 */
-
-/*******************************************************************************
- *                                                                             *
- * TitledPane                                                                  *
- *                                                                             *
- ******************************************************************************/
-/*
-
-.titled-pane {
-    -fx-text-fill: -bisq-green;
-}
-
-.titled-pane:focused {
-    -fx-color: -bisq-grey-content-bg;
-}
-
-.titled-pane > .title {
-    !*  -fx-background-color:
-              linear-gradient(to bottom,
-              derive(-fx-color,-15%) 95%,
-              derive(-fx-color,-25%) 100%
-              ),
-              -fx-inner-border, -fx-body-color;*!
-    -fx-background-color: -bisq-grey-content-bg;
-    -fx-background-insets: 0, 1, 2;
-    -fx-background-radius: 2;
-    -fx-font-size: 1.5em;
-    -fx-padding: 0.3333em 0.75em 0.75em 0.75em; !* 4 9 4 9 *!
-    !* -fx-padding: 0.3333em 0.75em 0.3333em 0.75em;  *!
-}
-
-!* alternative focus using the ring around the entire title area *!
-!*.titled-pane:focused > .title {
-    -fx-background-color: -fx-faint-focus-color, -fx-focus-color, -fx-inner-border, -fx-body-color;
-    -fx-background-insets: 0, 0.7, 2, 3;
-}*!
-!* focus purely on the arrow *!
-.titled-pane:focused > .title > .arrow-button > .arrow {
-    -fx-background-color: -bs-color-primary;
-    -fx-background-insets: -1, 0;
-    !* -fx-effect: dropshadow(two-pass-box , -fx-focus-color, 5, 0.2 , 0, 0);*!
-}
-
-.titled-pane > .title > .arrow-button {
-    -fx-background-color: null;
-    -fx-background-insets: 0;
-    -fx-background-radius: 0;
-    -fx-padding: 0.0em 0.583em 0.0em 0.0em; !* 0 7 0 0 *!
-}
-
-.titled-pane > .title > .arrow-button > .arrow {
-    -fx-background-color: -bs-color-primary;
-    -fx-background-insets: 1 0 -1 0, 0;
-    -fx-padding: 0.25em 0.3125em 0.25em 0.3125em; !* 3 3.75 3 3.75 *!
-    -fx-shape: "M 0 0 h 7 l -3.5 4 z";
-}
-
-.titled-pane > .title:hover {
-    -fx-color: -fx-hover-base;
-}
-
-!* alternative content using a border and a grad to transparent background - why should TitledPane content have a colour? *!
-.titled-pane > *.content {
-    -fx-border-color: -fx-box-border;
-    -fx-border-insets: -1 0 0 0;
-    -fx-background-color: -fx-background;
-}
-*/
-
-
-/*******************************************************************************
- *                                                                             *
- * SplitPane                                                                   *
- *                                                                             *
- ******************************************************************************/
-
-.split-pane > .split-pane-divider {
-    -fx-padding: 0 0.15em 0 0.15em; /* 0 3 0 3 */
-}
-
-/* horizontal the two nodes are placed to the left/right of each other. */
-.split-pane:horizontal > .split-pane-divider {
-    /*-fx-background-color: -fx-box-border, -fx-inner-border-horizontal;*/
-    -fx-background-color: -bisq-grey-left-nav-bg;
-    /* -fx-background-color: -bisq-grey-left-nav-selected-bg;*/
-
-    -fx-background-insets: 0, 0 1 0 1;
-}
-
-/* vertical the two nodes are placed on top of each other. */
-.split-pane:vertical > .split-pane-divider {
-    -fx-background-color: -fx-box-border, -fx-inner-border;
-    -fx-background-insets: 0, 1 0 1 0;
-}
-
-
-.navigation-button {
-    -fx-cursor: hand;
-    -fx-background-color: transparent;
-    -fx-padding: 11;
-}
-
-.navigation-button .text {
-    -fx-font-size: 1.8em;
-    -fx-fill: -bs-rd-nav-deselected;
-}
-
-.navigation-button:selected {
-    -fx-background-color: -bs-background-color;
-    -fx-border-radius: 4;
-    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 4, 0, 0, 0, 2);
-}
-
-.navigation-button:selected .text {
-    -fx-fill: -bs-rd-nav-selected;
-}
 
 .accent-headline {
     -fx-font-size: 1.1em;
@@ -525,7 +695,7 @@ New css for bisq2.
 
 
 #chat-user-name {
-    -fx-text-fill: -bs-color-green-5;
+    -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 1.0em;
     -fx-cursor: hand;
 }
@@ -551,64 +721,11 @@ New css for bisq2.
 }
 
 
-.keyword-tradeTags {
-    -fx-fill: -bs-buy-hover;
-}
-
-.keyword-btc {
-    -fx-fill: -bs-buy-hover;
-}
-
-.keyword-amountTag {
-    -fx-fill: -bs-buy-hover;
-}
-
-.keyword-currencyTags {
-    -fx-fill: -bs-turquoise;
-}
-
-.keyword-paymentMethodTags {
-    -fx-fill: -bs-turquoise;
-}
-
 .keyword-customTags {
-    -fx-fill: -bs-yellow;
+    -fx-fill: -bs-turquoise;
 }
 
 .keyword-none {
     -fx-fill: -fx-light-text-color;
 }
-
-/*
-.jfx-badge .badge-pane {
-    -fx-background-color: -bs-red;
-    -fx-background-radius: 15;
-    -fx-pref-width: 15;
-    -fx-pref-height: 15;
-}
-
-.jfx-badge.new .badge-pane {
-    -fx-pref-width: 30;
-}
-
-.jfx-badge.auto-conf .badge-pane {
-    -fx-background-color: -xmr-orange;
-    -fx-pref-width: -1;
-    -fx-padding: -1 10 0 10;
-}
-
-.jfx-badge .badge-pane .label {
-    -fx-font-weight: bold;
-    -fx-font-size: 0.692em;
-    -fx-text-fill: -bs-background-color;
-}
-
-.jfx-badge {
-    -fx-padding: -3 0 0 0;
-}
-
-.jfx-badge > .navigation-button {
-    -fx-translate-y: 1;
-}
-*/
 

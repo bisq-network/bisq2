@@ -29,6 +29,14 @@ public class MarketRepository {
         return new Market(CryptoCurrencyRepository.getDefaultCurrency().getCode(), FiatCurrencyRepository.getDefaultCurrency().getCode());
     }
 
+    public static Market getBsqMarket() {
+        return new Market("BSQ", "BTC");
+    }
+
+    public static Market getXmrMarket() {
+        return new Market("XMR", "BTC");
+    }
+
     public static List<Market> getMajorMarkets() {
         return Stream.concat(getMajorFiatMarkets().stream(), getMajorCryptoCurrencyMarkets().stream())
                 .collect(Collectors.toList());
@@ -40,9 +48,26 @@ public class MarketRepository {
                 .collect(Collectors.toList());
     }
 
+    public static List<Market> getAllFiatMarkets() {
+        return FiatCurrencyRepository.getAllCurrencies().stream()
+                .map(currency -> new Market("BTC", currency.getCode()))
+                .collect(Collectors.toList());
+    }
+
     public static List<Market> getMajorCryptoCurrencyMarkets() {
         return CryptoCurrencyRepository.getMajorCurrencies().stream()
                 .map(currency -> new Market(currency.getCode(), "BTC"))
+                .collect(Collectors.toList());
+    }
+
+    public static List<Market> getAllCryptoCurrencyMarkets() {
+        return CryptoCurrencyRepository.getAllCurrencies().stream()
+                .map(currency -> new Market(currency.getCode(), "BTC"))
+                .collect(Collectors.toList());
+    }
+
+    public static List<Market> getAllMarkets() {
+        return Stream.concat(getAllFiatMarkets().stream(), getAllCryptoCurrencyMarkets().stream())
                 .collect(Collectors.toList());
     }
 }

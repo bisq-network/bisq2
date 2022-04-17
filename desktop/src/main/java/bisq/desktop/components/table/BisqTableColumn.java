@@ -17,9 +17,8 @@
 
 package bisq.desktop.components.table;
 
-import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.BisqInputTextField;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Button;
+import bisq.desktop.components.controls.jfx.BisqInputTextField;
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
 import bisq.desktop.components.overlay.PopOverWrapper;
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -53,7 +52,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
 
     private Label helpIcon;
     private final PopOverWrapper popoverWrapper = new PopOverWrapper();
-    private final BisqLabel titleLabel = new BisqLabel();
+    private final Label titleLabel = new Label();
     private Optional<Function<S, Boolean>> isVisibleFunction = Optional.empty();
     private Optional<Function<S, String>> valueSupplier = Optional.empty();
     private Optional<Function<S, StringProperty>> valuePropertySupplier = Optional.empty();
@@ -64,8 +63,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     };
     private BiConsumer<S, Boolean> onToggleHandler = (item, selected) -> {
     };
-    private Optional<Class<? extends BisqButton>> buttonClass = Optional.empty();
-    private BiConsumer<S, BisqButton> updateItemWithButtonHandler = (item, button) -> {
+    private Optional<Class<? extends Button>> buttonClass = Optional.empty();
+    private BiConsumer<S, Button> updateItemWithButtonHandler = (item, button) -> {
     };
     private BiConsumer<S, BisqInputTextField> updateItemWithInputTextFieldHandler = (item, field) -> {
     };
@@ -86,8 +85,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         };
         private BiConsumer<S, Boolean> onToggleHandler = (item, selected) -> {
         };
-        private Optional<Class<? extends BisqButton>> buttonClass = Optional.empty();
-        private BiConsumer<S, BisqButton> updateItemWithButtonHandler = (item, button) -> {
+        private Optional<Class<? extends Button>> buttonClass = Optional.empty();
+        private BiConsumer<S, Button> updateItemWithButtonHandler = (item, button) -> {
         };
         private BiConsumer<S, BisqInputTextField> updateItemWithInputTextFieldHandler = (item, field) -> {
         };
@@ -182,7 +181,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             return this;
         }
 
-        public Builder<S> updateItemWithButtonHandler(BiConsumer<S, BisqButton> handler) {
+        public Builder<S> updateItemWithButtonHandler(BiConsumer<S, Button> handler) {
             this.updateItemWithButtonHandler = handler;
             return this;
         }
@@ -192,7 +191,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             return this;
         }
 
-        public Builder<S> buttonClass(Class<? extends BisqButton> buttonClass) {
+        public Builder<S> buttonClass(Class<? extends Button> buttonClass) {
             this.buttonClass = Optional.of(buttonClass);
             return this;
         }
@@ -238,7 +237,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         helpIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(() -> createInfoPopOver(help)));
         helpIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());
 
-        BisqLabel label = new BisqLabel(title);
+        Label label = new Label(title);
         HBox hBox = new HBox(label, helpIcon);
         hBox.setStyle("-fx-alignment: center-left");
         hBox.setSpacing(4);
@@ -381,11 +380,11 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                         return new TableCell<>() {
                             S previousItem;
 
-                            private BisqButton button;
+                            private Button button;
 
                             {
                                 try {
-                                    button = buttonClass.orElse(BisqButton.class).getDeclaredConstructor().newInstance();
+                                    button = buttonClass.orElse(Button.class).getDeclaredConstructor().newInstance();
                                 } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                                     e.printStackTrace();
                                 }

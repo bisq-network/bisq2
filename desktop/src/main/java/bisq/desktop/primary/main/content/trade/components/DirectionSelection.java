@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.common.monetary.Market;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import javafx.beans.property.*;
@@ -127,13 +127,13 @@ public class DirectionSelection {
         private final Button buy, sell;
         private final ChangeListener<String> baseCodeListener;
         private final ChangeListener<Direction> directionListener;
-        private final BisqLabel headline;
+        private final Label headline;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
 
             root.setSpacing(10);
-            headline = new BisqLabel(Res.get("createOffer.selectOfferType"));
+            headline = new Label(Res.get("createOffer.selectOfferType"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
             buy = new Button();

@@ -19,8 +19,9 @@ package bisq.desktop.primary.main.content.trade;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.trade.create.CreateOfferController;
 import bisq.desktop.primary.main.content.trade.offerbook.OfferbookController;
 import bisq.desktop.primary.main.content.trade.take.TakeOfferController;
@@ -30,16 +31,19 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class TradeController extends TabController<TradeModel> {
+public class TradeController extends NavigationController {
     private final DefaultApplicationService applicationService;
+    @Getter
+    private final TradeModel model;
     @Getter
     private final TradeView view;
     private final OfferbookController offerbookController;
 
     public TradeController(DefaultApplicationService applicationService) {
-        super(new TradeModel(), NavigationTarget.TRADE);
+        super(NavigationTarget.TRADE);
 
         this.applicationService = applicationService;
+        model = new TradeModel();
         view = new TradeView(model, this);
 
         offerbookController = new OfferbookController(applicationService);
@@ -55,27 +59,47 @@ public class TradeController extends TabController<TradeModel> {
 
     @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        model.createOfferTabVisible.set(navigationTarget == NavigationTarget.CREATE_OFFER ||
-                offerbookController.showCreateOfferTab());
-        model.takeOfferTabVisible.set(navigationTarget == NavigationTarget.TAKE_OFFER ||
-                offerbookController.getShowTakeOfferTab().get());
+        model.showCreateOffer.set(navigationTarget == NavigationTarget.CREATE_OFFER);
+        model.showTakeOffer.set(navigationTarget == NavigationTarget.TAKE_OFFER);
     }
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        model.showCreateOffer.set(false);
+        model.showTakeOffer.set(false);
         switch (navigationTarget) {
             case OFFERBOOK -> {
                 return Optional.of(offerbookController);
             }
             case CREATE_OFFER -> {
+                model.showCreateOffer.set(true);
                 return Optional.of(new CreateOfferController(applicationService));
             }
             case TAKE_OFFER -> {
+                model.showTakeOffer.set(true);
                 return Optional.of(new TakeOfferController(applicationService));
             }
             default -> {
                 return Optional.empty();
             }
         }
+    }
+
+    public void onOpenCreateOffer() {
+
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
+   /*     Navigation.navigateTo(NavigationTarget.CREATE_OFFER,
+                new CreateOfferController.InitData(model.selectedMarket,
+                        model.direction,
+                        model.showCreateOfferTab));*/
+    }
+
+    public void onCloseCreateOffer() {
+        model.showCreateOffer.set(false);
+        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
+    }
+    public void onCloseTakeOffer() {
+        model.showTakeOffer.set(false);
+        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
     }
 }

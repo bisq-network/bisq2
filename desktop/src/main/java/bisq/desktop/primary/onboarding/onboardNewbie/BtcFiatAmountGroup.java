@@ -22,7 +22,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.components.controls.AmountInput;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
@@ -188,7 +188,7 @@ class BtcFiatAmountGroup {
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        private final BisqLabel maxAmountLabel, marketPriceLabel;
+        private final Label maxAmountLabel, marketPriceLabel;
         private final Pane baseAmount, quoteAmount;
 
         private View(Model model,
@@ -202,7 +202,7 @@ class BtcFiatAmountGroup {
             
             VBox baseAmountBox = new VBox();
             baseAmountBox.setSpacing(3);
-            maxAmountLabel = new BisqLabel(Res.get("satoshisquareapp.createOffer.maxAmount"));
+            maxAmountLabel = new Label(Res.get("satoshisquareapp.createOffer.maxAmount"));
             maxAmountLabel.setAlignment(Pos.CENTER_RIGHT);
             maxAmountLabel.setPadding(new Insets(0, 5, 0, 0));
             maxAmountLabel.getStyleClass().add("bisq-small-light-label-dimmed");
@@ -210,7 +210,7 @@ class BtcFiatAmountGroup {
 
             VBox quoteAmountBox = new VBox();
             quoteAmountBox.setSpacing(3);
-            marketPriceLabel = new BisqLabel();
+            marketPriceLabel = new Label();
             marketPriceLabel.setAlignment(Pos.CENTER_RIGHT);
             marketPriceLabel.setPadding(new Insets(0, 5, 0, 0));
             marketPriceLabel.getStyleClass().add("bisq-small-light-label-dimmed");

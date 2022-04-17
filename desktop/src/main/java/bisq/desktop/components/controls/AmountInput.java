@@ -186,7 +186,6 @@ public class AmountInput {
 
             //  Listeners on view component events
             focusListener = (o, old, newValue) -> {
-                log.error("old {}, newValue={}", old, newValue);
                 controller.onFocusChange(newValue);
                 controller.onAmount(textInputBox.getText());
             };
@@ -206,7 +205,7 @@ public class AmountInput {
                 textInputBox.setMouseTransparent(true);
             }
             textInputBox.promptTextProperty().bind(model.prompt);
-            textInputBox.descriptionTextProperty().bind(model.description);
+            textInputBox.descriptionProperty().bind(model.description);
             rightLabel.textProperty().bind(model.code);
             model.amount.addListener(amountListener);
             applyAmount(model.amount.get());
@@ -219,7 +218,7 @@ public class AmountInput {
                 textInputBox.inputTextFieldFocusedProperty().removeListener(focusListener);
             }
             textInputBox.promptTextProperty().unbind();
-            textInputBox.descriptionTextProperty().unbind();
+            textInputBox.descriptionProperty().unbind();
 
             rightLabel.textProperty().unbind();
             model.amount.removeListener(amountListener);

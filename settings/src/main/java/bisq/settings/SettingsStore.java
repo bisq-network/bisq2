@@ -19,6 +19,7 @@ package bisq.settings;
 
 import bisq.common.monetary.Market;
 import bisq.common.monetary.MarketRepository;
+import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
@@ -28,7 +29,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -38,20 +38,20 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
     private final Cookie cookie;
     private DisplaySettings displaySettings = new DisplaySettings();
     private final Map<String, Boolean> dontShowAgainMap = new HashMap<>();
-    private final List<Market> markets;
+    private final ObservableSet<Market> markets;
     @Setter
     private Market selectedMarket;
 
     public SettingsStore() {
         cookie = new Cookie();
-        markets = MarketRepository.getMajorMarkets();
+        markets = new ObservableSet<>(MarketRepository.getMajorMarkets());
         selectedMarket = MarketRepository.getDefault();
     }
 
     public SettingsStore(Cookie cookie,
                          DisplaySettings displaySettings,
                          Map<String, Boolean> dontShowAgainMap,
-                         List<Market> markets,
+                         ObservableSet<Market> markets,
                          Market selectedMarket) {
         this.cookie = cookie;
         this.displaySettings = displaySettings;
@@ -76,7 +76,7 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
                 DisplaySettings.fromProto((proto.getDisplaySettings())),
                 proto.getDontShowAgainMapMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
-                proto.getMarketsList().stream().map(Market::fromProto).collect(Collectors.toList()),
+                new ObservableSet<>(proto.getMarketsList().stream().map(Market::fromProto).collect(Collectors.toList())),
                 Market.fromProto(proto.getSelectedMarket()));
     }
 

@@ -35,9 +35,6 @@ import java.util.Collection;
 @Getter
 public class OnboardNewbieModel implements Model {
     static final int MAX_INPUT_TERMS = 500;
-    private final ObservableList<String> tradeTags = FXCollections.observableArrayList();
-    private final ObservableList<String> currencyTags = FXCollections.observableArrayList();
-    private final ObservableList<String> paymentMethodsTags = FXCollections.observableArrayList();
     private final ObservableList<String> customTags = FXCollections.observableArrayList();
     @Setter
     private Market selectedMarket;

@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqButton;
+import javafx.scene.control.Button;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import javafx.scene.layout.Pane;
@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UserProfileView extends View<VBox, UserProfileModel, UserProfileController> {
-    private final BisqButton showCreateUserProfileButton;
+    private final Button showCreateUserProfileButton;
     private final Pane channelAdmin;
     private final Pane createUserProfile;
 
@@ -44,8 +44,9 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
         root.setPadding(Layout.PADDING);
         root.setSpacing(40);
 
-        showCreateUserProfileButton = new BisqButton(Res.get("social.createUserProfile.headline"));
+        showCreateUserProfileButton = new Button(Res.get("social.createUserProfile.headline"));
         showCreateUserProfileButton.setMinWidth(300);
+        userProfileSelection.setMinWidth(600);
         root.getChildren().addAll(userProfileSelection,
                 userProfile,
                 showCreateUserProfileButton,

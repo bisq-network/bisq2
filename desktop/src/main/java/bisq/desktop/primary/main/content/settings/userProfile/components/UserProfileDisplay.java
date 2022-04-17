@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.settings.userProfile.components;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.social.user.profile.UserProfileService;
@@ -66,14 +66,14 @@ public class UserProfileDisplay {
 
         @Override
         public void onActivate() {
-            pin = FxBindings.subscribe(userProfileService.getPersistableStore().getSelectedUserProfile(),
+            pin = FxBindings.subscribe(userProfileService.getSelectedUserProfile(),
                     userProfile -> {
-                        model.userName.set(userProfile.identity().domainId());
-                        model.id.set(Res.get("social.createUserProfile.id", userProfile.chatUser().getId()));
-                        String entitledRoles = userProfile.entitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
+                        model.userName.set(userProfile.getIdentity().domainId());
+                        model.id.set(Res.get("social.createUserProfile.id", userProfile.getChatUser().getId()));
+                        String entitledRoles = userProfile.getEntitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
                         model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
-                        model.entitlementsVisible.set(!userProfile.entitlements().isEmpty());
-                        model.roboHashNode.set(RoboHash.getImage(new ByteArray(userProfile.chatUser().getPubKeyHash())));
+                        model.entitlementsVisible.set(!userProfile.getEntitlements().isEmpty());
+                        model.roboHashNode.set(RoboHash.getImage(new ByteArray(userProfile.getChatUser().getPubKeyHash())));
                     });
         }
 
@@ -97,7 +97,7 @@ public class UserProfileDisplay {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final BisqLabel userName, id, entitlements;
+        private final Label userName, id, entitlements;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
@@ -105,7 +105,7 @@ public class UserProfileDisplay {
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
 
-            userName = new BisqLabel();
+            userName = new Label();
             userName.getStyleClass().add("headline-label");
             userName.setPadding(new Insets(10, 0, 0, 0));
 
@@ -113,11 +113,11 @@ public class UserProfileDisplay {
             roboIconImageView.setFitWidth(75);
             roboIconImageView.setFitHeight(75);
 
-            id = new BisqLabel();
+            id = new Label();
             id.getStyleClass().add("offer-label-small"); //todo
             id.setPadding(new Insets(-5, 0, 0, 0));
 
-            entitlements = new BisqLabel();
+            entitlements = new Label();
             entitlements.getStyleClass().add("offer-label-small"); //todo
             entitlements.setPadding(new Insets(-5, 0, 0, 0));
 

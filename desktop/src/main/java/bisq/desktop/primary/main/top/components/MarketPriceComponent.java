@@ -20,7 +20,6 @@ package bisq.desktop.primary.main.top.components;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.BisqComboBoxOld;
 import bisq.desktop.layout.Layout;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -97,13 +96,12 @@ public class MarketPriceComponent {
             applyMarketPriceMap();
         }
 
-
         @Override
         public void onMarketSelected(Market selectedMarket) {
             applySelectedMarket();
         }
 
-        private void onSelect(ListItem selectedItem) {
+        private void onSelect(MarketPriceComponent.ListItem selectedItem) {
             if (selectedItem != null) {
                 marketPriceService.select(selectedItem.marketPrice.getMarket());
             }
@@ -139,18 +137,23 @@ public class MarketPriceComponent {
     }
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<VBox, bisq.desktop.common.view.Model, bisq.desktop.common.view.Controller> {
+    public static class View extends bisq.desktop.common.view.View<VBox,
+            bisq.desktop.primary.main.top.components.MarketPriceComponent.Model,
+            bisq.desktop.primary.main.top.components.MarketPriceComponent.Controller> {
+        private final ComboBox<ListItem> comboBox;
+
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
             root.setAlignment(Pos.CENTER_LEFT);
 
-            ComboBox<ListItem> comboBox = new BisqComboBoxOld<>();
+            //todo adopt to AutoCompleteComboBox
+            comboBox = new ComboBox<>(model.items);
+            comboBox.setMinWidth(200);
             comboBox.setVisibleRowCount(12);
             comboBox.setFocusTraversable(false);
             comboBox.setId("price-feed-combo");
             comboBox.setPadding(new Insets(0, -3, -3, 0));
-            comboBox.setItems(model.items);
-            comboBox.setOnAction(e -> controller.onSelect(comboBox.getSelectionModel().getSelectedItem()));
+
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(@Nullable ListItem listItem) {
@@ -219,6 +222,8 @@ public class MarketPriceComponent {
 
         @Override
         protected void onViewAttached() {
+            //  comboBox.setOnChangeConfirmed(e -> controller.onSelect(comboBox.getSelectionModel().getSelectedItem()));
+            comboBox.setOnAction(e -> controller.onSelect(comboBox.getSelectionModel().getSelectedItem()));
         }
 
         @Override

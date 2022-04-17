@@ -24,47 +24,29 @@ import java.text.BreakIterator;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class KeyWordDetection {
-    public static StyleSpans<Collection<String>> getStyleSpans(String text,
-                                                               List<String> tradeTags,
-                                                               List<String> currencyTags,
-                                                               List<String> paymentMethodTags,
-                                                               List<String> customTags) {
+    public static StyleSpans<Collection<String>> getStyleSpans(String text, List<String> customTags) {
         StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
         BreakIterator iterator = BreakIterator.getWordInstance();
         iterator.setText(text);
+        Set<String> customTagUppercase = customTags.stream().map(String::toUpperCase).collect(Collectors.toSet());
         int lastIndex = iterator.first();
         int lastKwEnd = 0;
         while (lastIndex != BreakIterator.DONE) {
             int firstIndex = lastIndex;
             lastIndex = iterator.next();
             if (lastIndex != BreakIterator.DONE) {
-                String word = text.substring(firstIndex, lastIndex).toUpperCase(); //todo make case insensitive
-                if (tradeTags.contains(word)) {
-                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
-                    spansBuilder.add(Collections.singleton("keyword-tradeTags"), lastIndex - firstIndex);
-                    lastKwEnd = lastIndex;
-                } else if (currencyTags.contains(word)) {
-                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
-                    spansBuilder.add(Collections.singleton("keyword-currencyTags"), lastIndex - firstIndex);
-                    lastKwEnd = lastIndex;
-                } else if (paymentMethodTags.contains(word)) {
-                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
-                    spansBuilder.add(Collections.singleton("keyword-paymentMethodTags"), lastIndex - firstIndex);
-                    lastKwEnd = lastIndex;
-                } else if (customTags.contains(word)) {
+                String word = text.substring(firstIndex, lastIndex).toUpperCase(); 
+                if (customTagUppercase.contains(word)) {
                     spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
                     spansBuilder.add(Collections.singleton("keyword-customTags"), lastIndex - firstIndex);
                     lastKwEnd = lastIndex;
-                } else if (word.equals("BTC") || word.equals("BITCOIN")) {
-                    // I would like to buy 0.007 BTC for EUR using SEPA, Bank transfers
+                }  else if (word.matches("[0-9]{1,13}(\\.[0-9]*)?")) {
                     spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
-                    spansBuilder.add(Collections.singleton("keyword-btc"), lastIndex - firstIndex);
-                    lastKwEnd = lastIndex;
-                } else if (word.matches("[0-9]{1,13}(\\.[0-9]*)?")) {
-                    spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
-                    spansBuilder.add(Collections.singleton("keyword-amountTag"), lastIndex - firstIndex);
+                    spansBuilder.add(Collections.singleton("keyword-customTags"), lastIndex - firstIndex);
                     lastKwEnd = lastIndex;
                 } else {
                     spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);

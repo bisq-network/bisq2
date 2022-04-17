@@ -19,6 +19,7 @@ package bisq.social.chat;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.user.ChatUser;
@@ -45,8 +46,6 @@ public abstract class ChatMessage {
     @Getter
     protected final long date;
     @Getter
-    protected final ChannelType channelType;
-    @Getter
     protected final boolean wasEdited;
     @Getter
     protected final MetaData metaData;
@@ -56,7 +55,6 @@ public abstract class ChatMessage {
                           Optional<String> text,
                           Optional<QuotedMessage> quotedMessage,
                           long date,
-                          ChannelType channelType,
                           boolean wasEdited,
                           MetaData metaData) {
         this.channelId = channelId;
@@ -64,19 +62,19 @@ public abstract class ChatMessage {
         this.optionalText = text;
         this.quotedMessage = quotedMessage;
         this.date = date;
-        this.channelType = channelType;
         this.wasEdited = wasEdited;
         this.metaData = metaData;
     }
 
-    abstract public String getText();
-
+    public String getText() {
+        return optionalText.orElse(Res.get("shared.na"));
+    }
+    
     bisq.social.protobuf.ChatMessage.Builder getChatMessageBuilder() {
         bisq.social.protobuf.ChatMessage.Builder builder = bisq.social.protobuf.ChatMessage.newBuilder()
                 .setChannelId(channelId)
                 .setAuthor(author.toProto())
                 .setDate(date)
-                .setChannelType(channelType.toProto())
                 .setWasEdited(wasEdited)
                 .setMetaData(metaData.toProto());
         quotedMessage.ifPresent(quotedMessage -> builder.setQuotedMessage(quotedMessage.toProto()));
@@ -92,8 +90,8 @@ public abstract class ChatMessage {
             case PUBLICCHATMESSAGE -> {
                 return PublicChatMessage.fromProto(proto);
             }
-            case TRADECHATMESSAGE -> {
-                return TradeChatMessage.fromProto(proto);
+            case MARKETCHATMESSAGE -> {
+                return MarketChatMessage.fromProto(proto);
             }
             case MESSAGE_NOT_SET -> {
                 throw new UnresolvableProtobufMessageException(proto);
@@ -110,8 +108,8 @@ public abstract class ChatMessage {
                     case PUBLICCHATMESSAGE -> {
                         return PublicChatMessage.fromProto(proto);
                     }
-                    case TRADECHATMESSAGE -> {
-                        return TradeChatMessage.fromProto(proto);
+                    case MARKETCHATMESSAGE -> {
+                        return MarketChatMessage.fromProto(proto);
                     }
                     case MESSAGE_NOT_SET -> {
                         throw new UnresolvableProtobufMessageException(proto);

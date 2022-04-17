@@ -62,32 +62,29 @@ message Entitlement {
 }
 
 message ChatUser {
-  network.NetworkId networkId = 1;
-  repeated Entitlement entitlements = 2;
+  string nickName = 1;
+  network.NetworkId networkId = 2;
+  repeated Entitlement entitlements = 3;
 }
 message QuotedMessage {
-  string userName = 1;
-  common.ByteArray pubKeyHash = 2;
-  string message = 3;
-}
-
-enum ChannelType {
-  PUBLIC = 0;
-  PRIVATE = 1;
+  string profileId = 1;
+  string nickName = 2;
+  common.ByteArray pubKeyHash = 3;
+  string message = 4;
 }
 
 message PrivateChatMessage {
 }
 message PublicChatMessage {
 }
-message TradeIntent {
+message MarketChatOffer {
   uint64 btcAmount = 1;
   string quoteCurrencyCode = 2;
   repeated string paymentMethods = 3;
   string makersTradeTerms = 5;
 }
-message TradeChatMessage {
-  TradeIntent tradeIntent = 1;
+message MarketChatMessage {
+  optional MarketChatOffer marketChatOffer = 1;
 }
 message ChatMessage {
   string channelId = 1;
@@ -95,13 +92,12 @@ message ChatMessage {
   ChatUser author = 3;
   optional QuotedMessage quotedMessage = 4;
   uint64 date = 5;
-  ChannelType channelType = 6;
-  bool wasEdited = 7;
-  network.MetaData metaData = 8;
+  bool wasEdited = 6;
+  network.MetaData metaData = 7;
   oneof message {
     PrivateChatMessage privateChatMessage = 20;
     PublicChatMessage publicChatMessage = 21;
-    TradeChatMessage tradeChatMessage = 22;
+    MarketChatMessage marketChatMessage = 22;
   }
 }
 
@@ -113,31 +109,32 @@ enum NotificationSetting {
 
 message UserProfile {
   identity.Identity identity = 1;
-  repeated Entitlement entitlements = 2;
+  string nickName = 2;
+  repeated Entitlement entitlements = 3;
 }
 
 // Channels
 message PrivateChannel {
   ChatUser peer = 1;
   UserProfile myProfile = 2;
+  repeated ChatMessage chatMessages = 3;
+}
+message MarketChannel {
+  common.Market market = 1;
 }
 message PublicChannel {
   string channelName = 1;
   string description = 2;
   ChatUser channelAdmin = 3;
   repeated ChatUser channelModerators = 4;
-  repeated string tradeTags = 5;
-  repeated string currencyTags = 6;
-  repeated string paymentMethodTags = 7;
-  repeated string customTags = 8;
 }
 message Channel {
   string id = 1;
   NotificationSetting notificationSetting = 2;
-  repeated ChatMessage chatMessages = 3;
   oneof message{
     PrivateChannel privateChannel = 10;
-    PublicChannel publicChannel = 11;
+    MarketChannel marketChannel = 11;
+    PublicChannel publicChannel = 12;
   }
 }
 
@@ -151,9 +148,11 @@ message UserProfileStore {
 message ChatStore {
   repeated Channel privateChannels = 1;
   repeated Channel publicChannels = 2;
-  Channel selectedChannel = 3;
-  repeated string ignoredChatUserIds = 4;
+  repeated Channel marketChannels = 3;
+  Channel selectedChannel = 4;
+  repeated string customTags = 5;
+  repeated string ignoredChatUserIds = 6;
 }
 
-message TradeIntentStore {
+message MarketChatOfferStore {
 }

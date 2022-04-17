@@ -25,8 +25,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -34,19 +32,16 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
     @EqualsAndHashCode.Include
     protected final String id;
     protected final Observable<NotificationSetting> notificationSetting = new Observable<>();
-    protected final ObservableSet<T> chatMessages = new ObservableSet<>();
 
-    public Channel(String id, NotificationSetting notificationSetting, Set<T> chatMessages) {
+    public Channel(String id, NotificationSetting notificationSetting) {
         this.id = id;
         this.notificationSetting.set(notificationSetting);
-        this.chatMessages.addAll(chatMessages);
     }
 
     public bisq.social.protobuf.Channel.Builder getChannelBuilder() {
         return bisq.social.protobuf.Channel.newBuilder()
                 .setId(id)
-                .setNotificationSetting(notificationSetting.get().toProto())
-                .addAllChatMessages(chatMessages.stream().map(this::getChatMessageProto).collect(Collectors.toList()));
+                .setNotificationSetting(notificationSetting.get().toProto());
     }
 
     // As protobuf classes do not support inheritance we need to delegate it to our subclasses to provide the
@@ -63,6 +58,9 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
             case PUBLICCHANNEL -> {
                 return PublicChannel.fromProto(proto, proto.getPublicChannel());
             }
+            case MARKETCHANNEL -> {
+                return MarketChannel.fromProto(proto, proto.getMarketChannel());
+            }
             case MESSAGE_NOT_SET -> {
                 throw new UnresolvableProtobufMessageException(proto);
             }
@@ -70,17 +68,15 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-    public void addChatMessage(T chatMessage) {
-        chatMessages.add(chatMessage);
-    }
+    abstract public ObservableSet<T> getChatMessages();
 
-    public void removeChatMessage(T chatMessage) {
-        chatMessages.remove(chatMessage);
-    }
+    abstract public void addChatMessage(T chatMessage);
 
-    public void removeChatMessages(Collection<T> removeMessages) {
-        chatMessages.removeAll(removeMessages);
-    }
+    abstract public void removeChatMessage(T chatMessage);
 
-    public abstract String getChannelName();
+    abstract public void removeChatMessages(Collection<T> removeMessages);
+
+    public String getDisplayString() {
+        return id;
+    }
 }

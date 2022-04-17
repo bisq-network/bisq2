@@ -44,21 +44,22 @@ public class OnboardNewbieView extends View<VBox, OnboardNewbieModel, OnboardNew
         root.setAlignment(Pos.TOP_CENTER);
         root.setSpacing(30);
         root.getStyleClass().add("content-pane");
-        
+
         Label headLineLabel = new Label(Res.get("satoshisquareapp.createOffer.headline"));
         headLineLabel.setWrapText(true);
         headLineLabel.getStyleClass().add("bisq-big-light-headline-label");
         VBox.setMargin(headLineLabel, new Insets(50, 200, 0, 200));
         VBox.setVgrow(headLineLabel, Priority.ALWAYS);
 
-        int width = 600;
+        int width = 500;
         amountPrice.setMaxWidth(width);
-        
+
         double leftWidth = (width) / 2d;
+        Pane paymentMethodsRoot = paymentMethods.getRoot();
+
         marketSelection.setMaxWidth(leftWidth);
         VBox.setMargin(marketSelection, new Insets(0, 0, 0, -leftWidth));
-     
-        Pane paymentMethodsRoot = paymentMethods.getRoot();
+
         paymentMethodsRoot.setMaxWidth(leftWidth);
         VBox.setMargin(paymentMethodsRoot, new Insets(0, 0, 0, -leftWidth));
 
@@ -70,7 +71,7 @@ public class OnboardNewbieView extends View<VBox, OnboardNewbieModel, OnboardNew
         HBox buttons = Layout.hBoxWith(skipButton, publishButton);
         buttons.setAlignment(Pos.CENTER);
         buttons.setMaxWidth(width);
-        
+
         root.getChildren().addAll(headLineLabel, marketSelection, amountPrice, paymentMethodsRoot, buttons);
     }
 

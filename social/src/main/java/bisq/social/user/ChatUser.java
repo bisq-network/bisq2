@@ -20,6 +20,7 @@ package bisq.social.user;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
+import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.security.DigestUtil;
 import lombok.EqualsAndHashCode;
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
 
 /**
  * Publicly shared chat user data
- * We cache pubKey hash, id and generated userName.
+ * We cache pubKey hash, id and generated profileId.
  * ChatUser is part of the ChatMessage so we have many instances from the same chat user and want to avoid
  * costs from hashing and the userame generation. We could also try to restructure the domain model to avoid that
  * the chat user is part of the message (e.g. use an id and reference to p2p network data for chat user).
@@ -46,22 +47,27 @@ import java.util.stream.Collectors;
 public class ChatUser implements Proto {
     private static final transient Map<ByteArray, DerivedData> CACHE = new HashMap<>();
     @Getter
+    private final String nickName;
+    @Getter
     private final NetworkId networkId;
     @Getter
     private final Set<Entitlement> entitlements;
     private transient DerivedData derivedData;
 
-    public ChatUser(NetworkId networkId) {
-        this(networkId, new HashSet<>());
+    //todo add profileId
+    public ChatUser(String nickName, NetworkId networkId) {
+        this(nickName, networkId, new HashSet<>());
     }
 
-    public ChatUser(NetworkId networkId, Set<Entitlement> entitlements) {
+    public ChatUser(String nickName, NetworkId networkId, Set<Entitlement> entitlements) {
+        this.nickName = nickName;
         this.networkId = networkId;
         this.entitlements = entitlements;
     }
 
     public bisq.social.protobuf.ChatUser toProto() {
         return bisq.social.protobuf.ChatUser.newBuilder()
+                .setNickName(nickName)
                 .setNetworkId(networkId.toProto())
                 .addAllEntitlements(entitlements.stream()
                         .sorted()
@@ -74,7 +80,7 @@ public class ChatUser implements Proto {
         Set<Entitlement> set = proto.getEntitlementsList().stream()
                 .map(Entitlement::fromProto)
                 .collect(Collectors.toSet());
-        return new ChatUser(NetworkId.fromProto(proto.getNetworkId()), set);
+        return new ChatUser(proto.getNickName(), NetworkId.fromProto(proto.getNetworkId()), set);
     }
 
     public boolean hasEntitlementType(Entitlement.Type type) {
@@ -85,11 +91,16 @@ public class ChatUser implements Proto {
     public String getId() {
         return getDerivedData().id();
     }
-
-    public String getUserName() {
-        return getDerivedData().userName;
+    public String getTooltipString() {
+        return Res.get("social.chatUser.tooltip", nickName, getProfileId());
+    }
+    public String getProfileId() {
+        return getDerivedData().profileId;
     }
 
+    public String getUserName() {
+        return UserNameLookup.getUserName(getProfileId(), nickName);
+    }
     public byte[] getPubKeyHash() {
         return getDerivedData().pubKeyHash().getBytes();
     }
@@ -112,14 +123,14 @@ public class ChatUser implements Proto {
         if (!CACHE.containsKey(mapKey)) {
             byte[] pubKeyHash = DigestUtil.hash(pubKeyBytes);
             String id = Hex.encode(pubKeyHash);
-            String userName = UserNameGenerator.fromHash(pubKeyHash);
-            DerivedData derivedData = new DerivedData(new ByteArray(pubKeyHash), id, userName);
+            String profileId = UserNameGenerator.fromHash(pubKeyHash);
+            DerivedData derivedData = new DerivedData(new ByteArray(pubKeyHash), id, profileId);
             CACHE.put(mapKey, derivedData);
         }
         return CACHE.get(mapKey);
     }
 
-    private static record DerivedData(ByteArray pubKeyHash, String id, String userName) {
+    private static record DerivedData(ByteArray pubKeyHash, String id, String profileId) {
     }
 
     public static record BurnInfo(long totalBsqBurned, long firstBurnDate) {

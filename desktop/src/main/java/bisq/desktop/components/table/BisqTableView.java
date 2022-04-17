@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.table;
 
-import bisq.desktop.components.controls.BisqLabel;
+import javafx.scene.control.Label;
 import bisq.i18n.Res;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.TableView;
@@ -27,7 +27,7 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
         super();
 
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        setPlaceholder(new BisqLabel(Res.get("table.placeholder.noData")));
+        setPlaceholder(new Label(Res.get("table.placeholder.noData")));
     }
 
     public BisqTableView(SortedList<S> sortedList) {
@@ -36,7 +36,7 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         sortedList.comparatorProperty().bind(comparatorProperty());
 
-        setPlaceholder(new BisqLabel(Res.get("table.placeholder.noData")));
+        setPlaceholder(new Label(Res.get("table.placeholder.noData")));
     }
 
     public void setFixHeight(double value) {

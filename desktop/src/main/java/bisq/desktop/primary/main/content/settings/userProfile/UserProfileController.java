@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.settings.userProfile.components.CreateUserProfile;
 import bisq.desktop.primary.main.content.settings.userProfile.components.UserProfileDisplay;
-import bisq.desktop.primary.main.content.settings.userProfile.components.UserProfileSelection;
+import bisq.desktop.primary.main.content.settings.userProfile.components.UserProfileSelectionAtSettings;
 import bisq.desktop.primary.main.content.settings.userProfile.components.ChannelAdmin;
 import bisq.social.chat.ChatService;
 import bisq.social.user.Entitlement;
@@ -34,7 +34,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class UserProfileController implements Controller {
 
-    private final UserProfileSelection userProfileSelection;
+    private final UserProfileSelectionAtSettings userProfileSelection;
     private final CreateUserProfile createUserProfile;
     @Getter
     private final UserProfileModel model;
@@ -49,7 +49,7 @@ public class UserProfileController implements Controller {
     public UserProfileController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
-        userProfileSelection = new UserProfileSelection(userProfileService);
+        userProfileSelection = new UserProfileSelectionAtSettings(userProfileService);
         userProfileDisplay = new UserProfileDisplay(userProfileService);
         createUserProfile = new CreateUserProfile(chatService, userProfileService, applicationService.getKeyPairService());
         channelAdmin = new ChannelAdmin(userProfileService, applicationService.getChatService());
@@ -68,7 +68,7 @@ public class UserProfileController implements Controller {
         model.channelAdminVisible.set(true);
         selectedUserProfileSubscription = EasyBind.subscribe(userProfileSelection.getSelectedUserProfile(),
                 userProfile -> {
-                    model.channelAdminVisible.set(userProfile.chatUser().hasEntitlementType(Entitlement.Type.CHANNEL_ADMIN));
+                    model.channelAdminVisible.set(userProfile.getChatUser().hasEntitlementType(Entitlement.Type.CHANNEL_ADMIN));
                 });
     }
 

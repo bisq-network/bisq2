@@ -32,6 +32,9 @@
     -fx-image: url("images/arrow-down.png");
 }
 
+#close {
+    -fx-image: url("images/close.png");
+}
 #cross {
     -fx-image: url("images/cross.png");
 }

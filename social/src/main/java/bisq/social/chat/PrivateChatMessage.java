@@ -49,7 +49,6 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
                 text,
                 quotedMessage,
                 date,
-                ChannelType.PRIVATE,
                 wasEdited,
 //                new MetaData(TimeUnit.SECONDS.toMillis(10), 100000, PrivateChatMessage.class.getSimpleName()));
                 new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PrivateChatMessage.class.getSimpleName()));
@@ -60,7 +59,6 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
                                String text,
                                Optional<QuotedMessage> quotedMessage,
                                long date,
-                               ChannelType channelType,
                                boolean wasEdited,
                                MetaData metaData) {
         super(channelId,
@@ -68,7 +66,6 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
                 Optional.of(text),
                 quotedMessage,
                 date,
-                channelType,
                 wasEdited,
                 metaData);
     }
@@ -94,14 +91,8 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),
-                ChannelType.fromProto(baseProto.getChannelType()),
                 baseProto.getWasEdited(),
                 MetaData.fromProto(baseProto.getMetaData()));
-    }
-
-    @Override
-    public String getText() {
-        return optionalText.get();
     }
 
     // Required for MailboxMessage use case
