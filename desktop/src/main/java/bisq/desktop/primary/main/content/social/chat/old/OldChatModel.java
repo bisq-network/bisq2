@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.chat;
+package bisq.desktop.primary.main.content.social.chat.old;
 
 import bisq.desktop.common.view.Model;
 import bisq.desktop.primary.main.content.social.components.ChatUserDetails;
@@ -42,7 +42,7 @@ import java.util.function.Predicate;
 
 @Slf4j
 @Getter
-public class ChatModel implements Model {
+public class OldChatModel implements Model {
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
     private final StringProperty selectedChannelAsString = new SimpleStringProperty("");
@@ -68,7 +68,7 @@ public class ChatModel implements Model {
     private final ObservableList<String> paymentMethodsTags = FXCollections.observableArrayList();
     private final ObservableList<String> customTags = FXCollections.observableArrayList();
     
-    public ChatModel(ChatService chatService, UserProfileService userProfileService) {
+    public OldChatModel(ChatService chatService, UserProfileService userProfileService) {
         this.chatService = chatService;
         ignoredChatUserPredicate = item -> !chatService.getPersistableStore().getIgnoredChatUserIds().contains(item.getChatUserId());
         this.userProfileService = userProfileService;

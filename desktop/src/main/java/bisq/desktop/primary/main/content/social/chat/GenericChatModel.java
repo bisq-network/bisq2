@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.exchange;
+package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.desktop.primary.main.content.social.ChatModel;
 import lombok.Getter;
@@ -23,8 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class ExchangeModel extends ChatModel {
-    public ExchangeModel() {
+public class GenericChatModel extends ChatModel {
+    public GenericChatModel() {
         super();
     }
 }

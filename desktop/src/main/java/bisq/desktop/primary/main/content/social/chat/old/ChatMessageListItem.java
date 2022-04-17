@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.chat;
+package bisq.desktop.primary.main.content.social.chat.old;
 
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
@@ -50,7 +50,7 @@ public class ChatMessageListItem<T extends ChatMessage> implements Comparable<Ch
 
     public ChatMessageListItem(T chatMessage) {
         this.chatMessage = chatMessage;
-        String editPostFix = chatMessage.isWasEdited() ? ChatView.EDITED_POST_FIX : "";
+        String editPostFix = chatMessage.isWasEdited() ? OldChatView.EDITED_POST_FIX : "";
         message = chatMessage.getText() + editPostFix;
         quotedMessage = chatMessage.getQuotedMessage();
         author = chatMessage.getAuthor();

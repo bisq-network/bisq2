@@ -282,6 +282,31 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 });
     }
 
+    public CompletableFuture<DataService.BroadCastDataResult> publishEditedMarketChatMessage(MarketChatMessage originalChatMessage,
+                                                                                             String editedText,
+                                                                                             UserProfile userProfile) {
+        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
+        checkArgument(originalChatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
+                "NetworkId must match");
+        return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
+                .whenComplete((result, throwable) -> {
+                    if (throwable == null) {
+                        // We do not support editing the MarketChatOffer directly but remove it and replace it with 
+                        // the edited text.
+                        MarketChatMessage newChatMessage = new MarketChatMessage(originalChatMessage.getChannelId(),
+                                userProfile.getChatUser(),
+                                Optional.empty(),
+                                Optional.of(editedText),
+                                originalChatMessage.getQuotedMessage(),
+                                originalChatMessage.getDate(),
+                                true);
+                        networkService.publishAuthenticatedData(newChatMessage, nodeIdAndKeyPair);
+                    } else {
+                        log.error("Error at deleting old message", throwable);
+                    }
+                });
+    }
+    
     public void deletePublicChatMessage(PublicChatMessage chatMessage, UserProfile userProfile) {
         NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
         checkArgument(chatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),

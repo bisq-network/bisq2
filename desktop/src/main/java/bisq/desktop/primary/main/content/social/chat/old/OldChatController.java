@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.chat;
+package bisq.desktop.primary.main.content.social.chat.old;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
@@ -40,11 +40,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class ChatController implements Controller {
+public class OldChatController implements Controller {
     private final ChatService chatService;
-    private final ChatModel model;
+    private final OldChatModel model;
     @Getter
-    private final ChatView view;
+    private final OldChatView view;
     private final UserProfileService userProfileService;
     private final PublicChannelSelection publicChannelSelection;
     private final PrivateChannelSelection privateChannelSelection;
@@ -56,7 +56,7 @@ public class ChatController implements Controller {
     private Subscription notificationSettingSubscription;
     private ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messageListener;
 
-    public ChatController(DefaultApplicationService applicationService) {
+    public OldChatController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
 
@@ -66,8 +66,8 @@ public class ChatController implements Controller {
         publicChannelSelection = new PublicChannelSelection(chatService);
         privateChannelSelection = new PrivateChannelSelection(chatService);
         quotedMessageBlock = new QuotedMessageBlock();
-        model = new ChatModel(chatService, userProfileService);
-        view = new ChatView(model,
+        model = new OldChatModel(chatService, userProfileService);
+        view = new OldChatView(model,
                 this,
                 userProfileSelection.getRoot(),
                 publicChannelSelection.getRoot(),

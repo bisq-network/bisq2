@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.chat;
+package bisq.desktop.primary.main.content.social.chat.old;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
@@ -49,7 +49,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class ChatView extends View<SplitPane, ChatModel, ChatController> {
+public class OldChatView extends View<SplitPane, OldChatModel, OldChatController> {
     public final static String EDITED_POST_FIX = " " + Res.get("social.message.wasEdited");
 
     private final ListView<ChatMessageListItem<? extends ChatMessage>> messagesListView;
@@ -68,14 +68,14 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
     private Subscription chatUserOverviewRootSubscription;
     private Pane chatUserOverviewRoot;
 
-    public ChatView(ChatModel model,
-                    ChatController controller,
-                    Pane userProfileComboBox,
-                    Pane publicChannelSelection,
-                    Pane privateChannelSelection,
-                    Pane notificationsSettings,
-                    Pane channelInfo,
-                    Pane reply) {
+    public OldChatView(OldChatModel model,
+                       OldChatController controller,
+                       Pane userProfileComboBox,
+                       Pane publicChannelSelection,
+                       Pane privateChannelSelection,
+                       Pane notificationsSettings,
+                       Pane channelInfo,
+                       Pane reply) {
         super(new SplitPane(), model, controller);
 
 

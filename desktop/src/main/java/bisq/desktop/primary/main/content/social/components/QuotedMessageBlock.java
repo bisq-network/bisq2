@@ -136,11 +136,10 @@ public class QuotedMessageBlock {
             Label headline = new Label(Res.get("social.reply.headline"));
             headline.setStyle("-fx-text-fill: -bisq-grey-9");
             removeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
-            VBox.setMargin(removeButton, new Insets(0, 0, 0, 0));
+            HBox.setMargin(removeButton, new Insets(0, -25, 0, 0));
             HBox topBox = Layout.hBoxWith(headline, Spacer.fillHBox(), removeButton);
             topBox.setAlignment(Pos.CENTER);
-            // topBox.setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
-            topBox.setPadding(new Insets(5, 5, 5, 5));
+            topBox.setPadding(new Insets(5, 10, -5, 10));
 
             userName = new Label();
             userName.setPadding(new Insets(3, 0, 0, -3));
@@ -148,13 +147,11 @@ public class QuotedMessageBlock {
             roboIconImageView = new ImageView();
             roboIconImageView.setFitWidth(25);
             roboIconImageView.setFitHeight(25);
-            //  HBox.setMargin(roboIconImageView, new Insets(0, 0, 0, 5));
             HBox userBox = Layout.hBoxWith(roboIconImageView, userName);
-            // userBox.setPadding(new Insets(0, 0, 0, 5));
-            VBox.setMargin(userBox, new Insets(0, 0, 0, 30));
+            VBox.setMargin(userBox, new Insets(0, 0, 0, 20));
             quotedMessage = new Text();
             quotedMessage.setStyle("-fx-fill: -bisq-grey-9");
-            VBox.setMargin(quotedMessage, new Insets(0, 0, 15, 30));
+            VBox.setMargin(quotedMessage, new Insets(0, 0, 15, 20));
             root.getChildren().addAll(topBox, userBox, quotedMessage);
         }
 

@@ -39,10 +39,7 @@ import bisq.social.user.ChatUser;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -66,7 +63,6 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -144,14 +140,17 @@ public class ChatMessagesComponent {
                     chatMessagesPin = FxBindings.<MarketChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                             .map(ChatMessageListItem::new)
                             .to(marketChannel.getChatMessages());
+                    model.allowEditing.set(true);
                 } else if (channel instanceof PublicChannel publicChannel) {
                     chatMessagesPin = FxBindings.<PublicChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                             .map(ChatMessageListItem::new)
                             .to(publicChannel.getChatMessages());
+                    model.allowEditing.set(true);
                 } else if (channel instanceof PrivateChannel privateChannel) {
                     chatMessagesPin = FxBindings.<PrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                             .map(ChatMessageListItem::new)
                             .to(privateChannel.getChatMessages());
+                    model.allowEditing.set(false);
                 }
             });
             
@@ -278,27 +277,27 @@ public class ChatMessagesComponent {
         }
 
         private void refreshMessages() {
-            List<ChatMessageListItem<? extends ChatMessage>> chatMessages = new ArrayList<>(model.chatMessages);
-            model.chatMessages.setAll(chatMessages);
-            //chatMessagesPin.unbind();
-      /*  chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
-                .map(ChatMessageListItem::new)
-                .to((ObservableSet<ChatMessage>) model.getSelectedChannel().get().getChatMessages()); */
-            //todo expected type <? extends ChatMessage> does not work ;-(
+            model.chatMessages.setAll(new ArrayList<>(model.chatMessages));
         }
 
         public void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
             if (!chatService.isMyMessage(chatMessage)) {
                 return;
             }
-            if (chatMessage instanceof PublicChatMessage publicChatMessage) {
+            if (chatMessage instanceof MarketChatMessage marketChatMessage) {
+                UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
+                chatService.publishEditedMarketChatMessage(marketChatMessage, editedText, userProfile)
+                        .whenComplete((r, t) -> {
+                            // todo maybe show spinner while deleting old msg and hide it once done?
+                        });
+            } else if (chatMessage instanceof PublicChatMessage publicChatMessage) {
                 UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
                 chatService.publishEditedPublicChatMessage(publicChatMessage, editedText, userProfile)
                         .whenComplete((r, t) -> {
                             // todo maybe show spinner while deleting old msg and hide it once done?
                         });
             } else {
-                //todo private message
+                //todo editing private message not supported yet
             }
         }
 
@@ -348,6 +347,7 @@ public class ChatMessagesComponent {
         private final StringProperty textInput = new SimpleStringProperty("");
         private final Predicate<ChatMessageListItem<? extends ChatMessage>> ignoredChatUserPredicate;
         private final ObservableList<String> customTags = FXCollections.observableArrayList();
+        private final BooleanProperty allowEditing = new SimpleBooleanProperty();
         private Optional<Consumer<ChatUser>> showChatUserDetailsHandler = Optional.empty();
 
         private Model(ChatService chatService, UserProfileService userProfileService) {
@@ -382,7 +382,7 @@ public class ChatMessagesComponent {
         private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
         private final HBox bottomBox;
 
-        private View(Model model, Controller controller, Pane reply) {
+        private View(Model model, Controller controller, Pane quotedMessageBlock) {
             super(new VBox(), model, controller);
 
             root.setSpacing(20);
@@ -408,7 +408,7 @@ public class ChatMessagesComponent {
 
             bottomBox.setAlignment(Pos.CENTER);
             VBox.setMargin(bottomBox, new Insets(0, 0, -10, 0));
-            root.getChildren().addAll(messagesListView, reply, bottomBox);
+            root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
             messagesListener = c -> messagesListView.scrollTo(model.getSortedChatMessages().size() - 1);
         }
@@ -455,20 +455,18 @@ public class ChatMessagesComponent {
                         private final Text quotedMessageField = new Text();
                         private final HBox hBox, reactionsBox, editControlsBox, quotedMessageBox;
                         private final VBox vBox, messageBox;
-                        private final ChatUserIcon chatUserIcon = new ChatUserIcon(50);
+                        private final ChatUserIcon chatUserIcon = new ChatUserIcon(37.5);
                         Tooltip dateTooltip;
                         Subscription widthSubscription;
 
                         {
                             userNameLabel.setId("chat-user-name");
-                            userNameLabel.setPadding(new Insets(10, 0, 0, 0));
+                            userNameLabel.setPadding(new Insets(10, 0, -5, 0));
+                           
                             time.getStyleClass().add("message-header");
                             time.setPadding(new Insets(-6, 0, 0, 0));
                             time.setVisible(false);
 
-                            message.setAutoHeight(true);
-                            message.setPadding(new Insets(-35, 0, 0, 0));
-                            //  VBox.setMargin(message, new Insets(-25, 0, 0, 5));
 
                             //todo emojiButton1, emojiButton2, emojiButton3 will be filled with emoji icons
                             emojiButton1 = BisqIconButton.createIconButton(AwesomeIcon.THUMBS_UP_ALT);
@@ -484,6 +482,25 @@ public class ChatMessagesComponent {
                             Label verticalLine = new Label("|");
                             HBox.setMargin(verticalLine, new Insets(4, 0, 0, 0));
                             verticalLine.setId("chat-message-reactions-separator");
+
+                            editedMessageField = new BisqTextArea();
+                            editedMessageField.setVisible(false);
+                            editedMessageField.setManaged(false);
+
+                            saveEditButton = new Button(Res.get("shared.save"));
+                            cancelEditButton = new Button(Res.get("shared.cancel"));
+                            editControlsBox = Layout.hBoxWith(Spacer.fillHBox(), cancelEditButton, saveEditButton);
+                            editControlsBox.setVisible(false);
+                            editControlsBox.setManaged(false);
+                            quotedMessageBox = new HBox();
+                            quotedMessageBox.setSpacing(10);
+                            quotedMessageBox.setVisible(false);
+                            quotedMessageBox.setManaged(false);
+                            VBox.setMargin(quotedMessageBox, new Insets(0, 0, 10, 0));
+
+                            message.setAutoHeight(true);
+                            VBox.setMargin(message, new Insets(-5, 0, 0, 0));
+
                             reactionsBox = Layout.hBoxWith(
                                     Spacer.fillHBox(),
                                     emojiButton1,
@@ -497,32 +514,23 @@ public class ChatMessagesComponent {
                                     moreOptionsButton);
                             reactionsBox.setSpacing(5);
                             reactionsBox.setVisible(false);
-                            reactionsBox.setStyle("-fx-background-color: -bisq-grey-18; -fx-background-radius: 3px");
+                            reactionsBox.setStyle("-fx-background-color: -bisq-grey-18; -fx-background-radius: 8px");
 
-                            editedMessageField = new BisqTextArea();
-                            editedMessageField.setVisible(false);
-                            editedMessageField.setManaged(false);
-
-                            saveEditButton = new Button(Res.get("shared.save"));
-                            cancelEditButton = new Button(Res.get("shared.cancel"));
-
-                            editControlsBox = Layout.hBoxWith(Spacer.fillHBox(), cancelEditButton, saveEditButton);
-                            editControlsBox.setVisible(false);
-                            editControlsBox.setManaged(false);
-                            quotedMessageBox = new HBox();
-                            quotedMessageBox.setSpacing(10);
-                            VBox.setMargin(quotedMessageBox, new Insets(10, 0, 5, 0));
+                            HBox reactionsOuterBox = Layout.hBoxWith(Spacer.fillHBox(), reactionsBox);
+                            VBox.setMargin(reactionsOuterBox, new Insets(10, 0, 0, 0));
+                           
                             messageBox = Layout.vBoxWith(quotedMessageBox,
                                     message,
                                     editedMessageField,
                                     editControlsBox,
-                                    Layout.hBoxWith(Spacer.fillHBox(), reactionsBox));
+                                    reactionsOuterBox);
+                            messageBox.setSpacing(0);
                             VBox.setVgrow(messageBox, Priority.ALWAYS);
                             vBox = Layout.vBoxWith(userNameLabel, messageBox);
                             HBox.setHgrow(vBox, Priority.ALWAYS);
                             VBox userIconTimeBox = Layout.vBoxWith(chatUserIcon, time);
                             HBox.setMargin(userIconTimeBox, new Insets(10, 0, 0, -10));
-                            hBox = Layout.hBoxWith(userIconTimeBox, vBox);
+                            this.hBox = Layout.hBoxWith(userIconTimeBox, vBox);
                         }
 
                         @Override
@@ -530,6 +538,8 @@ public class ChatMessagesComponent {
                             super.updateItem(item, empty);
                             if (item != null && !empty) {
                                 if (item.getQuotedMessage().isPresent()) {
+                                    quotedMessageBox.setVisible(true);
+                                    quotedMessageBox.setManaged(true);
                                     QuotedMessage quotedMessage = item.getQuotedMessage().get();
                                     if (quotedMessage.nickName() != null &&
                                             quotedMessage.profileId() != null &&
@@ -565,6 +575,8 @@ public class ChatMessagesComponent {
                                     }
                                 } else {
                                     quotedMessageBox.getChildren().clear();
+                                    quotedMessageBox.setVisible(false);
+                                    quotedMessageBox.setManaged(false);
                                 }
 
                                 message.setText(item.getMessage());
@@ -617,10 +629,10 @@ public class ChatMessagesComponent {
                                 replyButton.setManaged(!isMyMessage);
                                 pmButton.setVisible(!isMyMessage);
                                 pmButton.setManaged(!isMyMessage);
-                                editButton.setVisible(isMyMessage);
-                                editButton.setManaged(isMyMessage);
-                                deleteButton.setVisible(isMyMessage);
-                                deleteButton.setManaged(isMyMessage);
+                                editButton.setVisible(isMyMessage && model.allowEditing.get());
+                                editButton.setManaged(isMyMessage && model.allowEditing.get());
+                                deleteButton.setVisible(isMyMessage && model.allowEditing.get());
+                                deleteButton.setManaged(isMyMessage && model.allowEditing.get());
 
                                 widthSubscription = EasyBind.subscribe(messagesListView.widthProperty(),
                                         width -> {
