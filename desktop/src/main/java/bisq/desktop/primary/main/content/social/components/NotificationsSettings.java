@@ -17,8 +17,6 @@
 
 package bisq.desktop.primary.main.content.social.components;
 
-import bisq.desktop.components.controls.BisqLabel;
-import bisq.desktop.components.controls.BisqRadioButton;
 import bisq.i18n.Res;
 import bisq.social.chat.Channel;
 import bisq.social.chat.ChatMessage;
@@ -28,6 +26,8 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.Pane;
@@ -97,7 +97,7 @@ public class NotificationsSettings {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ToggleGroup toggleGroup = new ToggleGroup();
         private final ChangeListener<Toggle> toggleListener;
-        private final BisqRadioButton all, mention, none;
+        private final RadioButton all, mention, none;
 
         private final ChangeListener<Channel<? extends ChatMessage>> channelChangeListener;
 
@@ -106,13 +106,14 @@ public class NotificationsSettings {
 
             root.setSpacing(5);
 
-            BisqLabel headline = new BisqLabel(Res.get("social.channel.notifications"));
-            headline.getStyleClass().add("channel-settings-headline");
+            Label headline = new Label(Res.get("social.channel.notifications"));
+            headline.setId("chat-sidebar-headline");
             headline.setPadding(new Insets(0, 40, 0, 0));
+            VBox.setMargin(headline, new Insets(0, 0, 20, 0));
 
-            all = new BisqRadioButton(Res.get("social.channel.notifications.all"));
-            mention = new BisqRadioButton(Res.get("social.channel.notifications.mention"));
-            none = new BisqRadioButton(Res.get("social.channel.notifications.never"));
+            all = new RadioButton(Res.get("social.channel.notifications.all"));
+            mention = new RadioButton(Res.get("social.channel.notifications.mention"));
+            none = new RadioButton(Res.get("social.channel.notifications.never"));
 
             all.setToggleGroup(toggleGroup);
             mention.setToggleGroup(toggleGroup);

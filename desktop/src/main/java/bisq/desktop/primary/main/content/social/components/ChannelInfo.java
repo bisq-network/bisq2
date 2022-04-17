@@ -17,32 +17,29 @@
 
 package bisq.desktop.primary.main.content.social.components;
 
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqButton;
-import bisq.desktop.components.controls.BisqLabel;
-import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
-import bisq.social.chat.Channel;
-import bisq.social.chat.ChatMessage;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.PublicChannel;
+import bisq.social.chat.*;
 import bisq.social.user.ChatUser;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Cursor;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.util.Callback;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -62,7 +59,7 @@ public class ChannelInfo {
     }
 
     public void setChannel(Channel<? extends ChatMessage> channel) {
-        controller.model.setChannel(channel);
+        controller.setChannel(channel);
     }
 
     public void setOnUndoIgnoreChatUser(Runnable handler) {
@@ -71,11 +68,13 @@ public class ChannelInfo {
 
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
+        private final ChatService chatService;
         @Getter
         private final View view;
 
         private Controller(ChatService chatService) {
-            model = new Model(chatService);
+            this.chatService = chatService;
+            model = new Model();
             view = new View(model, this);
         }
 
@@ -88,129 +87,115 @@ public class ChannelInfo {
         }
 
         public void onUndoIgnoreUser(ChatUser chatUser) {
-            model.chatService.undoIgnoreChatUser(chatUser);
+            chatService.undoIgnoreChatUser(chatUser);
             model.undoIgnoreChatUserHandler.ifPresent(Runnable::run);
+        }
+
+        public void setChannel(Channel<? extends ChatMessage> channel) {
+            Set<String> ignoredChatUserIds = new HashSet<>(chatService.getPersistableStore().getIgnoredChatUserIds());
+            model.channelName.set(channel.getDisplayString());
+            model.members.setAll(channel.getChatMessages().stream()
+                    .map(ChatMessage::getAuthor)
+                    .distinct()
+                    .map((chatUser -> new ChatUserOverview(chatUser, ignoredChatUserIds.contains(chatUser.getId()))))
+                    .sorted()
+                    .collect(Collectors.toList()));
+
+            if (channel instanceof MarketChannel marketChannel) {
+                model.description.set(marketChannel.getDescription());
+                model.descriptionVisible.set(true);
+                model.adminProfile = Optional.empty();
+                model.moderators.clear();
+            } else if (channel instanceof PublicChannel publicChannel) {
+                model.description.set(publicChannel.getDescription());
+                model.descriptionVisible.set(true);
+                model.adminProfile = Optional.of(new ChatUserOverview(publicChannel.getChannelAdmin()));
+                model.moderators.setAll(publicChannel.getChannelModerators().stream()
+                        .map(ChatUserOverview::new)
+                        .sorted()
+                        .collect(Collectors.toList()));
+            } else {
+                model.descriptionVisible.set(false);
+                model.description.set(null);
+                model.adminProfile = Optional.empty();
+                model.moderators.clear();
+            }
+
+            model.channel.set(channel);
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ChatService chatService;
-        private ObjectProperty<Channel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
-        private String channelName;
-        private Optional<String> description = Optional.empty();
+        private final ObjectProperty<Channel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
+        private final StringProperty channelName = new SimpleStringProperty();
+        private final StringProperty description = new SimpleStringProperty();
+        private final BooleanProperty descriptionVisible = new SimpleBooleanProperty();
         private final ObservableList<ChatUserOverview> moderators = FXCollections.observableArrayList();
         private Optional<ChatUserOverview> adminProfile = Optional.empty();
         private final ObservableList<ChatUserOverview> members = FXCollections.observableArrayList();
         private Optional<Runnable> undoIgnoreChatUserHandler = Optional.empty();
 
-        private Model(ChatService chatService) {
-            this.chatService = chatService;
-        }
-
-        private void setChannel(Channel<? extends ChatMessage> channel) {
-            Set<String> ignoredChatUserIds = new HashSet<>(chatService.getPersistableStore().getIgnoredChatUserIds());
-          /*  channelName = channel.getMarket();
-            members.setAll(channel.getChatMessages().stream()
-                    .map(ChatMessage::getAuthor)
-                    .distinct()
-                    .map((chatUser -> new ChatUserOverview(chatUser, ignoredChatUserIds.contains(chatUser.getId()))))
-                    .sorted()
-                    .collect(Collectors.toList()));*/
-            
-            if (channel instanceof PublicChannel publicChannel) {
-                description = Optional.of(publicChannel.getDescription());
-                adminProfile = Optional.of(new ChatUserOverview(publicChannel.getChannelAdmin()));
-                moderators.setAll(publicChannel.getChannelModerators().stream()
-                        .map(ChatUserOverview::new)
-                        .sorted()
-                        .collect(Collectors.toList()));
-
-            } else {
-                description = Optional.empty();
-                adminProfile = Optional.empty();
-                moderators.clear();
-            }
-
-            this.channel.set(channel);
+        private Model() {
         }
     }
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
 
-        private final ChangeListener<Channel<?>> channelChangeListener;
+        private final ListView<ChatUserOverview> members;
+        private final Label channelNameLabel;
+        private final Text descriptionText;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
 
-            root.setSpacing(5);
-            // root.setFillWidth(true);
+            root.setSpacing(15);
 
-            channelChangeListener = (observable, oldValue, newValue) -> update();
+            channelNameLabel = new Label();
+            channelNameLabel.setId("chat-sidebar-headline");
 
-            update();
-        }
+            descriptionText = new Text();
+            descriptionText.setId("chat-sidebar-text");
 
-        private void update() {
-            if (model.channel.get() == null) {
-                return;
-            }
+            Label membersHeadLine = new Label(Res.get("social.channel.settings.members").toUpperCase());
+            membersHeadLine.setId("chat-sidebar-text");
+            VBox.setMargin(membersHeadLine, new Insets(20, 0, 0, 0));
 
-            root.getChildren().clear();
-
-            BisqLabel channelName = new BisqLabel(model.channelName);
-            channelName.getStyleClass().add("channel-settings-headline");
-            root.getChildren().add(channelName);
-
-            model.description.ifPresent(description -> root.getChildren().add(new BisqLabel(description)));
-
-            model.adminProfile.ifPresent(adminProfile -> {
-                BisqLabel adminHeadLine = new BisqLabel(Res.get("social.channel.settings.admin"));
-                adminHeadLine.setPadding(new Insets(20, 0, 0, 0));
-                adminHeadLine.getStyleClass().add("accent-headline");
-                root.getChildren().addAll(adminHeadLine, adminProfile.getRoot());
-            });
-
-            if (!model.moderators.isEmpty()) {
-                BisqLabel moderatorsHeadLine = new BisqLabel(Res.get("social.channel.settings.moderators"));
-                moderatorsHeadLine.setPadding(new Insets(20, 0, 0, 0));
-                moderatorsHeadLine.getStyleClass().add("accent-headline");
-                root.getChildren().add(moderatorsHeadLine);
-                root.getChildren().addAll(model.moderators.stream()
-                        .map(ChatUserOverview::getRoot)
-                        .collect(Collectors.toList()));
-            }
-
-            ListView<ChatUserOverview> members = new ListView<>();
-            members.setStyle("-fx-border-width: 0; -fx-background-color: -bs-color-gray-background");
-            members.setFocusTraversable(false);
+            members = new ListView<>(model.members);
             VBox.setVgrow(members, Priority.ALWAYS);
             members.setCellFactory(new Callback<>() {
                 @Override
                 public ListCell<ChatUserOverview> call(ListView<ChatUserOverview> list) {
                     return new ListCell<>() {
-                        private BisqButton undoIgnoreUserButton;
+                        final Button undoIgnoreUserButton = new Button(Res.get("social.undoIgnore"));
+                        final HBox hBox = new HBox();
+
+                        {
+                            hBox.setAlignment(Pos.CENTER_LEFT);
+                            hBox.setSpacing(10);
+                            hBox.setFillHeight(true);
+                            setCursor(Cursor.HAND);
+                            setPrefHeight(40);
+                            setPadding(new Insets(0, 0, -20, 0));
+                        }
 
                         @Override
                         public void updateItem(final ChatUserOverview chatUserOverview, boolean empty) {
                             super.updateItem(chatUserOverview, empty);
                             if (chatUserOverview != null && !empty) {
-                                Pane chatUserOverviewRoot = chatUserOverview.getRoot();
-                                undoIgnoreUserButton = new BisqButton(Res.get("social.undoIgnore"));
                                 undoIgnoreUserButton.setOnAction(e -> {
                                     controller.onUndoIgnoreUser(chatUserOverview.getChatUser());
                                     members.refresh();
                                 });
+                                undoIgnoreUserButton.setVisible(chatUserOverview.isIgnored());
+                                undoIgnoreUserButton.setManaged(chatUserOverview.isIgnored());
 
-                                updateState(chatUserOverview, chatUserOverviewRoot);
-                                HBox hBox = Layout.hBoxWith(chatUserOverviewRoot, Spacer.fillHBox(), undoIgnoreUserButton);
-                                hBox.setFillHeight(true);
+                                Pane chatUserOverviewRoot = chatUserOverview.getRoot();
+                                chatUserOverviewRoot.setOpacity(chatUserOverview.isIgnored() ? 0.4 : 1);
+
+                                hBox.getChildren().setAll(chatUserOverviewRoot, Spacer.fillHBox(), undoIgnoreUserButton);
+
                                 setGraphic(hBox);
-                                UIThread.runOnNextRenderFrame(() -> {
-                                    if (getWidth() > 0) {
-                                        members.setPrefWidth(getWidth() + 30);
-                                    }
-                                });
                             } else {
                                 if (undoIgnoreUserButton != null) {
                                     undoIgnoreUserButton.setOnAction(null);
@@ -219,29 +204,49 @@ public class ChannelInfo {
                             }
                         }
 
-                        private void updateState(ChatUserOverview chatUserOverview, Pane chatUserOverviewRoot) {
-                            undoIgnoreUserButton.setVisible(chatUserOverview.isIgnored());
-                            chatUserOverviewRoot.setOpacity(chatUserOverview.isIgnored() ? 0.3 : 1);
-                        }
                     };
                 }
             });
-            members.setItems(model.members);
-            BisqLabel membersHeadLine = new BisqLabel(Res.get("social.channel.settings.members"));
-            membersHeadLine.setPadding(new Insets(20, 0, 0, 0));
-            membersHeadLine.getStyleClass().add("accent-headline");
 
-            root.getChildren().addAll(membersHeadLine, members);
+            root.getChildren().addAll(channelNameLabel, descriptionText, membersHeadLine, members);
+
+            //todo admin/mods not added yet
+                 /*  model.adminProfile.ifPresent(adminProfile -> {
+                    Label adminHeadLine = new Label(Res.get("social.channel.settings.admin"));
+                    adminHeadLine.setPadding(new Insets(20, 0, 0, 0));
+                    root.getChildren().addAll(adminHeadLine, adminProfile.getRoot());
+                });
+
+                if (!model.moderators.isEmpty()) {
+                    Label moderatorsHeadLine = new Label(Res.get("social.channel.settings.moderators"));
+                    moderatorsHeadLine.setPadding(new Insets(20, 0, 0, 0));
+                    root.getChildren().add(moderatorsHeadLine);
+                    root.getChildren().addAll(model.moderators.stream()
+                            .map(ChatUserOverview::getRoot)
+                            .collect(Collectors.toList()));
+                }*/
         }
 
         @Override
         protected void onViewAttached() {
-            model.channel.addListener(channelChangeListener);
+            channelNameLabel.textProperty().bind(model.channelName);
+            descriptionText.textProperty().bind(model.description);
+            descriptionText.visibleProperty().bind(model.descriptionVisible);
+            descriptionText.managedProperty().bind(model.descriptionVisible);
+            EasyBind.subscribe(root.widthProperty(), w -> {
+                double width = w.doubleValue();
+                if (width > 0) {
+                    descriptionText.setWrappingWidth(width - 20);
+                }
+            });
         }
 
         @Override
         protected void onViewDetached() {
-            model.channel.removeListener(channelChangeListener);
+            channelNameLabel.textProperty().unbind();
+            descriptionText.textProperty().unbind();
+            descriptionText.visibleProperty().unbind();
+            descriptionText.managedProperty().unbind();
         }
     }
 }

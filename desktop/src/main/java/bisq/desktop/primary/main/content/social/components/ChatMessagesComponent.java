@@ -64,7 +64,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -276,6 +278,8 @@ public class ChatMessagesComponent {
         }
 
         private void refreshMessages() {
+            List<ChatMessageListItem<? extends ChatMessage>> chatMessages = new ArrayList<>(model.chatMessages);
+            model.chatMessages.setAll(chatMessages);
             //chatMessagesPin.unbind();
       /*  chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
                 .map(ChatMessageListItem::new)

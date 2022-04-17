@@ -4,7 +4,6 @@ import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.social.chat.Channel;
 import bisq.social.chat.ChatService;
@@ -19,10 +18,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TitledPane;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -133,7 +129,7 @@ public abstract class ChannelSelection {
 
         protected ListCell<Channel<?>> getListCell() {
             return new ListCell<>() {
-                final BisqLabel label = new BisqLabel();
+                final Label label = new Label();
                 final HBox hBox = new HBox();
 
                 {

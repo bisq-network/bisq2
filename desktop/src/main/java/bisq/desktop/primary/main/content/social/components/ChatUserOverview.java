@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.social.components;
 
 import bisq.common.data.ByteArray;
-import bisq.desktop.components.controls.BisqLabel;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
@@ -26,6 +25,8 @@ import bisq.social.user.ChatUser;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -73,7 +74,6 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
         @Getter
         private final View view;
 
-
         private Controller(ChatUser chatUser) {
             model = new Model(chatUser);
             view = new View(model, this);
@@ -87,7 +87,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
             }
 
             model.id.set(chatUser.getId());
-            model.userName.set(chatUser.getProfileId());
+            model.userName.set(chatUser.getUserName());
             model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
             String entitledRoles = chatUser.getEntitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
             model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
@@ -115,20 +115,26 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        private final ImageView roboIconImageView;
-        private final BisqLabel userName, id, entitlements;
+        private final ImageView roboIcon;
+        private final Label userName, id, entitlements;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
             super(new HBox(), model, controller);
+            
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
 
-            userName = new BisqLabel();
-            roboIconImageView = new ImageView();
-            roboIconImageView.setFitWidth(25);
-            roboIconImageView.setFitHeight(25);
-            HBox hBox = Layout.hBoxWith(roboIconImageView, userName);
+            userName = new Label();
+            userName.setMaxWidth(100);
+            Tooltip.install(userName,  new Tooltip(model.chatUser.getTooltipString()));
+
+            roboIcon = new ImageView();
+            roboIcon.setFitWidth(37.5);
+            roboIcon.setFitHeight(37.5);
+            Tooltip.install(roboIcon,  new Tooltip(model.chatUser.getTooltipString()));
+
+            HBox hBox = Layout.hBoxWith(roboIcon, userName);
             hBox.setAlignment(Pos.CENTER_LEFT);
 
             ImageView trust = new ImageView();
@@ -137,16 +143,16 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
             trust.setY(20);
 
             StackPane icons = new StackPane();
-            icons.getChildren().addAll(roboIconImageView, trust);
+            icons.getChildren().addAll(roboIcon, trust);
 
             root.getChildren().addAll(icons, userName);
 
             // todo add tooltip overlay for id and entitlements
-            id = new BisqLabel();
+            id = new Label();
             id.getStyleClass().add("offer-label-small");
             id.setPadding(new Insets(-5, 0, 0, 0));
 
-            entitlements = new BisqLabel();
+            entitlements = new Label();
             entitlements.getStyleClass().add("offer-label-small");
             entitlements.setPadding(new Insets(-5, 0, 0, 0));
         }
@@ -161,7 +167,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
-                    roboIconImageView.setImage(roboIcon);
+                    this.roboIcon.setImage(roboIcon);
                 }
             });
         }

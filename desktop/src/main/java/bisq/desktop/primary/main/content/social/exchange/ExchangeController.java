@@ -24,6 +24,8 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.social.components.*;
+import bisq.social.chat.Channel;
+import bisq.social.chat.ChatMessage;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.PrivateChannel;
 import bisq.social.user.profile.UserProfileService;
@@ -91,34 +93,34 @@ public class ExchangeController implements Controller {
             ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(), chatUser);
             chatUserDetails.setOnSendPrivateMessage(chatMessagesComponent::openPrivateChannel);
             chatUserDetails.setOnIgnoreChatUser(chatMessagesComponent::refreshMessages);
-            chatUserDetails.setOnMentionUser(chatUser2 -> chatMessagesComponent.mentionUser(chatUser2));
+            chatUserDetails.setOnMentionUser(chatMessagesComponent::mentionUser);
             model.setChatUserDetails(Optional.of(chatUserDetails));
             model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
         });
 
-        selectedChannelPin = chatService.getSelectedChannel().addObserver(channel -> {
-            model.getSelectedChannelAsString().set(channel.getDisplayString());
-            model.getSelectedChannel().set(channel);
+        selectedChannelPin = chatService.getSelectedChannel().addObserver(this::handleChannelChange);
+    }
 
-            if (channel instanceof PrivateChannel privateChannel) {
-                model.getPeersRoboIconImage().set(RoboHash.getImage(new ByteArray(privateChannel.getPeer().getPubKeyHash())));
-                model.getPeersRoboIconVisible().set(true);
-            } else {
-                model.getPeersRoboIconVisible().set(false);
-            }
+    private void handleChannelChange(Channel<? extends ChatMessage> channel) {
+        model.getSelectedChannelAsString().set(channel.getDisplayString());
+        model.getSelectedChannel().set(channel);
+
+        if (channel instanceof PrivateChannel privateChannel) {
+            model.getPeersRoboIconImage().set(RoboHash.getImage(new ByteArray(privateChannel.getPeer().getPubKeyHash())));
+            model.getPeersRoboIconVisible().set(true);
+        } else {
+            model.getPeersRoboIconVisible().set(false);
+        }
+
+        if (model.getChannelInfoVisible().get()) {
+            cleanupChannelInfo();
+            showChannelInfo();
+        }
         
-
-          /*  if (model.getChannelInfoVisible().get()) {
-                channelInfo.setChannel(channel);
-                channelInfo.setOnUndoIgnoreChatUser(() -> {
-                    refreshMessages();
-                    channelInfo.setChannel(channel);
-                });
-            }
+         /* 
             if (model.getNotificationsVisible().get()) {
                 notificationsSettings.setChannel(channel);
             }*/
-        });
     }
 
     @Override
@@ -137,7 +139,8 @@ public class ExchangeController implements Controller {
         model.getNotificationsVisible().set(visible);
         model.getSideBarVisible().set(visible);
         model.getChannelInfoVisible().set(false);
-        removeChatUserDetails();
+        cleanupChatUserDetails();
+        cleanupChannelInfo();
         if (visible) {
             notificationsSettings.setChannel(model.getSelectedChannel().get());
         }
@@ -148,25 +151,31 @@ public class ExchangeController implements Controller {
         model.getChannelInfoVisible().set(visible);
         model.getSideBarVisible().set(visible);
         model.getNotificationsVisible().set(false);
-        removeChatUserDetails();
+        cleanupChatUserDetails();
         if (visible) {
-            channelInfo.setChannel(model.getSelectedChannel().get());
-            channelInfo.setOnUndoIgnoreChatUser(() -> {
-                chatMessagesComponent.refreshMessages();
-                channelInfo.setChannel(model.getSelectedChannel().get());
-            });
+            showChannelInfo();
+        } else {
+            cleanupChannelInfo();
         }
     }
 
+    private void showChannelInfo() {
+        channelInfo.setChannel(model.getSelectedChannel().get());
+        channelInfo.setOnUndoIgnoreChatUser(() -> {
+            chatMessagesComponent.refreshMessages();
+            channelInfo.setChannel(model.getSelectedChannel().get());
+        });
+    }
 
     public void onCloseSideBar() {
         model.getSideBarVisible().set(false);
         model.getChannelInfoVisible().set(false);
         model.getNotificationsVisible().set(false);
-        removeChatUserDetails();
+        cleanupChatUserDetails();
+        cleanupChannelInfo();
     }
 
-    private void removeChatUserDetails() {
+    private void cleanupChatUserDetails() {
         model.getChatUserDetails().ifPresent(e -> e.setOnMentionUser(null));
         model.getChatUserDetails().ifPresent(e -> e.setOnSendPrivateMessage(null));
         model.getChatUserDetails().ifPresent(e -> e.setOnIgnoreChatUser(null));
@@ -174,5 +183,7 @@ public class ExchangeController implements Controller {
         model.getChatUserDetailsRoot().set(null);
     }
 
-
+    private void cleanupChannelInfo() {
+        channelInfo.setOnUndoIgnoreChatUser(null);
+    }
 }

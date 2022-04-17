@@ -445,7 +445,19 @@
 
 #chat-messages-headline {
     -fx-text-fill: -bisq-text-color-white;
-    -fx-font-size: 1.44em;
+    -fx-font-size: 1.78em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+#chat-sidebar-headline {
+    -fx-text-fill: -bisq-text-color-white;
+    -fx-font-size: 1.78em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+#chat-sidebar-text {
+    -fx-text-fill: -bisq-text-color-white;
+    -fx-fill: -bisq-text-color-white;
+    -fx-font-size: 1.05em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 

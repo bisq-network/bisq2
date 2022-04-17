@@ -19,6 +19,7 @@ package bisq.social.chat;
 
 import bisq.common.monetary.Market;
 import bisq.common.observable.ObservableSet;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -74,4 +75,9 @@ public class MarketChannel extends Channel<MarketChatMessage> {
     public void removeChatMessages(Collection<MarketChatMessage> removeMessages) {
         chatMessages.removeAll(removeMessages);
     }
+
+    public String getDescription() {
+        return Res.get("social.marketChannel.description", market.toString());
+    }
+
 }
