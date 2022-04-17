@@ -136,6 +136,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         EasyBind.subscribe(model.showProcessingPopup, show -> {
             if (show) {
                 processingPopup = new Popup().information(Res.get("social.createUserProfile.prepare"));
+                processingPopup.hideCloseButton();
                 processingPopup.show();
             } else if (processingPopup != null) {
                 processingPopup.hide();
