@@ -24,7 +24,6 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -36,31 +35,19 @@ public class PublicChannel extends Channel<PublicChatMessage> {
     private final String description;
     private final ChatUser channelAdmin;
     private final Set<ChatUser> channelModerators;
-    private final ObservableSet<String> tradeTags = new ObservableSet<>();
-    private final ObservableSet<String> currencyTags = new ObservableSet<>();
-    private final ObservableSet<String> paymentMethodTags = new ObservableSet<>();
-    private final ObservableSet<String> customTags = new ObservableSet<>();
     private transient final ObservableSet<PublicChatMessage> chatMessages = new ObservableSet<>();
 
     public PublicChannel(String id,
                          String channelName,
                          String description,
                          ChatUser channelAdmin,
-                         Set<ChatUser> channelModerators,
-                         Set<String> tradeTags,
-                         Set<String> currencyTags,
-                         Set<String> paymentMethodTags,
-                         Set<String> customTags
+                         Set<ChatUser> channelModerators
     ) {
         this(id, channelName,
                 description,
                 channelAdmin,
                 channelModerators,
-                NotificationSetting.MENTION,
-                tradeTags,
-                currencyTags,
-                paymentMethodTags,
-                customTags
+                NotificationSetting.MENTION
         );
     }
 
@@ -69,21 +56,13 @@ public class PublicChannel extends Channel<PublicChatMessage> {
                           String description,
                           ChatUser channelAdmin,
                           Set<ChatUser> channelModerators,
-                          NotificationSetting notificationSetting,
-                          Set<String> tradeTags,
-                          Set<String> currencyTags,
-                          Set<String> paymentMethodTags,
-                          Set<String> customTags) {
+                          NotificationSetting notificationSetting) {
         super(id, notificationSetting);
 
         this.channelName = channelName;
         this.description = description;
         this.channelAdmin = channelAdmin;
         this.channelModerators = channelModerators;
-        this.tradeTags.addAll(tradeTags);
-        this.currencyTags.addAll(currencyTags);
-        this.paymentMethodTags.addAll(paymentMethodTags);
-        this.customTags.addAll(customTags);
     }
 
     public bisq.social.protobuf.Channel toProto() {
@@ -92,10 +71,6 @@ public class PublicChannel extends Channel<PublicChatMessage> {
                         .setDescription(description)
                         .setChannelAdmin(channelAdmin.toProto())
                         .addAllChannelModerators(channelModerators.stream().map(ChatUser::toProto).collect(Collectors.toList()))
-                        .addAllTradeTags(tradeTags)
-                        .addAllCurrencyTags(currencyTags)
-                        .addAllPaymentMethodTags(paymentMethodTags)
-                        .addAllCustomTags(customTags)
                 )
                 .build();
     }
@@ -108,12 +83,7 @@ public class PublicChannel extends Channel<PublicChatMessage> {
                 proto.getDescription(),
                 ChatUser.fromProto(proto.getChannelAdmin()),
                 proto.getChannelModeratorsList().stream().map(ChatUser::fromProto).collect(Collectors.toSet()),
-                NotificationSetting.fromProto(baseProto.getNotificationSetting()),
-                new HashSet<>(proto.getTradeTagsList()),
-                new HashSet<>(proto.getCurrencyTagsList()),
-                new HashSet<>(proto.getPaymentMethodTagsList()),
-                new HashSet<>(proto.getCustomTagsList())
-        );
+                NotificationSetting.fromProto(baseProto.getNotificationSetting()));
     }
 
     @Override

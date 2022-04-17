@@ -13,7 +13,6 @@ import bisq.social.user.ChatUser;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -27,7 +26,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -62,12 +60,8 @@ public abstract class ChannelSelection {
 
         @Override
         public void onActivate() {
-            selectedChannelPin = FxBindings.subscribe(chatService.getPersistableStore().getSelectedChannel(),
-                    channel -> model.selectedChannel.set(model.channels.stream()
-                            .filter(currentChannel -> currentChannel.equals(channel))
-                            .findAny()
-                            .orElse(null))
-            );
+            selectedChannelPin = FxBindings.subscribe(chatService.getSelectedChannel(),
+                    channel -> model.selectedChannel.set(channel));
         }
 
         @Override
@@ -89,7 +83,6 @@ public abstract class ChannelSelection {
         SortedList<Channel<?>> sortedList = new SortedList<>(channels);
 
         protected Model() {
-           // sortedList.setComparator(Comparator.comparing(Channel::getMarket));
         }
     }
 
@@ -97,99 +90,86 @@ public abstract class ChannelSelection {
     public static class View extends bisq.desktop.common.view.View<VBox, ChannelSelection.Model, ChannelSelection.Controller> {
         protected final ListView<Channel<?>> listView;
         private final InvalidationListener channelsChangedListener;
-        protected Subscription subscription;
-        private final ChangeListener<Channel<?>> channelChangeListener;
+        protected Subscription listViewSelectedChannelSubscription, modelSelectedChannelSubscription;
 
         protected View(ChannelSelection.Model model, ChannelSelection.Controller controller, String headlineText) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
-            root.setStyle("-fx-background-color: -bisq-grey-left-nav-bg;");
-
-            listView = new ListView<>();
+            listView = new ListView<>(model.sortedList);
             listView.setPrefHeight(100);
-            listView.setItems(model.sortedList);
             listView.setFocusTraversable(false);
             listView.setPadding(new Insets(5, 0, 5, 0));
-            listView.setStyle("-fx-background-color: -bisq-grey-left-nav-bg; -fx-border-width: 0;");
-            listView.setCellFactory(new Callback<>() {
-                @Override
-                public ListCell<Channel<?>> call(ListView<Channel<?>> list) {
-                    return new ListCell<>() {
-                        final BisqLabel label = new BisqLabel();
-                        final HBox hBox = new HBox();
-
-                        {
-                            hBox.setSpacing(10);
-                            hBox.setAlignment(Pos.CENTER_LEFT);
-                            hBox.setPadding(new Insets(7, 5, 7, 5));
-                            hBox.setMouseTransparent(true);
-                            setCursor(Cursor.HAND);
-                            setStyle("-fx-background-color: -bisq-grey-left-nav-bg; -fx-border-width: 0;");
-                        }
-
-                        @Override
-                        public void updateItem(final Channel<?> item, boolean empty) {
-                            super.updateItem(item, empty);
-                            if (item != null && !empty) {
-                                hBox.getChildren().clear();
-                                if (item instanceof PrivateChannel privateChannel) {
-                                    ChatUser peer = privateChannel.getPeer();
-                                    byte[] peersPubKeyHash = peer.getPubKeyHash();
-                                    ImageView roboIcon = new ImageView(RoboHash.getImage(new ByteArray(peersPubKeyHash)));
-                                    roboIcon.setFitWidth(25);
-                                    roboIcon.setFitHeight(25);
-                                    hBox.getChildren().add(roboIcon);
-                                }
-                                hBox.getChildren().add(label);
-                               // label.setText(item.getMarket());
-
-                                if (item.equals(model.selectedChannel.get())) {
-                                    hBox.setStyle("-fx-background-color: -bisq-grey-left-nav-selected-bg; -fx-background-radius: 3px");
-                                    label.setStyle("-fx-text-fill: -fx-light-text-color;");
-                                } else {
-                                    hBox.setStyle("-fx-background-color: -bisq-grey-left-nav-bg; -fx-background-radius: 3px");
-                                    label.setStyle("-fx-text-fill: -fx-mid-text-color;");
-                                }
-                                setGraphic(hBox);
-                            } else {
-                                hBox.getChildren().clear();
-                                setGraphic(null);
-                            }
-                        }
-                    };
-                }
-            });
+            listView.setCellFactory(p -> getListCell());
 
             TitledPane titledPane = new TitledPane(headlineText, listView);
-            titledPane.setStyle("-fx-background-color: -bisq-grey-left-nav-bg; -fx-border-width: 0");
 
             root.getChildren().addAll(titledPane);
-            channelChangeListener = (channelObserver, oldValue, newValue) -> {
-                if (oldValue == null || oldValue.equals(newValue)) return; // abort endless loop of event triggering
-                int indexOfSelectedItem = listView.getItems().indexOf(newValue);
-                listView.getSelectionModel().clearAndSelect(indexOfSelectedItem);
-                listView.refresh();
-            };
             channelsChangedListener = observable -> adjustHeight();
         }
 
         @Override
         protected void onViewAttached() {
-            subscription = EasyBind.subscribe(listView.getSelectionModel().selectedItemProperty(), controller::onSelected);
-            // We cannot use binding for listView.getSelectionModel().selectedItemProperty() 
-            // See: https://stackoverflow.com/questions/32782065/binding-a-javafx-listviews-selection-index-to-an-integer-property#32782145
-            model.selectedChannel.addListener(channelChangeListener);
-
+            listViewSelectedChannelSubscription = EasyBind.subscribe(listView.getSelectionModel().selectedItemProperty(),
+                    channel -> {
+                        if (channel != null && !channel.equals(model.selectedChannel.get())) {
+                            controller.onSelected(channel);
+                        }
+                    });
+            modelSelectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
+                    channel -> {
+                        if (channel != null && !channel.equals(listView.getSelectionModel().getSelectedItem())) {
+                            UIThread.runOnNextRenderFrame(() -> listView.getSelectionModel().select(channel));
+                        }
+                    });
             model.channels.addListener(channelsChangedListener);
             adjustHeight();
         }
 
         @Override
         protected void onViewDetached() {
-            subscription.unsubscribe();
-            model.selectedChannel.removeListener(channelChangeListener);
+            listViewSelectedChannelSubscription.unsubscribe();
+            modelSelectedChannelSubscription.unsubscribe();
             model.channels.removeListener(channelsChangedListener);
+        }
+
+        protected ListCell<Channel<?>> getListCell() {
+            return new ListCell<>() {
+                final BisqLabel label = new BisqLabel();
+                final HBox hBox = new HBox();
+
+                {
+                    hBox.setSpacing(10);
+                    hBox.setAlignment(Pos.CENTER_LEFT);
+                    hBox.setPadding(new Insets(7, 5, 7, 5));
+                    hBox.setMouseTransparent(true);
+                    setCursor(Cursor.HAND);
+                    setPrefHeight(40);
+                }
+
+                @Override
+                protected void updateItem(Channel<?> item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (item != null && !empty) {
+                        hBox.getChildren().clear();
+                        if (item instanceof PrivateChannel privateChannel) {
+                            ChatUser peer = privateChannel.getPeer();
+                            byte[] peersPubKeyHash = peer.getPubKeyHash();
+                            ImageView roboIcon = new ImageView(RoboHash.getImage(new ByteArray(peersPubKeyHash)));
+                            roboIcon.setFitWidth(25);
+                            roboIcon.setFitHeight(25);
+                            hBox.getChildren().add(roboIcon);
+                        }
+                        hBox.getChildren().add(label);
+                        label.setText(item.getId());
+
+                        setGraphic(hBox);
+                    } else {
+                        hBox.getChildren().clear();
+                        setGraphic(null);
+                    }
+                }
+            };
         }
 
         private void adjustHeight() {
@@ -199,6 +179,5 @@ public abstract class ChannelSelection {
                 }
             });
         }
-
     }
 }

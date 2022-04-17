@@ -21,7 +21,9 @@ import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.KeyWordDetection;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTaggableTextArea;
@@ -50,6 +52,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -121,15 +124,43 @@ public class ChatMessagesComponent {
         @Override
         public void onActivate() {
             model.getSortedChatMessages().setComparator(ChatMessagesComponent.ChatMessageListItem::compareTo);
+            model.customTags.addAll(chatService.getCustomTags());
+            chatService.getSelectedChannel().addObserver(channel -> {
+                model.selectedChannelListItem.set(new ChannelListItem<>(channel));
+                model.chatMessages.setAll(channel.getChatMessages().stream()
+                        .map(ChatMessageListItem::new)
+                        .collect(Collectors.toSet()));
 
-            EasyBind.subscribe(model.selectedChannelListItem, item -> {
-                if (item != null) {
-                    log.error("getChatMessages {}",item.getChannel().getChatMessages());
-                    model.chatMessages.setAll(item.getChannel().getChatMessages().stream()
+
+
+               /* model.chatMessages.addListener(new ListChangeListener<ChatMessageListItem<? extends ChatMessage>>() {
+                    @Override
+                    public void onChanged(Change<? extends ChatMessageListItem<? extends ChatMessage>> c) {
+                        c.next();
+                        log.error("mes" + c.getAddedSubList());
+                    }
+                });*/
+
+                if (channel instanceof MarketChannel marketChannel) {
+                    FxBindings.<MarketChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                            .map(ChatMessageListItem::new)
+                            .to(marketChannel.getChatMessages());
+
+                } else if (channel instanceof PublicChannel publicChannel) {
+
+                } else if (channel instanceof PrivateChannel privateChannel) {
+
+                }
+            });
+           /* Observable<Channel<? extends ChatMessage>> selectedChannel = chatService.getSelectedChannel();
+            EasyBind.subscribe(selectedChannel, channel -> {
+                if (channel != null) {
+                    log.error("getChatMessages {}",channel.getChatMessages());
+                    model.chatMessages.setAll(channel.getChatMessages().stream()
                             .map(ChatMessageListItem::new)
                             .collect(Collectors.toSet()));
                 }
-            });
+            });*/
 
           /*  selectedChannelPin = chatService.getPersistableStore().getSelectedChannel().addObserver(channel -> {
                 if (channel instanceof PublicChannel publicChannel) {
@@ -309,16 +340,15 @@ public class ChatMessagesComponent {
 
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<ChannelListItem<?>> selectedChannelListItem = new SimpleObjectProperty<>();
-
-        private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
-        private final SortedList<ChatMessageListItem<? extends ChatMessage>> sortedChatMessages = new SortedList<>(chatMessages);
-        private final FilteredList<ChatMessageListItem<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(sortedChatMessages);
-
-        private final StringProperty textInput = new SimpleStringProperty("");
-        private final Predicate<ChatMessageListItem<? extends ChatMessage>> ignoredChatUserPredicate;
         private final ChatService chatService;
         private final UserProfileService userProfileService;
+        private final ObjectProperty<ChannelListItem<?>> selectedChannelListItem = new SimpleObjectProperty<>();
+        private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
+        private final FilteredList<ChatMessageListItem<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(chatMessages);
+        private final SortedList<ChatMessageListItem<? extends ChatMessage>> sortedChatMessages = new SortedList<>(filteredChatMessages);
+        private final StringProperty textInput = new SimpleStringProperty("");
+        private final Predicate<ChatMessageListItem<? extends ChatMessage>> ignoredChatUserPredicate;
+        private final ObservableList<String> customTags = FXCollections.observableArrayList();
 
         private Model(ChatService chatService, UserProfileService userProfileService) {
             this.chatService = chatService;
@@ -350,33 +380,37 @@ public class ChatMessagesComponent {
         private final BisqTextArea inputField;
         private final Button createOfferButton;
         private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
+        private final HBox bottomBox;
 
         private View(Model model, Controller controller, Pane reply) {
             super(new VBox(), model, controller);
 
-            root.setStyle("-fx-background-color: -fx-base");
+            root.setSpacing(20);
 
-
-            messagesListView = new ListView<>(model.getFilteredChatMessages());
+            messagesListView = new ListView<>(model.getSortedChatMessages());
+            Label placeholder = new Label(Res.get("table.placeholder.noData"));
+            messagesListView.setPlaceholder(placeholder);
             messagesListView.setCellFactory(getCellFactory());
-            //messagesListView.setFocusTraversable(false);
-            messagesListView.setStyle("-fx-border-width: 0; -fx-background-color: -fx-base");
             VBox.setVgrow(messagesListView, Priority.ALWAYS);
 
             inputField = new BisqTextArea();
-            inputField.setLabelFloat(true);
+            inputField.setId("chat-messages-text-area-input-field");
             inputField.setPromptText(Res.get("social.chat.input.prompt"));
-            inputField.setStyle("-fx-background-color: -fx-base");
+            inputField.setPrefWidth(300);
 
             createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
+            createOfferButton.setPrefHeight(39);
             createOfferButton.setDefaultButton(true);
-            HBox.setMargin(createOfferButton, new Insets(5, -30, 0, 0));
 
-            HBox bottomBox = Layout.hBoxWith(inputField, createOfferButton);
+            bottomBox = Layout.hBoxWith(inputField, createOfferButton);
+            HBox.setHgrow(createOfferButton, Priority.NEVER);
+            HBox.setHgrow(inputField, Priority.ALWAYS);
 
+            bottomBox.setAlignment(Pos.CENTER);
+            VBox.setMargin(bottomBox, new Insets(0, 0, -10, 0));
             root.getChildren().addAll(messagesListView, reply, bottomBox);
 
-            messagesListener = c -> messagesListView.scrollTo(model.getFilteredChatMessages().size() - 1);
+            messagesListener = c -> messagesListView.scrollTo(model.getSortedChatMessages().size() - 1);
         }
 
         @Override
@@ -395,8 +429,7 @@ public class ChatMessagesComponent {
                     }
                 }
             });
-            // messagesListView.setItems(model.getFilteredChatMessages());
-            model.getFilteredChatMessages().addListener(messagesListener);
+            model.getSortedChatMessages().addListener(messagesListener);
         }
 
         @Override
@@ -404,12 +437,11 @@ public class ChatMessagesComponent {
             inputField.textProperty().unbindBidirectional(model.getTextInput());
             createOfferButton.setOnAction(null);
             inputField.setOnKeyPressed(null);
-            model.getFilteredChatMessages().removeListener(messagesListener);
+            model.getSortedChatMessages().removeListener(messagesListener);
         }
 
         private Callback<ListView<ChatMessageListItem<? extends ChatMessage>>, ListCell<ChatMessageListItem<? extends ChatMessage>>> getCellFactory() {
             return new Callback<>() {
-
                 @Override
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
@@ -429,13 +461,14 @@ public class ChatMessagesComponent {
 
                         {
                             nickNameLabel.setId("chat-user-name");
-                            nickNameLabel.setPadding(new Insets(2, 0, -8, 0));
+                            nickNameLabel.setPadding(new Insets(10, 0, 0, 0));
                             time.getStyleClass().add("message-header");
                             time.setPadding(new Insets(-6, 0, 0, 0));
                             time.setVisible(false);
 
                             message.setAutoHeight(true);
-                            VBox.setMargin(message, new Insets(0, 0, 0, 5));
+                            message.setPadding(new Insets(-35, 0, 0, 0));
+                            //  VBox.setMargin(message, new Insets(-25, 0, 0, 5));
 
                             //todo emojiButton1, emojiButton2, emojiButton3 will be filled with emoji icons
                             emojiButton1 = BisqIconButton.createIconButton(AwesomeIcon.THUMBS_UP_ALT);
@@ -464,8 +497,7 @@ public class ChatMessagesComponent {
                                     moreOptionsButton);
                             reactionsBox.setSpacing(5);
                             reactionsBox.setVisible(false);
-                            reactionsBox.setStyle("-fx-background-color: -bisq-grey-left-nav-selected-bg; -fx-background-radius: 3px");
-                            // reactionsBox.setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
+                            reactionsBox.setStyle("-fx-background-color: -bisq-grey-18; -fx-background-radius: 3px");
 
                             editedMessageField = new BisqTextArea();
                             editedMessageField.setVisible(false);
@@ -488,8 +520,9 @@ public class ChatMessagesComponent {
                             VBox.setVgrow(messageBox, Priority.ALWAYS);
                             vBox = Layout.vBoxWith(nickNameLabel, messageBox);
                             HBox.setHgrow(vBox, Priority.ALWAYS);
-                            hBox = Layout.hBoxWith(Layout.vBoxWith(chatUserIcon, time), vBox);
-                            setStyle("-fx-background-color: -fx-base");
+                            VBox userIconTimeBox = Layout.vBoxWith(chatUserIcon, time);
+                            HBox.setMargin(userIconTimeBox, new Insets(10, 0, 0, -10));
+                            hBox = Layout.hBoxWith(userIconTimeBox, vBox);
                         }
 
                         @Override
@@ -534,11 +567,7 @@ public class ChatMessagesComponent {
                                 }
 
                                 message.setText(item.getMessage());
-                              /*  message.setStyleSpans(0, KeyWordDetection.getStyleSpans(item.getMessage(),
-                                        model.getTradeTags(),
-                                        model.getCurrencyTags(),
-                                        model.getPaymentMethodsTags(),
-                                        model.getCustomTags()));*/
+                                message.setStyleSpans(0, KeyWordDetection.getStyleSpans(item.getMessage(), model.getCustomTags()));
 
                                 time.setText(item.getTime());
 
@@ -560,14 +589,14 @@ public class ChatMessagesComponent {
                                 setOnMouseEntered(e -> {
                                     time.setVisible(true);
                                     reactionsBox.setVisible(true);
-                                    messageBox.setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
-                                    setStyle("-fx-background-color: -bisq-grey-left-nav-bg;");
+                                    messageBox.setStyle("-fx-background-color: -bisq-grey-left-nav-selected-bg");
+                                    setStyle("-fx-background-color: -bisq-grey-left-nav-selected-bg;");
                                 });
                                 setOnMouseExited(e -> {
                                     time.setVisible(false);
                                     reactionsBox.setVisible(false);
-                                    messageBox.setStyle("-fx-background-color: -fx-base");
-                                    setStyle("-fx-background-color: -fx-base");
+                                    messageBox.setStyle("-fx-background-color: transparent");
+                                    setStyle("-fx-background-color: transparent");
                                 });
 
                                 ChatMessage chatMessage = item.getChatMessage();

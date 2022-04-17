@@ -125,10 +125,6 @@ message PublicChannel {
   string description = 2;
   ChatUser channelAdmin = 3;
   repeated ChatUser channelModerators = 4;
-  repeated string tradeTags = 5;
-  repeated string currencyTags = 6;
-  repeated string paymentMethodTags = 7;
-  repeated string customTags = 8;
 }
 message Channel {
   string id = 1;
@@ -152,7 +148,8 @@ message ChatStore {
   repeated Channel publicChannels = 2;
   repeated Channel marketChannels = 3;
   Channel selectedChannel = 4;
-  repeated string ignoredChatUserIds = 5;
+  repeated string customTags = 5;
+  repeated string ignoredChatUserIds = 6;
 }
 
 message MarketChatOfferStore {

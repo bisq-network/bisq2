@@ -32,16 +32,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Getter
 public class ChatStore implements PersistableStore<ChatStore> {
-    @Getter
+
     private final ObservableSet<PrivateChannel> privateChannels = new ObservableSet<>();
-    @Getter
     private final ObservableSet<PublicChannel> publicChannels = new ObservableSet<>();
-    @Getter
     private final ObservableSet<MarketChannel> marketChannels = new ObservableSet<>();
-    @Getter
     private final Observable<Channel<? extends ChatMessage>> selectedChannel = new Observable<>();
-    @Getter
+    private final ObservableSet<String> customTags = new ObservableSet<>();
     private final ObservableSet<String> ignoredChatUserIds = new ObservableSet<>();
 
     public ChatStore() {
@@ -51,11 +49,13 @@ public class ChatStore implements PersistableStore<ChatStore> {
                       Set<PublicChannel> publicChannels,
                       Set<MarketChannel> marketChannels,
                       Channel<? extends ChatMessage> selectedChannel,
+                      Set<String> customTags,
                       Set<String> ignoredChatUserIds) {
         setAll(privateChannels,
                 publicChannels,
                 marketChannels,
                 selectedChannel,
+                customTags,
                 ignoredChatUserIds);
     }
 
@@ -66,6 +66,7 @@ public class ChatStore implements PersistableStore<ChatStore> {
                 .addAllPublicChannels(publicChannels.stream().map(PublicChannel::toProto).collect(Collectors.toSet()))
                 .addAllMarketChannels(marketChannels.stream().map(MarketChannel::toProto).collect(Collectors.toSet()))
                 .setSelectedChannel(selectedChannel.get().toProto())
+                .addAllCustomTags(customTags)
                 .addAllIgnoredChatUserIds(ignoredChatUserIds)
                 .build();
     }
@@ -84,6 +85,7 @@ public class ChatStore implements PersistableStore<ChatStore> {
                 publicChannels,
                 marketChannels,
                 Channel.fromProto(proto.getSelectedChannel()),
+                new HashSet<>(proto.getCustomTagsCount()),
                 new HashSet<>(proto.getIgnoredChatUserIdsList())
         );
     }
@@ -105,6 +107,7 @@ public class ChatStore implements PersistableStore<ChatStore> {
                 chatStore.publicChannels,
                 chatStore.marketChannels,
                 chatStore.selectedChannel.get(),
+                chatStore.getCustomTags(),
                 chatStore.ignoredChatUserIds);
     }
 
@@ -114,6 +117,7 @@ public class ChatStore implements PersistableStore<ChatStore> {
                 publicChannels,
                 marketChannels,
                 selectedChannel.get(),
+                customTags,
                 ignoredChatUserIds);
     }
 
@@ -121,6 +125,7 @@ public class ChatStore implements PersistableStore<ChatStore> {
                        Set<PublicChannel> publicChannels,
                        Set<MarketChannel> marketChannels,
                        Channel<? extends ChatMessage> selectedChannel,
+                       Set<String> customTags,
                        Set<String> ignoredChatUserIds) {
         this.privateChannels.clear();
         this.privateChannels.addAll(privateChannels);
@@ -129,6 +134,8 @@ public class ChatStore implements PersistableStore<ChatStore> {
         this.marketChannels.clear();
         this.marketChannels.addAll(marketChannels);
         this.selectedChannel.set(selectedChannel);
+        this.customTags.clear();
+        this.customTags.addAll(customTags);
         this.ignoredChatUserIds.clear();
         this.ignoredChatUserIds.addAll(ignoredChatUserIds);
     }

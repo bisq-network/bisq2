@@ -236,36 +236,6 @@
     -fx-shape: "M 0 0 l 3.5 4 l 3.5 -4";
 }
 
-.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
-    -fx-background: -fx-selection-bar;
-    -fx-background-color: -fx-selection-bar;
-}
-
-.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
-.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
-    -fx-background: -fx-accent;
-    -fx-background-color: -fx-selection-bar;
-}
-
-
-/* list view */
-/*.list-view .list-cell {
-    -fx-background-color: -bs-background-color;
-}
-.list-view .list-cell:odd {
-    -fx-background-color: derive(-bs-background-color, -5%);
-}
-.list-view .list-cell:even {
-    -fx-background-color: derive(-bs-background-color, 5%);
-}
-.list-view .list-cell:hover,
-.list-view .list-cell:selected,
-.table-view .table-cell:hover,
-.table-view .table-cell:selected {
-    -fx-background: -fx-accent;
-    -fx-background-color: -fx-selection-bar;
-    -fx-border-color: -fx-selection-bar;
-}*/
 
 .number-column.table-cell {
     -fx-background-color: -bs-background-color;
@@ -1156,14 +1126,6 @@ textfield */
     -fx-cursor: hand;
 }
 
-/*******************************************************************************
- *                                                                             *
- * Textarea                                                                    *
- *                                                                             *
- ******************************************************************************/
-.text-area {
-    -fx-border-color: -bs-background-gray;
-}
 
 /*******************************************************************************
  *                                                                             *

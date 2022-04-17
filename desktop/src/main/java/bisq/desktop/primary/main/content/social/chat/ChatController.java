@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.social.chat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -82,16 +81,11 @@ public class ChatController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getCustomTags().addAll(chatService.getCustomTags());
         notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
                 value -> chatService.setNotificationSetting(chatService.getPersistableStore().getSelectedChannel().get(), value));
 
         selectedChannelPin = chatService.getPersistableStore().getSelectedChannel().addObserver(channel -> {
-            if (channel instanceof PublicChannel publicChannel) {
-                tradeTagsPin = FxBindings.<String, String>bind(model.getTradeTags()).map(String::toUpperCase).to(publicChannel.getTradeTags());
-                currencyTagsPin = FxBindings.<String, String>bind(model.getCurrencyTags()).map(String::toUpperCase).to(publicChannel.getCurrencyTags());
-                paymentMethodTagsPin = FxBindings.<String, String>bind(model.getPaymentMethodsTags()).map(String::toUpperCase).to(publicChannel.getPaymentMethodTags());
-                customTagsPin = FxBindings.<String, String>bind(model.getCustomTags()).map(String::toUpperCase).to(publicChannel.getCustomTags());
-            }
 
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
@@ -166,17 +160,10 @@ public class ChatController implements Controller {
     public void onDeactivate() {
         notificationSettingSubscription.unsubscribe();
         selectedChannelPin.unbind();
-        chatMessagesPin.unbind();
+       // chatMessagesPin.unbind();
 
         if (messageListener != null) {
             model.getChatMessages().removeListener(messageListener);
-        }
-
-        if (tradeTagsPin != null) {
-            tradeTagsPin.unbind();
-            currencyTagsPin.unbind();
-            paymentMethodTagsPin.unbind();
-            customTagsPin.unbind();
         }
     }
 

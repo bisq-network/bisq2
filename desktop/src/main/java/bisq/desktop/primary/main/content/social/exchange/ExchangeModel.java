@@ -26,8 +26,6 @@ import bisq.social.chat.ChatMessage;
 import bisq.social.chat.ChatService;
 import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.*;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,6 +38,8 @@ import java.util.Optional;
 @Slf4j
 @Getter
 public class ExchangeModel implements Model {
+    private final ChatService chatService;
+    private final UserProfileService userProfileService;
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
     private final StringProperty selectedChannelAsString = new SimpleStringProperty("");
@@ -49,22 +49,12 @@ public class ExchangeModel implements Model {
     private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();
     private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
-
-  
-    private final ChatService chatService;
-   
-    private final UserProfileService userProfileService;
     @Setter
     private Optional<ChatUserDetails> chatUserDetails = Optional.empty();
-    private final ObservableList<String> tradeTags = FXCollections.observableArrayList();
-    private final ObservableList<String> currencyTags = FXCollections.observableArrayList();
-    private final ObservableList<String> paymentMethodsTags = FXCollections.observableArrayList();
-    private final ObservableList<String> customTags = FXCollections.observableArrayList();
-    
+
     public ExchangeModel(ChatService chatService, UserProfileService userProfileService) {
         this.chatService = chatService;
         this.userProfileService = userProfileService;
-      
     }
 
     void setSendMessageResult(String channelId, ConfidentialMessageService.Result result, BroadcastResult broadcastResult) {

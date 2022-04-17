@@ -338,7 +338,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
                 if (node instanceof ListView _listView) {
                     //noinspection unchecked
                     listView = _listView;
-                    listView.getStyleClass().add("bisq-combo-box-list-view");
+                    listView.setId("bisq-combo-box-list-view");
 
                     // Hack to get access to background and insert our polygon
                     listView.parentProperty().addListener(new WeakReference<>(

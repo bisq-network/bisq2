@@ -32,11 +32,7 @@ public class PublicChannelSelection extends ChannelSelection {
             public void onActivate() {
                 super.onActivate();
                 channelsPin = FxBindings.<PublicChannel, Channel<?>>bind(model.channels)
-                        .to(this.chatService.getPersistableStore().getPublicChannels());
-
-                if (!model.channels.isEmpty()) {
-                    chatService.selectChannel(model.channels.get(0));
-                }
+                        .to(chatService.getPublicChannels());
             }
         });
     }

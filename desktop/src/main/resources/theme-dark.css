@@ -331,49 +331,6 @@ Taken from Bisq. Might need some clean up
     -fx-border-radius: 1;
 }
 
-/*.combo-box-popup > .list-view {
-    -fx-background-color: -bs-background-color;
-}*/
-
-/*
-.jfx-combo-box > .arrow-button > .arrow {
-    -fx-border-color: -bs-color-gray-13;
-}
-*/
-
-/*.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
-    -fx-background: -bs-combobox-selected;
-    -fx-background-color: -bs-combobox-selected;
-}
-
-.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
-.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
-    -fx-background: -bs-combobox-hover;
-    -fx-background-color: -bs-combobox-hover;
-    -fx-text-fill: -bs-text-color;
-}*/
-/*
-.list-view .list-cell:odd, .list-view .list-cell:even {
-    -fx-background-color: -bs-background-color;
-    -fx-border-width: 0;
-}
-
-.list-view .list-cell:selected,
-.table-view .table-cell:selected {
-    -fx-border-color: transparent;
-    -fx-border-width: 0;
-}
-
-.list-view, .list-view:focused {
-    -fx-border-color: -bs-content-background-gray;
-    -fx-border-width: 1;
-}
-
-.list-view .list-cell, .list-view .list-cell:focused {
-    -fx-border-color: transparent;
-    -fx-border-width: 0;
-}*/
-
 .jfx-text-field {
     -fx-background-radius: 4;
 }

@@ -59,6 +59,9 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
             case PUBLICCHANNEL -> {
                 return PublicChannel.fromProto(proto, proto.getPublicChannel());
             }
+            case MARKETCHANNEL -> {
+                return MarketChannel.fromProto(proto, proto.getMarketChannel());
+            }
             case MESSAGE_NOT_SET -> {
                 throw new UnresolvableProtobufMessageException(proto);
             }

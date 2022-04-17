@@ -35,8 +35,9 @@ public class PrivateChannelSelection extends ChannelSelection {
                 chatService.removeExpiredPrivateMessages();
                 super.onActivate();
                 channelsPin = FxBindings.<PrivateChannel, Channel<?>> bind(model.channels)
-                        .to(chatService.getPersistableStore().getPrivateChannels());
+                        .to(chatService.getPrivateChannels());
             }
         });
     }
+    
 }

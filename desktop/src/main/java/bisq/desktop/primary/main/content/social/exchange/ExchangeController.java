@@ -19,12 +19,10 @@ package bisq.desktop.primary.main.content.social.exchange;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.social.components.*;
 import bisq.social.chat.ChatService;
-import bisq.social.chat.PublicChannel;
 import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,9 +42,9 @@ public class ExchangeController implements Controller {
     private final ChannelInfo channelInfo;
     private final NotificationsSettings notificationsSettings;
     private final QuotedMessageBlock quotedMessageBlock;
-    private final MarketChannelSelection marketChannelSelection;
     private final UserProfileSelection userProfileDisplay;
     private final ChatMessagesComponent chatMessagesComponent;
+    private final MarketChannelSelection marketChannelSelection;
     private Pin selectedChannelPin, tradeTagsPin, currencyTagsPin, paymentMethodTagsPin, customTagsPin;
 
     private Subscription notificationSettingSubscription;
@@ -56,8 +54,8 @@ public class ExchangeController implements Controller {
         userProfileService = applicationService.getUserProfileService();
 
         userProfileDisplay = new UserProfileSelection(userProfileService);
-        marketChannelSelection = new MarketChannelSelection(chatService, applicationService.getSettingsService());
         privateChannelSelection = new PrivateChannelSelection(chatService);
+        marketChannelSelection = new MarketChannelSelection(chatService);
         chatMessagesComponent = new ChatMessagesComponent(chatService, userProfileService);
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
@@ -67,7 +65,7 @@ public class ExchangeController implements Controller {
         view = new ExchangeView(model,
                 this,
                 userProfileDisplay.getRoot(),
-                marketChannelSelection,
+                marketChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 notificationsSettings.getRoot(),
@@ -77,39 +75,14 @@ public class ExchangeController implements Controller {
 
     @Override
     public void onActivate() {
-        //  chatMessagesComponent.selectedChannelListItemProperty().bind(marketChannelSelection.selectedMarketProperty());
-
-        EasyBind.subscribe(marketChannelSelection.selectedMarketProperty(), item -> {
-            if (item != null) {
-                model.getSelectedChannelAsString().set(item.getChannel().getId());
-                chatMessagesComponent.setSelectedChannelListItem(item);
-            }
-        });
-        // marketSelection.setSelectedMarket(data.market());
-
         notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
-                value -> chatService.setNotificationSetting(chatService.getPersistableStore().getSelectedChannel().get(), value));
+                value -> chatService.setNotificationSetting(chatService.getSelectedChannel().get(), value));
 
-        selectedChannelPin = chatService.getPersistableStore().getSelectedChannel().addObserver(channel -> {
-            if (channel instanceof PublicChannel publicChannel) {
-                tradeTagsPin = FxBindings.<String, String>bind(model.getTradeTags()).map(String::toUpperCase).to(publicChannel.getTradeTags());
-                currencyTagsPin = FxBindings.<String, String>bind(model.getCurrencyTags()).map(String::toUpperCase).to(publicChannel.getCurrencyTags());
-                paymentMethodTagsPin = FxBindings.<String, String>bind(model.getPaymentMethodsTags()).map(String::toUpperCase).to(publicChannel.getPaymentMethodTags());
-                customTagsPin = FxBindings.<String, String>bind(model.getCustomTags()).map(String::toUpperCase).to(publicChannel.getCustomTags());
-            }
-
-         /*   if (chatMessagesPin != null) {
-                chatMessagesPin.unbind();
-            }*/
-            
-          /*  chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
-                    .map(ChatMessageListItem::new) // only Public or PrivatChatmessage possible here
-                    .to((ObservableSet<ChatMessage>) channel.getChatMessages());
-
-            model.getSelectedChannelAsString().set(channel.getMarket());*/
-
+        selectedChannelPin = chatService.getSelectedChannel().addObserver(channel -> {
+            model.getSelectedChannelAsString().set(channel.getId());
             model.getSelectedChannel().set(channel);
-            if (model.getChannelInfoVisible().get()) {
+
+          /*  if (model.getChannelInfoVisible().get()) {
                 channelInfo.setChannel(channel);
                 channelInfo.setOnUndoIgnoreChatUser(() -> {
                     refreshMessages();
@@ -118,9 +91,7 @@ public class ExchangeController implements Controller {
             }
             if (model.getNotificationsVisible().get()) {
                 notificationsSettings.setChannel(channel);
-            }
-
-
+            }*/
         });
     }
 
@@ -128,16 +99,7 @@ public class ExchangeController implements Controller {
     public void onDeactivate() {
         notificationSettingSubscription.unsubscribe();
         selectedChannelPin.unbind();
-       // chatMessagesPin.unbind();
-
-        if (tradeTagsPin != null) {
-            tradeTagsPin.unbind();
-            currencyTagsPin.unbind();
-            paymentMethodTagsPin.unbind();
-            customTagsPin.unbind();
-        }
     }
-
 
     public void onToggleFilterBox() {
         boolean visible = !model.getFilterBoxVisible().get();

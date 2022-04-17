@@ -21,6 +21,7 @@ import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
 import bisq.common.monetary.MarketRepository;
+import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
@@ -149,10 +150,6 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Optional<PublicChannel>> addChannel(UserProfile userProfile, String channelName, String description) {
-        Set<String> currencyTags = getFiatCurrencyTags();
-        Set<String> tradeTags = getTradeTags();
-        Set<String> paymentMethodTags = getPaymentMethodTags();
-        Set<String> customTags = getCustomTags();
         return userProfile.getEntitlements().stream()
                 .filter(entitlement -> entitlement.entitlementType() == Entitlement.Type.CHANNEL_ADMIN)
                 .filter(entitlement -> entitlement.proof() instanceof Entitlement.BondedRoleProof)
@@ -166,11 +163,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                     channelName,
                                     description,
                                     chatUser,
-                                    new HashSet<>(),
-                                    tradeTags,
-                                    currencyTags,
-                                    paymentMethodTags,
-                                    customTags);
+                                    new HashSet<>());
                             persistableStore.getPublicChannels().add(publicChannel);
                             persist();
                             setSelectedChannelIfNotSet();
@@ -394,10 +387,6 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         persistableStore.getMarketChannels().add(new MarketChannel(MarketRepository.getXmrMarket()));
         persistableStore.getSelectedChannel().set(defaultChannel);
 
-        Set<String> currencyTags = getFiatCurrencyTags();
-        Set<String> tradeTags = getTradeTags();
-        Set<String> paymentMethodTags = getPaymentMethodTags();
-        Set<String> customTags = getCustomTags();
         ChatUser dummyChannelAdmin = new ChatUser(userProfile.getIdentity().networkId());
         Set<ChatUser> dummyChannelModerators = userProfileService.getPersistableStore().getUserProfiles().stream()
                 .map(p -> new ChatUser(p.getIdentity().networkId()))
@@ -407,56 +396,43 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 "Discussions Bisq",
                 "Channel for discussions about Bisq",
                 dummyChannelAdmin,
-                dummyChannelModerators,
-                tradeTags,
-                currencyTags,
-                paymentMethodTags,
-                customTags));
+                dummyChannelModerators
+        ));
         persistableStore.getPublicChannels().add(new PublicChannel("Discussions Bitcoin",
                 "Discussions Bitcoin",
                 "Channel for discussions about Bitcoin",
                 dummyChannelAdmin,
-                dummyChannelModerators,
-                tradeTags,
-                currencyTags,
-                paymentMethodTags,
-                customTags));
+                dummyChannelModerators
+        ));
         persistableStore.getPublicChannels().add(new PublicChannel("Discussions Monero",
                 "Discussions Monero",
                 "Channel for discussions about Monero",
                 dummyChannelAdmin,
-                dummyChannelModerators,
-                tradeTags,
-                currencyTags,
-                paymentMethodTags,
-                customTags));
+                dummyChannelModerators
+        ));
         persistableStore.getPublicChannels().add(new PublicChannel("Price",
                 "Price",
                 "Channel for discussions about market price",
                 dummyChannelAdmin,
-                dummyChannelModerators,
-                tradeTags,
-                currencyTags,
-                paymentMethodTags,
-                customTags));
+                dummyChannelModerators
+        ));
         persistableStore.getPublicChannels().add(new PublicChannel("Economy",
                 "Economy",
                 "Channel for discussions about economy",
                 dummyChannelAdmin,
-                dummyChannelModerators,
-                tradeTags,
-                currencyTags,
-                paymentMethodTags,
-                customTags));
+                dummyChannelModerators
+        ));
         persistableStore.getPublicChannels().add(new PublicChannel("Off-topic",
                 "Off-topic",
                 "Channel for anything else",
                 dummyChannelAdmin,
-                dummyChannelModerators,
-                tradeTags,
-                currencyTags,
-                paymentMethodTags,
-                customTags));
+                dummyChannelModerators
+        ));
+
+        Set<String> customTags = Set.of("BTC", "Bitcoin", "bank-transfer", "SEPA", "zelle", "revolut", "BUY", "SELL", "WANT", "RECEIVE",
+                "Tor", "I2P", "Trezor", "Ledger", "Wasabi", "Samurai", "Monero");
+        persistableStore.getCustomTags().addAll(customTags);
+        persist();
     }
 
     private void setSelectedChannelIfNotSet() {
@@ -472,22 +448,10 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return Stream.concat(names, codes).collect(Collectors.toSet());
     }
 
-    private Set<String> getCustomTags() {
-        return Set.of("Tor", "I2P", "Trezor", "Ledger", "Wasabi", "Samurai", "Monero");
-    }
-
-    private Set<String> getPaymentMethodTags() {
-        return Set.of("sepa", "bank-transfer", "zelle", "revolut");
-    }
-
-    private Set<String> getTradeTags() {
-        return Set.of("BUY", "SELL", "WANT", "RECEIVE");
-    }
 
     public void removeExpiredPrivateMessages() {
         // will need to go through al channels and check on their messages if they have expired.
-        persistableStore.getPrivateChannels().stream()
-                .forEach(this::purgeExpired);
+        persistableStore.getPrivateChannels().forEach(this::purgeExpired);
     }
 
 /*    private List<MarketChannel> getMarketChannels() {
@@ -522,5 +486,13 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public ObservableSet<PrivateChannel> getPrivateChannels() {
         return persistableStore.getPrivateChannels();
+    }
+
+    public Observable<Channel<? extends ChatMessage>> getSelectedChannel() {
+        return persistableStore.getSelectedChannel();
+    }
+
+    public Set<String> getCustomTags() {
+        return persistableStore.getCustomTags();
     }
 }

@@ -51,6 +51,7 @@ public class ChatUser implements Proto {
     private final Set<Entitlement> entitlements;
     private transient DerivedData derivedData;
 
+    //todo add nickName
     public ChatUser(NetworkId networkId) {
         this(networkId, new HashSet<>());
     }

@@ -23,7 +23,6 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Skin;
 import javafx.scene.text.Text;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -47,14 +46,13 @@ public class BisqTextArea extends JFXTextArea {
     private double scrollHideThreshold = SCROLL_HIDE_THRESHOLD;
     private boolean initialized;
     private final InvalidationListener textChangeListener = o -> adjustHeight();
-    ;
     private ScrollPane selectorScrollPane;
     private Text selectorText;
 
     public BisqTextArea() {
         setWrapText(true);
 
-        setStyle("-fx-background-color: -bisq-grey-5; -fx-border-color: -bisq-grey-5; -fx-text-fill: -fx-light-text-color;");
+       // setStyle("-fx-background-color: -bisq-grey-5; -fx-border-color: -bisq-grey-5; -fx-text-fill: -fx-light-text-color;");
 
         // We use a weakReference for the sceneChangeListener to avoid leaking when our instance is gone
         sceneProperty().addListener(new WeakReference<>((ChangeListener<Scene>) (observable, oldValue, newValue) -> {
@@ -109,10 +107,10 @@ public class BisqTextArea extends JFXTextArea {
         }
     }
 
-    @Override
+ /*   @Override
     protected Skin<?> createDefaultSkin() {
         return new JFXTextAreaSkinBisqStyle(this);
-    }
+    }*/
 
     private void adjustHeight() {
         double textHeight = selectorText.getBoundsInLocal().getHeight();

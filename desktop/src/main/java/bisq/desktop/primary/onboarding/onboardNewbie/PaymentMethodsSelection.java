@@ -18,6 +18,7 @@
 package bisq.desktop.primary.onboarding.onboardNewbie;
 
 import bisq.common.monetary.Market;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqLabel;
@@ -42,7 +43,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 
@@ -168,7 +168,6 @@ public class PaymentMethodsSelection {
         private final FlowPane selectedPaymentMethodsBox;
         private final ChangeListener<String> selectedItemListener;
         private final BisqLabel maxPaymentMethods;
-        private Subscription maxWidthSubscription;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
@@ -197,7 +196,7 @@ public class PaymentMethodsSelection {
             };
             selectedItemListener = (observable, oldValue, newValue) -> {
                 controller.onAddPaymentMethod(comboBox.getSelectionModel().getSelectedItem());
-                comboBox.getSelectionModel().select(null);
+                UIThread.runOnNextRenderFrame(()-> comboBox.getSelectionModel().clearSelection());
             };
         }
 
@@ -211,8 +210,6 @@ public class PaymentMethodsSelection {
             model.selectedPaymentMethods.addListener(selectedPaymentMethodsListener);
 
             comboBox.maxWidthProperty().bind(root.maxWidthProperty());
-            comboBox.minWidthProperty().bind(root.minWidthProperty());
-            comboBox.prefWidthProperty().bind(root.prefWidthProperty());
         }
 
         @Override
@@ -223,11 +220,8 @@ public class PaymentMethodsSelection {
 
             comboBox.getSelectionModel().selectedItemProperty().removeListener(selectedItemListener);
             model.selectedPaymentMethods.removeListener(selectedPaymentMethodsListener);
-            maxWidthSubscription.unsubscribe();
 
             comboBox.maxWidthProperty().unbind();
-            comboBox.minWidthProperty().unbind();
-            comboBox.prefWidthProperty().unbind();
         }
 
         private Node getPaymentMethodItem(String paymentMethod) {

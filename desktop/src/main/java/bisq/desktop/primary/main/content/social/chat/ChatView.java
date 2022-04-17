@@ -124,7 +124,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         VBox.setVgrow(messagesListView, Priority.ALWAYS);
 
         inputField = new BisqTextArea();
-        inputField.setLabelFloat(true);
+       // inputField.setLabelFloat(true);
         inputField.setPromptText(Res.get("social.chat.input.prompt"));
         inputField.setStyle("-fx-background-color: -fx-base");
 
@@ -358,11 +358,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
                             }
 
                             message.setText(item.getMessage());
-                            message.setStyleSpans(0, KeyWordDetection.getStyleSpans(item.getMessage(),
-                                    model.getTradeTags(),
-                                    model.getCurrencyTags(),
-                                    model.getPaymentMethodsTags(),
-                                    model.getCustomTags()));
+                            message.setStyleSpans(0, KeyWordDetection.getStyleSpans(item.getMessage(), model.getCustomTags()));
 
                             time.setText(item.getTime());
 
