@@ -50,7 +50,7 @@ public class SocialController extends TabController<SocialModel> {
     @Override
     public void onActivate() {
         selectedUserProfilePin = FxBindings.bind(model.getSelectedUserProfile())
-                .to(applicationService.getUserProfileService().getPersistableStore().getSelectedUserProfile());
+                .to(applicationService.getUserProfileService().getSelectedUserProfile());
     }
 
     @Override

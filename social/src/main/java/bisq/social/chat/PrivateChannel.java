@@ -109,7 +109,7 @@ public class PrivateChannel extends Channel<PrivateChatMessage> {
         String myName = peerName.equals(chatNames[0]) ? chatNames[1] : chatNames[0];
         // now go through all my identities and get the one with the right Name
         // it should be ensured by the NameGenerator that  they are unique!
-        return userProfileService.getPersistableStore().getUserProfiles().stream()
+        return userProfileService.getUserProfiles().stream()
                 .filter(up -> up.getProfileId().equals(myName))
                 .findAny()
                 .orElseThrow(); // TODO how to report errors

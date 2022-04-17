@@ -24,7 +24,6 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import bisq.social.user.Entitlement;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -37,11 +36,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class UserProfileStore implements PersistableStore<UserProfileStore> {
-    @Getter
     private final Observable<UserProfile> selectedUserProfile = new Observable<>();
-    @Getter
     private final ObservableSet<UserProfile> userProfiles;
-    @Getter
     private final Map<String, Entitlement.ProofOfBurnProof> verifiedProofOfBurnProofs = new HashMap<>();
 
     public UserProfileStore() {
@@ -97,5 +93,17 @@ public class UserProfileStore implements PersistableStore<UserProfileStore> {
         selectedUserProfile.set(persisted.getSelectedUserProfile().get());
         userProfiles.addAll(persisted.getUserProfiles());
         verifiedProofOfBurnProofs.putAll(persisted.getVerifiedProofOfBurnProofs());
+    }
+
+    Observable<UserProfile> getSelectedUserProfile() {
+        return selectedUserProfile;
+    }
+
+    ObservableSet<UserProfile> getUserProfiles() {
+        return userProfiles;
+    }
+
+    Map<String, Entitlement.ProofOfBurnProof> getVerifiedProofOfBurnProofs() {
+        return verifiedProofOfBurnProofs;
     }
 }

@@ -73,8 +73,8 @@ public class UserProfileSelectionAtSettings {
 
         @Override
         public void onActivate() {
-            userProfilesPin = FxBindings.<UserProfile, UserProfile>bind(model.userProfiles).to(userProfileService.getPersistableStore().getUserProfiles());
-            selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(userProfileService.getPersistableStore().getSelectedUserProfile());
+            userProfilesPin = FxBindings.<UserProfile, UserProfile>bind(model.userProfiles).to(userProfileService.getUserProfiles());
+            selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(userProfileService.getSelectedUserProfile());
         }
 
         @Override

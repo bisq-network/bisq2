@@ -78,6 +78,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         );
         left.setPadding(new Insets(0, 10, 0, 0));
         left.setPrefWidth(300);
+        left.setMinWidth(180);
 
         // Center toolbar
         // peersRoboIconView only visible for private channels
@@ -112,7 +113,7 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         channelInfo.setMinWidth(200);
         sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo);
         sideBar.setAlignment(Pos.TOP_RIGHT);
-        sideBar.setMinWidth(200);
+        sideBar.setMinWidth(340);
         sideBar.setPadding(new Insets(10, 20, 20, 20));
         sideBar.setFillWidth(true);
         sideBar.setStyle("-fx-background-color: -bisq-grey-left-nav-bg");
@@ -123,6 +124,8 @@ public class ExchangeView extends View<SplitPane, ExchangeModel, ExchangeControl
         
         HBox.setMargin(chatMessagesComponent, new Insets(0, 0, 10, 10));
         HBox.setHgrow(chatMessagesComponent, Priority.ALWAYS);
+        VBox.setMargin(chatMessagesComponent, new Insets(0,0,15,0));
+        chatMessagesComponent.setMinWidth(650);
         messagesListAndSideBar = Layout.hBoxWith(chatMessagesComponent, sideBar);
         
         VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);

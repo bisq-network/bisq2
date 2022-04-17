@@ -83,6 +83,19 @@ public class ExchangeController implements Controller {
         notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
                 value -> chatService.setNotificationSetting(chatService.getSelectedChannel().get(), value));
 
+        chatMessagesComponent.setOnShowChatUserDetails(chatUser -> {
+            model.getSideBarVisible().set(true);
+            model.getChannelInfoVisible().set(false);
+            model.getNotificationsVisible().set(false);
+
+            ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(), chatUser);
+            chatUserDetails.setOnSendPrivateMessage(chatMessagesComponent::openPrivateChannel);
+            chatUserDetails.setOnIgnoreChatUser(chatMessagesComponent::refreshMessages);
+            chatUserDetails.setOnMentionUser(chatUser2 -> chatMessagesComponent.mentionUser(chatUser2));
+            model.setChatUserDetails(Optional.of(chatUserDetails));
+            model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
+        });
+
         selectedChannelPin = chatService.getSelectedChannel().addObserver(channel -> {
             model.getSelectedChannelAsString().set(channel.getDisplayString());
             model.getSelectedChannel().set(channel);
@@ -139,20 +152,12 @@ public class ExchangeController implements Controller {
         if (visible) {
             channelInfo.setChannel(model.getSelectedChannel().get());
             channelInfo.setOnUndoIgnoreChatUser(() -> {
-                refreshMessages();
+                chatMessagesComponent.refreshMessages();
                 channelInfo.setChannel(model.getSelectedChannel().get());
             });
         }
     }
 
-
-    private void refreshMessages() {
-        //chatMessagesPin.unbind();
-      /*  chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
-                .map(ChatMessageListItem::new)
-                .to((ObservableSet<ChatMessage>) model.getSelectedChannel().get().getChatMessages()); */
-        //todo expected type <? extends ChatMessage> does not work ;-(
-    }
 
     public void onCloseSideBar() {
         model.getSideBarVisible().set(false);

@@ -61,7 +61,7 @@ public class MarketChatOfferService implements PersistenceClient<MarketChatOffer
                                                                                      long baseSideAmount,
                                                                                      Set<String> selectedPaymentMethods,
                                                                                      String makersTradeTerms) {
-        UserProfile userProfile = chatService.getUserProfileService().getSelectedUserProfile();
+        UserProfile userProfile = chatService.getUserProfileService().getSelectedUserProfile().get();
         MarketChatOffer marketChatOffer = new MarketChatOffer(baseSideAmount,
                 selectedMarket.quoteCurrencyCode(),
                 selectedPaymentMethods,

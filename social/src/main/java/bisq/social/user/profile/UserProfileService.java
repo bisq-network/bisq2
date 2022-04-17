@@ -19,6 +19,8 @@ package bisq.social.user.profile;
 
 import bisq.common.data.Pair;
 import bisq.common.encoding.Hex;
+import bisq.common.observable.Observable;
+import bisq.common.observable.ObservableSet;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
@@ -58,7 +60,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 public class UserProfileService implements PersistenceClient<UserProfileStore> {
     // For dev testing we use hard coded txId and a pubkeyhash to get real data from Bisq explorer
     private static final boolean USE_DEV_TEST_POB_VALUES = true;
-
 
     public static record Config(List<String> btcMempoolProviders,
                                 List<String> bsqMempoolProviders) {
@@ -287,8 +288,13 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         };
     }
 
-    public UserProfile getSelectedUserProfile() {
-        return persistableStore.getSelectedUserProfile().get();
+
+    public Observable<UserProfile> getSelectedUserProfile() {
+        return persistableStore.getSelectedUserProfile();
+    }
+
+    public ObservableSet<UserProfile> getUserProfiles() {
+        return persistableStore.getUserProfiles();
     }
 
     private BaseHttpClient getApiHttpClient(List<String> providerUrls) {

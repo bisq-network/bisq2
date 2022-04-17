@@ -68,7 +68,7 @@ public class ChannelAdmin {
         @Override
         public void onActivate() {
             selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile)
-                    .to(userProfileService.getPersistableStore().getSelectedUserProfile());
+                    .to(userProfileService.getSelectedUserProfile());
         }
 
         @Override

@@ -66,6 +66,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static bisq.desktop.primary.main.content.social.components.ChatMessagesComponent.View.EDITED_POST_FIX;
@@ -82,8 +83,8 @@ public class ChatMessagesComponent {
         return controller.view.getRoot();
     }
 
-    public void mentionUser(String userName) {
-        controller.mentionUser(userName);
+    public void mentionUser(ChatUser chatUser) {
+        controller.mentionUser(chatUser);
     }
 
   /*  public ObjectProperty<ChannelListItem<?>> selectedChannelListItemProperty() {
@@ -98,6 +99,19 @@ public class ChatMessagesComponent {
     public FilteredList<ChatMessageListItem<? extends ChatMessage>> getFilteredChatMessages() {
         return controller.model.getFilteredChatMessages();
     }
+
+    public void setOnShowChatUserDetails(Consumer<ChatUser> handler) {
+        controller.model.showChatUserDetailsHandler = Optional.of(handler);
+    }
+
+    public void openPrivateChannel(ChatUser peer) {
+        controller.openPrivateChannel(peer);
+    }
+
+    public void refreshMessages() {
+        controller.refreshMessages();
+    }
+
 
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
@@ -214,7 +228,7 @@ public class ChatMessagesComponent {
 
         void onSendMessage(String text) {
             Channel<? extends ChatMessage> channel = model.selectedChannel.get();
-            UserProfile userProfile = userProfileService.getSelectedUserProfile();
+            UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
             if (channel instanceof MarketChannel marketChannel) {
                 chatService.publishMarketChatTextMessage(text, quotedMessageBlock.getQuotedMessage(), marketChannel, userProfile);
             } else if (channel instanceof PublicChannel publicChannel) {
@@ -225,25 +239,12 @@ public class ChatMessagesComponent {
             quotedMessageBlock.close();
         }
 
-        public void onUserNameClicked(String userName) {
-            mentionUser(userName);
+        public void onMention(ChatUser chatUser) {
+            mentionUser(chatUser);
         }
 
         public void onShowChatUserDetails(ChatMessage chatMessage) {
-            //todo
-           /* model.getSideBarVisible().set(true);
-            model.getChannelInfoVisible().set(false);
-            model.getNotificationsVisible().set(false);
-
-            ChatUserDetails chatUserDetails = new ChatUserDetails(model.getChatService(), chatMessage.getAuthor());
-            chatUserDetails.setOnSendPrivateMessage(chatUser -> {
-                // todo
-                log.info("onSendPrivateMessage {}", chatUser);
-            });
-            chatUserDetails.setOnIgnoreChatUser(this::refreshMessages);
-            chatUserDetails.setOnMentionUser(chatUser -> chatMessagesComponent.mentionUser(chatUser.getProfileId()));
-            model.setChatUserDetails(Optional.of(chatUserDetails));
-            model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());*/
+            model.showChatUserDetailsHandler.ifPresent(handler -> handler.accept(chatMessage.getAuthor()));
         }
 
         public void onOpenEmojiSelector(ChatMessage chatMessage) {
@@ -263,13 +264,23 @@ public class ChatMessagesComponent {
          */
         public void onOpenPrivateChannel(ChatMessage chatMessage) {
             if (chatService.isMyMessage(chatMessage)) {
-                return; // should never happen as the button for opening the channel should not appear
-                // but kept here for double safety
+                return;
             }
-            ChatUser peer = chatMessage.getAuthor();
-            String channelId = PrivateChannel.createChannelId(peer, userProfileService.getPersistableStore().getSelectedUserProfile().get());
+            openPrivateChannel(chatMessage.getAuthor());
+        }
+
+        private void openPrivateChannel(ChatUser peer) {
+            String channelId = PrivateChannel.createChannelId(peer, userProfileService.getSelectedUserProfile().get());
             PrivateChannel channel = chatService.getOrCreatePrivateChannel(channelId, peer);
             chatService.setSelectedChannel(channel);
+        }
+
+        private void refreshMessages() {
+            //chatMessagesPin.unbind();
+      /*  chatMessagesPin = FxBindings.<ChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.getChatMessages())
+                .map(ChatMessageListItem::new)
+                .to((ObservableSet<ChatMessage>) model.getSelectedChannel().get().getChatMessages()); */
+            //todo expected type <? extends ChatMessage> does not work ;-(
         }
 
         public void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
@@ -277,7 +288,7 @@ public class ChatMessagesComponent {
                 return;
             }
             if (chatMessage instanceof PublicChatMessage publicChatMessage) {
-                UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
+                UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
                 chatService.publishEditedPublicChatMessage(publicChatMessage, editedText, userProfile)
                         .whenComplete((r, t) -> {
                             // todo maybe show spinner while deleting old msg and hide it once done?
@@ -289,8 +300,10 @@ public class ChatMessagesComponent {
 
         public void onDeleteMessage(ChatMessage chatMessage) {
             if (chatService.isMyMessage(chatMessage)) {
-                if (chatMessage instanceof PublicChatMessage publicChatMessage) {
-                    UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
+                UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
+                if (chatMessage instanceof MarketChatMessage marketChatMessage) {
+                    chatService.deletePublicChatMessage(marketChatMessage, userProfile);
+                } else if (chatMessage instanceof PublicChatMessage publicChatMessage) {
                     chatService.deletePublicChatMessage(publicChatMessage, userProfile);
                 } else {
                     //todo delete private message
@@ -311,12 +324,12 @@ public class ChatMessagesComponent {
             //Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
         }
 
-        private void mentionUser(String userName) {
+        private void mentionUser(ChatUser chatUser) {
             String existingText = model.getTextInput().get();
             if (!existingText.isEmpty() && !existingText.endsWith(" ")) {
                 existingText += " ";
             }
-            model.getTextInput().set(existingText + "@" + userName + " ");
+            model.getTextInput().set(existingText + "@" + chatUser.getUserName() + " ");
         }
     }
 
@@ -331,6 +344,7 @@ public class ChatMessagesComponent {
         private final StringProperty textInput = new SimpleStringProperty("");
         private final Predicate<ChatMessageListItem<? extends ChatMessage>> ignoredChatUserPredicate;
         private final ObservableList<String> customTags = FXCollections.observableArrayList();
+        private Optional<Consumer<ChatUser>> showChatUserDetailsHandler = Optional.empty();
 
         private Model(ChatService chatService, UserProfileService userProfileService) {
             this.chatService = chatService;
@@ -564,7 +578,7 @@ public class ChatMessagesComponent {
                                 Tooltip.install(time, dateTooltip);
 
                                 userNameLabel.setText(item.getAuthor().getUserName());
-                                userNameLabel.setOnMouseClicked(e -> controller.onUserNameClicked(item.getAuthor().getUserName()));
+                                userNameLabel.setOnMouseClicked(e -> controller.onMention(item.getAuthor()));
 
                                 chatUserIcon.setChatUser(item.getAuthor(), model.getUserProfileService());
                                 chatUserIcon.setCursor(Cursor.HAND);

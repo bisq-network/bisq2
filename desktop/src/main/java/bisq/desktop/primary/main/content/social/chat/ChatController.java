@@ -116,7 +116,7 @@ public class ChatController implements Controller {
             // show the popup but only highlight the notifications icon (we would need to add a notification 
             // settings tab then in the notifications component).
             // We look up all our usernames, not only the selected one
-            Set<String> myUserNames = userProfileService.getPersistableStore().getUserProfiles().stream()
+            Set<String> myUserNames = userProfileService.getUserProfiles().stream()
                     .map(userProfile -> userProfile.getChatUser().getProfileId())
                     .collect(Collectors.toSet());
             messageListener = c -> {
@@ -173,8 +173,8 @@ public class ChatController implements Controller {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     void onSendMessage(String text) {
-        Channel<? extends ChatMessage> channel = chatService.getPersistableStore().getSelectedChannel().get();
-        UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
+        Channel<? extends ChatMessage> channel = chatService.getSelectedChannel().get();
+        UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
         if (channel instanceof PublicChannel publicChannel) {
             chatService.publishPublicChatMessage(text, quotedMessageBlock.getQuotedMessage(), publicChannel, userProfile);
         } else if (channel instanceof PrivateChannel privateChannel) {
@@ -286,7 +286,7 @@ public class ChatController implements Controller {
             // but kept here for double safety
         }
         ChatUser peer = chatMessage.getAuthor();
-        String channelId = PrivateChannel.createChannelId(peer, userProfileService.getPersistableStore().getSelectedUserProfile().get());
+        String channelId = PrivateChannel.createChannelId(peer, userProfileService.getSelectedUserProfile().get());
         PrivateChannel channel = chatService.getOrCreatePrivateChannel(channelId, peer);
         chatService.setSelectedChannel(channel);
     }
@@ -296,7 +296,7 @@ public class ChatController implements Controller {
             return;
         }
         if (chatMessage instanceof PublicChatMessage publicChatMessage) {
-            UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
+            UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
             chatService.publishEditedPublicChatMessage(publicChatMessage, editedText, userProfile)
                     .whenComplete((r, t) -> {
                         // todo maybe show spinner while deleting old msg and hide it once done?
@@ -309,7 +309,7 @@ public class ChatController implements Controller {
     public void onDeleteMessage(ChatMessage chatMessage) {
         if (chatService.isMyMessage(chatMessage)) {
             if (chatMessage instanceof PublicChatMessage publicChatMessage) {
-                UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
+                UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
                 chatService.deletePublicChatMessage(publicChatMessage, userProfile);
             } else {
                 //todo delete private message

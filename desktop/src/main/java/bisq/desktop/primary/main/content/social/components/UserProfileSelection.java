@@ -78,11 +78,11 @@ public class UserProfileSelection {
 
         @Override
         public void onActivate() {
-            selectedUserProfilePin = FxBindings.subscribe(userProfileService.getPersistableStore().getSelectedUserProfile(),
+            selectedUserProfilePin = FxBindings.subscribe(userProfileService.getSelectedUserProfile(),
                     userProfile -> model.selectedUserProfile.set(new ListItem(userProfile)));
             userProfilesPin = FxBindings.<UserProfile, ListItem>bind(model.userProfiles)
                     .map(ListItem::new)
-                    .to(userProfileService.getPersistableStore().getUserProfiles());
+                    .to(userProfileService.getUserProfiles());
         }
 
         @Override

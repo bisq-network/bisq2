@@ -359,12 +359,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public boolean isMyMessage(ChatMessage chatMessage) {
         String chatId = chatMessage.getAuthor().getId();
-        return userProfileService.getPersistableStore().getUserProfiles().stream()
+        return userProfileService.getUserProfiles().stream()
                 .anyMatch(userprofile -> userprofile.getChatUser().getId().equals(chatId));
     }
 
     public void maybeAddDefaultChannels() {
-        UserProfile userProfile = userProfileService.getPersistableStore().getSelectedUserProfile().get();
+        UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
         if (userProfile == null || !persistableStore.getPublicChannels().isEmpty()) {
             return;
         }
@@ -376,7 +376,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         setSelectedChannel(defaultChannel);
 
         ChatUser dummyChannelAdmin = new ChatUser(userProfile.getNickName(), userProfile.getIdentity().networkId());
-        Set<ChatUser> dummyChannelModerators = userProfileService.getPersistableStore().getUserProfiles().stream()
+        Set<ChatUser> dummyChannelModerators = userProfileService.getUserProfiles().stream()
                 .map(profile -> new ChatUser(profile.getNickName(), profile.getIdentity().networkId()))
                 .collect(Collectors.toSet());
 
