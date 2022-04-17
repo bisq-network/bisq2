@@ -21,7 +21,7 @@ import bisq.common.monetary.Market;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
-import bisq.desktop.primary.main.content.social.exchange.Badge;
+import bisq.desktop.components.controls.Badge;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.social.chat.ChatService;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.exchange;
+package bisq.desktop.components.controls;
 
 import javafx.animation.FadeTransition;
 import javafx.beans.DefaultProperty;
