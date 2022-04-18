@@ -24,6 +24,7 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.jfx.BisqInputTextField;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.layout.Layout;
+import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -48,7 +49,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
     private final BisqInputTextField filterBoxRoot;
     private final Pane notificationsSettings;
     private final Pane channelInfo;
-
+    private final Button createOfferButton;
     private final HBox messagesListAndSideBar;
     private final ImageView peersRoboIconView;
     private Subscription chatUserOverviewRootSubscription;
@@ -71,10 +72,16 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         this.userProfileSelection = userProfileSelection;
 
         // Left 
+
+        createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button").toUpperCase());
+        createOfferButton.setDefaultButton(true);
+        createOfferButton.setPrefHeight(40);
+        VBox.setMargin(createOfferButton, new Insets(0,0,1,0));
         left = Layout.vBoxWith(userProfileSelection,
                 marketChannelSelection,
                 privateChannelSelection,
-                Spacer.fillVBox()
+                Spacer.fillVBox(),
+                createOfferButton
         );
         left.setPadding(new Insets(0, 10, 0, 0));
         left.setPrefWidth(300);
@@ -151,11 +158,13 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         channelInfo.managedProperty().bind(model.getChannelInfoVisible());
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
+        createOfferButton.prefWidthProperty().bind(left.widthProperty());
 
         searchButton.setOnAction(e -> controller.onToggleFilterBox());
         notificationsButton.setOnAction(e -> controller.onToggleNotifications());
         infoButton.setOnAction(e -> controller.onToggleChannelInfo());
         closeButton.setOnAction(e -> controller.onCloseSideBar());
+        createOfferButton.setOnAction(e -> controller.onCreateOffer());
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
                 pane -> {
@@ -197,11 +206,13 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         channelInfo.managedProperty().unbind();
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
+        createOfferButton.prefWidthProperty().unbind();
 
         searchButton.setOnAction(null);
         notificationsButton.setOnAction(null);
         infoButton.setOnAction(null);
         closeButton.setOnAction(null);
+        createOfferButton.setOnAction(null);
 
         chatUserOverviewRootSubscription.unsubscribe();
         if (widthSubscription != null) {
