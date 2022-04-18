@@ -19,7 +19,7 @@ jobs:
     name: Building on ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.1
 
       - name: Setup Java JDK
         uses: actions/setup-java@v3.1.1
