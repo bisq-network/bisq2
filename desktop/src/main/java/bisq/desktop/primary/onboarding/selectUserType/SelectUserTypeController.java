@@ -18,10 +18,13 @@
 package bisq.desktop.primary.onboarding.selectUserType;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.data.ByteArray;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
+import bisq.social.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +35,9 @@ public class SelectUserTypeController implements Controller {
     private final SelectUserTypeView view;
 
     public SelectUserTypeController(DefaultApplicationService applicationService) {
-        model = new SelectUserTypeModel();
+        UserProfile userProfile = applicationService.getUserProfileService().getSelectedUserProfile().get();
+        String profileId = userProfile.getProfileId();
+        model = new SelectUserTypeModel(profileId, RoboHash.getImage(new ByteArray(userProfile.getPubKeyHash())));
         model.getUserTypes().addAll(SelectUserTypeModel.Type.NEWBIE, SelectUserTypeModel.Type.PRO_TRADER);
         view = new SelectUserTypeView(model, this);
     }

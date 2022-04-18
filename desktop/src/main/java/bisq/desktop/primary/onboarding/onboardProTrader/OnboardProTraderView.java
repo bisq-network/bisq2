@@ -36,7 +36,7 @@ public class OnboardProTraderView extends View<VBox, OnboardProTraderModel, Onbo
     @Override
     protected void onViewAttached() {
         //todo
-        UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget.CHAT)).after(1000);
+        UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget.DISCUSS)).after(1000);
     }
 
     @Override

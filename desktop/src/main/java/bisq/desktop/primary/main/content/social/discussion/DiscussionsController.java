@@ -15,30 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.exchange;
+package bisq.desktop.primary.main.content.social.discussion;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.primary.main.content.social.ChatController;
-import bisq.desktop.primary.main.content.social.components.MarketChannelSelection;
+import bisq.desktop.primary.main.content.social.components.PublicChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ExchangeController extends ChatController<ExchangeView, ExchangeModel> {
-    public ExchangeController(DefaultApplicationService applicationService) {
+public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> {
+    public DiscussionsController(DefaultApplicationService applicationService) {
         super(applicationService);
     }
 
     @Override
-    public ExchangeModel getChatModel() {
-        return new ExchangeModel();
+    public DiscussionsModel getChatModel() {
+        return new DiscussionsModel();
     }
 
     @Override
-    public ExchangeView getChatView() { 
-        return new ExchangeView(model,
+    public DiscussionsView getChatView() {
+        return new DiscussionsView(model,
                 this,
                 userProfileSelection.getRoot(),
-                new MarketChannelSelection(chatService).getRoot(),
+                new PublicChannelSelection(chatService).getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 notificationsSettings.getRoot(),

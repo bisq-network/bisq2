@@ -170,7 +170,10 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
         cleanupChatUserDetails();
         cleanupChannelInfo();
     }
-
+    public void onCreateOffer() {
+        //todo
+        //Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
+    }
     protected void cleanupChatUserDetails() {
         model.getChatUserDetails().ifPresent(e -> e.setOnMentionUser(null));
         model.getChatUserDetails().ifPresent(e -> e.setOnSendPrivateMessage(null));

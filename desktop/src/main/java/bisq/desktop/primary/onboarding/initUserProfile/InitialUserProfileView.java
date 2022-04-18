@@ -78,7 +78,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
 
         nicknameTextInputBox = new TextInputBox(Res.get("satoshisquareapp.setDefaultUserProfile.nickName"),
                 Res.get("satoshisquareapp.setDefaultUserProfile.nickName.prompt"));
-        nicknameTextInputBox.setPrefWidth(inputWidth);
+        nicknameTextInputBox.setPrefWidth(300);
 
         roboIconWithId = new RoboIconWithId(300);
         Tooltip.install(roboIconWithId, new Tooltip(Res.get("satoshisquareapp.setDefaultUserProfile.tryOther.button")));
@@ -99,9 +99,9 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         vBox.getChildren().addAll(
                 headLineLabel,
                 subTitleLabel,
-                nicknameTextInputBox,
                 roboIconWithId,
                 tryOtherInfoLabel,
+                nicknameTextInputBox,
                 nextButton
         );
     }

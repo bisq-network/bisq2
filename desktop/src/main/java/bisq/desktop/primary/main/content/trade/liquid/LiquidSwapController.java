@@ -15,20 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade;
+package bisq.desktop.primary.main.content.trade.liquid;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-@Getter
-public class TradeModel extends TabModel {
+public class LiquidSwapController implements Controller {
+    private final LiquidSwapModel model;
+    @Getter
+    private final LiquidSwapView view;
 
-    public TradeModel( ) {
+    public LiquidSwapController(DefaultApplicationService applicationService) {
+        model = new LiquidSwapModel();
+        view = new LiquidSwapView(model, this);
     }
 
     @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TRADE_OVERVIEW;
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
     }
 }

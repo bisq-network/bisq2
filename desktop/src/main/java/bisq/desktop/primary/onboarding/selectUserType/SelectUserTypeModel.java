@@ -23,6 +23,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.image.Image;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -49,7 +50,11 @@ public class SelectUserTypeModel implements Model {
     private final StringProperty buttonText = new SimpleStringProperty();
     @Setter
     private SelectUserTypeModel.Type selectedType;
+    private final String profileId;
+    private final Image roboHashNode;
 
-    public SelectUserTypeModel() {
+    public SelectUserTypeModel(String profileId, Image roboHashNode) {
+        this.profileId = profileId;
+        this.roboHashNode = roboHashNode;
     }
 }

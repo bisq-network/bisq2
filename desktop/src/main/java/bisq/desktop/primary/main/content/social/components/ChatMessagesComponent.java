@@ -85,15 +85,6 @@ public class ChatMessagesComponent {
         controller.mentionUser(chatUser);
     }
 
-  /*  public ObjectProperty<ChannelListItem<?>> selectedChannelListItemProperty() {
-        return controller.model.selectedChannelListItem;
-    }*/
-
-  /*  public void setSelectedChannelListItem(ChannelListItem<?> item) {
-        controller.model.selectedChannel.set(item);
-    }*/
-
-    //todo
     public FilteredList<ChatMessageListItem<? extends ChatMessage>> getFilteredChatMessages() {
         return controller.model.getFilteredChatMessages();
     }
@@ -322,10 +313,7 @@ public class ChatMessagesComponent {
 
         }
 
-        public void onCreateOffer() {
-            //todo
-            //Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
-        }
+  
 
         private void mentionUser(ChatUser chatUser) {
             String existingText = model.getTextInput().get();
@@ -378,7 +366,7 @@ public class ChatMessagesComponent {
 
         private final ListView<ChatMessageListItem<? extends ChatMessage>> messagesListView;
         private final BisqTextArea inputField;
-        private final Button createOfferButton;
+
         private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
         private final HBox bottomBox;
 
@@ -398,12 +386,9 @@ public class ChatMessagesComponent {
             inputField.setPromptText(Res.get("social.chat.input.prompt"));
             inputField.setPrefWidth(300);
 
-            createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
-            createOfferButton.setPrefHeight(39);
-            createOfferButton.setDefaultButton(true);
 
-            bottomBox = Layout.hBoxWith(inputField, createOfferButton);
-            HBox.setHgrow(createOfferButton, Priority.NEVER);
+            // there will get added some controls for emojis so leave the box even its only 1 child yet
+            bottomBox = Layout.hBoxWith(inputField);
             HBox.setHgrow(inputField, Priority.ALWAYS);
 
             bottomBox.setAlignment(Pos.CENTER);
@@ -416,7 +401,6 @@ public class ChatMessagesComponent {
         @Override
         protected void onViewAttached() {
             inputField.textProperty().bindBidirectional(model.getTextInput());
-            createOfferButton.setOnAction(e -> controller.onCreateOffer());
 
             inputField.setOnKeyPressed(event -> {
                 if (event.getCode() == KeyCode.ENTER) {
@@ -435,7 +419,6 @@ public class ChatMessagesComponent {
         @Override
         protected void onViewDetached() {
             inputField.textProperty().unbindBidirectional(model.getTextInput());
-            createOfferButton.setOnAction(null);
             inputField.setOnKeyPressed(null);
             model.getSortedChatMessages().removeListener(messagesListener);
         }
@@ -462,7 +445,7 @@ public class ChatMessagesComponent {
                         {
                             userNameLabel.setId("chat-user-name");
                             userNameLabel.setPadding(new Insets(10, 0, -5, 0));
-                           
+
                             time.getStyleClass().add("message-header");
                             time.setPadding(new Insets(-6, 0, 0, 0));
                             time.setVisible(false);
@@ -518,7 +501,7 @@ public class ChatMessagesComponent {
 
                             HBox reactionsOuterBox = Layout.hBoxWith(Spacer.fillHBox(), reactionsBox);
                             VBox.setMargin(reactionsOuterBox, new Insets(10, 0, 0, 0));
-                           
+
                             messageBox = Layout.vBoxWith(quotedMessageBox,
                                     message,
                                     editedMessageField,

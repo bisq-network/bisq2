@@ -18,12 +18,10 @@
 package bisq.desktop.primary.main.content.social;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.observable.Pin;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.social.chat.GenericChatController;
+import bisq.desktop.primary.main.content.social.discussion.DiscussionsController;
 import bisq.desktop.primary.main.content.social.education.EducationController;
 import bisq.desktop.primary.main.content.social.events.EventsController;
 import bisq.desktop.primary.main.content.social.exchange.ExchangeController;
@@ -37,10 +35,9 @@ public class SocialController extends TabController<SocialModel> {
     private final DefaultApplicationService applicationService;
     @Getter
     private final SocialView view;
-    private Pin selectedUserProfilePin;
 
     public SocialController(DefaultApplicationService applicationService) {
-        super(new SocialModel(applicationService.getUserProfileService()), NavigationTarget.SOCIAL);
+        super(new SocialModel(), NavigationTarget.SOCIAL);
 
         this.applicationService = applicationService;
 
@@ -49,15 +46,11 @@ public class SocialController extends TabController<SocialModel> {
 
     @Override
     public void onActivate() {
-        selectedUserProfilePin = FxBindings.bind(model.getSelectedUserProfile())
-                .to(applicationService.getUserProfileService().getSelectedUserProfile());
     }
 
     @Override
     public void onDeactivate() {
-        selectedUserProfilePin.unbind();
     }
-
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
@@ -65,16 +58,15 @@ public class SocialController extends TabController<SocialModel> {
             case EXCHANGE -> {
                 return Optional.of(new ExchangeController(applicationService));
             }
-            case CHAT -> {
-                return Optional.of(new GenericChatController(applicationService));
+            case DISCUSS -> {
+                return Optional.of(new DiscussionsController(applicationService));
             }
-            case EDUCATION -> {
+            case LEARN -> {
                 return Optional.of(new EducationController(applicationService));
             }
-            case EVENTS -> {
+            case CONNECT -> {
                 return Optional.of(new EventsController(applicationService));
             }
-
             default -> {
                 return Optional.empty();
             }

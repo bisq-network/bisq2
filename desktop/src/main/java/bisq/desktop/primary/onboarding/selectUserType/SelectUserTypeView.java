@@ -18,8 +18,8 @@
 package bisq.desktop.primary.onboarding.selectUserType;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
+import bisq.desktop.components.controls.RoboIconWithId;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -39,6 +39,7 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
     private final Button nextButton, backButton;
     private final AutoCompleteComboBox<SelectUserTypeModel.Type> userTypeBox;
     private final Label info;
+    private final RoboIconWithId roboIconWithId;
 
     public SelectUserTypeView(SelectUserTypeModel model, SelectUserTypeController controller) {
         super(new ScrollPane(), model, controller);
@@ -79,23 +80,25 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         VBox.setVgrow(info, Priority.ALWAYS);
         VBox.setMargin(info, new Insets(0, 0, 0, 0));
 
+        roboIconWithId = new RoboIconWithId(300);
+        roboIconWithId.setProfileId(model.getProfileId());
+        roboIconWithId.setRoboHashImage(model.getRoboHashNode());
+        roboIconWithId.setMouseTransparent(false);
+        
         userTypeBox = new AutoCompleteComboBox<>(model.getUserTypes(),Res.get("satoshisquareapp.selectTraderType.description"));
-        userTypeBox.setPrefWidth(width);
+        userTypeBox.setPrefWidth(300);
 
         backButton = new Button(Res.get("back"));
         nextButton = new Button(Res.get("shared.nextStep"));
         nextButton.setDefaultButton(true);
         HBox buttons = Layout.hBoxWith(backButton, nextButton);
         buttons.setAlignment(Pos.CENTER);
-        VBox.setMargin(buttons, new Insets(0, 0, 50, 0));
-        VBox.setMargin(userTypeBox, new Insets(0, 0, 50, userTypeBox.getWidth()));
 
-        // todo remove that hack once design is final
-        HBox vBox = Layout.hBoxWith(Spacer.fillHBox(), userTypeBox, Spacer.fillHBox());
         this.vBox.getChildren().addAll(
                 headLineLabel,
                 subTitleLabel,
-                vBox,
+                roboIconWithId,
+                userTypeBox,
                /* info,*/
                 buttons
         );
@@ -104,7 +107,6 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
     @Override
     protected void onViewAttached() {
         info.textProperty().bind(model.getInfo());
-       // nextButton.textProperty().bind(model.getButtonText());
 
         userTypeBox.getSelectionModel().select(model.getUserTypes().get(0));
         userTypeBox.setOnAction(e -> controller.onSelect(userTypeBox.getSelectionModel().getSelectedItem()));

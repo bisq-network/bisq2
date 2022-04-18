@@ -35,16 +35,16 @@ public class Navigation {
 
     private static final Map<NavigationTarget, Set<NavigationController>> listeners = new ConcurrentHashMap<>();
     // navigationControllerListeners are called first
-   // private static final Map<NavigationTarget, Set<NavigationController>> navigationControllerListeners = new ConcurrentHashMap<>();
+    // private static final Map<NavigationTarget, Set<NavigationController>> navigationControllerListeners = new ConcurrentHashMap<>();
     private static final LinkedList<NavigationTarget> history = new LinkedList<>();
     private static final LinkedList<NavigationTarget> alt = new LinkedList<>();
 
-     static void addListener(NavigationTarget host, NavigationController listener) {
+    static void addListener(NavigationTarget host, NavigationController listener) {
         listeners.putIfAbsent(host, new CopyOnWriteArraySet<>());
         listeners.get(host).add(listener);
     }
 
-     static void removeListener(NavigationTarget host, NavigationController listener) {
+    static void removeListener(NavigationTarget host, NavigationController listener) {
         Optional.ofNullable(listeners.get(host)).ifPresent(set -> set.remove(listener));
     }
 

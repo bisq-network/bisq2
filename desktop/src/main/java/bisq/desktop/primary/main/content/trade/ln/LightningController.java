@@ -15,20 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade;
+package bisq.desktop.primary.main.content.trade.ln;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-@Getter
-public class TradeModel extends TabModel {
+public class LightningController implements Controller {
+    private final LightningModel model;
+    @Getter
+    private final LightningView view;
 
-    public TradeModel( ) {
+    public LightningController(DefaultApplicationService applicationService) {
+        model = new LightningModel();
+        view = new LightningView(model, this);
     }
 
     @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TRADE_OVERVIEW;
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
     }
 }

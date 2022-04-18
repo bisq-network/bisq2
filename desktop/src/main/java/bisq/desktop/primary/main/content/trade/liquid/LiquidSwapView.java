@@ -15,25 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social;
+package bisq.desktop.primary.main.content.trade.liquid;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabView;
-import bisq.i18n.Res;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.common.view.View;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 
-@Slf4j
-public class SocialView extends TabView<SocialModel, SocialController> {
+public class LiquidSwapView extends View<VBox, LiquidSwapModel, LiquidSwapController> {
+    public LiquidSwapView(LiquidSwapModel model, LiquidSwapController controller) {
+        super(new VBox(), model, controller);
 
-    public SocialView(SocialModel model, SocialController controller) {
-        super(model, controller);
-
-        headlineLabel.setText(Res.get("social"));
-
-        addTab(Res.get("social.exchange"), NavigationTarget.EXCHANGE);
-        addTab(Res.get("social.discuss"), NavigationTarget.DISCUSS);
-        addTab(Res.get("social.learn"), NavigationTarget.LEARN);
-        addTab(Res.get("social.connect"), NavigationTarget.CONNECT);
+        root.setAlignment(Pos.CENTER);
+        Label label = new Label("WIP");
+        label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 20em");
+        Label small = new Label(getClass().getSimpleName());
+        small.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 2em");
+        root.getChildren().addAll(label, small);
     }
 
     @Override

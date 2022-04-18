@@ -33,9 +33,19 @@ public abstract class TabController<T extends TabModel> extends NavigationContro
         this.model = model;
     }
 
+    @Override
+    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+        if (model.getSelectedTabButton().get() != null &&
+                navigationTarget != model.getSelectedTabButton().get().getNavigationTarget()) {
+            onTabSelected(navigationTarget);
+        }
+    }
+
     void onTabSelected(NavigationTarget navigationTarget) {
-        findTabButton(navigationTarget).ifPresent(tabButton -> model.getSelectedTabButton().set(tabButton));
-        Navigation.navigateTo(navigationTarget);
+        findTabButton(navigationTarget).ifPresent(tabButton -> {
+            model.getSelectedTabButton().set(tabButton);
+            Navigation.navigateTo(navigationTarget);
+        });
     }
 
     void onTabButtonCreated(TabButton tabButton) {
