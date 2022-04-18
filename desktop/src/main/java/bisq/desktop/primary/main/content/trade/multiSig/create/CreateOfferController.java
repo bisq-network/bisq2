@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.create;
+package bisq.desktop.primary.main.content.trade.multiSig.create;
 
 import bisq.account.accounts.Account;
 import bisq.account.settlement.SettlementMethod;

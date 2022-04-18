@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.take;
+package bisq.desktop.primary.main.content.trade.multiSig.take;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -24,7 +24,6 @@ import javafx.scene.control.Label;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;

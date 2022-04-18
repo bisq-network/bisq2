@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.offerbook;
+package bisq.desktop.primary.main.content.trade.multiSig.offerbook;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
@@ -29,8 +29,8 @@ import javafx.scene.control.Button;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.components.controls.MarketSelection;
-import bisq.desktop.primary.main.content.trade.create.CreateOfferController;
-import bisq.desktop.primary.main.content.trade.take.TakeOfferController;
+import bisq.desktop.primary.main.content.trade.multiSig.create.CreateOfferController;
+import bisq.desktop.primary.main.content.trade.multiSig.take.TakeOfferController;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
 import bisq.offer.OfferBookService;

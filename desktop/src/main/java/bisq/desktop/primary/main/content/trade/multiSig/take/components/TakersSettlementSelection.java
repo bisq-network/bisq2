@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.take.components;
+package bisq.desktop.primary.main.content.trade.multiSig.take.components;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;

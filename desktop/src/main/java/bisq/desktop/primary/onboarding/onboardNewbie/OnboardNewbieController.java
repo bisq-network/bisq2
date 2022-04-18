@@ -145,7 +145,7 @@ public class OnboardNewbieController implements Controller {
     }
 
     void onSkip() {
-        Navigation.navigateTo(NavigationTarget.CHAT);
+        Navigation.navigateTo(NavigationTarget.DISCUSS);
     }
 
     private void updateOfferPreview() {

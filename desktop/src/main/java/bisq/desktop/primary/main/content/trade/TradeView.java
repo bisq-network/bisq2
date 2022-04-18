@@ -17,134 +17,33 @@
 
 package bisq.desktop.primary.main.content.trade;
 
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.NavigationView;
-import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.overlay.OverlayWindow;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
-import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import lombok.extern.slf4j.Slf4j;
 
-public class TradeView extends NavigationView<VBox, TradeModel, TradeController> {
-    private final Label headlineLabel;
-    private final Region line;
-    protected final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
-    private final Button createOfferButton;
-    private OverlayWindow overlayWindow;
+@Slf4j
+public class TradeView extends TabView<TradeModel, TradeController> {
 
     public TradeView(TradeModel model, TradeController controller) {
-        super(new VBox(), model, controller);
+        super(model, controller);
 
-        root.setFillWidth(true);
-        root.setPadding(new Insets(0, -67, 0, 0));
+        headlineLabel.setText(Res.get("trade"));
 
-        headlineLabel = new Label(Res.get("offerbook"));
-        headlineLabel.getStyleClass().add("bisq-content-headline-label");
-
-        createOfferButton = new Button(Res.get("createOffer.createOffer.button"));
-        createOfferButton.setDefaultButton(true);
-       // createOfferButton.getStyleClass().add("bisq-border-dark-bg-button");
-        HBox.setMargin(createOfferButton, new Insets(-5, 0, 0, 0));
-
-        HBox topBox = new HBox();
-        topBox.setFillHeight(true);
-        topBox.setSpacing(46);
-        topBox.getChildren().addAll(headlineLabel, Spacer.fillHBox(), createOfferButton);
-        topBox.setPadding(new Insets(0, 67, 2, 0));
-
-        HBox.setMargin(headlineLabel, new Insets(-5, 0, 20, -2));
-
-        ScrollPane scrollPane = new ScrollPane();
-        scrollPane.setFitToHeight(true);
-        scrollPane.setFitToWidth(true);
-
-
-        line = new Region();
-        line.getStyleClass().add("bisq-darkest-bg");
-        double lineHeight = 1.5;
-        line.setMinHeight(lineHeight);
-
-        Pane lineAndMarker = new Pane();
-        lineAndMarker.getChildren().addAll(line);
-        lineAndMarker.setMinHeight(lineHeight);
-        lineAndMarker.setPadding(new Insets(0, 67, 0, 0));
-
-        root.getChildren().addAll(topBox, lineAndMarker, scrollPane);
-
-        viewChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                Region childRoot = newValue.getRoot();
-                if (overlayWindow != null) {
-                    overlayWindow.close();
-                    overlayWindow = null;
-                }
-                if (model.showCreateOffer.get()) {
-                    overlayWindow = new OverlayWindow(getRoot(), childRoot, controller::onCloseCreateOffer);
-                    overlayWindow.show();
-                } else if (model.showTakeOffer.get()) {
-                    overlayWindow = new OverlayWindow(getRoot(), childRoot, controller::onCloseTakeOffer);
-                    overlayWindow.show();
-                } else {
-                    childRoot.getStyleClass().add("bisq-content-bg");
-                    childRoot.setPadding(new Insets(33, 67, 0, 0));
-                    scrollPane.setContent(childRoot);
-                }
-
-            }
-        };
-
-
-        // addTab(Res.get("trade.offerbook"), NavigationTarget.OFFERBOOK);
-
-        //   headlineLabel.setText(Res.get("trade"));
+        addTab(Res.get("trade.overview"), NavigationTarget.TRADE_OVERVIEW);
+        addTab(Res.get("trade.satoshiSquare"), NavigationTarget.SATOSHI_SQUARE);
+        addTab(Res.get("trade.liquidSwap"), NavigationTarget.LIQUID_SWAPS);
+        addTab(Res.get("trade.multiSig"), NavigationTarget.MULTI_SIG);
+        addTab(Res.get("trade.xmrSwap"), NavigationTarget.XMR_SWAPS);
+        addTab(Res.get("trade.bsqSwap"), NavigationTarget.BSQ_SWAPS);
+        addTab(Res.get("trade.lightning"), NavigationTarget.LIGHTNING);
     }
 
     @Override
     protected void onViewAttached() {
-      /*  UIThread.runOnNextRenderFrame(() -> {
-            NavigationTarget navigationTarget = model.getNavigationTarget();
-            if (navigationTarget != null) {
-                Navigation.navigateTo(navigationTarget);
-            }
-        });*/
-        createOfferButton.setOnAction(e -> controller.onOpenCreateOffer());
-        line.prefWidthProperty().bind(root.widthProperty());
-        model.getView().addListener(viewChangeListener);
     }
 
     @Override
     protected void onViewDetached() {
-        createOfferButton.setOnAction(null);
-        line.prefWidthProperty().unbind();
-        model.getView().removeListener(viewChangeListener);
-
-        // createOfferTabVisibleSubscription.unsubscribe();
-        //  takeOfferTabVisibleSubscription.unsubscribe();
     }
-
-/*    private void onCreateOfferTabVisibleChange(boolean value) {
-        if (value) {
-            addTab(Res.get("trade.createOffer"), NavigationTarget.CREATE_OFFER);
-        } else {
-            removeTab(NavigationTarget.CREATE_OFFER);
-        }
-    }
-
-    private void onTakeOfferTabVisibleChange(boolean value) {
-        if (value) {
-            addTab(Res.get("trade.takeOffer"), NavigationTarget.TAKE_OFFER);
-        } else {
-            removeTab(NavigationTarget.TAKE_OFFER);
-        }
-    }*/
 }

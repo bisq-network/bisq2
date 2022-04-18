@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.take;
+package bisq.desktop.primary.main.content.trade.multiSig.take;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
@@ -26,7 +26,7 @@ import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.portfolio.pending.PendingTradesController;
 import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
-import bisq.desktop.primary.main.content.trade.take.components.TakersSettlementSelection;
+import bisq.desktop.primary.main.content.trade.multiSig.take.components.TakersSettlementSelection;
 import bisq.offer.Offer;
 import bisq.offer.spec.Direction;
 import bisq.oracle.marketprice.MarketPriceService;
