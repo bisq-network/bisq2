@@ -3,6 +3,7 @@ package bisq.desktop.primary.main.content.social.components;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.social.chat.Channel;
@@ -60,6 +61,14 @@ public abstract class ChannelSelection {
         @Override
         public void onActivate() {
             model.sortedList.setComparator(Comparator.comparing(Channel::getDisplayString));
+            selectedChannelPin = FxBindings.subscribe(chatService.getSelectedChannel(),
+                    channel -> {
+                        if (model.channels.contains(channel)) {
+                            model.selectedChannel.set(channel);
+                        } else {
+                            model.selectedChannel.set(null);
+                        }
+                    });
         }
 
         @Override
@@ -115,8 +124,10 @@ public abstract class ChannelSelection {
                     });
             modelSelectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
                     channel -> {
-                        if (channel != null && !channel.equals(listView.getSelectionModel().getSelectedItem())) {
-                            UIThread.runOnNextRenderFrame(() -> listView.getSelectionModel().select(channel));
+                        if (channel != null) {
+                            UIThread.runOnNextRenderFrame(() -> listView.getSelectionModel().clearAndSelect(listView.getItems().indexOf(channel)));
+                        } else {
+                            UIThread.runOnNextRenderFrame(() -> listView.getSelectionModel().clearSelection());
                         }
                     });
             model.channels.addListener(channelsChangedListener);

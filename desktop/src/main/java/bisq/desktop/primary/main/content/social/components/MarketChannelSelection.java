@@ -33,13 +33,6 @@ public class MarketChannelSelection extends ChannelSelection {
                 super.onActivate();
                 channelsPin = FxBindings.<MarketChannel, Channel<?>>bind(model.channels)
                         .to(chatService.getMarketChannels());
-
-                selectedChannelPin = FxBindings.subscribe(chatService.getSelectedChannel(),
-                        channel -> {
-                            if (channel instanceof MarketChannel) {
-                                model.selectedChannel.set(channel);
-                            }
-                        });
             }
         });
     }
