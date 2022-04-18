@@ -23,7 +23,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.social.chat.GenericChatController;
+import bisq.desktop.primary.main.content.social.discussion.DiscussionsController;
 import bisq.desktop.primary.main.content.social.education.EducationController;
 import bisq.desktop.primary.main.content.social.events.EventsController;
 import bisq.desktop.primary.main.content.social.exchange.ExchangeController;
@@ -66,7 +66,7 @@ public class SocialController extends TabController<SocialModel> {
                 return Optional.of(new ExchangeController(applicationService));
             }
             case CHAT -> {
-                return Optional.of(new GenericChatController(applicationService));
+                return Optional.of(new DiscussionsController(applicationService));
             }
             case EDUCATION -> {
                 return Optional.of(new EducationController(applicationService));

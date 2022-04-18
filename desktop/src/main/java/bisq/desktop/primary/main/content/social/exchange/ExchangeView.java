@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ExchangeView extends ChatView {
-
     public ExchangeView(ExchangeModel model,
                         ExchangeController controller,
                         Pane userProfileSelection,
@@ -43,15 +42,5 @@ public class ExchangeView extends ChatView {
                 notificationsSettings,
                 channelInfo,
                 filterBox);
-    }
-
-    @Override
-    protected void onViewAttached() {
-        super.onViewAttached();
-    }
-
-    @Override
-    protected void onViewDetached() {
-        super.onViewDetached();
     }
 }

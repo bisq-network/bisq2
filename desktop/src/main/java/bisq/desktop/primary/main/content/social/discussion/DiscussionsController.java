@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.chat;
+package bisq.desktop.primary.main.content.social.discussion;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.primary.main.content.social.ChatController;
@@ -23,20 +23,19 @@ import bisq.desktop.primary.main.content.social.components.PublicChannelSelectio
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GenericChatController extends ChatController<GenericChatView, GenericChatModel> {
-
-    public GenericChatController(DefaultApplicationService applicationService) {
+public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> {
+    public DiscussionsController(DefaultApplicationService applicationService) {
         super(applicationService);
     }
 
     @Override
-    public GenericChatModel getChatModel() {
-        return new GenericChatModel();
+    public DiscussionsModel getChatModel() {
+        return new DiscussionsModel();
     }
 
     @Override
-    public GenericChatView getChatView() {
-        return new GenericChatView(model,
+    public DiscussionsView getChatView() {
+        return new DiscussionsView(model,
                 this,
                 userProfileSelection.getRoot(),
                 new PublicChannelSelection(chatService).getRoot(),
@@ -45,15 +44,5 @@ public class GenericChatController extends ChatController<GenericChatView, Gener
                 notificationsSettings.getRoot(),
                 channelInfo.getRoot(),
                 filterBox);
-    }
-
-    @Override
-    public void onActivate() {
-        super.onActivate();
-    }
-
-    @Override
-    public void onDeactivate() {
-        super.onDeactivate();
     }
 }

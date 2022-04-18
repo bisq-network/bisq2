@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ExchangeController extends ChatController<ExchangeView, ExchangeModel> {
     public ExchangeController(DefaultApplicationService applicationService) {
         super(applicationService);
-       
     }
 
     @Override
@@ -45,15 +44,5 @@ public class ExchangeController extends ChatController<ExchangeView, ExchangeMod
                 notificationsSettings.getRoot(),
                 channelInfo.getRoot(),
                 filterBox);
-    }
-
-    @Override
-    public void onActivate() {
-        super.onActivate();
-    }
-
-    @Override
-    public void onDeactivate() {
-        super.onDeactivate();
     }
 }

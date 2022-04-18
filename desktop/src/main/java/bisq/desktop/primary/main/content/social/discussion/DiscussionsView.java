@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.chat;
+package bisq.desktop.primary.main.content.social.discussion;
 
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.social.ChatView;
@@ -23,10 +23,9 @@ import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GenericChatView extends ChatView {
-
-    public GenericChatView(GenericChatModel model,
-                           GenericChatController controller,
+public class DiscussionsView extends ChatView {
+    public DiscussionsView(DiscussionsModel model,
+                           DiscussionsController controller,
                            Pane userProfileSelection,
                            Pane marketChannelSelection,
                            Pane privateChannelSelection,
@@ -43,15 +42,5 @@ public class GenericChatView extends ChatView {
                 notificationsSettings,
                 channelInfo,
                 filterBox);
-    }
-
-    @Override
-    protected void onViewAttached() {
-        super.onViewAttached();
-    }
-
-    @Override
-    protected void onViewDetached() {
-        super.onViewDetached();
     }
 }
