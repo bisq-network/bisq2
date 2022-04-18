@@ -29,6 +29,6 @@ public class ContentModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.SOCIAL;
+        return NavigationTarget.TRADE;
     }
 }

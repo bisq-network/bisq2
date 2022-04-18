@@ -15,32 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social;
+package bisq.desktop.primary.main.content.trade.multiSig;
 
+import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabView;
-import bisq.i18n.Res;
-import lombok.extern.slf4j.Slf4j;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 
-@Slf4j
-public class SocialView extends TabView<SocialModel, SocialController> {
+public class MultiSigModel extends NavigationModel {
+    public BooleanProperty showCreateOffer = new SimpleBooleanProperty();
+    public BooleanProperty showTakeOffer = new SimpleBooleanProperty();
 
-    public SocialView(SocialModel model, SocialController controller) {
-        super(model, controller);
-
-        headlineLabel.setText(Res.get("social"));
-
-        addTab(Res.get("social.exchange"), NavigationTarget.EXCHANGE);
-        addTab(Res.get("social.discuss"), NavigationTarget.DISCUSS);
-        addTab(Res.get("social.learn"), NavigationTarget.LEARN);
-        addTab(Res.get("social.connect"), NavigationTarget.CONNECT);
+    public MultiSigModel() {
     }
 
     @Override
-    protected void onViewAttached() {
-    }
-
-    @Override
-    protected void onViewDetached() {
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.OFFERBOOK;
     }
 }

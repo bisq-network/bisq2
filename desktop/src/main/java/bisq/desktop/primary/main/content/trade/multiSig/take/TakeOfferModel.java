@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.take;
+package bisq.desktop.primary.main.content.trade.multiSig.take;
 
 import bisq.account.accounts.Account;
 import bisq.account.protocol.SwapProtocolType;

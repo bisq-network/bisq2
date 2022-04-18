@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.offerbook;
+package bisq.desktop.primary.main.content.trade.multiSig.offerbook;
 
 import bisq.common.currency.TradeCurrency;
 import bisq.desktop.components.table.TableItem;

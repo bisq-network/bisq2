@@ -19,34 +19,32 @@ package bisq.desktop.primary.main.content.trade;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.trade.create.CreateOfferController;
-import bisq.desktop.primary.main.content.trade.offerbook.OfferbookController;
-import bisq.desktop.primary.main.content.trade.take.TakeOfferController;
+import bisq.desktop.common.view.TabController;
+import bisq.desktop.primary.main.content.social.exchange.ExchangeController;
+import bisq.desktop.primary.main.content.trade.bsqSwap.BsqSwapController;
+import bisq.desktop.primary.main.content.trade.liquid.LiquidSwapController;
+import bisq.desktop.primary.main.content.trade.ln.LightningController;
+import bisq.desktop.primary.main.content.trade.multiSig.MultiSigController;
+import bisq.desktop.primary.main.content.trade.overview.TradeOverviewController;
+import bisq.desktop.primary.main.content.trade.xmr.XmrSwapController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public class TradeController extends NavigationController {
+public class TradeController extends TabController<TradeModel> {
     private final DefaultApplicationService applicationService;
     @Getter
-    private final TradeModel model;
-    @Getter
     private final TradeView view;
-    private final OfferbookController offerbookController;
 
     public TradeController(DefaultApplicationService applicationService) {
-        super(NavigationTarget.TRADE);
+        super(new TradeModel(), NavigationTarget.TRADE);
 
         this.applicationService = applicationService;
-        model = new TradeModel();
-        view = new TradeView(model, this);
 
-        offerbookController = new OfferbookController(applicationService);
+        view = new TradeView(model, this);
     }
 
     @Override
@@ -58,48 +56,32 @@ public class TradeController extends NavigationController {
     }
 
     @Override
-    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        model.showCreateOffer.set(navigationTarget == NavigationTarget.CREATE_OFFER);
-        model.showTakeOffer.set(navigationTarget == NavigationTarget.TAKE_OFFER);
-    }
-
-    @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        model.showCreateOffer.set(false);
-        model.showTakeOffer.set(false);
         switch (navigationTarget) {
-            case OFFERBOOK -> {
-                return Optional.of(offerbookController);
+            case TRADE_OVERVIEW -> {
+                return Optional.of(new TradeOverviewController(applicationService));
             }
-            case CREATE_OFFER -> {
-                model.showCreateOffer.set(true);
-                return Optional.of(new CreateOfferController(applicationService));
+            case SATOSHI_SQUARE -> {
+                return Optional.of(new ExchangeController(applicationService));
             }
-            case TAKE_OFFER -> {
-                model.showTakeOffer.set(true);
-                return Optional.of(new TakeOfferController(applicationService));
+            case LIQUID_SWAPS -> {
+                return Optional.of(new LiquidSwapController(applicationService));
+            }
+            case MULTI_SIG -> {
+                return Optional.of(new MultiSigController(applicationService));
+            }
+            case XMR_SWAPS -> {
+                return Optional.of(new XmrSwapController(applicationService));
+            }
+            case BSQ_SWAPS -> {
+                return Optional.of(new BsqSwapController(applicationService));
+            }
+            case LIGHTNING -> {
+                return Optional.of(new LightningController(applicationService));
             }
             default -> {
                 return Optional.empty();
             }
         }
-    }
-
-    public void onOpenCreateOffer() {
-
-        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
-   /*     Navigation.navigateTo(NavigationTarget.CREATE_OFFER,
-                new CreateOfferController.InitData(model.selectedMarket,
-                        model.direction,
-                        model.showCreateOfferTab));*/
-    }
-
-    public void onCloseCreateOffer() {
-        model.showCreateOffer.set(false);
-        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
-    }
-    public void onCloseTakeOffer() {
-        model.showTakeOffer.set(false);
-        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
     }
 }
