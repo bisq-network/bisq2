@@ -194,8 +194,7 @@ public class CreateUserProfile {
             createUserButton = new Button(Res.get("social.createUserProfile.createButton"));
             createUserButton.setMinWidth(minWidth);
             createUserButton.disableProperty().bind(profileIdInputField.textProperty().isEmpty());
-            createUserButton.getStyleClass().add("action-button");
-
+            createUserButton.setDefaultButton(true);
             VBox vBox = new VBox();
             vBox.setSpacing(Layout.SPACING);
             vBox.getChildren().addAll(nickNameInputField, profileIdInputField, generateNewIdentityButton, entitlementButton);

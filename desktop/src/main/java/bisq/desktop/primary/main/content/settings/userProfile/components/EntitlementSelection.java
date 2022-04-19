@@ -234,13 +234,13 @@ public class EntitlementSelection {
             tableView.getColumns().add(new BisqTableColumn.Builder<EntitlementItem>()
                     .title(Res.get("social.createUserProfile.entitlement.table.header.proof"))
                     .fixWidth(160)
-                    .cellFactory(BisqTableColumn.CellFactory.BUTTON)
+                    .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
                     .actionHandler(controller::onOpenProofWindow)
                     .value(Res.get("social.createUserProfile.entitlement.table.proof.button"))
                     .build());
             tableView.getColumns().add(new BisqTableColumn.Builder<EntitlementItem>()
                     .fixWidth(120)
-                    .cellFactory(BisqTableColumn.CellFactory.BUTTON)
+                    .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
                     .actionHandler(controller::onShowInfo)
                     .value(Res.get("social.createUserProfile.entitlement.table.header.info"))
                     .build());
@@ -324,10 +324,10 @@ public class EntitlementSelection {
                                             UIThread.run(() -> {
                                                 if (throwable == null && proof.isPresent()) {
                                                     //todo hide button and show feedback text instead
-                                                    actionButton.getStyleClass().add("action-button");
+                                                    actionButton.setDefaultButton(true);
                                                     actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.success"));
                                                 } else {
-                                                    actionButton.getStyleClass().remove("action-button");
+                                                    actionButton.setDefaultButton(false);
                                                     actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.failed"));
                                                 }
                                             });
@@ -347,10 +347,10 @@ public class EntitlementSelection {
                                                 if (throwable == null && proof.isPresent()) {
                                                     //todo hide button and show feedback text instead
                                                     actionButton.setDisable(false);
-                                                    actionButton.getStyleClass().add("action-button");
+                                                    actionButton.setDefaultButton(true);
                                                     actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.success"));
                                                 } else {
-                                                    actionButton.getStyleClass().remove("action-button");
+                                                    actionButton.setDefaultButton(false);
                                                     actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.failed"));
                                                 }
                                             });
@@ -368,10 +368,10 @@ public class EntitlementSelection {
                                                 if (throwable == null && proof.isPresent()) {
                                                     //todo hide button and show feedback text instead
                                                     actionButton.setDisable(false);
-                                                    actionButton.getStyleClass().add("action-button");
+                                                    actionButton.setDefaultButton(true);
                                                     actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.success"));
                                                 } else {
-                                                    actionButton.getStyleClass().remove("action-button");
+                                                    actionButton.setDefaultButton(false);
                                                     actionButton.setText(Res.get("social.createUserProfile.table.entitlement.verify.failed"));
                                                 }
                                             });

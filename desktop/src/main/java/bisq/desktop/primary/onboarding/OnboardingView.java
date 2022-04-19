@@ -36,7 +36,7 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
     public OnboardingView(OnboardingModel model, OnboardingController controller) {
         super(new VBox(), model, controller);
 
-        root.getStyleClass().add("content-pane");
+        root.getStyleClass().add("bisq-content-bg");
 
         Label step1 = new Label("1. " + Res.get("onboarding.step1").toUpperCase());
         step1.getStyleClass().add("bisq-small-light-label");
@@ -60,7 +60,7 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
         step3.getStyleClass().add("bisq-small-light-label-dimmed");
 
         HBox box = Layout.hBoxWith(Spacer.fillHBox(), step1, line1, step2, line2, step3, Spacer.fillHBox());
-        box.getStyleClass().add("content-pane");
+        box.getStyleClass().add("bisq-content-bg");
         box.setSpacing(15);
         VBox.setMargin(box, new Insets(47, 0, 0, 0));
         root.getChildren().add(box);

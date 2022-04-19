@@ -57,7 +57,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
         amountPrice.setPadding(new Insets(0, 0, -5, 0));
 
         takeOfferButton = new Button(Res.get("takeOffer.button"));
-        takeOfferButton.getStyleClass().add("action-button");
+        takeOfferButton.setDefaultButton(true);
 
         Button cancelButton = new Button(Res.get("cancel"));
         cancelButton.setOnAction(e -> controller.onCancel());

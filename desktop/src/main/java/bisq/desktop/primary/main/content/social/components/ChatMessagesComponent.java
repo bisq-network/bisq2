@@ -587,8 +587,8 @@ public class ChatMessagesComponent {
                                 setOnMouseEntered(e -> {
                                     time.setVisible(true);
                                     reactionsBox.setVisible(true);
-                                    messageBox.setStyle("-fx-background-color: -bisq-grey-left-nav-selected-bg");
-                                    setStyle("-fx-background-color: -bisq-grey-left-nav-selected-bg;");
+                                    messageBox.setStyle("-fx-background-color: -bisq-grey-2");
+                                    setStyle("-fx-background-color: -bisq-grey-2;");
                                 });
                                 setOnMouseExited(e -> {
                                     time.setVisible(false);

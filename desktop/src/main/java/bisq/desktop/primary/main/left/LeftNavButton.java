@@ -131,7 +131,7 @@ class LeftNavButton extends Pane implements Toggle {
             getStyleClass().remove("bisq-darkest-bg");
             getStyleClass().add("bisq-dark-bg");
 
-            // setStyle("-fx-background-color: -bisq-grey-left-nav-selected-bg;");
+            // setStyle("-fx-background-color: -bisq-grey-2;");
 
             // label.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");
             label.getStyleClass().remove("bisq-nav-label");
@@ -140,7 +140,7 @@ class LeftNavButton extends Pane implements Toggle {
 
             icon.setOpacity(1);
         } else {
-            //setStyle("-fx-background-color: -bisq-grey-left-nav-bg;");
+            //setStyle("-fx-background-color: -bisq-bg-dark;");
             getStyleClass().remove("bisq-dark-bg");
             getStyleClass().add("bisq-darkest-bg");
             //label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");

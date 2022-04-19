@@ -17,19 +17,15 @@
 
 package bisq.desktop.components.table;
 
-import javafx.scene.control.Button;
-import bisq.desktop.components.controls.jfx.BisqInputTextField;
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
+import bisq.desktop.components.controls.jfx.BisqInputTextField;
 import bisq.desktop.components.overlay.PopOverWrapper;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.StringProperty;
 import javafx.scene.Node;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +39,8 @@ import java.util.function.Function;
 
 @Slf4j
 public class BisqTableColumn<S> extends TableColumn<S, S> {
-    public enum CellFactory {
+
+    public enum DefaultCellFactories {
         TEXT,
         TEXT_INPUT,
         BUTTON,
@@ -68,6 +65,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     };
     private BiConsumer<S, BisqInputTextField> updateItemWithInputTextFieldHandler = (item, field) -> {
     };
+    private Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory = Optional.empty();
 
     public static class Builder<S> {
         private Optional<String> title = Optional.empty();
@@ -80,7 +78,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private Optional<Function<S, StringProperty>> valuePropertySupplier = Optional.empty();
         private Optional<Function<S, StringProperty>> valuePropertyBiDirBindingSupplier = Optional.empty();
         private Optional<Comparator<S>> comparator = Optional.empty();
-        private CellFactory cellFactory = CellFactory.TEXT;
+        private DefaultCellFactories defaultCellFactories = DefaultCellFactories.TEXT;
         private Consumer<S> onActionHandler = item -> {
         };
         private BiConsumer<S, Boolean> onToggleHandler = (item, selected) -> {
@@ -90,9 +88,10 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         };
         private BiConsumer<S, BisqInputTextField> updateItemWithInputTextFieldHandler = (item, field) -> {
         };
+        private Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory = Optional.empty();
 
         public BisqTableColumn<S> build() {
-            BisqTableColumn<S> tableColumn = new BisqTableColumn<>(cellFactory);
+            BisqTableColumn<S> tableColumn = new BisqTableColumn<>(defaultCellFactories, cellFactory);
             if (title.isPresent()) {
                 tableColumn.applyTitle(title.get());
             } else {
@@ -171,8 +170,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             return this;
         }
 
-        public Builder<S> cellFactory(CellFactory cellFactory) {
-            this.cellFactory = cellFactory;
+        public Builder<S> cellFactory(DefaultCellFactories defaultCellFactories) {
+            this.defaultCellFactories = defaultCellFactories;
             return this;
         }
 
@@ -200,6 +199,11 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             this.onToggleHandler = onToggleHandler;
             return this;
         }
+
+        public Builder<S> setCellFactory(Callback<TableColumn<S, S>, TableCell<S, S>> cellFactory) {
+            this.cellFactory = Optional.of(cellFactory);
+            return this;
+        }
     }
 
     public void applyComparator(Comparator<S> comparator) {
@@ -207,15 +211,19 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         setComparator(comparator);
     }
 
-    public BisqTableColumn(CellFactory cellFactory) {
+    public BisqTableColumn(DefaultCellFactories defaultCellFactories, Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory) {
         super();
 
         setCellValueFactory((data) -> new ReadOnlyObjectWrapper<>(data.getValue()));
-        switch (cellFactory) {
-            case TEXT -> applyTextCellFactory();
-            case TEXT_INPUT -> applyTextInputCellFactory();
-            case BUTTON -> applyButtonCellFactory();
-            case CHECKBOX -> applyCheckBoxCellFactory();
+        if (cellFactory.isPresent()) {
+            setCellFactory(cellFactory.get());
+        } else {
+            switch (defaultCellFactories) {
+                case TEXT -> applyTextCellFactory();
+                case TEXT_INPUT -> applyTextInputCellFactory();
+                case BUTTON -> applyButtonCellFactory();
+                case CHECKBOX -> applyCheckBoxCellFactory();
+            }
         }
     }
 
@@ -232,7 +240,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
 
     public void setTitleWithHelpText(String title, String help) {
         helpIcon = new Label();
-        AwesomeDude.setIcon(helpIcon, AwesomeIcon.QUESTION_SIGN, "1em");
+        AwesomeDude.setIcon(helpIcon, AwesomeIcon.INFO_SIGN, "1em");
         helpIcon.setOpacity(0.4);
         helpIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(() -> createInfoPopOver(help)));
         helpIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());
@@ -240,7 +248,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         Label label = new Label(title);
         HBox hBox = new HBox(label, helpIcon);
         hBox.setStyle("-fx-alignment: center-left");
-        hBox.setSpacing(4);
+        hBox.setSpacing(10);
         setGraphic(hBox);
     }
 
@@ -268,8 +276,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<S, S> call(TableColumn<S,
-                            S> column) {
+                    public TableCell<S, S> call(TableColumn<S, S> column) {
                         return new TableCell<>() {
                             S previousItem;
 
@@ -281,7 +288,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                         tableItem.deactivate();
                                     }
                                     previousItem = item;
-
                                     if (item instanceof TableItem tableItem) {
                                         tableItem.activate();
                                     }
