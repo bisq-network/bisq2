@@ -36,11 +36,11 @@ public class ProtocolListItem implements TableItem {
     private final String marketsInfo;
     private final String securityInfo;
     private final Pair<Long, Long> tradeLimits;
-    private final String tradeLimitsInfo;
     private final String privacyInfo;
     private final String convenienceInfo;
     private final String costInfo;
     private final String speedInfo;
+    private final String releaseDate;
 
     ProtocolListItem(SwapProtocol.Type swapProtocolType,
                      NavigationTarget navigationTarget,
@@ -48,11 +48,11 @@ public class ProtocolListItem implements TableItem {
                      String marketsInfo,
                      String securityInfo,
                      Pair<Long, Long> tradeLimits,
-                     String tradeLimitsInfo,
                      String privacyInfo,
                      String convenienceInfo,
                      String costInfo,
-                     String speedInfo
+                     String speedInfo,
+                     String releaseDate
 
     ) {
         this.swapProtocolType = swapProtocolType;
@@ -61,11 +61,11 @@ public class ProtocolListItem implements TableItem {
         this.marketsInfo = marketsInfo;
         this.securityInfo = securityInfo;
         this.tradeLimits = tradeLimits;
-        this.tradeLimitsInfo = tradeLimitsInfo;
         this.privacyInfo = privacyInfo;
         this.convenienceInfo = convenienceInfo;
         this.costInfo = costInfo;
         this.speedInfo = speedInfo;
+        this.releaseDate = releaseDate;
     }
 
     @Override

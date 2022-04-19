@@ -52,6 +52,10 @@ public class Icons {
         return getIconForLabel(icon, "0.769em", label, style);
     }
 
+    public static Text getIconForLabel(GlyphIcons icon, String style) {
+        return getIconForLabel(icon, AwesomeDude.DEFAULT_ICON_SIZE, new Label(), style);
+    }
+
     public static Text getIconForLabel(GlyphIcons icon, String iconSize, Label label, String style) {
         if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
             final Text textIcon = MaterialDesignIconFactory.get().createIcon(icon, iconSize);

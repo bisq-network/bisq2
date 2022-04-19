@@ -32,11 +32,11 @@ public class TradeView extends TabView<TradeModel, TradeController> {
 
         addTab(Res.get("trade.overview"), NavigationTarget.TRADE_OVERVIEW);
         addTab(Res.get("trade.satoshiSquare"), NavigationTarget.SATOSHI_SQUARE);
-        addTab(Res.get("trade.liquidSwap"), NavigationTarget.LIQUID_SWAPS);
-        addTab(Res.get("trade.multiSig"), NavigationTarget.MULTI_SIG);
-        addTab(Res.get("trade.xmrSwap"), NavigationTarget.XMR_SWAPS);
-        addTab(Res.get("trade.bsqSwap"), NavigationTarget.BSQ_SWAPS);
-        addTab(Res.get("trade.lightning"), NavigationTarget.LIGHTNING);
+        addTab(Res.get("trade.liquidSwap"), NavigationTarget.LIQUID_SWAP);
+        addTab(Res.get("trade.multiSig"), NavigationTarget.BISQ_MULTI_SIG);
+        addTab(Res.get("trade.xmrSwap"), NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP);
+        addTab(Res.get("trade.bsqSwap"), NavigationTarget.BSQ_SWAP);
+        addTab(Res.get("trade.lightning"), NavigationTarget.LN_3_PARTY);
     }
 
     @Override

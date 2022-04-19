@@ -64,19 +64,19 @@ public class TradeController extends TabController<TradeModel> {
             case SATOSHI_SQUARE -> {
                 return Optional.of(new ExchangeController(applicationService));
             }
-            case LIQUID_SWAPS -> {
+            case LIQUID_SWAP -> {
                 return Optional.of(new LiquidSwapController(applicationService));
             }
-            case MULTI_SIG -> {
+            case BISQ_MULTI_SIG -> {
                 return Optional.of(new MultiSigController(applicationService));
             }
-            case XMR_SWAPS -> {
+            case ATOMIC_CROSS_CHAIN_SWAP -> {
                 return Optional.of(new XmrSwapController(applicationService));
             }
-            case BSQ_SWAPS -> {
+            case BSQ_SWAP -> {
                 return Optional.of(new BsqSwapController(applicationService));
             }
-            case LIGHTNING -> {
+            case LN_3_PARTY -> {
                 return Optional.of(new LightningController(applicationService));
             }
             default -> {

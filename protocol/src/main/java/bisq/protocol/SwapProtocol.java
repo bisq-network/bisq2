@@ -22,10 +22,10 @@ import lombok.Getter;
 public class SwapProtocol {
     @Getter
     public enum Type {
-        SATOSHI_SQUARE(Security.LOW, Privacy.LOW, Convenience.HIGH, Cost.HIGH, Speed.LOW),
+        SATOSHI_SQUARE(Security.LOW, Privacy.MID, Convenience.HIGH, Cost.HIGH, Speed.LOW),
         LIQUID_SWAP(Security.HIGH, Privacy.HIGH, Convenience.MID, Cost.LOW, Speed.HIGH),
-        ATOMIC_CROSS_CHAIN_SWAP(Security.HIGH, Privacy.LOW, Convenience.MID, Cost.MID, Speed.MID),
-        BISQ_MULTI_SIG(Security.MID, Privacy.LOW, Convenience.MID, Cost.MID, Speed.LOW),
+        ATOMIC_CROSS_CHAIN_SWAP(Security.HIGH, Privacy.HIGH, Convenience.LOW, Cost.MID, Speed.MID),
+        BISQ_MULTI_SIG(Security.MID, Privacy.MID, Convenience.MID, Cost.MID, Speed.LOW),
         BSQ_SWAP(Security.HIGH, Privacy.MID, Convenience.MID, Cost.MID, Speed.MID),
         LN_3_PARTY(Security.MID, Privacy.MID, Convenience.MID, Cost.LOW, Speed.LOW);
 
@@ -45,23 +45,23 @@ public class SwapProtocol {
     }
 
     public enum Security {
-        HIGH, MID, LOW
+        LOW, MID, HIGH
     }
 
     public enum Privacy {
-        HIGH, MID, LOW
+        LOW, MID, HIGH
     }
 
     public enum Convenience {
-        HIGH, MID, LOW
+        LOW, MID, HIGH
     }
 
     public enum Cost {
-        HIGH, MID, LOW
+        LOW, MID, HIGH
     }
 
     public enum Speed {
-        HIGH, MID, LOW
+        LOW, MID, HIGH
     }
 }
 

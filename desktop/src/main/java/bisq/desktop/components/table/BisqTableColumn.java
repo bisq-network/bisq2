@@ -39,7 +39,8 @@ import java.util.function.Function;
 
 @Slf4j
 public class BisqTableColumn<S> extends TableColumn<S, S> {
-    public enum CellFactory {
+
+    public enum DefaultCellFactories {
         TEXT,
         TEXT_INPUT,
         BUTTON,
@@ -64,6 +65,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     };
     private BiConsumer<S, BisqInputTextField> updateItemWithInputTextFieldHandler = (item, field) -> {
     };
+    private Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory = Optional.empty();
 
     public static class Builder<S> {
         private Optional<String> title = Optional.empty();
@@ -76,7 +78,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private Optional<Function<S, StringProperty>> valuePropertySupplier = Optional.empty();
         private Optional<Function<S, StringProperty>> valuePropertyBiDirBindingSupplier = Optional.empty();
         private Optional<Comparator<S>> comparator = Optional.empty();
-        private CellFactory cellFactory = CellFactory.TEXT;
+        private DefaultCellFactories defaultCellFactories = DefaultCellFactories.TEXT;
         private Consumer<S> onActionHandler = item -> {
         };
         private BiConsumer<S, Boolean> onToggleHandler = (item, selected) -> {
@@ -86,9 +88,10 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         };
         private BiConsumer<S, BisqInputTextField> updateItemWithInputTextFieldHandler = (item, field) -> {
         };
+        private Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory = Optional.empty();
 
         public BisqTableColumn<S> build() {
-            BisqTableColumn<S> tableColumn = new BisqTableColumn<>(cellFactory);
+            BisqTableColumn<S> tableColumn = new BisqTableColumn<>(defaultCellFactories, cellFactory);
             if (title.isPresent()) {
                 tableColumn.applyTitle(title.get());
             } else {
@@ -167,8 +170,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             return this;
         }
 
-        public Builder<S> cellFactory(CellFactory cellFactory) {
-            this.cellFactory = cellFactory;
+        public Builder<S> cellFactory(DefaultCellFactories defaultCellFactories) {
+            this.defaultCellFactories = defaultCellFactories;
             return this;
         }
 
@@ -196,6 +199,11 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             this.onToggleHandler = onToggleHandler;
             return this;
         }
+
+        public Builder<S> setCellFactory(Callback<TableColumn<S, S>, TableCell<S, S>> cellFactory) {
+            this.cellFactory = Optional.of(cellFactory);
+            return this;
+        }
     }
 
     public void applyComparator(Comparator<S> comparator) {
@@ -203,17 +211,19 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         setComparator(comparator);
     }
 
-    public BisqTableColumn(CellFactory cellFactory) {
+    public BisqTableColumn(DefaultCellFactories defaultCellFactories, Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory) {
         super();
 
-       // titleLabel.setStyle("-fx-font-size: 1.2em");
-
         setCellValueFactory((data) -> new ReadOnlyObjectWrapper<>(data.getValue()));
-        switch (cellFactory) {
-            case TEXT -> applyTextCellFactory();
-            case TEXT_INPUT -> applyTextInputCellFactory();
-            case BUTTON -> applyButtonCellFactory();
-            case CHECKBOX -> applyCheckBoxCellFactory();
+        if (cellFactory.isPresent()) {
+            setCellFactory(cellFactory.get());
+        } else {
+            switch (defaultCellFactories) {
+                case TEXT -> applyTextCellFactory();
+                case TEXT_INPUT -> applyTextInputCellFactory();
+                case BUTTON -> applyButtonCellFactory();
+                case CHECKBOX -> applyCheckBoxCellFactory();
+            }
         }
     }
 

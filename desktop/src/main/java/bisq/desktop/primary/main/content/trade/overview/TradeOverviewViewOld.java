@@ -64,19 +64,19 @@ public class TradeOverviewViewOld extends View<VBox, TradeOverviewModel, TradeOv
                 () -> Navigation.navigateTo(NavigationTarget.SATOSHI_SQUARE),
                 "liquidSwap",
                 false,
-                () -> Navigation.navigateTo(NavigationTarget.LIQUID_SWAPS));
+                () -> Navigation.navigateTo(NavigationTarget.LIQUID_SWAP));
         addSmallBox("xmrSwap",
                 false,
-                () -> Navigation.navigateTo(NavigationTarget.XMR_SWAPS),
+                () -> Navigation.navigateTo(NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP),
                 "multiSig",
                 false,
-                () -> Navigation.navigateTo(NavigationTarget.MULTI_SIG));
+                () -> Navigation.navigateTo(NavigationTarget.BISQ_MULTI_SIG));
         addSmallBox("bsqSwap",
                 false,
-                () -> Navigation.navigateTo(NavigationTarget.BSQ_SWAPS),
+                () -> Navigation.navigateTo(NavigationTarget.BSQ_SWAP),
                 "lightning",
                 false,
-                () -> Navigation.navigateTo(NavigationTarget.LIGHTNING));
+                () -> Navigation.navigateTo(NavigationTarget.LN_3_PARTY));
 
         // As we have scroll pane as parent container our root grows when increasing width but does not shrink anymore.
         // If anyone finds a better solution would be nice to get rid of that hack...
