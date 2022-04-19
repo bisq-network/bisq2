@@ -17,19 +17,15 @@
 
 package bisq.desktop.components.table;
 
-import javafx.scene.control.Button;
-import bisq.desktop.components.controls.jfx.BisqInputTextField;
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
+import bisq.desktop.components.controls.jfx.BisqInputTextField;
 import bisq.desktop.components.overlay.PopOverWrapper;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.StringProperty;
 import javafx.scene.Node;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
@@ -210,6 +206,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     public BisqTableColumn(CellFactory cellFactory) {
         super();
 
+       // titleLabel.setStyle("-fx-font-size: 1.2em");
+
         setCellValueFactory((data) -> new ReadOnlyObjectWrapper<>(data.getValue()));
         switch (cellFactory) {
             case TEXT -> applyTextCellFactory();
@@ -232,7 +230,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
 
     public void setTitleWithHelpText(String title, String help) {
         helpIcon = new Label();
-        AwesomeDude.setIcon(helpIcon, AwesomeIcon.QUESTION_SIGN, "1em");
+        AwesomeDude.setIcon(helpIcon, AwesomeIcon.INFO_SIGN, "1em");
         helpIcon.setOpacity(0.4);
         helpIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(() -> createInfoPopOver(help)));
         helpIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());
@@ -240,7 +238,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         Label label = new Label(title);
         HBox hBox = new HBox(label, helpIcon);
         hBox.setStyle("-fx-alignment: center-left");
-        hBox.setSpacing(4);
+        hBox.setSpacing(10);
         setGraphic(hBox);
     }
 
@@ -268,8 +266,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<S, S> call(TableColumn<S,
-                            S> column) {
+                    public TableCell<S, S> call(TableColumn<S, S> column) {
                         return new TableCell<>() {
                             S previousItem;
 
@@ -281,7 +278,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                         tableItem.deactivate();
                                     }
                                     previousItem = item;
-
                                     if (item instanceof TableItem tableItem) {
                                         tableItem.activate();
                                     }

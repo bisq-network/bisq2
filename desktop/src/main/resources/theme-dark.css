@@ -157,12 +157,8 @@ Taken from Bisq. Might need some clean up
     /*-fx-faint-focus-color: transparent;*/
 }
 
-/* Bisq 2 - does not work inside bisq2.css ...*/
-.action-button {
-    -fx-background-color: -bisq-dark-green;
-    -fx-text-fill: -fx-light-text-color;
-}
 
+/*
 .action-button:hover, .action-button:focused {
     -fx-background-color: derive(-fx-accent, -10%);
 }
@@ -171,50 +167,10 @@ Taken from Bisq. Might need some clean up
     -fx-background-color: -bisq-grey-6;
     -fx-text-fill: -bisq-grey-9;
 }
+*/
 
 
 
-
-/* table view */
-.table-view, .table-cell:focused, .table-row-cell {
-    -fx-background: transparent;
-    -fx-border-width: 0;
-}
-
-.table-view .column-header {
-    -fx-background-color: derive(-bs-background-color, -50%);
-    -fx-border-width: 0;
-}
-
-.table-view {
-    -fx-background-color: derive(-bs-background-color, -30%);
-    -fx-border-width: 0;
-}
-
-.table-view .table-row-cell:even .table-cell {
-    -fx-background-color: derive(-bs-background-color, -5%);
-    -fx-border-color: derive(-bs-background-color, -5%);
-}
-
-.table-view .table-row-cell:odd .table-cell {
-    -fx-background-color: derive(-bs-background-color, -30%);
-    -fx-border-color: derive(-bs-background-color, -30%);
-}
-
-.table-view .table-row-cell:selected .table-cell {
-    -fx-background: -fx-accent;
-    -fx-background-color: -fx-selection-bar;
-    -fx-border-color: -fx-selection-bar;
-}
-
-.table-row-cell {
-    -fx-border-color: -bs-background-color;
-}
-
-.table-row-cell:empty, .table-row-cell:empty:even, .table-row-cell:empty:odd {
-    -fx-background-color: -bs-background-color;
-    -fx-min-height: 36;
-}
 
 .offer-table .table-row-cell {
     -fx-background: -fx-accent;
@@ -378,9 +334,6 @@ Taken from Bisq. Might need some clean up
     -jfx-disable-animation: true;
 }
 
-.jfx-password-field {
-    -fx-background-color: derive(-bs-background-color, -15%);
-}
 
 .input-with-border {
     -fx-border-width: 0;
@@ -400,75 +353,6 @@ Taken from Bisq. Might need some clean up
     -fx-background-color: transparent;
 }
 
-.jfx-date-picker .jfx-text-field > .input-line {
-    -fx-background-color: transparent;
-}
-
-.content-pane {
-    -fx-background-color: -bs-content-background-gray;
-    -jfx-disable-animation: true;
-}
-
-.top-navigation {
-    -fx-border-width: 0 0 0 0;
-    -fx-padding: 0 7 0 0;
-}
-
-.nav-price-balance {
-    -fx-effect: null;
-}
-
-.nav-price-balance .jfx-combo-box > .input-line {
-    -fx-background-color: transparent;
-}
-
-.nav-button:selected {
-    -fx-background-color: derive(-bs-color-primary-dark, -10%);
-    -fx-effect: null;
-}
-
-.nav-button:hover {
-    -fx-background-color: -bs-rd-nav-button-hover;
-}
-
-.nav-primary .nav-button:selected {
-    -fx-background-color: derive(-bs-color-primary-dark, -5%);
-}
-
-.table-view {
-    -fx-border-color: transparent;
-}
-
-.table-view .table-cell {
-    -fx-padding: 6 0 4 0;
-    -fx-text-fill: -bs-text-color;
-}
-
-.table-view .table-cell.last-column {
-    -fx-padding: 6 10 4 0;
-}
-
-.table-view .table-cell.last-column.avatar-column {
-    -fx-padding: 6 0 4 0;
-}
-
-.table-view .table-cell.first-column {
-    -fx-padding: 6 0 4 10;
-}
-
-.jfx-tab-pane .headers-region .tab .tab-container .tab-label {
-    -fx-cursor: hand;
-    -jfx-disable-animation: true;
-}
-
-.jfx-tab-pane .headers-region .tab .tab-container .tab-label:hover {
-    -fx-background-color: -bs-tab-content-label-hover;
-    -jfx-disable-animation: true;
-}
-
-.jfx-tab-pane {
-    -jfx-disable-animation: true;
-}
 
 #form-header-text {
     -fx-font-weight: normal;
@@ -487,26 +371,9 @@ Taken from Bisq. Might need some clean up
     -fx-font-weight: normal;
 }
 
-.titled-group-bg, .titled-group-bg-active {
-    -fx-border-color: -bs-rd-separator-dark;
-}
 
-/*.action-button:disabled, #sell-button:disabled, #buy-button:disabled {
-    -fx-background-color: derive(-bs-color-gray-0, -20%);
-}*/
 
 .warning-box {
     -fx-background-color: -bs-color-primary-dark;
 }
 
-.jfx-date-picker .date-picker-popup {
-    -fx-background-color: -bs-color-gray-background;
-}
-
-.jfx-date-picker .left-button, .jfx-date-picker .right-button {
-    -fx-background-color: derive(-bs-color-gray-0, -10%);
-}
-
-.progress-bar > .secondary-bar {
-    -fx-background-color: -bs-color-gray-0;
-}

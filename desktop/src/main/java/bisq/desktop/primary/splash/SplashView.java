@@ -40,7 +40,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.CENTER);
-        root.getStyleClass().add("content-pane");
+        root.getStyleClass().add("bisq-content-bg");
         
         ImageView logo = new ImageView();
         logo.setId("logo-splash");

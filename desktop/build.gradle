@@ -38,7 +38,7 @@ dependencies {
     implementation 'de.jensd:fontawesomefx:8.0.0'
     implementation 'de.jensd:fontawesomefx-commons:9.1.2'
     implementation 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
-    implementation 'org.controlsfx:controlsfx:11.1.1'
+   /* implementation 'org.controlsfx:controlsfx:11.1.1'*/
 
     implementation "org.fxmisc.easybind:easybind:1.0.3"
     implementation 'org.fxmisc.richtext:richtextfx:0.10.9'
