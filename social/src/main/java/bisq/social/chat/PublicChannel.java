@@ -22,11 +22,13 @@ import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
@@ -38,10 +40,10 @@ public class PublicChannel extends Channel<PublicChatMessage> {
     private transient final ObservableSet<PublicChatMessage> chatMessages = new ObservableSet<>();
 
     PublicChannel(String id,
-                         String channelName,
-                         String description,
-                         ChatUser channelAdmin,
-                         Set<ChatUser> channelModerators
+                  String channelName,
+                  String description,
+                  ChatUser channelAdmin,
+                  Set<ChatUser> channelModerators
     ) {
         this(id, channelName,
                 description,

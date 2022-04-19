@@ -89,6 +89,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private BiConsumer<S, BisqInputTextField> updateItemWithInputTextFieldHandler = (item, field) -> {
         };
         private Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory = Optional.empty();
+        private boolean isFirst, isLast;
 
         public BisqTableColumn<S> build() {
             BisqTableColumn<S> tableColumn = new BisqTableColumn<>(defaultCellFactories, cellFactory);
@@ -109,12 +110,18 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             tableColumn.buttonClass = buttonClass;
             tableColumn.updateItemWithButtonHandler = updateItemWithButtonHandler;
             tableColumn.updateItemWithInputTextFieldHandler = updateItemWithInputTextFieldHandler;
+            if (isFirst) {
+                tableColumn.getStyleClass().add("first");
+            }
+            if (isLast) {
+                tableColumn.getStyleClass().add("last");
+            }
             comparator.ifPresent(tableColumn::applyComparator);
             return tableColumn;
         }
 
         public Builder<S> title(String title) {
-            this.title = Optional.of(title);
+            this.title = Optional.of(title.toUpperCase());
             return this;
         }
 
@@ -202,6 +209,16 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
 
         public Builder<S> setCellFactory(Callback<TableColumn<S, S>, TableCell<S, S>> cellFactory) {
             this.cellFactory = Optional.of(cellFactory);
+            return this;
+        }
+
+        public Builder<S> isFirst() {
+            this.isFirst = true;
+            return this;
+        }
+
+        public Builder<S> isLast() {
+            this.isLast = true;
             return this;
         }
     }

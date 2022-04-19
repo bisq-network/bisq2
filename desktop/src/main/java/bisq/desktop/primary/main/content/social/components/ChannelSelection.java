@@ -152,8 +152,8 @@ public abstract class ChannelSelection {
                         if (item instanceof PrivateChannel privateChannel) {
                             ChatUser peer = privateChannel.getPeer();
                             ImageView roboIcon = new ImageView(RoboHash.getImage(new ByteArray(peer.getPubKeyHash())));
-                            roboIcon.setFitWidth(37.5);
-                            roboIcon.setFitHeight(37.5);
+                            roboIcon.setFitWidth(35);
+                            roboIcon.setFitHeight(35);
                             hBox.getChildren().add(roboIcon);
                             String userName = peer.getUserName();
                             label.setText(StringUtils.truncate(userName, 20));

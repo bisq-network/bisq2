@@ -21,25 +21,19 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.overlay.OverlayWindow;
-import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 public class MultiSigView extends NavigationView<VBox, MultiSigModel, MultiSigController> {
-    private final Label headlineLabel;
+   // private final Label headlineLabel;
     private final Region line;
     protected final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
-    private final Button createOfferButton;
+ //   private final Button createOfferButton;
     private OverlayWindow overlayWindow;
 
     public MultiSigView(MultiSigModel model, MultiSigController controller) {
@@ -48,21 +42,20 @@ public class MultiSigView extends NavigationView<VBox, MultiSigModel, MultiSigCo
         root.setFillWidth(true);
         root.setPadding(new Insets(0, -67, 0, 0));
 
-        headlineLabel = new Label(Res.get("offerbook"));
+     /*   headlineLabel = new Label(Res.get("offerbook"));
         headlineLabel.getStyleClass().add("bisq-content-headline-label");
 
         createOfferButton = new Button(Res.get("createOffer.createOffer.button"));
         createOfferButton.setDefaultButton(true);
-       // createOfferButton.getStyleClass().add("bisq-border-dark-bg-button");
-        HBox.setMargin(createOfferButton, new Insets(-5, 0, 0, 0));
+        HBox.setMargin(createOfferButton, new Insets(-5, 0, 0, 0));*/
 
-        HBox topBox = new HBox();
+       /* HBox topBox = new HBox();
         topBox.setFillHeight(true);
         topBox.setSpacing(46);
         topBox.getChildren().addAll(headlineLabel, Spacer.fillHBox(), createOfferButton);
         topBox.setPadding(new Insets(0, 67, 2, 0));
 
-        HBox.setMargin(headlineLabel, new Insets(-5, 0, 20, -2));
+        HBox.setMargin(headlineLabel, new Insets(-5, 0, 20, -2));*/
 
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToHeight(true);
@@ -74,12 +67,12 @@ public class MultiSigView extends NavigationView<VBox, MultiSigModel, MultiSigCo
         double lineHeight = 1.5;
         line.setMinHeight(lineHeight);
 
-        Pane lineAndMarker = new Pane();
+      /*  Pane lineAndMarker = new Pane();
         lineAndMarker.getChildren().addAll(line);
         lineAndMarker.setMinHeight(lineHeight);
-        lineAndMarker.setPadding(new Insets(0, 67, 0, 0));
+        lineAndMarker.setPadding(new Insets(0, 67, 0, 0));*/
 
-        root.getChildren().addAll(topBox, lineAndMarker, scrollPane);
+        root.getChildren().addAll(/*topBox, lineAndMarker,*/ scrollPane);
 
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -96,10 +89,9 @@ public class MultiSigView extends NavigationView<VBox, MultiSigModel, MultiSigCo
                     overlayWindow.show();
                 } else {
                     childRoot.getStyleClass().add("bisq-content-bg");
-                    childRoot.setPadding(new Insets(33, 67, 0, 0));
+                  //  childRoot.setPadding(new Insets(33, 67, 0, 0));
                     scrollPane.setContent(childRoot);
                 }
-
             }
         };
 
@@ -117,14 +109,14 @@ public class MultiSigView extends NavigationView<VBox, MultiSigModel, MultiSigCo
                 Navigation.navigateTo(navigationTarget);
             }
         });*/
-        createOfferButton.setOnAction(e -> controller.onOpenCreateOffer());
+    //    createOfferButton.setOnAction(e -> controller.onOpenCreateOffer());
         line.prefWidthProperty().bind(root.widthProperty());
         model.getView().addListener(viewChangeListener);
     }
 
     @Override
     protected void onViewDetached() {
-        createOfferButton.setOnAction(null);
+    //    createOfferButton.setOnAction(null);
         line.prefWidthProperty().unbind();
         model.getView().removeListener(viewChangeListener);
 

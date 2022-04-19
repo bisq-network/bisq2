@@ -37,7 +37,7 @@ public class OpenOffersView extends View<VBox, OpenOffersModel, OpenOffersContro
 
         tableView = new BisqTableView<>(model.getSortedItems());
         tableView.setMinHeight(200);
-        tableView.setPadding(new Insets(-20, 0, 0, 0));
+        VBox.setMargin(tableView, new Insets(-33, 0, 0, 0));
         configDataTableView();
 
         this.root.getChildren().addAll(tableView);

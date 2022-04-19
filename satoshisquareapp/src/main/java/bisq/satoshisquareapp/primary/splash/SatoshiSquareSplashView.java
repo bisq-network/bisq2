@@ -20,11 +20,11 @@ package bisq.satoshisquareapp.primary.splash;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
-import javafx.scene.control.Label;
-import bisq.desktop.components.controls.jfx.BisqProgressBar;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -34,7 +34,7 @@ import javafx.scene.text.TextAlignment;
 import java.util.concurrent.TimeUnit;
 
 public class SatoshiSquareSplashView extends View<VBox, SatoshiSquareSplashModel, SatoshiSquareSplashController> {
-    private final BisqProgressBar progressBar;
+    private final ProgressBar progressBar;
     private final Label subTitle1, subTitle2, subTitle3;
     private final UIScheduler scheduler;
     private int sloganCounter = 1;
@@ -68,7 +68,7 @@ public class SatoshiSquareSplashView extends View<VBox, SatoshiSquareSplashModel
                 })
                 .periodically(4, TimeUnit.SECONDS);
 
-        progressBar = new BisqProgressBar(-1);
+        progressBar = new ProgressBar(-1);
         progressBar.setMaxHeight(2);
         progressBar.setMinWidth(400);
         VBox.setMargin(progressBar, new Insets(60, 0, 10, 0));

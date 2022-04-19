@@ -55,7 +55,7 @@ class InventoryHandler implements Connection.Listener {
     }
 
     CompletableFuture<Inventory> request(DataFilter dataFilter) {
-       // log.debug("Node {} send GetInventoryRequest to {} with dataFilter {} and nonce {}. Connection={}",
+        // log.debug("Node {} send GetInventoryRequest to {} with dataFilter {} and nonce {}. Connection={}",
         //        node, connection.getPeerAddress(), dataFilter, nonce, connection.getId());
         ts = System.currentTimeMillis();
         supplyAsync(() -> node.send(new InventoryRequest(dataFilter, nonce), connection), NetworkService.NETWORK_IO_POOL)
@@ -95,7 +95,7 @@ class InventoryHandler implements Connection.Listener {
               /*  log.info("Node {} received GetInventoryResponse from {} with inventory {} and nonce {}. Connection={}",
                         node, connection.getPeerAddress(), response.inventory(), response.requestNonce(), connection.getId());*/
                 log.info("\n##########################################################################################\n" +
-                        "## INVENTORY\n" +
+                        "## INVENTORY from: " + connection.getPeerAddress() + "\n" +
                         "##########################################################################################\n" +
                         map.entrySet().stream().map(e -> e.getValue() + " " + e.getKey()).collect(Collectors.joining("\n")) +
                         "\n##########################################################################################");

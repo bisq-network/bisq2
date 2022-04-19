@@ -21,28 +21,16 @@
 .root {
     -fx-font-size: 13;
 
-    /* COLORS applied to moderna */
-    -fx-base: -bisq-content-bg;
-    -fx-accent: -bisq-green;
-    -fx-background: #29292a;
-    -fx-control-inner-background: #2B2B2B;
-
-    -fx-box-border: transparent;
-    -fx-focus-color: transparent;
-    -fx-faint-focus-color: -bisq-dark-green;
-    /*  -fx-selection-bar: #-fx-accent;
-      -fx-selection-bar-non-focused: #2a7e2e;*/
-    -fx-default-button: derive(-fx-accent, 95%);
-
-    -fx-dark-text-color: black;
-    -fx-mid-text-color: -bisq-grey-9;
-    -fx-light-text-color: white;
 
     /* Colors */
     -bisq-green: #56ae48;
     -bisq-dark-green: #2ea33c;
     -bisq-logo-green: #25b135;
     -bisq-darkest-green: derive(-bisq-logo-green, -50%);
+    -bisq-white: white;
+    -bisq-turquoise: #2cacaf;
+    -bisq-buy: #006600;
+    -bisq-sell: #660000;
 
     /* Greys */
     -bisq-grey-2: #1D1D1D;
@@ -64,6 +52,8 @@
     -bisq-grey-18: #141414;
     -bisq-grey-19: #282828;
     -bisq-grey-20: #454545;
+    -bisq-grey-21: #343434;
+
 
     /* Background colors */
     -bisq-bg-darker: -bisq-grey-2;
@@ -75,130 +65,19 @@
     -bisq-border-color-grey: -bisq-grey-7;
     -bisq-border-color-grey-hover: -bisq-grey-11;
 
-    /* Text colors */
-    -bisq-text-white: white;
 
+    -fx-base: -bisq-content-bg;
+    -fx-accent: -bisq-green;
+    -fx-background: -bisq-content-bg;
 
-    /*OLD*/
+    -fx-box-border: transparent;
+    -fx-focus-color: -fx-accent;
+    -fx-faint-focus-color: -fx-accent;
+    -fx-default-button: -bisq-green;
 
-
-    /* bisq main colors */
-    -bs-background-color: #29292a;
-    -bs-background-gray: #2B2B2B;
-    -bs-content-background-gray: #1F1F1F;
-
-    /* fifty shades of gray */
-    -bs-color-gray-13: #bbb;
-    -bs-color-gray-11: #dadada;
-    -bs-color-gray-10: #cfcecf;
-    -bs-color-gray-6: #afaeb0;
-    -bs-color-gray-5: #424242;
-    -bs-color-gray-4: #929293;
-    -bs-color-gray-3: #656565;
-    -bs-color-gray-2: #504f52;
-    -bs-color-gray-1: #29292a;
-    -bs-color-gray-0: #2B2B2B;
-    -bs-color-gray-dim: #aaaaaa;
-    -bs-color-gray-ddd: #444444;
-    -bs-color-gray-ccc: #7a7a7a;
-    -bs-color-gray-bbb: #5a5a5a;
-    -bs-color-gray-aaa: #29292a;
-    -bs-color-gray-fafa: #0a0a0a;
-    -bs-color-gray-background: #1F1F1F;
-
-    /* lesser used colors */
-    -bs-color-blue-5: #0a4576;
-    -bs-color-blue-4: #57acc9;
-    -bs-color-blue-3: #9bbdc9;
-    -bs-color-blue-2: #6aa4b6;
-    -bs-color-blue-1: #b5e1ef;
-    -bs-color-blue-0: blue;
-    -bs-color-green-1: #c4d9c5;
-    -bs-color-green-2: #98b999;
-    -bs-color-green-3: #619864;
-    -bs-color-green-4: #15bc1d;
-    -bs-color-green-5: #2a7e2e;
-    -bs-red: #D73030;
-    -bs-turquoise: #2cacaf;
-    -bs-yellow: #ffb60f;
-    -bs-yellow-light: derive(-bs-yellow, 81%);
-    -bs-blue-transparent: #0f87c344;
-    -bs-bg-green: #99ba9c;
-    -bs-rd-green: #25B135;
-    -bs-rd-green-dark: #3EA34A;
-
-    /* other element styling */
-    -bs-rd-nav-border: #535353;
-    -bs-rd-nav-primary-border: rgba(0, 0, 0, 0);
-    -bs-rd-nav-border-color: rgba(255, 255, 255, 0.1);
-    -bs-rd-nav-background: #141414;
-    -bs-rd-nav-primary-background: rgba(255, 255, 255, 0.015);
-    -bs-rd-nav-selected: #fff;
-    -bs-rd-nav-deselected: rgba(255, 255, 255, 0.45);
-    -bs-rd-nav-button-hover: rgba(255, 255, 255, 0.03);
-
-    -bs-tab-content-area: #111;
-    -bs-content-pane-bg-top: #212121;
-    -bs-rd-tab-border: rgba(255, 255, 255, 0.00);
-    -bs-tab-content-label-hover: rgba(0, 0, 0, 0.03);
-    -bs-combobox-hover: rgba(255, 255, 255, 0.1);
-    -bs-combobox-selected: rgba(21, 188, 29, 0.1);
-    -bs-content-pane-bg-bottom: #29292a;
-    -bs-scroll-pane-background: transparent;
-    -bs-tab-content-area: transparent;
-    -bs-viewport-background: transparent;
-
-    -bs-footer-pane-background: #29292a;
-    -bs-footer-pane-text: #cfcecf;
-    -bs-footer-pane-line: #29292a;
-
-    -bs-rd-font-balance: #bbbbbb;
-    -bs-rd-font-dark-gray: #d4d4d4;
-    -bs-rd-font-dark: #cccccc;
-    -bs-rd-font-light: #b4b4b4;
-    -bs-rd-font-lighter: #a0a0a0;
-
-    -bs-rd-font-confirmation-label: #504f52;
-    -bs-rd-font-balance-label: #999999;
-
-    -bisq-text-white-transparent-dark: rgba(29, 29, 33, 0.54);
-    -bisq-text-white-transparent: rgba(29, 29, 33, 0.2);
-    -bs-color-gray-line: #504f52;
-
-    -bs-rd-separator: #1F1F1F;
-    -bs-rd-separator-dark: #1F1F1F;
-    -bs-rd-error-red: #d83431;
-    -bs-rd-error-field: #521C1C;
-    -bs-rd-message-bubble: #0086c6;
-    -bs-rd-tooltip-truncated: #afaeb0;
-
-    -bs-toggle-selected: #25b135;
-    -bs-warning: #db6300;
-    -bs-buy: #006600;
-    -bs-buy-focus: black;
-    -bs-buy-hover: #237b2d;
-    -bs-buy-transparent: rgba(46, 163, 60, 0.3);
-    -bs-sell: #660000;
-    -bs-sell-focus: #090202;
-    -bs-sell-hover: #b42522;
-    -bs-sell-transparent: rgba(216, 52, 49, 0.3);
-    -bs-volume-transparent: rgba(37, 177, 54, 0.5);
-    -bs-candle-stick-average-line: rgba(21, 188, 29, 0.8);
-    -bs-candle-stick-loss: #ee6563;
-    -bs-candle-stick-won: #15bc1d;
-    -bs-cancel: #1d1d21;
-    -bs-cancel-focus: black;
-    -bs-cancel-hover: #050506;
-    -bs-green-soft: derive(-bs-rd-green, 60%);
-    -bs-red-soft: derive(-bs-rd-error-red, 60%);
-    -bs-chart-tick: rgba(255, 255, 255, 0.7);
-    -bs-chart-lines: rgba(0, 0, 0, 0.3);
-    -bs-white: white;
-    -bs-prompt-text: -bs-color-gray-3;
-    -bs-decimals: #db6300;
-    -bs-soft-red: #aa4c3b;
-    -bs-turquoise-light: #11eeee;
-
+    -fx-dark-text-color: black;
+    -fx-mid-text-color: -bisq-grey-9;
+    -fx-light-text-color: -bisq-white;
 }
 
 
@@ -208,6 +87,7 @@
  *                                                                             *
  ******************************************************************************/
 
+/* TODO unify sizes */
 .very-small-text {
     -fx-font-size: 0.692em;
 }
@@ -217,31 +97,16 @@
 }
 
 .normal-text {
-    -fx-font-size: 0.923em;
+    -fx-font-size: 1em;
 }
 
 .large-text {
-    -fx-font-size: 0.923em;
+    -fx-font-size: 1.2em;
 }
 
 .very-large-text {
-    -fx-font-size: 0.923em;
+    -fx-font-size: 2em;
 }
-
-/*
-0.9em 17 dpx
-2.51em  48 dpx
-1.44 28 dpx
-1em 19 dpx
-1.15em 22 dpx
-1.25em 24 dpx
-0.73em 14 dpx
-0.78em 15 dpx
-1.05em 20 dpx
-1.78em 34 dpx
-1.3em  25 dpx
-4em  78 dpx
- */
 
 
 /*******************************************************************************
@@ -261,7 +126,7 @@
     -fx-background-color: -bisq-grey-12;
     -fx-background-radius: 4;
     -fx-border-style: none;;
-    -fx-text-fill: -bisq-text-white;
+    -fx-text-fill: -bisq-white;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -310,8 +175,8 @@
     -fx-border-style: none;
     -fx-border-width: 0px;
     -fx-underline: true;
-    -fx-text-fill: -bs-rd-font-dark;
-    -fx-fill: -bs-rd-font-dark;
+    /*  -fx-text-fill: -bs-rd-font-dark;
+      -fx-fill: -bs-rd-font-dark;*/
 }
 
 .hyperlink.no-underline {
@@ -319,8 +184,8 @@
 }
 
 .hyperlink:hover {
-    -fx-text-fill: -bisq-text-white;
-    -fx-fill: -bisq-text-white;
+    -fx-text-fill: -bisq-white;
+    -fx-fill: -bisq-white;
 }
 
 .hyperlink:hover,
@@ -336,8 +201,8 @@
 }
 
 .hyperlink.error {
-    -fx-text-fill: -bs-rd-error-red;
-    -fx-fill: -bs-rd-error-red;
+    /*  -fx-text-fill: -bs-rd-error-red;
+      -fx-fill: -bs-rd-error-red;*/
 }
 
 
@@ -348,19 +213,19 @@
  ******************************************************************************/
 
 .bisq-text-headline-1 {
-    -fx-fill: -bisq-text-white;
+    -fx-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 4.1em;
 }
 
 .bisq-text-headline-2 {
-    -fx-fill: -bisq-text-white;
+    -fx-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 2em;
 }
 
 .bisq-text-1 {
-    -fx-fill: -bisq-text-white;
+    -fx-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1.35em;
 }
@@ -373,20 +238,20 @@
  ******************************************************************************/
 
 .bisq-big-light-headline-label {
-    -fx-text-fill: -bisq-text-white;
+    -fx-text-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 2.51em;
 }
 
 .bisq-sub-title-label {
-    -fx-text-fill: -bisq-text-white;
+    -fx-text-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1.44em;
 }
 
 .bisq-large-profile-id-label {
     -fx-background-color: -bisq-grey-6;
-    -fx-text-fill: -bisq-text-white;
+    -fx-text-fill: -bisq-white;
     -fx-font-size: 1em;
 }
 
@@ -444,6 +309,13 @@
     -fx-text-fill: -bisq-grey-13;
 }
 
+/*.bisq-label-white {
+    -fx-text-fill: -bisq-white;
+}
+
+.bisq-label-white:selected {
+    -fx-text-fill: -bisq-green;
+}*/
 
 /*******************************************************************************
  *                                                                             *
@@ -465,7 +337,8 @@
 .bisq-input-box-text-input {
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
-    -fx-text-fill: -bisq-text-white;
+    -fx-text-fill: -bisq-white;
+    -fx-prompt-text-fill: -bisq-grey-14;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -593,15 +466,28 @@
 
 /*******************************************************************************
  *                                                                             *
- * ProgressIndicator                                                                  *
+ * ProgressBar                                                                  *
  *                                                                             *
  ******************************************************************************/
 
-.progress-indicator > .determinate-indicator > .indicator {
-    -fx-background-color: -fx-control-inner-background;
-    -fx-border-color: -fx-box-border;
-    -fx-border-width: 1;
-    -fx-padding: 0.166667em; /* 2px */
+.progress-bar {
+    -fx-indeterminate-bar-animation-time: 1;
+}
+
+.progress-bar > .track {
+    -fx-background-color: -bisq-grey-21;
+}
+
+.progress-bar > .bar,
+.progress-bar:indeterminate > .bar {
+    -fx-background-color: -bisq-green;
+    -fx-padding: 1.5;
+}
+
+.progress-bar > .track,
+.progress-bar > .bar {
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
 }
 
 
@@ -625,7 +511,7 @@
 
 .bisq-badge .badge-label {
     -fx-font-size: 0.85em;
-    -fx-text-fill: -bisq-text-white;
+    -fx-text-fill: -bisq-white;
 
 }
 
@@ -649,16 +535,24 @@
     -fx-background-insets: 0 0 0 0;
 }
 
-.list-view .list-cell:odd, .list-view .list-cell:even {
-    -fx-background-color: -bisq-bg-dark;
+.list-view .list-cell {
+    -fx-text-fill: -bisq-white;
     -fx-font-size: 1.05em;
     -fx-padding: 0 0 0 22;
-    -fx-background-insets: 0 0 0 0;
+    -fx-background-insets: 0;
+    -fx-background-color: -bisq-bg-dark;
 }
 
-
 .list-view .list-cell:selected {
-    -fx-background-color: -bisq-grey-16;
+    -fx-background-color: -bisq-bg-darker;
+}
+
+.list-view .list-cell .label {
+    -fx-text-fill: -bisq-white;
+}
+
+.list-view .list-cell:selected .label {
+    /* -fx-text-fill: -bisq-green;*/
 }
 
 
@@ -676,9 +570,6 @@
 tree-table-view:focused {
     -fx-background-insets: 0;
     -fx-border-color: -bisq-bg-dark;
-}
-
-.list-view:focused {
 }
 
 /* Selected rows */
@@ -699,7 +590,7 @@ tree-table-view:focused {
  ******************************************************************************/
 
 .table-view {
-    -fx-background-color: transparent;
+    -fx-background-color: -bisq-content-bg;
     -fx-border-width: 0;
     -fx-font-size: 1em;
 }
@@ -712,14 +603,18 @@ tree-table-view:focused {
 /* column-header */
 .table-view .column-header {
     -fx-background-color: -bisq-content-bg;
-    -fx-pref-height: 44px;
+    -fx-pref-height: 54px;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: transparent;
 }
 
 .table-view .column-header .label {
     -fx-alignment: center;
     -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 0.9em;
-    -fx-label-padding: 0 0 0 10;
+    -fx-label-padding: 0 10 0 10;
 }
 
 /* first */
@@ -740,10 +635,10 @@ tree-table-view:focused {
     -fx-alignment: center-right;
 }
 
-
 /* table-cell */
 .table-view .table-cell {
     -fx-alignment: center;
+    -fx-padding: 0 10 0 10;
 }
 
 /* row-cell */
@@ -751,16 +646,14 @@ tree-table-view:focused {
     -fx-border-width: 1 0 0 0;
     -fx-pref-height: 54px;
     -fx-border-color: -bisq-bg-dark;
-    /*   -fx-alignment: center;*/
 }
 
 .table-view .table-row-cell .table-cell {
-    -fx-label-padding: 0 0 0 10;
     -fx-border-color: transparent;
 }
 
 .table-view .table-row-cell .table-cell .text {
-    -fx-fill: -bisq-text-white;
+    -fx-fill: -bisq-white;
 }
 
 /* empty */
@@ -786,7 +679,7 @@ tree-table-view:focused {
 
 /* selected */
 .table-row-cell:selected {
-    -fx-fill: -bisq-text-white;
+    -fx-fill: -bisq-white;
 }
 
 .table-view .table-row-cell:hover .table-cell,
@@ -797,39 +690,38 @@ tree-table-view:focused {
 
 /* button */
 .table-view .table-row-cell:selected .button .text {
-    -fx-fill: -bisq-text-white;
+    -fx-fill: -bisq-white;
 }
 
 /* copy-icon */
 .table-view .table-row-cell .copy-icon .text,
 .table-view .table-row-cell .copy-icon .text:hover {
-    -fx-fill: -bisq-text-white;
+    -fx-fill: -bisq-white;
 }
 
 .table-view .table-row-cell:selected .copy-icon .text {
-    -fx-fill: -bisq-text-white;
+    -fx-fill: -bisq-white;
 }
 
 .table-view .table-row-cell:selected .copy-icon .text:hover {
-    -fx-fill: -bisq-text-white;
+    -fx-fill: -bisq-white;
 }
 
 /* hyperlink */
 .table-view .table-row-cell:selected .hyperlink .text {
-    -fx-fill: -bisq-text-white;
+    -fx-fill: -bisq-white;
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
 
 .table-view .table-row-cell .hyperlink .text {
-    /* -fx-fill: -bs-rd-font-dark;*/
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
 
 .table-view .table-row-cell .hyperlink .text:hover,
 .table-view .table-row-cell:selected .hyperlink .text:hover {
-    -fx-fill: -bisq-text-white;
+    -fx-fill: -bisq-white;
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
@@ -860,7 +752,7 @@ tree-table-view:focused {
 
 .titled-pane {
     -fx-background-color: -bisq-bg-dark;
-    -fx-text-fill: -bisq-text-white;
+    -fx-text-fill: -bisq-white;
     -fx-label-padding: -30 0 0 0;
 }
 
@@ -886,7 +778,7 @@ tree-table-view:focused {
 }
 
 .titled-pane > .title > .arrow-button > .arrow {
-    -fx-background-color: -bisq-text-white;
+    -fx-background-color: -bisq-white;
     -fx-background-insets: 1 0 -1 0, 0;
     -fx-padding: 0.25em 0.3125em 0.25em 0.3125em; /* 3 3.75 3 3.75 */
     -fx-shape: "M 0 0 h 7 l -3.5 4 z";
@@ -985,17 +877,17 @@ tree-table-view:focused {
 
 .scroll-bar:horizontal .thumb:hover,
 .scroll-bar:vertical .thumb:hover {
-    -fx-background-color: -bs-color-gray-5;
+    -fx-background-color: -bisq-grey-5;
 }
 
 .scroll-bar:horizontal .thumb:pressed,
 .scroll-bar:vertical .thumb:pressed {
-    -fx-background-color: -bs-color-gray-4;
+    -fx-background-color: -bisq-grey-5;
 }
 
 .scroll-bar:vertical:focused,
 .scroll-bar:horizontal:focused {
-    -fx-background-color: transparent, -bs-color-gray-4, -bs-color-gray-4;
+    -fx-background-color: transparent;
 }
 
 
@@ -1005,10 +897,9 @@ tree-table-view:focused {
  *                                                                             *
  ******************************************************************************/
 .grid-pane {
-    -fx-background-color: -bs-content-background-gray;
+    -fx-background-color: transparent;
     -fx-background-radius: 5;
     -fx-effect: null;
-    -fx-effect: dropshadow(gaussian, -bs-color-gray-10, 10, 0, 0, 0);
     -fx-background-insets: 10;
 }
 
@@ -1071,7 +962,7 @@ tree-table-view:focused {
 }
 
 .popover > .content .default-text {
-    -fx-text-fill: -bisq-text-white;
+    -fx-text-fill: -bisq-white;
 }
 
 .popover > .content > .title > .text {
@@ -1095,8 +986,8 @@ tree-table-view:focused {
 }
 
 .popover > .border {
-    -fx-stroke: linear-gradient(to bottom, -bisq-text-white-transparent, -bisq-text-white-transparent-dark) !important;
-    -fx-fill: -bs-background-color !important;
+    /* -fx-stroke: linear-gradient(to bottom, -bisq-white-transparent, -bisq-white-transparent-dark) !important;*/
+    -fx-fill: transparent;
 }
 
 
@@ -1143,7 +1034,7 @@ tree-table-view:focused {
 
 
 .keyword-customTags {
-    -fx-fill: -bs-turquoise;
+    -fx-fill: -bisq-turquoise;
 }
 
 .keyword-none {
@@ -1152,7 +1043,7 @@ tree-table-view:focused {
 
 .channel-settings-headline {
     -fx-font-size: 1.692em;
-    -fx-text-fill: -bs-color-green-5;
+    -fx-text-fill: -bisq-grey-5;
 }
 
 #chat-messages-list-view {
@@ -1166,7 +1057,7 @@ tree-table-view:focused {
     -fx-border-width: 1;
     -fx-border-radius: 4;
     -fx-faint-focus-color: transparent;
-    -fx-text-fill: -bisq-text-white;
+    -fx-text-fill: -bisq-white;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-background-insets: 0;
@@ -1175,39 +1066,39 @@ tree-table-view:focused {
 }
 
 #chat-messages-headline {
-    -fx-text-fill: -bisq-text-white;
+    -fx-text-fill: -bisq-white;
     -fx-font-size: 1.78em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 #chat-sidebar-headline {
-    -fx-text-fill: -bisq-text-white;
+    -fx-text-fill: -bisq-white;
     -fx-font-size: 1.78em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 #chat-sidebar-text {
-    -fx-text-fill: -bisq-text-white;
-    -fx-fill: -bisq-text-white;
+    -fx-text-fill: -bisq-white;
+    -fx-fill: -bisq-white;
     -fx-font-size: 1.05em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 #buy-button {
-    -fx-background-color: -bs-buy;
-    -fx-text-fill: -bs-white;
+    -fx-background-color: -bisq-buy;
+    -fx-text-fill: -bisq-white;
     -fx-background-insets: 0 0 0 0;
 }
 
 #sell-button {
-    -fx-background-color: -bs-sell;
-    -fx-text-fill: -bs-white;
+    -fx-background-color: -bisq-sell;
+    -fx-text-fill: -bisq-white;
     -fx-background-insets: 0 0 0 0;
 }
 
 #button-inactive {
-    -fx-background-color: -bs-color-gray-3;
-    -fx-text-fill: -bs-white;
+    -fx-background-color: -bisq-grey-5;
+    -fx-text-fill: -bisq-white;
     -fx-background-insets: 0 0 0 0;
 }
 
@@ -1226,6 +1117,7 @@ tree-table-view:focused {
     -fx-padding: 0 0 0 22;
     -fx-background-insets: 0 0 1 0;
     -fx-pref-height: 40px;
+    -fx-text-fill: -bisq-white;
 }
 
 
@@ -1241,22 +1133,22 @@ tree-table-view:focused {
 }
 
 #chat-message-reactions-separator {
-    -fx-text-fill: -bs-color-gray-dim;
+    -fx-text-fill: -bisq-grey-5;
     -fx-font-weight: bold;
 }
 
 #chat-quoted-message-top-pane {
-    -fx-background-color: -bs-color-gray-5;
+    -fx-background-color: -bisq-grey-5;
 }
 
 #proof-of-burn-tooltip {
-    -fx-background: -bs-color-gray-fafa;
-    -fx-text-fill: -bisq-text-white;
-    -fx-background-color: -bs-color-gray-fafa;
+    -fx-background: -bisq-grey-5;
+    -fx-text-fill: -bisq-white;
+    -fx-background-color: -bisq-grey-5;
     -fx-background-radius: 6px;
     -fx-background-insets: 0;
     -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
-    -fx-effect: dropshadow(three-pass-box, -bisq-text-white-transparent, 10, 0, 0, 3);
+    /* -fx-effect: dropshadow(three-pass-box, -bisq-white-transparent, 10, 0, 0, 3);*/
     -fx-font-size: 0.85em;
 }
 

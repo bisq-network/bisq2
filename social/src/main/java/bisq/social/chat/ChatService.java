@@ -80,13 +80,15 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.userProfileService = userProfileService;
 
-        networkService.addMessageListener(this);
-        networkService.addDataServiceListener(this);
+
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         maybeAddDefaultChannels();
+        networkService.addMessageListener(this);
+        networkService.addDataServiceListener(this);
+        networkService.getDataService().ifPresent(ds -> ds.getAllAuthenticatedPayload().forEach(this::onAuthenticatedDataAdded));
         setSelectedChannelIfNotSet();
         return CompletableFuture.completedFuture(true);
     }
@@ -175,7 +177,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public Optional<MarketChannel> findMarketChannel(Market selectedMarket) {
-        return persistableStore.getMarketChannels().stream().filter(e->e.getMarket().equals(selectedMarket)).findAny();
+        return persistableStore.getMarketChannels().stream().filter(e -> e.getMarket().equals(selectedMarket)).findAny();
     }
 
     public PrivateChannel getOrCreatePrivateChannel(String id, ChatUser peer) {
@@ -306,7 +308,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                     }
                 });
     }
-    
+
     public void deletePublicChatMessage(PublicChatMessage chatMessage, UserProfile userProfile) {
         NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
         checkArgument(chatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
@@ -389,8 +391,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public void maybeAddDefaultChannels() {
-        UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
-        if (userProfile == null || !persistableStore.getPublicChannels().isEmpty()) {
+        if (!persistableStore.getPublicChannels().isEmpty()) {
             return;
         }
 
@@ -400,46 +401,41 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         persistableStore.getMarketChannels().add(new MarketChannel(MarketRepository.getXmrMarket()));
         setSelectedChannel(defaultChannel);
 
-        ChatUser dummyChannelAdmin = new ChatUser(userProfile.getNickName(), userProfile.getIdentity().networkId());
-        Set<ChatUser> dummyChannelModerators = userProfileService.getUserProfiles().stream()
-                .map(profile -> new ChatUser(profile.getNickName(), profile.getIdentity().networkId()))
-                .collect(Collectors.toSet());
-
         persistableStore.getPublicChannels().add(new PublicChannel("Discussions Bisq",
                 "Discussions Bisq",
                 "Channel for discussions about Bisq",
-                dummyChannelAdmin,
-                dummyChannelModerators
+                null,
+                null
         ));
         persistableStore.getPublicChannels().add(new PublicChannel("Discussions Bitcoin",
                 "Discussions Bitcoin",
                 "Channel for discussions about Bitcoin",
-                dummyChannelAdmin,
-                dummyChannelModerators
+                null,
+                null
         ));
         persistableStore.getPublicChannels().add(new PublicChannel("Discussions Monero",
                 "Discussions Monero",
                 "Channel for discussions about Monero",
-                dummyChannelAdmin,
-                dummyChannelModerators
+                null,
+                null
         ));
         persistableStore.getPublicChannels().add(new PublicChannel("Price",
                 "Price",
                 "Channel for discussions about market price",
-                dummyChannelAdmin,
-                dummyChannelModerators
+                null,
+                null
         ));
         persistableStore.getPublicChannels().add(new PublicChannel("Economy",
                 "Economy",
                 "Channel for discussions about economy",
-                dummyChannelAdmin,
-                dummyChannelModerators
+                null,
+                null
         ));
         persistableStore.getPublicChannels().add(new PublicChannel("Off-topic",
                 "Off-topic",
                 "Channel for anything else",
-                dummyChannelAdmin,
-                dummyChannelModerators
+                null,
+                null
         ));
 
         Set<String> customTags = Set.of("BTC", "Bitcoin", "bank-transfer", "SEPA", "zelle", "revolut", "BUY", "SELL", "WANT", "RECEIVE",
