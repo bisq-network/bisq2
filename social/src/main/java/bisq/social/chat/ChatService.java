@@ -80,13 +80,15 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.userProfileService = userProfileService;
 
-        networkService.addMessageListener(this);
-        networkService.addDataServiceListener(this);
+
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         maybeAddDefaultChannels();
+        networkService.addMessageListener(this);
+        networkService.addDataServiceListener(this);
+        networkService.getDataService().ifPresent(ds -> ds.getAllAuthenticatedPayload().forEach(this::onAuthenticatedDataAdded));
         setSelectedChannelIfNotSet();
         return CompletableFuture.completedFuture(true);
     }
