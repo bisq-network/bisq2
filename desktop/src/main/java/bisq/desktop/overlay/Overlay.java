@@ -911,8 +911,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                 actionButton.setDisable(true);
 
             HBox.setHgrow(actionButton, Priority.SOMETIMES);
-
-            actionButton.getStyleClass().add("action-button");
+            actionButton.setDefaultButton(true);
             //TODO app wide focus
             //actionButton.requestFocus();
 

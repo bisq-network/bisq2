@@ -47,7 +47,7 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         vBox = new VBox();
         vBox.setAlignment(Pos.TOP_CENTER);
         vBox.setSpacing(30);
-        vBox.getStyleClass().add("content-pane");
+        vBox.getStyleClass().add("bisq-content-bg");
 
         root.setContent(vBox);
         root.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -55,7 +55,7 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         // We must set setFitToHeight false as otherwise text wrapping does not work at labels
         // We need to apply prefViewportHeight once we know our vbox height.
         root.setFitToHeight(false);
-        root.getStyleClass().add("content-pane");
+        root.getStyleClass().add("bisq-content-bg");
 
         Label headLineLabel = new Label(Res.get("satoshisquareapp.selectTraderType.headline"));
         headLineLabel.setWrapText(true);

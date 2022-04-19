@@ -62,7 +62,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         amountPrice.setPadding(new Insets(0, 0, -5, 0));
 
         createOfferButton = new Button(Res.get("createOffer.button"));
-        createOfferButton.getStyleClass().add("action-button");
+        createOfferButton.setDefaultButton(true);
         Button cancelButton = new Button(Res.get("cancel"));
         cancelButton.setOnAction(e -> controller.onCancel());
 

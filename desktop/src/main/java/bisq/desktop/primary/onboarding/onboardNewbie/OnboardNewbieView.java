@@ -43,7 +43,7 @@ public class OnboardNewbieView extends View<VBox, OnboardNewbieModel, OnboardNew
 
         root.setAlignment(Pos.TOP_CENTER);
         root.setSpacing(30);
-        root.getStyleClass().add("content-pane");
+        root.getStyleClass().add("bisq-content-bg");
 
         Label headLineLabel = new Label(Res.get("satoshisquareapp.createOffer.headline"));
         headLineLabel.setWrapText(true);
