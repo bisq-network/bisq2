@@ -64,6 +64,8 @@
     -bisq-grey-18: #141414;
     -bisq-grey-19: #282828;
     -bisq-grey-20: #454545;
+    -bisq-grey-21: #343434;
+
 
     /* Background colors */
     -bisq-bg-darker: -bisq-grey-2;
@@ -593,15 +595,28 @@
 
 /*******************************************************************************
  *                                                                             *
- * ProgressIndicator                                                                  *
+ * ProgressBar                                                                  *
  *                                                                             *
  ******************************************************************************/
 
-.progress-indicator > .determinate-indicator > .indicator {
-    -fx-background-color: -fx-control-inner-background;
-    -fx-border-color: -fx-box-border;
-    -fx-border-width: 1;
-    -fx-padding: 0.166667em; /* 2px */
+.progress-bar {
+    -fx-indeterminate-bar-animation-time: 1;
+}
+
+.progress-bar > .track {
+    -fx-background-color: -bisq-grey-21;
+}
+
+.progress-bar > .bar,
+.progress-bar:indeterminate > .bar {
+    -fx-background-color: -bisq-green;
+    -fx-padding: 1.5;
+}
+
+.progress-bar > .track,
+.progress-bar > .bar {
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
 }
 
 

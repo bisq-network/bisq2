@@ -18,11 +18,11 @@
 package bisq.desktop.primary.splash;
 
 import bisq.desktop.common.view.View;
-import javafx.scene.control.Label;
-import bisq.desktop.components.controls.jfx.BisqProgressBar;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -32,7 +32,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class SplashView extends View<VBox, SplashModel, SplashController> {
-    private final BisqProgressBar progressBar;
+    private final ProgressBar progressBar;
     private final Label statusLabel;
     private Subscription stateSubscription;
 
@@ -41,25 +41,25 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
 
         root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("bisq-content-bg");
-        
+
         ImageView logo = new ImageView();
         logo.setId("logo-splash");
-        VBox.setMargin(logo, new Insets(-52, 0, 83, 0)); 
+        VBox.setMargin(logo, new Insets(-52, 0, 83, 0));
 
         statusLabel = new Label("");
         statusLabel.getStyleClass().add("bisq-small-light-label");
         statusLabel.setTextAlignment(TextAlignment.CENTER);
 
-        progressBar = new BisqProgressBar(-1);
-        progressBar.setMinHeight(3);
-        progressBar.setMaxHeight(3);
+        progressBar = new ProgressBar(-1);
+        progressBar.setMinHeight(3.5);
+        progressBar.setMaxHeight(3.5);
         progressBar.setMinWidth(535);
         VBox.setMargin(progressBar, new Insets(16, 0, 16, 0));
 
         Label connectingTitle = new Label(Res.get("satoshisquareapp.splash.connecting").toUpperCase());
         connectingTitle.getStyleClass().add("bisq-small-light-label-dimmed");
 
-        root.getChildren().addAll(logo,  statusLabel, progressBar, connectingTitle);
+        root.getChildren().addAll(logo, statusLabel, progressBar, connectingTitle);
     }
 
     @Override
