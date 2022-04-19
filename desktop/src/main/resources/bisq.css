@@ -712,7 +712,7 @@ tree-table-view:focused {
 /* column-header */
 .table-view .column-header {
     -fx-background-color: -bisq-content-bg;
-    -fx-pref-height: 44px;
+    -fx-pref-height: 54px;
 }
 
 .table-view .column-header .label {

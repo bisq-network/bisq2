@@ -114,7 +114,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         }
 
         public Builder<S> title(String title) {
-            this.title = Optional.of(title);
+            this.title = Optional.of(title.toUpperCase());
             return this;
         }
 
