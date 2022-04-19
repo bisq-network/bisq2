@@ -85,14 +85,6 @@ public class MultiSigController extends NavigationController {
         }
     }
 
-    public void onOpenCreateOffer() {
-        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
-   /*     Navigation.navigateTo(NavigationTarget.CREATE_OFFER,
-                new CreateOfferController.InitData(model.selectedMarket,
-                        model.direction,
-                        model.showCreateOfferTab));*/
-    }
-
     public void onCloseCreateOffer() {
         model.showCreateOffer.set(false);
         Navigation.navigateTo(NavigationTarget.OFFERBOOK);

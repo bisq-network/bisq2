@@ -74,7 +74,6 @@ public class TextInputBox extends Pane {
             setMaxWidth(width);
         });
 
-       // setPrefWidth(300);
         EasyBind.subscribe(descriptionProperty, description -> {
             if (description != null) {
                 descriptionLabel.setText(description.toUpperCase());

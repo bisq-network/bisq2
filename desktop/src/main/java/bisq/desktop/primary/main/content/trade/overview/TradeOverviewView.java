@@ -66,13 +66,12 @@ public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverv
     }
 
     private void configDataTableView() {
-        BisqTableColumn<ProtocolListItem> column = new BisqTableColumn.Builder<ProtocolListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.protocol"))
                 .minWidth(80)
+                .isFirst()
                 .valueSupplier(e -> Res.get("trade.protocols." + e.getSwapProtocolType().name()))
-                .build();
-        column.getStyleClass().add("first");
-        tableView.getColumns().add(column);
+                .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.markets"))
                 .minWidth(80)
@@ -108,15 +107,14 @@ public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverv
                 .minWidth(80)
                 .valueSupplier(ProtocolListItem::getReleaseDate)
                 .build());
-        column = new BisqTableColumn.Builder<ProtocolListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .fixWidth(150)
                 .value(Res.get("shared.select"))
                 .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
                 .buttonClass(BisqIconButton.class)
                 .actionHandler(controller::onSelect)
-                .build();
-        column.getStyleClass().add("last");
-        tableView.getColumns().add(column);
+                .isLast()
+                .build());
     }
 
     public Callback<TableColumn<ProtocolListItem, ProtocolListItem>, TableCell<ProtocolListItem, ProtocolListItem>> getCellFactory(

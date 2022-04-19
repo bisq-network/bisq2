@@ -20,15 +20,14 @@ package bisq.desktop.primary.main.content.trade.multiSig.offerbook;
 import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
 import bisq.common.observable.Pin;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.CachingController;
-import javafx.scene.control.Button;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.components.controls.MarketSelection;
+import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.multiSig.create.CreateOfferController;
 import bisq.desktop.primary.main.content.trade.multiSig.take.TakeOfferController;
 import bisq.i18n.Res;
@@ -37,6 +36,7 @@ import bisq.offer.OfferBookService;
 import bisq.offer.OpenOfferService;
 import bisq.offer.spec.Direction;
 import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.scene.control.Button;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -139,6 +139,14 @@ public class OfferbookController implements CachingController {
         model.showAllMarkets.set(selected);
         model.marketSelectionDisabled.set(selected);
         updateFilterPredicate();
+    }
+
+    public void onOpenCreateOffer() {
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
+   /*     Navigation.navigateTo(NavigationTarget.CREATE_OFFER,
+                new CreateOfferController.InitData(model.selectedMarket,
+                        model.direction,
+                        model.showCreateOfferTab));*/
     }
 
     void onCreateOffer() {
