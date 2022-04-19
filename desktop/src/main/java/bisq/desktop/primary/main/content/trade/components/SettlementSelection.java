@@ -414,7 +414,7 @@ public class SettlementSelection {
             tableView.getColumns().add(new BisqTableColumn.Builder<AccountListItem>()
                     .title(Res.get("createOffer.account.table.select"))
                     .minWidth(40)
-                    .cellFactory(BisqTableColumn.CellFactory.CHECKBOX)
+                    .cellFactory(BisqTableColumn.DefaultCellFactories.CHECKBOX)
                     .toggleHandler((item, selected) -> controller.onAccountSelectionChanged(item, selected, isBaseSide))
                     .build());
         }
@@ -428,7 +428,7 @@ public class SettlementSelection {
             tableView.getColumns().add(new BisqTableColumn.Builder<SettlementListItem>()
                     .title(Res.get("createOffer.account.table.select"))
                     .minWidth(40)
-                    .cellFactory(BisqTableColumn.CellFactory.CHECKBOX)
+                    .cellFactory(BisqTableColumn.DefaultCellFactories.CHECKBOX)
                     .toggleHandler((item, selected) -> controller.onSettlementSelectionChanged(item, selected, isBaseSide))
                     .build());
         }

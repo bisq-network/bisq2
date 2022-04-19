@@ -234,13 +234,13 @@ public class EntitlementSelection {
             tableView.getColumns().add(new BisqTableColumn.Builder<EntitlementItem>()
                     .title(Res.get("social.createUserProfile.entitlement.table.header.proof"))
                     .fixWidth(160)
-                    .cellFactory(BisqTableColumn.CellFactory.BUTTON)
+                    .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
                     .actionHandler(controller::onOpenProofWindow)
                     .value(Res.get("social.createUserProfile.entitlement.table.proof.button"))
                     .build());
             tableView.getColumns().add(new BisqTableColumn.Builder<EntitlementItem>()
                     .fixWidth(120)
-                    .cellFactory(BisqTableColumn.CellFactory.BUTTON)
+                    .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
                     .actionHandler(controller::onShowInfo)
                     .value(Res.get("social.createUserProfile.entitlement.table.header.info"))
                     .build());

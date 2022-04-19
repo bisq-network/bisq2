@@ -85,7 +85,7 @@ public class OpenOffersView extends View<VBox, OpenOffersModel, OpenOffersContro
         tableView.getColumns().add(new BisqTableColumn.Builder<OpenOfferListItem>()
                 .fixWidth(150)
                 .value(Res.get("remove"))
-                .cellFactory(BisqTableColumn.CellFactory.BUTTON)
+                .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
                 .buttonClass(BisqIconButton.class)
                 .actionHandler(controller::onRemoveOffer)
                 .build());
