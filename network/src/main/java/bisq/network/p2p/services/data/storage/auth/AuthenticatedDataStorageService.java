@@ -144,7 +144,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             if (requestFromMap instanceof RemoveAuthenticatedDataRequest) {
-                log.debug("Already removed. request={}, map={}", request, map);
+               // log.debug("Already removed. request={}, map={}", request, map);
                 // We have had the entry already removed.
                 if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                     // We update the map with the new request with the fresh sequence number.
