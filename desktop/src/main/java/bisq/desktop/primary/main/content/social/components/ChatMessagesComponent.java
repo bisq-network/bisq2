@@ -388,14 +388,13 @@ public class ChatMessagesComponent {
             inputField.setId("chat-messages-text-area-input-field");
             inputField.setPromptText(Res.get("social.chat.input.prompt"));
             inputField.setPrefWidth(300);
-
+            HBox.setHgrow(inputField, Priority.ALWAYS);
 
             // there will get added some controls for emojis so leave the box even its only 1 child yet
             bottomBox = Layout.hBoxWith(inputField);
-            HBox.setHgrow(inputField, Priority.ALWAYS);
-
             bottomBox.setAlignment(Pos.CENTER);
             VBox.setMargin(bottomBox, new Insets(0, 0, -10, 0));
+            
             root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
             messagesListener = c -> messagesListView.scrollTo(model.getSortedChatMessages().size() - 1);
