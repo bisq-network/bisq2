@@ -87,7 +87,7 @@
  *                                                                             *
  ******************************************************************************/
 
-/* TODO unify sizes */
+/* TODO collect and unify sizes */
 .very-small-text {
     -fx-font-size: 0.692em;
 }
@@ -101,13 +101,16 @@
 }
 
 .large-text {
-    -fx-font-size: 1.2em;
+    -fx-font-size: 1.78em;
 }
 
 .very-large-text {
     -fx-font-size: 2em;
 }
 
+.super-large-text {
+    -fx-font-size: 4.1em;
+}
 
 /*******************************************************************************
  * Text based                                            *
@@ -1066,7 +1069,7 @@ tree-table-view:focused {
 }
 
 #chat-messages-headline {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -bisq-green;
     -fx-font-size: 1.78em;
     -fx-font-family: "IBM Plex Sans Light";
 }

@@ -118,22 +118,19 @@ public class MarketPriceComponent {
         }
 
         private void applyMarketPriceMap() {
-            UIThread.run(() -> model.applyMarketPriceMap(marketPriceService.getMarketPriceByCurrencyMap()));
+            UIThread.run(() -> {
+                //todo apply sorted list from settings
+                List<ListItem> list = marketPriceService.getMarketPriceByCurrencyMap().values().stream()
+                        .map(ListItem::new)
+                        .collect(Collectors.toList());
+                model.items.setAll(list);
+            });
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObservableList<ListItem> items = FXCollections.observableArrayList();
         private final ObjectProperty<ListItem> selected = new SimpleObjectProperty<>();
-
-        private void applyMarketPriceMap(Map<Market, MarketPrice> map) {
-            //todo use preferred currencies + edit entry
-            List<ListItem> list = map.values().stream().map(ListItem::new).collect(Collectors.toList());
-            items.setAll(list);
-            if (selected.get() != null) {
-                selected.set(new ListItem(map.get(selected.get().marketPrice.getMarket())));
-            }
-        }
     }
 
     @Slf4j

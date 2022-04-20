@@ -108,7 +108,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
         HBox centerToolbar = Layout.hBoxWith(peersRoboIconView, selectedChannelLabel, Spacer.fillHBox(), searchButton, notificationsButton, infoButton);
         centerToolbar.setStyle("-fx-background-color: -bisq-bg-dark");
         centerToolbar.setAlignment(Pos.CENTER);
-        // centerToolbar.setPadding(new Insets(10,10,0,20));
         centerToolbar.setMinHeight(50);
         VBox.setMargin(centerToolbar, new Insets(0, 0, 0, 10));
 
@@ -131,7 +130,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> {
 
         HBox.setMargin(chatMessagesComponent, new Insets(0, 0, 10, 10));
         HBox.setHgrow(chatMessagesComponent, Priority.ALWAYS);
-        VBox.setMargin(chatMessagesComponent, new Insets(0, 0, 15, 0));
         chatMessagesComponent.setMinWidth(650);
         messagesListAndSideBar = Layout.hBoxWith(chatMessagesComponent, sideBar);
 
