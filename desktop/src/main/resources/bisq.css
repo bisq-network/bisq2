@@ -1057,7 +1057,7 @@ tree-table-view:focused {
     -fx-border-width: 1;
     -fx-border-radius: 4;
     -fx-faint-focus-color: transparent;
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -bisq-green;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-background-insets: 0;

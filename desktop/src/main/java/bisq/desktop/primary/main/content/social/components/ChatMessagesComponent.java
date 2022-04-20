@@ -35,6 +35,7 @@ import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.social.chat.*;
+import bisq.social.offer.MarketChatOffer;
 import bisq.social.user.ChatUser;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
@@ -313,14 +314,16 @@ public class ChatMessagesComponent {
 
         }
 
-  
-
         private void mentionUser(ChatUser chatUser) {
             String existingText = model.getTextInput().get();
             if (!existingText.isEmpty() && !existingText.endsWith(" ")) {
                 existingText += " ";
             }
             model.getTextInput().set(existingText + "@" + chatUser.getUserName() + " ");
+        }
+
+        public void onTakeOffer(MarketChatOffer marketChatOffer) {
+            //todo
         }
     }
 
@@ -428,9 +431,9 @@ public class ChatMessagesComponent {
                 @Override
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
-                        private final Button saveEditButton, cancelEditButton;
                         private final BisqTextArea editedMessageField;
-                        private final Button emojiButton1, emojiButton2, openEmojiSelectorButton, replyButton,
+                        private final Button takeOfferButton, saveEditButton, cancelEditButton,
+                                emojiButton1, emojiButton2, openEmojiSelectorButton, replyButton,
                                 pmButton, editButton, deleteButton, moreOptionsButton;
                         private final Label userNameLabel = new Label();
                         private final Label time = new Label();
@@ -449,7 +452,6 @@ public class ChatMessagesComponent {
                             time.getStyleClass().add("message-header");
                             time.setPadding(new Insets(-6, 0, 0, 0));
                             time.setVisible(false);
-
 
                             //todo emojiButton1, emojiButton2, emojiButton3 will be filled with emoji icons
                             emojiButton1 = BisqIconButton.createIconButton(AwesomeIcon.THUMBS_UP_ALT);
@@ -475,15 +477,15 @@ public class ChatMessagesComponent {
                             editControlsBox = Layout.hBoxWith(Spacer.fillHBox(), cancelEditButton, saveEditButton);
                             editControlsBox.setVisible(false);
                             editControlsBox.setManaged(false);
+                            VBox.setMargin(editControlsBox, new Insets(10, 0, 0, 0));
+
                             quotedMessageBox = new HBox();
                             quotedMessageBox.setSpacing(10);
                             quotedMessageBox.setVisible(false);
                             quotedMessageBox.setManaged(false);
                             VBox.setMargin(quotedMessageBox, new Insets(0, 0, 10, 0));
 
-                            message.setAutoHeight(true);
-                            VBox.setMargin(message, new Insets(-5, 0, 0, 0));
-
+                          
                             reactionsBox = Layout.hBoxWith(
                                     Spacer.fillHBox(),
                                     emojiButton1,
@@ -502,13 +504,24 @@ public class ChatMessagesComponent {
                             HBox reactionsOuterBox = Layout.hBoxWith(Spacer.fillHBox(), reactionsBox);
                             VBox.setMargin(reactionsOuterBox, new Insets(10, 0, 0, 0));
 
+                            message.setAutoHeight(true);
+                            HBox.setHgrow(message, Priority.ALWAYS);
+                            
+                            takeOfferButton = new Button(Res.get("takeOffer"));
+                            takeOfferButton.setVisible(false);
+                            takeOfferButton.setManaged(false);
+                        
+                            HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
+                            HBox messageAndTakeOfferButton = Layout.hBoxWith(message, takeOfferButton);
+                            VBox.setMargin(messageAndTakeOfferButton, new Insets(-5, 0, 0, 0));
                             messageBox = Layout.vBoxWith(quotedMessageBox,
-                                    message,
+                                    messageAndTakeOfferButton,
                                     editedMessageField,
                                     editControlsBox,
                                     reactionsOuterBox);
                             messageBox.setSpacing(0);
                             VBox.setVgrow(messageBox, Priority.ALWAYS);
+
                             vBox = Layout.vBoxWith(userNameLabel, messageBox);
                             HBox.setHgrow(vBox, Priority.ALWAYS);
                             VBox userIconTimeBox = Layout.vBoxWith(chatUserIcon, time);
@@ -560,6 +573,18 @@ public class ChatMessagesComponent {
                                     quotedMessageBox.getChildren().clear();
                                     quotedMessageBox.setVisible(false);
                                     quotedMessageBox.setManaged(false);
+                                }
+
+                                if (item.getChatMessage() instanceof MarketChatMessage marketChatMessage &&
+                                        marketChatMessage.getMarketChatOffer().isPresent()) {
+                                    MarketChatOffer marketChatOffer = marketChatMessage.getMarketChatOffer().get();
+                                    takeOfferButton.setVisible(true);
+                                    takeOfferButton.setManaged(true);
+                                    takeOfferButton.setOnAction(e -> controller.onTakeOffer(marketChatOffer));
+
+                                } else {
+                                    takeOfferButton.setVisible(false);
+                                    takeOfferButton.setManaged(false);
                                 }
 
                                 message.setText(item.getMessage());
@@ -633,7 +658,6 @@ public class ChatMessagesComponent {
                                 hBox.setOnMouseEntered(null);
                                 hBox.setOnMouseExited(null);
                                 chatUserIcon.releaseResources();
-
                                 emojiButton1.setOnAction(null);
                                 emojiButton2.setOnAction(null);
                                 openEmojiSelectorButton.setOnAction(null);
@@ -645,6 +669,7 @@ public class ChatMessagesComponent {
                                 saveEditButton.setOnAction(null);
                                 cancelEditButton.setOnAction(null);
                                 editedMessageField.setOnKeyPressed(null);
+                                takeOfferButton.setOnAction(null);
 
                                 setGraphic(null);
                             }
