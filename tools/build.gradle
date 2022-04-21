@@ -1,27 +1,19 @@
 plugins {
     id 'bisq.java-library'
-    id 'application'
-    id 'distribution'
+   /* id 'distribution'*/
     alias(libs.plugins.openjfx)
 }
 
 apply from: '../buildSrc/bisq-version.gradle'
 
-application {
-    project.mainClassName = 'bisq.tools.theme.currentbisq.Main'
-    applicationDefaultJvmArgs = ['--add-exports', 'javafx.controls/com.sun.javafx.scene.control.behavior=ALL-UNNAMED',
-                                 '--add-exports', 'javafx.controls/com.sun.javafx.scene.control=ALL-UNNAMED',
-                                 '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED']
-}
-
-run {
+/*run {
     // Pass command-line properties to application
     // Normally they'd only be applied to the gradle process, but we need them in the started application
     // See https://stackoverflow.com/a/23689696
     systemProperties System.getProperties()
-}
+}*/
 
-distributions {
+/*distributions {
     main {
         distributionBaseName = 'jfx-dist'
     }
@@ -33,7 +25,7 @@ tasks.named('jar') {
                 'Implementation-Version': project.version,
                 'Main-Class': 'bisq.tools.theme.currentbisq.Main')
     }
-}
+}*/
 
 javafx {
     version = '17.0.1'
