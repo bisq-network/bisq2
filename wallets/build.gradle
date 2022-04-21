@@ -8,7 +8,7 @@ apply from: '../buildSrc/logging-dependencies.gradle'
 
 ext {
     jsonrpc4jVersion = '1.6.0.bisq.2'
-    jacksonDatabindVersion = '2.12.0'
+    jacksonVersion = '2.13.2'
     jeroMqVersion = '0.5.2'
 }
 
@@ -18,7 +18,7 @@ dependencies {
     implementation project(':common')
     implementation project(':persistence')
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonDatabindVersion")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.github.bisq-network:jsonrpc4j:$jsonrpc4jVersion") {
         exclude(module: 'base64')
         exclude(module: 'httpcore-nio')
