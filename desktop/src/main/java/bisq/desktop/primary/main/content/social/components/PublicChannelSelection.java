@@ -17,30 +17,71 @@
 
 package bisq.desktop.primary.main.content.social.components;
 
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
 import bisq.social.chat.Channel;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.PublicChannel;
+import javafx.scene.layout.Pane;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PublicChannelSelection extends ChannelSelection {
-    public PublicChannelSelection(ChatService chatService) {
-        super(new ChannelSelection.Controller(chatService, Res.get("social.publicChannels")) {
-            @Override
-            public void onActivate() {
-                super.onActivate();
-                channelsPin = FxBindings.<PublicChannel, Channel<?>>bind(model.channels)
-                        .to(chatService.getPublicChannels());
+    private final Controller controller;
 
-                selectedChannelPin = FxBindings.subscribe(chatService.getSelectedChannel(),
-                        channel -> {
-                            if (channel instanceof PublicChannel) {
-                                model.selectedChannel.set(channel);
-                            }
-                        });
-            }
-        });
+    public PublicChannelSelection(DefaultApplicationService applicationService) {
+        controller = new Controller(applicationService.getChatService());
+    }
+
+    public Pane getRoot() {
+        return controller.view.getRoot();
+    }
+
+    protected static class Controller extends bisq.desktop.primary.main.content.social.components.ChannelSelection.Controller {
+        private final Model model;
+        @Getter
+        private final View view;
+
+        protected Controller(ChatService chatService) {
+            super(chatService);
+
+            model = new Model();
+            view = new View(model, this);
+        }
+
+        @Override
+        protected ChannelSelection.Model getChannelSelectionModel() {
+            return model;
+        }
+
+        @Override
+        public void onActivate() {
+            super.onActivate();
+            channelsPin = FxBindings.<PublicChannel, Channel<?>>bind(model.channels)
+                    .to(chatService.getPublicChannels());
+
+            selectedChannelPin = FxBindings.subscribe(chatService.getSelectedChannel(),
+                    channel -> {
+                        if (channel instanceof PublicChannel) {
+                            model.selectedChannel.set(channel);
+                        }
+                    });
+        }
+    }
+
+    protected static class Model extends bisq.desktop.primary.main.content.social.components.ChannelSelection.Model {
+    }
+
+    protected static class View extends bisq.desktop.primary.main.content.social.components.ChannelSelection.View<Model, Controller> {
+        protected View(Model model, Controller controller) {
+            super(model, controller);
+        }
+
+        @Override
+        protected String getHeadlineText() {
+            return Res.get("social.publicChannels");
+        }
     }
 }

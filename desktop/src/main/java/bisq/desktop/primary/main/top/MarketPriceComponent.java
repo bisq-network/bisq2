@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.top.components;
+package bisq.desktop.primary.main.top;
 
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Market;
@@ -135,8 +135,8 @@ public class MarketPriceComponent {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox,
-            bisq.desktop.primary.main.top.components.MarketPriceComponent.Model,
-            bisq.desktop.primary.main.top.components.MarketPriceComponent.Controller> {
+            MarketPriceComponent.Model,
+            MarketPriceComponent.Controller> {
         private final ComboBox<ListItem> comboBox;
 
         private View(Model model, Controller controller) {

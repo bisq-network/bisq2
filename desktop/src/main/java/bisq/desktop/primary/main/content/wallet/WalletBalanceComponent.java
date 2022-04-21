@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.top.components;
+package bisq.desktop.primary.main.content.wallet;
 
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Pin;

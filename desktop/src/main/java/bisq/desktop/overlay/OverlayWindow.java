@@ -40,13 +40,15 @@ import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
 public class OverlayWindow extends Pane {
     private final static double MARGIN = 66;
     private final static double TOP_MARGIN = 57;
 
     private final Region content;
-    private final Runnable closeHandler;
+    private Optional<Runnable> closeHandler = java.util.Optional.empty();
     private final Parent ownerRoot;
     private final Window rootWindow;
     private final Scene scene;
@@ -60,9 +62,13 @@ public class OverlayWindow extends Pane {
     private double height;
     private UIScheduler fixPositionsScheduler;
 
+    public OverlayWindow(Region owner, Region content) {
+        this(owner, content, null);
+    }
+
     public OverlayWindow(Region owner, Region content, Runnable closeHandler) {
         this.content = content;
-        this.closeHandler = closeHandler;
+        this.closeHandler = Optional.ofNullable(closeHandler);
 
         // Stage setup
         Scene rootScene = owner.getScene();
@@ -144,7 +150,7 @@ public class OverlayWindow extends Pane {
     public void close() {
         stage.hide();
         cleanup();
-        closeHandler.run();
+        closeHandler.ifPresent(Runnable::run);
     }
 
     private void doLayout() {

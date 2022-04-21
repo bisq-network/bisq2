@@ -23,7 +23,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -32,35 +31,27 @@ import java.util.Comparator;
 
 @Slf4j
 public abstract class ChannelSelection {
-    protected final ChannelSelection.Controller controller;
 
-    public ChannelSelection(ChannelSelection.Controller controller) {
-        this.controller = controller;
+    public ChannelSelection() {
     }
 
-    public Pane getRoot() {
-        return controller.view.getRoot();
-    }
+    public abstract Pane getRoot();
 
     protected static abstract class Controller implements bisq.desktop.common.view.Controller {
-        protected final ChannelSelection.Model model;
-        @Getter
-        protected final ChannelSelection.View view;
         protected final ChatService chatService;
         protected Pin selectedChannelPin;
         protected Pin channelsPin;
 
-        protected Controller(ChatService chatService, String headlineText) {
+        protected Controller(ChatService chatService) {
             this.chatService = chatService;
-
-            model = new ChannelSelection.Model();
-            view = new ChannelSelection.View(model, this, headlineText);
         }
 
         @Override
         public void onActivate() {
-            model.sortedList.setComparator(Comparator.comparing(Channel::getDisplayString));
+            getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(Channel::getDisplayString));
         }
+
+        protected abstract Model getChannelSelectionModel();
 
         @Override
         public void onDeactivate() {
@@ -85,12 +76,14 @@ public abstract class ChannelSelection {
     }
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<VBox, ChannelSelection.Model, ChannelSelection.Controller> {
+    public static abstract class View<M extends  ChannelSelection.Model, C extends ChannelSelection.Controller> extends bisq.desktop.common.view.View<VBox, M, C> {
         protected final ListView<Channel<?>> listView;
         private final InvalidationListener channelsChangedListener;
+        protected final Pane titledPaneContainer;
+        private final TitledPane titledPane;
         protected Subscription listViewSelectedChannelSubscription, modelSelectedChannelSubscription;
 
-        protected View(ChannelSelection.Model model, ChannelSelection.Controller controller, String headlineText) {
+        protected View(M  model, C controller) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
@@ -99,14 +92,20 @@ public abstract class ChannelSelection {
             listView.setFocusTraversable(false);
             listView.setCellFactory(p -> getListCell());
 
-            TitledPane titledPane = new TitledPane(headlineText, listView);
+             titledPane = new TitledPane(getHeadlineText(), listView);
 
-            root.getChildren().addAll(titledPane);
+            titledPaneContainer = new Pane();
+            titledPaneContainer.getChildren().addAll(titledPane);
+
+            root.getChildren().addAll(titledPaneContainer);
             channelsChangedListener = observable -> adjustHeight();
         }
 
+        protected abstract String getHeadlineText();
+
         @Override
         protected void onViewAttached() {
+            titledPane.prefWidthProperty().bind(root.widthProperty());
             listViewSelectedChannelSubscription = EasyBind.subscribe(listView.getSelectionModel().selectedItemProperty(),
                     channel -> {
                         if (channel != null) {
@@ -125,6 +124,7 @@ public abstract class ChannelSelection {
 
         @Override
         protected void onViewDetached() {
+            titledPane.prefWidthProperty().unbind();
             listViewSelectedChannelSubscription.unsubscribe();
             modelSelectedChannelSubscription.unsubscribe();
             model.channels.removeListener(channelsChangedListener);

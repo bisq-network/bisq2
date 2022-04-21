@@ -33,12 +33,14 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import lombok.EqualsAndHashCode;
@@ -130,14 +132,21 @@ public class MarketChannelsChooser {
     }
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
+    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+        private final static double POPUP_PADDING = 66;
         private final AutoCompleteComboBox<MarketChannelItem> comboBox;
         private final ChangeListener<MarketChannelItem> selectedMarketListener;
 
         private View(Model model, Controller controller) {
-            super(new Pane(), model, controller);
+            super(new VBox(), model, controller);
+
+            root.setSpacing(30);
+            root.setPrefWidth(600);
+            root.getStyleClass().add("bisq-darkest-bg");
+            root.setPadding(new Insets(POPUP_PADDING, POPUP_PADDING, POPUP_PADDING, POPUP_PADDING));
 
             comboBox = new AutoCompleteComboBox<>(model.sortedList, Res.get("social.marketChannels"));
+            comboBox.setMaxWidth(300);
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(@Nullable MarketChannelItem value) {

@@ -264,22 +264,26 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     private LeftNavButton createNavigationButton(String title, ImageView icon, NavigationTarget navigationTarget) {
         LeftNavButton button = new LeftNavButton(title, icon, toggleGroup, navigationTarget);
-        button.setOnAction(() -> {
-            controller.onNavigationTargetSelected(navigationTarget);
-            maybeAnimateMark();
-        });
-        controller.onNavigationButtonCreated(button);
+        setupButtonHandler(navigationTarget, button);
         return button;
     }
 
     private LeftNavSubButton createSecondaryNavigationButton(String title, NavigationTarget navigationTarget) {
         LeftNavSubButton button = new LeftNavSubButton(title, toggleGroup, navigationTarget);
+        setupButtonHandler(navigationTarget, button);
+        return button;
+    }
+
+    private void setupButtonHandler(NavigationTarget navigationTarget, LeftNavButton button) {
         button.setOnAction(() -> {
-            controller.onNavigationTargetSelected(navigationTarget);
-            maybeAnimateMark();
+            if (button.isSelected()) {
+                controller.onToggleExpandMenu();
+            } else {
+                controller.onNavigationTargetSelected(navigationTarget);
+                maybeAnimateMark();
+            }
         });
         controller.onNavigationButtonCreated(button);
-        return button;
     }
 
     private void maybeAnimateMark() {
