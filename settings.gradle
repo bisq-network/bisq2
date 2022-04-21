@@ -33,7 +33,6 @@ include 'tools'
 include 'tor'
 include 'wallets'
 
-
 import org.gradle.util.GradleVersion
 
 def minGradleVersion = GradleVersion.version("7.4.1")

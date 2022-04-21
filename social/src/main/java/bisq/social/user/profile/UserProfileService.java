@@ -23,7 +23,6 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
@@ -36,7 +35,10 @@ import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.KeyPairService;
 import bisq.security.SignatureUtil;
-import bisq.social.user.*;
+import bisq.social.user.BsqTxValidator;
+import bisq.social.user.BtcTxValidator;
+import bisq.social.user.ChatUser;
+import bisq.social.user.Entitlement;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonSyntaxException;
@@ -265,17 +267,6 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     public CompletableFuture<Optional<Entitlement.Proof>> verifyModerator(String invitationCode, PublicKey publicKey) {
         //todo
         return CompletableFuture.completedFuture(Optional.of(new Entitlement.InvitationProof(invitationCode)));
-    }
-
-    private CompletableFuture<Boolean> createDefaultUserProfile() {
-        String keyId = StringUtils.createUid();
-        KeyPair keyPair = keyPairService.generateKeyPair();
-        byte[] pubKeyBytes = keyPair.getPublic().getEncoded();
-        byte[] pubKeyHash = DigestUtil.hash(pubKeyBytes);
-        String useName = UserNameGenerator.fromHash(pubKeyHash);
-        //todo we added a nickname
-        return createNewInitializedUserProfile(useName, "TODO", keyId, keyPair, new HashSet<>())
-                .thenApply(userProfile -> true);
     }
 
     //todo work out concept how to adjust those values
