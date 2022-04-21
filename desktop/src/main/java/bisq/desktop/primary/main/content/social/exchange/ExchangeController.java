@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ExchangeController extends ChatController<ExchangeView, ExchangeModel> {
+
     public ExchangeController(DefaultApplicationService applicationService) {
         super(applicationService);
     }
@@ -34,11 +35,11 @@ public class ExchangeController extends ChatController<ExchangeView, ExchangeMod
     }
 
     @Override
-    public ExchangeView getChatView() { 
+    public ExchangeView getChatView() {
         return new ExchangeView(model,
                 this,
                 userProfileSelection.getRoot(),
-                new MarketChannelSelection(chatService).getRoot(),
+                new MarketChannelSelection(applicationService).getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 notificationsSettings.getRoot(),

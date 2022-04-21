@@ -21,13 +21,11 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.social.exchange.ExchangeController;
-import bisq.desktop.primary.main.content.trade.bsqSwap.BsqSwapController;
-import bisq.desktop.primary.main.content.trade.liquid.LiquidSwapController;
-import bisq.desktop.primary.main.content.trade.ln.LightningController;
-import bisq.desktop.primary.main.content.trade.multiSig.MultiSigController;
+import bisq.desktop.primary.main.content.trade.closedTrades.GlobalClosedTradesController;
+import bisq.desktop.primary.main.content.trade.offerbook.GlobalOfferbookController;
+import bisq.desktop.primary.main.content.trade.openoffers.GlobalOpenOffersController;
 import bisq.desktop.primary.main.content.trade.overview.TradeOverviewController;
-import bisq.desktop.primary.main.content.trade.xmr.XmrSwapController;
+import bisq.desktop.primary.main.content.trade.pendingTrades.GlobalPendingTradesController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,23 +59,17 @@ public class TradeController extends TabController<TradeModel> {
             case TRADE_OVERVIEW -> {
                 return Optional.of(new TradeOverviewController(applicationService));
             }
-            case SATOSHI_SQUARE -> {
-                return Optional.of(new ExchangeController(applicationService));
+            case OFFERBOOK -> {
+                return Optional.of(new GlobalOfferbookController(applicationService));
             }
-            case LIQUID_SWAP -> {
-                return Optional.of(new LiquidSwapController(applicationService));
+            case OPEN_OFFERS -> {
+                return Optional.of(new GlobalOpenOffersController(applicationService));
             }
-            case BISQ_MULTI_SIG -> {
-                return Optional.of(new MultiSigController(applicationService));
+            case PENDING_TRADES -> {
+                return Optional.of(new GlobalPendingTradesController(applicationService));
             }
-            case ATOMIC_CROSS_CHAIN_SWAP -> {
-                return Optional.of(new XmrSwapController(applicationService));
-            }
-            case BSQ_SWAP -> {
-                return Optional.of(new BsqSwapController(applicationService));
-            }
-            case LN_3_PARTY -> {
-                return Optional.of(new LightningController(applicationService));
+            case CLOSED_TRADES -> {
+                return Optional.of(new GlobalClosedTradesController(applicationService));
             }
             default -> {
                 return Optional.empty();

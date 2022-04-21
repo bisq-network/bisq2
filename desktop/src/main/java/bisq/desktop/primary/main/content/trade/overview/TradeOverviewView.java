@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.trade.overview;
 
 import bisq.desktop.common.utils.Icons;
+import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -40,7 +41,7 @@ import java.util.List;
 import java.util.function.Function;
 
 @Slf4j
-public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverviewController> {
+public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverviewController> implements TabViewChild {
     private final BisqTableView<ProtocolListItem> tableView;
     private Callback<TableColumn<ProtocolListItem, ProtocolListItem>, TableCell<ProtocolListItem, ProtocolListItem>> cellFactory;
 

@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.settings.networkInfo;
 
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.scene.Node;
@@ -30,7 +31,7 @@ import java.util.Optional;
 
 
 @Slf4j
-public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoController> {
+public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoController> implements TabViewChild {
 
     private final Accordion accordion;
 

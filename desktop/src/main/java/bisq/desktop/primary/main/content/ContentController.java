@@ -22,11 +22,16 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.markets.MarketsController;
-import bisq.desktop.primary.main.content.portfolio.PortfolioController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
 import bisq.desktop.primary.main.content.social.SocialController;
+import bisq.desktop.primary.main.content.social.exchange.ExchangeController;
 import bisq.desktop.primary.main.content.support.SupportController;
 import bisq.desktop.primary.main.content.trade.TradeController;
+import bisq.desktop.primary.main.content.bsqSwap.BsqSwapController;
+import bisq.desktop.primary.main.content.liquid.LiquidSwapController;
+import bisq.desktop.primary.main.content.ln.LightningController;
+import bisq.desktop.primary.main.content.multiSig.MultiSigController;
+import bisq.desktop.primary.main.content.xmr.XmrSwapController;
 import bisq.desktop.primary.main.content.wallet.WalletController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -66,8 +71,23 @@ public class ContentController extends NavigationController {
             case TRADE -> {
                 return Optional.of(new TradeController(applicationService));
             }
-            case PORTFOLIO -> {
-                return Optional.of(new PortfolioController(applicationService));
+            case SATOSHI_SQUARE -> {
+                return Optional.of(new ExchangeController(applicationService));
+            }
+            case LIQUID_SWAP -> {
+                return Optional.of(new LiquidSwapController(applicationService));
+            }
+            case BISQ_MULTI_SIG -> {
+                return Optional.of(new MultiSigController(applicationService));
+            }
+            case ATOMIC_CROSS_CHAIN_SWAP -> {
+                return Optional.of(new XmrSwapController(applicationService));
+            }
+            case BSQ_SWAP -> {
+                return Optional.of(new BsqSwapController(applicationService));
+            }
+            case LN_3_PARTY -> {
+                return Optional.of(new LightningController(applicationService));
             }
             case MARKETS -> {
                 return Optional.of(new MarketsController(applicationService));

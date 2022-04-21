@@ -17,13 +17,14 @@
 
 package bisq.desktop.primary.main.content.wallet.receive;
 
+import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
 
-public class WalletReceiveView extends View<VBox, WalletReceiveModel, WalletReceiveController> {
+public class WalletReceiveView extends View<VBox, WalletReceiveModel, WalletReceiveController> implements TabViewChild {
     public WalletReceiveView(WalletReceiveModel model, WalletReceiveController controller) {
         super(new VBox(), model, controller);
 

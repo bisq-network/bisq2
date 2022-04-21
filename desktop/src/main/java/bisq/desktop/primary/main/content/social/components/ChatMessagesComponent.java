@@ -220,16 +220,18 @@ public class ChatMessagesComponent {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         void onSendMessage(String text) {
-            Channel<? extends ChatMessage> channel = model.selectedChannel.get();
-            UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
-            if (channel instanceof MarketChannel marketChannel) {
-                chatService.publishMarketChatTextMessage(text, quotedMessageBlock.getQuotedMessage(), marketChannel, userProfile);
-            } else if (channel instanceof PublicChannel publicChannel) {
-                chatService.publishPublicChatMessage(text, quotedMessageBlock.getQuotedMessage(), publicChannel, userProfile);
-            } else if (channel instanceof PrivateChannel privateChannel) {
-                chatService.sendPrivateChatMessage(text, quotedMessageBlock.getQuotedMessage(), privateChannel);
+            if (text != null && !text.isEmpty()) {
+                Channel<? extends ChatMessage> channel = model.selectedChannel.get();
+                UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
+                if (channel instanceof MarketChannel marketChannel) {
+                    chatService.publishMarketChatTextMessage(text, quotedMessageBlock.getQuotedMessage(), marketChannel, userProfile);
+                } else if (channel instanceof PublicChannel publicChannel) {
+                    chatService.publishPublicChatMessage(text, quotedMessageBlock.getQuotedMessage(), publicChannel, userProfile);
+                } else if (channel instanceof PrivateChannel privateChannel) {
+                    chatService.sendPrivateChatMessage(text, quotedMessageBlock.getQuotedMessage(), privateChannel);
+                }
+                quotedMessageBlock.close();
             }
-            quotedMessageBlock.close();
         }
 
         public void onMention(ChatUser chatUser) {
@@ -400,7 +402,8 @@ public class ChatMessagesComponent {
 
             root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
-            messagesListener = c -> messagesListView.scrollTo(model.getSortedChatMessages().size() - 1);
+            messagesListener = c -> UIThread.runOnNextRenderFrame(() ->
+                    messagesListView.scrollTo(messagesListView.getItems().size() - 1));
         }
 
         @Override

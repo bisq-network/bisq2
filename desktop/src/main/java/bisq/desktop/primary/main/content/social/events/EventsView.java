@@ -17,12 +17,13 @@
 
 package bisq.desktop.primary.main.content.social.events;
 
+import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
-public class EventsView extends View<VBox, EventsModel, EventsController> {
+public class EventsView extends View<VBox, EventsModel, EventsController> implements TabViewChild {
     public EventsView(EventsModel model, EventsController controller) {
         super(new VBox(), model, controller);
 

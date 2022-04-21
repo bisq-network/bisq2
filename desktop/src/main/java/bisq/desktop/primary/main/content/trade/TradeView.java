@@ -31,12 +31,11 @@ public class TradeView extends TabView<TradeModel, TradeController> {
         headlineLabel.setText(Res.get("trade"));
 
         addTab(Res.get("trade.overview"), NavigationTarget.TRADE_OVERVIEW);
-        addTab(Res.get("trade.satoshiSquare"), NavigationTarget.SATOSHI_SQUARE);
-        addTab(Res.get("trade.liquidSwap"), NavigationTarget.LIQUID_SWAP);
-        addTab(Res.get("trade.multiSig"), NavigationTarget.BISQ_MULTI_SIG);
-        addTab(Res.get("trade.xmrSwap"), NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP);
-        addTab(Res.get("trade.bsqSwap"), NavigationTarget.BSQ_SWAP);
-        addTab(Res.get("trade.lightning"), NavigationTarget.LN_3_PARTY);
+        addTab(Res.get("offerbook"), NavigationTarget.OFFERBOOK);
+        addTab(Res.get("openOffers"), NavigationTarget.OPEN_OFFERS);
+        addTab(Res.get("pendingTrades"), NavigationTarget.PENDING_TRADES);
+        addTab(Res.get("closedTrades"), NavigationTarget.CLOSED_TRADES);
+
     }
 
     @Override

@@ -308,6 +308,16 @@
     -fx-font-size: 1.25em;
 }
 
+.bisq-sub-nav-label {
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.1em;
+}
+
+.bisq-sub-nav-label-selected {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.1em;
+}
+
 .bisq-grey-dimmed {
     -fx-text-fill: -bisq-grey-13;
 }

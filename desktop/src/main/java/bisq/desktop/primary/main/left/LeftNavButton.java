@@ -33,18 +33,22 @@ import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 class LeftNavButton extends Pane implements Toggle {
     static final int HEIGHT = 40;
     @Getter
-    private final NavigationTarget navigationTarget;
-    private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
-    private final BooleanProperty selectedProperty = new SimpleBooleanProperty();
-    private final Label label;
-    private final Tooltip tooltip;
-    private final ImageView icon;
+    protected final NavigationTarget navigationTarget;
+    protected final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
+    protected final BooleanProperty selectedProperty = new SimpleBooleanProperty();
+    protected final Label label;
+    protected final Tooltip tooltip;
 
-    LeftNavButton(String title, ImageView icon, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
+    @Nullable
+    protected final ImageView icon;
+
+    LeftNavButton(String title, @Nullable ImageView icon, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
         this.icon = icon;
         this.navigationTarget = navigationTarget;
 
@@ -55,22 +59,47 @@ class LeftNavButton extends Pane implements Toggle {
 
         setToggleGroup(toggleGroup);
         toggleGroup.getToggles().add(this);
-        selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
+       // selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
 
         tooltip = new Tooltip(title);
-
-        icon.setMouseTransparent(true);
-        icon.setLayoutX(25);
-        icon.setLayoutY(10.5);
-        icon.setOpacity(0.5);
+        if (icon != null) {
+            icon.setMouseTransparent(true);
+            icon.setLayoutX(25);
+            icon.setLayoutY(10.5);
+            icon.setOpacity(0.5);
+            getChildren().add(icon);
+        }
 
         label = new Label(title);
         label.setLayoutX(56);
         label.setLayoutY(9.5);
         label.setMouseTransparent(true);
-        label.getStyleClass().add("bisq-nav-label");
 
-        getChildren().addAll(icon, label);
+        getChildren().add(label);
+
+        applyStyle();
+    }
+
+    protected void applyStyle() {
+        if (selectedProperty.get()) {
+            getStyleClass().remove("bisq-darkest-bg");
+            getStyleClass().add("bisq-dark-bg");
+            label.getStyleClass().remove("bisq-nav-label");
+            label.getStyleClass().add("bisq-nav-label-selected");
+
+            if (icon != null) {
+                icon.setOpacity(1);
+            }
+        } else {
+            getStyleClass().remove("bisq-dark-bg");
+            getStyleClass().add("bisq-darkest-bg");
+            label.getStyleClass().remove("bisq-nav-label-selected");
+            label.getStyleClass().add("bisq-nav-label");
+
+            if (icon != null) {
+                icon.setOpacity(0.6);
+            }
+        }
     }
 
 
@@ -78,7 +107,7 @@ class LeftNavButton extends Pane implements Toggle {
         setOnMouseClicked(e -> handler.run());
     }
 
-    public void setMenuExpanded(boolean menuExpanded, int width, int duration) {
+    public void setMenuExpanded(boolean menuExpanded, int duration) {
         if (menuExpanded) {
             Tooltip.uninstall(this, tooltip);
             label.setVisible(true);
@@ -126,28 +155,6 @@ class LeftNavButton extends Pane implements Toggle {
     @Override
     public void setSelected(boolean selected) {
         selectedProperty.set(selected);
-
-        if (selected) {
-            getStyleClass().remove("bisq-darkest-bg");
-            getStyleClass().add("bisq-dark-bg");
-
-            // setStyle("-fx-background-color: -bisq-grey-2;");
-
-            // label.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");
-            label.getStyleClass().remove("bisq-nav-label");
-            label.getStyleClass().add("bisq-nav-label-selected");
-
-
-            icon.setOpacity(1);
-        } else {
-            //setStyle("-fx-background-color: -bisq-bg-dark;");
-            getStyleClass().remove("bisq-dark-bg");
-            getStyleClass().add("bisq-darkest-bg");
-            //label.setStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.15em;");
-            label.getStyleClass().remove("bisq-nav-label-selected");
-            label.getStyleClass().add("bisq-nav-label");
-
-            icon.setOpacity(0.6);
-        }
+        applyStyle();
     }
 }

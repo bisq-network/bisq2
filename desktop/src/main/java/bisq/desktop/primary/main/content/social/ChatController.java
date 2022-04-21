@@ -44,6 +44,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     @Getter
     protected V view;
     protected final UserProfileService userProfileService;
+    protected final DefaultApplicationService applicationService;
     protected final PrivateChannelSelection privateChannelSelection;
     protected final ChannelInfo channelInfo;
     protected final NotificationsSettings notificationsSettings;
@@ -54,11 +55,12 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     protected Subscription notificationSettingSubscription;
 
     public ChatController(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
         chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
 
         userProfileSelection = new UserProfileSelection(userProfileService);
-        privateChannelSelection = new PrivateChannelSelection(chatService);
+        privateChannelSelection = new PrivateChannelSelection(applicationService);
      
         chatMessagesComponent = new ChatMessagesComponent(chatService, userProfileService);
         channelInfo = new ChannelInfo(chatService);
