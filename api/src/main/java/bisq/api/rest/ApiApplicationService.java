@@ -27,6 +27,7 @@ public class ApiApplicationService {
     private final DefaultApplicationService applicationService;
 
     public ApiApplicationService() {
-        applicationService = new DefaultApplicationService(new String[]{});
+        applicationService = new DefaultApplicationService(new String[]{"--appName=bisq2_API"});
+        applicationService.initialize().join();
     }
 }
