@@ -35,6 +35,7 @@ import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
@@ -42,7 +43,6 @@ import java.util.function.Function;
 public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverviewController> {
     private final BisqTableView<ProtocolListItem> tableView;
     private Callback<TableColumn<ProtocolListItem, ProtocolListItem>, TableCell<ProtocolListItem, ProtocolListItem>> cellFactory;
-
 
     public TradeOverviewView(TradeOverviewModel model, TradeOverviewController controller) {
         super(new VBox(), model, controller);
@@ -66,12 +66,13 @@ public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverv
     }
 
     private void configDataTableView() {
-        tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
+        BisqTableColumn<ProtocolListItem> column = new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.protocol"))
                 .minWidth(80)
                 .isFirst()
-                .valueSupplier(e -> Res.get("trade.protocols." + e.getSwapProtocolType().name()))
-                .build());
+                .valueSupplier(ProtocolListItem::getProtocolsName)
+                .build();
+        tableView.getColumns().add(column);
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.markets"))
                 .minWidth(80)
@@ -80,16 +81,19 @@ public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverv
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.security"))
                 .minWidth(80)
+                .comparator(Comparator.comparing(e -> e.getSwapProtocolType().getSecurity().ordinal()))
                 .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getSecurity().ordinal(), ProtocolListItem::getSecurityInfo))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.privacy"))
                 .minWidth(80)
+                .comparator(Comparator.comparing(e -> e.getSwapProtocolType().getPrivacy().ordinal()))
                 .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getPrivacy().ordinal(), ProtocolListItem::getPrivacyInfo))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.convenience"))
                 .minWidth(80)
+                .comparator(Comparator.comparing(e -> e.getSwapProtocolType().getConvenience().ordinal()))
                 .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getConvenience().ordinal(), ProtocolListItem::getConvenienceInfo))
                 .build());
     /*    tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()

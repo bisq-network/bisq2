@@ -118,13 +118,11 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof MarketChatMessage marketChatMessage) {
-          //  log.error("marketChatMessage {}", marketChatMessage.getMarketChatOffer().map(e->e.getChatMessageText()).orElse(marketChatMessage.getText()));
             persistableStore.getMarketChannels().stream()
                     .filter(channel -> channel.getId().equals(marketChatMessage.getChannelId()))
                     .findAny()
                     .ifPresent(channel -> channel.addChatMessage(marketChatMessage));
         } else if (distributedData instanceof PublicChatMessage publicChatMessage) {
-           // log.error("publicChatMessage {}", publicChatMessage.getText());
             persistableStore.getPublicChannels().stream()
                     .filter(channel -> channel.getId().equals(publicChatMessage.getChannelId()))
                     .findAny()

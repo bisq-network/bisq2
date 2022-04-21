@@ -54,7 +54,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     private Optional<Function<S, String>> valueSupplier = Optional.empty();
     private Optional<Function<S, StringProperty>> valuePropertySupplier = Optional.empty();
     private Optional<Function<S, StringProperty>> valuePropertyBiDirBindingSupplier = Optional.empty();
-    private final Optional<Comparator<S>> comparator = Optional.empty();
+    private Optional<Comparator<S>> comparator = Optional.empty();
     private Optional<String> value = Optional.empty();
     private Consumer<S> onActionHandler = item -> {
     };
@@ -78,6 +78,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private Optional<Function<S, StringProperty>> valuePropertySupplier = Optional.empty();
         private Optional<Function<S, StringProperty>> valuePropertyBiDirBindingSupplier = Optional.empty();
         private Optional<Comparator<S>> comparator = Optional.empty();
+        private boolean isSortable = true;
         private DefaultCellFactories defaultCellFactories = DefaultCellFactories.TEXT;
         private Consumer<S> onActionHandler = item -> {
         };
@@ -116,7 +117,19 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             if (isLast) {
                 tableColumn.getStyleClass().add("last");
             }
-            comparator.ifPresent(tableColumn::applyComparator);
+
+            tableColumn.setSortable(isSortable);
+            if (isSortable) {
+
+                if (comparator.isPresent()) {
+                    tableColumn.setComparator(comparator.get());
+                } else if (valueSupplier.isPresent()) {
+                    tableColumn.setComparator(Comparator.comparing(e -> valueSupplier.get().apply(e)));
+                } else if (value.isPresent()) {
+                    tableColumn.setComparator(Comparator.comparing(e -> value.get()));
+                }
+                //todo support for  valuePropertySupplier, valuePropertyBiDirBindingSupplier missing
+            }
             return tableColumn;
         }
 
@@ -171,9 +184,13 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             return this;
         }
 
-
         public Builder<S> value(String value) {
             this.value = Optional.of(value);
+            return this;
+        }
+
+        public Builder<S> isSortable(boolean value) {
+            this.isSortable = value;
             return this;
         }
 
@@ -221,11 +238,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             this.isLast = true;
             return this;
         }
-    }
-
-    public void applyComparator(Comparator<S> comparator) {
-        setSortable(true);
-        setComparator(comparator);
     }
 
     public BisqTableColumn(DefaultCellFactories defaultCellFactories, Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory) {
