@@ -92,7 +92,7 @@ public class ChannelInfo {
         }
 
         public void setChannel(Channel<? extends ChatMessage> channel) {
-            Set<String> ignoredChatUserIds = new HashSet<>(chatService.getPersistableStore().getIgnoredChatUserIds());
+            Set<String> ignoredChatUserIds = new HashSet<>(chatService.getIgnoredChatUserIds());
             model.channelName.set(channel.getDisplayString());
             model.members.setAll(channel.getChatMessages().stream()
                     .map(ChatMessage::getAuthor)

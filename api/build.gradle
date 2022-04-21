@@ -9,17 +9,8 @@ apply from: '../buildSrc/logging-dependencies.gradle'
 
 dependencies {
     api platform(project(':platforms:common-platform'))
-    api platform(project(':platforms:web-platform'))
 
     implementation project(':common')
     implementation project(':presentation')
     implementation project(':application')
-
-    implementation libs.google.gson
-
-    implementation 'io.ratpack:ratpack-core'
-    implementation 'io.ratpack:ratpack-rx2'
-
-    implementation 'io.reactivex.rxjava2:rxjava'
-    implementation 'org.reactivestreams:reactive-streams'
 }

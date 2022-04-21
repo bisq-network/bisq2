@@ -4,10 +4,10 @@ include 'platforms:cli-platform'
 include 'platforms:common-platform'
 include 'platforms:grpc-platform'
 include 'platforms:network-platform'
-include 'platforms:web-platform'
 include 'platforms:test-platform'
 
 include 'account'
+include 'api'
 include 'application'
 include 'cli'
 include 'common'
@@ -32,7 +32,7 @@ include 'support'
 include 'tools'
 include 'tor'
 include 'wallets'
-include 'web'
+
 
 import org.gradle.util.GradleVersion
 
