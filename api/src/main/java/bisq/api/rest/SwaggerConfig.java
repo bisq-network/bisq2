@@ -34,8 +34,9 @@ public class SwaggerConfig {
     @Bean
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
-                .apiInfo(apiInfo()).select()
-                .paths(PathSelectors.regex("/.*"))
+                .apiInfo(apiInfo())
+                .select()
+                .paths(PathSelectors.regex("/api/.*"))
                 .build();
     }
 
@@ -43,8 +44,8 @@ public class SwaggerConfig {
         return new ApiInfo("Bisq v2 REST API",
                 "Bisq v2 REST API.",
                 "0.0.1",
-                "Terms of service",
-                new Contact("None", "bisq.network", "none@bisq.network"),
+                "",
+                new Contact("Bisq", "https://bisq.network", ""),
                 "GNU Affero General Public License",
                 "https://github.com/bisq-network/bisq2/blob/main/LICENSE",
                 Collections.emptyList());

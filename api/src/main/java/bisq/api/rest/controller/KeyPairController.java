@@ -41,13 +41,13 @@ class KeyPairController {
         keyPairService = apiApplicationService.getSecurityService().getKeyPairService();
     }
 
-    @GetMapping(path = "/keypair/get-or-create/{keyId}")
+    @GetMapping(path = "/api/keypair/get-or-create/{keyId}")
     public String getOrCreateKeyPair(@PathVariable("keyId") String keyId) throws JsonProcessingException {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         return mapper.writeValueAsString(new JsonKeyPair(Hex.encode(keyPair.getPrivate().getEncoded()), Hex.encode(keyPair.getPublic().getEncoded())));
     }
 
-    @GetMapping(path = "/keypair/get/{keyId}")
+    @GetMapping(path = "/api/keypair/get/{keyId}")
     public String findKeyPair(@PathVariable("keyId") String keyId) throws JsonProcessingException {
         Optional<KeyPair> optionalKeyPair = keyPairService.findKeyPair(keyId);
         if (optionalKeyPair.isPresent()) {
