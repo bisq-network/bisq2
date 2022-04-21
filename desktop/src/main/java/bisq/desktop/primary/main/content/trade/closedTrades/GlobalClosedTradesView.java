@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.closedTrades;
 
+import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -26,7 +27,7 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GlobalClosedTradesView extends View<VBox, GlobalClosedTradesModel, GlobalClosedTradesController> {
+public class GlobalClosedTradesView extends View<VBox, GlobalClosedTradesModel, GlobalClosedTradesController> implements TabViewChild {
 
     private final BisqTableView<GlobalClosedTradeListItem> tableView;
 

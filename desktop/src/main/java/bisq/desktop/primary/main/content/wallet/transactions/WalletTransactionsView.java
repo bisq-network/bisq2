@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.wallet.transactions;
 
+import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -24,7 +25,8 @@ import bisq.i18n.Res;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-public class WalletTransactionsView extends View<VBox, WalletTransactionsModel, WalletTransactionsController> {
+public class WalletTransactionsView extends View<VBox, WalletTransactionsModel, WalletTransactionsController>
+        implements TabViewChild {
     private final BisqTableView<WalletTransactionListItem> tableView;
 
     public WalletTransactionsView(WalletTransactionsModel model, WalletTransactionsController controller) {

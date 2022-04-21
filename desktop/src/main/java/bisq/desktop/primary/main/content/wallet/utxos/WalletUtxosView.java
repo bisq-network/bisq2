@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.wallet.utxos;
 
+import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.scene.control.TableColumn;
@@ -24,7 +25,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-public class WalletUtxosView extends View<VBox, WalletUtxosModel, WalletUtxosController> {
+public class WalletUtxosView extends View<VBox, WalletUtxosModel, WalletUtxosController> implements TabViewChild {
     private final TableView<WalletUtxoListItem> tableView;
 
     public WalletUtxosView(WalletUtxosModel model, WalletUtxosController controller) {

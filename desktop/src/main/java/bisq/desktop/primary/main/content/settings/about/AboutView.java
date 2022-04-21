@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.about;
 
+import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -24,12 +25,13 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AboutView extends View<VBox, AboutModel, AboutController> {
+public class AboutView extends View<VBox, AboutModel, AboutController> implements TabViewChild {
 
     public AboutView(AboutModel model, AboutController controller) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.CENTER);
+        
         Label label = new Label("WIP");
         label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 20em");
         Label small = new Label(getClass().getSimpleName());

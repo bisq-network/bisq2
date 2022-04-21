@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.social;
 
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -41,7 +42,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class ChatView extends View<SplitPane, ChatModel, ChatController> {
+public class ChatView extends View<SplitPane, ChatModel, ChatController> implements TabViewChild {
     private final Label selectedChannelLabel;
     private final Button searchButton, notificationsButton, infoButton, closeButton;
     private final Pane userProfileSelection;

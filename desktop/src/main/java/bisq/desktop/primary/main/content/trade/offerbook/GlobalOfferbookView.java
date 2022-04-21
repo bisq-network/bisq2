@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.offerbook;
 
+import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -34,7 +35,7 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GlobalOfferbookView extends View<VBox, GlobalOfferbookModel, GlobalOfferbookController> {
+public class GlobalOfferbookView extends View<VBox, GlobalOfferbookModel, GlobalOfferbookController> implements TabViewChild {
     private final BisqTableView<GlobalOfferListItem> tableView;
     private final BisqToggleButton showAllMarkets;
     private final Pane marketSelection;

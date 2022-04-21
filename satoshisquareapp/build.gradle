@@ -1,12 +1,14 @@
 plugins {
     id 'bisq.java-library'
-    id 'application'
+   /* id 'application'*/
    /* id 'distribution'*/  //todo as long we dont need a jar we leave that out, speeds up build
     alias(libs.plugins.openjfx)
 }
 
 apply from: '../buildSrc/bisq-version.gradle'
 apply from: '../buildSrc/logging-dependencies.gradle'
+apply from: '../buildSrc/test-dependencies.gradle'
+/*
 
 application {
     project.mainClassName = 'bisq.satoshisquareapp.Main'
@@ -27,6 +29,7 @@ distributions {
         distributionBaseName = 'jfx-dist'
     }
 }
+*/
 
 tasks.named('jar') {
     manifest {

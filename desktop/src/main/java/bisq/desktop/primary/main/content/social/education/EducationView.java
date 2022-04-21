@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.social.education;
 
+import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
@@ -36,7 +37,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
-public class EducationView extends View<VBox, EducationModel, EducationController> {
+public class EducationView extends View<VBox, EducationModel, EducationController> implements TabViewChild {
     private static final int MARGIN = 44;
     private static final int TEXT_SPACE = 22;
     private static final int SCROLLBAR_WIDTH = 12;
@@ -108,8 +109,8 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
             double right = root.getPadding().getRight();
             double value = w.doubleValue() - right + SCROLLBAR_WIDTH;
             double wrappingWidth = value - box.getPadding().getLeft() - box.getPadding().getRight();
-            contentLabel.setWrappingWidth(wrappingWidth-MARGIN);
-            headlineLabel.setWrappingWidth(wrappingWidth-MARGIN);
+            contentLabel.setWrappingWidth(wrappingWidth - MARGIN);
+            headlineLabel.setWrappingWidth(wrappingWidth - MARGIN);
             box.setPrefWidth(value);
             box.setMinWidth(value);
             box.setMaxWidth(value);
@@ -139,7 +140,7 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
 
         Button button = new Button(buttonLabel);
         button.getStyleClass().add("bisq-border-dark-bg-button");
-        
+
         VBox box = Layout.vBoxWith(headlineLabel, contentLabel, button);
         box.setSpacing(TEXT_SPACE);
         box.getStyleClass().add("bisq-box-1");
@@ -147,8 +148,8 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
         subscriptions.add(EasyBind.subscribe(root.widthProperty(), w -> {
             double value = (w.doubleValue() - root.getPadding().getRight() - MARGIN + SCROLLBAR_WIDTH) / 2;
             double wrappingWidth = value - box.getPadding().getLeft() - box.getPadding().getRight();
-            headlineLabel.setWrappingWidth(wrappingWidth-MARGIN);
-            contentLabel.setWrappingWidth(wrappingWidth-MARGIN);
+            headlineLabel.setWrappingWidth(wrappingWidth - MARGIN);
+            contentLabel.setWrappingWidth(wrappingWidth - MARGIN);
             box.setPrefWidth(value);
             box.setMinWidth(value);
             box.setMaxWidth(value);

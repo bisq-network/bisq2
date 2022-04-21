@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.openoffers;
 
+import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -27,7 +28,7 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GlobalOpenOffersView extends View<VBox, GlobalOpenOffersModel, GlobalOpenOffersController> {
+public class GlobalOpenOffersView extends View<VBox, GlobalOpenOffersModel, GlobalOpenOffersController>  implements TabViewChild {
     private final BisqTableView<GlobalOpenOfferListItem> tableView;
 
     public GlobalOpenOffersView(GlobalOpenOffersModel model, GlobalOpenOffersController controller) {

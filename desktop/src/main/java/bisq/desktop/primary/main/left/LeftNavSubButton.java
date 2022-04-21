@@ -25,17 +25,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class LeftNavSubButton extends LeftNavButton {
+    private final static double LABEL_X_POS_EXPANDED = 71;
+    private final static double LABEL_X_POS_COLLAPSED = 33.5;
 
     private final String fullTitle;
-    private final double labelXPosExpanded;
 
     LeftNavSubButton(String title, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
         super(title, null, toggleGroup, navigationTarget);
         this.fullTitle = title;
 
-        label.setLayoutX(81);
-        labelXPosExpanded = label.getLayoutX();
-        log.error("labelXPosExpanded "+labelXPosExpanded);
+        label.setLayoutX(LABEL_X_POS_EXPANDED);
     }
 
     @Override
@@ -57,11 +56,11 @@ class LeftNavSubButton extends LeftNavButton {
     public void setMenuExpanded(boolean menuExpanded, int duration) {
         if (menuExpanded) {
             Tooltip.uninstall(this, tooltip);
-            Transitions.animateLeftSubNavigation(label, labelXPosExpanded, duration);
+            Transitions.animateLeftSubNavigation(label, LABEL_X_POS_EXPANDED, duration);
             label.setText(fullTitle);
         } else {
             Tooltip.install(this, tooltip);
-            Transitions.animateLeftSubNavigation(label, 33.5, duration);
+            Transitions.animateLeftSubNavigation(label, LABEL_X_POS_COLLAPSED, duration);
             label.setText(fullTitle.substring(0, 1));
         }
     }
