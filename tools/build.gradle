@@ -33,7 +33,6 @@ javafx {
 }
 
 apply from: '../buildSrc/logging-dependencies.gradle'
-apply from: '../buildSrc/test-dependencies.gradle'
 
 dependencies {
     api platform(project(':platforms:common-platform'))

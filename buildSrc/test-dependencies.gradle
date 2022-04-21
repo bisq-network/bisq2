@@ -1,5 +1,0 @@
-dependencies {
-    api platform(project(':platforms:test-platform'))
-    testImplementation libs.junit.jupiter.api
-    testRuntimeOnly libs.junit.jupiter.engine
-}

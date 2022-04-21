@@ -33,8 +33,7 @@ google-guava =      { module = 'com.google.guava:guava',            version.ref 
 i2p-streaming =     { module = 'net.i2p.client:streaming',          version.ref = 'i2p-lib' }
 i2p-core =          { module = 'net.i2p:i2p',                       version.ref = 'i2p-lib' }
 i2p-router =        { module = 'net.i2p:router',                    version.ref = 'i2p-lib' }
-junit-jupiter-api = { module = 'org.junit.jupiter:junit-jupiter-api', version.ref = 'junit-jupiter-lib' }
-junit-jupiter-engine = { module = 'org.junit.jupiter:junit-jupiter-engine', version.ref = 'junit-jupiter-lib' }
+junit-jupiter =     { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter-lib' }
 logback-core =      { module = 'ch.qos.logback:logback-core',       version.ref = 'logback-lib' }
 logback-classic =   { module = 'ch.qos.logback:logback-classic',    version.ref = 'logback-lib' }
 lombok =            { module = 'org.projectlombok:lombok',          version.ref = 'lombok-lib' }
