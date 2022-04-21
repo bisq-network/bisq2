@@ -27,13 +27,6 @@ java {
     withSourcesJar()
 }
 
-tasks.named('compileJava') {
-    sourceCompatibility = 16
-    targetCompatibility = 16
-    modularity.inferModulePath = false
-    options.compilerArgs += ['-Xdoclint:none', '-Xlint:none', '-nowarn']
-}
-
 jar {
     // Exclude .proto files from generated jars.
     exclude '*.proto'
