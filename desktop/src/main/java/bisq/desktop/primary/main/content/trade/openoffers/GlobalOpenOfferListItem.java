@@ -15,12 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.globalOfferbook;
+package bisq.desktop.primary.main.content.trade.openoffers;
 
 import bisq.common.currency.TradeCurrency;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
+import bisq.offer.OpenOffer;
 import bisq.offer.spec.SettlementSpec;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.AmountFormatter;
@@ -34,9 +35,10 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class GlobalOfferListItem implements TableItem {
+public class GlobalOpenOfferListItem implements TableItem {
     @EqualsAndHashCode.Include
     private final String id;
+    private final OpenOffer openOffer;
     private final Offer offer;
     private final String market;
     private final MarketPriceService marketPriceService;
@@ -46,8 +48,9 @@ public class GlobalOfferListItem implements TableItem {
     private final String settlement;
     private final String options;
 
-    GlobalOfferListItem(Offer offer, MarketPriceService marketPriceService) {
-        this.offer = offer;
+    GlobalOpenOfferListItem(OpenOffer openOffer, MarketPriceService marketPriceService) {
+        this.openOffer = openOffer;
+        this.offer = openOffer.getOffer();
         this.marketPriceService = marketPriceService;
 
         id = offer.getId();
@@ -58,11 +61,11 @@ public class GlobalOfferListItem implements TableItem {
 
         String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
                 .map(SettlementSpec::settlementMethodName)
-                .map(Res::get)
+                .map(settlementMethodName -> Res.get(settlementMethodName))
                 .collect(Collectors.joining("\n"));
         String quoteSideSettlement = offer.getQuoteSideSettlementSpecs().stream()
                 .map(SettlementSpec::settlementMethodName)
-                .map(Res::get)
+                .map(settlementMethodName -> Res.get(settlementMethodName))
                 .collect(Collectors.joining("\n"));
 
         String baseCurrencyCode = offer.getMarket().baseCurrencyCode();

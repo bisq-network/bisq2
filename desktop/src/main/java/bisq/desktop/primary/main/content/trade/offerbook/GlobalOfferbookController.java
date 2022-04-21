@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.globalOfferbook;
+package bisq.desktop.primary.main.content.trade.offerbook;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;

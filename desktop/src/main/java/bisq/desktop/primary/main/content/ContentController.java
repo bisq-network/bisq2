@@ -22,7 +22,6 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.markets.MarketsController;
-import bisq.desktop.primary.main.content.portfolio.PortfolioController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
 import bisq.desktop.primary.main.content.social.SocialController;
 import bisq.desktop.primary.main.content.social.exchange.ExchangeController;
@@ -89,9 +88,6 @@ public class ContentController extends NavigationController {
             }
             case LN_3_PARTY -> {
                 return Optional.of(new LightningController(applicationService));
-            }
-            case PORTFOLIO -> {
-                return Optional.of(new PortfolioController(applicationService));
             }
             case MARKETS -> {
                 return Optional.of(new MarketsController(applicationService));

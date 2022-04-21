@@ -21,8 +21,11 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.trade.globalOfferbook.GlobalOfferbookController;
+import bisq.desktop.primary.main.content.trade.closedTrades.GlobalClosedTradesController;
+import bisq.desktop.primary.main.content.trade.offerbook.GlobalOfferbookController;
+import bisq.desktop.primary.main.content.trade.openoffers.GlobalOpenOffersController;
 import bisq.desktop.primary.main.content.trade.overview.TradeOverviewController;
+import bisq.desktop.primary.main.content.trade.pendingTrades.GlobalPendingTradesController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,8 +59,17 @@ public class TradeController extends TabController<TradeModel> {
             case TRADE_OVERVIEW -> {
                 return Optional.of(new TradeOverviewController(applicationService));
             }
-            case GLOBAL_OFFERBOOK -> {
+            case OFFERBOOK -> {
                 return Optional.of(new GlobalOfferbookController(applicationService));
+            }
+            case OPEN_OFFERS -> {
+                return Optional.of(new GlobalOpenOffersController(applicationService));
+            }
+            case PENDING_TRADES -> {
+                return Optional.of(new GlobalPendingTradesController(applicationService));
+            }
+            case CLOSED_TRADES -> {
+                return Optional.of(new GlobalClosedTradesController(applicationService));
             }
             default -> {
                 return Optional.empty();

@@ -28,10 +28,8 @@ public class PortfolioView extends TabView<PortfolioModel, PortfolioController> 
     public PortfolioView(PortfolioModel model, PortfolioController controller) {
         super(model, controller);
 
-        addTab(Res.get("portfolio.openOffers"), NavigationTarget.OPEN_OFFERS);
-        addTab(Res.get("portfolio.pending"), NavigationTarget.PENDING_TRADES);
-        addTab(Res.get("portfolio.closed"), NavigationTarget.CLOSED_TRADES);
-   
+        addTab(Res.get("openOffers"), NavigationTarget.OPEN_OFFERS);
+       
         headlineLabel.setText(Res.get("portfolio"));
     }
 

@@ -84,9 +84,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 ImageUtil.getImageViewById("sell"),
                 NavigationTarget.TRADE);
 
-        LeftNavButton portfolio = createNavigationButton(Res.get("portfolio"),
-                ImageUtil.getImageViewById("portfolio"),
-                NavigationTarget.PORTFOLIO);
         LeftNavButton markets = createNavigationButton(Res.get("markets"),
                 ImageUtil.getImageViewById("market"),
                 NavigationTarget.MARKETS);
@@ -102,17 +99,17 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 ImageUtil.getImageViewById("settings"),
                 NavigationTarget.SETTINGS);
 
-        LeftNavSubButton satoshiSquare = createSecondaryNavigationButton(Res.get("trade.satoshiSquare"),
+        LeftNavSubButton satoshiSquare = createSecondaryNavigationButton(Res.get("satoshiSquare"),
                 NavigationTarget.SATOSHI_SQUARE);
-        LeftNavSubButton liquidSwap = createSecondaryNavigationButton(Res.get("trade.liquidSwap"),
+        LeftNavSubButton liquidSwap = createSecondaryNavigationButton(Res.get("liquidSwap"),
                 NavigationTarget.LIQUID_SWAP);
-        LeftNavSubButton multiSig = createSecondaryNavigationButton(Res.get("trade.multiSig"),
+        LeftNavSubButton multiSig = createSecondaryNavigationButton(Res.get("multiSig"),
                 NavigationTarget.BISQ_MULTI_SIG);
-        LeftNavSubButton xmrSwap = createSecondaryNavigationButton(Res.get("trade.xmrSwap"),
+        LeftNavSubButton xmrSwap = createSecondaryNavigationButton(Res.get("xmrSwap"),
                 NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP);
-        LeftNavSubButton lightning = createSecondaryNavigationButton(Res.get("trade.lightning"),
+        LeftNavSubButton lightning = createSecondaryNavigationButton(Res.get("lightning"),
                 NavigationTarget.LN_3_PARTY);
-        LeftNavSubButton bsqSwap = createSecondaryNavigationButton(Res.get("trade.bsqSwap"),
+        LeftNavSubButton bsqSwap = createSecondaryNavigationButton(Res.get("bsqSwap"),
                 NavigationTarget.BSQ_SWAP);
         tradeSubMenuItems.getChildren().addAll(satoshiSquare, liquidSwap, multiSig, xmrSwap, lightning, bsqSwap);
          /*  social.setOnAction(() -> {
@@ -156,7 +153,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(social, trade, tradeSubMenuItems, portfolio, markets, wallet, support, settings);
+        mainMenuItems.getChildren().addAll(social, trade, tradeSubMenuItems, markets, wallet, support, settings);
         mainMenuItems.setLayoutY(menuTop);
         root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, mainMenuItems, expandIcon, collapseIcon, networkInfoBox);
     }
@@ -293,7 +290,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         UIThread.runOnNextRenderFrame(() -> {
             double targetY = menuTop + selectedLeftNavButton.getBoundsInParent().getMinY();
             if (selectedLeftNavButton instanceof LeftNavSubButton) {
-                targetY +=  tradeSubMenuItems.getLayoutY();
+                targetY += tradeSubMenuItems.getLayoutY();
             }
             Transitions.animateNavigationButtonMarks(selectionMarker, selectedLeftNavButton.getHeight(),
                     targetY);

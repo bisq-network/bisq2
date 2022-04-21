@@ -45,7 +45,7 @@ public class TakeOfferView extends View<VBox, TakeOfferModel, TakeOfferControlle
         root.setPadding(new Insets(MARGIN, MARGIN, MARGIN, MARGIN));
         root.getStyleClass().add("bisq-darkest-bg");
 
-        Label headlineLabel = new Label(Res.get("trade.takeOffer"));
+        Label headlineLabel = new Label(Res.get("takeOffer"));
         headlineLabel.getStyleClass().add("bisq-content-headline-label");
         HBox headLineBox = Layout.hBoxWith(Spacer.fillHBox(), headlineLabel, Spacer.fillHBox());
         VBox.setMargin(headLineBox, new Insets(-27, 0, 0, 0));
