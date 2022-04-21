@@ -24,7 +24,7 @@ jobs:
       - name: Setup Java JDK
         uses: actions/setup-java@v3.1.1
         with:
-          java-version: '16'
+          java-version: '17'
           distribution: 'zulu'
 
       - name: Gradle Build Action
