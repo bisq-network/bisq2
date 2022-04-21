@@ -13,40 +13,12 @@ repositories {
 
 apply from: 'bisq-version.gradle'
 
-ext {
-    createTestReports = false
-}
-
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-}
-
-java {
-    modularity.inferModulePath = false
-    withJavadocJar()
-    withSourcesJar()
 }
 
 jar {
     // Exclude .proto files from generated jars.
     exclude '*.proto'
     includeEmptyDirs false
-}
-
-tasks.withType(Test).configureEach {
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-    if (!project.hasProperty("createTestReports")) {
-        reports.html.enabled = false
-        reports.junitXml.enabled = false
-    }
-}
-
-tasks.named("javadoc") {
-    source = sourceSets.main.allJava
-    options.addStringOption('Xdoclint:none', '-quiet')
-}
-
-tasks.named("test") {
-    useJUnitPlatform()
-    exclude '**/**Integration*'
 }

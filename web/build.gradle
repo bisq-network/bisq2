@@ -6,7 +6,6 @@ version '0.0.1-SNAPSHOT'
 
 apply from: '../buildSrc/bisq-version.gradle'
 apply from: '../buildSrc/logging-dependencies.gradle'
-apply from: '../buildSrc/test-dependencies.gradle'
 
 dependencies {
     api platform(project(':platforms:common-platform'))
