@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.portfolio.openoffers;
+package bisq.desktop.primary.main.content.trade.multiSig.openoffers;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;

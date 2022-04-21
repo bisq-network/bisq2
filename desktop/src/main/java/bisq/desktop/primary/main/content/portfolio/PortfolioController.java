@@ -21,9 +21,9 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.portfolio.closed.ClosedTradesController;
-import bisq.desktop.primary.main.content.portfolio.openoffers.OpenOffersController;
-import bisq.desktop.primary.main.content.portfolio.pending.PendingTradesController;
+import bisq.desktop.primary.main.content.trade.multiSig.closedTrades.ClosedTradesController;
+import bisq.desktop.primary.main.content.trade.multiSig.openoffers.OpenOffersController;
+import bisq.desktop.primary.main.content.trade.multiSig.pendingTrades.PendingTradesController;
 import lombok.Getter;
 
 import java.util.Optional;

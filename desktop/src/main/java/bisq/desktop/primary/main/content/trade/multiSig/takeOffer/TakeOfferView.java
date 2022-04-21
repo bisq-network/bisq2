@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.multiSig.take;
+package bisq.desktop.primary.main.content.trade.multiSig.takeOffer;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;

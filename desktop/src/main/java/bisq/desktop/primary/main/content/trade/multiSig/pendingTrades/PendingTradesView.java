@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.portfolio.closed;
+package bisq.desktop.primary.main.content.trade.multiSig.pendingTrades;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -26,11 +26,11 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ClosedTradesView extends View<VBox, ClosedTradesModel, ClosedTradesController> {
+public class PendingTradesView extends View<VBox, PendingTradesModel, PendingTradesController> {
 
-    private final BisqTableView<ClosedTradeListItem> tableView;
+    private final BisqTableView<PendingTradeListItem> tableView;
 
-    public ClosedTradesView(ClosedTradesModel model, ClosedTradesController controller) {
+    public PendingTradesView(PendingTradesModel model, PendingTradesController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(30);
@@ -52,30 +52,30 @@ public class ClosedTradesView extends View<VBox, ClosedTradesModel, ClosedTrades
     }
 
     private void configDataTableView() {
-        tableView.getColumns().add(new BisqTableColumn.Builder<ClosedTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<PendingTradeListItem>()
                 .title(Res.get("offerbook.table.header.market"))
                 .minWidth(80)
-                .valueSupplier(ClosedTradeListItem::getMarket)
+                .valueSupplier(PendingTradeListItem::getMarket)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ClosedTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<PendingTradeListItem>()
                 .title(Res.get("openOffers.table.header.price"))
                 .minWidth(120)
-                .valueSupplier(ClosedTradeListItem::getPrice)
+                .valueSupplier(PendingTradeListItem::getPrice)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ClosedTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<PendingTradeListItem>()
                 .title(Res.get("openOffers.table.header.baseAmount"))
                 .minWidth(80)
-                .valueSupplier(ClosedTradeListItem::getBaseAmount)
+                .valueSupplier(PendingTradeListItem::getBaseAmount)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ClosedTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<PendingTradeListItem>()
                 .minWidth(80)
                 .title(Res.get("openOffers.table.header.quoteAmount"))
-                .valueSupplier(ClosedTradeListItem::getQuoteAmount)
+                .valueSupplier(PendingTradeListItem::getQuoteAmount)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ClosedTradeListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<PendingTradeListItem>()
                 .minWidth(100)
                 .title(Res.get("offerbook.table.header.settlement"))
-                .valueSupplier(ClosedTradeListItem::getSettlement)
+                .valueSupplier(PendingTradeListItem::getSettlement)
                 .build());
     }
 }

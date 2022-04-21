@@ -445,6 +445,24 @@ public class Transitions {
             node.setPrefWidth(targetWidth);
         }
     }
+    public static void animateLeftSubNavigation(Region node, double targetX, int duration) {
+        if (displaySettings.isUseAnimations()) {
+            double startX = node.getLayoutX();
+            Interpolator interpolator = startX > targetX ? Interpolator.EASE_IN : Interpolator.EASE_OUT;
+            Timeline timeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(node.layoutXProperty(), startX, Interpolator.LINEAR)
+            ));
+
+            keyFrames.add(new KeyFrame(Duration.millis(duration),
+                    new KeyValue(node.layoutXProperty(), targetX, interpolator)
+            ));
+            timeline.play();
+        } else {
+            node.setLayoutX(targetX);
+        }
+    }
 
     public static void animateNavigationButtonMarks(Region node, double targetHeight, double targetY) {
         double startY = node.getLayoutY();

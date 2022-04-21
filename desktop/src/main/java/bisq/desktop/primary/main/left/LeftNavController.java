@@ -49,7 +49,7 @@ public class LeftNavController implements Controller {
                     .findAny();
         }
         supportedNavigationTarget.ifPresent(target->{
-            findTabButton(target).ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
+            findNavButton(target).ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
             model.getSelectedNavigationTarget().set(target);  
         });
     }
@@ -63,7 +63,7 @@ public class LeftNavController implements Controller {
     }
 
     void onNavigationTargetSelected(NavigationTarget navigationTarget) {
-        findTabButton(navigationTarget).ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
+        findNavButton(navigationTarget).ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
         model.getSelectedNavigationTarget().set(navigationTarget);
         Navigation.navigateTo(navigationTarget);
     }
@@ -77,7 +77,7 @@ public class LeftNavController implements Controller {
         model.getNavigationTargets().add(leftNavButton.getNavigationTarget());
     }
 
-    Optional<LeftNavButton> findTabButton(NavigationTarget navigationTarget) {
+    Optional<LeftNavButton> findNavButton(NavigationTarget navigationTarget) {
         return model.getLeftNavButtons().stream()
                 .filter(leftNavButton -> navigationTarget == leftNavButton.getNavigationTarget())
                 .findAny();

@@ -22,9 +22,12 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.trade.multiSig.create.CreateOfferController;
+import bisq.desktop.primary.main.content.trade.multiSig.closedTrades.ClosedTradesController;
+import bisq.desktop.primary.main.content.trade.multiSig.createOffer.CreateOfferController;
 import bisq.desktop.primary.main.content.trade.multiSig.offerbook.OfferbookController;
-import bisq.desktop.primary.main.content.trade.multiSig.take.TakeOfferController;
+import bisq.desktop.primary.main.content.trade.multiSig.openoffers.OpenOffersController;
+import bisq.desktop.primary.main.content.trade.multiSig.pendingTrades.PendingTradesController;
+import bisq.desktop.primary.main.content.trade.multiSig.takeOffer.TakeOfferController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,7 +43,7 @@ public class MultiSigController extends NavigationController {
     private final OfferbookController offerbookController;
 
     public MultiSigController(DefaultApplicationService applicationService) {
-        super(NavigationTarget.TRADE);
+        super(NavigationTarget.BISQ_MULTI_SIG);
 
         this.applicationService = applicationService;
         model = new MultiSigModel();
@@ -59,8 +62,8 @@ public class MultiSigController extends NavigationController {
 
     @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        model.showCreateOffer.set(navigationTarget == NavigationTarget.CREATE_OFFER);
-        model.showTakeOffer.set(navigationTarget == NavigationTarget.TAKE_OFFER);
+        model.showCreateOffer.set(navigationTarget == NavigationTarget.MULTI_SIG_CREATE_OFFER);
+        model.showTakeOffer.set(navigationTarget == NavigationTarget.MULTI_SIG_TAKE_OFFER);
     }
 
     @Override
@@ -68,16 +71,25 @@ public class MultiSigController extends NavigationController {
         model.showCreateOffer.set(false);
         model.showTakeOffer.set(false);
         switch (navigationTarget) {
-            case OFFERBOOK -> {
+            case MULTI_SIG_OFFERBOOK -> {
                 return Optional.of(offerbookController);
             }
-            case CREATE_OFFER -> {
+            case MULTI_SIG_CREATE_OFFER -> {
                 model.showCreateOffer.set(true);
                 return Optional.of(new CreateOfferController(applicationService));
             }
-            case TAKE_OFFER -> {
+            case MULTI_SIG_TAKE_OFFER -> {
                 model.showTakeOffer.set(true);
                 return Optional.of(new TakeOfferController(applicationService));
+            }
+            case MULTI_SIG_OPEN_OFFERS -> {
+                return Optional.of(new OpenOffersController(applicationService));
+            }
+            case MULTI_SIG_PENDING_TRADES -> {
+                return Optional.of(new PendingTradesController(applicationService));
+            }
+            case MULTI_SIG_CLOSED_TRADES -> {
+                return Optional.of(new ClosedTradesController(applicationService));
             }
             default -> {
                 return Optional.empty();
@@ -87,10 +99,11 @@ public class MultiSigController extends NavigationController {
 
     public void onCloseCreateOffer() {
         model.showCreateOffer.set(false);
-        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
+        Navigation.navigateTo(NavigationTarget.MULTI_SIG_OFFERBOOK);
     }
+
     public void onCloseTakeOffer() {
         model.showTakeOffer.set(false);
-        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
+        Navigation.navigateTo(NavigationTarget.MULTI_SIG_OFFERBOOK);
     }
 }

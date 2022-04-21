@@ -31,6 +31,6 @@ public class MultiSigModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.OFFERBOOK;
+        return NavigationTarget.MULTI_SIG_OFFERBOOK;
     }
 }

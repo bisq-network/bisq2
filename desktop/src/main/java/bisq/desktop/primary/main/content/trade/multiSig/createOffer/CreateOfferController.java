@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.multiSig.create;
+package bisq.desktop.primary.main.content.trade.multiSig.createOffer;
 
 import bisq.account.accounts.Account;
 import bisq.account.settlement.SettlementMethod;
@@ -168,11 +168,11 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
     public void onPublishOffer() {
         openOfferService.publishOffer(model.getOffer());
         model.setShowCreateOfferTab(false);
-        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
+        Navigation.navigateTo(NavigationTarget.MULTI_SIG_OFFERBOOK);
     }
 
     public void onCancel() {
         model.setShowCreateOfferTab(false);
-        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
+        Navigation.navigateTo(NavigationTarget.MULTI_SIG_OFFERBOOK);
     }
 }

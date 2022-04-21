@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.portfolio.pending;
+package bisq.desktop.primary.main.content.trade.multiSig.closedTrades;
 
 import bisq.desktop.common.view.Model;
 import javafx.collections.FXCollections;
@@ -29,12 +29,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @Setter
-public class PendingTradesModel implements Model {
-    final ObservableList<PendingTradeListItem> listItems = FXCollections.observableArrayList();
-    final FilteredList<PendingTradeListItem> filteredItems = new FilteredList<>(listItems);
-    final SortedList<PendingTradeListItem> sortedItems = new SortedList<>(filteredItems);
+public class ClosedTradesModel implements Model {
 
-    public PendingTradesModel() {
+    final ObservableList<ClosedTradeListItem> listItems = FXCollections.observableArrayList();
+    final FilteredList<ClosedTradeListItem> filteredItems = new FilteredList<>(listItems);
+    final SortedList<ClosedTradeListItem> sortedItems = new SortedList<>(filteredItems);
 
+    public ClosedTradesModel() {
     }
 }

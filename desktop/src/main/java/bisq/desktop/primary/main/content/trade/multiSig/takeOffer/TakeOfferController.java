@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.multiSig.take;
+package bisq.desktop.primary.main.content.trade.multiSig.takeOffer;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
@@ -23,10 +23,10 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.InitWithDataController;
-import bisq.desktop.primary.main.content.portfolio.pending.PendingTradesController;
+import bisq.desktop.primary.main.content.trade.multiSig.pendingTrades.PendingTradesController;
 import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
-import bisq.desktop.primary.main.content.trade.multiSig.take.components.TakersSettlementSelection;
+import bisq.desktop.primary.main.content.trade.multiSig.takeOffer.components.TakersSettlementSelection;
 import bisq.offer.Offer;
 import bisq.offer.spec.Direction;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -138,6 +138,6 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
 
     public void onCancel() {
         model.showTakeOfferTab.set(false);
-        Navigation.navigateTo(NavigationTarget.OFFERBOOK);
+        Navigation.navigateTo(NavigationTarget.MULTI_SIG_OFFERBOOK);
     }
 }

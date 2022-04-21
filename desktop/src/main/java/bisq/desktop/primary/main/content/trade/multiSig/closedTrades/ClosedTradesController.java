@@ -15,44 +15,40 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.portfolio.pending;
+package bisq.desktop.primary.main.content.trade.multiSig.closedTrades;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.common.view.InitWithDataController;
-import bisq.protocol.*;
+import bisq.desktop.common.view.Controller;
+import bisq.protocol.Protocol;
+import bisq.protocol.ProtocolModel;
+import bisq.protocol.ProtocolService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PendingTradesController implements InitWithDataController<PendingTradesController.InitData> {
-    public static record InitData(TakerProtocol<TakerProtocolModel> protocol) {
-    }
-
-    private final PendingTradesModel model;
+public class ClosedTradesController implements Controller {
+    private final ClosedTradesModel model;
     @Getter
-    private final PendingTradesView view;
+    private final ClosedTradesView view;
     private final ProtocolService protocolService;
+    private int pin;
     private Pin protocolsPin;
 
 
-    public PendingTradesController(DefaultApplicationService applicationService) {
-        model = new PendingTradesModel();
-        view = new PendingTradesView(model, this);
-
+    public ClosedTradesController(DefaultApplicationService applicationService) {
+        model = new ClosedTradesModel();
+        view = new ClosedTradesView(model, this);
         protocolService = applicationService.getProtocolService();
-        model.filteredItems.setPredicate(e -> e.getProtocol().isPending());
+        model.filteredItems.setPredicate(e -> e.getProtocol().isCompleted());
     }
 
-    @Override
-    public void initWithData(InitData initData) {
-    }
 
     @Override
     public void onActivate() {
-        protocolsPin = FxBindings.<Protocol<? extends ProtocolModel>, PendingTradeListItem>bind(model.getListItems())
-                .map(PendingTradeListItem::new)
+        protocolsPin = FxBindings.<Protocol<? extends ProtocolModel>, ClosedTradeListItem>bind(model.getListItems())
+                .map(ClosedTradeListItem::new)
                 .to(protocolService.getProtocols());
     }
 

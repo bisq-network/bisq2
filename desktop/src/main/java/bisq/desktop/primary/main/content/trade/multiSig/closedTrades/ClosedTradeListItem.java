@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.portfolio.pending;
+package bisq.desktop.primary.main.content.trade.multiSig.closedTrades;
 
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Quote;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class PendingTradeListItem implements TableItem {
+public class ClosedTradeListItem implements TableItem {
     @EqualsAndHashCode.Include
     private final String id;
     private final Offer offer;
@@ -49,7 +49,7 @@ public class PendingTradeListItem implements TableItem {
     private final String options;
     private final Protocol<? extends ProtocolModel> protocol;
 
-    public PendingTradeListItem(Protocol<? extends ProtocolModel> protocol) {
+    public ClosedTradeListItem(Protocol<? extends ProtocolModel> protocol) {
         this.protocol = protocol;
         Contract contract = protocol.getContract();
         offer = contract.getOffer();
@@ -62,11 +62,11 @@ public class PendingTradeListItem implements TableItem {
 
         String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
                 .map(SettlementSpec::settlementMethodName)
-                .map(Res::get)
+                .map(settlementMethodName -> Res.get(settlementMethodName))
                 .collect(Collectors.joining("\n"));
         String quoteSideSettlement = offer.getQuoteSideSettlementSpecs().stream()
                 .map(SettlementSpec::settlementMethodName)
-                .map(Res::get)
+                .map(settlementMethodName -> Res.get(settlementMethodName))
                 .collect(Collectors.joining("\n"));
 
         String baseCurrencyCode = offer.getMarket().baseCurrencyCode();

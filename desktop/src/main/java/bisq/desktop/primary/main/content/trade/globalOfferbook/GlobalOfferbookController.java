@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.multiSig.offerbook;
+package bisq.desktop.primary.main.content.trade.globalOfferbook;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
@@ -28,7 +28,6 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.MarketSelection;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
-import bisq.desktop.primary.main.content.trade.multiSig.createOffer.CreateOfferController;
 import bisq.desktop.primary.main.content.trade.multiSig.takeOffer.TakeOfferController;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
@@ -43,10 +42,10 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class OfferbookController implements CachingController {
-    private final OfferbookModel model;
+public class GlobalOfferbookController implements CachingController {
+    private final GlobalOfferbookModel model;
     @Getter
-    private final OfferbookView view;
+    private final GlobalOfferbookView view;
     private final MarketSelection marketSelection;
     private final DirectionSelection directionSelection;
     private final OpenOfferService openOfferService;
@@ -55,15 +54,15 @@ public class OfferbookController implements CachingController {
     private Pin offerListPin;
     private Subscription selectedMarketSubscription, directionSubscription;
 
-    public OfferbookController(DefaultApplicationService applicationService) {
+    public GlobalOfferbookController(DefaultApplicationService applicationService) {
         offerBookService = applicationService.getOfferBookService();
         openOfferService = applicationService.getOpenOfferService();
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
         directionSelection = new DirectionSelection();
 
-        model = new OfferbookModel(applicationService);
-        view = new OfferbookView(model, this, marketSelection.getRoot(), directionSelection.getRoot());
+        model = new GlobalOfferbookModel(applicationService);
+        view = new GlobalOfferbookView(model, this, marketSelection.getRoot(), directionSelection.getRoot());
     }
 
     @Override
@@ -79,8 +78,8 @@ public class OfferbookController implements CachingController {
                     model.direction = direction;
                     applyDirectionChange(direction);
                 });
-        offerListPin = FxBindings.<Offer, OfferListItem>bind(model.getListItems())
-                .map(offer -> new OfferListItem(offer, model.marketPriceService))
+        offerListPin = FxBindings.<Offer, GlobalOfferListItem>bind(model.getListItems())
+                .map(offer -> new GlobalOfferListItem(offer, model.marketPriceService))
                 .to(offerBookService.getOffers());
 
         model.showAllMarkets.set(false);
@@ -141,23 +140,7 @@ public class OfferbookController implements CachingController {
         updateFilterPredicate();
     }
 
-    public void onOpenCreateOffer() {
-        Navigation.navigateTo(NavigationTarget.MULTI_SIG_CREATE_OFFER);
-   /*     Navigation.navigateTo(NavigationTarget.CREATE_OFFER,
-                new CreateOfferController.InitData(model.selectedMarket,
-                        model.direction,
-                        model.showCreateOfferTab));*/
-    }
-
-    void onCreateOffer() {
-        model.showCreateOfferTab = true;
-        Navigation.navigateTo(NavigationTarget.MULTI_SIG_CREATE_OFFER,
-                new CreateOfferController.InitData(model.selectedMarket,
-                        model.direction,
-                        model.showCreateOfferTab));
-    }
-
-    void onActionButtonClicked(OfferListItem item) {
+    void onActionButtonClicked(GlobalOfferListItem item) {
         if (model.isMyOffer(item)) {
             onRemoveOffer(item);
         } else {
@@ -165,7 +148,7 @@ public class OfferbookController implements CachingController {
         }
     }
 
-    void onUpdateItemWithButton(OfferListItem item, Button button) {
+    void onUpdateItemWithButton(GlobalOfferListItem item, Button button) {
         if (item != null && button instanceof BisqIconButton bisqIconButton) {
             boolean isMyOffer = model.isMyOffer(item);
             bisqIconButton.setMinWidth(200);
@@ -187,7 +170,7 @@ public class OfferbookController implements CachingController {
         }
     }
 
-    private void onRemoveOffer(OfferListItem item) {
+    private void onRemoveOffer(GlobalOfferListItem item) {
         Offer offer = item.getOffer();
         openOfferService.removeMyOffer(item.getOffer())
                 .whenComplete((broadCastResultFutures, throwable2) -> {
@@ -205,7 +188,7 @@ public class OfferbookController implements CachingController {
                 });
     }
 
-    private void onTakeOffer(OfferListItem item) {
+    private void onTakeOffer(GlobalOfferListItem item) {
         model.showTakeOfferTab.set(true);
         Navigation.navigateTo(NavigationTarget.MULTI_SIG_TAKE_OFFER, new TakeOfferController.InitData(item.getOffer(), model.showTakeOfferTab));
     }
