@@ -262,10 +262,11 @@ public class ChatMessagesComponent {
             openPrivateChannel(chatMessage.getAuthor());
         }
 
-        private void openPrivateChannel(ChatUser peer) {
+        private PrivateChannel openPrivateChannel(ChatUser peer) {
             String channelId = PrivateChannel.createChannelId(peer, userProfileService.getSelectedUserProfile().get());
             PrivateChannel channel = chatService.getOrCreatePrivateChannel(channelId, peer);
             chatService.setSelectedChannel(channel);
+            return channel;
         }
 
         private void refreshMessages() {
@@ -322,8 +323,10 @@ public class ChatMessagesComponent {
             model.getTextInput().set(existingText + "@" + chatUser.getUserName() + " ");
         }
 
-        public void onTakeOffer(MarketChatOffer marketChatOffer) {
-            //todo
+        public void onTakeOffer(MarketChatOffer marketChatOffer, ChatUser author) {
+            PrivateChannel privateChannel = openPrivateChannel(author);
+            String text = Res.get("satoshisquareapp.chat.takeOffer.takerRequest", marketChatOffer.getChatMessageText());
+            chatService.sendPrivateChatMessage(text, Optional.empty(), privateChannel);
         }
     }
 
@@ -394,7 +397,7 @@ public class ChatMessagesComponent {
             bottomBox = Layout.hBoxWith(inputField);
             bottomBox.setAlignment(Pos.CENTER);
             VBox.setMargin(bottomBox, new Insets(0, 0, -10, 0));
-            
+
             root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
             messagesListener = c -> messagesListView.scrollTo(model.getSortedChatMessages().size() - 1);
@@ -448,7 +451,7 @@ public class ChatMessagesComponent {
                             userNameLabel.setId("chat-user-name");
                             userNameLabel.setPadding(new Insets(10, 0, -5, 0));
 
-                            time.getStyleClass().add("message-header");
+                            time.setId("chat-messages-date");
                             time.setPadding(new Insets(-6, 0, 0, 0));
                             time.setVisible(false);
 
@@ -484,7 +487,6 @@ public class ChatMessagesComponent {
                             quotedMessageBox.setManaged(false);
                             VBox.setMargin(quotedMessageBox, new Insets(0, 0, 10, 0));
 
-                          
                             reactionsBox = Layout.hBoxWith(
                                     Spacer.fillHBox(),
                                     emojiButton1,
@@ -505,11 +507,11 @@ public class ChatMessagesComponent {
 
                             message.setAutoHeight(true);
                             HBox.setHgrow(message, Priority.ALWAYS);
-                            
+
                             takeOfferButton = new Button(Res.get("takeOffer"));
                             takeOfferButton.setVisible(false);
                             takeOfferButton.setManaged(false);
-                        
+
                             HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
                             HBox messageAndTakeOfferButton = Layout.hBoxWith(message, takeOfferButton);
                             VBox.setMargin(messageAndTakeOfferButton, new Insets(-5, 0, 0, 0));
@@ -576,10 +578,10 @@ public class ChatMessagesComponent {
 
                                 if (item.getChatMessage() instanceof MarketChatMessage marketChatMessage &&
                                         marketChatMessage.getMarketChatOffer().isPresent()) {
-                                    MarketChatOffer marketChatOffer = marketChatMessage.getMarketChatOffer().get();
                                     takeOfferButton.setVisible(true);
                                     takeOfferButton.setManaged(true);
-                                    takeOfferButton.setOnAction(e -> controller.onTakeOffer(marketChatOffer));
+                                    takeOfferButton.setOnAction(e -> controller.onTakeOffer(marketChatMessage.getMarketChatOffer().get(),
+                                            marketChatMessage.getAuthor()));
 
                                 } else {
                                     takeOfferButton.setVisible(false);

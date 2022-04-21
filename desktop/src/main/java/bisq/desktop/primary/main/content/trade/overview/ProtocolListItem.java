@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.trade.overview;
 import bisq.common.data.Pair;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.table.TableItem;
+import bisq.i18n.Res;
 import bisq.protocol.SwapProtocol;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -41,6 +42,7 @@ public class ProtocolListItem implements TableItem {
     private final String costInfo;
     private final String speedInfo;
     private final String releaseDate;
+    private final String protocolsName;
 
     ProtocolListItem(SwapProtocol.Type swapProtocolType,
                      NavigationTarget navigationTarget,
@@ -66,6 +68,7 @@ public class ProtocolListItem implements TableItem {
         this.costInfo = costInfo;
         this.speedInfo = speedInfo;
         this.releaseDate = releaseDate;
+        protocolsName= Res.get("trade.protocols." + swapProtocolType.name());
     }
 
     @Override

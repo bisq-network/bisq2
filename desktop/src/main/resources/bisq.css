@@ -1074,6 +1074,11 @@ tree-table-view:focused {
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+#chat-messages-date {
+    -fx-text-fill: -bisq-grey-11;
+    -fx-font-size: 0.7em;
+}
+
 #chat-sidebar-headline {
     -fx-text-fill: -bisq-white;
     -fx-font-size: 1.78em;
