@@ -75,7 +75,7 @@ Separating the trade protocol from the security mechanism has a number of additi
 Bisq v1 offers trading exclusively through a (rather heavy) desktop application.
 
 Bisq v2 will be API-driven to enable new interfaces, bots, and integrations to be created in addition to the flagship desktop interface:
-- a headless application controlled through a REST or gRPC API
+- a headless application controlled through a REST API
   - enables trading bots
   - enables alternative interfaces for mobile apps, RaspiBlitz, Umbrel, etc.
 - a light mobile client that acts as a remote control for full nodes users host elsewhere

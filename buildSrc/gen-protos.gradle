@@ -3,7 +3,6 @@
 //      apply from: '../buildSrc/gen-protos.gradle'
 ext {
     // Default generated src dirs.
-    generatedGrpcProtoSrcDir = 'build/generated/source/main/grpc'
     generatedProtoSrcDir = 'build/generated/source/main/java'
 }
 
