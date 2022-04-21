@@ -24,7 +24,9 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,6 +37,8 @@ import java.util.stream.Collectors;
 public class PublicChannel extends Channel<PublicChatMessage> {
     private final String channelName;
     private final String description;
+    //todo atm we have set it to null
+    @Nullable
     private final ChatUser channelAdmin;
     private final Set<ChatUser> channelModerators;
     private transient final ObservableSet<PublicChatMessage> chatMessages = new ObservableSet<>();
@@ -68,13 +72,12 @@ public class PublicChannel extends Channel<PublicChatMessage> {
     }
 
     public bisq.social.protobuf.Channel toProto() {
-        return getChannelBuilder().setPublicChannel(bisq.social.protobuf.PublicChannel.newBuilder()
-                        .setChannelName(channelName)
-                        .setDescription(description)
-                        .setChannelAdmin(channelAdmin.toProto())
-                        .addAllChannelModerators(channelModerators.stream().map(ChatUser::toProto).collect(Collectors.toList()))
-                )
-                .build();
+        bisq.social.protobuf.PublicChannel.Builder builder = bisq.social.protobuf.PublicChannel.newBuilder()
+                .setChannelName(channelName)
+                .setDescription(description)
+                .addAllChannelModerators(channelModerators.stream().map(ChatUser::toProto).collect(Collectors.toList()));
+        Optional.ofNullable(channelAdmin).ifPresent(e -> builder.setChannelAdmin(channelAdmin.toProto()));
+        return getChannelBuilder().setPublicChannel(builder).build();
     }
 
     public static PublicChannel fromProto(bisq.social.protobuf.Channel baseProto,

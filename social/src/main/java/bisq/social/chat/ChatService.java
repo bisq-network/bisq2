@@ -214,6 +214,11 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         persist();
     }
 
+    public Optional<PublicChannel> findPublicChannel(String id) {
+        return persistableStore.getPublicChannels().stream().filter(e -> e.getId()
+                .equals(id))
+                .findAny();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // ChatMessage
@@ -405,37 +410,37 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 "Discussions Bisq",
                 "Channel for discussions about Bisq",
                 null,
-                null
+                new HashSet<>()
         ));
         persistableStore.getPublicChannels().add(new PublicChannel("Discussions Bitcoin",
                 "Discussions Bitcoin",
                 "Channel for discussions about Bitcoin",
                 null,
-                null
+                new HashSet<>()
         ));
         persistableStore.getPublicChannels().add(new PublicChannel("Discussions Monero",
                 "Discussions Monero",
                 "Channel for discussions about Monero",
                 null,
-                null
+                new HashSet<>()
         ));
         persistableStore.getPublicChannels().add(new PublicChannel("Price",
                 "Price",
                 "Channel for discussions about market price",
                 null,
-                null
+                new HashSet<>()
         ));
         persistableStore.getPublicChannels().add(new PublicChannel("Economy",
                 "Economy",
                 "Channel for discussions about economy",
                 null,
-                null
+                new HashSet<>()
         ));
         persistableStore.getPublicChannels().add(new PublicChannel("Off-topic",
                 "Off-topic",
                 "Channel for anything else",
                 null,
-                null
+                new HashSet<>()
         ));
 
         Set<String> customTags = Set.of("BTC", "Bitcoin", "bank-transfer", "SEPA", "zelle", "revolut", "BUY", "SELL", "WANT", "RECEIVE",

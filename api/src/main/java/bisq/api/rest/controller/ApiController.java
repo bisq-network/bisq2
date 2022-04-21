@@ -15,14 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.rest.dao;
+package bisq.api.rest.controller;
 
-public class JsonKeyPair {
-    public final String privateKeyHex;
-    public final String publicKeyHex;
+import bisq.common.proto.Proto;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
 
-    public JsonKeyPair(String privateKeyHex, String publicKeyHex) {
-        this.privateKeyHex = privateKeyHex;
-        this.publicKeyHex = publicKeyHex;
+public abstract class ApiController {
+    protected String asJson(Proto protoObject) {
+        if (protoObject == null) {
+            return "null";
+        }
+        try {
+            return JsonFormat.printer().print(protoObject.toProto());
+        } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 }

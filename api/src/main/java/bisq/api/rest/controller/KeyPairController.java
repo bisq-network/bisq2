@@ -18,11 +18,10 @@
 package bisq.api.rest.controller;
 
 import bisq.api.rest.ApiApplicationService;
-import bisq.api.rest.dao.JsonKeyPair;
-import bisq.common.encoding.Hex;
+import bisq.security.KeyPairProtoUtil;
 import bisq.security.KeyPairService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,26 +33,24 @@ import java.util.Optional;
 @Slf4j
 @RestController
 class KeyPairController {
-    private final ObjectMapper mapper = new ObjectMapper();
     private final KeyPairService keyPairService;
 
     public KeyPairController(ApiApplicationService apiApplicationService) {
         keyPairService = apiApplicationService.getSecurityService().getKeyPairService();
     }
 
-    @GetMapping(path = "/keypair/get-or-create/{keyId}")
-    public String getOrCreateKeyPair(@PathVariable("keyId") String keyId) throws JsonProcessingException {
+    @GetMapping(path = "/api/keypair/get-or-create/{keyId}")
+    public String getOrCreateKeyPair(@PathVariable("keyId") String keyId) throws InvalidProtocolBufferException {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
-        return mapper.writeValueAsString(new JsonKeyPair(Hex.encode(keyPair.getPrivate().getEncoded()), Hex.encode(keyPair.getPublic().getEncoded())));
+        return JsonFormat.printer().print(KeyPairProtoUtil.toProto(keyPair));
     }
 
-    @GetMapping(path = "/keypair/get/{keyId}")
-    public String findKeyPair(@PathVariable("keyId") String keyId) throws JsonProcessingException {
+    @GetMapping(path = "/api/keypair/get/{keyId}")
+    public String findKeyPair(@PathVariable("keyId") String keyId) throws InvalidProtocolBufferException {
         Optional<KeyPair> optionalKeyPair = keyPairService.findKeyPair(keyId);
         if (optionalKeyPair.isPresent()) {
             KeyPair keyPair = optionalKeyPair.get();
-            JsonKeyPair value = new JsonKeyPair(Hex.encode(keyPair.getPrivate().getEncoded()), Hex.encode(keyPair.getPublic().getEncoded()));
-            return mapper.writeValueAsString(value);
+            return JsonFormat.printer().print(KeyPairProtoUtil.toProto(keyPair));
         } else {
             return "null";
         }
