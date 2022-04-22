@@ -18,10 +18,7 @@
 package bisq.api.rest.controller;
 
 import bisq.api.rest.ApiApplicationService;
-import bisq.security.KeyPairProtoUtil;
 import bisq.security.KeyPairService;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.util.JsonFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,25 +29,31 @@ import java.util.Optional;
 
 @Slf4j
 @RestController
-class KeyPairController {
+class KeyPairController extends ApiController {
     private final KeyPairService keyPairService;
 
     public KeyPairController(ApiApplicationService apiApplicationService) {
         keyPairService = apiApplicationService.getSecurityService().getKeyPairService();
     }
 
+    /**
+     * @param keyId The ID for identifying the key which we look up or create in case it does not exist.
+     * @return The key pair.
+     */
     @GetMapping(path = "/api/keypair/get-or-create/{keyId}")
-    public String getOrCreateKeyPair(@PathVariable("keyId") String keyId) throws InvalidProtocolBufferException {
-        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
-        return JsonFormat.printer().print(KeyPairProtoUtil.toProto(keyPair));
+    public String getOrCreateKeyPair(@PathVariable("keyId") String keyId) {
+        return keyPairAsJson(keyPairService.getOrCreateKeyPair(keyId));
     }
 
+    /**
+     * @param keyId The ID for identifying the key which we look up.
+     * @return The key pair if a key pair with that keyId exist, otherwise null.
+     */
     @GetMapping(path = "/api/keypair/get/{keyId}")
-    public String findKeyPair(@PathVariable("keyId") String keyId) throws InvalidProtocolBufferException {
+    public String findKeyPair(@PathVariable("keyId") String keyId) {
         Optional<KeyPair> optionalKeyPair = keyPairService.findKeyPair(keyId);
         if (optionalKeyPair.isPresent()) {
-            KeyPair keyPair = optionalKeyPair.get();
-            return JsonFormat.printer().print(KeyPairProtoUtil.toProto(keyPair));
+            return keyPairAsJson(optionalKeyPair.get());
         } else {
             return "null";
         }

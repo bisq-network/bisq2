@@ -18,7 +18,6 @@
 package bisq.desktop.components.table;
 
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
-import bisq.desktop.components.controls.jfx.BisqInputTextField;
 import bisq.desktop.components.overlay.PopOverWrapper;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -63,7 +62,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     private Optional<Class<? extends Button>> buttonClass = Optional.empty();
     private BiConsumer<S, Button> updateItemWithButtonHandler = (item, button) -> {
     };
-    private BiConsumer<S, BisqInputTextField> updateItemWithInputTextFieldHandler = (item, field) -> {
+    private BiConsumer<S, TextField> updateItemWithInputTextFieldHandler = (item, field) -> {
     };
     private Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory = Optional.empty();
 
@@ -87,7 +86,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private Optional<Class<? extends Button>> buttonClass = Optional.empty();
         private BiConsumer<S, Button> updateItemWithButtonHandler = (item, button) -> {
         };
-        private BiConsumer<S, BisqInputTextField> updateItemWithInputTextFieldHandler = (item, field) -> {
+        private BiConsumer<S, TextField> updateItemWithInputTextFieldHandler = (item, field) -> {
         };
         private Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory = Optional.empty();
         private boolean isFirst, isLast;
@@ -209,7 +208,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             return this;
         }
 
-        public Builder<S> updateItemWithInputTextFieldHandler(BiConsumer<S, BisqInputTextField> handler) {
+        public Builder<S> updateItemWithInputTextFieldHandler(BiConsumer<S, TextField> handler) {
             this.updateItemWithInputTextFieldHandler = handler;
             return this;
         }
@@ -358,16 +357,16 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                         return new TableCell<>() {
                             S previousItem;
 
-                            private final BisqInputTextField inputTextField = new BisqInputTextField();
+                            private final TextField textField = new TextField();
 
                             @Override
                             public void updateItem(final S item, boolean empty) {
                                 super.updateItem(item, empty);
-                                updateItemWithInputTextFieldHandler.accept(item, inputTextField);
+                                updateItemWithInputTextFieldHandler.accept(item, textField);
 
                                 if (item != null && !empty) {
-                                    isVisibleFunction.ifPresent(function -> inputTextField.setVisible(function.apply(item)));
-                                    setGraphic(inputTextField);
+                                    isVisibleFunction.ifPresent(function -> textField.setVisible(function.apply(item)));
+                                    setGraphic(textField);
 
                                     if (previousItem instanceof TableItem tableItem) {
                                         tableItem.deactivate();
@@ -378,15 +377,15 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                         tableItem.activate();
                                     }
                                     if (value.isPresent()) {
-                                        inputTextField.setText(value.get());
+                                        textField.setText(value.get());
                                     } else if (valueSupplier.isPresent()) {
-                                        inputTextField.setText(valueSupplier.get().apply(item));
+                                        textField.setText(valueSupplier.get().apply(item));
                                     } else if (valuePropertySupplier.isPresent()) {
                                         valuePropertySupplier.ifPresent(supplier ->
-                                                inputTextField.textProperty().bind(supplier.apply(item)));
+                                                textField.textProperty().bind(supplier.apply(item)));
                                     } else if (valuePropertyBiDirBindingSupplier.isPresent()) {
                                         valuePropertyBiDirBindingSupplier.ifPresent(supplier ->
-                                                inputTextField.textProperty().bindBidirectional(supplier.apply(item)));
+                                                textField.textProperty().bindBidirectional(supplier.apply(item)));
                                     }
                                 } else {
                                     if (previousItem != null) {

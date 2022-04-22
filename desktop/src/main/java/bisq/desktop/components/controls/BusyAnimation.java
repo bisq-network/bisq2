@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.controls.jfx;
+package bisq.desktop.components.controls;
 
-import com.jfoenix.controls.JFXSpinner;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.control.ProgressIndicator;
 
-public class BusyAnimation extends JFXSpinner {
+public class BusyAnimation extends ProgressIndicator {
 
     private final BooleanProperty isRunningProperty = new SimpleBooleanProperty();
 

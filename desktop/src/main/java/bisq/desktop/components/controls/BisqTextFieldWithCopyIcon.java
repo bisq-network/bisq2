@@ -18,20 +18,20 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ClipboardUtil;
-import bisq.desktop.components.controls.jfx.BisqTextField;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 
 public class BisqTextFieldWithCopyIcon extends AnchorPane {
 
     private final StringProperty textProperty = new SimpleStringProperty();
-    private final BisqTextField textField;
+    private final TextField textField;
     private boolean copyWithoutCurrencyPostFix;
     private boolean copyTextAfterDelimiter;
 
@@ -65,7 +65,7 @@ public class BisqTextFieldWithCopyIcon extends AnchorPane {
                 ClipboardUtil.copyToClipboard(copyText);
             }
         });
-        textField = new BisqTextField();
+        textField = new TextField();
         textField.setEditable(false);
         if (customStyleClass != null) textField.getStyleClass().add(customStyleClass);
         textField.textProperty().bindBidirectional(textProperty);

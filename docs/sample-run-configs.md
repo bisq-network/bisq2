@@ -62,7 +62,6 @@ Program Arguments (Alt+R)
 
 VM Options (Alt+V)
 ```
---add-opens java.base/java.lang.reflect=ALL-UNNAMED 
 -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR 
 -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 
 -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
@@ -75,7 +74,6 @@ Copy the `Alice_clear` run configuration, rename it to `Alice_tor` and change:
 - Program Arguments to `--appName=bisq_Alice_tor`
 - VM options to:
 ```
---add-opens java.base/java.lang.reflect=ALL-UNNAMED 
 -Dbisq.networkServiceConfig.supportedTransportTypes.0=TOR 
 -Dbisq.networkServiceConfig.seedAddressByTransportType.tor.0=<onion address of seed 1>:1000 
 -Dbisq.networkServiceConfig.seedAddressByTransportType.tor.1=<onion address of seed 2>:1001
@@ -87,7 +85,6 @@ Copy the `Alice_clear` run configuration, rename it to `Alice_i2p` and change:
 - Program Arguments to `--appName=bisq_Alice_i2p`
 - VM options to:
 ```
---add-opens java.base/java.lang.reflect=ALL-UNNAMED 
 -Dbisq.networkServiceConfig.supportedTransportTypes.0=I2P 
 -Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.0=<i2p destination of seed 1>:5000 
 -Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.1=<i2p destination of seed 2>:5001

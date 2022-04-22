@@ -20,8 +20,6 @@ package bisq.desktop.primary.main.content.settings.userProfile.components;
 import bisq.common.encoding.Hex;
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;
-import javafx.scene.control.Label;
-import bisq.desktop.components.controls.jfx.BisqTextField;
 import bisq.desktop.components.controls.BisqTextFieldWithCopyIcon;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -39,6 +37,8 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -278,7 +278,7 @@ public class EntitlementSelection {
         private final Controller controller;
         private final Model model;
         private final EntitlementItem entitlementItem;
-        private BisqTextField firstField, secondField;
+        private TextField firstField, secondField;
         private BisqTextFieldWithCopyIcon pubKeyHashField;
 
         //todo missing validations
@@ -337,7 +337,7 @@ public class EntitlementSelection {
                 }
                 case MEDIATOR, CHANNEL_ADMIN -> {
                     firstField.setPromptText(Res.get("social.createUserProfile.entitlement.popup.bondedRole.txId"));
-                    secondField = new BisqTextField();
+                    secondField = new TextField();
                     secondField = gridPane.addTextField(Res.get("social.createUserProfile.entitlement.popup.bondedRole.sig"), "");
                     onAction(() -> {
                                 actionButton.setDisable(true); //todo add busy animation

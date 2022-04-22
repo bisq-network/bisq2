@@ -25,7 +25,7 @@ import bisq.desktop.common.utils.KeyWordDetection;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTaggableTextArea;
-import bisq.desktop.components.controls.jfx.BisqTextArea;
+import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.desktop.layout.Layout;

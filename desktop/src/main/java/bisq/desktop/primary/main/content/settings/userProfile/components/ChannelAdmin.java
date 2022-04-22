@@ -19,9 +19,6 @@ package bisq.desktop.primary.main.content.settings.userProfile.components;
 
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import bisq.desktop.components.controls.jfx.BisqTextField;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.user.profile.UserProfile;
@@ -30,6 +27,9 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -109,8 +109,8 @@ public class ChannelAdmin {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final Button addChannelButton;
-        private final BisqTextField channelNameField;
-        private final BisqTextField descriptionField;
+        private final TextField channelNameField;
+        private final TextField descriptionField;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
@@ -119,8 +119,8 @@ public class ChannelAdmin {
             Label headline = new Label(Res.get("social.channelAdmin.headline"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
-            channelNameField = new BisqTextField();
-            descriptionField = new BisqTextField();
+            channelNameField = new TextField();
+            descriptionField = new TextField();
             addChannelButton = new Button(Res.get("social.channelAdmin.addChannel"));
 
             root.getChildren().addAll(headline, channelNameField, descriptionField, addChannelButton);

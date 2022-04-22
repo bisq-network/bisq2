@@ -19,12 +19,12 @@ package bisq.desktop.primary.main.content.wallet.send;
 
 import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.jfx.BisqTextField;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -32,10 +32,10 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
     public WalletSendView(WalletSendModel model, WalletSendController controller) {
         super(new VBox(), model, controller);
 
-        BisqTextField addressTextField = createTextField(Res.get("address") + ":");
+        TextField addressTextField = createTextField(Res.get("address") + ":");
         addressTextField.textProperty().bindBidirectional(model.addressProperty());
 
-        BisqTextField amountTextField = createTextField(Res.get("amount") + ":");
+        TextField amountTextField = createTextField(Res.get("amount") + ":");
         amountTextField.textProperty().bindBidirectional(model.amountProperty());
 
         Button sendButton = new Button(Res.get("send"));
@@ -56,8 +56,8 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
     protected void onViewDetached() {
     }
 
-    private BisqTextField createTextField(String promptText) {
-        BisqTextField textField = new BisqTextField();
+    private TextField createTextField(String promptText) {
+        TextField textField = new TextField();
         textField.setPromptText(promptText);
         return textField;
     }

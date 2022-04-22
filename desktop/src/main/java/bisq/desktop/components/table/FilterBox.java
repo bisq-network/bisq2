@@ -17,10 +17,10 @@
 
 package bisq.desktop.components.table;
 
-import bisq.desktop.components.controls.jfx.BisqInputTextField;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.transformation.FilteredList;
+import javafx.scene.control.TextField;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,7 +35,7 @@ public class FilterBox {
         controller = new Controller(filteredList);
     }
 
-    public BisqInputTextField getRoot() {
+    public TextField getRoot() {
         return controller.view.getRoot();
     }
 
@@ -75,11 +75,11 @@ public class FilterBox {
 
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<BisqInputTextField, Model, Controller> {
+    public static class View extends bisq.desktop.common.view.View<TextField, Model, Controller> {
         private final ChangeListener<String> listener;
 
         private View(Model model, Controller controller) {
-            super(new BisqInputTextField(), model, controller);
+            super(new TextField(), model, controller);
 
             root.setPromptText(Res.get("search"));
             root.setMinWidth(100);
