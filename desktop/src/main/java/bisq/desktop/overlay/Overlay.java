@@ -29,7 +29,7 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.BisqGridPane;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import bisq.desktop.components.controls.jfx.BusyAnimation;
+import bisq.desktop.components.controls.BusyAnimation;
 import bisq.i18n.Res;
 import bisq.settings.DisplaySettings;
 import com.google.common.reflect.TypeToken;
