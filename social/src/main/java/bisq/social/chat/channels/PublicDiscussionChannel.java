@@ -15,39 +15,37 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat;
+package bisq.social.chat.channels;
 
 import bisq.common.observable.ObservableSet;
+import bisq.social.chat.NotificationSetting;
+import bisq.social.chat.messages.PublicDiscussionChatMessage;
 import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
 @ToString
-@EqualsAndHashCode(callSuper = true)
-public class PublicChannel extends Channel<PublicChatMessage> {
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage> implements PublicChannel {
     private final String channelName;
     private final String description;
-    //todo atm we have set it to null
-    @Nullable
     private final ChatUser channelAdmin;
     private final Set<ChatUser> channelModerators;
-    private transient final ObservableSet<PublicChatMessage> chatMessages = new ObservableSet<>();
+    private transient final ObservableSet<PublicDiscussionChatMessage> chatMessages = new ObservableSet<>();
 
-    PublicChannel(String id,
-                  String channelName,
-                  String description,
-                  ChatUser channelAdmin,
-                  Set<ChatUser> channelModerators
+    public PublicDiscussionChannel(String id,
+                            String channelName,
+                            String description,
+                            ChatUser channelAdmin,
+                            Set<ChatUser> channelModerators
     ) {
         this(id, channelName,
                 description,
@@ -57,12 +55,12 @@ public class PublicChannel extends Channel<PublicChatMessage> {
         );
     }
 
-    private PublicChannel(String id,
-                          String channelName,
-                          String description,
-                          ChatUser channelAdmin,
-                          Set<ChatUser> channelModerators,
-                          NotificationSetting notificationSetting) {
+    private PublicDiscussionChannel(String id,
+                                    String channelName,
+                                    String description,
+                                    ChatUser channelAdmin,
+                                    Set<ChatUser> channelModerators,
+                                    NotificationSetting notificationSetting) {
         super(id, notificationSetting);
 
         this.channelName = channelName;
@@ -72,17 +70,20 @@ public class PublicChannel extends Channel<PublicChatMessage> {
     }
 
     public bisq.social.protobuf.Channel toProto() {
-        bisq.social.protobuf.PublicChannel.Builder builder = bisq.social.protobuf.PublicChannel.newBuilder()
-                .setChannelName(channelName)
-                .setDescription(description)
-                .addAllChannelModerators(channelModerators.stream().map(ChatUser::toProto).collect(Collectors.toList()));
-        Optional.ofNullable(channelAdmin).ifPresent(e -> builder.setChannelAdmin(channelAdmin.toProto()));
-        return getChannelBuilder().setPublicChannel(builder).build();
+        return getChannelBuilder()
+                .setPublicDiscussionChannel(bisq.social.protobuf.PublicDiscussionChannel.newBuilder()
+                        .setChannelName(channelName)
+                        .setDescription(description)
+                        .setChannelAdmin(channelAdmin.toProto())
+                        .addAllChannelModerators(channelModerators.stream()
+                                .map(ChatUser::toProto)
+                                .collect(Collectors.toList())))
+                .build();
     }
 
-    public static PublicChannel fromProto(bisq.social.protobuf.Channel baseProto,
-                                          bisq.social.protobuf.PublicChannel proto) {
-        return new PublicChannel(
+    public static PublicDiscussionChannel fromProto(bisq.social.protobuf.Channel baseProto,
+                                                    bisq.social.protobuf.PublicDiscussionChannel proto) {
+        return new PublicDiscussionChannel(
                 baseProto.getId(),
                 proto.getChannelName(),
                 proto.getDescription(),
@@ -92,22 +93,22 @@ public class PublicChannel extends Channel<PublicChatMessage> {
     }
 
     @Override
-    protected bisq.social.protobuf.ChatMessage getChatMessageProto(PublicChatMessage chatMessage) {
+    protected bisq.social.protobuf.ChatMessage getChatMessageProto(PublicDiscussionChatMessage chatMessage) {
         return chatMessage.toProto();
     }
 
     @Override
-    public void addChatMessage(PublicChatMessage chatMessage) {
+    public void addChatMessage(PublicDiscussionChatMessage chatMessage) {
         chatMessages.add(chatMessage);
     }
 
     @Override
-    public void removeChatMessage(PublicChatMessage chatMessage) {
+    public void removeChatMessage(PublicDiscussionChatMessage chatMessage) {
         chatMessages.remove(chatMessage);
     }
 
     @Override
-    public void removeChatMessages(Collection<PublicChatMessage> removeMessages) {
+    public void removeChatMessages(Collection<PublicDiscussionChatMessage> removeMessages) {
         chatMessages.removeAll(removeMessages);
     }
 }

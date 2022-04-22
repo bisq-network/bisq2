@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat;
+package bisq.social.chat.messages;
 
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.social.offer.MarketChatOffer;
+import bisq.social.offer.TradeChatOffer;
 import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,16 +33,16 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class MarketChatMessage extends PublicChatMessage implements DistributedData {
-    private final Optional<MarketChatOffer> marketChatOffer;
+public class PublicTradeChatMessage extends PublicDiscussionChatMessage implements DistributedData {
+    private final Optional<TradeChatOffer> marketChatOffer;
 
-    public MarketChatMessage(String channelId,
-                             ChatUser sender,
-                             Optional<MarketChatOffer> marketChatOffer,
-                             Optional<String> text,
-                             Optional<QuotedMessage> quotedMessage,
-                             long date,
-                             boolean wasEdited) {
+    public PublicTradeChatMessage(String channelId,
+                                  ChatUser sender,
+                                  Optional<TradeChatOffer> marketChatOffer,
+                                  Optional<String> text,
+                                  Optional<Quotation> quotedMessage,
+                                  long date,
+                                  boolean wasEdited) {
         this(channelId,
                 sender,
                 marketChatOffer,
@@ -50,17 +50,17 @@ public class MarketChatMessage extends PublicChatMessage implements DistributedD
                 quotedMessage,
                 date,
                 wasEdited,
-                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, MarketChatMessage.class.getSimpleName()));
+                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PublicTradeChatMessage.class.getSimpleName()));
     }
 
-    public MarketChatMessage(String channelId,
-                             ChatUser sender,
-                             Optional<MarketChatOffer> marketChatOffer,
-                             Optional<String> text,
-                             Optional<QuotedMessage> quotedMessage,
-                             long date,
-                             boolean wasEdited,
-                             MetaData metaData) {
+    public PublicTradeChatMessage(String channelId,
+                                  ChatUser sender,
+                                  Optional<TradeChatOffer> marketChatOffer,
+                                  Optional<String> text,
+                                  Optional<Quotation> quotedMessage,
+                                  long date,
+                                  boolean wasEdited,
+                                  MetaData metaData) {
         super(channelId,
                 sender,
                 text,
@@ -72,22 +72,22 @@ public class MarketChatMessage extends PublicChatMessage implements DistributedD
     }
 
     public bisq.social.protobuf.ChatMessage toProto() {
-        bisq.social.protobuf.MarketChatMessage.Builder builder = bisq.social.protobuf.MarketChatMessage.newBuilder();
-        marketChatOffer.ifPresent(marketChatOffer -> builder.setMarketChatOffer(marketChatOffer.toProto()));
-        return getChatMessageBuilder().setMarketChatMessage(builder).build();
+        bisq.social.protobuf.PublicTradeChatMessage.Builder builder = bisq.social.protobuf.PublicTradeChatMessage.newBuilder();
+        marketChatOffer.ifPresent(marketChatOffer -> builder.setTradeChatOffer(marketChatOffer.toProto()));
+        return getChatMessageBuilder().setPublicTradeChatMessage(builder).build();
     }
 
-    public static MarketChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
-        Optional<QuotedMessage> quotedMessage = baseProto.hasQuotedMessage() ?
-                Optional.of(QuotedMessage.fromProto(baseProto.getQuotedMessage())) :
+    public static PublicTradeChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
+        Optional<Quotation> quotedMessage = baseProto.hasQuotedMessage() ?
+                Optional.of(Quotation.fromProto(baseProto.getQuotedMessage())) :
                 Optional.empty();
         Optional<String> text = baseProto.hasText() ?
                 Optional.of(baseProto.getText()) :
                 Optional.empty();
-        Optional<MarketChatOffer> marketChatOffer = baseProto.getMarketChatMessage().hasMarketChatOffer() ?
-                Optional.of(MarketChatOffer.fromProto(baseProto.getMarketChatMessage().getMarketChatOffer())) :
+        Optional<TradeChatOffer> marketChatOffer = baseProto.getPublicTradeChatMessage().hasTradeChatOffer() ?
+                Optional.of(TradeChatOffer.fromProto(baseProto.getPublicTradeChatMessage().getTradeChatOffer())) :
                 Optional.empty();
-        return new MarketChatMessage(
+        return new PublicTradeChatMessage(
                 baseProto.getChannelId(),
                 ChatUser.fromProto(baseProto.getAuthor()),
                 marketChatOffer,
@@ -100,7 +100,7 @@ public class MarketChatMessage extends PublicChatMessage implements DistributedD
 
     @Override
     public String getText() {
-        return marketChatOffer.map(MarketChatOffer::getChatMessageText).orElse(super.getText());
+        return marketChatOffer.map(TradeChatOffer::getChatMessageText).orElse(super.getText());
     }
 
     @Override

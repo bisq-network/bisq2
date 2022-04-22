@@ -20,6 +20,10 @@ package bisq.desktop.primary.main.content.social.components;
 import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import bisq.social.chat.*;
+import bisq.social.chat.channels.Channel;
+import bisq.social.chat.channels.PublicDiscussionChannel;
+import bisq.social.chat.channels.PublicTradeChannel;
+import bisq.social.chat.messages.ChatMessage;
 import bisq.social.user.ChatUser;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -101,16 +105,16 @@ public class ChannelInfo {
                     .sorted()
                     .collect(Collectors.toList()));
 
-            if (channel instanceof MarketChannel marketChannel) {
-                model.description.set(marketChannel.getDescription());
+            if (channel instanceof PublicTradeChannel publicTradeChannel) {
+                model.description.set(publicTradeChannel.getDescription());
                 model.descriptionVisible.set(true);
                 model.adminProfile = Optional.empty();
                 model.moderators.clear();
-            } else if (channel instanceof PublicChannel publicChannel) {
-                model.description.set(publicChannel.getDescription());
+            } else if (channel instanceof PublicDiscussionChannel publicDiscussionChannel) {
+                model.description.set(publicDiscussionChannel.getDescription());
                 model.descriptionVisible.set(true);
-                model.adminProfile = Optional.of(new ChatUserOverview(publicChannel.getChannelAdmin()));
-                model.moderators.setAll(publicChannel.getChannelModerators().stream()
+                model.adminProfile = Optional.of(new ChatUserOverview(publicDiscussionChannel.getChannelAdmin()));
+                model.moderators.setAll(publicDiscussionChannel.getChannelModerators().stream()
                         .map(ChatUserOverview::new)
                         .sorted()
                         .collect(Collectors.toList()));

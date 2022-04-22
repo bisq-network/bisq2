@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat;
+package bisq.social.chat.messages;
 
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
@@ -37,30 +37,34 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
-    public PrivateChatMessage(String channelId,
-                              ChatUser sender,
-                              String text,
-                              Optional<QuotedMessage> quotedMessage,
-                              long date,
-                              boolean wasEdited) {
+public class PrivateDiscussionChatMessage extends ChatMessage implements MailboxMessage {
+    private final String receiversProfileId;
+
+    public PrivateDiscussionChatMessage(String channelId,
+                                        ChatUser sender,
+                                        String receiversProfileId,
+                                        String text,
+                                        Optional<Quotation> quotedMessage,
+                                        long date,
+                                        boolean wasEdited) {
         this(channelId,
                 sender,
+                receiversProfileId,
                 text,
                 quotedMessage,
                 date,
                 wasEdited,
-//                new MetaData(TimeUnit.SECONDS.toMillis(10), 100000, PrivateChatMessage.class.getSimpleName()));
-                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PrivateChatMessage.class.getSimpleName()));
+                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PrivateDiscussionChatMessage.class.getSimpleName()));
     }
 
-    private PrivateChatMessage(String channelId,
-                               ChatUser sender,
-                               String text,
-                               Optional<QuotedMessage> quotedMessage,
-                               long date,
-                               boolean wasEdited,
-                               MetaData metaData) {
+    private PrivateDiscussionChatMessage(String channelId,
+                                         ChatUser sender,
+                                         String receiversProfileId,
+                                         String text,
+                                         Optional<Quotation> quotedMessage,
+                                         long date,
+                                         boolean wasEdited,
+                                         MetaData metaData) {
         super(channelId,
                 sender,
                 Optional.of(text),
@@ -68,6 +72,7 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
                 date,
                 wasEdited,
                 metaData);
+        this.receiversProfileId = receiversProfileId;
     }
 
     @Override
@@ -77,17 +82,21 @@ public class PrivateChatMessage extends ChatMessage implements MailboxMessage {
                 .build();
     }
 
-    bisq.social.protobuf.ChatMessage toChatMessageProto() {
-        return getChatMessageBuilder().setPrivateChatMessage(bisq.social.protobuf.PrivateChatMessage.newBuilder()).build();
+    public bisq.social.protobuf.ChatMessage toChatMessageProto() {
+        return getChatMessageBuilder()
+                .setPrivateDiscussionChatMessage(bisq.social.protobuf.PrivateDiscussionChatMessage.newBuilder()
+                        .setReceiversProfileId(receiversProfileId))
+                .build();
     }
 
-    public static PrivateChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
-        Optional<QuotedMessage> quotedMessage = baseProto.hasQuotedMessage() ?
-                Optional.of(QuotedMessage.fromProto(baseProto.getQuotedMessage())) :
+    public static PrivateDiscussionChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
+        Optional<Quotation> quotedMessage = baseProto.hasQuotedMessage() ?
+                Optional.of(Quotation.fromProto(baseProto.getQuotedMessage())) :
                 Optional.empty();
-        return new PrivateChatMessage(
+        return new PrivateDiscussionChatMessage(
                 baseProto.getChannelId(),
                 ChatUser.fromProto(baseProto.getAuthor()),
+                baseProto.getPrivateDiscussionChatMessage().getReceiversProfileId(),
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),

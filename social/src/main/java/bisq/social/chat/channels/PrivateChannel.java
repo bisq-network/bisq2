@@ -15,19 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.components;
+package bisq.social.chat.channels;
 
-import bisq.social.chat.channels.Channel;
-import bisq.social.chat.messages.ChatMessage;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import bisq.social.user.ChatUser;
 
-@EqualsAndHashCode
-@Getter
-public class ChannelListItem<T extends Channel<? extends ChatMessage>> {
-    protected final T channel;
+public interface PrivateChannel {
+    String CHANNEL_DELIMITER = "@PC@";
 
-    public ChannelListItem(T channel) {
-        this.channel = channel;
+    ChatUser getPeer();
+
+    static String createChannelId(String peersProfileId, String myProfileId) {
+        if (peersProfileId.compareTo(myProfileId) < 0) {
+            return peersProfileId + CHANNEL_DELIMITER + myProfileId;
+        } else { // need to have an ordering here, otherwise there would be 2 channelIDs for the same participants
+            return myProfileId + CHANNEL_DELIMITER + peersProfileId;
+        }
     }
 }

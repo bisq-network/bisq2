@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat;
+package bisq.social.chat.messages;
 
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -33,29 +33,29 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class PublicChatMessage extends ChatMessage implements DistributedData {
-    public PublicChatMessage(String channelId,
-                             ChatUser sender,
-                             String text,
-                             Optional<QuotedMessage> quotedMessage,
-                             long date,
-                             boolean wasEdited) {
+public class PublicDiscussionChatMessage extends ChatMessage implements DistributedData {
+    public PublicDiscussionChatMessage(String channelId,
+                                       ChatUser sender,
+                                       String text,
+                                       Optional<Quotation> quotedMessage,
+                                       long date,
+                                       boolean wasEdited) {
         this(channelId,
                 sender,
                 Optional.of(text),
                 quotedMessage,
                 date,
                 wasEdited,
-                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PublicChatMessage.class.getSimpleName()));
+                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PublicDiscussionChatMessage.class.getSimpleName()));
     }
 
-    protected PublicChatMessage(String channelId,
-                                ChatUser sender,
-                                Optional<String> text,
-                                Optional<QuotedMessage> quotedMessage,
-                                long date,
-                                boolean wasEdited,
-                                MetaData metaData) {
+    protected PublicDiscussionChatMessage(String channelId,
+                                          ChatUser sender,
+                                          Optional<String> text,
+                                          Optional<Quotation> quotedMessage,
+                                          long date,
+                                          boolean wasEdited,
+                                          MetaData metaData) {
         super(channelId,
                 sender,
                 text,
@@ -66,14 +66,14 @@ public class PublicChatMessage extends ChatMessage implements DistributedData {
     }
 
     public bisq.social.protobuf.ChatMessage toProto() {
-        return getChatMessageBuilder().setPublicChatMessage(bisq.social.protobuf.PublicChatMessage.newBuilder()).build();
+        return getChatMessageBuilder().setPublicDiscussionChatMessage(bisq.social.protobuf.PublicDiscussionChatMessage.newBuilder()).build();
     }
 
-    public static PublicChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
-        Optional<QuotedMessage> quotedMessage = baseProto.hasQuotedMessage() ?
-                Optional.of(QuotedMessage.fromProto(baseProto.getQuotedMessage())) :
+    public static PublicDiscussionChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
+        Optional<Quotation> quotedMessage = baseProto.hasQuotedMessage() ?
+                Optional.of(Quotation.fromProto(baseProto.getQuotedMessage())) :
                 Optional.empty();
-        return new PublicChatMessage(
+        return new PublicDiscussionChatMessage(
                 baseProto.getChannelId(),
                 ChatUser.fromProto(baseProto.getAuthor()),
                 Optional.of(baseProto.getText()),

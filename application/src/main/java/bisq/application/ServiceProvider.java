@@ -23,7 +23,7 @@ import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.Offer;
 import bisq.oracle.daobridge.DaoBridgeData;
-import bisq.social.chat.ChatMessage;
+import bisq.social.chat.messages.ChatMessage;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import lombok.extern.slf4j.Slf4j;

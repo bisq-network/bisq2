@@ -288,6 +288,10 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         return persistableStore.getUserProfiles();
     }
 
+    public Optional<UserProfile> findUserProfile(String profileId) {
+        return getUserProfiles().stream().filter(userProfile -> userProfile.getProfileId().equals(profileId)).findAny();
+    }
+
     private BaseHttpClient getApiHttpClient(List<String> providerUrls) {
         String userAgent = "Bisq 2";
         String url = CollectionUtil.getRandomElement(providerUrls);

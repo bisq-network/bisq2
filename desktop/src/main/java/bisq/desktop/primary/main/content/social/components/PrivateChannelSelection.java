@@ -20,9 +20,10 @@ package bisq.desktop.primary.main.content.social.components;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
-import bisq.social.chat.Channel;
+import bisq.social.chat.channels.Channel;
 import bisq.social.chat.ChatService;
-import bisq.social.chat.PrivateChannel;
+import bisq.social.chat.channels.PrivateDiscussionChannel;
+import bisq.social.chat.channels.PrivateTradeChannel;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 public class PrivateChannelSelection extends ChannelSelection {
     private final Controller controller;
 
-    public PrivateChannelSelection(DefaultApplicationService applicationService) {
-        controller = new Controller(applicationService.getChatService());
+    public PrivateChannelSelection(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
+        controller = new Controller(applicationService.getChatService(), isDiscussionsChat);
     }
 
     public Pane getRoot() {
@@ -44,10 +45,10 @@ public class PrivateChannelSelection extends ChannelSelection {
         @Getter
         private final View view;
 
-        protected Controller(ChatService chatService) {
+        protected Controller(ChatService chatService, boolean isDiscussionsChat) {
             super(chatService);
 
-            model = new Model();
+            model = new Model(isDiscussionsChat);
             view = new View(model, this);
         }
 
@@ -59,20 +60,49 @@ public class PrivateChannelSelection extends ChannelSelection {
         @Override
         public void onActivate() {
             super.onActivate();
-            chatService.removeExpiredPrivateMessages();
-            channelsPin = FxBindings.<PrivateChannel, Channel<?>>bind(model.channels)
-                    .to(chatService.getPrivateChannels());
 
-            selectedChannelPin = FxBindings.subscribe(chatService.getSelectedChannel(),
-                    channel -> {
-                        if (channel instanceof PrivateChannel) {
-                            model.selectedChannel.set(channel);
-                        }
-                    });
+            if (model.isDiscussionsChat) {
+                channelsPin = FxBindings.<PrivateDiscussionChannel, Channel<?>>bind(model.channels)
+                        .to(chatService.getPrivateDiscussionChannels());
+
+                selectedChannelPin = FxBindings.subscribe(chatService.getSelectedDiscussionChannel(),
+                        channel -> {
+                            if (channel instanceof PrivateDiscussionChannel) {
+                                model.selectedChannel.set(channel);
+                            }
+                        });
+            } else {
+                channelsPin = FxBindings.<PrivateTradeChannel, Channel<?>>bind(model.channels)
+                        .to(chatService.getPrivateTradeChannels());
+
+                selectedChannelPin = FxBindings.subscribe(chatService.getSelectedTradeChannel(),
+                        channel -> {
+                            if (channel instanceof PrivateTradeChannel) {
+                                model.selectedChannel.set(channel);
+                            }
+                        });
+            }
+        }
+
+        @Override
+        protected void onSelected(Channel<?> channel) {
+            if (channel == null) {
+                return;
+            }
+            if (model.isDiscussionsChat) {
+                chatService.selectDiscussionChannel(channel);
+            } else {
+                chatService.selectTradeChannel(channel);
+            }
         }
     }
 
     protected static class Model extends bisq.desktop.primary.main.content.social.components.ChannelSelection.Model {
+        private final boolean isDiscussionsChat;
+
+        public Model(boolean isDiscussionsChat) {
+            this.isDiscussionsChat = isDiscussionsChat;
+        }
     }
 
     protected static class View extends bisq.desktop.primary.main.content.social.components.ChannelSelection.View<Model, Controller> {

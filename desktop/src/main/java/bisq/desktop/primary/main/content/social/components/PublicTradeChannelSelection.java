@@ -22,8 +22,8 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.overlay.OverlayWindow;
 import bisq.i18n.Res;
-import bisq.social.chat.Channel;
-import bisq.social.chat.MarketChannel;
+import bisq.social.chat.channels.Channel;
+import bisq.social.chat.channels.PublicTradeChannel;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Cursor;
@@ -33,10 +33,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MarketChannelSelection extends ChannelSelection {
+public class PublicTradeChannelSelection extends ChannelSelection {
     private final Controller controller;
 
-    public MarketChannelSelection(DefaultApplicationService applicationService) {
+    public PublicTradeChannelSelection(DefaultApplicationService applicationService) {
         controller = new Controller(applicationService);
     }
 
@@ -48,14 +48,14 @@ public class MarketChannelSelection extends ChannelSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final MarketChannelsChooser marketChannelsChooser;
+        private final TradeChannelsChooser tradeChannelsChooser;
 
         protected Controller(DefaultApplicationService applicationService) {
             super(applicationService.getChatService());
 
-            marketChannelsChooser = new MarketChannelsChooser(chatService, applicationService.getSettingsService());
+            tradeChannelsChooser = new TradeChannelsChooser(chatService, applicationService.getSettingsService());
             model = new Model();
-            view = new View(model, this, marketChannelsChooser.getRoot());
+            view = new View(model, this, tradeChannelsChooser.getRoot());
         }
 
         @Override
@@ -66,19 +66,28 @@ public class MarketChannelSelection extends ChannelSelection {
         @Override
         public void onActivate() {
             super.onActivate();
-            channelsPin = FxBindings.<MarketChannel, Channel<?>>bind(model.channels)
-                    .to(chatService.getMarketChannels());
+            channelsPin = FxBindings.<PublicTradeChannel, Channel<?>>bind(model.channels)
+                    .to(chatService.getPublicTradeChannels());
 
-            selectedChannelPin = FxBindings.subscribe(chatService.getSelectedChannel(),
+            selectedChannelPin = FxBindings.subscribe(chatService.getSelectedTradeChannel(),
                     channel -> {
-                        if (channel instanceof MarketChannel) {
+                        if (channel instanceof PublicTradeChannel) {
                             model.selectedChannel.set(channel);
                         }
                     });
         }
 
+        @Override
+        protected void onSelected(Channel<?> channel) {
+            if (channel == null) {
+                return;
+            }
+
+            chatService.selectTradeChannel(channel);
+        }
+
         public void onOpenMarketsChannelChooser() {
-            new OverlayWindow(view.getRoot(), marketChannelsChooser.getRoot()).show();
+            new OverlayWindow(view.getRoot(), tradeChannelsChooser.getRoot()).show();
         }
     }
 

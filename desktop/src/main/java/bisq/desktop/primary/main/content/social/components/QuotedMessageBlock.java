@@ -24,8 +24,8 @@ import javafx.scene.control.Label;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
-import bisq.social.chat.ChatMessage;
-import bisq.social.chat.QuotedMessage;
+import bisq.social.chat.messages.ChatMessage;
+import bisq.social.chat.messages.Quotation;
 import bisq.social.user.ChatUser;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
@@ -65,13 +65,13 @@ public class QuotedMessageBlock {
         controller.close();
     }
 
-    public Optional<QuotedMessage> getQuotedMessage() {
-        String text = controller.model.quotedMessage.get();
+    public Optional<Quotation> getQuotation() {
+        String text = controller.model.quotation.get();
         ChatUser chatUser = controller.model.author;
         if (text == null || text.isEmpty() || chatUser == null) {
             return Optional.empty();
         }
-        return Optional.of(new QuotedMessage(chatUser.getProfileId(), chatUser.getNickName(), chatUser.getPubKeyHashAsByteArray(), text));
+        return Optional.of(new Quotation(chatUser.getProfileId(), chatUser.getNickName(), chatUser.getPubKeyHashAsByteArray(), text));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -90,13 +90,13 @@ public class QuotedMessageBlock {
             model.author = author;
             model.userName.set(author.getProfileId());
             model.roboHashNode.set(RoboHash.getImage(new ByteArray(author.getPubKeyHash())));
-            model.quotedMessage.set(chatMessage.getText());
+            model.quotation.set(chatMessage.getText());
             model.visible.set(true);
         }
 
         private void close() {
             model.visible.set(false);
-            model.quotedMessage.set(null);
+            model.quotation.set(null);
         }
 
         @Override
@@ -110,7 +110,7 @@ public class QuotedMessageBlock {
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final BooleanProperty visible = new SimpleBooleanProperty();
-        private final StringProperty quotedMessage = new SimpleStringProperty("");
+        private final StringProperty quotation = new SimpleStringProperty("");
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
         private ChatUser author;
@@ -160,7 +160,7 @@ public class QuotedMessageBlock {
             root.visibleProperty().bind(model.visible);
             root.managedProperty().bind(model.visible);
             userName.textProperty().bind(model.userName);
-            quotedMessage.textProperty().bind(model.quotedMessage);
+            quotedMessage.textProperty().bind(model.quotation);
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
                     roboIconImageView.setImage(roboIcon);

@@ -15,12 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat;
+package bisq.social.chat.channels;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.social.chat.messages.ChatMessage;
+import bisq.social.chat.NotificationSetting;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -52,14 +54,17 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
 
     public static Channel<? extends ChatMessage> fromProto(bisq.social.protobuf.Channel proto) {
         switch (proto.getMessageCase()) {
-            case PRIVATECHANNEL -> {
-                return PrivateChannel.fromProto(proto, proto.getPrivateChannel());
+            case PRIVATETRADECHANNEL -> {
+                return PrivateTradeChannel.fromProto(proto, proto.getPrivateTradeChannel());
             }
-            case PUBLICCHANNEL -> {
-                return PublicChannel.fromProto(proto, proto.getPublicChannel());
+            case PRIVATEDISCUSSIONCHANNEL -> {
+                return PrivateDiscussionChannel.fromProto(proto, proto.getPrivateDiscussionChannel());
             }
-            case MARKETCHANNEL -> {
-                return MarketChannel.fromProto(proto, proto.getMarketChannel());
+            case PUBLICTRADECHANNEL -> {
+                return PublicTradeChannel.fromProto(proto, proto.getPublicTradeChannel());
+            }
+            case PUBLICDISCUSSIONCHANNEL -> {
+                return PublicDiscussionChannel.fromProto(proto, proto.getPublicDiscussionChannel());
             }
             case MESSAGE_NOT_SET -> {
                 throw new UnresolvableProtobufMessageException(proto);

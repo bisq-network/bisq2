@@ -25,7 +25,7 @@ import bisq.desktop.components.controls.Badge;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.social.chat.ChatService;
-import bisq.social.chat.MarketChannel;
+import bisq.social.chat.channels.PublicTradeChannel;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -53,14 +53,14 @@ import java.util.Optional;
 import java.util.Random;
 
 @Slf4j
-public class MarketChannelsChooser {
+public class TradeChannelsChooser {
     private final Controller controller;
 
-    public MarketChannelsChooser(ChatService chatService, SettingsService settingsService) {
+    public TradeChannelsChooser(ChatService chatService, SettingsService settingsService) {
         controller = new Controller(chatService, settingsService);
     }
 
-    public ReadOnlyObjectProperty<MarketChannelItem> selectedMarketProperty() {
+    public ReadOnlyObjectProperty<TradeChannelItem> selectedMarketProperty() {
         return controller.model.selectedMarketChannelItem;
     }
 
@@ -68,15 +68,15 @@ public class MarketChannelsChooser {
         return controller.view.getRoot();
     }
 
-    public void setSelectedMarket(MarketChannelItem market) {
+    public void setSelectedMarket(TradeChannelItem market) {
         controller.model.selectedMarketChannelItem.set(market);
     }
 
-    public void setCellFactory(Callback<ListView<MarketChannelItem>, ListCell<MarketChannelItem>> value) {
+    public void setCellFactory(Callback<ListView<TradeChannelItem>, ListCell<TradeChannelItem>> value) {
         controller.model.cellFactory = Optional.of(value);
     }
 
-    public void setButtonCell(ListCell<MarketChannelItem> value) {
+    public void setButtonCell(ListCell<TradeChannelItem> value) {
         controller.model.buttonCell = Optional.of(value);
     }
 
@@ -94,37 +94,38 @@ public class MarketChannelsChooser {
 
         @Override
         public void onActivate() {
-            model.sortedList.setComparator(MarketChannelItem::compareTo);
-            FxBindings.<MarketChannel, MarketChannelItem>bind(model.marketChannelItems)
-                    .map(MarketChannelItem::new)
-                    .to(chatService.getMarketChannels());
-            findMarketChannelItem(model.settingsService.getSelectedMarket()).ifPresent(model.selectedMarketChannelItem::set);
+            model.sortedList.setComparator(TradeChannelItem::compareTo);
+            FxBindings.<PublicTradeChannel, TradeChannelItem>bind(model.tradeChannelItems)
+                    .map(TradeChannelItem::new)
+                    .to(chatService.getPublicTradeChannels());
+            findTradeChannelItem(model.settingsService.getSelectedMarket())
+                    .ifPresent(model.selectedMarketChannelItem::set);
         }
 
         @Override
         public void onDeactivate() {
         }
 
-        private void onSelectMarket(MarketChannelItem selected) {
+        private void onSelectMarket(TradeChannelItem selected) {
             if (selected != null) {
                 model.selectedMarketChannelItem.set(selected);
-                chatService.setSelectedChannel(selected.channel);
+                chatService.selectTradeChannel(selected.channel);
             }
         }
 
-        private Optional<MarketChannelItem> findMarketChannelItem(Market market) {
-            return model.marketChannelItems.stream().filter(e -> e.getMarket().equals(market)).findAny();
+        private Optional<TradeChannelItem> findTradeChannelItem(Market market) {
+            return model.tradeChannelItems.stream().filter(e -> e.getMarket().equals(market)).findAny();
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<MarketChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
-        private final ObservableList<MarketChannelItem> marketChannelItems = FXCollections.observableArrayList();
-        private final SortedList<MarketChannelItem> sortedList = new SortedList<>(marketChannelItems);
+        private final ObjectProperty<TradeChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
+        private final ObservableList<TradeChannelItem> tradeChannelItems = FXCollections.observableArrayList();
+        private final SortedList<TradeChannelItem> sortedList = new SortedList<>(tradeChannelItems);
 
         private final SettingsService settingsService;
-        private Optional<Callback<ListView<MarketChannelItem>, ListCell<MarketChannelItem>>> cellFactory = Optional.empty();
-        private Optional<ListCell<MarketChannelItem>> buttonCell = Optional.empty();
+        private Optional<Callback<ListView<TradeChannelItem>, ListCell<TradeChannelItem>>> cellFactory = Optional.empty();
+        private Optional<ListCell<TradeChannelItem>> buttonCell = Optional.empty();
 
         public Model(SettingsService settingsService) {
             this.settingsService = settingsService;
@@ -134,8 +135,8 @@ public class MarketChannelsChooser {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final static double POPUP_PADDING = 66;
-        private final AutoCompleteComboBox<MarketChannelItem> comboBox;
-        private final ChangeListener<MarketChannelItem> selectedMarketListener;
+        private final AutoCompleteComboBox<TradeChannelItem> comboBox;
+        private final ChangeListener<TradeChannelItem> selectedMarketListener;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
@@ -149,12 +150,12 @@ public class MarketChannelsChooser {
             comboBox.setMaxWidth(300);
             comboBox.setConverter(new StringConverter<>() {
                 @Override
-                public String toString(@Nullable MarketChannelItem value) {
+                public String toString(@Nullable TradeChannelItem value) {
                     return value != null ? value.toString() : "";
                 }
 
                 @Override
-                public MarketChannelItem fromString(String string) {
+                public TradeChannelItem fromString(String string) {
                     return null;
                 }
             });
@@ -181,13 +182,13 @@ public class MarketChannelsChooser {
         }
 
         @NonNull
-        private Callback<ListView<MarketChannelsChooser.MarketChannelItem>, ListCell<MarketChannelsChooser.MarketChannelItem>> getCellFactory() {
+        private Callback<ListView<TradeChannelItem>, ListCell<TradeChannelItem>> getCellFactory() {
             return new Callback<>() {
                 @Override
-                public ListCell<MarketChannelsChooser.MarketChannelItem> call(ListView<MarketChannelsChooser.MarketChannelItem> list) {
+                public ListCell<TradeChannelItem> call(ListView<TradeChannelItem> list) {
                     return new ListCell<>() {
                         @Override
-                        public void updateItem(final MarketChannelsChooser.MarketChannelItem item, boolean empty) {
+                        public void updateItem(final TradeChannelItem item, boolean empty) {
                             super.updateItem(item, empty);
                             if (item != null && !empty) {
                                 Label market = new Label(item.toString());
@@ -215,14 +216,14 @@ public class MarketChannelsChooser {
 
     @EqualsAndHashCode(callSuper = true)
     @Getter
-    public final static class MarketChannelItem extends ChannelListItem<MarketChannel> implements Comparable<MarketChannelItem> {
+    public final static class TradeChannelItem extends ChannelListItem<PublicTradeChannel> implements Comparable<TradeChannelItem> {
         private final Market market;
         @EqualsAndHashCode.Exclude
         private int numMessages = new Random().nextInt(100);
 
-        public MarketChannelItem(MarketChannel marketChannel) {
-            super(marketChannel);
-            this.market = marketChannel.getMarket();
+        public TradeChannelItem(PublicTradeChannel publicTradeChannel) {
+            super(publicTradeChannel);
+            this.market = publicTradeChannel.getMarket();
         }
 
         @Override
@@ -231,7 +232,7 @@ public class MarketChannelsChooser {
         }
 
         @Override
-        public int compareTo(@NonNull MarketChannelsChooser.MarketChannelItem o) {
+        public int compareTo(@NonNull TradeChannelsChooser.TradeChannelItem o) {
             return Integer.compare(o.numMessages, numMessages);
         }
     }

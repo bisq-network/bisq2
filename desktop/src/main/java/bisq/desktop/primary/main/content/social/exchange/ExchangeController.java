@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.social.exchange;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.primary.main.content.social.ChatController;
-import bisq.desktop.primary.main.content.social.components.MarketChannelSelection;
+import bisq.desktop.primary.main.content.social.components.PublicTradeChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -39,7 +39,7 @@ public class ExchangeController extends ChatController<ExchangeView, ExchangeMod
         return new ExchangeView(model,
                 this,
                 userProfileSelection.getRoot(),
-                new MarketChannelSelection(applicationService).getRoot(),
+                new PublicTradeChannelSelection(applicationService).getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 notificationsSettings.getRoot(),

@@ -21,7 +21,7 @@ import bisq.api.rest.ApiApplicationService;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.social.chat.ChatService;
-import bisq.social.chat.PublicChannel;
+import bisq.social.chat.channels.PublicDiscussionChannel;
 import bisq.social.user.UserNameGenerator;
 import bisq.social.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
@@ -48,34 +48,34 @@ class ChatController extends ApiController {
         identityService = apiApplicationService.getIdentityService();
     }
 
-    @GetMapping(path = "/api/chat/get-market-channels")
-    public List<String> getMarketChannels() {
-        return chatService.getMarketChannels().stream().map(this::asJson).collect(Collectors.toList());
+    @GetMapping(path = "/api/chat/get-public-trade-channels")
+    public List<String> getPublicTradeChannels() {
+        return chatService.getPublicTradeChannels().stream().map(this::asJson).collect(Collectors.toList());
     }
 
-    @GetMapping(path = "/api/chat/get-public-channels")
-    public List<String> getPublicChannels() {
-        return chatService.getPublicChannels().stream().map(this::asJson).collect(Collectors.toList());
+    @GetMapping(path = "/api/chat/get-public-discussion-channels")
+    public List<String> getPublicDiscussionChannels() {
+        return chatService.getPublicDiscussionChannels().stream().map(this::asJson).collect(Collectors.toList());
     }
 
-    @GetMapping(path = "/api/chat/get-selected-channel")
-    public String getSelectedChannel() {
-        return asJson(chatService.getSelectedChannel().get());
+    @GetMapping(path = "/api/chat/get-selected-trade-channel")
+    public String getSelectedTradeChannel() {
+        return asJson(chatService.getSelectedTradeChannel().get());
     }
 
-    @PostMapping(path = "/api/chat/select-channel/{channelId}")
-    public boolean selectedChannel(@PathVariable("channelId") String channelId) {
-        Optional<PublicChannel> optionalPublicChannel = chatService.getPersistableStore().findPublicChannel(channelId);
-        optionalPublicChannel.ifPresent(chatService::setSelectedChannel);
+    @PostMapping(path = "/api/chat/select-public-discussion-channel/{channelId}")
+    public boolean selectedPublicDiscussionChannel(@PathVariable("channelId") String channelId) {
+        Optional<PublicDiscussionChannel> optionalPublicChannel = chatService.findPublicDiscussionChannel(channelId);
+        optionalPublicChannel.ifPresent(chatService::selectTradeChannel);
         return optionalPublicChannel.isPresent();
     }
 
-    @PostMapping(path = "/api/chat/publish-public-msg/{text}")
-    public boolean publishPublicChatMessage(@PathVariable("text") String text) {
-        if (chatService.getSelectedChannel().get() instanceof PublicChannel publicChannel) {
-            chatService.publishPublicChatMessage(text,
+    @PostMapping(path = "/api/chat/publish-discussion-chat-message/{text}")
+    public boolean publishDiscussionChatMessage(@PathVariable("text") String text) {
+        if (chatService.getSelectedDiscussionChannel().get() instanceof PublicDiscussionChannel publicDiscussionChannel) {
+            chatService.publishDiscussionChatMessage(text,
                     Optional.empty(),
-                    publicChannel,
+                    publicDiscussionChannel,
                     userProfileService.getSelectedUserProfile().get());
             return true;
         } else {

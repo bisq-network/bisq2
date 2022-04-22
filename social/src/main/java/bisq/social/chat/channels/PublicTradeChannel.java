@@ -15,31 +15,34 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat;
+package bisq.social.chat.channels;
 
 import bisq.common.monetary.Market;
 import bisq.common.observable.ObservableSet;
 import bisq.i18n.Res;
+import bisq.social.chat.NotificationSetting;
+import bisq.social.chat.messages.PublicTradeChatMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
+
 @Slf4j
 @Getter
 @ToString
-@EqualsAndHashCode(callSuper = true)
-public class MarketChannel extends Channel<MarketChatMessage> {
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class PublicTradeChannel extends Channel<PublicTradeChatMessage> implements PublicChannel {
     private final Market market;
 
-    private transient final ObservableSet<MarketChatMessage> chatMessages = new ObservableSet<>();
+    private transient final ObservableSet<PublicTradeChatMessage> chatMessages = new ObservableSet<>();
 
-    MarketChannel(Market market) {
+    public PublicTradeChannel(Market market) {
         this(market.toString(), market);
     }
 
-    private MarketChannel(String id, Market market) {
+    private PublicTradeChannel(String id, Market market) {
         super(id, NotificationSetting.MENTION);
 
         this.market = market;
@@ -47,38 +50,37 @@ public class MarketChannel extends Channel<MarketChatMessage> {
 
     @Override
     public bisq.social.protobuf.Channel toProto() {
-        return getChannelBuilder().setMarketChannel(bisq.social.protobuf.MarketChannel.newBuilder()
+        return getChannelBuilder().setPublicTradeChannel(bisq.social.protobuf.PublicTradeChannel.newBuilder()
                         .setMarket(market.toProto()))
                 .build();
     }
 
-    public static MarketChannel fromProto(bisq.social.protobuf.Channel baseProto,
-                                          bisq.social.protobuf.MarketChannel proto) {
-        return new MarketChannel(baseProto.getId(), Market.fromProto(proto.getMarket()));
+    public static PublicTradeChannel fromProto(bisq.social.protobuf.Channel baseProto,
+                                               bisq.social.protobuf.PublicTradeChannel proto) {
+        return new PublicTradeChannel(baseProto.getId(), Market.fromProto(proto.getMarket()));
     }
 
     @Override
-    protected bisq.social.protobuf.ChatMessage getChatMessageProto(MarketChatMessage chatMessage) {
+    protected bisq.social.protobuf.ChatMessage getChatMessageProto(PublicTradeChatMessage chatMessage) {
         return chatMessage.toProto();
     }
 
     @Override
-    public void addChatMessage(MarketChatMessage chatMessage) {
+    public void addChatMessage(PublicTradeChatMessage chatMessage) {
         chatMessages.add(chatMessage);
     }
 
     @Override
-    public void removeChatMessage(MarketChatMessage chatMessage) {
+    public void removeChatMessage(PublicTradeChatMessage chatMessage) {
         chatMessages.remove(chatMessage);
     }
 
     @Override
-    public void removeChatMessages(Collection<MarketChatMessage> removeMessages) {
+    public void removeChatMessages(Collection<PublicTradeChatMessage> removeMessages) {
         chatMessages.removeAll(removeMessages);
     }
 
     public String getDescription() {
         return Res.get("social.marketChannel.description", market.toString());
     }
-
 }
