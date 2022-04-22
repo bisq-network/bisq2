@@ -18,10 +18,7 @@
 package bisq.desktop.primary.main.content.multiSig;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabController;
+import bisq.desktop.common.view.*;
 import bisq.desktop.primary.main.content.multiSig.closedTrades.ClosedTradesController;
 import bisq.desktop.primary.main.content.multiSig.offerbook.OfferbookController;
 import bisq.desktop.primary.main.content.multiSig.openoffers.OpenOffersController;
@@ -34,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class MultiSigController extends TabController<MultiSigModel> {
+public class MultiSigController extends TabController<MultiSigModel> implements CachingController {
     private final DefaultApplicationService applicationService;
     @Getter
     private final MultiSigView view;

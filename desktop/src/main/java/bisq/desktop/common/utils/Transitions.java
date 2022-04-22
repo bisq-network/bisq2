@@ -300,7 +300,7 @@ public class Transitions {
         if (displaySettings.isUseAnimations()) {
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
-            log.error("node.getHeight() " + node.getHeight());
+            node.setTranslateY(0);
             double start = node.getLayoutY() - node.getHeight();
             double end = node.getLayoutY();
             keyFrames.add(new KeyFrame(Duration.millis(0),
@@ -347,6 +347,7 @@ public class Transitions {
             double duration = getDuration(DEFAULT_DURATION / 2);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            node.setTranslateY(0);
             double start = node.getLayoutY();
             double end = node.getHeight();
             keyFrames.add(new KeyFrame(Duration.millis(0),
@@ -370,7 +371,7 @@ public class Transitions {
             double duration = getDuration(DEFAULT_DURATION / 2);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
-            double start = node.getLayoutX();
+            double start = node.getTranslateX();
             double end = node.getWidth();
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR),
@@ -381,7 +382,10 @@ public class Transitions {
                     new KeyValue(node.translateXProperty(), end, Interpolator.EASE_OUT)
             ));
 
-            timeline.setOnFinished(e -> onFinishedHandler.run());
+            timeline.setOnFinished(e -> {
+                onFinishedHandler.run();
+                node.setTranslateX(start);
+            });
             timeline.play();
         } else {
             onFinishedHandler.run();
@@ -393,14 +397,15 @@ public class Transitions {
             double duration = getDuration(DEFAULT_DURATION);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
-            double endY = -node.getHeight();
+            node.setTranslateY(0);
+            double end = -node.getHeight();
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(node.opacityProperty(), 1, DEFAULT_INTERPOLATOR),
                     new KeyValue(node.translateYProperty(), -10, DEFAULT_INTERPOLATOR)
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
                     new KeyValue(node.opacityProperty(), 0, DEFAULT_INTERPOLATOR),
-                    new KeyValue(node.translateYProperty(), endY, DEFAULT_INTERPOLATOR)
+                    new KeyValue(node.translateYProperty(), end, DEFAULT_INTERPOLATOR)
             ));
 
             timeline.setOnFinished(e -> onFinishedHandler.run());
@@ -445,6 +450,7 @@ public class Transitions {
             node.setPrefWidth(targetWidth);
         }
     }
+
     public static void animateLeftSubNavigation(Region node, double targetX, int duration) {
         if (displaySettings.isUseAnimations()) {
             double startX = node.getLayoutX();

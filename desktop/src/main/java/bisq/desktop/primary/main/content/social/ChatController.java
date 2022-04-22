@@ -23,13 +23,13 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilterBox;
+import bisq.desktop.primary.main.content.satoshiSquare.exchange.ExchangeController;
 import bisq.desktop.primary.main.content.social.components.*;
 import bisq.desktop.primary.main.content.social.discussion.DiscussionsController;
-import bisq.desktop.primary.main.content.satoshiSquare.exchange.ExchangeController;
-import bisq.social.chat.channels.Channel;
-import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.ChatService;
+import bisq.social.chat.channels.Channel;
 import bisq.social.chat.channels.PrivateDiscussionChannel;
+import bisq.social.chat.messages.ChatMessage;
 import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -90,6 +90,8 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
                             chatService.setNotificationSetting(channel, value);
                         }
                     });
+            
+            selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(this::handleChannelChange);
         } else {
             notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
                     value -> {
@@ -98,6 +100,8 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
                             chatService.setNotificationSetting(channel, value);
                         }
                     });
+            
+            selectedChannelPin = chatService.getSelectedDiscussionChannel().addObserver(this::handleChannelChange);
         }
 
         chatMessagesComponent.setOnShowChatUserDetails(chatUser -> {
@@ -112,8 +116,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
             model.setChatUserDetails(Optional.of(chatUserDetails));
             model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
         });
-
-        selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(this::handleChannelChange);
     }
 
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
