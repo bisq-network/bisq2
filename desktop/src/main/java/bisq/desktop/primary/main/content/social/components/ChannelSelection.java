@@ -5,9 +5,9 @@ import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.social.chat.Channel;
 import bisq.social.chat.ChatService;
-import bisq.social.chat.PrivateChannel;
+import bisq.social.chat.channels.Channel;
+import bisq.social.chat.channels.PrivateChannel;
 import bisq.social.user.ChatUser;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
@@ -59,10 +59,7 @@ public abstract class ChannelSelection {
             channelsPin.unbind();
         }
 
-        protected void onSelected(Channel<?> channel) {
-            if (channel == null) return;
-            chatService.setSelectedChannel(channel);
-        }
+        abstract protected void onSelected(Channel<?> channel);
     }
 
 
@@ -76,14 +73,14 @@ public abstract class ChannelSelection {
     }
 
     @Slf4j
-    public static abstract class View<M extends  ChannelSelection.Model, C extends ChannelSelection.Controller> extends bisq.desktop.common.view.View<VBox, M, C> {
+    public static abstract class View<M extends ChannelSelection.Model, C extends ChannelSelection.Controller> extends bisq.desktop.common.view.View<VBox, M, C> {
         protected final ListView<Channel<?>> listView;
         private final InvalidationListener channelsChangedListener;
         protected final Pane titledPaneContainer;
         private final TitledPane titledPane;
         protected Subscription listViewSelectedChannelSubscription, modelSelectedChannelSubscription;
 
-        protected View(M  model, C controller) {
+        protected View(M model, C controller) {
             super(new VBox(), model, controller);
             root.setSpacing(10);
 
@@ -92,7 +89,7 @@ public abstract class ChannelSelection {
             listView.setFocusTraversable(false);
             listView.setCellFactory(p -> getListCell());
 
-             titledPane = new TitledPane(getHeadlineText(), listView);
+            titledPane = new TitledPane(getHeadlineText(), listView);
 
             titledPaneContainer = new Pane();
             titledPaneContainer.getChildren().addAll(titledPane);

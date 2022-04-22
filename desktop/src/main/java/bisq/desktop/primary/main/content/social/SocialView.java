@@ -28,9 +28,9 @@ public class SocialView extends TabView<SocialModel, SocialController> {
     public SocialView(SocialModel model, SocialController controller) {
         super(model, controller);
 
-        headlineLabel.setText(Res.get("social"));
+        headlineLabel.setText(Res.get("welcome"));
 
-        addTab(Res.get("social.exchange"), NavigationTarget.EXCHANGE);
+        addTab(Res.get("social.gettingStarted"), NavigationTarget.GETTING_STARTED);
         addTab(Res.get("social.discuss"), NavigationTarget.DISCUSS);
         addTab(Res.get("social.learn"), NavigationTarget.LEARN);
         addTab(Res.get("social.connect"), NavigationTarget.CONNECT);

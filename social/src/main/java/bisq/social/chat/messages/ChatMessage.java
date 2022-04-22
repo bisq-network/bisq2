@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat;
+package bisq.social.chat.messages;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -42,7 +42,7 @@ public abstract class ChatMessage {
     @Getter
     protected ChatUser author;
     @Getter
-    protected final Optional<QuotedMessage> quotedMessage;
+    protected final Optional<Quotation> quotedMessage;
     @Getter
     protected final long date;
     @Getter
@@ -53,7 +53,7 @@ public abstract class ChatMessage {
     protected ChatMessage(String channelId,
                           ChatUser author,
                           Optional<String> text,
-                          Optional<QuotedMessage> quotedMessage,
+                          Optional<Quotation> quotedMessage,
                           long date,
                           boolean wasEdited,
                           MetaData metaData) {
@@ -69,8 +69,8 @@ public abstract class ChatMessage {
     public String getText() {
         return optionalText.orElse(Res.get("shared.na"));
     }
-    
-    bisq.social.protobuf.ChatMessage.Builder getChatMessageBuilder() {
+
+    public bisq.social.protobuf.ChatMessage.Builder getChatMessageBuilder() {
         bisq.social.protobuf.ChatMessage.Builder builder = bisq.social.protobuf.ChatMessage.newBuilder()
                 .setChannelId(channelId)
                 .setAuthor(author.toProto())
@@ -84,14 +84,17 @@ public abstract class ChatMessage {
 
     public static ChatMessage fromProto(bisq.social.protobuf.ChatMessage proto) {
         switch (proto.getMessageCase()) {
-            case PRIVATECHATMESSAGE -> {
-                return PrivateChatMessage.fromProto(proto);
+            case PRIVATETRADECHATMESSAGE -> {
+                return PrivateTradeChatMessage.fromProto(proto);
             }
-            case PUBLICCHATMESSAGE -> {
-                return PublicChatMessage.fromProto(proto);
+            case PRIVATEDISCUSSIONCHATMESSAGE -> {
+                return PrivateDiscussionChatMessage.fromProto(proto);
             }
-            case MARKETCHATMESSAGE -> {
-                return MarketChatMessage.fromProto(proto);
+            case PUBLICTRADECHATMESSAGE -> {
+                return PublicTradeChatMessage.fromProto(proto);
+            }
+            case PUBLICDISCUSSIONCHATMESSAGE -> {
+                return PublicDiscussionChatMessage.fromProto(proto);
             }
             case MESSAGE_NOT_SET -> {
                 throw new UnresolvableProtobufMessageException(proto);
@@ -105,11 +108,11 @@ public abstract class ChatMessage {
             try {
                 bisq.social.protobuf.ChatMessage proto = any.unpack(bisq.social.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
-                    case PUBLICCHATMESSAGE -> {
-                        return PublicChatMessage.fromProto(proto);
+                    case PUBLICTRADECHATMESSAGE -> {
+                        return PublicTradeChatMessage.fromProto(proto);
                     }
-                    case MARKETCHATMESSAGE -> {
-                        return MarketChatMessage.fromProto(proto);
+                    case PUBLICDISCUSSIONCHATMESSAGE -> {
+                        return PublicDiscussionChatMessage.fromProto(proto);
                     }
                     case MESSAGE_NOT_SET -> {
                         throw new UnresolvableProtobufMessageException(proto);
@@ -125,7 +128,19 @@ public abstract class ChatMessage {
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                return PrivateChatMessage.fromProto(any.unpack(bisq.social.protobuf.ChatMessage.class));
+                bisq.social.protobuf.ChatMessage proto = any.unpack(bisq.social.protobuf.ChatMessage.class);
+                switch (proto.getMessageCase()) {
+                    case PRIVATETRADECHATMESSAGE -> {
+                        return PrivateTradeChatMessage.fromProto(proto);
+                    }
+                    case PRIVATEDISCUSSIONCHATMESSAGE -> {
+                        return PrivateDiscussionChatMessage.fromProto(proto);
+                    }
+                    case MESSAGE_NOT_SET -> {
+                        throw new UnresolvableProtobufMessageException(proto);
+                    }
+                }
+                throw new UnresolvableProtobufMessageException(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

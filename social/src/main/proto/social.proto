@@ -73,18 +73,22 @@ message QuotedMessage {
   string message = 4;
 }
 
-message PrivateChatMessage {
+message PrivateTradeChatMessage {
+  string receiversProfileId = 1;
 }
-message PublicChatMessage {
+message PrivateDiscussionChatMessage {
+  string receiversProfileId = 1;
 }
-message MarketChatOffer {
+message PublicDiscussionChatMessage {
+}
+message TradeChatOffer {
   uint64 btcAmount = 1;
   string quoteCurrencyCode = 2;
   repeated string paymentMethods = 3;
   string makersTradeTerms = 5;
 }
-message MarketChatMessage {
-  optional MarketChatOffer marketChatOffer = 1;
+message PublicTradeChatMessage {
+  optional TradeChatOffer tradeChatOffer = 1;
 }
 message ChatMessage {
   string channelId = 1;
@@ -95,9 +99,10 @@ message ChatMessage {
   bool wasEdited = 6;
   network.MetaData metaData = 7;
   oneof message {
-    PrivateChatMessage privateChatMessage = 20;
-    PublicChatMessage publicChatMessage = 21;
-    MarketChatMessage marketChatMessage = 22;
+    PrivateTradeChatMessage privateTradeChatMessage = 20;
+    PrivateDiscussionChatMessage privateDiscussionChatMessage = 21;
+    PublicTradeChatMessage publicTradeChatMessage = 22;
+    PublicDiscussionChatMessage publicDiscussionChatMessage = 23;
   }
 }
 
@@ -114,15 +119,21 @@ message UserProfile {
 }
 
 // Channels
-message PrivateChannel {
+message PrivateDiscussionChannel {
   ChatUser peer = 1;
   UserProfile myProfile = 2;
   repeated ChatMessage chatMessages = 3;
 }
-message MarketChannel {
+message PrivateTradeChannel {
+  ChatUser peer = 1;
+  UserProfile myProfile = 2;
+  repeated ChatMessage chatMessages = 3;
+}
+
+message PublicTradeChannel {
   common.Market market = 1;
 }
-message PublicChannel {
+message PublicDiscussionChannel {
   string channelName = 1;
   string description = 2;
   ChatUser channelAdmin = 3;
@@ -132,9 +143,10 @@ message Channel {
   string id = 1;
   NotificationSetting notificationSetting = 2;
   oneof message{
-    PrivateChannel privateChannel = 10;
-    MarketChannel marketChannel = 11;
-    PublicChannel publicChannel = 12;
+    PrivateTradeChannel privateTradeChannel = 10;
+    PrivateDiscussionChannel privateDiscussionChannel = 11;
+    PublicTradeChannel publicTradeChannel = 12;
+    PublicDiscussionChannel publicDiscussionChannel = 13;
   }
 }
 
@@ -146,13 +158,15 @@ message UserProfileStore {
 }
 
 message ChatStore {
-  repeated Channel privateChannels = 1;
-  repeated Channel publicChannels = 2;
-  repeated Channel marketChannels = 3;
-  Channel selectedChannel = 4;
-  repeated string customTags = 5;
-  repeated string ignoredChatUserIds = 6;
+  repeated Channel privateTradeChannels = 1;
+  repeated Channel privateDiscussionChannels = 2;
+  repeated Channel publicTradeChannels = 3;
+  repeated Channel publicDiscussionChannels = 4;
+  Channel selectedTradeChannel = 5;
+  Channel selectedDiscussionChannel = 6;
+  repeated string customTags = 7;
+  repeated string ignoredChatUserIds = 8;
 }
 
-message MarketChatOfferStore {
+message TradeChatOfferStore {
 }

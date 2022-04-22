@@ -18,7 +18,7 @@ import java.util.Set;
 @EqualsAndHashCode
 @Slf4j
 @Getter
-public class MarketChatOffer implements Proto {
+public class TradeChatOffer implements Proto {
     private final long btcAmount;
     private final String quoteCurrencyCode;
     private final Set<String> paymentMethods;
@@ -26,7 +26,7 @@ public class MarketChatOffer implements Proto {
     @Nullable
     private transient final String chatMessageText;
 
-    public MarketChatOffer(long btcAmount, String quoteCurrencyCode, Set<String> paymentMethods, String makersTradeTerms) {
+    public TradeChatOffer(long btcAmount, String quoteCurrencyCode, Set<String> paymentMethods, String makersTradeTerms) {
         this.btcAmount = btcAmount;
         this.quoteCurrencyCode = quoteCurrencyCode;
         this.paymentMethods = paymentMethods;
@@ -39,8 +39,8 @@ public class MarketChatOffer implements Proto {
     }
 
     @Override
-    public bisq.social.protobuf.MarketChatOffer toProto() {
-        return bisq.social.protobuf.MarketChatOffer.newBuilder()
+    public bisq.social.protobuf.TradeChatOffer toProto() {
+        return bisq.social.protobuf.TradeChatOffer.newBuilder()
                 .setBtcAmount(btcAmount)
                 .setQuoteCurrencyCode(quoteCurrencyCode)
                 .addAllPaymentMethods(new ArrayList<>(paymentMethods))
@@ -48,8 +48,8 @@ public class MarketChatOffer implements Proto {
                 .build();
     }
 
-    public static MarketChatOffer fromProto(bisq.social.protobuf.MarketChatOffer proto) {
-        return new MarketChatOffer(proto.getBtcAmount(),
+    public static TradeChatOffer fromProto(bisq.social.protobuf.TradeChatOffer proto) {
+        return new TradeChatOffer(proto.getBtcAmount(),
                 proto.getQuoteCurrencyCode(),
                 new HashSet<>(proto.getPaymentMethodsList()),
                 proto.getMakersTradeTerms());

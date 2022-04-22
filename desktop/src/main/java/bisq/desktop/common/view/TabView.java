@@ -84,7 +84,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
                 Region childRoot = newValue.getRoot();
              /*   childRoot.getStyleClass().add("bisq-content-bg");
                 childRoot.setPadding(new Insets(33, 67, 0, 0));*/
-                if(newValue instanceof TabViewChild tabViewChild){
+                if (newValue instanceof TabViewChild tabViewChild) {
                     tabViewChild.applyPadding(childRoot);
                 }
                 scrollPane.setContent(childRoot);

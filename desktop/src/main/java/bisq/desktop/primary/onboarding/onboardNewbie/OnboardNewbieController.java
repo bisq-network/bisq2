@@ -29,7 +29,7 @@ import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.social.chat.ChatService;
-import bisq.social.offer.MarketChatOfferService;
+import bisq.social.offer.TradeChatOfferService;
 import com.google.common.base.Joiner;
 import javafx.beans.InvalidationListener;
 import lombok.Getter;
@@ -48,14 +48,14 @@ public class OnboardNewbieController implements Controller {
     private final BtcFiatAmountGroup btcFiatAmountGroup;
     private final PaymentMethodsSelection paymentMethodsSelection;
     private final ChatService chatService;
-    private final MarketChatOfferService marketChatOfferService;
+    private final TradeChatOfferService tradeChatOfferService;
 
     private Subscription selectedMarketSubscription, baseSideAmountSubscription;
     private final InvalidationListener paymentMethodsSelectionListener;
     private Subscription termsDisabledSubscription;
 
     public OnboardNewbieController(DefaultApplicationService applicationService) {
-        marketChatOfferService = applicationService.getMarketChatOfferService();
+        tradeChatOfferService = applicationService.getTradeChatOfferService();
         chatService = applicationService.getChatService();
         model = new OnboardNewbieModel(applicationService.getUserProfileService().getSelectedUserProfile().get().getProfileId());
 
@@ -121,7 +121,7 @@ public class OnboardNewbieController implements Controller {
     }
 
     void onCreateOffer() {
-        marketChatOfferService.publishMarketChatOffer(model.getSelectedMarket(),
+        tradeChatOfferService.publishTradeChatOffer(model.getSelectedMarket(),
                         model.getBaseSideAmount().getValue(),
                         new HashSet<>(model.getSelectedPaymentMethods()),
                         model.getTerms().get())

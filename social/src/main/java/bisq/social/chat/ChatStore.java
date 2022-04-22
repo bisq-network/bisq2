@@ -22,12 +22,13 @@ import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import bisq.social.chat.channels.*;
+import bisq.social.chat.messages.ChatMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,26 +36,32 @@ import java.util.stream.Collectors;
 @Getter
 public class ChatStore implements PersistableStore<ChatStore> {
 
-    private final ObservableSet<PrivateChannel> privateChannels = new ObservableSet<>();
-    private final ObservableSet<PublicChannel> publicChannels = new ObservableSet<>();
-    private final ObservableSet<MarketChannel> marketChannels = new ObservableSet<>();
-    private final Observable<Channel<? extends ChatMessage>> selectedChannel = new Observable<>();
+    private final ObservableSet<PrivateTradeChannel> privateTradeChannels = new ObservableSet<>();
+    private final ObservableSet<PrivateDiscussionChannel> privateDiscussionChannels = new ObservableSet<>();
+    private final ObservableSet<PublicDiscussionChannel> publicDiscussionChannels = new ObservableSet<>();
+    private final ObservableSet<PublicTradeChannel> publicTradeChannels = new ObservableSet<>();
+    private final Observable<Channel<? extends ChatMessage>> selectedTradeChannel = new Observable<>();
+    private final Observable<Channel<? extends ChatMessage>> selectedDiscussionChannel = new Observable<>();
     private final ObservableSet<String> customTags = new ObservableSet<>();
     private final ObservableSet<String> ignoredChatUserIds = new ObservableSet<>();
 
     public ChatStore() {
     }
 
-    private ChatStore(Set<PrivateChannel> privateChannels,
-                      Set<PublicChannel> publicChannels,
-                      Set<MarketChannel> marketChannels,
-                      Channel<? extends ChatMessage> selectedChannel,
+    private ChatStore(Set<PrivateTradeChannel> privateTradeChannels,
+                      Set<PrivateDiscussionChannel> privateDiscussionChannels,
+                      Set<PublicDiscussionChannel> publicDiscussionChannels,
+                      Set<PublicTradeChannel> publicTradeChannels,
+                      Channel<? extends ChatMessage> selectedTradeChannel,
+                      Channel<? extends ChatMessage> selectedDiscussionChannel,
                       Set<String> customTags,
                       Set<String> ignoredChatUserIds) {
-        setAll(privateChannels,
-                publicChannels,
-                marketChannels,
-                selectedChannel,
+        setAll(privateTradeChannels,
+                privateDiscussionChannels,
+                publicDiscussionChannels,
+                publicTradeChannels,
+                selectedTradeChannel,
+                selectedDiscussionChannel,
                 customTags,
                 ignoredChatUserIds);
     }
@@ -62,29 +69,36 @@ public class ChatStore implements PersistableStore<ChatStore> {
     @Override
     public bisq.social.protobuf.ChatStore toProto() {
         return bisq.social.protobuf.ChatStore.newBuilder()
-                .addAllPrivateChannels(privateChannels.stream().map(PrivateChannel::toProto).collect(Collectors.toSet()))
-                .addAllPublicChannels(publicChannels.stream().map(PublicChannel::toProto).collect(Collectors.toSet()))
-                .addAllMarketChannels(marketChannels.stream().map(MarketChannel::toProto).collect(Collectors.toSet()))
-                .setSelectedChannel(selectedChannel.get().toProto())
+                .addAllPrivateTradeChannels(privateTradeChannels.stream().map(PrivateTradeChannel::toProto).collect(Collectors.toSet()))
+                .addAllPrivateDiscussionChannels(privateDiscussionChannels.stream().map(PrivateDiscussionChannel::toProto).collect(Collectors.toSet()))
+                .addAllPublicDiscussionChannels(publicDiscussionChannels.stream().map(PublicDiscussionChannel::toProto).collect(Collectors.toSet()))
+                .addAllPublicTradeChannels(publicTradeChannels.stream().map(PublicTradeChannel::toProto).collect(Collectors.toSet()))
+                .setSelectedTradeChannel(selectedTradeChannel.get().toProto())
+                .setSelectedDiscussionChannel(selectedDiscussionChannel.get().toProto())
                 .addAllCustomTags(customTags)
                 .addAllIgnoredChatUserIds(ignoredChatUserIds)
                 .build();
     }
 
     public static ChatStore fromProto(bisq.social.protobuf.ChatStore proto) {
-        Set<PrivateChannel> privateChannels = proto.getPrivateChannelsList().stream()
-                .map(e -> (PrivateChannel) PrivateChannel.fromProto(e))
+        Set<PrivateTradeChannel> privateTradeChannels = proto.getPrivateTradeChannelsList().stream()
+                .map(e -> (PrivateTradeChannel) PrivateTradeChannel.fromProto(e))
                 .collect(Collectors.toSet());
-        Set<PublicChannel> publicChannels = proto.getPublicChannelsList().stream()
-                .map(e -> (PublicChannel) PublicChannel.fromProto(e))
+        Set<PrivateDiscussionChannel> privateDiscussionChannels = proto.getPrivateDiscussionChannelsList().stream()
+                .map(e -> (PrivateDiscussionChannel) PrivateDiscussionChannel.fromProto(e))
                 .collect(Collectors.toSet());
-        Set<MarketChannel> marketChannels = proto.getMarketChannelsList().stream()
-                .map(e -> (MarketChannel) MarketChannel.fromProto(e))
+        Set<PublicDiscussionChannel> publicDiscussionChannels = proto.getPublicDiscussionChannelsList().stream()
+                .map(e -> (PublicDiscussionChannel) PublicDiscussionChannel.fromProto(e))
                 .collect(Collectors.toSet());
-        return new ChatStore(privateChannels,
-                publicChannels,
-                marketChannels,
-                Channel.fromProto(proto.getSelectedChannel()),
+        Set<PublicTradeChannel> publicTradeChannels = proto.getPublicTradeChannelsList().stream()
+                .map(e -> (PublicTradeChannel) PublicTradeChannel.fromProto(e))
+                .collect(Collectors.toSet());
+        return new ChatStore(privateTradeChannels,
+                privateDiscussionChannels,
+                publicDiscussionChannels,
+                publicTradeChannels,
+                Channel.fromProto(proto.getSelectedTradeChannel()),
+                Channel.fromProto(proto.getSelectedDiscussionChannel()),
                 new HashSet<>(proto.getCustomTagsCount()),
                 new HashSet<>(proto.getIgnoredChatUserIdsList())
         );
@@ -103,48 +117,49 @@ public class ChatStore implements PersistableStore<ChatStore> {
 
     @Override
     public void applyPersisted(ChatStore chatStore) {
-        setAll(chatStore.privateChannels,
-                chatStore.publicChannels,
-                chatStore.marketChannels,
-                chatStore.selectedChannel.get(),
+        setAll(chatStore.privateTradeChannels,
+                chatStore.privateDiscussionChannels,
+                chatStore.publicDiscussionChannels,
+                chatStore.publicTradeChannels,
+                chatStore.selectedTradeChannel.get(),
+                chatStore.selectedDiscussionChannel.get(),
                 chatStore.getCustomTags(),
                 chatStore.ignoredChatUserIds);
     }
 
     @Override
     public ChatStore getClone() {
-        return new ChatStore(privateChannels,
-                publicChannels,
-                marketChannels,
-                selectedChannel.get(),
+        return new ChatStore(privateTradeChannels,
+                privateDiscussionChannels,
+                publicDiscussionChannels,
+                publicTradeChannels,
+                selectedTradeChannel.get(),
+                selectedDiscussionChannel.get(),
                 customTags,
                 ignoredChatUserIds);
     }
 
-    public void setAll(Set<PrivateChannel> privateChannels,
-                       Set<PublicChannel> publicChannels,
-                       Set<MarketChannel> marketChannels,
-                       Channel<? extends ChatMessage> selectedChannel,
+    public void setAll(Set<PrivateTradeChannel> privateTradeChannels,
+                       Set<PrivateDiscussionChannel> privateDiscussionChannels,
+                       Set<PublicDiscussionChannel> publicDiscussionChannels,
+                       Set<PublicTradeChannel> publicTradeChannels,
+                       Channel<? extends ChatMessage> selectedTradeChannel,
+                       Channel<? extends ChatMessage> selectedDiscussionChannel,
                        Set<String> customTags,
                        Set<String> ignoredChatUserIds) {
-        this.privateChannels.clear();
-        this.privateChannels.addAll(privateChannels);
-        this.publicChannels.clear();
-        this.publicChannels.addAll(publicChannels);
-        this.marketChannels.clear();
-        this.marketChannels.addAll(marketChannels);
-        this.selectedChannel.set(selectedChannel);
+        this.privateTradeChannels.clear();
+        this.privateTradeChannels.addAll(privateTradeChannels);
+        this.privateDiscussionChannels.clear();
+        this.privateDiscussionChannels.addAll(privateDiscussionChannels);
+        this.publicDiscussionChannels.clear();
+        this.publicDiscussionChannels.addAll(publicDiscussionChannels);
+        this.publicTradeChannels.clear();
+        this.publicTradeChannels.addAll(publicTradeChannels);
+        this.selectedTradeChannel.set(selectedTradeChannel);
+        this.selectedDiscussionChannel.set(selectedDiscussionChannel);
         this.customTags.clear();
         this.customTags.addAll(customTags);
         this.ignoredChatUserIds.clear();
         this.ignoredChatUserIds.addAll(ignoredChatUserIds);
-    }
-
-    public Optional<PrivateChannel> findPrivateChannel(String id) {
-        return privateChannels.stream().filter(e -> e.getId().equals(id)).findAny();
-    }
-
-    public Optional<PublicChannel> findPublicChannel(String id) {
-        return publicChannels.stream().filter(e -> e.getId().equals(id)).findAny();
     }
 }

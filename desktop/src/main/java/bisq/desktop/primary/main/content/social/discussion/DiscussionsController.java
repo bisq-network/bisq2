@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.social.discussion;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.primary.main.content.social.ChatController;
-import bisq.desktop.primary.main.content.social.components.PublicChannelSelection;
+import bisq.desktop.primary.main.content.social.components.PublicDiscussionChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -38,7 +38,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
         return new DiscussionsView(model,
                 this,
                 userProfileSelection.getRoot(),
-                new PublicChannelSelection(applicationService).getRoot(),
+                new PublicDiscussionChannelSelection(applicationService).getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 notificationsSettings.getRoot(),

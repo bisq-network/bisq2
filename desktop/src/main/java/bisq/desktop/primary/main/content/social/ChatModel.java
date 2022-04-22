@@ -19,8 +19,8 @@ package bisq.desktop.primary.main.content.social;
 
 import bisq.desktop.common.view.Model;
 import bisq.desktop.primary.main.content.social.components.ChatUserDetails;
-import bisq.social.chat.Channel;
-import bisq.social.chat.ChatMessage;
+import bisq.social.chat.channels.Channel;
+import bisq.social.chat.messages.ChatMessage;
 import javafx.beans.property.*;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;

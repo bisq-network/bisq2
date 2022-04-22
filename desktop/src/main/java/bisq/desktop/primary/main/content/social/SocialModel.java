@@ -28,6 +28,6 @@ public class SocialModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.EXCHANGE;
+        return NavigationTarget.GETTING_STARTED;
     }
 }

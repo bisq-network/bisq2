@@ -24,25 +24,25 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MarketChatOfferStore implements PersistableStore<MarketChatOfferStore> {
-    public MarketChatOfferStore() {
+public class TradeChatOfferStore implements PersistableStore<TradeChatOfferStore> {
+    public TradeChatOfferStore() {
     }
 
     @Override
-    public bisq.social.protobuf.MarketChatOfferStore toProto() {
-        return bisq.social.protobuf.MarketChatOfferStore.newBuilder()
+    public bisq.social.protobuf.TradeChatOfferStore toProto() {
+        return bisq.social.protobuf.TradeChatOfferStore.newBuilder()
                 .build();
     }
 
-    public static MarketChatOfferStore fromProto(bisq.social.protobuf.MarketChatOfferStore proto) {
-        return new MarketChatOfferStore();
+    public static TradeChatOfferStore fromProto(bisq.social.protobuf.TradeChatOfferStore proto) {
+        return new TradeChatOfferStore();
     }
 
     @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.social.protobuf.MarketChatOfferStore.class));
+                return fromProto(any.unpack(bisq.social.protobuf.TradeChatOfferStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -50,11 +50,11 @@ public class MarketChatOfferStore implements PersistableStore<MarketChatOfferSto
     }
 
     @Override
-    public void applyPersisted(MarketChatOfferStore chatStore) {
+    public void applyPersisted(TradeChatOfferStore chatStore) {
     }
 
     @Override
-    public MarketChatOfferStore getClone() {
-        return new MarketChatOfferStore();
+    public TradeChatOfferStore getClone() {
+        return new TradeChatOfferStore();
     }
 }

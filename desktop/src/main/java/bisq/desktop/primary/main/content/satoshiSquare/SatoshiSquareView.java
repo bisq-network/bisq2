@@ -15,19 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.components;
+package bisq.desktop.primary.main.content.satoshiSquare;
 
-import bisq.social.chat.channels.Channel;
-import bisq.social.chat.messages.ChatMessage;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabView;
+import bisq.i18n.Res;
+import lombok.extern.slf4j.Slf4j;
 
-@EqualsAndHashCode
-@Getter
-public class ChannelListItem<T extends Channel<? extends ChatMessage>> {
-    protected final T channel;
+@Slf4j
+public class SatoshiSquareView extends TabView<SatoshiSquareModel, SatoshiSquareController> {
 
-    public ChannelListItem(T channel) {
-        this.channel = channel;
+    public SatoshiSquareView(SatoshiSquareModel model, SatoshiSquareController controller) {
+        super(model, controller);
+
+        headlineLabel.setText(Res.get("satoshiSquare"));
+
+        addTab(Res.get("exchange"), NavigationTarget.EXCHANGE);
+    }
+
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
     }
 }

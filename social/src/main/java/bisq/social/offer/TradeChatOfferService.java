@@ -25,7 +25,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.social.chat.ChatService;
-import bisq.social.chat.MarketChannel;
+import bisq.social.chat.channels.PublicTradeChannel;
 import bisq.social.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,17 +35,17 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class MarketChatOfferService implements PersistenceClient<MarketChatOfferStore> {
+public class TradeChatOfferService implements PersistenceClient<TradeChatOfferStore> {
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final ChatService chatService;
-    private final MarketChatOfferStore persistableStore = new MarketChatOfferStore();
-    private final Persistence<MarketChatOfferStore> persistence;
+    private final TradeChatOfferStore persistableStore = new TradeChatOfferStore();
+    private final Persistence<TradeChatOfferStore> persistence;
 
-    public MarketChatOfferService(NetworkService networkService,
-                                  IdentityService identityService,
-                                  ChatService chatService,
-                                  PersistenceService persistenceService) {
+    public TradeChatOfferService(NetworkService networkService,
+                                 IdentityService identityService,
+                                 ChatService chatService,
+                                 PersistenceService persistenceService) {
         this.networkService = networkService;
         this.identityService = identityService;
         this.chatService = chatService;
@@ -57,16 +57,16 @@ public class MarketChatOfferService implements PersistenceClient<MarketChatOffer
         return CompletableFuture.completedFuture(true);
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishMarketChatOffer(Market selectedMarket,
-                                                                                     long baseSideAmount,
-                                                                                     Set<String> selectedPaymentMethods,
-                                                                                     String makersTradeTerms) {
+    public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatOffer(Market selectedMarket,
+                                                                                    long baseSideAmount,
+                                                                                    Set<String> selectedPaymentMethods,
+                                                                                    String makersTradeTerms) {
         UserProfile userProfile = chatService.getUserProfileService().getSelectedUserProfile().get();
-        MarketChatOffer marketChatOffer = new MarketChatOffer(baseSideAmount,
+        TradeChatOffer tradeChatOffer = new TradeChatOffer(baseSideAmount,
                 selectedMarket.quoteCurrencyCode(),
                 selectedPaymentMethods,
                 makersTradeTerms);
-        MarketChannel marketChannel = chatService.findMarketChannel(selectedMarket).orElseThrow();
-        return chatService.publishMarketChatOffer(marketChatOffer, marketChannel, userProfile);
+        PublicTradeChannel publicTradeChannel = chatService.findPublicTradeChannel(selectedMarket.toString()).orElseThrow();
+        return chatService.publishTradeChatOffer(tradeChatOffer, publicTradeChannel, userProfile);
     }
 }

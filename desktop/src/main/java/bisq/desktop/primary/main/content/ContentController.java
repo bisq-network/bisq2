@@ -21,18 +21,18 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.markets.MarketsController;
-import bisq.desktop.primary.main.content.settings.SettingsController;
-import bisq.desktop.primary.main.content.social.SocialController;
-import bisq.desktop.primary.main.content.social.exchange.ExchangeController;
-import bisq.desktop.primary.main.content.support.SupportController;
-import bisq.desktop.primary.main.content.trade.TradeController;
 import bisq.desktop.primary.main.content.bsqSwap.BsqSwapController;
 import bisq.desktop.primary.main.content.liquid.LiquidSwapController;
 import bisq.desktop.primary.main.content.ln.LightningController;
+import bisq.desktop.primary.main.content.markets.MarketsController;
 import bisq.desktop.primary.main.content.multiSig.MultiSigController;
-import bisq.desktop.primary.main.content.xmr.XmrSwapController;
+import bisq.desktop.primary.main.content.satoshiSquare.SatoshiSquareController;
+import bisq.desktop.primary.main.content.settings.SettingsController;
+import bisq.desktop.primary.main.content.social.SocialController;
+import bisq.desktop.primary.main.content.support.SupportController;
+import bisq.desktop.primary.main.content.trade.TradeController;
 import bisq.desktop.primary.main.content.wallet.WalletController;
+import bisq.desktop.primary.main.content.xmr.XmrSwapController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,7 +72,7 @@ public class ContentController extends NavigationController {
                 return Optional.of(new TradeController(applicationService));
             }
             case SATOSHI_SQUARE -> {
-                return Optional.of(new ExchangeController(applicationService));
+                return Optional.of(new SatoshiSquareController(applicationService));
             }
             case LIQUID_SWAP -> {
                 return Optional.of(new LiquidSwapController(applicationService));

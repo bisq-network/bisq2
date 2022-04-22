@@ -15,19 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.components;
+package bisq.desktop.primary.main.content.social.gettingStarted;
 
-import bisq.social.chat.channels.Channel;
-import bisq.social.chat.messages.ChatMessage;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import bisq.desktop.common.view.Model;
 
-@EqualsAndHashCode
-@Getter
-public class ChannelListItem<T extends Channel<? extends ChatMessage>> {
-    protected final T channel;
-
-    public ChannelListItem(T channel) {
-        this.channel = channel;
-    }
+public class GettingStartedModel implements Model {
 }
