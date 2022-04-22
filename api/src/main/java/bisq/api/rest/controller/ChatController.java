@@ -27,6 +27,7 @@ import bisq.social.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashSet;
@@ -62,14 +63,14 @@ class ChatController extends ApiController {
         return asJson(chatService.getSelectedChannel().get());
     }
 
-    @GetMapping(path = "/api/chat/select-channel/{channelId}")
+    @PostMapping(path = "/api/chat/select-channel/{channelId}")
     public boolean selectedChannel(@PathVariable("channelId") String channelId) {
         Optional<PublicChannel> optionalPublicChannel = chatService.getPersistableStore().findPublicChannel(channelId);
         optionalPublicChannel.ifPresent(chatService::setSelectedChannel);
         return optionalPublicChannel.isPresent();
     }
 
-    @GetMapping(path = "/api/chat/publish-public-msg/{text}")
+    @PostMapping(path = "/api/chat/publish-public-msg/{text}")
     public boolean publishPublicChatMessage(@PathVariable("text") String text) {
         if (chatService.getSelectedChannel().get() instanceof PublicChannel publicChannel) {
             chatService.publishPublicChatMessage(text,
@@ -92,7 +93,7 @@ class ChatController extends ApiController {
         return asJson(identityService.getOrCreateIdentity(domainId).join());
     }
 
-    @GetMapping(path = "/api/chat/create-user-profile/{domainId}/{nickName}")
+    @PostMapping(path = "/api/chat/create-user-profile/{domainId}/{nickName}")
     public String createUserProfile(@PathVariable("domainId") String domainId,
                                     @PathVariable("nickName") String nickName) {
         Identity identity = identityService.getOrCreateIdentity(domainId).join();
