@@ -15,19 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social;
+package bisq.desktop.primary.main.content.social.gettingStarted;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
-import lombok.Getter;
+import bisq.desktop.common.view.Model;
 
-@Getter
-public class SocialModel extends TabModel {
-    public SocialModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.GETTING_STARTED;
-    }
+public class GettingStartedModel implements Model {
 }

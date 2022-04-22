@@ -15,19 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social;
+package bisq.desktop.primary.main.content.satoshiSquare;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
 import lombok.Getter;
 
 @Getter
-public class SocialModel extends TabModel {
-    public SocialModel() {
+public class SatoshiSquareModel extends TabModel {
+    public SatoshiSquareModel() {
     }
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.GETTING_STARTED;
+        return NavigationTarget.EXCHANGE;
     }
 }

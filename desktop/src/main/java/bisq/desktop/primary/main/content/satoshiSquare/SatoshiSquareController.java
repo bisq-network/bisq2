@@ -15,33 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social;
+package bisq.desktop.primary.main.content.satoshiSquare;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.social.discussion.DiscussionsController;
-import bisq.desktop.primary.main.content.social.education.EducationController;
-import bisq.desktop.primary.main.content.social.events.EventsController;
-import bisq.desktop.primary.main.content.social.gettingStarted.GettingStartedController;
+import bisq.desktop.primary.main.content.satoshiSquare.exchange.ExchangeController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public class SocialController extends TabController<SocialModel> {
+public class SatoshiSquareController extends TabController<SatoshiSquareModel> {
     private final DefaultApplicationService applicationService;
     @Getter
-    private final SocialView view;
+    private final SatoshiSquareView view;
 
-    public SocialController(DefaultApplicationService applicationService) {
-        super(new SocialModel(), NavigationTarget.SOCIAL);
+    public SatoshiSquareController(DefaultApplicationService applicationService) {
+        super(new SatoshiSquareModel(), NavigationTarget.SATOSHI_SQUARE);
 
         this.applicationService = applicationService;
 
-        view = new SocialView(model, this);
+        view = new SatoshiSquareView(model, this);
     }
 
     @Override
@@ -55,20 +52,8 @@ public class SocialController extends TabController<SocialModel> {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-          /*  case EXCHANGE -> {
+            case EXCHANGE -> {
                 return Optional.of(new ExchangeController(applicationService));
-            }*/
-            case GETTING_STARTED -> {
-                return Optional.of(new GettingStartedController(applicationService));
-            }
-            case DISCUSS -> {
-                return Optional.of(new DiscussionsController(applicationService));
-            }
-            case LEARN -> {
-                return Optional.of(new EducationController(applicationService));
-            }
-            case CONNECT -> {
-                return Optional.of(new EventsController(applicationService));
             }
             default -> {
                 return Optional.empty();

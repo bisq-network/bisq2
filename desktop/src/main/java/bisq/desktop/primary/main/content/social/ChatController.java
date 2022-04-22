@@ -25,7 +25,7 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.social.components.*;
 import bisq.desktop.primary.main.content.social.discussion.DiscussionsController;
-import bisq.desktop.primary.main.content.social.exchange.ExchangeController;
+import bisq.desktop.primary.main.content.satoshiSquare.exchange.ExchangeController;
 import bisq.social.chat.channels.Channel;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.ChatService;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social;
+package bisq.desktop.primary.main.content.satoshiSquare;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabView;
@@ -23,17 +23,14 @@ import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SocialView extends TabView<SocialModel, SocialController> {
+public class SatoshiSquareView extends TabView<SatoshiSquareModel, SatoshiSquareController> {
 
-    public SocialView(SocialModel model, SocialController controller) {
+    public SatoshiSquareView(SatoshiSquareModel model, SatoshiSquareController controller) {
         super(model, controller);
 
-        headlineLabel.setText(Res.get("welcome"));
+        headlineLabel.setText(Res.get("satoshiSquare"));
 
-        addTab(Res.get("social.gettingStarted"), NavigationTarget.GETTING_STARTED);
-        addTab(Res.get("social.discuss"), NavigationTarget.DISCUSS);
-        addTab(Res.get("social.learn"), NavigationTarget.LEARN);
-        addTab(Res.get("social.connect"), NavigationTarget.CONNECT);
+        addTab(Res.get("exchange"), NavigationTarget.EXCHANGE);
     }
 
     @Override

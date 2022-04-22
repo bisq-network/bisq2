@@ -45,8 +45,7 @@ public enum NavigationTarget {
     CONTENT(MAIN),
    
     SOCIAL(CONTENT),
-
-    EXCHANGE(SOCIAL),
+    GETTING_STARTED(SOCIAL),
     DISCUSS(SOCIAL),
     LEARN(SOCIAL),
     CONNECT(SOCIAL),
@@ -59,6 +58,8 @@ public enum NavigationTarget {
     CLOSED_TRADES(TRADE),
     
     SATOSHI_SQUARE(CONTENT),
+    EXCHANGE(SATOSHI_SQUARE),
+    
     LIQUID_SWAP(CONTENT),
     
     BISQ_MULTI_SIG(CONTENT),

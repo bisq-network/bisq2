@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.social.exchange;
+package bisq.desktop.primary.main.content.satoshiSquare.exchange;
 
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.social.ChatView;
@@ -43,4 +43,5 @@ public class ExchangeView extends ChatView {
                 channelInfo,
                 filterBox);
     }
+
 }
