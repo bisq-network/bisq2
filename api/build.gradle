@@ -11,15 +11,20 @@ buildscript {
 
 plugins {
     id 'bisq.java-library'
+    id 'application'
+    alias(libs.plugins.shadow)
+}
+
+application {
+    project.mainClassName = 'bisq.api.rest.RestApi'
 }
 
 apply plugin: "org.springframework.boot"
 apply plugin: 'io.spring.dependency-management'
-
-version '0.0.1-SNAPSHOT'
-
 apply from: '../buildSrc/bisq-version.gradle'
 apply from: '../buildSrc/logging-dependencies.gradle'
+
+version '0.0.1-SNAPSHOT'
 
 ext {
     jacksonVersion = '2.13.2'
