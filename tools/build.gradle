@@ -1,37 +1,8 @@
 plugins {
     id 'bisq.java-library'
-   /* id 'distribution'*/
-    alias(libs.plugins.openjfx)
 }
 
 apply from: '../buildSrc/bisq-version.gradle'
-
-/*run {
-    // Pass command-line properties to application
-    // Normally they'd only be applied to the gradle process, but we need them in the started application
-    // See https://stackoverflow.com/a/23689696
-    systemProperties System.getProperties()
-}*/
-
-/*distributions {
-    main {
-        distributionBaseName = 'jfx-dist'
-    }
-}
-
-tasks.named('jar') {
-    manifest {
-        attributes('Implementation-Title': project.name,
-                'Implementation-Version': project.version,
-                'Main-Class': 'bisq.tools.theme.currentbisq.Main')
-    }
-}*/
-
-javafx {
-    version = '17.0.1'
-    modules = ['javafx.base', 'javafx.controls', 'javafx.graphics']
-}
-
 apply from: '../buildSrc/logging-dependencies.gradle'
 
 dependencies {
@@ -53,15 +24,6 @@ dependencies {
     implementation project(':presentation')
     implementation project(':application')
     implementation project(':wallets')
-    implementation project(':desktop')
 
     implementation libs.google.guava
-
-    implementation 'com.jfoenix:jfoenix:9.0.10'
-    implementation 'de.jensd:fontawesomefx-commons:9.1.2'
-    implementation 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
-
-    implementation "org.fxmisc.easybind:easybind:1.0.3"
-    implementation 'org.fxmisc.richtext:richtextfx:0.10.9'
-
 }

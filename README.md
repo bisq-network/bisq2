@@ -61,14 +61,14 @@ The social module manages chat use-cases. User management is not implemented yet
 
 Bisq 2 requires Java 16 and Gradle 7.3.3.
 
-You can right-click the `bisq.desktopapp.Main` class in the desktopapp module to create a run config or create a `run config` in `Run/Edi Configurations`. You need to add the JVM argument: `--add-opens java.base/java.lang.reflect=ALL-UNNAMED` (due the JFoenix issue with Java 16).
+You can right-click the `bisq.desktopapp.Main` class in the desktopapp module to create a run config or create a `run config` in `Run/Edi Configurations`. 
 
 The desktop app also requires JVM args (the typesafe config lib we use does not support overriding program args, so you have to use JVM args).
 - For clearnet use
-`--add-opens java.base/java.lang.reflect=ALL-UNNAMED -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR`
+-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR`
 
 - For clearnet, Tor, and I2P use
-`--add-opens java.base/java.lang.reflect=ALL-UNNAMED -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR -Dbisq.networkServiceConfig.supportedTransportTypes.1=TOR -Dbisq.networkServiceConfig.supportedTransportTypes.2=I2P`
+-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR -Dbisq.networkServiceConfig.supportedTransportTypes.1=TOR -Dbisq.networkServiceConfig.supportedTransportTypes.2=I2P`
 
 ## Running the Prototype with a local network
 If you want to use the network, you have to start at least one seed node with the appropriate JVM arguments (see instructions below) as there are no public seed nodes available at that stage. You can run clear net, Tor and I2P or any combination of those.

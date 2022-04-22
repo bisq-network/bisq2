@@ -81,8 +81,8 @@ To achieve that, there are two main challenges:
 - **Integrating non-modular dependencies**, like `i2p`, `jtorctl` or `jsocks`. One way to do this is to add java module
   support in the upstream dependencies themselves, then use the modularized version. Another way is to use gradle
   plugins[^8] that can programmatically generate and customize java modules from standard non-modular libs.
-- **Integrating non-conventional already-modular dependencies**, like `jfoenix`. Partly due to their own dependencies,
-  some libraries[^9] have a non-conventional approach to java modularization. To integrate them in a modular setup, Bisq 2
+- **Integrating non-conventional already-modular dependencies**. Partly due to their own dependencies,
+  some libraries have a non-conventional approach to java modularization. To integrate them in a modular setup, Bisq 2
   would have to define extra exports for the non-accessible packages. One way to do this is by adding `--add-exports` as
   compile args:
 
@@ -108,7 +108,3 @@ compileJava {
 [^6]: https://docs.gradle.org/current/userguide/java_platform_plugin.html
 [^7]: https://docs.oracle.com/en/java/javase/17/jpackage/packaging-overview.html#GUID-786E15C0-2CE7-4BDF-9B2F-AC1C57249134
 [^8]: https://github.com/jjohannes/extra-java-module-info
-[^9]: For example, `jfoenix` does define a java module interface, but it doesn't expose the package \
-`com.jfoenix.adapters` which contains the class `ReflectionHelper`. This specific class is used in our codebase to \
-identify and style individual components. The javadoc of `ReflectionHelper` states _"This class is for breaking the \
-module system of Java 9"_.
