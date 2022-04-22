@@ -18,10 +18,10 @@
 package bisq.desktop.components.containers;
 
 import bisq.desktop.common.utils.StageUtil;
-import bisq.desktop.components.controls.jfx.BisqTextField;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
-public class OverlayTextField extends BisqTextField {
+public class OverlayTextField extends TextField {
     public OverlayTextField(String title, String text) {
         setText(text);
         Stage stage = StageUtil.addToOverlayStage(this, title);

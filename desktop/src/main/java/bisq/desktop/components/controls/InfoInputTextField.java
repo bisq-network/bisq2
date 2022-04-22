@@ -18,13 +18,13 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
-import bisq.desktop.components.controls.jfx.BisqInputTextField;
 import bisq.desktop.components.overlay.PopOverWrapper;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import lombok.Getter;
 
@@ -35,7 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class InfoInputTextField extends AnchorPane {
 
     @Getter
-    private final BisqInputTextField inputTextField;
+    private final TextField textField;
 
     private final Label icon;
     private final PopOverWrapper popoverWrapper = new PopOverWrapper();
@@ -43,17 +43,17 @@ public class InfoInputTextField extends AnchorPane {
     private Node node;
 
     public InfoInputTextField(String text, String infoText) {
-        this(0);
-        inputTextField.setText(text);
+        this();
+        textField.setText(text);
         setContentForPopOver(defaultContentForPopOver(infoText), AwesomeIcon.INFO_SIGN);
     }
 
-    public InfoInputTextField(double inputLineExtension) {
+    public InfoInputTextField() {
         super();
 
-        inputTextField = new BisqInputTextField(inputLineExtension);
-        AnchorPane.setRightAnchor(inputTextField, 0.0);
-        AnchorPane.setLeftAnchor(inputTextField, 0.0);
+        textField = new TextField();
+        AnchorPane.setRightAnchor(textField, 0.0);
+        AnchorPane.setLeftAnchor(textField, 0.0);
 
         icon = new Label();
         icon.setLayoutY(3);
@@ -71,7 +71,7 @@ public class InfoInputTextField extends AnchorPane {
 
         hideIcon();
 
-        getChildren().addAll(inputTextField, icon);
+        getChildren().addAll(textField, icon);
     }
 
 
@@ -111,11 +111,11 @@ public class InfoInputTextField extends AnchorPane {
 
     public void setIconsRightAligned() {
         AnchorPane.clearConstraints(icon);
-        AnchorPane.clearConstraints(inputTextField);
+        AnchorPane.clearConstraints(textField);
 
         AnchorPane.setRightAnchor(icon, 7.0);
-        AnchorPane.setLeftAnchor(inputTextField, 0.0);
-        AnchorPane.setRightAnchor(inputTextField, 0.0);
+        AnchorPane.setLeftAnchor(textField, 0.0);
+        AnchorPane.setRightAnchor(textField, 0.0);
     }
 
 

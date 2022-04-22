@@ -21,7 +21,6 @@ import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.jfx.BisqToggleButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.layout.Layout;
@@ -29,6 +28,7 @@ import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GlobalOfferbookView extends View<VBox, GlobalOfferbookModel, GlobalOfferbookController> implements TabViewChild {
     private final BisqTableView<GlobalOfferListItem> tableView;
-    private final BisqToggleButton showAllMarkets;
+    private final ToggleButton showAllMarkets;
     private final Pane marketSelection;
 
     public GlobalOfferbookView(GlobalOfferbookModel model,
@@ -52,7 +52,7 @@ public class GlobalOfferbookView extends View<VBox, GlobalOfferbookModel, Global
         root.setSpacing(30);
         // root.setPadding(new Insets(-20, 0, 0, 0));
 
-        showAllMarkets = new BisqToggleButton();
+        showAllMarkets = new ToggleButton();
         showAllMarkets.setText(Res.get("offerbook.showAllMarkets"));
         // showAllMarkets.setPadding(new Insets(6, 0, 0, 0));
         HBox.setMargin(showAllMarkets, new Insets(-6, 0, 0, 0));

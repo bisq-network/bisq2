@@ -20,9 +20,6 @@ package bisq.desktop.primary.main.content.settings.userProfile.components;
 import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import bisq.desktop.components.controls.jfx.BisqTextField;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
@@ -33,6 +30,9 @@ import bisq.social.user.UserNameGenerator;
 import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -161,7 +161,7 @@ public class CreateUserProfile {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
         private final Button generateNewIdentityButton, entitlementButton, createUserButton;
-        private final BisqTextField nickNameInputField, profileIdInputField;
+        private final TextField nickNameInputField, profileIdInputField;
         private final Label feedbackLabel;
         private Subscription roboHashNodeSubscription;
 
@@ -173,13 +173,13 @@ public class CreateUserProfile {
             headline.getStyleClass().add("titled-group-bg-label-active");
             headline.setPadding(new Insets(0, 0, 10, 0));
 
-            nickNameInputField = new BisqTextField();
+            nickNameInputField = new TextField();
             double minWidth = 300;
             nickNameInputField.setMinWidth(minWidth);
             nickNameInputField.setFocusTraversable(false);
             nickNameInputField.setPromptText(Res.get("social.createUserProfile.nickName.prompt"));
 
-            profileIdInputField = new BisqTextField();
+            profileIdInputField = new TextField();
             profileIdInputField.setMinWidth(minWidth);
             profileIdInputField.setEditable(false);
             profileIdInputField.setFocusTraversable(false);

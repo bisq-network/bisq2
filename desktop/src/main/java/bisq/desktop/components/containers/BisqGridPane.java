@@ -19,9 +19,8 @@ package bisq.desktop.components.containers;
 
 import bisq.common.data.Pair;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
-import bisq.desktop.components.controls.jfx.BisqTextArea;
-import bisq.desktop.components.controls.jfx.BisqTextField;
 import bisq.desktop.components.controls.BisqTextFieldWithCopyIcon;
+import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.layout.Layout;
@@ -31,6 +30,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,18 +85,18 @@ public class BisqGridPane extends GridPane {
         return region;
     }
 
-    public BisqTextField addTextField(String labelText, StringProperty textFieldText) {
-        BisqTextField textField = addTextField(labelText, textFieldText.get());
+    public TextField addTextField(String labelText, StringProperty textFieldText) {
+        TextField textField = addTextField(labelText, textFieldText.get());
         textField.textProperty().bindBidirectional(textFieldText);
         return textField;
     }
 
-    public BisqTextField addTextField(String labelText) {
+    public TextField addTextField(String labelText) {
         return addTextField(labelText, "");
     }
 
-    public BisqTextField addTextField(String labelText, String textFieldText) {
-        BisqTextField textField = new BisqTextField(textFieldText);
+    public TextField addTextField(String labelText, String textFieldText) {
+        TextField textField = new TextField(textFieldText);
         textField.setPromptText(labelText);
         GridPane.setRowIndex(textField, getRowCount());
         GridPane.setColumnIndex(textField, 0);

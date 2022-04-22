@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.controls.jfx;
+package bisq.desktop.components.controls;
 
 import bisq.desktop.common.threading.UIThread;
 import javafx.beans.InvalidationListener;
