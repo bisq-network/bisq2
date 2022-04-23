@@ -52,10 +52,6 @@ public class GettingStartedView extends View<VBox, GettingStartedModel, GettingS
         super(new VBox(), model, controller);
 
         root.setSpacing(MARGIN);
-    }
-
-    @Override
-    protected void onViewAttached() {
         addHeaderBox();
         addSmallBox("new",
                 controller::onOpenSatoshiSquare,
@@ -82,6 +78,10 @@ public class GettingStartedView extends View<VBox, GettingStartedModel, GettingS
                 }
             }
         }
+    }
+
+    @Override
+    protected void onViewAttached() {
     }
 
     @Override

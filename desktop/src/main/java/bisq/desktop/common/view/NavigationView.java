@@ -22,19 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class NavigationView<R extends Region, M extends NavigationModel, C extends NavigationController> extends View<R, M, C> {
-
     public NavigationView(R root, M model, C controller) {
         super(root, model, controller);
     }
-
-   /* @Override
-    void onViewAttachedInternal() {
-        UIThread.runOnNextRenderFrame(() -> {
-            NavigationTarget navigationTarget = model.getNavigationTarget();
-            if (navigationTarget != null) {
-                Navigation.navigateTo(navigationTarget);
-            }
-        });
-        onViewAttached();
-    }*/
 }

@@ -34,6 +34,13 @@ public abstract class TabController<T extends TabModel> extends NavigationContro
     }
 
     @Override
+    public void onActivateInternal() {
+        super.onActivateInternal();
+        
+        onTabSelected(model.getNavigationTarget());
+    }
+
+    @Override
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
         if (model.getSelectedTabButton().get() != null &&
                 navigationTarget != model.getSelectedTabButton().get().getNavigationTarget()) {

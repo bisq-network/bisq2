@@ -46,7 +46,8 @@ public abstract class NavigationController implements Controller {
             Optional<Controller> childController = findController(candidate.get(), data);
             if (childController.isPresent()) {
                 // We as host handle that target and found the controller. 
-                getModel().applyChild(candidate.get(), childController.get().getView());
+                getModel().setNavigationTarget(candidate.get());
+                getModel().setView(childController.get().getView());
                 selectedChildTarget = candidate;
                 Navigation.persistNavigationTarget(navigationTarget);
                 break;
@@ -67,18 +68,25 @@ public abstract class NavigationController implements Controller {
         Navigation.addNavigationController(host, this);
 
         // Apply child target for our host from the persisted NavigationTarget
-        Navigation.getPersistedNavigationTarget().ifPresent(persisted -> {
-            Optional<NavigationTarget> hostCandidate = persisted.getParent();
-            NavigationTarget childCandidate = persisted;
-            while (hostCandidate.isPresent() && hostCandidate.get() != host) {
-                childCandidate = hostCandidate.get();
-                hostCandidate = childCandidate.getParent();
-            }
-            NavigationTarget finalChildCandidate = childCandidate;
-            hostCandidate.ifPresent(e -> getModel().applyPersistedNavigationTarget(finalChildCandidate));
-        });
+        NavigationModel model = getModel();
+        if (model.getNavigationTarget() == null) {
+            Navigation.getPersistedNavigationTarget().ifPresent(persisted -> {
+                Optional<NavigationTarget> hostCandidate = persisted.getParent();
+                NavigationTarget childCandidate = persisted;
+                while (hostCandidate.isPresent() && hostCandidate.get() != host) {
+                    childCandidate = hostCandidate.get();
+                    hostCandidate = childCandidate.getParent();
+                }
+                NavigationTarget finalChildCandidate = childCandidate;
+                hostCandidate.ifPresent(e -> model.setNavigationTarget(finalChildCandidate));
+            });
+        }
+        // If we did not have a persisted target we apply the default
+        if (model.getNavigationTarget() == null) {
+            model.setNavigationTarget(model.getDefaultNavigationTarget());
+        }
 
-        UIThread.runOnNextRenderFrame(() -> processNavigationTarget(getModel().getNavigationTarget(), Optional.empty()));
+        UIThread.runOnNextRenderFrame(() -> processNavigationTarget(model.getNavigationTarget(), Optional.empty()));
 
         onActivate();
     }

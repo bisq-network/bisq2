@@ -20,9 +20,7 @@ package bisq.desktop.common.view;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
@@ -38,9 +36,10 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected final HBox tabs;
     private final Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
-    protected final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
+    private final ScrollPane scrollPane;
     private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
     private boolean transitionStarted;
+    private Subscription viewSubscription;
 
     public TabView(M model, C controller) {
         super(new VBox(), model, controller);
@@ -58,7 +57,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         tabs.getChildren().addAll(headlineLabel, Spacer.fillHBox());
         tabs.setPadding(new Insets(0, 67, 2, 0));
 
-        ScrollPane scrollPane = new ScrollPane();
+        scrollPane = new ScrollPane();
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
@@ -78,18 +77,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         lineAndMarker.setPadding(new Insets(0, 67, 0, 0));
 
         root.getChildren().addAll(tabs, lineAndMarker, scrollPane);
-
-        viewChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                Region childRoot = newValue.getRoot();
-             /*   childRoot.getStyleClass().add("bisq-content-bg");
-                childRoot.setPadding(new Insets(33, 67, 0, 0));*/
-                if (newValue instanceof TabViewChild tabViewChild) {
-                    tabViewChild.applyPadding(childRoot);
-                }
-                scrollPane.setContent(childRoot);
-            }
-        };
     }
 
     @Override
@@ -97,12 +84,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         selectionMarker.setLayoutX(0);
         selectionMarker.setPrefWidth(0);
         transitionStarted = false;
-        UIThread.runOnNextRenderFrame(() -> {
-            NavigationTarget navigationTarget = model.getNavigationTarget();
-            if (navigationTarget != null) {
-                Navigation.navigateTo(navigationTarget);
-            }
-        });
 
         line.prefWidthProperty().bind(root.widthProperty());
         model.getTabButtons().forEach(tabButton ->
@@ -124,12 +105,31 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
             }
         });
 
-        model.getView().addListener(viewChangeListener);
-
-        UIThread.runOnNextRenderFrame(() -> {
-            controller.onTabSelected(model.getNavigationTarget());
+        viewSubscription = EasyBind.subscribe(model.getView(), view -> {
+            if (view != null) {
+                Region childRoot = view.getRoot();
+                if (view instanceof TabViewChild tabViewChild) {
+                    tabViewChild.applyPadding(childRoot);
+                }
+                scrollPane.setContent(childRoot);
+            }
         });
-        onViewAttached();
+
+        super.onViewAttachedInternal();
+    }
+
+    @Override
+    void onViewDetachedInternal() {
+        line.prefWidthProperty().unbind();
+        selectedTabButtonSubscription.unsubscribe();
+        rootWidthSubscription.unsubscribe();
+        if (layoutDoneSubscription != null) {
+            layoutDoneSubscription.unsubscribe();
+        }
+        model.getTabButtons().forEach(tabButton -> tabButton.setOnAction(null));
+        viewSubscription.unsubscribe();
+
+        super.onViewDetachedInternal();
     }
 
     @Override
@@ -140,20 +140,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
     @Override
     public void onTransitionCompleted() {
-    }
-
-    @Override
-    void onViewDetachedInternal() {
-        super.onViewDetachedInternal();
-
-        line.prefWidthProperty().unbind();
-        selectedTabButtonSubscription.unsubscribe();
-        rootWidthSubscription.unsubscribe();
-        if (layoutDoneSubscription != null) {
-            layoutDoneSubscription.unsubscribe();
-        }
-        model.getTabButtons().forEach(tabButton -> tabButton.setOnAction(null));
-        model.getView().removeListener(viewChangeListener);
     }
 
     protected void addTab(String text, NavigationTarget navigationTarget) {

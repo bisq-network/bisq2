@@ -91,6 +91,6 @@ public class WalletController extends TabController<WalletModel> implements Cont
     }
 
     private void onConfigPopupClosed() {
-        Navigation.navigateTo(model.getDefaultNavigationTarget());
+        Navigation.navigateTo(NavigationTarget.WALLET_TRANSACTIONS);
     }
 }

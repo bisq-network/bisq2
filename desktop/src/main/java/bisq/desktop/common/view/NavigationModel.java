@@ -27,21 +27,19 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class NavigationModel implements Model {
     @Getter
     protected final ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> view = new SimpleObjectProperty<>();
-
     protected NavigationTarget navigationTarget;
 
+    void setNavigationTarget(NavigationTarget navigationTarget) {
+        this.navigationTarget = navigationTarget;
+    }
+
     NavigationTarget getNavigationTarget() {
-        return navigationTarget == null ? getDefaultNavigationTarget() : navigationTarget;
+        return navigationTarget;
     }
 
     public abstract NavigationTarget getDefaultNavigationTarget();
 
-    void applyChild(NavigationTarget navigationTarget, View<? extends Parent, ? extends Model, ? extends Controller> view) {
-        this.navigationTarget = navigationTarget;
+    void setView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
         this.view.set(view);
-    }
-
-    void applyPersistedNavigationTarget(NavigationTarget navigationTarget) {
-        this.navigationTarget = navigationTarget;
     }
 }
