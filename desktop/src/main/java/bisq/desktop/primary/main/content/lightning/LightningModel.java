@@ -15,27 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.ln;
+package bisq.desktop.primary.main.content.lightning;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.CachingController;
-import lombok.Getter;
+import bisq.desktop.common.view.Model;
 
-public class LightningController implements CachingController {
-    private final LightningModel model;
-    @Getter
-    private final LightningView view;
-
-    public LightningController(DefaultApplicationService applicationService) {
-        model = new LightningModel();
-        view = new LightningView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
-    }
+public class LightningModel implements Model {
 }
