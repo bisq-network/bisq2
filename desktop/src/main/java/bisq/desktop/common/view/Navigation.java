@@ -17,6 +17,9 @@
 
 package bisq.desktop.common.view;
 
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedList;
@@ -28,48 +31,50 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
 public class Navigation {
-
-  /*  public interface Listener {
-        void onNavigate2(NavigationTarget navigationTarget, Optional<Object> data);
-    }*/
-
-    private static final Map<NavigationTarget, Set<NavigationController>> listeners = new ConcurrentHashMap<>();
-    // navigationControllerListeners are called first
-    // private static final Map<NavigationTarget, Set<NavigationController>> navigationControllerListeners = new ConcurrentHashMap<>();
+    private static final Map<NavigationTarget, Set<NavigationController>> navigationControllers = new ConcurrentHashMap<>();
     private static final LinkedList<NavigationTarget> history = new LinkedList<>();
     private static final LinkedList<NavigationTarget> alt = new LinkedList<>();
+    private static SettingsService settingsService;
+    @Getter
+    private static Optional<NavigationTarget> persistedNavigationTarget = Optional.empty();
 
-    static void addListener(NavigationTarget host, NavigationController listener) {
-        listeners.putIfAbsent(host, new CopyOnWriteArraySet<>());
-        listeners.get(host).add(listener);
+    public static void init(SettingsService settingsService) {
+        Navigation.settingsService = settingsService;
     }
 
-    static void removeListener(NavigationTarget host, NavigationController listener) {
-        Optional.ofNullable(listeners.get(host)).ifPresent(set -> set.remove(listener));
+    public static void applyPersisted(NavigationTarget persistedNavigationTarget) {
+        Navigation.persistedNavigationTarget = Optional.ofNullable(persistedNavigationTarget);
     }
 
-/*    public static void addNavigationControllerListener(NavigationTarget host, NavigationController listener) {
-        navigationControllerListeners.putIfAbsent(host, new CopyOnWriteArraySet<>());
-        navigationControllerListeners.get(host).add(listener);
+    static void addNavigationController(NavigationTarget host, NavigationController listener) {
+        navigationControllers.putIfAbsent(host, new CopyOnWriteArraySet<>());
+        navigationControllers.get(host).add(listener);
     }
 
-    public static void removeNavigationControllerListener(NavigationTarget host, NavigationController listener) {
-        Optional.ofNullable(navigationControllerListeners.get(host)).ifPresent(set -> set.remove(listener));
-    }*/
+    static void removeNavigationController(NavigationTarget host, NavigationController listener) {
+        Optional.ofNullable(navigationControllers.get(host)).ifPresent(set -> set.remove(listener));
+    }
 
     public static void navigateTo(NavigationTarget navigationTarget) {
         history.add(navigationTarget);
-        listeners.forEach((key, value) -> {
+        navigationControllers.forEach((key, value) -> {
             if (navigationTarget.getPath().contains(key)) {
                 value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.empty()));
             }
         });
     }
 
+    static void persistNavigationTarget(NavigationTarget navigationTarget) {
+        if (navigationTarget.isAllowPersistence()) {
+            settingsService.getPersistableStore().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
+            settingsService.persist();
+        }
+    }
+
     // If data is passed we don't add it to the history as we would need to store the data as well, and it could be 
     // stale anyway at a later moment.  
     public static void navigateTo(NavigationTarget navigationTarget, Object data) {
-        listeners.forEach((key, value) -> {
+        navigationControllers.forEach((key, value) -> {
             if (navigationTarget.getPath().contains(key)) {
                 value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.of(data)));
             }
@@ -82,7 +87,7 @@ public class Navigation {
         }
         NavigationTarget navigationTarget = history.pollLast();
         alt.add(navigationTarget);
-        listeners.forEach((key, value) -> {
+        navigationControllers.forEach((key, value) -> {
             if (navigationTarget.getPath().contains(key)) {
                 value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.empty()));
             }
@@ -95,12 +100,10 @@ public class Navigation {
         }
         NavigationTarget navigationTarget = alt.pollLast();
         history.add(navigationTarget);
-        listeners.forEach((key, value) -> {
+        navigationControllers.forEach((key, value) -> {
             if (navigationTarget.getPath().contains(key)) {
                 value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.empty()));
             }
         });
     }
-
-
 }

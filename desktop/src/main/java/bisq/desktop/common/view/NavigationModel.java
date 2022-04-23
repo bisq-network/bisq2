@@ -30,14 +30,18 @@ public abstract class NavigationModel implements Model {
 
     protected NavigationTarget navigationTarget;
 
-    public NavigationTarget getNavigationTarget() {
+    NavigationTarget getNavigationTarget() {
         return navigationTarget == null ? getDefaultNavigationTarget() : navigationTarget;
     }
 
     public abstract NavigationTarget getDefaultNavigationTarget();
 
-    public void applyChild(NavigationTarget navigationTarget, View<? extends Parent, ? extends Model, ? extends Controller> view) {
+    void applyChild(NavigationTarget navigationTarget, View<? extends Parent, ? extends Model, ? extends Controller> view) {
         this.navigationTarget = navigationTarget;
         this.view.set(view);
+    }
+
+    void applyPersistedNavigationTarget(NavigationTarget navigationTarget) {
+        this.navigationTarget = navigationTarget;
     }
 }

@@ -32,6 +32,7 @@ import bisq.desktop.primary.main.MainController;
 import bisq.desktop.primary.onboarding.OnboardingController;
 import bisq.desktop.primary.splash.SplashController;
 import bisq.settings.CookieKey;
+import bisq.settings.DisplaySettings;
 import bisq.settings.SettingsService;
 import javafx.application.Platform;
 import lombok.Getter;
@@ -57,16 +58,19 @@ public class PrimaryStageController extends NavigationController {
         this.applicationService = applicationService;
         settingsService = applicationService.getSettingsService();
         this.onStageReadyHandler = onStageReadyHandler;
+
         model = new PrimaryStageModel(applicationService);
         view = new PrimaryStageView(model, this, applicationJavaFxApplicationData.stage());
 
         Browser.setHostServices(applicationJavaFxApplicationData.hostServices());
-        Transitions.setDisplaySettings(applicationService.getSettingsService().getDisplaySettings());
-        DontShowAgainLookup.setPreferences(applicationService.getSettingsService());
-        Notification.init(view.getRoot(), applicationService.getSettingsService().getDisplaySettings());
+        DisplaySettings displaySettings = settingsService.getDisplaySettings();
+        Transitions.setDisplaySettings(displaySettings);
+        DontShowAgainLookup.setPreferences(settingsService);
+        Notification.init(view.getRoot(), displaySettings);
+        Navigation.init(settingsService);
         Overlay.init(view.getRoot(),
                 applicationService.getApplicationConfig().baseDir(),
-                applicationService.getSettingsService().getDisplaySettings(),
+                displaySettings,
                 this::shutdown);
 
         // Here we start to attach the view hierarchy to the stage.
@@ -102,28 +106,27 @@ public class PrimaryStageController extends NavigationController {
         }
     }
 
-    @Override
-    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        if (navigationTarget.isAllowPersistence()) {
-            settingsService.getPersistableStore().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
-            settingsService.persist();
-        }
-    }
-
     public void onDomainInitialized() {
         // After the domain is initialized we show the application content
-        Navigation.navigateTo(NavigationTarget.ONBOARDING);
-        //todo
-       /* if (applicationService.getUserProfileService().isDefaultUserProfileMissing()) {
+        if (applicationService.getUserProfileService().isDefaultUserProfileMissing()) {
             Navigation.navigateTo(NavigationTarget.ONBOARDING);
         } else {
-            String persisted = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
+            String value = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
+            if (value != null && !value.isEmpty()) {
+                NavigationTarget persisted = NavigationTarget.valueOf(value);
+                Navigation.applyPersisted(persisted);
+                Navigation.navigateTo(persisted);
+            } else {
+                Navigation.navigateTo(NavigationTarget.GETTING_STARTED);
+            }
+          /*  String persisted = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
+            log.error("persisted {}", persisted);
             if (persisted != null && NavigationTarget.valueOf(persisted) != NavigationTarget.SPLASH) {
                 Navigation.navigateTo(NavigationTarget.valueOf(persisted));
             } else {
                 Navigation.navigateTo(NavigationTarget.MAIN);
-            }
-        }*/
+            }*/
+        }
     }
 
     public void onUncaughtException(Thread thread, Throwable throwable) {

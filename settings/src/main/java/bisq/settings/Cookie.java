@@ -21,6 +21,7 @@ import bisq.common.proto.Proto;
 import bisq.settings.protobuf.CookieMapEntry;
 import lombok.Getter;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -66,6 +67,7 @@ public class Cookie implements Proto {
         this.map.putAll(map);
     }
 
+    @Nullable
     public String getValue(CookieKey key) {
         return map.get(key);
     }

@@ -18,46 +18,44 @@
 package bisq.desktop.common.view;
 
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Slf4j
 public enum NavigationTarget {
     NONE(),
     ROOT(),
 
-    PRIMARY_STAGE(ROOT),
+    PRIMARY_STAGE(ROOT, false),
 
-    SPLASH(PRIMARY_STAGE),
+    SPLASH(PRIMARY_STAGE, false),
 
-    ONBOARDING(PRIMARY_STAGE),
+    ONBOARDING(PRIMARY_STAGE, false),
 
-    INIT_USER_PROFILE(ONBOARDING),
+    INIT_USER_PROFILE(ONBOARDING, false),
     SELECT_USER_TYPE(ONBOARDING),
     ONBOARD_NEWBIE(ONBOARDING),
     ONBOARD_PRO_TRADER(ONBOARDING),
 
-    MAIN(PRIMARY_STAGE),
+    MAIN(PRIMARY_STAGE, false),
 
-    CONTENT(MAIN),
+    CONTENT(MAIN, false),
 
-    SOCIAL(CONTENT),
+    SOCIAL(CONTENT, false),
     GETTING_STARTED(SOCIAL),
     DISCUSS(SOCIAL),
     LEARN(SOCIAL),
     CONNECT(SOCIAL),
 
-    TRADE(CONTENT),
+    TRADE(CONTENT, false),
     TRADE_OVERVIEW(TRADE),
     OFFERBOOK(TRADE),
     OPEN_OFFERS(TRADE),
     PENDING_TRADES(TRADE),
     CLOSED_TRADES(TRADE),
 
-    SATOSHI_SQUARE(CONTENT),
+    SATOSHI_SQUARE(CONTENT, false),
     EXCHANGE(SATOSHI_SQUARE),
 
     LIQUID_SWAP(CONTENT),
@@ -78,7 +76,7 @@ public enum NavigationTarget {
     PORTFOLIO(CONTENT),
 
 
-    SETTINGS(CONTENT),
+    SETTINGS(CONTENT, false),
     PREFERENCES(SETTINGS),
     NETWORK_INFO(SETTINGS),
     ABOUT(SETTINGS),
@@ -87,7 +85,7 @@ public enum NavigationTarget {
     MARKETS(CONTENT),
     SUPPORT(CONTENT),
 
-    WALLET(CONTENT),
+    WALLET(CONTENT, false),
     WALLET_TRANSACTIONS(WALLET),
     WALLET_SEND(WALLET),
     WALLET_RECEIVE(WALLET),

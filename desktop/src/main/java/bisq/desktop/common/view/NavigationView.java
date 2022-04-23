@@ -17,7 +17,6 @@
 
 package bisq.desktop.common.view;
 
-import bisq.desktop.common.threading.UIThread;
 import javafx.scene.layout.Region;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +27,7 @@ public abstract class NavigationView<R extends Region, M extends NavigationModel
         super(root, model, controller);
     }
 
-    @Override
+   /* @Override
     void onViewAttachedInternal() {
         UIThread.runOnNextRenderFrame(() -> {
             NavigationTarget navigationTarget = model.getNavigationTarget();
@@ -37,5 +36,5 @@ public abstract class NavigationView<R extends Region, M extends NavigationModel
             }
         });
         onViewAttached();
-    }
+    }*/
 }
