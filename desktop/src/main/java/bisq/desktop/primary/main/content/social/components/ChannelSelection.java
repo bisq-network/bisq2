@@ -8,6 +8,8 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.Channel;
 import bisq.social.chat.channels.PrivateChannel;
+import bisq.social.chat.channels.PublicChannel;
+import bisq.social.chat.channels.PublicDiscussionChannel;
 import bisq.social.user.ChatUser;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
@@ -156,7 +158,7 @@ public abstract class ChannelSelection {
                             label.setText(StringUtils.truncate(userName, 20));
                             label.setTooltip(new Tooltip(peer.getTooltipString()));
                         } else {
-                            label.setText(item.getId());
+                            label.setText(item.getDisplayString());
                         }
                         hBox.getChildren().add(label);
                         setGraphic(hBox);

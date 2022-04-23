@@ -543,7 +543,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         Identity channelAdminIdentity = identityService.getOrCreateIdentity(IdentityService.DEFAULT).join();
         ChatUser channelAdmin = new ChatUser("Admin", channelAdminIdentity.networkId());
 
-        PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel("Discussions Bisq",
+        PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(StringUtils.createUid(),
                 "Discussions Bisq",
                 "Channel for discussions about Bisq",
                 channelAdmin,
@@ -551,31 +551,31 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         );
         selectDiscussionChannel(defaultDiscussionChannel);
         persistableStore.getPublicDiscussionChannels().add(defaultDiscussionChannel);
-        persistableStore.getPublicDiscussionChannels().add(new PublicDiscussionChannel("Discussions Bitcoin",
+        persistableStore.getPublicDiscussionChannels().add(new PublicDiscussionChannel(StringUtils.createUid(),
                 "Discussions Bitcoin",
                 "Channel for discussions about Bitcoin",
                 channelAdmin,
                 new HashSet<>()
         ));
-        persistableStore.getPublicDiscussionChannels().add(new PublicDiscussionChannel("Discussions Monero",
+        persistableStore.getPublicDiscussionChannels().add(new PublicDiscussionChannel(StringUtils.createUid(),
                 "Discussions Monero",
                 "Channel for discussions about Monero",
                 channelAdmin,
                 new HashSet<>()
         ));
-        persistableStore.getPublicDiscussionChannels().add(new PublicDiscussionChannel("Price",
+        persistableStore.getPublicDiscussionChannels().add(new PublicDiscussionChannel(StringUtils.createUid(),
                 "Price",
                 "Channel for discussions about market price",
                 channelAdmin,
                 new HashSet<>()
         ));
-        persistableStore.getPublicDiscussionChannels().add(new PublicDiscussionChannel("Economy",
+        persistableStore.getPublicDiscussionChannels().add(new PublicDiscussionChannel(StringUtils.createUid(),
                 "Economy",
                 "Channel for discussions about economy",
                 channelAdmin,
                 new HashSet<>()
         ));
-        persistableStore.getPublicDiscussionChannels().add(new PublicDiscussionChannel("Off-topic",
+        persistableStore.getPublicDiscussionChannels().add(new PublicDiscussionChannel(StringUtils.createUid(),
                 "Off-topic",
                 "Channel for anything else",
                 channelAdmin,

@@ -111,4 +111,9 @@ public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage
     public void removeChatMessages(Collection<PublicDiscussionChatMessage> removeMessages) {
         chatMessages.removeAll(removeMessages);
     }
+
+    @Override
+    public String getDisplayString() {
+        return channelName;
+    }
 }
