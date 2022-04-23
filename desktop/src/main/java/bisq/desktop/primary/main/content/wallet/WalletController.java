@@ -41,7 +41,7 @@ public class WalletController extends TabController<WalletModel> implements Cont
 
     public WalletController(DefaultApplicationService applicationService) {
         super(new WalletModel(), NavigationTarget.WALLET);
-        
+
         this.applicationService = applicationService;
         walletService = applicationService.getWalletService();
 

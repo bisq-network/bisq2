@@ -40,7 +40,7 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
         this.model = model;
         this.controller = controller;
 
-       // boolean useCaching = controller instanceof Controller;
+        // boolean useCaching = controller instanceof Controller;
         boolean useCaching = controller.useCaching();
         sceneChangeListener = (ov, oldValue, newScene) -> {
             if (oldValue == null && newScene != null) {

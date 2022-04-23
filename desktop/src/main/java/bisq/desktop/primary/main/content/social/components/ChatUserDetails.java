@@ -149,7 +149,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
             root.setSpacing(10);
             root.setAlignment(Pos.TOP_LEFT);
-            
+
             roboIconImageView = new ImageView();
             VBox.setMargin(roboIconImageView, new Insets(0, 0, 0, 0));
 
@@ -175,7 +175,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             ignoreButton = new Button(Res.get("social.ignore"));
             reportButton = new Button(Res.get("social.report"));
 
-            root.getChildren().addAll(roboIconImageView,userName, id, entitlements, Spacer.height(10),
+            root.getChildren().addAll(roboIconImageView, userName, id, entitlements, Spacer.height(10),
                     openPrivateMessageButton, mentionButton, ignoreButton, reportButton);
         }
 

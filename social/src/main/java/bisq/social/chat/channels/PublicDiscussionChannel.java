@@ -42,10 +42,10 @@ public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage
     private transient final ObservableSet<PublicDiscussionChatMessage> chatMessages = new ObservableSet<>();
 
     public PublicDiscussionChannel(String id,
-                            String channelName,
-                            String description,
-                            ChatUser channelAdmin,
-                            Set<ChatUser> channelModerators
+                                   String channelName,
+                                   String description,
+                                   ChatUser channelAdmin,
+                                   Set<ChatUser> channelModerators
     ) {
         this(id, channelName,
                 description,

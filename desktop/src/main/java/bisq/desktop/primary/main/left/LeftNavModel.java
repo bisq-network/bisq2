@@ -45,7 +45,7 @@ public class LeftNavModel implements Model {
     private final List<LeftNavButton> leftNavButtons = new ArrayList<>();
     private final ObjectProperty<NavigationTarget> selectedNavigationTarget = new SimpleObjectProperty<>();
     private final ObjectProperty<LeftNavButton> selectedNavigationButton = new SimpleObjectProperty<>();
-    
+
     private final StringProperty torNumConnections = new SimpleStringProperty("0");
     private final StringProperty torNumTargetConnections = new SimpleStringProperty("0");
     private final BooleanProperty torEnabled = new SimpleBooleanProperty(false);
@@ -53,8 +53,8 @@ public class LeftNavModel implements Model {
     private final StringProperty i2pNumTargetConnections = new SimpleStringProperty("0");
     private final BooleanProperty i2pEnabled = new SimpleBooleanProperty(false);
     private final BooleanProperty menuExpanded = new SimpleBooleanProperty(true);
- 
-    
+
+
     public LeftNavModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
 

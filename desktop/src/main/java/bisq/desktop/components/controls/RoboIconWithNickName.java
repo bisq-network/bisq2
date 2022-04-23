@@ -84,6 +84,6 @@ public class RoboIconWithNickName extends HBox {
     public void setUserProfile(UserProfile userProfile) {
         imageView.setImage(RoboHash.getImage(new ByteArray(userProfile.getPubKeyHash())));
         nickNameLabel.setText(userProfile.getNickName());
-        Tooltip.install(this, new Tooltip( userProfile.getTooltipString()));
+        Tooltip.install(this, new Tooltip(userProfile.getTooltipString()));
     }
 }

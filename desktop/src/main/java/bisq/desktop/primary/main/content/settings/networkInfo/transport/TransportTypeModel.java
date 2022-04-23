@@ -60,10 +60,10 @@ public class TransportTypeModel implements Model {
     private final StringProperty messageReceiver = new SimpleStringProperty();
     private final StringProperty receivedMessages = new SimpleStringProperty("");
     private final IdentityService identityService;
-    private  Node.Listener defaultNodeListener;
-    private  NodesById.Listener nodesByIdListener;
-    private  ServiceNode serviceNode;
-    private  Node defaultNode;
+    private Node.Listener defaultNodeListener;
+    private NodesById.Listener nodesByIdListener;
+    private ServiceNode serviceNode;
+    private Node defaultNode;
     private final Optional<NetworkId> selectedNetworkId = Optional.empty();
     private final Map<String, Node.Listener> nodeListenersByNodeId = new HashMap<>();
     private Collection<Node> allNodes = new ArrayList<>();

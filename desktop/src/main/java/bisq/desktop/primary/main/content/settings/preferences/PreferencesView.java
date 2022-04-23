@@ -29,7 +29,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(), model, controller);
-        
+
         root.setAlignment(Pos.CENTER);
         Label label = new Label("WIP");
         label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 20em");

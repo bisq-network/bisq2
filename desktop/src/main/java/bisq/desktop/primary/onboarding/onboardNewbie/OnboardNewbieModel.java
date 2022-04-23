@@ -52,10 +52,10 @@ public class OnboardNewbieModel implements Model {
     private final StringProperty offerPreview = new SimpleStringProperty();
     private final StringProperty terms = new SimpleStringProperty();
     private final BooleanProperty termsEditable = new SimpleBooleanProperty(true);
-    private final String userName ;
+    private final String userName;
     ObjectProperty<StyleSpans<Collection<String>>> styleSpans = new SimpleObjectProperty<>();
-    
-    public OnboardNewbieModel( String userName) {
+
+    public OnboardNewbieModel(String userName) {
         this.userName = userName;
     }
 }

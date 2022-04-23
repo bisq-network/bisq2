@@ -47,10 +47,10 @@ public abstract class NavigationController implements Controller {
                 // apply the child view to our view.
               /*  if (childControllerClassName.isEmpty() ||
                         !childControllerClassName.get().equals(childController.get().getClass().toString())) {*/
-                    // log.debug("{}: Apply child controller. childController={}",
-                    //          this.getClass().getSimpleName(), childController.get().getClass().getSimpleName());
-                    getModel().applyChild(candidate.get(), childController.get().getView());
-                    childControllerClassName = Optional.of(candidate.get().name());
+                // log.debug("{}: Apply child controller. childController={}",
+                //          this.getClass().getSimpleName(), childController.get().getClass().getSimpleName());
+                getModel().applyChild(candidate.get(), childController.get().getView());
+                childControllerClassName = Optional.of(candidate.get().name());
             /*    } else {
                     // We might get called from the navigation event dispatcher when child views gets attached and
                     // apply their default navigationTargets. 

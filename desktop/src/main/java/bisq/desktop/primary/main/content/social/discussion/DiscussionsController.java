@@ -40,7 +40,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     @Override
     public void onActivate() {
         super.onActivate();
-        
+
         notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
                 value -> {
                     Channel<? extends ChatMessage> channel = chatService.getSelectedDiscussionChannel().get();

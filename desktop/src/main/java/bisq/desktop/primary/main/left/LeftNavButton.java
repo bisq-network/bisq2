@@ -59,7 +59,7 @@ class LeftNavButton extends Pane implements Toggle {
 
         setToggleGroup(toggleGroup);
         toggleGroup.getToggles().add(this);
-       // selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
+        // selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
 
         tooltip = new Tooltip(title);
         if (icon != null) {

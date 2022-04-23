@@ -77,7 +77,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> impleme
         createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button").toUpperCase());
         createOfferButton.setDefaultButton(true);
         createOfferButton.setPrefHeight(40);
-        VBox.setMargin(createOfferButton, new Insets(0,0,1,0));
+        VBox.setMargin(createOfferButton, new Insets(0, 0, 1, 0));
         left = Layout.vBoxWith(userProfileSelection,
                 marketChannelSelection,
                 privateChannelSelection,

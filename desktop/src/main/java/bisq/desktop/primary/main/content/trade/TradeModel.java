@@ -24,7 +24,7 @@ import lombok.Getter;
 @Getter
 public class TradeModel extends TabModel {
 
-    public TradeModel( ) {
+    public TradeModel() {
     }
 
     @Override

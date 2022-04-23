@@ -20,7 +20,8 @@ public record Quotation(String profileId, String nickName, ByteArray pubKeyHash,
                 ByteArray.fromProto(proto.getPubKeyHash()),
                 proto.getMessage());
     }
-    public  String getUserName() {
+
+    public String getUserName() {
         return UserNameLookup.getUserName(profileId, nickName);
     }
 }

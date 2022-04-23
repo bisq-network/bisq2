@@ -178,7 +178,7 @@ public class PaymentMethodsSelection {
             maxPaymentMethods.setPadding(new Insets(3, 5, 0, 0));
 
             comboBox = new AutoCompleteComboBox<>(model.paymentMethods, model.description.get());
-          
+
             selectedPaymentMethodsBox = new FlowPane();
             selectedPaymentMethodsBox.setHgap(10);
             selectedPaymentMethodsBox.setVgap(10);
@@ -195,7 +195,7 @@ public class PaymentMethodsSelection {
             };
             selectedItemListener = (observable, oldValue, newValue) -> {
                 controller.onAddPaymentMethod(comboBox.getSelectionModel().getSelectedItem());
-                UIThread.runOnNextRenderFrame(()-> comboBox.getSelectionModel().clearSelection());
+                UIThread.runOnNextRenderFrame(() -> comboBox.getSelectionModel().clearSelection());
             };
         }
 

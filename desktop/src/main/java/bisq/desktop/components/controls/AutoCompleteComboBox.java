@@ -360,7 +360,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         protected void layoutChildren(final double x, final double y,
                                       final double w, final double h) {
             super.layoutChildren(x, y, w, h);
-           
+
             arrow.setLayoutX(w - 22);
             textInputBox.setPrefWidth(w);
             layoutListView();

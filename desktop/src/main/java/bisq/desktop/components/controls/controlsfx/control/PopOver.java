@@ -79,7 +79,6 @@ import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
  * PopOver popOver = new PopOver();
  * popOver.getRoot().getStylesheets().add(...);
  * </pre>
- *
  */
 public class PopOver extends PopupControl {
 
@@ -143,8 +142,7 @@ public class PopOver extends PopupControl {
     /**
      * Creates a pop over with the given node as the content node.
      *
-     * @param content
-     *            The content shown by the pop over
+     * @param content The content shown by the pop over
      */
     public PopOver(Node content) {
         this();
@@ -203,7 +201,6 @@ public class PopOver extends PopupControl {
      * Returns the value of the content property
      *
      * @return the content node
-     *
      * @see #contentNodeProperty()
      */
     public final Node getContentNode() {
@@ -213,9 +210,7 @@ public class PopOver extends PopupControl {
     /**
      * Sets the value of the content property.
      *
-     * @param content
-     *            the new content node value
-     *
+     * @param content the new content node value
      * @see #contentNodeProperty()
      */
     public final void setContentNode(Node content) {
@@ -261,8 +256,7 @@ public class PopOver extends PopupControl {
      * below the given owner node. The arrow will slightly overlap with the
      * owner node.
      *
-     * @param owner
-     *            the owner of the pop over
+     * @param owner the owner of the pop over
      */
     public final void show(Node owner) {
         show(owner, 4);
@@ -275,12 +269,10 @@ public class PopOver extends PopupControl {
      * given owner. If the arrow points up then the pop over will be placed
      * below the given owner node.
      *
-     * @param owner
-     *            the owner of the pop over
-     * @param offset
-     *            if negative specifies the distance to the owner node or when
-     *            positive specifies the number of pixels that the arrow will
-     *            overlap with the owner node (positive values are recommended)
+     * @param owner  the owner of the pop over
+     * @param offset if negative specifies the distance to the owner node or when
+     *               positive specifies the number of pixels that the arrow will
+     *               overlap with the owner node (positive values are recommended)
      */
     public final void show(Node owner, double offset) {
         requireNonNull(owner);
@@ -317,7 +309,9 @@ public class PopOver extends PopupControl {
         }
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public final void show(Window owner) {
         super.show(owner);
@@ -333,7 +327,9 @@ public class PopOver extends PopupControl {
                 closePopOverOnOwnerWindowClose);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public final void show(Window ownerWindow, double anchorX, double anchorY) {
         super.show(ownerWindow, anchorX, anchorY);
@@ -354,12 +350,9 @@ public class PopOver extends PopupControl {
      * the given owner node. The x and y coordinate will be the target location
      * of the arrow of the pop over and not the location of the window.
      *
-     * @param owner
-     *            the owning node
-     * @param x
-     *            the x coordinate for the pop over arrow tip
-     * @param y
-     *            the y coordinate for the pop over arrow tip
+     * @param owner the owning node
+     * @param x     the x coordinate for the pop over arrow tip
+     * @param y     the y coordinate for the pop over arrow tip
      */
     @Override
     public final void show(Node owner, double x, double y) {
@@ -371,14 +364,10 @@ public class PopOver extends PopupControl {
      * the given owner node. The x and y coordinate will be the target location
      * of the arrow of the pop over and not the location of the window.
      *
-     * @param owner
-     *            the owning node
-     * @param x
-     *            the x coordinate for the pop over arrow tip
-     * @param y
-     *            the y coordinate for the pop over arrow tip
-     * @param fadeInDuration
-     *            the time it takes for the pop over to be fully visible. This duration takes precedence over the fade-in property without setting.
+     * @param owner          the owning node
+     * @param x              the x coordinate for the pop over arrow tip
+     * @param y              the y coordinate for the pop over arrow tip
+     * @param fadeInDuration the time it takes for the pop over to be fully visible. This duration takes precedence over the fade-in property without setting.
      */
     public final void show(Node owner, double x, double y,
                            Duration fadeInDuration) {
@@ -481,9 +470,8 @@ public class PopOver extends PopupControl {
     /**
      * Hides the pop over by quickly changing its opacity to 0.
      *
-     * @param fadeOutDuration
-     *            the duration of the fade transition that is being used to
-     *            change the opacity of the pop over
+     * @param fadeOutDuration the duration of the fade transition that is being used to
+     *                        change the opacity of the pop over
      * @since 1.0
      */
     public final void hide(Duration fadeOutDuration) {
@@ -609,9 +597,7 @@ public class PopOver extends PopupControl {
     /**
      * Sets the value of the headerAlwaysVisible property.
      *
-     * @param visible
-     *            if true, then the header is visible even while attached
-     *
+     * @param visible if true, then the header is visible even while attached
      * @see #headerAlwaysVisibleProperty()
      */
     public final void setHeaderAlwaysVisible(boolean visible) {
@@ -622,7 +608,6 @@ public class PopOver extends PopupControl {
      * Returns the value of the detachable property.
      *
      * @return true if the header is visible even while attached
-     *
      * @see #headerAlwaysVisibleProperty()
      */
     public final boolean isHeaderAlwaysVisible() {
@@ -643,9 +628,7 @@ public class PopOver extends PopupControl {
     /**
      * Sets the value of the closeButtonEnabled property.
      *
-     * @param enabled
-     *            if false, the pop over will not be closeable by the header's close button
-     *
+     * @param enabled if false, the pop over will not be closeable by the header's close button
      * @see #closeButtonEnabledProperty()
      */
     public final void setCloseButtonEnabled(boolean enabled) {
@@ -656,7 +639,6 @@ public class PopOver extends PopupControl {
      * Returns the value of the closeButtonEnabled property.
      *
      * @return true if the header's close button is enabled
-     *
      * @see #closeButtonEnabledProperty()
      */
     public final boolean isCloseButtonEnabled() {
@@ -678,9 +660,7 @@ public class PopOver extends PopupControl {
     /**
      * Sets the value of the detachable property.
      *
-     * @param detachable
-     *            if true then the user can detach / tear off the pop over
-     *
+     * @param detachable if true then the user can detach / tear off the pop over
      * @see #detachableProperty()
      */
     public final void setDetachable(boolean detachable) {
@@ -691,7 +671,6 @@ public class PopOver extends PopupControl {
      * Returns the value of the detachable property.
      *
      * @return true if the user is allowed to detach / tear off the pop over
-     *
      * @see #detachableProperty()
      */
     public final boolean isDetachable() {
@@ -715,10 +694,8 @@ public class PopOver extends PopupControl {
     /**
      * Sets the value of the detached property.
      *
-     * @param detached
-     *            if true the pop over will change its apperance to "detached"
-     *            mode
-     *
+     * @param detached if true the pop over will change its apperance to "detached"
+     *                 mode
      * @see #detachedProperty()
      */
     public final void setDetached(boolean detached) {
@@ -729,7 +706,6 @@ public class PopOver extends PopupControl {
      * Returns the value of the detached property.
      *
      * @return true if the pop over is currently detached.
-     *
      * @see #detachedProperty()
      */
     public final boolean isDetached() {
@@ -756,7 +732,6 @@ public class PopOver extends PopupControl {
      * Returns the value of the arrow size property.
      *
      * @return the arrow size property value
-     *
      * @see #arrowSizeProperty()
      */
     public final double getArrowSize() {
@@ -766,9 +741,7 @@ public class PopOver extends PopupControl {
     /**
      * Sets the value of the arrow size property.
      *
-     * @param size
-     *            the new value of the arrow size property
-     *
+     * @param size the new value of the arrow size property
      * @see #arrowSizeProperty()
      */
     public final void setArrowSize(double size) {
@@ -796,7 +769,6 @@ public class PopOver extends PopupControl {
      * Returns the value of the arrow indent property.
      *
      * @return the arrow indent value
-     *
      * @see #arrowIndentProperty()
      */
     public final double getArrowIndent() {
@@ -806,9 +778,7 @@ public class PopOver extends PopupControl {
     /**
      * Sets the value of the arrow indent property.
      *
-     * @param size
-     *            the arrow indent value
-     *
+     * @param size the arrow indent value
      * @see #arrowIndentProperty()
      */
     public final void setArrowIndent(double size) {
@@ -835,7 +805,6 @@ public class PopOver extends PopupControl {
      * Returns the value of the corner radius property.
      *
      * @return the corner radius
-     *
      * @see #cornerRadiusProperty()
      */
     public final double getCornerRadius() {
@@ -845,9 +814,7 @@ public class PopOver extends PopupControl {
     /**
      * Sets the value of the corner radius property.
      *
-     * @param radius
-     *            the corner radius
-     *
+     * @param radius the corner radius
      * @see #cornerRadiusProperty()
      */
     public final void setCornerRadius(double radius) {
@@ -898,9 +865,8 @@ public class PopOver extends PopupControl {
      * Stores the preferred arrow location. This might not be the actual
      * location of the arrow if auto fix is enabled.
      *
-     * @see #setAutoFix(boolean)
-     *
      * @return the arrow location property
+     * @see #setAutoFix(boolean)
      */
     public final ObjectProperty<ArrowLocation> arrowLocationProperty() {
         return arrowLocation;
@@ -909,10 +875,8 @@ public class PopOver extends PopupControl {
     /**
      * Sets the value of the arrow location property.
      *
+     * @param location the requested location
      * @see #arrowLocationProperty()
-     *
-     * @param location
-     *            the requested location
      */
     public final void setArrowLocation(ArrowLocation location) {
         arrowLocationProperty().set(location);
@@ -921,9 +885,8 @@ public class PopOver extends PopupControl {
     /**
      * Returns the value of the arrow location property.
      *
-     * @see #arrowLocationProperty()
-     *
      * @return the preferred arrow location
+     * @see #arrowLocationProperty()
      */
     public final ArrowLocation getArrowLocation() {
         return arrowLocationProperty().get();

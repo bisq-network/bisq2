@@ -48,9 +48,9 @@ public class LeftNavController implements Controller {
                     .filter(navigationTargets::contains)
                     .findAny();
         }
-        supportedNavigationTarget.ifPresent(target->{
+        supportedNavigationTarget.ifPresent(target -> {
             findNavButton(target).ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
-            model.getSelectedNavigationTarget().set(target);  
+            model.getSelectedNavigationTarget().set(target);
         });
     }
 

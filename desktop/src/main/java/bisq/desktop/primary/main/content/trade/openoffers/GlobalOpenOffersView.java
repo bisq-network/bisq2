@@ -28,12 +28,12 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GlobalOpenOffersView extends View<VBox, GlobalOpenOffersModel, GlobalOpenOffersController>  implements TabViewChild {
+public class GlobalOpenOffersView extends View<VBox, GlobalOpenOffersModel, GlobalOpenOffersController> implements TabViewChild {
     private final BisqTableView<GlobalOpenOfferListItem> tableView;
 
     public GlobalOpenOffersView(GlobalOpenOffersModel model, GlobalOpenOffersController controller) {
         super(new VBox(), model, controller);
-        
+
         root.setSpacing(30);
 
         tableView = new BisqTableView<>(model.getSortedItems());

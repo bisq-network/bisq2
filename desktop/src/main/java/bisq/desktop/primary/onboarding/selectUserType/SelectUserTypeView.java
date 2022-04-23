@@ -84,8 +84,8 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         roboIconWithId.setProfileId(model.getProfileId());
         roboIconWithId.setRoboHashImage(model.getRoboHashNode());
         roboIconWithId.setMouseTransparent(false);
-        
-        userTypeBox = new AutoCompleteComboBox<>(model.getUserTypes(),Res.get("satoshisquareapp.selectTraderType.description"));
+
+        userTypeBox = new AutoCompleteComboBox<>(model.getUserTypes(), Res.get("satoshisquareapp.selectTraderType.description"));
         userTypeBox.setPrefWidth(300);
 
         backButton = new Button(Res.get("back"));
@@ -99,7 +99,7 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
                 subTitleLabel,
                 roboIconWithId,
                 userTypeBox,
-               /* info,*/
+                /* info,*/
                 buttons
         );
     }

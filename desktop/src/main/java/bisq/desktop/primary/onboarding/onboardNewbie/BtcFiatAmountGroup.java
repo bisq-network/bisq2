@@ -199,7 +199,7 @@ class BtcFiatAmountGroup {
 
             this.baseAmount = baseAmount;
             this.quoteAmount = quoteAmount;
-            
+
             VBox baseAmountBox = new VBox();
             baseAmountBox.setSpacing(3);
             maxAmountLabel = new Label(Res.get("satoshisquareapp.createOffer.maxAmount"));

@@ -21,7 +21,7 @@ import javafx.geometry.Insets;
 import javafx.scene.layout.Region;
 
 public interface TabViewChild {
-    default void applyPadding( Region root){
+    default void applyPadding(Region root) {
         root.getStyleClass().add("bisq-content-bg");
         root.setPadding(new Insets(33, 67, 0, 0));
     }

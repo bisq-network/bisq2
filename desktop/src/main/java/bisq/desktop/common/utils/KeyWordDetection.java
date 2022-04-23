@@ -39,12 +39,12 @@ public class KeyWordDetection {
             int firstIndex = lastIndex;
             lastIndex = iterator.next();
             if (lastIndex != BreakIterator.DONE) {
-                String word = text.substring(firstIndex, lastIndex).toUpperCase(); 
+                String word = text.substring(firstIndex, lastIndex).toUpperCase();
                 if (customTagUppercase.contains(word)) {
                     spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
                     spansBuilder.add(Collections.singleton("keyword-customTags"), lastIndex - firstIndex);
                     lastKwEnd = lastIndex;
-                }  else if (word.matches("[0-9]{1,13}(\\.[0-9]*)?")) {
+                } else if (word.matches("[0-9]{1,13}(\\.[0-9]*)?")) {
                     spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
                     spansBuilder.add(Collections.singleton("keyword-customTags"), lastIndex - firstIndex);
                     lastKwEnd = lastIndex;
