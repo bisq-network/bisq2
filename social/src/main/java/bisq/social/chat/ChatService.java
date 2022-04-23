@@ -17,6 +17,7 @@
 
 package bisq.social.chat;
 
+import bisq.common.monetary.Market;
 import bisq.common.monetary.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
@@ -143,6 +144,18 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     // Public Trade domain
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public PublicTradeChannel addPublicTradeChannel(Market market) {
+        PublicTradeChannel tradeChannel = new PublicTradeChannel(market);
+        persistableStore.getPublicTradeChannels().add(tradeChannel);
+        persist();
+        
+        networkService.getDataService()
+                .ifPresent(dataService -> dataService.getAllAuthenticatedPayload()
+                .forEach(this::onAuthenticatedDataAdded));
+        
+        return tradeChannel;
+    }
+
     public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatTextMessage(String text,
                                                                                           Optional<Quotation> quotedMessage,
                                                                                           PublicTradeChannel publicTradeChannel,
@@ -227,7 +240,6 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private Trade domain
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
 
     public CompletableFuture<NetworkService.SendMessageResult> sendPrivateTradeChatMessage(String text,
                                                                                            Optional<Quotation> quotedMessage,

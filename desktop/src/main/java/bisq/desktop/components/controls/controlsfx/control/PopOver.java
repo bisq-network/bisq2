@@ -82,7 +82,7 @@ import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
  */
 public class PopOver extends PopupControl {
 
-    private static final String DEFAULT_STYLE_CLASS = "popover"; //$NON-NLS-1$
+    private static final String DEFAULT_STYLE_CLASS = "popover";
 
     private static final Duration DEFAULT_FADE_DURATION = Duration.seconds(.2);
 
@@ -105,7 +105,7 @@ public class PopOver extends PopupControl {
         getStyleClass().add(DEFAULT_STYLE_CLASS);
 
       /*  getRoot().getStylesheets().add(
-                requireNonNull(PopOver.class.getResource("popover.css")).toExternalForm()); //$NON-NLS-1$
+                requireNonNull(PopOver.class.getResource("popover.css")).toExternalForm());
 */
         setAnchorLocation(AnchorLocation.WINDOW_TOP_LEFT);
         setOnHiding(evt -> setDetached(false));
@@ -113,7 +113,7 @@ public class PopOver extends PopupControl {
         /*
          * Create some initial content.
          */
-        Label label = new Label("No content set"); //$NON-NLS-1$
+        Label label = new Label("No content set");
         label.setPrefSize(200, 200);
         label.setPadding(new Insets(4));
         setContentNode(label);
@@ -177,12 +177,12 @@ public class PopOver extends PopupControl {
     // Content support.
 
     private final ObjectProperty<Node> contentNode = new SimpleObjectProperty<>(
-            this, "contentNode") { //$NON-NLS-1$
+            this, "contentNode") {
         @Override
         public void setValue(Node node) {
             if (node == null) {
                 throw new IllegalArgumentException(
-                        "content node can not be null"); //$NON-NLS-1$
+                        "content node can not be null");
             }
         }
 
@@ -384,7 +384,7 @@ public class PopOver extends PopupControl {
         targetY = y;
 
         if (owner == null) {
-            throw new IllegalArgumentException("owner can not be null"); //$NON-NLS-1$
+            throw new IllegalArgumentException("owner can not be null");
         }
 
         if (fadeInDuration == null) {
@@ -585,7 +585,7 @@ public class PopOver extends PopupControl {
 
     // always show header
 
-    private final BooleanProperty headerAlwaysVisible = new SimpleBooleanProperty(this, "headerAlwaysVisible"); //$NON-NLS-1$
+    private final BooleanProperty headerAlwaysVisible = new SimpleBooleanProperty(this, "headerAlwaysVisible");
 
     /**
      * Determines whether or not the {@link PopOver} header should remain visible, even while attached.
@@ -616,7 +616,7 @@ public class PopOver extends PopupControl {
 
     // enable close button
 
-    private final BooleanProperty closeButtonEnabled = new SimpleBooleanProperty(this, "closeButtonEnabled", true); //$NON-NLS-1$
+    private final BooleanProperty closeButtonEnabled = new SimpleBooleanProperty(this, "closeButtonEnabled", true);
 
     /**
      * Determines whether or not the header's close button should be available.
@@ -648,7 +648,7 @@ public class PopOver extends PopupControl {
     // detach support
 
     private final BooleanProperty detachable = new SimpleBooleanProperty(this,
-            "detachable", true); //$NON-NLS-1$
+            "detachable", true);
 
     /**
      * Determines if the pop over is detachable at all.
@@ -678,7 +678,7 @@ public class PopOver extends PopupControl {
     }
 
     private final BooleanProperty detached = new SimpleBooleanProperty(this,
-            "detached", false); //$NON-NLS-1$
+            "detached", false);
 
     /**
      * Determines whether the pop over is detached from the owning node or not.
@@ -717,7 +717,7 @@ public class PopOver extends PopupControl {
     // TODO: make styleable
 
     private final DoubleProperty arrowSize = new SimpleDoubleProperty(this,
-            "arrowSize", 12); //$NON-NLS-1$
+            "arrowSize", 12);
 
     /**
      * Controls the size of the arrow. Default value is 12.
@@ -753,7 +753,7 @@ public class PopOver extends PopupControl {
     // TODO: make styleable
 
     private final DoubleProperty arrowIndent = new SimpleDoubleProperty(this,
-            "arrowIndent", 12); //$NON-NLS-1$
+            "arrowIndent", 12);
 
     /**
      * Controls the distance between the arrow and the corners of the pop over.
@@ -790,7 +790,7 @@ public class PopOver extends PopupControl {
     // TODO: make styleable
 
     private final DoubleProperty cornerRadius = new SimpleDoubleProperty(this,
-            "cornerRadius", 6); //$NON-NLS-1$
+            "cornerRadius", 6);
 
     /**
      * Returns the corner radius property for the pop over.
@@ -823,7 +823,7 @@ public class PopOver extends PopupControl {
 
     // Detached stage title
 
-    private final StringProperty title = new SimpleStringProperty(this, "title", "No title set"); //$NON-NLS-1$ //$NON-NLS-2$
+    private final StringProperty title = new SimpleStringProperty(this, "title", "No title set"); //$NON-NLS-2$
 
     /**
      * Stores the title to display in the PopOver's header.
@@ -852,14 +852,14 @@ public class PopOver extends PopupControl {
      */
     public final void setTitle(String title) {
         if (title == null) {
-            throw new IllegalArgumentException("title can not be null"); //$NON-NLS-1$
+            throw new IllegalArgumentException("title can not be null");
         }
 
         titleProperty().set(title);
     }
 
     private final ObjectProperty<ArrowLocation> arrowLocation = new SimpleObjectProperty<>(
-            this, "arrowLocation", ArrowLocation.LEFT_TOP); //$NON-NLS-1$
+            this, "arrowLocation", ArrowLocation.LEFT_TOP);
 
     /**
      * Stores the preferred arrow location. This might not be the actual

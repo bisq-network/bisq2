@@ -18,16 +18,24 @@
 package bisq.desktop.primary.main.content.social.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.monetary.Market;
+import bisq.common.monetary.MarketRepository;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.Icons;
-import bisq.desktop.overlay.OverlayWindow;
+import bisq.desktop.overlay.ListViewOverlay;
 import bisq.i18n.Res;
 import bisq.social.chat.channels.Channel;
 import bisq.social.chat.channels.PublicTradeChannel;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -79,6 +87,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                             model.selectedChannel.set(channel);
                         }
                     });
+
+            model.allMarkets.setAll(MarketRepository.getAllMarkets());
         }
 
         @Override
@@ -91,15 +101,21 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         public void onOpenMarketsChannelChooser() {
-            new OverlayWindow(view.getRoot(), tradeChannelsChooser.getRoot()).show();
+            //  new OverlayWindow(view.getRoot(), tradeChannelsChooser.getRoot()).show();
         }
 
         public void deSelectChannel() {
             model.selectedChannel.set(null);
         }
+
+        public void addMarket(Market market) {
+            PublicTradeChannel tradeChannel = chatService.addPublicTradeChannel(market);
+            chatService.selectTradeChannel(tradeChannel);
+        }
     }
 
     protected static class Model extends bisq.desktop.primary.main.content.social.components.ChannelSelection.Model {
+        ObservableList<Market> allMarkets = FXCollections.observableArrayList();
     }
 
     protected static class View extends bisq.desktop.primary.main.content.social.components.ChannelSelection.View<Model, Controller> {
@@ -113,16 +129,25 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             plusIcon.setOpacity(0.6);
             plusIcon.setLayoutY(15);
             plusIcon.setCursor(Cursor.HAND);
+
             titledPaneContainer.getChildren().add(plusIcon);
-            widthListener = (observableValue, oldValue, newValue) -> layoutIcon();
+            widthListener = (observableValue, oldValue, newValue) -> layout();
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            layoutIcon();
-            plusIcon.setOnMouseClicked(e -> controller.onOpenMarketsChannelChooser());
+            layout();
+
+            plusIcon.setOnMouseClicked(e -> {
+                new ListViewOverlay<>(plusIcon,
+                        model.allMarkets,
+                        c -> getMarketListCell(),
+                        controller::addMarket,
+                        400).show();
+
+            });
             titledPaneContainer.widthProperty().addListener(widthListener);
         }
 
@@ -137,9 +162,39 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             return Res.get("social.marketChannels");
         }
 
-        private void layoutIcon() {
+        private void layout() {
             plusIcon.setLayoutX(root.getWidth() - 25);
         }
 
+
+        protected ListCell<Market> getMarketListCell() {
+            return new ListCell<>() {
+                final Label label = new Label();
+                final HBox hBox = new HBox();
+
+                {
+                    hBox.setSpacing(10);
+                    hBox.setAlignment(Pos.CENTER_LEFT);
+                    hBox.setMouseTransparent(true);
+                    setCursor(Cursor.HAND);
+                    setPrefHeight(40);
+                    setPadding(new Insets(0, 0, -20, 0));
+                }
+
+                @Override
+                protected void updateItem(Market item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (item != null && !empty) {
+                        hBox.getChildren().clear();
+                        label.setText(item.toString());
+                        hBox.getChildren().add(label);
+                        setGraphic(hBox);
+                    } else {
+                        hBox.getChildren().clear();
+                        setGraphic(null);
+                    }
+                }
+            };
+        }
     }
 }
