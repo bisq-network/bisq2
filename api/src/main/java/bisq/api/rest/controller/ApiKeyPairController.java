@@ -29,10 +29,10 @@ import java.util.Optional;
 
 @Slf4j
 @RestController
-class KeyPairController extends ApiController {
+class ApiKeyPairController extends ApiController {
     private final KeyPairService keyPairService;
 
-    public KeyPairController(ApiApplicationService apiApplicationService) {
+    public ApiKeyPairController(ApiApplicationService apiApplicationService) {
         keyPairService = apiApplicationService.getSecurityService().getKeyPairService();
     }
 

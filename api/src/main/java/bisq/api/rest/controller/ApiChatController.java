@@ -37,12 +37,12 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
-class ChatController extends ApiController {
+class ApiChatController extends ApiController {
     private final ChatService chatService;
     private final UserProfileService userProfileService;
     private final IdentityService identityService;
 
-    public ChatController(ApiApplicationService apiApplicationService) {
+    public ApiChatController(ApiApplicationService apiApplicationService) {
         chatService = apiApplicationService.getChatService();
         userProfileService = apiApplicationService.getUserProfileService();
         identityService = apiApplicationService.getIdentityService();
