@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.xmr;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.CachingController;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-public class XmrSwapController implements CachingController {
+public class XmrSwapController implements Controller {
     private final XmrSwapModel model;
     @Getter
     private final XmrSwapView view;

@@ -19,13 +19,13 @@ package bisq.desktop.primary.main.content.wallet.transactions;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.CachingController;
+import bisq.desktop.common.view.Controller;
 import bisq.wallets.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class WalletTransactionsController implements CachingController {
+public class WalletTransactionsController implements Controller {
     private final WalletService walletService;
     private final WalletTransactionsModel model;
     @Getter

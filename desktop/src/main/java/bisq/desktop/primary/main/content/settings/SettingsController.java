@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.settings;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
@@ -32,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class SettingsController extends TabController<SettingsModel> implements CachingController {
+public class SettingsController extends TabController<SettingsModel> implements Controller {
     private final DefaultApplicationService applicationService;
     @Getter
     private final SettingsView view;

@@ -21,7 +21,6 @@ import bisq.common.monetary.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
-import javafx.scene.control.Label;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;

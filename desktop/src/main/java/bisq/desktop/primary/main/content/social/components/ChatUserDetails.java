@@ -19,8 +19,6 @@ package bisq.desktop.primary.main.content.social.components;
 
 import bisq.common.data.ByteArray;
 import bisq.desktop.components.containers.Spacer;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
@@ -28,6 +26,8 @@ import bisq.social.user.ChatUser;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;

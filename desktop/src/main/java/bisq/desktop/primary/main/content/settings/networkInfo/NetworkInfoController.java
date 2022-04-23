@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.settings.networkInfo;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.CachingController;
+import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.settings.networkInfo.transport.TransportTypeController;
 import bisq.network.p2p.node.transport.Transport;
 import javafx.scene.Node;
@@ -27,7 +27,7 @@ import lombok.Getter;
 import java.util.Optional;
 import java.util.Set;
 
-public class NetworkInfoController implements CachingController {
+public class NetworkInfoController implements Controller {
     private final DefaultApplicationService applicationService;
     @Getter
     private final NetworkInfoModel model;

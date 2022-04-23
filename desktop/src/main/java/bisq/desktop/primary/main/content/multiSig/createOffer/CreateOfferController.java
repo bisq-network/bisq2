@@ -21,12 +21,15 @@ import bisq.account.accounts.Account;
 import bisq.account.settlement.SettlementMethod;
 import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.CachingController;
-import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.controls.MarketSelection;
-import bisq.desktop.primary.main.content.trade.components.*;
+import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
+import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
+import bisq.desktop.primary.main.content.trade.components.ProtocolSelection;
+import bisq.desktop.primary.main.content.trade.components.SettlementSelection;
 import bisq.offer.OpenOfferService;
 import bisq.offer.spec.Direction;
 import javafx.collections.SetChangeListener;
@@ -38,7 +41,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.ArrayList;
 
 @Slf4j
-public class CreateOfferController implements InitWithDataController<CreateOfferController.InitData>, CachingController {
+public class CreateOfferController implements InitWithDataController<CreateOfferController.InitData>, Controller {
 
     public static record InitData(Market market, Direction direction, boolean showCreateOfferTab) {
     }

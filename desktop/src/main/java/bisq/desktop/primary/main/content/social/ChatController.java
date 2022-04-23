@@ -18,22 +18,17 @@
 package bisq.desktop.primary.main.content.social;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilterBox;
-import bisq.desktop.primary.main.content.satoshiSquare.exchange.ExchangeController;
+import bisq.desktop.overlay.Popup;
 import bisq.desktop.primary.main.content.social.components.*;
-import bisq.desktop.primary.main.content.social.discussion.DiscussionsController;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.Channel;
-import bisq.social.chat.channels.PrivateDiscussionChannel;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
@@ -56,13 +51,12 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     protected Pin selectedChannelPin;
     protected Subscription notificationSettingSubscription;
 
-    public ChatController(DefaultApplicationService applicationService) {
+    public ChatController(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
         this.applicationService = applicationService;
         chatService = applicationService.getChatService();
         userProfileService = applicationService.getUserProfileService();
 
         userProfileSelection = new UserProfileSelection(userProfileService);
-        boolean isDiscussionsChat = this instanceof DiscussionsController;
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
         chatMessagesComponent = new ChatMessagesComponent(chatService, userProfileService, isDiscussionsChat);
         channelInfo = new ChannelInfo(chatService);
@@ -71,39 +65,19 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
 
         //todo
         filterBox = new FilterBox(chatMessagesComponent.getFilteredChatMessages());
-
-        model = getChatModel();
+        createComponents();
+        model = getChatModel(isDiscussionsChat);
         view = getChatView();
     }
 
-    public abstract M getChatModel();
+    public abstract void createComponents();
+
+    public abstract M getChatModel(boolean isDiscussionsChat);
 
     public abstract V getChatView();
 
     @Override
     public void onActivate() {
-        if (this instanceof ExchangeController) {
-            notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
-                    value -> {
-                        Channel<? extends ChatMessage> channel = chatService.getSelectedTradeChannel().get();
-                        if (channel != null) {
-                            chatService.setNotificationSetting(channel, value);
-                        }
-                    });
-            
-            selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(this::handleChannelChange);
-        } else {
-            notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
-                    value -> {
-                        Channel<? extends ChatMessage> channel = chatService.getSelectedDiscussionChannel().get();
-                        if (channel != null) {
-                            chatService.setNotificationSetting(channel, value);
-                        }
-                    });
-            
-            selectedChannelPin = chatService.getSelectedDiscussionChannel().addObserver(this::handleChannelChange);
-        }
-
         chatMessagesComponent.setOnShowChatUserDetails(chatUser -> {
             model.getSideBarVisible().set(true);
             model.getChannelInfoVisible().set(false);
@@ -118,16 +92,17 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
         });
     }
 
+    @Override
+    public void onDeactivate() {
+        if (notificationSettingSubscription != null) {
+            notificationSettingSubscription.unsubscribe();
+        }
+        selectedChannelPin.unbind();
+    }
+
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         model.getSelectedChannelAsString().set(channel.getDisplayString());
         model.getSelectedChannel().set(channel);
-
-        if (channel instanceof PrivateDiscussionChannel privateDiscussionChannel) {
-            model.getPeersRoboIconImage().set(RoboHash.getImage(new ByteArray(privateDiscussionChannel.getPeer().getPubKeyHash())));
-            model.getPeersRoboIconVisible().set(true);
-        } else {
-            model.getPeersRoboIconVisible().set(false);
-        }
 
         if (model.getChannelInfoVisible().get()) {
             cleanupChannelInfo();
@@ -138,14 +113,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
             if (model.getNotificationsVisible().get()) {
                 notificationsSettings.setChannel(channel);
             }*/
-    }
-
-    @Override
-    public void onDeactivate() {
-        if (notificationSettingSubscription != null) {
-            notificationSettingSubscription.unsubscribe();
-        }
-        selectedChannelPin.unbind();
     }
 
     public void onToggleFilterBox() {
@@ -196,7 +163,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
 
     public void onCreateOffer() {
         //todo
-        //Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
+        new Popup().message("Not implemented yet").show();
     }
 
     protected void cleanupChatUserDetails() {

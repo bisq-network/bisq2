@@ -549,11 +549,10 @@
 }
 
 .list-view .list-cell {
-    -fx-text-fill: -bisq-white;
+    -fx-background-color: -bisq-bg-dark;
     -fx-font-size: 1.05em;
     -fx-padding: 0 0 0 22;
     -fx-background-insets: 0;
-    -fx-background-color: -bisq-bg-dark;
 }
 
 .list-view .list-cell:selected {
@@ -561,11 +560,11 @@
 }
 
 .list-view .list-cell .label {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -fx-mid-text-color;
 }
 
 .list-view .list-cell:selected .label {
-    /* -fx-text-fill: -bisq-green;*/
+    -fx-text-fill: -bisq-white;
 }
 
 

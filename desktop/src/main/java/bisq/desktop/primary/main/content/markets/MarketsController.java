@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.markets;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.CachingController;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-public class MarketsController implements CachingController {
+public class MarketsController implements Controller {
     private final MarketsModel model;
     @Getter
     private final MarketsView view;

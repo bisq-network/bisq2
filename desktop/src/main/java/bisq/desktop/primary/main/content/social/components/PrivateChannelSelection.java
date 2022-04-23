@@ -20,8 +20,8 @@ package bisq.desktop.primary.main.content.social.components;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
-import bisq.social.chat.channels.Channel;
 import bisq.social.chat.ChatService;
+import bisq.social.chat.channels.Channel;
 import bisq.social.chat.channels.PrivateDiscussionChannel;
 import bisq.social.chat.channels.PrivateTradeChannel;
 import javafx.scene.layout.Pane;
@@ -38,6 +38,10 @@ public class PrivateChannelSelection extends ChannelSelection {
 
     public Pane getRoot() {
         return controller.view.getRoot();
+    }
+
+    public void deSelectChannel() {
+        controller.deSelectChannel();
     }
 
     protected static class Controller extends bisq.desktop.primary.main.content.social.components.ChannelSelection.Controller {
@@ -94,6 +98,10 @@ public class PrivateChannelSelection extends ChannelSelection {
             } else {
                 chatService.selectTradeChannel(channel);
             }
+        }
+
+        public void deSelectChannel() {
+            model.selectedChannel.set(null);
         }
     }
 

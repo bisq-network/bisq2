@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.liquid;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.CachingController;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-public class LiquidSwapController implements CachingController {
+public class LiquidSwapController implements Controller {
     private final LiquidSwapModel model;
     @Getter
     private final LiquidSwapView view;

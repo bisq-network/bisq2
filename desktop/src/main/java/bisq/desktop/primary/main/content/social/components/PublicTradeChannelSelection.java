@@ -44,6 +44,10 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         return controller.view.getRoot();
     }
 
+    public void deSelectChannel() {
+        controller.deSelectChannel();
+    }
+
     protected static class Controller extends bisq.desktop.primary.main.content.social.components.ChannelSelection.Controller {
         private final Model model;
         @Getter
@@ -88,6 +92,10 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
         public void onOpenMarketsChannelChooser() {
             new OverlayWindow(view.getRoot(), tradeChannelsChooser.getRoot()).show();
+        }
+
+        public void deSelectChannel() {
+            model.selectedChannel.set(null);
         }
     }
 

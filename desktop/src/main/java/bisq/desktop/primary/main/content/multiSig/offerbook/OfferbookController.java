@@ -22,7 +22,7 @@ import bisq.common.monetary.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.CachingController;
+import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -43,7 +43,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class OfferbookController implements CachingController {
+public class OfferbookController implements Controller {
     private final OfferbookModel model;
     @Getter
     private final OfferbookView view;

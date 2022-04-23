@@ -19,7 +19,6 @@ package bisq.desktop.components.controls;
 
 import bisq.common.data.ByteArray;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.i18n.Res;
 import bisq.social.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

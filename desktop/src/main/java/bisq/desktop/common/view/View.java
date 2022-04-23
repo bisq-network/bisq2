@@ -40,7 +40,8 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
         this.model = model;
         this.controller = controller;
 
-        boolean isCaching = controller instanceof CachingController;
+       // boolean useCaching = controller instanceof Controller;
+        boolean useCaching = controller.useCaching();
         sceneChangeListener = (ov, oldValue, newScene) -> {
             if (oldValue == null && newScene != null) {
                 if (newScene.getWindow() != null) {
@@ -59,7 +60,7 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
                 }
             } else if (oldValue != null && newScene == null) {
                 onViewDetachedPrivate();
-                if (!isCaching) {
+                if (!useCaching) {
                     // If we do not use caching we do not expect to get added again to stage without creating a 
                     // new instance of the view, so we remove our sceneChangeListener.
                     UIThread.runOnNextRenderFrame(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
@@ -77,13 +78,15 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
     }
 
     private void onViewDetachedPrivate() {
-        onViewDetachedInternal();
         controller.onDeactivateInternal();
+        onViewDetachedInternal();
     }
 
     private void onViewAttachedPrivate() {
-        onViewAttachedInternal();
+        // View is listening on model changes triggered by controller, so we call controller first, so that view has 
+        // correct state.
         controller.onActivateInternal();
+        onViewAttachedInternal();
     }
 
     // The internal methods should be only used by framework classes (e.g. TabView)

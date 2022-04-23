@@ -18,11 +18,11 @@
 package bisq.desktop.primary.main.content.wallet.send;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.CachingController;
+import bisq.desktop.common.view.Controller;
 import bisq.wallets.WalletService;
 import lombok.Getter;
 
-public class WalletSendController implements CachingController {
+public class WalletSendController implements Controller {
     private final WalletService walletService;
     private final WalletSendModel model;
     @Getter

@@ -111,8 +111,10 @@ public abstract class ChannelSelection {
                     });
             modelSelectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
                     channel -> {
-                        if (channel != null && !channel.equals(listView.getSelectionModel().getSelectedItem())) {
-                            UIThread.runOnNextRenderFrame(() -> listView.getSelectionModel().select(channel));
+                        if (channel == null) {
+                            listView.getSelectionModel().clearSelection();
+                        } else if (!channel.equals(listView.getSelectionModel().getSelectedItem())) {
+                            listView.getSelectionModel().select(channel);
                         }
                     });
             model.channels.addListener(channelsChangedListener);

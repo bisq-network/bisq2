@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.support;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.CachingController;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-public class SupportController implements CachingController {
+public class SupportController implements Controller {
     private final SupportModel model;
     @Getter
     private final SupportView view;

@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.bsqSwap;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.CachingController;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-public class BsqSwapController implements CachingController {
+public class BsqSwapController implements Controller {
     private final BsqSwapModel model;
     @Getter
     private final BsqSwapView view;

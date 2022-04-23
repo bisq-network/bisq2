@@ -19,14 +19,14 @@ package bisq.desktop.primary.main.content.multiSig.takeOffer;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Market;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.CachingController;
-import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.primary.main.content.multiSig.pendingTrades.PendingTradesController;
+import bisq.desktop.primary.main.content.multiSig.takeOffer.components.TakersSettlementSelection;
 import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
-import bisq.desktop.primary.main.content.multiSig.takeOffer.components.TakersSettlementSelection;
 import bisq.offer.Offer;
 import bisq.offer.spec.Direction;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -38,7 +38,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TakeOfferController implements InitWithDataController<TakeOfferController.InitData>, CachingController {
+public class TakeOfferController implements InitWithDataController<TakeOfferController.InitData>, Controller {
     public static record InitData(Offer offer, BooleanProperty showTakeOfferTab) {
     }
 

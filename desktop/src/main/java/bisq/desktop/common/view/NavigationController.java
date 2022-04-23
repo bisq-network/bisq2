@@ -91,10 +91,11 @@ public abstract class NavigationController implements Controller {
         } else {
             return createController(navigationTarget)
                     .map(controller -> {
+                        //todo
                         if (controller instanceof InitWithDataController initWithDataController) {
                             data.ifPresent(initWithDataController::initWithObject);
                         }
-                        if (controller instanceof CachingController) {
+                        if (controller.useCaching()) {
                             controllerCache.put(navigationTarget, controller);
                         }
                         return controller;

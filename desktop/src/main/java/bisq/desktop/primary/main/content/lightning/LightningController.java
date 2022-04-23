@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.lightning;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.CachingController;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-public class LightningController implements CachingController {
+public class LightningController implements Controller {
     private final LightningModel model;
     @Getter
     private final LightningView view;
