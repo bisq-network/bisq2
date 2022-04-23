@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.settings.about;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.CachingController;
 import lombok.Getter;
 
-public class AboutController implements Controller {
+public class AboutController implements CachingController {
 
     private final AboutModel model;
     @Getter

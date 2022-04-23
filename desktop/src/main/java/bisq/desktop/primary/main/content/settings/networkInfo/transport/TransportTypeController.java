@@ -18,11 +18,11 @@
 package bisq.desktop.primary.main.content.settings.networkInfo.transport;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.CachingController;
 import bisq.network.p2p.node.transport.Transport;
 import lombok.Getter;
 
-public class TransportTypeController implements Controller {
+public class TransportTypeController implements CachingController {
     private final TransportTypeModel model;
     @Getter
     private final TransportTypeView view;

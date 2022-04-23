@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.trade.closedTrades;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.CachingController;
 import bisq.protocol.Protocol;
 import bisq.protocol.ProtocolModel;
 import bisq.protocol.ProtocolService;
@@ -28,7 +28,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GlobalClosedTradesController implements Controller {
+public class GlobalClosedTradesController implements CachingController {
     private final GlobalClosedTradesModel model;
     @Getter
     private final GlobalClosedTradesView view;

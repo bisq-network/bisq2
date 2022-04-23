@@ -18,12 +18,12 @@
 package bisq.desktop.primary.main.content.social.gettingStarted;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;
 
-public class GettingStartedController implements Controller {
+public class GettingStartedController implements CachingController {
     private final GettingStartedModel model;
     @Getter
     private final GettingStartedView view;

@@ -18,12 +18,13 @@
 package bisq.desktop.primary.main.content.satoshiSquare.exchange;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.CachingController;
 import bisq.desktop.primary.main.content.social.ChatController;
 import bisq.desktop.primary.main.content.social.components.PublicTradeChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ExchangeController extends ChatController<ExchangeView, ExchangeModel> {
+public class ExchangeController extends ChatController<ExchangeView, ExchangeModel> implements CachingController {
 
     public ExchangeController(DefaultApplicationService applicationService) {
         super(applicationService);

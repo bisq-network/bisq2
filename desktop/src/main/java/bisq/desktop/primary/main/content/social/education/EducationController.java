@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.social.education;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.CachingController;
 import lombok.Getter;
 
-public class EducationController implements Controller {
+public class EducationController implements CachingController {
     private final EducationModel model;
     @Getter
     private final EducationView view;

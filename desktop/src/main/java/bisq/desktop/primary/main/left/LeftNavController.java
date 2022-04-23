@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.left;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Controller;import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;

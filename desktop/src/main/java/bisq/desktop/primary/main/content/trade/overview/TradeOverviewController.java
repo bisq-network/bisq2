@@ -19,14 +19,14 @@ package bisq.desktop.primary.main.content.trade.overview;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.data.Pair;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.protocol.SwapProtocol;
 import lombok.Getter;
 
-public class TradeOverviewController implements Controller {
+public class TradeOverviewController implements CachingController {
     @Getter
     private final TradeOverviewModel model;
     @Getter

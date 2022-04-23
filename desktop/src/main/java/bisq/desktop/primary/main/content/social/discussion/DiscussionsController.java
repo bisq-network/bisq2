@@ -18,12 +18,13 @@
 package bisq.desktop.primary.main.content.social.discussion;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.CachingController;
 import bisq.desktop.primary.main.content.social.ChatController;
 import bisq.desktop.primary.main.content.social.components.PublicDiscussionChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> {
+public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> implements CachingController {
     public DiscussionsController(DefaultApplicationService applicationService) {
         super(applicationService);
     }

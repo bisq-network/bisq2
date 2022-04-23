@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.social.events;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.CachingController;
 import lombok.Getter;
 
-public class EventsController implements Controller {
+public class EventsController implements CachingController {
     private final EventsModel model;
     @Getter
     private final EventsView view;

@@ -20,11 +20,11 @@ package bisq.desktop.primary.main.content.wallet.receive;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.CachingController;
 import bisq.wallets.WalletService;
 import lombok.Getter;
 
-public class WalletReceiveController implements Controller {
+public class WalletReceiveController implements CachingController {
     private final WalletService walletService;
     private final WalletReceiveModel model;
     @Getter

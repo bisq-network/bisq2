@@ -18,11 +18,11 @@
 package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.CachingController;
+import bisq.desktop.primary.main.content.settings.userProfile.components.ChannelAdmin;
 import bisq.desktop.primary.main.content.settings.userProfile.components.CreateUserProfile;
 import bisq.desktop.primary.main.content.settings.userProfile.components.UserProfileDisplay;
 import bisq.desktop.primary.main.content.settings.userProfile.components.UserProfileSelectionAtSettings;
-import bisq.desktop.primary.main.content.settings.userProfile.components.ChannelAdmin;
 import bisq.social.chat.ChatService;
 import bisq.social.user.Entitlement;
 import bisq.social.user.profile.UserProfileService;
@@ -32,7 +32,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class UserProfileController implements Controller {
+public class UserProfileController implements CachingController {
 
     private final UserProfileSelectionAtSettings userProfileSelection;
     private final CreateUserProfile createUserProfile;
