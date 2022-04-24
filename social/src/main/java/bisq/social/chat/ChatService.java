@@ -42,6 +42,7 @@ import bisq.social.user.ChatUser;
 import bisq.social.user.Entitlement;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -563,8 +564,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         allMarketsForTradeChannel.remove(MarketRepository.getBsqMarket());
         allMarketsForTradeChannel.remove(MarketRepository.getXmrMarket());
         allMarketsForTradeChannel.forEach(market ->
-                getPublicTradeChannels().add(new PublicTradeChannel(market, false))); 
-    
+                getPublicTradeChannels().add(new PublicTradeChannel(market, false)));
+
         // Dummy admin
         Identity channelAdminIdentity = identityService.getOrCreateIdentity(IdentityService.DEFAULT).join();
         ChatUser channelAdmin = new ChatUser("Admin", channelAdminIdentity.networkId());

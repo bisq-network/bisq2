@@ -40,6 +40,8 @@ import bisq.social.chat.messages.*;
 import bisq.social.user.ChatUser;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.reputation.ReputationScore;
+import bisq.social.user.reputation.ReputationService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -66,7 +68,6 @@ import org.fxmisc.easybind.Subscription;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
-import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -78,8 +79,9 @@ public class ChatMessagesComponent {
 
     public ChatMessagesComponent(ChatService chatService,
                                  UserProfileService userProfileService,
+                                 ReputationService reputationService,
                                  boolean isDiscussionsChat) {
-        controller = new Controller(chatService, userProfileService, isDiscussionsChat);
+        controller = new Controller(chatService, userProfileService, reputationService, isDiscussionsChat);
     }
 
     public Pane getRoot() {
@@ -113,16 +115,21 @@ public class ChatMessagesComponent {
         private final View view;
         private final ChatService chatService;
         private final UserProfileService userProfileService;
+        private final ReputationService reputationService;
         private final QuotedMessageBlock quotedMessageBlock;
         private ListChangeListener<ChatMessagesComponent.ChatMessageListItem<? extends ChatMessage>> messageListener;
         private Pin selectedChannelPin, chatMessagesPin;
 
-        private Controller(ChatService chatService, UserProfileService userProfileService, boolean isDiscussionsChat) {
+        private Controller(ChatService chatService,
+                           UserProfileService userProfileService,
+                           ReputationService reputationService,
+                           boolean isDiscussionsChat) {
             this.chatService = chatService;
             this.userProfileService = userProfileService;
+            this.reputationService = reputationService;
             quotedMessageBlock = new QuotedMessageBlock();
 
-            model = new Model(chatService, userProfileService, isDiscussionsChat);
+            model = new Model(chatService, userProfileService, reputationService, isDiscussionsChat);
             view = new View(model, this, quotedMessageBlock.getRoot());
         }
 
@@ -358,6 +365,7 @@ public class ChatMessagesComponent {
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatService chatService;
         private final UserProfileService userProfileService;
+        private final ReputationService reputationService;
         private final ObjectProperty<Channel<?>> selectedChannel = new SimpleObjectProperty<>();
         private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
         private final FilteredList<ChatMessageListItem<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(chatMessages);
@@ -369,11 +377,15 @@ public class ChatMessagesComponent {
         private final BooleanProperty allowEditing = new SimpleBooleanProperty();
         private Optional<Consumer<ChatUser>> showChatUserDetailsHandler = Optional.empty();
 
-        private Model(ChatService chatService, UserProfileService userProfileService, boolean isDiscussionsChat) {
+        private Model(ChatService chatService,
+                      UserProfileService userProfileService,
+                      ReputationService reputationService,
+                      boolean isDiscussionsChat) {
             this.chatService = chatService;
             this.userProfileService = userProfileService;
-            ignoredChatUserPredicate = item -> !chatService.getIgnoredChatUserIds().contains(item.getAuthor().getId());
+            this.reputationService = reputationService;
             this.isDiscussionsChat = isDiscussionsChat;
+            ignoredChatUserPredicate = item -> !chatService.getIgnoredChatUserIds().contains(item.getAuthor().getId());
             filteredChatMessages.setPredicate(ignoredChatUserPredicate);
         }
 
@@ -388,6 +400,10 @@ public class ChatMessagesComponent {
 
         boolean isMyMessage(ChatMessage chatMessage) {
             return chatService.isMyMessage(chatMessage);
+        }
+
+        public ReputationScore getReputationScore(ChatUser author) {
+            return reputationService.getReputationScore(author);
         }
     }
 
@@ -473,11 +489,11 @@ public class ChatMessagesComponent {
                         private final ChatUserIcon chatUserIcon = new ChatUserIcon(37.5);
                         Tooltip dateTooltip;
                         Subscription widthSubscription;
-                        final ReputationScore reputationScore = new ReputationScore();
+                        final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
 
                         {
                             userNameLabel.setId("chat-user-name");
-                            HBox userNameAndScore = Layout.hBoxWith(userNameLabel, reputationScore);
+                            HBox userNameAndScore = Layout.hBoxWith(userNameLabel, reputationScoreDisplay);
                             userNameAndScore.setAlignment(Pos.CENTER_LEFT);
                             userNameAndScore.setPadding(new Insets(10, 0, -5, 0));
 
@@ -635,18 +651,16 @@ public class ChatMessagesComponent {
                                 dateTooltip = new Tooltip(item.getDate());
                                 Tooltip.install(time, dateTooltip);
 
-                                userNameLabel.setText(item.getAuthor().getUserName());
-                                userNameLabel.setOnMouseClicked(e -> controller.onMention(item.getAuthor()));
+                                ChatUser author = item.getAuthor();
+                                userNameLabel.setText(author.getUserName());
+                                userNameLabel.setOnMouseClicked(e -> controller.onMention(author));
 
-                                chatUserIcon.setChatUser(item.getAuthor(), model.getUserProfileService());
+                                chatUserIcon.setChatUser(author, model.getUserProfileService());
                                 chatUserIcon.setCursor(Cursor.HAND);
                                 chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(chatMessage));
-                                Tooltip.install(chatUserIcon, new Tooltip(item.getAuthor().getTooltipString()));
+                                Tooltip.install(chatUserIcon, new Tooltip(author.getTooltipString()));
 
-                                //todo
-                                reputationScore.applyScores(new Random().nextInt(100),
-                                        new Random().nextInt(10000),
-                                        new Random().nextInt(100) / 100d);
+                                reputationScoreDisplay.applyReputationScore(model.getReputationScore(author));
                                 setOnMouseEntered(e -> {
                                     time.setVisible(true);
                                     time.setManaged(true);
