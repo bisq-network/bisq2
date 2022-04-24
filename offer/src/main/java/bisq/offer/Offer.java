@@ -18,7 +18,7 @@
 package bisq.offer;
 
 import bisq.account.protocol.SwapProtocolType;
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.common.proto.ProtoResolver;

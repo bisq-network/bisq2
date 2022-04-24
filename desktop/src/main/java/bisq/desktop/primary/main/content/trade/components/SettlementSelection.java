@@ -22,7 +22,7 @@ import bisq.account.accounts.Account;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;

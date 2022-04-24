@@ -1,28 +1,26 @@
 package bisq.desktop.primary.main.content.social.components;
 
-import bisq.common.data.ByteArray;
+import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
-import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.robohash.RoboHash;
+import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.Channel;
-import bisq.social.chat.channels.PrivateChannel;
-import bisq.social.user.ChatUser;
+import bisq.social.chat.channels.PublicTradeChannel;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Cursor;
-import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TitledPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -48,7 +46,7 @@ public abstract class ChannelSelection {
 
         @Override
         public void onActivate() {
-            getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(Channel::getDisplayString));
+            getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(View.ChannelItem::getDisplayString));
         }
 
         protected abstract Model getChannelSelectionModel();
@@ -56,25 +54,35 @@ public abstract class ChannelSelection {
         @Override
         public void onDeactivate() {
             selectedChannelPin.unbind();
-            channelsPin.unbind();
+            if (channelsPin != null) {
+                channelsPin.unbind();
+            }
         }
 
-        abstract protected void onSelected(Channel<?> channel);
+        abstract protected void onSelected(View.ChannelItem channelItem);
     }
 
 
     protected static class Model implements bisq.desktop.common.view.Model {
-        ObjectProperty<Channel<?>> selectedChannel = new SimpleObjectProperty<>();
-        ObservableList<Channel<?>> channels = FXCollections.observableArrayList();
-        SortedList<Channel<?>> sortedList = new SortedList<>(channels);
+        ObjectProperty<View.ChannelItem> selectedChannel = new SimpleObjectProperty<>();
+        ObservableList<View.ChannelItem> channelItems = FXCollections.observableArrayList();
+        FilteredList<View.ChannelItem> filteredList = new FilteredList<>(channelItems);
+        SortedList<View.ChannelItem> sortedList = new SortedList<>(filteredList);
 
-        protected Model() {
+        public Model() {
+            filteredList.setPredicate(item -> {
+                if (item.getChannel() instanceof PublicTradeChannel publicTradeChannel) {
+                    return publicTradeChannel.isVisible();
+                } else {
+                    return true;
+                }
+            });
         }
     }
 
     @Slf4j
     public static abstract class View<M extends ChannelSelection.Model, C extends ChannelSelection.Controller> extends bisq.desktop.common.view.View<VBox, M, C> {
-        protected final ListView<Channel<?>> listView;
+        protected final ListView<ChannelItem> listView;
         private final InvalidationListener channelsChangedListener;
         protected final Pane titledPaneContainer;
         protected final TitledPane titledPane;
@@ -117,7 +125,7 @@ public abstract class ChannelSelection {
                             listView.getSelectionModel().select(channel);
                         }
                     });
-            model.channels.addListener(channelsChangedListener);
+            model.sortedList.addListener(channelsChangedListener);
             adjustHeight();
         }
 
@@ -126,49 +134,10 @@ public abstract class ChannelSelection {
             titledPane.prefWidthProperty().unbind();
             listViewSelectedChannelSubscription.unsubscribe();
             modelSelectedChannelSubscription.unsubscribe();
-            model.channels.removeListener(channelsChangedListener);
+            model.sortedList.removeListener(channelsChangedListener);
         }
 
-        protected ListCell<Channel<?>> getListCell() {
-            return new ListCell<>() {
-                final Label label = new Label();
-                final HBox hBox = new HBox();
-
-                {
-                    hBox.setSpacing(10);
-                    hBox.setAlignment(Pos.CENTER_LEFT);
-                    hBox.setMouseTransparent(true);
-                    setCursor(Cursor.HAND);
-                    setPrefHeight(40);
-                    setPadding(new Insets(0, 0, -20, 0));
-                }
-
-                @Override
-                protected void updateItem(Channel<?> item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (item != null && !empty) {
-                        hBox.getChildren().clear();
-                        if (item instanceof PrivateChannel privateChannel) {
-                            ChatUser peer = privateChannel.getPeer();
-                            ImageView roboIcon = new ImageView(RoboHash.getImage(new ByteArray(peer.getPubKeyHash())));
-                            roboIcon.setFitWidth(35);
-                            roboIcon.setFitHeight(35);
-                            hBox.getChildren().add(roboIcon);
-                            String userName = peer.getUserName();
-                            label.setText(StringUtils.truncate(userName, 20));
-                            label.setTooltip(new Tooltip(peer.getTooltipString()));
-                        } else {
-                            label.setText(item.getId());
-                        }
-                        hBox.getChildren().add(label);
-                        setGraphic(hBox);
-                    } else {
-                        hBox.getChildren().clear();
-                        setGraphic(null);
-                    }
-                }
-            };
-        }
+        protected abstract ListCell<ChannelItem> getListCell();
 
         private void adjustHeight() {
             UIThread.runOnNextRenderFrame(() -> {
@@ -176,6 +145,24 @@ public abstract class ChannelSelection {
                     listView.setPrefHeight(listCell.getHeight() * listView.getItems().size() + 10);
                 }
             });
+        }
+
+        @EqualsAndHashCode
+        @Getter
+        static class ChannelItem {
+            private final Channel<?> channel;
+
+            public ChannelItem(Channel<?> channel) {
+                this.channel = channel;
+            }
+
+            public String getDisplayString() {
+                if (channel instanceof PublicTradeChannel publicTradeChannel) {
+                    return publicTradeChannel.getMarket().map(Market::toString).orElse(Res.get("tradeChat.addMarketChannel.any"));
+                } else {
+                    return channel.getDisplayString();
+                }
+            }
         }
     }
 }

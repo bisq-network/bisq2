@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.multiSig.takeOffer;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;

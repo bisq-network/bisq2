@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.top;
 
 import bisq.common.currency.TradeCurrency;
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.layout.Layout;
 import bisq.oracle.marketprice.MarketPrice;

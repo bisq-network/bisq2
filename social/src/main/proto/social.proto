@@ -131,7 +131,8 @@ message PrivateTradeChannel {
 }
 
 message PublicTradeChannel {
-  common.Market market = 1;
+  optional common.Market market = 1;
+  bool isVisible = 2;
 }
 message PublicDiscussionChannel {
   string channelName = 1;

@@ -17,6 +17,7 @@
 
 package bisq.common.monetary;
 
+import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.Proto;
 import bisq.common.util.MathUtils;
@@ -61,7 +62,8 @@ public class Quote implements Comparable<Quote>, Proto {
         this.quoteMonetary = quoteMonetary;
         this.precision = quoteMonetary.precision;
         lowPrecision = quoteMonetary.minPrecision;
-        market = new Market(baseMonetary.getCode(), quoteMonetary.getCode());
+
+        market = new Market(baseMonetary.getCode(), quoteMonetary.getCode(), baseMonetary.getName(), quoteMonetary.getName());
     }
 
     public bisq.common.protobuf.Quote toProto() {

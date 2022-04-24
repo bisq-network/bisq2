@@ -95,9 +95,15 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             }
         });
         setAutocompleteItems(items);
-        clearOnFocus();
         registerKeyHandlers();
         reactToQueryChanges();
+
+        // Text input gets focus when added to stage (not clear why...)
+        // This prevents that the list gets opened and steals the focus
+        UIThread.runOnNextRenderFrame(() -> {
+            this.requestFocus();
+            clearOnFocus();
+        });
 
         // todo does not update items when we change list so add a handler here for a quick fix
         // need to figure out why its not updating

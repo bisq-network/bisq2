@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import javafx.beans.property.ObjectProperty;

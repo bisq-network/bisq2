@@ -67,6 +67,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
+import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -467,14 +468,18 @@ public class ChatMessagesComponent {
                         private final ChatUserIcon chatUserIcon = new ChatUserIcon(37.5);
                         Tooltip dateTooltip;
                         Subscription widthSubscription;
+                        final ReputationScore reputationScore = new ReputationScore();
 
                         {
                             userNameLabel.setId("chat-user-name");
-                            userNameLabel.setPadding(new Insets(10, 0, -5, 0));
+                            HBox userNameAndScore = Layout.hBoxWith(userNameLabel, reputationScore);
+                            userNameAndScore.setAlignment(Pos.CENTER_LEFT);
+                            userNameAndScore.setPadding(new Insets(10, 0, -5, 0));
 
                             time.setId("chat-messages-date");
                             time.setPadding(new Insets(-6, 0, 0, 0));
                             time.setVisible(false);
+                            time.setManaged(false);
 
                             //todo emojiButton1, emojiButton2, emojiButton3 will be filled with emoji icons
                             emojiButton1 = BisqIconButton.createIconButton(AwesomeIcon.THUMBS_UP_ALT);
@@ -544,7 +549,7 @@ public class ChatMessagesComponent {
                             messageBox.setSpacing(0);
                             VBox.setVgrow(messageBox, Priority.ALWAYS);
 
-                            vBox = Layout.vBoxWith(userNameLabel, messageBox);
+                            vBox = Layout.vBoxWith(userNameAndScore, messageBox);
                             HBox.setHgrow(vBox, Priority.ALWAYS);
                             VBox userIconTimeBox = Layout.vBoxWith(chatUserIcon, time);
                             HBox.setMargin(userIconTimeBox, new Insets(10, 0, 0, -10));
@@ -631,14 +636,22 @@ public class ChatMessagesComponent {
                                 chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
                                 Tooltip.install(chatUserIcon, new Tooltip(item.getAuthor().getTooltipString()));
 
+                                //todo
+                                reputationScore.applyScores(new Random().nextInt(100),
+                                        new Random().nextInt(10000),
+                                        new Random().nextInt(100) / 100d);
                                 setOnMouseEntered(e -> {
                                     time.setVisible(true);
+                                    time.setManaged(true);
+
                                     reactionsBox.setVisible(true);
                                     messageBox.setStyle("-fx-background-color: -bisq-grey-2");
                                     setStyle("-fx-background-color: -bisq-grey-2;");
                                 });
                                 setOnMouseExited(e -> {
                                     time.setVisible(false);
+                                    time.setManaged(false);
+
                                     reactionsBox.setVisible(false);
                                     messageBox.setStyle("-fx-background-color: transparent");
                                     setStyle("-fx-background-color: transparent");

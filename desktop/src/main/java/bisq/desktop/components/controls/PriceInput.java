@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.PriceValidator;

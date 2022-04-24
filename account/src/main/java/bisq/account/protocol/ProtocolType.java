@@ -17,7 +17,7 @@
 
 package bisq.account.protocol;
 
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.common.proto.ProtoEnum;
 
 import java.util.ArrayList;
@@ -52,9 +52,10 @@ public interface ProtocolType extends ProtoEnum {
     }
 
     private static boolean isBtcXmrSwapSupported(Market market) {
-        Market pair1 = new Market("BTC", "XMR");
-        Market pair2 = new Market("XMR", "BTC");
-        return market.equals(pair1) || market.equals(pair2);
+        String baseCurrencyCode = market.baseCurrencyCode();
+        String quoteCurrencyCode = market.quoteCurrencyCode();
+        return (baseCurrencyCode.equals("BTC") && quoteCurrencyCode.equals("XMR")) ||
+                (quoteCurrencyCode.equals("BTC") && baseCurrencyCode.equals("XMR"));
     }
 
     private static boolean isLiquidSwapSupported(Market market) {
@@ -64,9 +65,10 @@ public interface ProtocolType extends ProtoEnum {
     }
 
     private static boolean isBsqSwapSupported(Market market) {
-        Market pair1 = new Market("BTC", "BSQ");
-        Market pair2 = new Market("BSQ", "BTC");
-        return market.equals(pair1) || market.equals(pair2);
+        String baseCurrencyCode = market.baseCurrencyCode();
+        String quoteCurrencyCode = market.quoteCurrencyCode();
+        return (baseCurrencyCode.equals("BTC") && quoteCurrencyCode.equals("BSQ")) ||
+                (quoteCurrencyCode.equals("BTC") && baseCurrencyCode.equals("BSQ"));
     }
 
     private static boolean isLNSwapSupported(Market market) {

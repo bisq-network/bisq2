@@ -17,47 +17,65 @@
 
 package bisq.social.chat.channels;
 
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.common.observable.ObservableSet;
 import bisq.i18n.Res;
 import bisq.social.chat.NotificationSetting;
 import bisq.social.chat.messages.PublicTradeChatMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
+import java.util.Optional;
 
 @Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class PublicTradeChannel extends Channel<PublicTradeChatMessage> implements PublicChannel {
-    private final Market market;
+    private static final String ID_ANY = "anyPublicTradeChannel";
+
+    public Optional<Market> getMarket() {
+        return market;
+    }
+
+    private final Optional<Market> market;
+    @Setter
+    private  boolean isVisible;
 
     private transient final ObservableSet<PublicTradeChatMessage> chatMessages = new ObservableSet<>();
 
-    public PublicTradeChannel(Market market) {
-        this(market.toString(), market);
+    public PublicTradeChannel(Market market, boolean isVisible) {
+        this(Optional.of(market), isVisible);
     }
 
-    private PublicTradeChannel(String id, Market market) {
+    public PublicTradeChannel(Optional<Market> market, boolean isVisible) {
+        this(getId(market), market, isVisible);
+    }
+
+
+    private PublicTradeChannel(String id, Optional<Market> market, boolean isVisible) {
         super(id, NotificationSetting.MENTION);
 
         this.market = market;
+        this.isVisible = isVisible;
     }
 
     @Override
     public bisq.social.protobuf.Channel toProto() {
-        return getChannelBuilder().setPublicTradeChannel(bisq.social.protobuf.PublicTradeChannel.newBuilder()
-                        .setMarket(market.toProto()))
-                .build();
+        bisq.social.protobuf.PublicTradeChannel.Builder builder = bisq.social.protobuf.PublicTradeChannel.newBuilder()
+                .setIsVisible(isVisible);
+        market.ifPresent(market -> builder.setMarket(market.toProto()));
+        return getChannelBuilder().setPublicTradeChannel(builder).build();
     }
 
     public static PublicTradeChannel fromProto(bisq.social.protobuf.Channel baseProto,
                                                bisq.social.protobuf.PublicTradeChannel proto) {
-        return new PublicTradeChannel(baseProto.getId(), Market.fromProto(proto.getMarket()));
+        Optional<Market> market = proto.hasMarket() ? Optional.of(Market.fromProto(proto.getMarket())) : Optional.empty();
+        return new PublicTradeChannel(baseProto.getId(), market, baseProto.getPublicTradeChannel().getIsVisible());
     }
 
     @Override
@@ -81,6 +99,15 @@ public class PublicTradeChannel extends Channel<PublicTradeChatMessage> implemen
     }
 
     public String getDescription() {
-        return Res.get("social.marketChannel.description", market.toString());
+        return market.map(market -> Res.get("social.marketChannel.description", market.toString()))
+                .orElse(Res.get("social.marketChannel.description.any"));
+    }
+
+    public String getDisplayString() {
+        return market.map(Market::toString).orElse(Res.get("tradeChat.addMarketChannel.any"));
+    }
+
+    public static String getId(Optional<Market> market) {
+        return market.map(Market::toString).orElse(ID_ANY);
     }
 }

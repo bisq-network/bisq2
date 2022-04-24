@@ -158,7 +158,6 @@ public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverv
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
-
                             int index = enumOrdinalSupplier.apply(item);
                             for (int i = 0; i < stars.size(); i++) {
                                 stars.get(i).setOpacity(i <= index ? 1 : 0.2);

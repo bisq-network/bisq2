@@ -17,6 +17,7 @@
 
 package bisq.common.monetary;
 
+import bisq.common.currency.CryptoCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.util.MathUtils;
 import com.google.common.math.LongMath;
@@ -155,6 +156,11 @@ public class Coin extends Monetary {
         if (code.equals("XMR")) return 12;
         if (code.equals("BSQ")) return 2;
         return 8;
+    }
+
+    @Override
+    public String getName() {
+        return CryptoCurrencyRepository.getName(code).orElse(code);
     }
 
     @Override

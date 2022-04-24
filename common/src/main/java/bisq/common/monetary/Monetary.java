@@ -111,4 +111,6 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
     public int compareTo(Monetary other) {
         return Long.compare(value, other.getValue());
     }
+
+    public abstract String getName();
 }
