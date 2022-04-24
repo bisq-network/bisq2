@@ -54,7 +54,7 @@ public class PrivateDiscussionChatMessage extends ChatMessage implements Mailbox
                 quotedMessage,
                 date,
                 wasEdited,
-                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PrivateDiscussionChatMessage.class.getSimpleName()));
+                new MetaData(TimeUnit.DAYS.toMillis(1), 100000, PrivateDiscussionChatMessage.class.getSimpleName()));
     }
 
     private PrivateDiscussionChatMessage(String channelId,

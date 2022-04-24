@@ -50,7 +50,7 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
                 quotedMessage,
                 date,
                 wasEdited,
-                new MetaData(TimeUnit.DAYS.toMillis(10), 100000, PublicTradeChatMessage.class.getSimpleName()));
+                new MetaData(TimeUnit.DAYS.toMillis(1), 100000, PublicTradeChatMessage.class.getSimpleName()));
     }
 
     public PublicTradeChatMessage(String channelId,

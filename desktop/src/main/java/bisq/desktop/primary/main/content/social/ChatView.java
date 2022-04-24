@@ -86,7 +86,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> impleme
         );
         left.setPadding(new Insets(0, 10, 0, 0));
         left.setPrefWidth(300);
-        left.setMinWidth(180);
+        left.setMinWidth(220);
 
         // Center toolbar
         // peersRoboIconView only visible for private channels
