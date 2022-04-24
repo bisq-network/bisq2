@@ -51,8 +51,8 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         statusLabel.setTextAlignment(TextAlignment.CENTER);
 
         progressBar = new ProgressBar(-1);
-        progressBar.setMinHeight(3.5);
-        progressBar.setMaxHeight(3.5);
+        progressBar.setMinHeight(3);
+        progressBar.setMaxHeight(3);
         progressBar.setMinWidth(535);
         VBox.setMargin(progressBar, new Insets(16, 0, 16, 0));
 

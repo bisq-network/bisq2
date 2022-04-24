@@ -142,14 +142,11 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
             layout();
 
-            plusIcon.setOnMouseClicked(e -> {
-                new ComboBoxOverlay<>(plusIcon,
-                        model.allMarkets,
-                        c -> getMarketListCell(),
-                        controller::addMarket,
-                        350, 5,0).show();
-
-            });
+            plusIcon.setOnMouseClicked(e -> new ComboBoxOverlay<>(plusIcon,
+                    model.allMarkets,
+                    c -> getMarketListCell(),
+                    controller::addMarket,
+                    350, 5, 0).show());
             titledPaneContainer.widthProperty().addListener(widthListener);
         }
 
