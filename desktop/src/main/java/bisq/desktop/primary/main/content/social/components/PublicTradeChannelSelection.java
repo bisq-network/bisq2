@@ -43,6 +43,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 import java.util.Optional;
@@ -113,7 +114,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     .map(e -> ((PublicTradeChannel) e.getChannel()))
                     .filter(c -> c.getMarket().isEmpty())
                     .findAny();
-            if(anyMarketInVisible.isEmpty()){
+            if (anyMarketInVisible.isEmpty()) {
                 marketListItems.add(View.MarketListItem.ANY);
             }
 
@@ -231,14 +232,16 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 final Badge badge = new Badge(hBox);
 
                 {
-                    badge.setTooltip(Res.get("social.marketChannels.numMessages"));
-                    badge.setPosition(Pos.CENTER_RIGHT);
-                    hBox.setSpacing(10);
-                    hBox.setAlignment(Pos.CENTER_LEFT);
-                    hBox.getChildren().addAll(label, Spacer.fillHBox());
                     setCursor(Cursor.HAND);
                     setPrefHeight(40);
                     setPadding(new Insets(0, 0, -20, 0));
+
+                    badge.setTooltip(Res.get("social.marketChannels.numMessages"));
+                    badge.setPosition(Pos.CENTER_RIGHT);
+
+                    hBox.setSpacing(10);
+                    hBox.setAlignment(Pos.CENTER_LEFT);
+                    hBox.getChildren().addAll(label, Spacer.fillHBox());
                 }
 
                 @Override
@@ -260,17 +263,22 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         @Override
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {
+                private Subscription widthSubscription;
                 final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
                 final Label label = new Label();
                 final HBox hBox = new HBox();
 
                 {
-                    hBox.setSpacing(10);
-                    hBox.setAlignment(Pos.CENTER_LEFT);
-                    hBox.getChildren().addAll(label, Spacer.fillHBox(), removeIcon);
                     setCursor(Cursor.HAND);
                     setPrefHeight(40);
                     setPadding(new Insets(0, 0, -20, 0));
+
+                    hBox.setSpacing(10);
+                    hBox.setAlignment(Pos.CENTER_LEFT);
+                    hBox.getChildren().addAll(label, Spacer.fillHBox(), removeIcon);
+
+                    removeIcon.setCursor(Cursor.HAND);
+                    HBox.setMargin(removeIcon, new Insets(0, 12, 0, 0));
                 }
 
                 @Override
@@ -278,16 +286,13 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel publicTradeChannel) {
                         label.setText(item.getDisplayString());
-                        EasyBind.subscribe(widthProperty(), w -> {
+                        widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {
                                 label.setMaxWidth(getWidth() - 70);
                             }
                         });
 
                         removeIcon.setOpacity(0);
-                        removeIcon.setCursor(Cursor.HAND);
-
-                        HBox.setMargin(removeIcon, new Insets(0, 12, 0, 0));
                         removeIcon.setOnMouseClicked(e -> controller.onHideTradeChannel(publicTradeChannel));
                         setOnMouseClicked(e -> Transitions.fadeIn(removeIcon));
                         setOnMouseEntered(e -> Transitions.fadeIn(removeIcon));
@@ -299,6 +304,9 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         hBox.setOnMouseClicked(null);
                         hBox.setOnMouseEntered(null);
                         hBox.setOnMouseExited(null);
+                        if (widthSubscription != null) {
+                            widthSubscription.unsubscribe();
+                        }
                         setGraphic(null);
                     }
                 }

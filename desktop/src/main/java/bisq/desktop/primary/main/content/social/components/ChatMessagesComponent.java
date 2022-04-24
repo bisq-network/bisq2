@@ -37,7 +37,6 @@ import bisq.presentation.formatters.TimeFormatter;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
-import bisq.social.offer.TradeChatOffer;
 import bisq.social.user.ChatUser;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
@@ -340,12 +339,18 @@ public class ChatMessagesComponent {
             model.getTextInput().set(existingText + "@" + chatUser.getUserName() + " ");
         }
 
-        public void onTakeOffer(TradeChatOffer tradeChatOffer, ChatUser author) {
-            createAndSelectPrivateTradeChannel(author)
-                    .ifPresent(privateTradeChannel -> chatService.sendPrivateTradeChatMessage(
-                            Res.get("satoshisquareapp.chat.takeOffer.takerRequest", tradeChatOffer.getChatMessageText()),
-                            Optional.empty(),
-                            privateTradeChannel));
+        public void onTakeOffer(PublicTradeChatMessage marketChatMessage) {
+            if (model.isMyMessage(marketChatMessage) || marketChatMessage.getTradeChatOffer().isEmpty()) {
+                return;
+            }
+            createAndSelectPrivateTradeChannel(marketChatMessage.getAuthor())
+                    .ifPresent(privateTradeChannel -> {
+                        String chatMessageText = marketChatMessage.getTradeChatOffer().get().getChatMessageText();
+                        chatService.sendPrivateTradeChatMessage(
+                                Res.get("satoshisquareapp.chat.takeOffer.takerRequest", chatMessageText),
+                                Optional.empty(),
+                                privateTradeChannel);
+                    });
         }
     }
 
@@ -560,10 +565,11 @@ public class ChatMessagesComponent {
                         public void updateItem(final ChatMessageListItem<? extends ChatMessage> item, boolean empty) {
                             super.updateItem(item, empty);
                             if (item != null && !empty) {
-                                if (item.getQuotedMessage().isPresent()) {
+                                Optional<Quotation> optionalQuotation = item.getQuotedMessage();
+                                if (optionalQuotation.isPresent()) {
                                     quotedMessageBox.setVisible(true);
                                     quotedMessageBox.setManaged(true);
-                                    Quotation quotation = item.getQuotedMessage().get();
+                                    Quotation quotation = optionalQuotation.get();
                                     if (quotation.nickName() != null &&
                                             quotation.profileId() != null &&
                                             quotation.pubKeyHash() != null &&
@@ -602,12 +608,13 @@ public class ChatMessagesComponent {
                                     quotedMessageBox.setManaged(false);
                                 }
 
-                                if (item.getChatMessage() instanceof PublicTradeChatMessage marketChatMessage &&
-                                        marketChatMessage.getMarketChatOffer().isPresent()) {
+                                ChatMessage chatMessage = item.getChatMessage();
+                                if (!model.isMyMessage(chatMessage) &&
+                                        chatMessage instanceof PublicTradeChatMessage marketChatMessage &&
+                                        marketChatMessage.getTradeChatOffer().isPresent()) {
                                     takeOfferButton.setVisible(true);
                                     takeOfferButton.setManaged(true);
-                                    takeOfferButton.setOnAction(e -> controller.onTakeOffer(marketChatMessage.getMarketChatOffer().get(),
-                                            marketChatMessage.getAuthor()));
+                                    takeOfferButton.setOnAction(e -> controller.onTakeOffer(marketChatMessage));
 
                                 } else {
                                     takeOfferButton.setVisible(false);
@@ -620,7 +627,7 @@ public class ChatMessagesComponent {
                                 time.setText(item.getTime());
 
                                 saveEditButton.setOnAction(e -> {
-                                    controller.onSaveEditedMessage(item.getChatMessage(), editedMessageField.getText());
+                                    controller.onSaveEditedMessage(chatMessage, editedMessageField.getText());
                                     onCloseEditMessage();
                                 });
                                 cancelEditButton.setOnAction(e -> onCloseEditMessage());
@@ -633,7 +640,7 @@ public class ChatMessagesComponent {
 
                                 chatUserIcon.setChatUser(item.getAuthor(), model.getUserProfileService());
                                 chatUserIcon.setCursor(Cursor.HAND);
-                                chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
+                                chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(chatMessage));
                                 Tooltip.install(chatUserIcon, new Tooltip(item.getAuthor().getTooltipString()));
 
                                 //todo
@@ -657,7 +664,6 @@ public class ChatMessagesComponent {
                                     setStyle("-fx-background-color: transparent");
                                 });
 
-                                ChatMessage chatMessage = item.getChatMessage();
                                 emojiButton1.setOnAction(e -> controller.onAddEmoji((String) emojiButton1.getUserData()));
                                 emojiButton2.setOnAction(e -> controller.onAddEmoji((String) emojiButton2.getUserData()));
                                 openEmojiSelectorButton.setOnAction(e -> controller.onOpenEmojiSelector(chatMessage));

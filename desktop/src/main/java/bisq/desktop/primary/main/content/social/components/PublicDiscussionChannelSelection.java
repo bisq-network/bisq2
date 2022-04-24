@@ -31,6 +31,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class PublicDiscussionChannelSelection extends ChannelSelection {
@@ -111,27 +113,36 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
         @Override
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {
+                private Subscription widthSubscription;
                 final Label label = new Label();
                 final HBox hBox = new HBox();
 
                 {
-                    hBox.setSpacing(10);
-                    hBox.setAlignment(Pos.CENTER_LEFT);
                     setCursor(Cursor.HAND);
                     setPrefHeight(40);
                     setPadding(new Insets(0, 0, -20, 0));
+
+                    hBox.setSpacing(10);
+                    hBox.setAlignment(Pos.CENTER_LEFT);
+                    hBox.getChildren().add(label);
                 }
 
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PublicDiscussionChannel) {
-                        hBox.getChildren().clear();
                         label.setText(item.getDisplayString());
-                        hBox.getChildren().add(label);
+                        widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
+                            if (w.doubleValue() > 0) {
+                                label.setMaxWidth(getWidth() - 70);
+                            }
+                        });
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);
+                        if (widthSubscription != null) {
+                            widthSubscription.unsubscribe();
+                        }
                     }
                 }
             };

@@ -34,18 +34,18 @@ import java.util.concurrent.TimeUnit;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class PublicTradeChatMessage extends PublicDiscussionChatMessage implements DistributedData {
-    private final Optional<TradeChatOffer> marketChatOffer;
+    private final Optional<TradeChatOffer> tradeChatOffer;
 
     public PublicTradeChatMessage(String channelId,
                                   ChatUser sender,
-                                  Optional<TradeChatOffer> marketChatOffer,
+                                  Optional<TradeChatOffer> tradeChatOffer,
                                   Optional<String> text,
                                   Optional<Quotation> quotedMessage,
                                   long date,
                                   boolean wasEdited) {
         this(channelId,
                 sender,
-                marketChatOffer,
+                tradeChatOffer,
                 text,
                 quotedMessage,
                 date,
@@ -55,7 +55,7 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
 
     public PublicTradeChatMessage(String channelId,
                                   ChatUser sender,
-                                  Optional<TradeChatOffer> marketChatOffer,
+                                  Optional<TradeChatOffer> tradeChatOffer,
                                   Optional<String> text,
                                   Optional<Quotation> quotedMessage,
                                   long date,
@@ -68,12 +68,12 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
                 date,
                 wasEdited,
                 metaData);
-        this.marketChatOffer = marketChatOffer;
+        this.tradeChatOffer = tradeChatOffer;
     }
 
     public bisq.social.protobuf.ChatMessage toProto() {
         bisq.social.protobuf.PublicTradeChatMessage.Builder builder = bisq.social.protobuf.PublicTradeChatMessage.newBuilder();
-        marketChatOffer.ifPresent(marketChatOffer -> builder.setTradeChatOffer(marketChatOffer.toProto()));
+        tradeChatOffer.ifPresent(tradeChatOffer -> builder.setTradeChatOffer(tradeChatOffer.toProto()));
         return getChatMessageBuilder().setPublicTradeChatMessage(builder).build();
     }
 
@@ -84,13 +84,13 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
         Optional<String> text = baseProto.hasText() ?
                 Optional.of(baseProto.getText()) :
                 Optional.empty();
-        Optional<TradeChatOffer> marketChatOffer = baseProto.getPublicTradeChatMessage().hasTradeChatOffer() ?
+        Optional<TradeChatOffer> tradeChatOffer = baseProto.getPublicTradeChatMessage().hasTradeChatOffer() ?
                 Optional.of(TradeChatOffer.fromProto(baseProto.getPublicTradeChatMessage().getTradeChatOffer())) :
                 Optional.empty();
         return new PublicTradeChatMessage(
                 baseProto.getChannelId(),
                 ChatUser.fromProto(baseProto.getAuthor()),
-                marketChatOffer,
+                tradeChatOffer,
                 text,
                 quotedMessage,
                 baseProto.getDate(),
@@ -100,7 +100,7 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
 
     @Override
     public String getText() {
-        return marketChatOffer.map(TradeChatOffer::getChatMessageText).orElse(super.getText());
+        return tradeChatOffer.map(TradeChatOffer::getChatMessageText).orElse(super.getText());
     }
 
     @Override
