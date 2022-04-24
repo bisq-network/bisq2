@@ -22,7 +22,7 @@ import bisq.common.monetary.Market;
 import bisq.common.monetary.MarketRepository;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.Icons;
-import bisq.desktop.overlay.ListViewOverlay;
+import bisq.desktop.overlay.ComboBoxOverlay;
 import bisq.i18n.Res;
 import bisq.social.chat.channels.Channel;
 import bisq.social.chat.channels.PublicTradeChannel;
@@ -109,8 +109,10 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         public void addMarket(Market market) {
-            PublicTradeChannel tradeChannel = chatService.addPublicTradeChannel(market);
-            chatService.selectTradeChannel(tradeChannel);
+            if (market != null) {
+                PublicTradeChannel tradeChannel = chatService.addPublicTradeChannel(market);
+                chatService.selectTradeChannel(tradeChannel);
+            }
         }
     }
 
@@ -141,11 +143,11 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             layout();
 
             plusIcon.setOnMouseClicked(e -> {
-                new ListViewOverlay<>(plusIcon,
+                new ComboBoxOverlay<>(plusIcon,
                         model.allMarkets,
                         c -> getMarketListCell(),
                         controller::addMarket,
-                        400).show();
+                        350, 5,0).show();
 
             });
             titledPaneContainer.widthProperty().addListener(widthListener);

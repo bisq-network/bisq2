@@ -32,7 +32,7 @@ import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class EmptyOverlay {
+public class PopOver {
     private final Region owner;
     private final Region content;
     private final double offsetX;
@@ -47,7 +47,10 @@ public class EmptyOverlay {
     private double height;
     private UIScheduler fixPositionsScheduler;
 
-    public EmptyOverlay(Region owner, Region content, double offsetX, double offsetY) {
+    public PopOver(Region owner, Region content) {
+        this(owner, content, 0,0);
+    }
+    public PopOver(Region owner, Region content, double offsetX, double offsetY) {
         this.owner = owner;
         this.content = content;
         this.offsetX = offsetX;

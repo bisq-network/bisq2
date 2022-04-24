@@ -167,6 +167,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected Button actionButton, secondaryActionButton;
     private HBox buttonBox;
     protected Button closeButton;
+    private Region content;
 
     private HPos buttonAlignment = HPos.RIGHT;
 
@@ -373,6 +374,11 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public T message(String message) {
         preProcessMessage(message);
+        return cast();
+    }
+
+    public T content(Region content) {
+        this.content = content;
         return cast();
     }
 
@@ -805,6 +811,16 @@ public abstract class Overlay<T extends Overlay<T>> {
             GridPane.setColumnIndex(messageLabel, 0);
             GridPane.setColumnSpan(messageLabel, 2);
             gridPane.getChildren().add(messageLabel);
+            addFooter();
+        }
+        if (content != null) {
+            GridPane.setHalignment(content, HPos.LEFT);
+            GridPane.setHgrow(content, Priority.ALWAYS);
+            GridPane.setMargin(content, new Insets(3, 0, 0, 0));
+            GridPane.setRowIndex(content, gridPane.getRowCount());
+            GridPane.setColumnIndex(content, 0);
+            GridPane.setColumnSpan(content, 2);
+            gridPane.getChildren().add(content);
             addFooter();
         }
     }
