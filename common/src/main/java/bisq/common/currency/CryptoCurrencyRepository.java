@@ -24,6 +24,8 @@ import java.util.stream.Collectors;
 
 public class CryptoCurrencyRepository {
     @Getter
+    private static Map<String, String> nameByCode = new HashMap<>();
+    @Getter
     private static Map<String, CryptoCurrency> currencyByCode = new HashMap<>();
     @Getter
     private static List<CryptoCurrency> majorCurrencies;
@@ -37,30 +39,57 @@ public class CryptoCurrencyRepository {
     static {
         CryptoCurrency btc = new CryptoCurrency("BTC", "Bitcoin");
         currencyByCode.put("BTC", btc);
-        currencyByCode.put("USDT", new CryptoCurrency("USDT", "USD-Tether"));
         currencyByCode.put("XMR", new CryptoCurrency("XMR", "Monero"));
-        currencyByCode.put("ETH", new CryptoCurrency("ETH", "Ethereum"));
+        currencyByCode.put("L-BTC", new CryptoCurrency("L-BTC", "Liquid-Bitcoin"));
+        currencyByCode.put("USDT", new CryptoCurrency("USDT", "USD-Tether"));
         currencyByCode.put("GRIN", new CryptoCurrency("GRIN", "Grin"));
         currencyByCode.put("ZEC", new CryptoCurrency("ZEC", "Zcash"));
-        currencyByCode.put("L-BTC", new CryptoCurrency("L-BTC", "Liquid-Bitcoin"));
+        currencyByCode.put("ETH", new CryptoCurrency("ETH", "Ethereum"));
 
         defaultCurrency = btc;
+
         majorCurrencies = initMajorCurrencies();
+        majorCurrencies.remove(defaultCurrency);
+
         minorCurrencies = new ArrayList<>(currencyByCode.values());
         minorCurrencies.remove(defaultCurrency);
         minorCurrencies.removeAll(majorCurrencies);
         minorCurrencies.sort(Comparator.comparing(TradeCurrency::getNameAndCode));
+
         allCurrencies = new ArrayList<>();
         allCurrencies.add(defaultCurrency);
         allCurrencies.addAll(majorCurrencies);
         allCurrencies.addAll(minorCurrencies);
+
+        fillNameByCodeMap();
+
+        nameByCode.forEach((code, name) -> {
+            CryptoCurrency cryptoCurrency = new CryptoCurrency(code, name);
+            currencyByCode.put(code, cryptoCurrency);
+            if (!defaultCurrency.equals(cryptoCurrency) &&
+                    !majorCurrencies.contains(cryptoCurrency) &&
+                    !minorCurrencies.contains(cryptoCurrency)) {
+                minorCurrencies.add(cryptoCurrency);
+            }
+        });
     }
 
     private static List<CryptoCurrency> initMajorCurrencies() {
-        List<String> mainCodes = new ArrayList<>(List.of("BTC", "XMR", "L-BTC", "ETH", "USDT", "GRIN", "ZEC"));
+        List<String> mainCodes = new ArrayList<>(List.of("BTC", "XMR", "L-BTC", "USDT", "GRIN", "ZEC", "ETH"));
         return mainCodes.stream()
                 .map(code -> currencyByCode.get(code))
                 .distinct()
                 .collect(Collectors.toList());
     }
+
+    public static Optional<String> getName(String code) {
+        return Optional.ofNullable(currencyByCode.get(code)).map(TradeCurrency::getName);
+    }
+
+
+    //todo fill with major coins
+    private static void fillNameByCodeMap() {
+        nameByCode.put("ALGO", "Algorand");
+    }
+
 }

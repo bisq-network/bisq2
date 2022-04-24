@@ -17,6 +17,7 @@
 
 package bisq.common.monetary;
 
+import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.util.MathUtils;
 import com.google.common.math.LongMath;
@@ -111,6 +112,11 @@ public class Fiat extends Monetary {
     @Override
     public double toDouble(long value) {
         return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
+    }
+
+    @Override
+    public String getName() {
+        return FiatCurrencyRepository.getName(code).orElse(code);
     }
 
     @Override

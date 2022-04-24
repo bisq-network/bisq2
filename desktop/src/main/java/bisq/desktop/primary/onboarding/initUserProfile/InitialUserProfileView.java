@@ -111,6 +111,7 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         nextButton.disableProperty().bind(model.createProfileButtonDisable);
         roboIconWithId.textProperty().bind(model.profileId);
         nicknameTextInputBox.textProperty().bindBidirectional(model.nickName);
+        nicknameTextInputBox.requestFocus();
 
         roboIconWithId.setOnAction(controller::onCreateTempIdentity);
         nextButton.setOnAction(e -> controller.onCreateUserProfile());

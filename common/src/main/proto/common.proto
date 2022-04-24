@@ -54,6 +54,8 @@ message TradeCurrency {
 message Market {
   string baseCurrencyCode = 1;
   string quoteCurrencyCode = 2;
+  string baseCurrencyName = 3;
+  string quoteCurrencyName = 4;
 }
 
 message Coin {

@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.account.protocol.ProtocolType;
 import bisq.account.protocol.SwapProtocolType;
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;

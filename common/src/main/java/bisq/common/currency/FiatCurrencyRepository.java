@@ -48,20 +48,23 @@ public class FiatCurrencyRepository {
                 .collect(Collectors.toMap(FiatCurrency::getCode, Function.identity(), (x, y) -> x, HashMap::new));
 
         defaultCurrency = getCurrencyByCountryCode(locale.getCountry(), locale);
-        majorCurrencies = initMajorCurrencies(LocaleRepository.getDefaultLocale());
+
+        majorCurrencies = initMajorCurrencies();
+        majorCurrencies.remove(defaultCurrency);
+
         minorCurrencies = new ArrayList<>(currencyByCode.values());
         minorCurrencies.remove(defaultCurrency);
         minorCurrencies.removeAll(majorCurrencies);
         minorCurrencies.sort(Comparator.comparing(TradeCurrency::getNameAndCode));
+
         allCurrencies = new ArrayList<>();
         allCurrencies.add(defaultCurrency);
         allCurrencies.addAll(majorCurrencies);
         allCurrencies.addAll(minorCurrencies);
     }
 
-    private static List<FiatCurrency> initMajorCurrencies(Locale locale) {
-        List<String> mainCodes = new ArrayList<>(List.of("USD", "EUR", "GBP", "CAD", "AUD", "RUB", "INR", "NGN"));
-        mainCodes.add(0, defaultCurrency.code);
+    private static List<FiatCurrency> initMajorCurrencies() {
+        List<String> mainCodes = new ArrayList<>(List.of("USD", "EUR", "GBP", "CAD", "AUD", "RUB", "CNY", "INR", "NGN"));
         return mainCodes.stream()
                 .map(code -> currencyByCode.get(code))
                 .distinct()
@@ -87,5 +90,9 @@ public class FiatCurrencyRepository {
 
     public static FiatCurrency getCurrencyByCode(String code) {
         return currencyByCode.get(code);
+    }
+
+    public static Optional<String> getName(String code) {
+        return Optional.ofNullable(currencyByCode.get(code)).map(TradeCurrency::getName);
     }
 }

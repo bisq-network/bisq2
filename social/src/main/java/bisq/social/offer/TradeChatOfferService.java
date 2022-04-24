@@ -17,7 +17,7 @@
 
 package bisq.social.offer;
 
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;

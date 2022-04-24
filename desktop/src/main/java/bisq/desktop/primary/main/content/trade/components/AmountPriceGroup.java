@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.components;
 
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;

@@ -17,10 +17,10 @@
 
 package bisq.oracle.marketprice;
 
+import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Pair;
-import bisq.common.monetary.Market;
-import bisq.common.monetary.MarketRepository;
 import bisq.common.monetary.Quote;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;

@@ -41,7 +41,6 @@ public class TextInputBox extends Pane {
     private String prompt;
     private final StringProperty descriptionProperty = new SimpleStringProperty();
 
-    //  private final Label promptLabel;
     public TextInputBox(String description, String prompt) {
         this();
 
@@ -80,6 +79,10 @@ public class TextInputBox extends Pane {
             }
         });
         UIThread.runOnNextRenderFrame(this::requestFocus);
+    }
+
+    public void requestFocus() {
+        inputTextField.requestFocus();
     }
 
     public void setOnMousePressedHandler(EventHandler<? super MouseEvent> handler) {

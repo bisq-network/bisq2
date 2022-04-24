@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.offerbook;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;

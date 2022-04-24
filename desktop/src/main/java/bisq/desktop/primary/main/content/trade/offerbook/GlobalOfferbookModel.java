@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.offerbook;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;

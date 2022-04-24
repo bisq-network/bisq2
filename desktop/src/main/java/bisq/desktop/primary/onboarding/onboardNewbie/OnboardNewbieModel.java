@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.onboarding.onboardNewbie;
 
-import bisq.common.monetary.Market;
+import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Model;
