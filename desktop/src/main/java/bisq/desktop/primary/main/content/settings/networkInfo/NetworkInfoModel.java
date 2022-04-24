@@ -44,7 +44,7 @@ public class NetworkInfoModel implements Model {
     private final BooleanProperty i2pDisabled = new SimpleBooleanProperty(false);
     // private final ObjectProperty<Optional<TransportTypeView>> transportTypeView = new SimpleObjectProperty<>();
     private final Set<Transport.Type> supportedTransportTypes;
-  //  private final Set<NavigationTarget> supportedNavigationTarget;
+    //  private final Set<NavigationTarget> supportedNavigationTarget;
     // private final Optional<Transport.Type> selectedTransportType = Optional.empty();
 
     private final KeyPairService keyPairService;

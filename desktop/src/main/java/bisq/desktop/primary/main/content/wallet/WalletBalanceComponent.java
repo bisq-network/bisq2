@@ -81,17 +81,17 @@ public class WalletBalanceComponent {
         private View(Model model, Controller controller) {
             super(new HBox(), model, controller);
 
-           // root.setAlignment(Pos.BASELINE_CENTER);
+            // root.setAlignment(Pos.BASELINE_CENTER);
             root.setSpacing(8);
 
             Label label = new Label(Res.get("wallet.availableBalance").toUpperCase());
             label.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 0.8em");
-            label.setPadding(new Insets(3,0,0,0));
-            
+            label.setPadding(new Insets(3, 0, 0, 0));
+
             balance = new Label();
             balance.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.05em");
-           
-            root.getChildren().addAll(label,balance );
+
+            root.getChildren().addAll(label, balance);
         }
 
         @Override

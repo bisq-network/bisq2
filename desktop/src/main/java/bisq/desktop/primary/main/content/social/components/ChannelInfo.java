@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.social.components;
 
 import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
-import bisq.social.chat.*;
+import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.Channel;
 import bisq.social.chat.channels.PublicDiscussionChannel;
 import bisq.social.chat.channels.PublicTradeChannel;

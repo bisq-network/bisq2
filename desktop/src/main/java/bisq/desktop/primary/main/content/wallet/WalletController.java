@@ -32,7 +32,7 @@ import lombok.Getter;
 
 import java.util.Optional;
 
-public class WalletController extends TabController<WalletModel> {
+public class WalletController extends TabController<WalletModel> implements Controller {
     @Getter
     private final WalletView view;
     private final DefaultApplicationService applicationService;
@@ -41,7 +41,7 @@ public class WalletController extends TabController<WalletModel> {
 
     public WalletController(DefaultApplicationService applicationService) {
         super(new WalletModel(), NavigationTarget.WALLET);
-        
+
         this.applicationService = applicationService;
         walletService = applicationService.getWalletService();
 
@@ -91,6 +91,6 @@ public class WalletController extends TabController<WalletModel> {
     }
 
     private void onConfigPopupClosed() {
-        Navigation.navigateTo(model.getDefaultNavigationTarget());
+        Navigation.navigateTo(NavigationTarget.WALLET_TRANSACTIONS);
     }
 }

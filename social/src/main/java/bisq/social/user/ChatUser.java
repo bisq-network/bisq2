@@ -91,9 +91,11 @@ public class ChatUser implements Proto {
     public String getId() {
         return getDerivedData().id();
     }
+
     public String getTooltipString() {
         return Res.get("social.chatUser.tooltip", nickName, getProfileId());
     }
+
     public String getProfileId() {
         return getDerivedData().profileId;
     }
@@ -101,6 +103,7 @@ public class ChatUser implements Proto {
     public String getUserName() {
         return UserNameLookup.getUserName(getProfileId(), nickName);
     }
+
     public byte[] getPubKeyHash() {
         return getDerivedData().pubKeyHash().getBytes();
     }

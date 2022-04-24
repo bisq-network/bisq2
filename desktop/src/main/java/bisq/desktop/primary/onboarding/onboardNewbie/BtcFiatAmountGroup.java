@@ -22,7 +22,6 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
-import javafx.scene.control.Label;
 import bisq.desktop.components.controls.AmountInput;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
@@ -35,6 +34,7 @@ import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -199,7 +199,7 @@ class BtcFiatAmountGroup {
 
             this.baseAmount = baseAmount;
             this.quoteAmount = quoteAmount;
-            
+
             VBox baseAmountBox = new VBox();
             baseAmountBox.setSpacing(3);
             maxAmountLabel = new Label(Res.get("satoshisquareapp.createOffer.maxAmount"));

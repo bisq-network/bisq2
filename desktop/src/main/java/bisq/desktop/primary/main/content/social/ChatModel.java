@@ -46,7 +46,7 @@ public class ChatModel implements Model {
     private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
     private final BooleanProperty peersRoboIconVisible = new SimpleBooleanProperty();
     private final ObjectProperty<Image> peersRoboIconImage = new SimpleObjectProperty<>();
-    
+
     @Setter
     private Optional<ChatUserDetails> chatUserDetails = Optional.empty();
 

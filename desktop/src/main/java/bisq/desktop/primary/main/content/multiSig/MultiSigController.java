@@ -18,20 +18,23 @@
 package bisq.desktop.primary.main.content.multiSig;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.multiSig.closedTrades.ClosedTradesController;
+import bisq.desktop.primary.main.content.multiSig.createOffer.CreateOfferController;
 import bisq.desktop.primary.main.content.multiSig.offerbook.OfferbookController;
 import bisq.desktop.primary.main.content.multiSig.openoffers.OpenOffersController;
 import bisq.desktop.primary.main.content.multiSig.pendingTrades.PendingTradesController;
 import bisq.desktop.primary.main.content.multiSig.takeOffer.TakeOfferController;
-import bisq.desktop.primary.main.content.multiSig.createOffer.CreateOfferController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public class MultiSigController extends TabController<MultiSigModel> implements CachingController {
+public class MultiSigController extends TabController<MultiSigModel> implements Controller {
     private final DefaultApplicationService applicationService;
     @Getter
     private final MultiSigView view;

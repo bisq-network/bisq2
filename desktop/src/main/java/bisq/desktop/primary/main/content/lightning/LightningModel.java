@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.view;
-/**
- * Interface to mark a child controller to be cached by its parent Navigation controller.
- */
-public interface CachingController extends Controller{
+package bisq.desktop.primary.main.content.lightning;
+
+import bisq.desktop.common.view.Model;
+
+public class LightningModel implements Model {
 }

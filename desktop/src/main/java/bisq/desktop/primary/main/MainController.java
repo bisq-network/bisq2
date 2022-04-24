@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.CachingController;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
@@ -32,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class MainController extends NavigationController implements CachingController {
+public class MainController extends NavigationController {
     @Getter
     private final MainModel model = new MainModel();
     @Getter
@@ -47,7 +46,7 @@ public class MainController extends NavigationController implements CachingContr
         settingsService = applicationService.getSettingsService();
         this.applicationService = applicationService;
 
-         leftNavController = new LeftNavController(applicationService);
+        leftNavController = new LeftNavController(applicationService);
         TopPanelController topPanelController = new TopPanelController(applicationService);
 
         view = new MainView(model,

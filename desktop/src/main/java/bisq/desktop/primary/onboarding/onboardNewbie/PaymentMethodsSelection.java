@@ -21,7 +21,6 @@ import bisq.common.monetary.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
-import javafx.scene.control.Label;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
@@ -179,7 +178,7 @@ public class PaymentMethodsSelection {
             maxPaymentMethods.setPadding(new Insets(3, 5, 0, 0));
 
             comboBox = new AutoCompleteComboBox<>(model.paymentMethods, model.description.get());
-          
+
             selectedPaymentMethodsBox = new FlowPane();
             selectedPaymentMethodsBox.setHgap(10);
             selectedPaymentMethodsBox.setVgap(10);
@@ -196,7 +195,7 @@ public class PaymentMethodsSelection {
             };
             selectedItemListener = (observable, oldValue, newValue) -> {
                 controller.onAddPaymentMethod(comboBox.getSelectionModel().getSelectedItem());
-                UIThread.runOnNextRenderFrame(()-> comboBox.getSelectionModel().clearSelection());
+                UIThread.runOnNextRenderFrame(() -> comboBox.getSelectionModel().clearSelection());
             };
         }
 

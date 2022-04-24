@@ -121,18 +121,18 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
         private View(Model model, Controller controller) {
             super(new HBox(), model, controller);
-            
+
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
 
             userName = new Label();
             userName.setMaxWidth(100);
-            Tooltip.install(userName,  new Tooltip(model.chatUser.getTooltipString()));
+            Tooltip.install(userName, new Tooltip(model.chatUser.getTooltipString()));
 
             roboIcon = new ImageView();
             roboIcon.setFitWidth(37.5);
             roboIcon.setFitHeight(37.5);
-            Tooltip.install(roboIcon,  new Tooltip(model.chatUser.getTooltipString()));
+            Tooltip.install(roboIcon, new Tooltip(model.chatUser.getTooltipString()));
 
             HBox hBox = Layout.hBoxWith(roboIcon, userName);
             hBox.setAlignment(Pos.CENTER_LEFT);

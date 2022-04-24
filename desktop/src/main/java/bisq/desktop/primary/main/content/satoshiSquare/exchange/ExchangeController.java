@@ -18,20 +18,48 @@
 package bisq.desktop.primary.main.content.satoshiSquare.exchange;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.data.ByteArray;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.social.ChatController;
 import bisq.desktop.primary.main.content.social.components.PublicTradeChannelSelection;
+import bisq.social.chat.channels.Channel;
+import bisq.social.chat.channels.PrivateTradeChannel;
+import bisq.social.chat.messages.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
 
 @Slf4j
-public class ExchangeController extends ChatController<ExchangeView, ExchangeModel> {
+public class ExchangeController extends ChatController<ExchangeView, ExchangeModel> implements Controller {
+    private PublicTradeChannelSelection publicTradeChannelSelection;
 
     public ExchangeController(DefaultApplicationService applicationService) {
-        super(applicationService);
+        super(applicationService, false);
     }
 
     @Override
-    public ExchangeModel getChatModel() {
-        return new ExchangeModel();
+    public void onActivate() {
+        super.onActivate();
+
+        notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
+                value -> {
+                    Channel<? extends ChatMessage> channel = chatService.getSelectedTradeChannel().get();
+                    if (channel != null) {
+                        chatService.setNotificationSetting(channel, value);
+                    }
+                });
+
+        selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(this::handleChannelChange);
+    }
+
+    @Override
+    public void createComponents() {
+        publicTradeChannelSelection = new PublicTradeChannelSelection(applicationService);
+    }
+
+    @Override
+    public ExchangeModel getChatModel(boolean isDiscussionsChat) {
+        return new ExchangeModel(isDiscussionsChat);
     }
 
     @Override
@@ -39,11 +67,25 @@ public class ExchangeController extends ChatController<ExchangeView, ExchangeMod
         return new ExchangeView(model,
                 this,
                 userProfileSelection.getRoot(),
-                new PublicTradeChannelSelection(applicationService).getRoot(),
+                publicTradeChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 notificationsSettings.getRoot(),
                 channelInfo.getRoot(),
                 filterBox);
+    }
+
+    @Override
+    protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
+        super.handleChannelChange(channel);
+
+        if (channel instanceof PrivateTradeChannel privateTradeChannel) {
+            model.getPeersRoboIconImage().set(RoboHash.getImage(new ByteArray(privateTradeChannel.getPeer().getPubKeyHash())));
+            model.getPeersRoboIconVisible().set(true);
+            publicTradeChannelSelection.deSelectChannel();
+        } else {
+            model.getPeersRoboIconVisible().set(false);
+            privateChannelSelection.deSelectChannel();
+        }
     }
 }

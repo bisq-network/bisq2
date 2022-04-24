@@ -19,8 +19,8 @@ package bisq.desktop.common.view;
 
 /**
  * Interface for views which want to get notified if a transition was applied to it (usually by some outer container)
- * This is helpful for cascaded animations. 
- * E.g. ContentView fades in the PortfolioView after a short delay, the PortfolioView listens to onStartTransition to 
+ * This is helpful for cascaded animations.
+ * E.g. ContentView fades in the PortfolioView after a short delay, the PortfolioView listens to onStartTransition to
  * start its tabButton animation when fadein has started.
  */
 public interface TransitionedView {

@@ -104,6 +104,14 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         items.addListener(new WeakReference<>((ListChangeListener<T>) c -> setAutocompleteItems(items)).get());
     }
 
+    public Skin<T> getAutoCompleteComboBoxSkin() {
+        return skin;
+    }
+
+    public TextField getEditorTextField() {
+        return editor;
+    }
+
     @Override
     protected javafx.scene.control.Skin<?> createDefaultSkin() {
         if (skin == null) {
@@ -280,6 +288,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         protected final ObservableList<T> items;
         protected final ComboBox<T> comboBox;
         protected final Pane buttonPane;
+        private final DropShadow dropShadow;
         protected ListView<T> listView;
 
         public Skin(ComboBox<T> control, String description, String prompt) {
@@ -304,7 +313,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
             // todo: 5px does not look good, so leave it to 25 and wait for designer to make decision. Maybe we need
             // update layouts then...
-            DropShadow dropShadow = new DropShadow();
+            dropShadow = new DropShadow();
             dropShadow.setBlurType(BlurType.GAUSSIAN);
             dropShadow.setRadius(25);
             dropShadow.setSpread(0.65);
@@ -360,7 +369,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         protected void layoutChildren(final double x, final double y,
                                       final double w, final double h) {
             super.layoutChildren(x, y, w, h);
-           
+
             arrow.setLayoutX(w - 22);
             textInputBox.setPrefWidth(w);
             layoutListView();
@@ -401,6 +410,10 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
         protected int getRowHeight() {
             return 40;
+        }
+
+        public void setDropShadowColor(Color color) {
+            dropShadow.setColor(color);
         }
     }
 }

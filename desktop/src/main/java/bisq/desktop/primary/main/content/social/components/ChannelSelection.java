@@ -77,7 +77,7 @@ public abstract class ChannelSelection {
         protected final ListView<Channel<?>> listView;
         private final InvalidationListener channelsChangedListener;
         protected final Pane titledPaneContainer;
-        private final TitledPane titledPane;
+        protected final TitledPane titledPane;
         protected Subscription listViewSelectedChannelSubscription, modelSelectedChannelSubscription;
 
         protected View(M model, C controller) {
@@ -111,8 +111,10 @@ public abstract class ChannelSelection {
                     });
             modelSelectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
                     channel -> {
-                        if (channel != null && !channel.equals(listView.getSelectionModel().getSelectedItem())) {
-                            UIThread.runOnNextRenderFrame(() -> listView.getSelectionModel().select(channel));
+                        if (channel == null) {
+                            listView.getSelectionModel().clearSelection();
+                        } else if (!channel.equals(listView.getSelectionModel().getSelectedItem())) {
+                            listView.getSelectionModel().select(channel);
                         }
                     });
             model.channels.addListener(channelsChangedListener);

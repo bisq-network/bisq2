@@ -52,10 +52,7 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
         super(new VBox(), model, controller);
 
         root.setSpacing(MARGIN);
-    }
 
-    @Override
-    protected void onViewAttached() {
         addHeaderBox();
         addSmallBox("bisq", "bitcoin");
         addSmallBox("security", "privacy");
@@ -81,6 +78,10 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
                 }
             }
         }
+    }
+
+    @Override
+    protected void onViewAttached() {
     }
 
     @Override

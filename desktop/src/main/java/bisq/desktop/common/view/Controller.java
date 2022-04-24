@@ -21,7 +21,7 @@ import javafx.scene.Parent;
 
 /**
  * By default, we do not use caching. If a child controller should be cached by its parent Navigation controller,
- * it has to implement the CachingController interface.
+ * it has to implement the Controller interface.
  */
 public interface Controller {
     View<? extends Parent, ? extends Model, ? extends Controller> getView();
@@ -38,4 +38,8 @@ public interface Controller {
     void onActivate();
 
     void onDeactivate();
+
+    default boolean useCaching() {
+        return true;
+    }
 }

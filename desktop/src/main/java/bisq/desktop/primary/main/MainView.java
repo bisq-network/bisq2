@@ -32,12 +32,12 @@ public class MainView extends NavigationView<HBox, MainModel, MainController> {
         root.setFillHeight(true);
         AnchorPane topPanelAndContentBox = new AnchorPane();
         topPanelAndContentBox.getChildren().add(topPanelView);
-        Layout.pinToAnchorPane(topPanelView, 0,0,null,0);
+        Layout.pinToAnchorPane(topPanelView, 0, 0, null, 0);
 
         model.getView().addListener((observable, oldValue, contentView) -> {
             Region child = contentView.getRoot();
             HBox.setHgrow(child, Priority.ALWAYS);
-            Layout.pinToAnchorPane(child, TopPanelView.HEIGHT,0,0,0);
+            Layout.pinToAnchorPane(child, TopPanelView.HEIGHT, 0, 0, 0);
             topPanelAndContentBox.getChildren().add(child);
         });
 

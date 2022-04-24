@@ -58,7 +58,7 @@ import static javafx.scene.paint.Color.YELLOW;
 
 public class PopOverSkin implements Skin<PopOver> {
 
-    private static final String DETACHED_STYLE_CLASS = "detached"; //$NON-NLS-1$
+    private static final String DETACHED_STYLE_CLASS = "detached";
 
     private double xOffset;
     private double yOffset;
@@ -105,7 +105,7 @@ public class PopOverSkin implements Skin<PopOver> {
         title.textProperty().bind(popOver.titleProperty());
         title.setMaxSize(MAX_VALUE, MAX_VALUE);
         title.setAlignment(Pos.CENTER);
-        title.getStyleClass().add("text"); //$NON-NLS-1$
+        title.getStyleClass().add("text");
 
         Label closeIcon = new Label();
         closeIcon.setGraphic(createCloseIcon());
@@ -114,18 +114,18 @@ public class PopOverSkin implements Skin<PopOver> {
         closeIcon.visibleProperty().bind(
                 popOver.closeButtonEnabledProperty().and(
                         popOver.detachedProperty().or(popOver.headerAlwaysVisibleProperty())));
-        closeIcon.getStyleClass().add("icon"); //$NON-NLS-1$
+        closeIcon.getStyleClass().add("icon");
         closeIcon.setAlignment(CENTER_LEFT);
         closeIcon.getGraphic().setOnMouseClicked(evt -> popOver.hide());
 
         titlePane = new StackPane();
         titlePane.getChildren().add(title);
         titlePane.getChildren().add(closeIcon);
-        titlePane.getStyleClass().add("title"); //$NON-NLS-1$
+        titlePane.getStyleClass().add("title");
 
         content = new BorderPane();
         content.setCenter(popOver.getContentNode());
-        content.getStyleClass().add("content"); //$NON-NLS-1$
+        content.getStyleClass().add("content");
 
         if (popOver.isDetached() || popOver.isHeaderAlwaysVisible()) {
             content.setTop(titlePane);
@@ -190,7 +190,7 @@ public class PopOverSkin implements Skin<PopOver> {
                 });
 
         path = new Path();
-        path.getStyleClass().add("border"); //$NON-NLS-1$
+        path.getStyleClass().add("border");
         path.setManaged(false);
 
         clip = new Path();
@@ -274,17 +274,17 @@ public class PopOverSkin implements Skin<PopOver> {
 
     private Node createCloseIcon() {
         Group group = new Group();
-        group.getStyleClass().add("graphics"); //$NON-NLS-1$
+        group.getStyleClass().add("graphics");
 
         Circle circle = new Circle();
-        circle.getStyleClass().add("circle"); //$NON-NLS-1$
+        circle.getStyleClass().add("circle");
         circle.setRadius(6);
         circle.setCenterX(6);
         circle.setCenterY(6);
         group.getChildren().add(circle);
 
         Line line1 = new Line();
-        line1.getStyleClass().add("line"); //$NON-NLS-1$
+        line1.getStyleClass().add("line");
         line1.setStartX(4);
         line1.setStartY(4);
         line1.setEndX(8);
@@ -292,7 +292,7 @@ public class PopOverSkin implements Skin<PopOver> {
         group.getChildren().add(line1);
 
         Line line2 = new Line();
-        line2.getStyleClass().add("line"); //$NON-NLS-1$
+        line2.getStyleClass().add("line");
         line2.setStartX(8);
         line2.setStartY(4);
         line2.setEndX(4);

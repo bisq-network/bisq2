@@ -18,11 +18,11 @@
 package bisq.desktop.primary.onboarding;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.primary.onboarding.onboardNewbie.OnboardNewbieController;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.onboarding.initUserProfile.InitUserProfileController;
+import bisq.desktop.primary.onboarding.onboardNewbie.OnboardNewbieController;
 import bisq.desktop.primary.onboarding.onboardProTrader.OnboardProTraderController;
 import bisq.desktop.primary.onboarding.selectUserType.SelectUserTypeController;
 import lombok.Getter;

@@ -17,7 +17,6 @@
 
 package bisq.desktop.components.table;
 
-import javafx.scene.control.Label;
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
 import bisq.desktop.components.overlay.PopOverWrapper;
 import de.jensd.fx.fontawesome.AwesomeDude;

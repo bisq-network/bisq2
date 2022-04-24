@@ -68,7 +68,7 @@ public class ProtocolListItem implements TableItem {
         this.costInfo = costInfo;
         this.speedInfo = speedInfo;
         this.releaseDate = releaseDate;
-        protocolsName= Res.get("trade.protocols." + swapProtocolType.name());
+        protocolsName = Res.get("trade.protocols." + swapProtocolType.name());
     }
 
     @Override

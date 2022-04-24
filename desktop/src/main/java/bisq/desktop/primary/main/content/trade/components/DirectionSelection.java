@@ -18,12 +18,12 @@
 package bisq.desktop.primary.main.content.trade.components;
 
 import bisq.common.monetary.Market;
-import javafx.scene.control.Label;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;

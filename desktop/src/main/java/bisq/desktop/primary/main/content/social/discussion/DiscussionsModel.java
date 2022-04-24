@@ -24,4 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class DiscussionsModel extends ChatModel {
+    private final boolean isDiscussionsChat;
+
+    public DiscussionsModel(boolean isDiscussionsChat) {
+        this.isDiscussionsChat = isDiscussionsChat;
+    }
 }

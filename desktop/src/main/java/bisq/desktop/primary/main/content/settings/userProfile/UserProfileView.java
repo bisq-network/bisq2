@@ -19,9 +19,9 @@ package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
-import javafx.scene.control.Button;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
+import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;

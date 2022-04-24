@@ -51,7 +51,7 @@ public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferCon
         root.setSpacing(30);
         root.getStyleClass().add("bisq-darkest-bg");
         root.setPadding(new Insets(POPUP_PADDING, POPUP_PADDING, POPUP_PADDING, POPUP_PADDING));
-        
+
         marketSelection.setMinWidth(280);
 
         Label headlineLabel = new Label(Res.get("createOffer"));

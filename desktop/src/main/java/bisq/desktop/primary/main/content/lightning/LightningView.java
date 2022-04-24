@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.ln;
+package bisq.desktop.primary.main.content.lightning;
 
 import bisq.desktop.common.view.View;
 import javafx.geometry.Pos;

@@ -52,7 +52,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         marketSelection.setMinWidth(280);
 
         root.setSpacing(30);
-         root.setPadding(new Insets(0, 30, 0, 0));
+        root.setPadding(new Insets(0, 30, 0, 0));
 
         showAllMarkets = new ToggleButton();
         showAllMarkets.setText(Res.get("offerbook.showAllMarkets"));

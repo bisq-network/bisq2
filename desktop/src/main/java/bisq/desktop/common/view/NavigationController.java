@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.view;
 
+import bisq.desktop.common.threading.UIThread;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -27,38 +28,32 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class NavigationController implements Controller {
     protected final NavigationTarget host;
     private final Map<NavigationTarget, Controller> controllerCache = new ConcurrentHashMap<>();
-    // We do not hold the controller as we don't want to pin a reference in case it's a non caching controller
-    private Optional<String> childControllerClassName = Optional.empty();
+    private Optional<NavigationTarget> selectedChildTarget = Optional.empty();
 
     public NavigationController(NavigationTarget host) {
         this.host = host;
     }
 
     void processNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
-        this.onNavigate(navigationTarget, data);
+        onNavigate(navigationTarget, data);
         Optional<NavigationTarget> candidate = Optional.of(navigationTarget);
         while (candidate.isPresent()) {
-            if (!childControllerClassName.isEmpty() && childControllerClassName.get().equals(candidate.get().name())) {
-                return;
+            if (selectedChildTarget.isPresent() && selectedChildTarget.get() == candidate.get()) {
+                // We as host controller have already selected the child target in question.
+                // We exit the loop here.
+                break;
             }
             Optional<Controller> childController = findController(candidate.get(), data);
             if (childController.isPresent()) {
-                // If that controller is handling that navigationTarget and creates a childController we 
-                // apply the child view to our view.
-              /*  if (childControllerClassName.isEmpty() ||
-                        !childControllerClassName.get().equals(childController.get().getClass().toString())) {*/
-                    // log.debug("{}: Apply child controller. childController={}",
-                    //          this.getClass().getSimpleName(), childController.get().getClass().getSimpleName());
-                    getModel().applyChild(candidate.get(), childController.get().getView());
-                    childControllerClassName = Optional.of(candidate.get().name());
-            /*    } else {
-                    // We might get called from the navigation event dispatcher when child views gets attached and
-                    // apply their default navigationTargets. 
-                    // log.debug("{}: We have applied already that child controller. childController={}",
-                    //         this.getClass().getSimpleName(), childController.get().getClass().getSimpleName());
-                }*/
+                // We as host handle that target and found the controller. 
+                getModel().setNavigationTarget(candidate.get());
+                getModel().setView(childController.get().getView());
+                selectedChildTarget = candidate;
+                Navigation.persistNavigationTarget(navigationTarget);
                 break;
             } else {
+                // If we as host do not handle that child target we go down one parent to see we have handle 
+                // any other target in the path. 
                 // At NavigationTarget.ROOT we don't have a parent and candidate is not present, exiting the while loop
                 candidate = candidate.get().getParent();
             }
@@ -70,13 +65,35 @@ public abstract class NavigationController implements Controller {
 
     @Override
     public void onActivateInternal() {
-        Navigation.addListener(host, this);
+        Navigation.addNavigationController(host, this);
+
+        // Apply child target for our host from the persisted NavigationTarget
+        NavigationModel model = getModel();
+        if (model.getNavigationTarget() == null) {
+            Navigation.getPersistedNavigationTarget().ifPresent(persisted -> {
+                Optional<NavigationTarget> hostCandidate = persisted.getParent();
+                NavigationTarget childCandidate = persisted;
+                while (hostCandidate.isPresent() && hostCandidate.get() != host) {
+                    childCandidate = hostCandidate.get();
+                    hostCandidate = childCandidate.getParent();
+                }
+                NavigationTarget finalChildCandidate = childCandidate;
+                hostCandidate.ifPresent(e -> model.setNavigationTarget(finalChildCandidate));
+            });
+        }
+        // If we did not have a persisted target we apply the default
+        if (model.getNavigationTarget() == null) {
+            model.setNavigationTarget(model.getDefaultNavigationTarget());
+        }
+
+        UIThread.runOnNextRenderFrame(() -> processNavigationTarget(model.getNavigationTarget(), Optional.empty()));
+
         onActivate();
     }
 
     @Override
     public void onDeactivateInternal() {
-        Navigation.removeListener(host, this);
+        Navigation.removeNavigationController(host, this);
         onDeactivate();
     }
 
@@ -89,12 +106,14 @@ public abstract class NavigationController implements Controller {
 
             return Optional.of(controller);
         } else {
+
             return createController(navigationTarget)
                     .map(controller -> {
+                        //todo
                         if (controller instanceof InitWithDataController initWithDataController) {
                             data.ifPresent(initWithDataController::initWithObject);
                         }
-                        if (controller instanceof CachingController) {
+                        if (controller.useCaching()) {
                             controllerCache.put(navigationTarget, controller);
                         }
                         return controller;

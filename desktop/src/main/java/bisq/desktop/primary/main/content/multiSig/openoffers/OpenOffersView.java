@@ -33,7 +33,7 @@ public class OpenOffersView extends View<VBox, OpenOffersModel, OpenOffersContro
 
     public OpenOffersView(OpenOffersModel model, OpenOffersController controller) {
         super(new VBox(), model, controller);
-        
+
         root.setSpacing(30);
 
         tableView = new BisqTableView<>(model.getSortedItems());

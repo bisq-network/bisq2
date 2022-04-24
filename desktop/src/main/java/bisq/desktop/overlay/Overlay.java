@@ -27,8 +27,6 @@ import bisq.desktop.common.utils.DontShowAgainLookup;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.BisqGridPane;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import bisq.desktop.components.controls.BusyAnimation;
 import bisq.i18n.Res;
 import bisq.settings.DisplaySettings;
@@ -48,8 +46,10 @@ import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -167,6 +167,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected Button actionButton, secondaryActionButton;
     private HBox buttonBox;
     protected Button closeButton;
+    private Region content;
 
     private HPos buttonAlignment = HPos.RIGHT;
 
@@ -373,6 +374,11 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public T message(String message) {
         preProcessMessage(message);
+        return cast();
+    }
+
+    public T content(Region content) {
+        this.content = content;
         return cast();
     }
 
@@ -805,6 +811,16 @@ public abstract class Overlay<T extends Overlay<T>> {
             GridPane.setColumnIndex(messageLabel, 0);
             GridPane.setColumnSpan(messageLabel, 2);
             gridPane.getChildren().add(messageLabel);
+            addFooter();
+        }
+        if (content != null) {
+            GridPane.setHalignment(content, HPos.LEFT);
+            GridPane.setHgrow(content, Priority.ALWAYS);
+            GridPane.setMargin(content, new Insets(3, 0, 0, 0));
+            GridPane.setRowIndex(content, gridPane.getRowCount());
+            GridPane.setColumnIndex(content, 0);
+            GridPane.setColumnSpan(content, 2);
+            gridPane.getChildren().add(content);
             addFooter();
         }
     }

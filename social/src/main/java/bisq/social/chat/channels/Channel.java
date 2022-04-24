@@ -21,8 +21,8 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.NotificationSetting;
+import bisq.social.chat.messages.ChatMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 

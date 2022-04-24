@@ -15,7 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.view;
+package bisq.desktop.primary.main.content.lightning;
 
-public class BisqTabPane {
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
+
+public class LightningController implements Controller {
+    private final LightningModel model;
+    @Getter
+    private final LightningView view;
+
+    public LightningController(DefaultApplicationService applicationService) {
+        model = new LightningModel();
+        view = new LightningView(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
 }
