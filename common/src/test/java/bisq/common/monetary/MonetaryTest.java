@@ -67,7 +67,7 @@ public class MonetaryTest {
         assertEquals(4, quote.getPrecision());
         assertEquals("USD", quote.getQuoteMonetary().code);
         assertEquals("BTC", quote.getBaseMonetary().getCode());
-        assertEquals("BTC/USD", quote.getMarket().toString());
+        assertEquals("BTC/USD", quote.getMarket().getCurrencyCodes());
 
         usd = Fiat.of(50000.1249d, "USD");
         quote = Quote.of(btc, usd);
@@ -93,7 +93,7 @@ public class MonetaryTest {
         assertEquals(8, quote.getPrecision());
         assertEquals("BTC", quote.getQuoteMonetary().code);
         assertEquals("XMR", quote.getBaseMonetary().getCode());
-        assertEquals("XMR/BTC", quote.getMarket().toString());
+        assertEquals("XMR/BTC", quote.getMarket().getCurrencyCodes());
 
         xmr = Coin.asXmr(1d);
         btc = Coin.asBtc(0.00666667);
@@ -103,7 +103,7 @@ public class MonetaryTest {
         assertEquals(8, quote.getPrecision());
         assertEquals("BTC", quote.getQuoteMonetary().code);
         assertEquals("XMR", quote.getBaseMonetary().getCode());
-        assertEquals("XMR/BTC", quote.getMarket().toString());
+        assertEquals("XMR/BTC", quote.getMarket().getCurrencyCodes());
 
         // XMR/ETH
         xmr = Coin.asXmr(1d);     // 250
@@ -114,7 +114,7 @@ public class MonetaryTest {
         assertEquals(8, quote.getPrecision());
         assertEquals("ETH", quote.getQuoteMonetary().code);
         assertEquals("XMR", quote.getBaseMonetary().getCode());
-        assertEquals("XMR/ETH", quote.getMarket().toString());
+        assertEquals("XMR/ETH", quote.getMarket().getCurrencyCodes());
 
         // ETH/XMR
         eth = Coin.of(1d, "ETH"); //2500
@@ -125,7 +125,7 @@ public class MonetaryTest {
         assertEquals(12, quote.getPrecision());
         assertEquals("XMR", quote.getQuoteMonetary().code);
         assertEquals("ETH", quote.getBaseMonetary().getCode());
-        assertEquals("ETH/XMR", quote.getMarket().toString());
+        assertEquals("ETH/XMR", quote.getMarket().getCurrencyCodes());
 
         // USD/EUR
         usd = Fiat.of(1d, "USD");
@@ -136,7 +136,7 @@ public class MonetaryTest {
         assertEquals(4, quote.getPrecision());
         assertEquals("EUR", quote.getQuoteMonetary().code);
         assertEquals("USD", quote.getBaseMonetary().getCode());
-        assertEquals("USD/EUR", quote.getMarket().toString());
+        assertEquals("USD/EUR", quote.getMarket().getCurrencyCodes());
 
         // EUR/USD
         eur = Fiat.of(1d, "EUR");
@@ -147,7 +147,7 @@ public class MonetaryTest {
         assertEquals(4, quote.getPrecision());
         assertEquals("USD", quote.getQuoteMonetary().code);
         assertEquals("EUR", quote.getBaseMonetary().getCode());
-        assertEquals("EUR/USD", quote.getMarket().toString());
+        assertEquals("EUR/USD", quote.getMarket().getCurrencyCodes());
 
         // large numbers just below overflow
         xmr = Coin.asXmr(1500000d);
