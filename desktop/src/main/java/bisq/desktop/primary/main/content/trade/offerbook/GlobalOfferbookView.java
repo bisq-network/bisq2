@@ -21,6 +21,7 @@ import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqToggleButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.layout.Layout;
@@ -52,7 +53,7 @@ public class GlobalOfferbookView extends View<VBox, GlobalOfferbookModel, Global
         root.setSpacing(30);
         // root.setPadding(new Insets(-20, 0, 0, 0));
 
-        showAllMarkets = new ToggleButton();
+        showAllMarkets = new BisqToggleButton();
         showAllMarkets.setText(Res.get("offerbook.showAllMarkets"));
         // showAllMarkets.setPadding(new Insets(6, 0, 0, 0));
         HBox.setMargin(showAllMarkets, new Insets(-6, 0, 0, 0));

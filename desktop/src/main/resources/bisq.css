@@ -528,6 +528,45 @@
 
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * Toggle button                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-toggle-button,
+.bisq-toggle-button:armed,
+.bisq-toggle-button:hover,
+.bisq-toggle-button:focused,
+.bisq-toggle-button:selected,
+.bisq-toggle-button:focused:selected {
+    -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;
+    -fx-background-radius: 3px;
+    -fx-background-insets: 0px;
+
+    -bisq-toggle-color: -bisq-dark-green;
+    -bisq-untoggle-color: -bisq-white;
+    -bisq-toggle-line-color: derive(-bisq-toggle-color, 65%);
+    -bisq-untoggle-line-color: -bisq-grey-9;
+    -bisq-size: 8;
+}
+
+.bisq-toggle-button Line {
+    -fx-stroke: -bisq-untoggle-line-color;
+}
+
+.bisq-toggle-button:selected Line {
+    -fx-stroke: -bisq-toggle-line-color;
+}
+
+.bisq-toggle-button Circle {
+    -fx-fill: -bisq-untoggle-color;
+}
+
+.bisq-toggle-button:selected Circle {
+    -fx-fill: -bisq-toggle-color;
+}
+
 
 /*******************************************************************************
  * List based                                            *
