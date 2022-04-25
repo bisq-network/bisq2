@@ -42,7 +42,6 @@ import bisq.social.user.ChatUser;
 import bisq.social.user.Entitlement;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
-import bisq.social.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -570,7 +569,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         Identity channelAdminIdentity = identityService.getOrCreateIdentity(IdentityService.DEFAULT).join();
         ChatUser channelAdmin = new ChatUser("Admin", channelAdminIdentity.networkId());
 
-        PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel("Discussions Bisq",
+        PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BISQ_ID.name(),
                 "Discussions Bisq",
                 "Channel for discussions about Bisq",
                 channelAdmin,
@@ -578,31 +577,31 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         );
         selectDiscussionChannel(defaultDiscussionChannel);
         getPublicDiscussionChannels().add(defaultDiscussionChannel);
-        getPublicDiscussionChannels().add(new PublicDiscussionChannel("Discussions Bitcoin",
+        getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BITCOIN_ID.name(),
                 "Discussions Bitcoin",
                 "Channel for discussions about Bitcoin",
                 channelAdmin,
                 new HashSet<>()
         ));
-        getPublicDiscussionChannels().add(new PublicDiscussionChannel("Discussions Monero",
+        getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.MONERO_ID.name(),
                 "Discussions Monero",
                 "Channel for discussions about Monero",
                 channelAdmin,
                 new HashSet<>()
         ));
-        getPublicDiscussionChannels().add(new PublicDiscussionChannel("Price",
+        getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.PRICE_ID.name(),
                 "Price",
                 "Channel for discussions about market price",
                 channelAdmin,
                 new HashSet<>()
         ));
-        getPublicDiscussionChannels().add(new PublicDiscussionChannel("Economy",
+        getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.ECONOMY_ID.name(),
                 "Economy",
                 "Channel for discussions about economy",
                 channelAdmin,
                 new HashSet<>()
         ));
-        getPublicDiscussionChannels().add(new PublicDiscussionChannel("Off-topic",
+        getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.OFF_TOPIC_ID.name(),
                 "Off-topic",
                 "Channel for anything else",
                 channelAdmin,
