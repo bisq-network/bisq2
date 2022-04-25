@@ -1,0 +1,21 @@
+[Unit]
+Description=Bisq Seed
+After=network.target
+
+[Service]
+SyslogIdentifier=bisq2-seed
+ExecStart=/bisq/bisq2/seed/build/install/seed/bin/seed
+ExecStop=/bin/kill -TERM ${MAINPID}
+Restart=on-failure
+
+User=bisq
+Group=bisq
+
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateDevices=true
+MemoryDenyWriteExecute=false
+
+[Install]
+WantedBy=multi-user.target
