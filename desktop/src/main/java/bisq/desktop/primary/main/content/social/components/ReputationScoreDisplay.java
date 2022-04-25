@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.social.components;
 
 import bisq.desktop.common.utils.Icons;
 import bisq.i18n.Res;
+import bisq.social.user.reputation.ReputationScore;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -29,11 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
 @Slf4j
-public class ReputationScore extends HBox {
+public class ReputationScoreDisplay extends HBox {
     final List<Label> stars;
     final Tooltip tooltip = new Tooltip();
 
-    public ReputationScore() {
+    public ReputationScoreDisplay() {
         tooltip.setStyle("-fx-text-fill: black; -fx-background-color: -bisq-grey-11;");
         tooltip.setMaxWidth(300);
         tooltip.setWrapText(true);
@@ -52,15 +53,16 @@ public class ReputationScore extends HBox {
         getChildren().addAll(stars);
     }
 
-    public void applyScores(int ranking, int score, double relativeScore) {
-        int target = (int) Math.floor((stars.size() + 1) * relativeScore) - 1;
+    public void applyReputationScore(ReputationScore reputationScore) {
+       // int ranking, int score, double relativeScore
+        int target = (int) Math.floor((stars.size() + 1) * reputationScore.getRelativeScore()) - 1;
         for (int i = 0; i < stars.size(); i++) {
             stars.get(i).setOpacity(i <= target ? 1 : 0.1);
         }
 
-        long percent = Math.round(relativeScore * 10000) / 100;
+        long percent = Math.round(reputationScore.getRelativeScore() * 10000) / 100;
         tooltip.setText(Res.get("reputation.score.tooltip",
-                ranking, score, percent));
+                reputationScore.getRanking(), reputationScore.getScore(), percent));
         Tooltip.install(this, tooltip);
     }
 }

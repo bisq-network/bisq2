@@ -45,6 +45,7 @@ import bisq.social.SocialService;
 import bisq.social.chat.ChatService;
 import bisq.social.offer.TradeChatOfferService;
 import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.reputation.ReputationService;
 import bisq.wallets.NetworkType;
 import bisq.wallets.WalletBackend;
 import bisq.wallets.WalletConfig;
@@ -105,6 +106,7 @@ public class DefaultApplicationService extends ServiceProvider {
     private final AccountService accountService;
     private final TradeChatOfferService tradeChatOfferService;
     private final UserProfileService userProfileService;
+    private final ReputationService reputationService;
     private final WalletService walletService;
     private final OfferService offerService;
     private final SocialService socialService;
@@ -142,6 +144,7 @@ public class DefaultApplicationService extends ServiceProvider {
         socialService = new SocialService();
         UserProfileService.Config userProfileServiceConfig = UserProfileService.Config.from(getConfig("bisq.userProfileServiceConfig"));
         userProfileService = new UserProfileService(persistenceService, userProfileServiceConfig, keyPairService, identityService, networkService);
+        reputationService = new ReputationService(persistenceService, networkService, userProfileService);
         chatService = new ChatService(persistenceService, identityService, networkService, userProfileService);
         tradeChatOfferService = new TradeChatOfferService(networkService, identityService, chatService, persistenceService);
 
@@ -199,7 +202,8 @@ public class DefaultApplicationService extends ServiceProvider {
                 .thenCompose(result -> setStateAfterList(protocolService.initialize(), State.PROTOCOL_SERVICE_INITIALIZED))
                 .thenCompose(result -> CompletableFutureUtils.allOf(
                         userProfileService.initialize()
-                                .thenCompose(res -> chatService.initialize()),
+                                .thenCompose(res -> reputationService.initialize()).
+                                thenCompose(res -> chatService.initialize()),
                         openOfferService.initialize(),
                         offerBookService.initialize(),
                         tradeChatOfferService.initialize(),

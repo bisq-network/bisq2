@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.social.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.data.ByteArray;
-import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
@@ -39,6 +38,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class PrivateChannelSelection extends ChannelSelection {
@@ -139,15 +140,25 @@ public class PrivateChannelSelection extends ChannelSelection {
 
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {
+                private Subscription widthSubscription;
                 final Label label = new Label();
                 final HBox hBox = new HBox();
+                final Tooltip tooltip = new Tooltip();
+                final ImageView roboIcon = new ImageView();
 
                 {
-                    hBox.setSpacing(10);
-                    hBox.setAlignment(Pos.CENTER_LEFT);
                     setCursor(Cursor.HAND);
                     setPrefHeight(40);
                     setPadding(new Insets(0, 0, -20, 0));
+
+                    label.setTooltip(tooltip);
+
+                    roboIcon.setFitWidth(35);
+                    roboIcon.setFitHeight(35);
+
+                    hBox.setSpacing(10);
+                    hBox.setAlignment(Pos.CENTER_LEFT);
+                    hBox.getChildren().addAll(roboIcon, label);
                 }
 
                 @Override
@@ -155,16 +166,20 @@ public class PrivateChannelSelection extends ChannelSelection {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PrivateChannel privateChannel) {
                         ChatUser peer = privateChannel.getPeer();
-                        ImageView roboIcon = new ImageView(RoboHash.getImage(new ByteArray(peer.getPubKeyHash())));
-                        roboIcon.setFitWidth(35);
-                        roboIcon.setFitHeight(35);
-                        hBox.getChildren().addAll(roboIcon, label);
-                        String userName = peer.getUserName();
-                        label.setText(StringUtils.truncate(userName, 20));
-                        label.setTooltip(new Tooltip(peer.getTooltipString()));
+                        roboIcon.setImage(RoboHash.getImage(new ByteArray(peer.getPubKeyHash())));
+                        tooltip.setText(peer.getTooltipString());
+                        label.setText(item.getChannel().getDisplayString());
+                        widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
+                            if (w.doubleValue() > 0) {
+                                label.setMaxWidth(getWidth() - 70);
+                            }
+                        });
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);
+                        if (widthSubscription != null) {
+                            widthSubscription.unsubscribe();
+                        }
                     }
                 }
             };

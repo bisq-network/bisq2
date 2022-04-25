@@ -46,7 +46,8 @@ public record Market(String baseCurrencyCode,
     @Override
     public String toString() {
         return getNonBitcoinCurrency() + " (" + getCurrencyCodes() + ")";
-    }
+    }   
+  
 
     private String getNonBitcoinCurrency() {
         return isFiat() ? quoteCurrencyName : baseCurrencyName;

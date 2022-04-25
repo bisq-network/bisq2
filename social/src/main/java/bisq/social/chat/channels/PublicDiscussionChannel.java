@@ -35,6 +35,16 @@ import java.util.stream.Collectors;
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage> implements PublicChannel {
+
+    public enum ChannelId{
+        BISQ_ID,
+        BITCOIN_ID,
+        MONERO_ID,
+        PRICE_ID,
+        ECONOMY_ID,
+        OFF_TOPIC_ID
+
+    }
     private final String channelName;
     private final String description;
     private final ChatUser channelAdmin;
