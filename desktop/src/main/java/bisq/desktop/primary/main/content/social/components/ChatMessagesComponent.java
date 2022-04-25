@@ -507,7 +507,7 @@ public class ChatMessagesComponent {
                             emojiButton1.setUserData(":+1:");
                             emojiButton2 = BisqIconButton.createIconButton(AwesomeIcon.THUMBS_DOWN_ALT);
                             emojiButton1.setUserData(":-1:");
-                            openEmojiSelectorButton = BisqIconButton.createIconButton(AwesomeIcon.DOUBLE_ANGLE_UP);
+                            openEmojiSelectorButton = BisqIconButton.createIconButton(AwesomeIcon.SMILE);
                             replyButton = BisqIconButton.createIconButton(AwesomeIcon.REPLY);
                             pmButton = BisqIconButton.createIconButton(AwesomeIcon.COMMENT_ALT);
                             editButton = BisqIconButton.createIconButton(AwesomeIcon.EDIT);
