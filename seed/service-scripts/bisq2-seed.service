@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 SyslogIdentifier=bisq2-seed
+EnvironmentFile=/etc/default/bisq2-seed.env
 ExecStart=/bisq/bisq2/seed/build/install/seed/bin/seed
 ExecStop=/bin/kill -TERM ${MAINPID}
 Restart=on-failure
