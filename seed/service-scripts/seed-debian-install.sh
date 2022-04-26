@@ -23,20 +23,9 @@ update-clean-install-seed
 
 echo "[*] Installing bisq2-seed systemd service"
 sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/seed/service-scripts/bisq2-seed.service" "${SYSTEMD_SERVICE_HOME}"
+sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/seed/service-scripts/bisq2-seed.env" "${SYSTEMD_ENV_HOME}"
 
-echo "[*] Reloading systemd daemon configuration"
-sudo -H -i -u "${ROOT_USER}" systemctl daemon-reload
-
-echo "[*] Enabling bisq2-seed service"
-sudo -H -i -u "${ROOT_USER}" systemctl enable bisq2-seed
-
-echo "[*] Starting bisq2-seed service"
-sudo -H -i -u "${ROOT_USER}" systemctl start bisq2-seed
-sleep 5
-sudo -H -i -u "${ROOT_USER}" journalctl --no-pager --unit bisq2-seed
-
-echo '[*] Done'
-echo "[*] Start with: sudo systemctl start bisq2-seed"
-echo "[*] Stop with:  sudo systemctl stop bisq2-seed"
+echo '[*] Part 1 of service installation done'
+echo "[*] To finalize installation, see README.md for part 2 and 3"
 
 exit 0
