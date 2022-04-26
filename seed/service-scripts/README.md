@@ -17,14 +17,9 @@ If this is seed 1, ensure the content of that file now reads:
 ```
 JAVA_OPTS="
 -Dbisq.application.appName=bisq2_seed1
--Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR
 -Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000
--Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=159.65.117.67:8001
--Dbisq.networkServiceConfig.supportedTransportTypes.1=TOR
 -Dbisq.networkServiceConfig.defaultNodePortByTransportType.tor=1000
--Dbisq.networkServiceConfig.supportedTransportTypes.2=I2P
 -Dbisq.networkServiceConfig.defaultNodePortByTransportType.i2p=5000
--Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.1=0~EXMqCbYcdPHvb7nl-Y3eHxSUbaFhwQLycOtA0c45mhrieMaEbRVSRxaUEtjhgk8nVBpKYiDn4Za6X82aPokSFqURJx09bfKTExTklI~1u~0PJk6Wt3~Jpg4TLCYxql0WEphbEs5oEIR1d4myIm4ng3Iz9TM3dZUBMf4B~oRUiMGRxO-U7Vwxb3Qh1J0ZiqvQZmKzk9~ShEpk-FDR1-j0hlICQ2~RHNM7z4CdWReZLiyY8UboOxkakSIYasVEL2xs2Vgt7t4o078X5AcVtEJu6H31WXvUZSffFrt1BXZNTIoYs1FCCuhS1jMLh8N96eR3AqZ43Nr4Ljp78iqbLdikeVhb53Nzr0rDSYcfh57d2YVitjhfz2ant~6~SGSPxdJRdmsmDkTn5VAZwJhHGM5nh2BQbEwuEeeoufw6s7FNEoWMcv86h6ODmKTO0xyk8oMBT81zjdT8Xg5UkaHMSqJ0DnGcrVN4RQ6kOEbT5wtshVjpHgwWiJvOyEcj8XLJLqAAAA:5001
 "
 ```
 
@@ -33,14 +28,9 @@ If this is seed 2, set the file content to:
 ```
 JAVA_OPTS="
 -Dbisq.application.appName=bisq2_seed2
--Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR
 -Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8001
--Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=167.71.33.219:8000
--Dbisq.networkServiceConfig.supportedTransportTypes.1=TOR
 -Dbisq.networkServiceConfig.defaultNodePortByTransportType.tor=1001
--Dbisq.networkServiceConfig.supportedTransportTypes.2=I2P
 -Dbisq.networkServiceConfig.defaultNodePortByTransportType.i2p=5001
--Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.0=kglZCQYj~nyK3YlXCD5FjxOY2ggH8yosII0rqc7oqFhFfjKWy-89WYw-~mtTUqzCaN6LGd17XzheKG44XJnKrM-WvP732V8lbJcoMBIKeeHPlcfwpsTNbMJyWeXIlJByYNlw1HPVRMpBtzfJ9IznyQdwQWDkzA72pLreqpzJrgIoVYzP9OTXVLdROXnTP9RdmnzZ0h1B8XhQM-8LjHB7cE9o9VT9IXIFScICM8VZ8I1sp02rn26McTM~~XO5Zs1Df3IMV0eqteAe6TvH~Rc-6Hh3YhPrjEcv-YvV6RUlsoj605mmSO0Sj5oeacH3Cec73BlNJEGfQkmbTrXVNLqt2S4smqmkAhMq~sdCJCRKP8CFeBk6r-qVREucTeW3AmwXuGS~-8s7pAm99SlpTSepp75a2WNTIsWw~rWiHlM6faTJrkjcO5wJM7~G0tdYgVGk4zrt4VJ02AakUdh8wG1Y5sAX-daTUum~0YTk-fIAVBJSEiNc93XgZkwuTcc4J2BqAAAA:5000
 "
 ```
 
