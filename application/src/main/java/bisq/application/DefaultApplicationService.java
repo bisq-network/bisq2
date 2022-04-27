@@ -254,11 +254,12 @@ public class DefaultApplicationService extends ServiceProvider {
     private Optional<WalletConfig> createRegtestWalletConfig() {
         WalletBackend walletBackend = applicationConfig.isBitcoindRegtest() ?
                 WalletBackend.BITCOIND : WalletBackend.ELEMENTSD;
+        int port = walletBackend == WalletBackend.BITCOIND ? 18443 : 7040;
 
         var walletConfig = WalletConfig.builder()
                 .walletBackend(walletBackend)
-                .hostname(Optional.empty())
-                .port(Optional.empty())
+                .hostname("localhost")
+                .port(port)
                 .user("bisq")
                 .password("bisq")
                 .build();

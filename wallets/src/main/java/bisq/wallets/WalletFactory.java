@@ -37,7 +37,6 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class WalletFactory {
-    private static final String LOCALHOST = "127.0.0.1";
 
     static BitcoinWallet createBitcoinWallet(WalletConfig walletConfig,
                                              Path walletsDataDir,
@@ -64,13 +63,9 @@ public class WalletFactory {
     }
 
     private static RpcConfig createRpcConfigFromWalletConfig(WalletConfig walletConfig, Path walletPath) {
-        String hostname = walletConfig.getHostname().orElse(LOCALHOST);
-        int port = walletConfig.getPort()
-                .orElseGet(() -> walletConfig.getWalletBackend() == WalletBackend.BITCOIND ? 18443 : 7040);
-
         return new RpcConfig.Builder()
-                .hostname(hostname)
-                .port(port)
+                .hostname(walletConfig.getHostname())
+                .port(walletConfig.getPort())
                 .user(walletConfig.getUser())
                 .password(walletConfig.getPassword())
                 .walletPath(walletPath)
