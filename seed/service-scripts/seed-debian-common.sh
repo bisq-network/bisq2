@@ -19,7 +19,7 @@ BISQ_REPO_TAG_OR_BRANCH=main
 
 update-clean-install-seed () {
   echo "[*] Building Bisq Seed from source"
-  sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && ./gradlew clean :seed:installDist -x test"
+  sudo -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && ./gradlew clean :seed:installDist -x test"
 }
 
 # Takes 1 argument (BISQ_REMOTE_NAME)
