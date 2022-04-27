@@ -23,11 +23,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class BitcoindSendIntegrationTests extends SharedBitcoindInstanceTests {
+public class BitcoindSendUnconfirmedTxIntegrationTests extends SharedBitcoindInstanceTests {
 
     private BitcoindWallet receiverBackend;
 
@@ -40,10 +39,9 @@ public class BitcoindSendIntegrationTests extends SharedBitcoindInstanceTests {
     }
 
     @Test
-    public void sendOneBtcToAddress() {
+    public void sendBtcAndCheckIfUnconfirmedBalanceIncluded() {
         String receiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
         minerWallet.sendToAddress(receiverAddress, 1);
-        regtestSetup.mineOneBlock();
 
         assertThat(receiverBackend.getBalance())
                 .isEqualTo(1);

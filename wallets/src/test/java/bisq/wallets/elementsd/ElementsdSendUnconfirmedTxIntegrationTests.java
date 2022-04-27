@@ -15,37 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind;
+package bisq.wallets.elementsd;
 
 import bisq.wallets.AddressType;
-import bisq.wallets.bitcoind.rpc.BitcoindWallet;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class BitcoindSendIntegrationTests extends SharedBitcoindInstanceTests {
-
-    private BitcoindWallet receiverBackend;
-
-    @Override
-    @BeforeAll
-    public void start() throws IOException, InterruptedException {
-        super.start();
-        regtestSetup.mineInitialRegtestBlocks();
-        receiverBackend = regtestSetup.createNewWallet("receiver_wallet");
-    }
-
+public class ElementsdSendUnconfirmedTxIntegrationTests extends SharedElementsdInstanceTests {
     @Test
-    public void sendOneBtcToAddress() {
-        String receiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
-        minerWallet.sendToAddress(receiverAddress, 1);
-        regtestSetup.mineOneBlock();
+    public void sendOneLBtcToAddress() throws MalformedURLException {
+        peginBtc(20);
+        var receiverBackend = elementsdRegtestSetup.createNewWallet("receiver_wallet");
 
-        assertThat(receiverBackend.getBalance())
+        String receiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
+        elementsdMinerWallet.sendLBtcToAddress(receiverAddress, 1);
+
+        assertThat(receiverBackend.getLBtcBalance())
                 .isEqualTo(1);
     }
 }
