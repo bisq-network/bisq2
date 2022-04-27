@@ -1,3 +1,35 @@
+## Install I2P service
+
+```
+sudo apt install i2p
+```
+
+Edit the file `/etc/default/i2p` and modify the following properties to
+```
+RUN_DAEMON="true"
+ALLOW_ROOT="false"
+RUN_AS_USER="i2psvc"
+```
+
+Note: do not change or remove other lines in the config, but only modify the three mentioned above.
+
+Then start using the service with:
+
+```
+# Enable the service
+sudo systemctl enable i2p
+
+# Start the service
+sudo systemctl start i2p
+
+# Check the system status
+sudo systemctl status i2p
+```
+
+Note: the official instructions from https://geti2p.net/en/download/debian are slightly outdated and still require
+editing the config as described above.
+
+
 ## Install seed service
 
 ### Part 1: Install service
