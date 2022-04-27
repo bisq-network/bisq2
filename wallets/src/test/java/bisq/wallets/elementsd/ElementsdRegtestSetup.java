@@ -21,10 +21,8 @@ import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.AbstractRegtestSetup;
 import bisq.wallets.AddressType;
-import bisq.wallets.NetworkType;
 import bisq.wallets.bitcoind.BitcoindRegtestSetup;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
-import bisq.wallets.elementsd.process.ElementsdProcess;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
 import bisq.wallets.elementsd.rpc.responses.ElementsdListUnspentResponseEntry;
@@ -43,7 +41,7 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
 
     @Getter
     private final BitcoindRegtestSetup bitcoindRegtestSetup;
-    private final ElementsdProcess elementsdProcess;
+    private final ElementsdRegtestProcess elementsdProcess;
 
     private ElementsdConfig elementsdConfig;
 
@@ -136,10 +134,10 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
                 .findFirst();
     }
 
-    private ElementsdProcess createElementsdProcess() throws IOException {
+    private ElementsdRegtestProcess createElementsdProcess() throws IOException {
         Path elementsdDataDir = tmpDirPath.resolve("elementsd");
         elementsdConfig = createElementsRpcConfig();
-        return new ElementsdProcess(elementsdConfig, elementsdDataDir);
+        return new ElementsdRegtestProcess(elementsdConfig, elementsdDataDir);
     }
 
     private ElementsdDaemon createDaemon() throws MalformedURLException {
@@ -166,7 +164,6 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
     private RpcConfig createRpcConfigForPort(int port) throws IOException {
         Path walletPath = FileUtils.createTempDir();
         return new RpcConfig.Builder()
-                .networkType(NetworkType.REGTEST)
                 .hostname("127.0.0.1")
                 .user("bisq")
                 .password("bisq")

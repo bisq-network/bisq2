@@ -39,7 +39,6 @@ public class WalletNotRunningTest {
         Path walletPath = tempDirPath.resolve("wallet");
 
         RpcConfig rpcConfig = new RpcConfig.Builder()
-                .networkType(NetworkType.REGTEST)
                 .hostname("127.0.0.1")
                 .user("bisq")
                 .password("bisq")

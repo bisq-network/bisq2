@@ -23,7 +23,6 @@ import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.wallets.NetworkType;
 import bisq.wallets.WalletBackend;
 import bisq.wallets.WalletConfig;
 import bisq.wallets.WalletService;
@@ -111,7 +110,6 @@ public class WalletConfigPopup extends Popup {
         private WalletConfig createWalletConfigFromModel() {
             return WalletConfig.builder()
                     .walletBackend(model.selectedWalletBackend.get())
-                    .networkType(NetworkType.REGTEST)
                     .hostname(Optional.of(model.hostnameProperty.get()))
                     .port(Optional.of(Integer.parseInt(model.portProperty.get())))
                     .user(model.usernameProperty.get())

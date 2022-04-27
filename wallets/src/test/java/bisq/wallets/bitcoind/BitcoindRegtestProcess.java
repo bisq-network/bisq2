@@ -19,7 +19,6 @@ package bisq.wallets.bitcoind;
 
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
-import bisq.wallets.NetworkType;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.exceptions.RpcCallFailureException;
 import bisq.wallets.exceptions.WalletShutdownFailedException;
@@ -38,7 +37,7 @@ import java.util.List;
 import java.util.Scanner;
 
 @Slf4j
-public class BitcoindProcess implements DaemonProcess {
+public class BitcoindRegtestProcess implements DaemonProcess {
 
     @Getter
     protected final RpcConfig rpcConfig;
@@ -46,19 +45,18 @@ public class BitcoindProcess implements DaemonProcess {
 
     private Process bitcoindProcess;
 
-    public BitcoindProcess(RpcConfig rpcConfig, Path dataDir) {
+    public BitcoindRegtestProcess(RpcConfig rpcConfig, Path dataDir) {
         this.rpcConfig = rpcConfig;
         this.dataDir = dataDir;
     }
 
     @Override
     public ProcessConfig createProcessConfig() {
-        String networkArg = getParamForNetworkType(rpcConfig.networkType());
         int zmqPort = NetworkUtils.findFreeSystemPort();
         return new ProcessConfig(
                 "bitcoind",
                 List.of(
-                        networkArg,
+                        "-regtest",
                         "-datadir=" + dataDir.toAbsolutePath(),
                         "-debug=1",
 
@@ -132,14 +130,5 @@ public class BitcoindProcess implements DaemonProcess {
             log.error("Bitcoind didn't start correctly.", e);
             throw e;
         }
-    }
-
-    private String getParamForNetworkType(NetworkType networkType) {
-        return switch (networkType) {
-            case MAINNET -> "";
-            case REGTEST -> "-regtest";
-            case SIGNET -> "-signet";
-            case TESTNET -> "-testnet";
-        };
     }
 }

@@ -26,14 +26,14 @@ import org.junit.jupiter.api.BeforeAll;
 import java.io.IOException;
 
 public abstract class SharedBitcoindInstanceTests
-        extends AbstractSharedRegtestInstanceTests<BitcoindProcess, BitcoindWallet> {
+        extends AbstractSharedRegtestInstanceTests<BitcoindRegtestProcess, BitcoindWallet> {
 
     protected BitcoindRegtestSetup regtestSetup;
     protected BitcoindDaemon daemon;
     protected BitcoindWallet minerWallet;
 
     @Override
-    public AbstractRegtestSetup<BitcoindProcess, BitcoindWallet> createRegtestSetup() throws IOException {
+    public AbstractRegtestSetup<BitcoindRegtestProcess, BitcoindWallet> createRegtestSetup() throws IOException {
         regtestSetup = new BitcoindRegtestSetup();
         return regtestSetup;
     }

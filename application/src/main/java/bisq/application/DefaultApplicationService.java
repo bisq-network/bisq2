@@ -46,7 +46,6 @@ import bisq.social.chat.ChatService;
 import bisq.social.offer.TradeChatOfferService;
 import bisq.social.user.ChatUserService;
 import bisq.social.user.reputation.ReputationService;
-import bisq.wallets.NetworkType;
 import bisq.wallets.WalletBackend;
 import bisq.wallets.WalletConfig;
 import bisq.wallets.WalletService;
@@ -258,7 +257,6 @@ public class DefaultApplicationService extends ServiceProvider {
 
         var walletConfig = WalletConfig.builder()
                 .walletBackend(walletBackend)
-                .networkType(NetworkType.REGTEST)
                 .hostname(Optional.empty())
                 .port(Optional.empty())
                 .user("bisq")

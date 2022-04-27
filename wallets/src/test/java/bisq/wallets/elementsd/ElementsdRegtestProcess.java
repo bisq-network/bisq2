@@ -15,12 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.elementsd.process;
+package bisq.wallets.elementsd;
 
 import bisq.common.util.NetworkUtils;
-import bisq.wallets.NetworkType;
-import bisq.wallets.bitcoind.BitcoindProcess;
-import bisq.wallets.elementsd.ElementsdConfig;
+import bisq.wallets.bitcoind.BitcoindRegtestProcess;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.exceptions.RpcCallFailureException;
 import bisq.wallets.process.ProcessConfig;
@@ -34,10 +32,10 @@ import java.nio.file.Path;
 import java.util.List;
 
 @Slf4j
-public class ElementsdProcess extends BitcoindProcess {
+public class ElementsdRegtestProcess extends BitcoindRegtestProcess {
     private final ElementsdConfig elementsdConfig;
 
-    public ElementsdProcess(ElementsdConfig elementsdConfig, Path dataDir) {
+    public ElementsdRegtestProcess(ElementsdConfig elementsdConfig, Path dataDir) {
         super(elementsdConfig.elementsdRpcConfig(), dataDir);
         this.elementsdConfig = elementsdConfig;
     }
@@ -49,7 +47,7 @@ public class ElementsdProcess extends BitcoindProcess {
         return new ProcessConfig(
                 "elementsd",
                 List.of(
-                        "-chain=" + getNetworkName(),
+                        "-chain=elementsregtest",
                         "-datadir=" + dataDir.toAbsolutePath(),
                         "-debug=1",
 
@@ -83,15 +81,5 @@ public class ElementsdProcess extends BitcoindProcess {
         } catch (RpcCallFailureException e) {
             log.error("Failed to send stop command to elementsd.", e);
         }
-    }
-
-    private String getNetworkName() {
-        NetworkType networkType = rpcConfig.networkType();
-        return switch (networkType) {
-            case MAINNET -> "";
-            case REGTEST -> "elementsregtest";
-            case SIGNET -> "signet";
-            case TESTNET -> "liquidv1test";
-        };
     }
 }

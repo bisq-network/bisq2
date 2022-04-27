@@ -20,7 +20,6 @@ package bisq.wallets.bitcoind;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.AbstractRegtestSetup;
 import bisq.wallets.AddressType;
-import bisq.wallets.NetworkType;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponseEntry;
@@ -35,11 +34,11 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class BitcoindRegtestSetup
-        extends AbstractRegtestSetup<BitcoindProcess, BitcoindWallet> {
+        extends AbstractRegtestSetup<BitcoindRegtestProcess, BitcoindWallet> {
 
     @Getter
     private final RpcConfig rpcConfig;
-    private final BitcoindProcess bitcoindProcess;
+    private final BitcoindRegtestProcess bitcoindProcess;
 
     @Getter
     private final BitcoindDaemon daemon;
@@ -58,7 +57,7 @@ public class BitcoindRegtestSetup
     }
 
     @Override
-    protected BitcoindProcess createProcess() {
+    protected BitcoindRegtestProcess createProcess() {
         return bitcoindProcess;
     }
 
@@ -149,7 +148,6 @@ public class BitcoindRegtestSetup
         int port = NetworkUtils.findFreeSystemPort();
         Path walletPath = tmpDirPath.resolve("wallet");
         return new RpcConfig.Builder()
-                .networkType(NetworkType.REGTEST)
                 .hostname("127.0.0.1")
                 .user("bisq")
                 .password("bisq")
@@ -158,9 +156,9 @@ public class BitcoindRegtestSetup
                 .build();
     }
 
-    private BitcoindProcess createBitcoindProcess() {
+    private BitcoindRegtestProcess createBitcoindProcess() {
         Path bitcoindDataDir = tmpDirPath.resolve("bitcoind_data_dir");
-        return new BitcoindProcess(
+        return new BitcoindRegtestProcess(
                 rpcConfig,
                 bitcoindDataDir
         );

@@ -24,9 +24,9 @@ import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import java.io.IOException;
 
 public class BitcoindConnectionFailureIntegrationTests
-        extends ConnectionFailureIntegrationTests<BitcoindProcess, BitcoindWallet> {
+        extends ConnectionFailureIntegrationTests<BitcoindRegtestProcess, BitcoindWallet> {
     @Override
-    protected AbstractRegtestSetup<BitcoindProcess, BitcoindWallet> createRegtestSetup() throws IOException {
+    protected AbstractRegtestSetup<BitcoindRegtestProcess, BitcoindWallet> createRegtestSetup() throws IOException {
         return new BitcoindRegtestSetup();
     }
 }
