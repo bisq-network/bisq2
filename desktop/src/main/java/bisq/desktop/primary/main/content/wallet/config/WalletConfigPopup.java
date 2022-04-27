@@ -73,7 +73,6 @@ public class WalletConfigPopup extends Popup {
 
             model = new Model();
             view = new View(model, this, popup);
-            model.walletsDataDirPathProperty.set(applicationService.getApplicationConfig().baseDir() + File.separator + "wallets");
         }
 
         @Override
@@ -109,14 +108,6 @@ public class WalletConfigPopup extends Popup {
                     });
         }
 
-        private void onSelectWalletPath() {
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setInitialDirectory(new File(model.walletsDataDirPathProperty.get()));
-            directoryChooser.setTitle(Res.get("wallet.config.walletsDataDirPath"));
-            File file = directoryChooser.showDialog(popup.getGridPane().getScene().getWindow());
-            model.walletsDataDirPathProperty.set(file.getAbsolutePath());
-        }
-
         private WalletConfig createWalletConfigFromModel() {
             return WalletConfig.builder()
                     .walletBackend(model.selectedWalletBackend.get())
@@ -125,7 +116,6 @@ public class WalletConfigPopup extends Popup {
                     .port(Optional.of(Integer.parseInt(model.portProperty.get())))
                     .user(model.usernameProperty.get())
                     .password(model.passwordProperty.get())
-                    .walletsDataDirPath(Path.of(model.walletsDataDirPathProperty.get()))
                     .build();
         }
 
@@ -140,7 +130,6 @@ public class WalletConfigPopup extends Popup {
         private final ObjectProperty<WalletBackend> selectedWalletBackend =
                 new SimpleObjectProperty<>(this, "selectedWalletBackend", WalletBackend.BITCOIND);
 
-        private final StringProperty walletsDataDirPathProperty = new SimpleStringProperty(this, "walletPath");
         private final StringProperty hostnameProperty = new SimpleStringProperty(this, "hostname", "127.0.0.1");
         private final StringProperty portProperty = new SimpleStringProperty(this, "port", "18443");
         private final StringProperty usernameProperty = new SimpleStringProperty(this, "username", "bisq");
@@ -172,9 +161,6 @@ public class WalletConfigPopup extends Popup {
 
         private void addContent() {
             BisqGridPane gridPane = popup.getGridPane();
-
-            gridPane.addButton(Res.get("wallet.config.selectWalletPath"), controller::onSelectWalletPath);
-            gridPane.addTextField(Res.get("wallet.config.walletsDataDirPath"), model.walletsDataDirPathProperty);
 
             AutoCompleteComboBox<WalletBackend> walletBackendComboBox = gridPane.addComboBox(model.walletBackends);
             walletBackendComboBox.setPromptText(Res.get("wallet.config.selectWallet"));

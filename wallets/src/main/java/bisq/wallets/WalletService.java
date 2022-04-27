@@ -47,7 +47,7 @@ public class WalletService implements PersistenceClient<WalletStore> {
     private final WalletStore persistableStore = new WalletStore();
     @Getter
     private final Persistence<WalletStore> persistence;
-
+    private final Path walletsDataDir;
     private final Optional<WalletConfig> walletConfig;
     @Getter
     private Optional<Wallet> wallet = Optional.empty();
@@ -59,8 +59,10 @@ public class WalletService implements PersistenceClient<WalletStore> {
     private final Observable<Coin> observableBalanceAsCoin = new Observable<>(Coin.of(0, "BTC"));
 
     public WalletService(PersistenceService persistenceService,
+                         Path walletsDataDir,
                          Optional<WalletConfig> walletConfig) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        this.walletsDataDir = walletsDataDir;
         this.walletConfig = walletConfig;
     }
 
@@ -76,7 +78,6 @@ public class WalletService implements PersistenceClient<WalletStore> {
 
     public CompletableFuture<Boolean> loadOrCreateWallet(WalletConfig walletConfig, Optional<String> walletPassphrase) {
         if (wallet.isEmpty()) {
-            Path walletsDataDir = walletConfig.getWalletsDataDirPath();
             walletsDataDir.toFile().mkdirs();
 
             Wallet wallet = switch (walletConfig.getWalletBackend()) {
