@@ -160,7 +160,8 @@ public class DefaultApplicationService extends ServiceProvider {
         protocolService = new ProtocolService(networkService, identityService, persistenceService, openOfferService);
 
         Optional<WalletConfig> walletConfig = !isRegtestRun() ? Optional.empty() : createRegtestWalletConfig();
-        walletService = new WalletService(persistenceService, walletConfig);
+        Path walletsDataDir = Path.of(applicationConfig.baseDir() + File.separator + "wallets");
+        walletService = new WalletService(persistenceService, walletsDataDir, walletConfig);
 
         daoBridgeService = new DaoBridgeService(networkService, identityService, getConfig("bisq.oracle.daoBridge"));
     }
@@ -253,9 +254,6 @@ public class DefaultApplicationService extends ServiceProvider {
     }
 
     private Optional<WalletConfig> createRegtestWalletConfig() {
-        String walletsDataDir = applicationConfig.baseDir() + File.separator + "wallets";
-        Path walletsDataDirPath = FileSystems.getDefault().getPath(walletsDataDir);
-
         WalletBackend walletBackend = applicationConfig.isBitcoindRegtest() ?
                 WalletBackend.BITCOIND : WalletBackend.ELEMENTSD;
 
@@ -266,7 +264,6 @@ public class DefaultApplicationService extends ServiceProvider {
                 .port(Optional.empty())
                 .user("bisq")
                 .password("bisq")
-                .walletsDataDirPath(walletsDataDirPath)
                 .build();
         return Optional.of(walletConfig);
     }

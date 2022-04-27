@@ -32,5 +32,4 @@ public class WalletConfig {
     private final Optional<Integer> port;
     private final String user;
     private final String password;
-    private final Path walletsDataDirPath;
 }
