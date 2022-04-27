@@ -15,27 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.rpc.calls;
+package bisq.wallets.bitcoind.rpc.responses;
 
-import bisq.wallets.rpc.call.WalletRpcCall;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
-public class BitcoindGetBalanceRpcCall extends WalletRpcCall<Void, Double> {
-    public BitcoindGetBalanceRpcCall() {
-        super(null);
-    }
-
-    @Override
-    public String getRpcMethodName() {
-        return "getbalance";
-    }
-
-    @Override
-    public boolean isResponseValid(Double response) {
-        return true;
-    }
-
-    @Override
-    public Class<Double> getRpcResponseClass() {
-        return Double.class;
-    }
+@Getter
+@Setter
+public class BitcoindGetBalancesResponse {
+    private BitcoindGetMineBalancesResponse mine;
+    @JsonProperty("watchonly")
+    private BitcoindGetMineBalancesResponse watchOnly;
 }

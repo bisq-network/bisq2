@@ -56,8 +56,10 @@ public class BitcoindWallet {
     }
 
     public double getBalance() {
-        var rpcCall = new BitcoindGetBalanceRpcCall();
-        return rpcClient.invokeAndValidate(rpcCall);
+        var rpcCall = new BitcoindGetBalancesRpcCall();
+        BitcoindGetBalancesResponse response = rpcClient.invokeAndValidate(rpcCall);
+        BitcoindGetMineBalancesResponse mineBalancesResponse = response.getMine();
+        return mineBalancesResponse.getTrusted() + mineBalancesResponse.getUntrustedPending();
     }
 
     public String getNewAddress(AddressType addressType, String label) {
