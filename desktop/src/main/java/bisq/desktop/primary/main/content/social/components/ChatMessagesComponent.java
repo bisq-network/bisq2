@@ -21,9 +21,9 @@ import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.KeyWordDetection;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTaggableTextArea;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
@@ -477,8 +477,9 @@ public class ChatMessagesComponent {
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
                         private final BisqTextArea editedMessageField;
-                        private final Button takeOfferButton, saveEditButton, cancelEditButton,
-                                emojiButton1, emojiButton2, openEmojiSelectorButton, replyButton,
+                        private final Button takeOfferButton, saveEditButton, cancelEditButton;
+                        private final Label emojiButton1, emojiButton2,
+                                openEmojiSelectorButton, replyButton,
                                 pmButton, editButton, deleteButton, moreOptionsButton;
                         private final Label userNameLabel = new Label();
                         private final Label time = new Label();
@@ -502,17 +503,24 @@ public class ChatMessagesComponent {
                             time.setVisible(false);
                             time.setManaged(false);
 
-                            //todo emojiButton1, emojiButton2, emojiButton3 will be filled with emoji icons
-                            emojiButton1 = BisqIconButton.createIconButton(AwesomeIcon.THUMBS_UP_ALT);
+                            emojiButton1 = Icons.getIcon(AwesomeIcon.THUMBS_UP_ALT);
                             emojiButton1.setUserData(":+1:");
-                            emojiButton2 = BisqIconButton.createIconButton(AwesomeIcon.THUMBS_DOWN_ALT);
-                            emojiButton1.setUserData(":-1:");
-                            openEmojiSelectorButton = BisqIconButton.createIconButton(AwesomeIcon.DOUBLE_ANGLE_UP);
-                            replyButton = BisqIconButton.createIconButton(AwesomeIcon.REPLY);
-                            pmButton = BisqIconButton.createIconButton(AwesomeIcon.COMMENT_ALT);
-                            editButton = BisqIconButton.createIconButton(AwesomeIcon.EDIT);
-                            deleteButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
-                            moreOptionsButton = BisqIconButton.createIconButton(AwesomeIcon.ELLIPSIS_HORIZONTAL);
+                            emojiButton1.setCursor(Cursor.HAND);
+                            emojiButton2 = Icons.getIcon(AwesomeIcon.THUMBS_DOWN_ALT);
+                            emojiButton2.setUserData(":-1:");
+                            emojiButton2.setCursor(Cursor.HAND);
+                            openEmojiSelectorButton = Icons.getIcon(AwesomeIcon.SMILE);
+                            openEmojiSelectorButton.setCursor(Cursor.HAND);
+                            replyButton = Icons.getIcon(AwesomeIcon.REPLY);
+                            replyButton.setCursor(Cursor.HAND);
+                            pmButton = Icons.getIcon(AwesomeIcon.COMMENT_ALT);
+                            pmButton.setCursor(Cursor.HAND);
+                            editButton = Icons.getIcon(AwesomeIcon.EDIT);
+                            editButton.setCursor(Cursor.HAND);
+                            deleteButton = Icons.getIcon(AwesomeIcon.REMOVE_SIGN);
+                            deleteButton.setCursor(Cursor.HAND);
+                            moreOptionsButton = Icons.getIcon(AwesomeIcon.ELLIPSIS_HORIZONTAL);
+                            moreOptionsButton.setCursor(Cursor.HAND);
                             Label verticalLine = new Label("|");
                             HBox.setMargin(verticalLine, new Insets(4, 0, 0, 0));
                             verticalLine.setId("chat-message-reactions-separator");
@@ -534,8 +542,10 @@ public class ChatMessagesComponent {
                             quotedMessageBox.setManaged(false);
                             VBox.setMargin(quotedMessageBox, new Insets(0, 0, 10, 0));
 
+                            HBox.setMargin(emojiButton1, new Insets(0, 0, 0, 15));
+                            HBox.setMargin(moreOptionsButton, new Insets(0, 15, 0, 0));
+                            HBox.setMargin(verticalLine, new Insets(0, -10, 0, -10));
                             reactionsBox = Layout.hBoxWith(
-                                    Spacer.fillHBox(),
                                     emojiButton1,
                                     emojiButton2,
                                     verticalLine,
@@ -545,12 +555,13 @@ public class ChatMessagesComponent {
                                     editButton,
                                     deleteButton,
                                     moreOptionsButton);
-                            reactionsBox.setSpacing(5);
+                            reactionsBox.setSpacing(30);
+                            reactionsBox.setPadding(new Insets(5, 0, 5, 0));
                             reactionsBox.setVisible(false);
-                            reactionsBox.setStyle("-fx-background-color: -bisq-grey-18; -fx-background-radius: 8px");
+                            reactionsBox.setStyle("-fx-background-color: -bisq-grey-18; -fx-background-radius: 8 0 0 0");
 
                             HBox reactionsOuterBox = Layout.hBoxWith(Spacer.fillHBox(), reactionsBox);
-                            VBox.setMargin(reactionsOuterBox, new Insets(10, 0, 0, 0));
+                            VBox.setMargin(reactionsOuterBox, new Insets(-5, 0, 0, 0));
 
                             message.setAutoHeight(true);
                             HBox.setHgrow(message, Priority.ALWAYS);
@@ -561,13 +572,12 @@ public class ChatMessagesComponent {
 
                             HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
                             HBox messageAndTakeOfferButton = Layout.hBoxWith(message, takeOfferButton);
-                            VBox.setMargin(messageAndTakeOfferButton, new Insets(-5, 0, 0, 0));
+                            VBox.setMargin(messageAndTakeOfferButton, new Insets(-2, 0, 0, 0));
                             messageBox = Layout.vBoxWith(quotedMessageBox,
                                     messageAndTakeOfferButton,
                                     editedMessageField,
                                     editControlsBox,
                                     reactionsOuterBox);
-                            messageBox.setSpacing(0);
                             VBox.setVgrow(messageBox, Priority.ALWAYS);
 
                             vBox = Layout.vBoxWith(userNameAndScore, messageBox);
@@ -678,14 +688,14 @@ public class ChatMessagesComponent {
                                     setStyle("-fx-background-color: transparent");
                                 });
 
-                                emojiButton1.setOnAction(e -> controller.onAddEmoji((String) emojiButton1.getUserData()));
-                                emojiButton2.setOnAction(e -> controller.onAddEmoji((String) emojiButton2.getUserData()));
-                                openEmojiSelectorButton.setOnAction(e -> controller.onOpenEmojiSelector(chatMessage));
-                                replyButton.setOnAction(e -> controller.onReply(chatMessage));
-                                pmButton.setOnAction(e -> controller.onOpenPrivateChannel(chatMessage));
-                                editButton.setOnAction(e -> onEditMessage(item));
-                                deleteButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
-                                moreOptionsButton.setOnAction(e -> controller.onOpenMoreOptions(chatMessage));
+                                emojiButton1.setOnMouseClicked(e -> controller.onAddEmoji((String) emojiButton1.getUserData()));
+                                emojiButton2.setOnMouseClicked(e -> controller.onAddEmoji((String) emojiButton2.getUserData()));
+                                openEmojiSelectorButton.setOnMouseClicked(e -> controller.onOpenEmojiSelector(chatMessage));
+                                replyButton.setOnMouseClicked(e -> controller.onReply(chatMessage));
+                                pmButton.setOnMouseClicked(e -> controller.onOpenPrivateChannel(chatMessage));
+                                editButton.setOnMouseClicked(e -> onEditMessage(item));
+                                deleteButton.setOnMouseClicked(e -> controller.onDeleteMessage(chatMessage));
+                                moreOptionsButton.setOnMouseClicked(e -> controller.onOpenMoreOptions(chatMessage));
 
                                 boolean isMyMessage = model.isMyMessage(chatMessage);
                                 replyButton.setVisible(!isMyMessage);
@@ -713,14 +723,14 @@ public class ChatMessagesComponent {
                                 hBox.setOnMouseEntered(null);
                                 hBox.setOnMouseExited(null);
                                 chatUserIcon.releaseResources();
-                                emojiButton1.setOnAction(null);
-                                emojiButton2.setOnAction(null);
-                                openEmojiSelectorButton.setOnAction(null);
-                                replyButton.setOnAction(null);
-                                pmButton.setOnAction(null);
-                                editButton.setOnAction(null);
-                                deleteButton.setOnAction(null);
-                                moreOptionsButton.setOnAction(null);
+                                emojiButton1.setOnMouseClicked(null);
+                                emojiButton2.setOnMouseClicked(null);
+                                openEmojiSelectorButton.setOnMouseClicked(null);
+                                replyButton.setOnMouseClicked(null);
+                                pmButton.setOnMouseClicked(null);
+                                editButton.setOnMouseClicked(null);
+                                deleteButton.setOnMouseClicked(null);
+                                moreOptionsButton.setOnMouseClicked(null);
                                 saveEditButton.setOnAction(null);
                                 cancelEditButton.setOnAction(null);
                                 editedMessageField.setOnKeyPressed(null);
