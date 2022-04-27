@@ -21,9 +21,12 @@ import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.KeyWordDetection;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqPopupMenu;
+import bisq.desktop.components.controls.BisqPopupMenuItem;
 import bisq.desktop.components.controls.BisqTaggableTextArea;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
@@ -67,6 +70,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -119,6 +123,7 @@ public class ChatMessagesComponent {
         private final QuotedMessageBlock quotedMessageBlock;
         private ListChangeListener<ChatMessagesComponent.ChatMessageListItem<? extends ChatMessage>> messageListener;
         private Pin selectedChannelPin, chatMessagesPin;
+        private ChatMessage moreOptionsVisibleMessage = null;
 
         private Controller(ChatService chatService,
                            UserProfileService userProfileService,
@@ -330,8 +335,31 @@ public class ChatMessagesComponent {
             }
         }
 
-        public void onOpenMoreOptions(ChatMessage chatMessage) {
+        public void onOpenMoreOptions(HBox reactionsBox, ChatMessage chatMessage, Runnable onClose) {
+            if (moreOptionsVisibleMessage != null && moreOptionsVisibleMessage.equals(chatMessage)) {
+                return;
+            }
+            moreOptionsVisibleMessage = chatMessage;
+            List<BisqPopupMenuItem> items = new ArrayList<>();
+            
+            items.add(new BisqPopupMenuItem("Copy message", () -> {
+                ClipboardUtil.copyToClipboard(chatMessage.getText());
+            }));
+            items.add(new BisqPopupMenuItem("Copy link to message", () -> {
+                ClipboardUtil.copyToClipboard("???");  //todo implement url in chat message
+            }));
 
+            if (!chatService.isMyMessage(chatMessage)) {
+                items.add(new BisqPopupMenuItem("Ignore user", () -> {
+                    chatService.ignoreChatUser(chatMessage.getAuthor());
+                }));
+                items.add(new BisqPopupMenuItem("Report user to moderator", () -> {
+                    chatService.reportChatUser(chatMessage.getAuthor(), "");
+                }));
+            }
+            
+            BisqPopupMenu menu = new BisqPopupMenu(items, onClose);
+            menu.show(reactionsBox);
         }
 
         public void onAddEmoji(String emojiId) {
@@ -470,7 +498,7 @@ public class ChatMessagesComponent {
             inputField.setOnKeyPressed(null);
             model.getSortedChatMessages().removeListener(messagesListener);
         }
-
+        
         private Callback<ListView<ChatMessageListItem<? extends ChatMessage>>, ListCell<ChatMessageListItem<? extends ChatMessage>>> getCellFactory() {
             return new Callback<>() {
                 @Override
@@ -586,6 +614,15 @@ public class ChatMessagesComponent {
                             HBox.setMargin(userIconTimeBox, new Insets(10, 0, 0, -10));
                             this.hBox = Layout.hBoxWith(userIconTimeBox, vBox);
                         }
+                        
+                        private void hideHoverOverlay() {
+                            time.setVisible(false);
+                            time.setManaged(false);
+
+                            reactionsBox.setVisible(false);
+                            messageBox.setStyle("-fx-background-color: transparent");
+                            setStyle("-fx-background-color: transparent");
+                        }
 
                         @Override
                         public void updateItem(final ChatMessageListItem<? extends ChatMessage> item, boolean empty) {
@@ -672,6 +709,9 @@ public class ChatMessagesComponent {
 
                                 reputationScoreDisplay.applyReputationScore(model.getReputationScore(author));
                                 setOnMouseEntered(e -> {
+                                    if (controller.moreOptionsVisibleMessage != null) {
+                                        return;
+                                    }
                                     time.setVisible(true);
                                     time.setManaged(true);
 
@@ -680,12 +720,9 @@ public class ChatMessagesComponent {
                                     setStyle("-fx-background-color: -bisq-grey-2;");
                                 });
                                 setOnMouseExited(e -> {
-                                    time.setVisible(false);
-                                    time.setManaged(false);
-
-                                    reactionsBox.setVisible(false);
-                                    messageBox.setStyle("-fx-background-color: transparent");
-                                    setStyle("-fx-background-color: transparent");
+                                    if (controller.moreOptionsVisibleMessage == null) {
+                                        hideHoverOverlay();
+                                    }
                                 });
 
                                 emojiButton1.setOnMouseClicked(e -> controller.onAddEmoji((String) emojiButton1.getUserData()));
@@ -695,7 +732,10 @@ public class ChatMessagesComponent {
                                 pmButton.setOnMouseClicked(e -> controller.onOpenPrivateChannel(chatMessage));
                                 editButton.setOnMouseClicked(e -> onEditMessage(item));
                                 deleteButton.setOnMouseClicked(e -> controller.onDeleteMessage(chatMessage));
-                                moreOptionsButton.setOnMouseClicked(e -> controller.onOpenMoreOptions(chatMessage));
+                                moreOptionsButton.setOnMouseClicked(e -> controller.onOpenMoreOptions(reactionsBox, chatMessage, () -> {
+                                    hideHoverOverlay();
+                                    controller.moreOptionsVisibleMessage = null;
+                                }));
 
                                 boolean isMyMessage = model.isMyMessage(chatMessage);
                                 replyButton.setVisible(!isMyMessage);
