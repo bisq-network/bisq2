@@ -17,38 +17,29 @@
 
 package bisq.wallets.elementsd.rpc.calls;
 
+import bisq.wallets.elementsd.rpc.responses.ElementsdGetBalancesResponse;
 import bisq.wallets.rpc.call.WalletRpcCall;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
-public class ElementsdGetBalanceRpcCall extends WalletRpcCall<ElementsdGetBalanceRpcCall.Request, Double> {
+public class ElementsdGetBalancesRpcCall extends WalletRpcCall<Void, ElementsdGetBalancesResponse> {
 
-    @Getter
-    public static class Request {
-        @JsonProperty("assetlabel")
-        private final String assetLabel;
-
-        public Request(String assetLabel) {
-            this.assetLabel = assetLabel;
-        }
-    }
-
-    public ElementsdGetBalanceRpcCall(Request request) {
-        super(request);
+    public ElementsdGetBalancesRpcCall() {
+        super(null);
     }
 
     @Override
     public String getRpcMethodName() {
-        return "getbalance";
+        return "getbalances";
     }
 
     @Override
-    public boolean isResponseValid(Double response) {
+    public boolean isResponseValid(ElementsdGetBalancesResponse response) {
         return true;
     }
 
     @Override
-    public Class<Double> getRpcResponseClass() {
-        return Double.class;
+    public Class<ElementsdGetBalancesResponse> getRpcResponseClass() {
+        return ElementsdGetBalancesResponse.class;
     }
 }

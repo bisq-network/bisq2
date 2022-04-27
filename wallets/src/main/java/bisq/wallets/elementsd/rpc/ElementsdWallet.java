@@ -51,9 +51,13 @@ public class ElementsdWallet {
     }
 
     public double getAssetBalance(String assetLabel) {
-        var request = new ElementsdGetBalanceRpcCall.Request(assetLabel);
-        var rpcCall = new ElementsdGetBalanceRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        var rpcCall = new ElementsdGetBalancesRpcCall();
+        ElementsdGetBalancesResponse response = rpcClient.invokeAndValidate(rpcCall);
+        ElementsdGetMineBalancesResponse mineBalancesResponse = response.getMine();
+
+        double trustedBalance = mineBalancesResponse.getTrusted().getOrDefault(assetLabel, 0.);
+        double pendingBalance = mineBalancesResponse.getUntrustedPending().getOrDefault(assetLabel, 0.);
+        return trustedBalance + pendingBalance;
     }
 
     public ElementsdGetAddressInfoResponse getAddressInfo(String address) {
