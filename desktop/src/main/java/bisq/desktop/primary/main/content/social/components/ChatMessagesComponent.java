@@ -123,7 +123,6 @@ public class ChatMessagesComponent {
         private final QuotedMessageBlock quotedMessageBlock;
         private ListChangeListener<ChatMessagesComponent.ChatMessageListItem<? extends ChatMessage>> messageListener;
         private Pin selectedChannelPin, chatMessagesPin;
-        private ChatMessage moreOptionsVisibleMessage = null;
 
         private Controller(ChatService chatService,
                            UserProfileService userProfileService,
@@ -336,24 +335,24 @@ public class ChatMessagesComponent {
         }
 
         public void onOpenMoreOptions(HBox reactionsBox, ChatMessage chatMessage, Runnable onClose) {
-            if (moreOptionsVisibleMessage != null && moreOptionsVisibleMessage.equals(chatMessage)) {
+            if (chatMessage.equals(model.moreOptionsVisibleMessage.get())) {
                 return;
             }
-            moreOptionsVisibleMessage = chatMessage;
+            model.moreOptionsVisibleMessage.set(chatMessage);
             List<BisqPopupMenuItem> items = new ArrayList<>();
             
-            items.add(new BisqPopupMenuItem("Copy message", () -> {
+            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"), () -> {
                 ClipboardUtil.copyToClipboard(chatMessage.getText());
             }));
-            items.add(new BisqPopupMenuItem("Copy link to message", () -> {
+            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyLinkToMessage"), () -> {
                 ClipboardUtil.copyToClipboard("???");  //todo implement url in chat message
             }));
 
             if (!chatService.isMyMessage(chatMessage)) {
-                items.add(new BisqPopupMenuItem("Ignore user", () -> {
+                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"), () -> {
                     chatService.ignoreChatUser(chatMessage.getAuthor());
                 }));
-                items.add(new BisqPopupMenuItem("Report user to moderator", () -> {
+                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.reportUser"), () -> {
                     chatService.reportChatUser(chatMessage.getAuthor(), "");
                 }));
             }
@@ -403,6 +402,7 @@ public class ChatMessagesComponent {
         private final boolean isDiscussionsChat;
         private final ObservableList<String> customTags = FXCollections.observableArrayList();
         private final BooleanProperty allowEditing = new SimpleBooleanProperty();
+        private final ObjectProperty<ChatMessage> moreOptionsVisibleMessage = new SimpleObjectProperty<>(null);
         private Optional<Consumer<ChatUser>> showChatUserDetailsHandler = Optional.empty();
 
         private Model(ChatService chatService,
@@ -709,7 +709,7 @@ public class ChatMessagesComponent {
 
                                 reputationScoreDisplay.applyReputationScore(model.getReputationScore(author));
                                 setOnMouseEntered(e -> {
-                                    if (controller.moreOptionsVisibleMessage != null) {
+                                    if (model.moreOptionsVisibleMessage.get() != null) {
                                         return;
                                     }
                                     time.setVisible(true);
@@ -720,7 +720,7 @@ public class ChatMessagesComponent {
                                     setStyle("-fx-background-color: -bisq-grey-2;");
                                 });
                                 setOnMouseExited(e -> {
-                                    if (controller.moreOptionsVisibleMessage == null) {
+                                    if (model.moreOptionsVisibleMessage.get() == null) {
                                         hideHoverOverlay();
                                     }
                                 });
@@ -734,7 +734,7 @@ public class ChatMessagesComponent {
                                 deleteButton.setOnMouseClicked(e -> controller.onDeleteMessage(chatMessage));
                                 moreOptionsButton.setOnMouseClicked(e -> controller.onOpenMoreOptions(reactionsBox, chatMessage, () -> {
                                     hideHoverOverlay();
-                                    controller.moreOptionsVisibleMessage = null;
+                                    model.moreOptionsVisibleMessage.set(null);
                                 }));
 
                                 boolean isMyMessage = model.isMyMessage(chatMessage);
