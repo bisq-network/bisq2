@@ -342,18 +342,18 @@ public class ChatMessagesComponent {
             moreOptionsVisibleMessage = chatMessage;
             List<BisqPopupMenuItem> items = new ArrayList<>();
             
-            items.add(new BisqPopupMenuItem("Copy message", () -> {
+            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"), () -> {
                 ClipboardUtil.copyToClipboard(chatMessage.getText());
             }));
-            items.add(new BisqPopupMenuItem("Copy link to message", () -> {
+            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyLinkToMessage"), () -> {
                 ClipboardUtil.copyToClipboard("???");  //todo implement url in chat message
             }));
 
             if (!chatService.isMyMessage(chatMessage)) {
-                items.add(new BisqPopupMenuItem("Ignore user", () -> {
+                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"), () -> {
                     chatService.ignoreChatUser(chatMessage.getAuthor());
                 }));
-                items.add(new BisqPopupMenuItem("Report user to moderator", () -> {
+                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.reportUser"), () -> {
                     chatService.reportChatUser(chatMessage.getAuthor(), "");
                 }));
             }
