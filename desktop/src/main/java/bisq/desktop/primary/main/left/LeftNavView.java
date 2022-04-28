@@ -56,12 +56,13 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     private final ToggleGroup toggleGroup = new ToggleGroup();
     LeftNavButton trade;
+    LeftNavButton wallet;
     @Getter
     private final NetworkInfoBox networkInfoBox;
     private final Label expandIcon, collapseIcon;
     private final ImageView logoExpanded, logoCollapsed;
     private final Region selectionMarker;
-    private final VBox mainMenuItems, tradeSubMenuItems;
+    private final VBox mainMenuItems, tradeSubMenuItems, walletSubMenuItems;
     private final int menuTop;
     private Subscription navigationTargetSubscription, menuExpandedSubscription;
 
@@ -92,9 +93,20 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 NavigationTarget.MARKETS);
 
         //todo lower prio menu add design
-        LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
+
+        walletSubMenuItems = new VBox(2);
+        VBox.setMargin(walletSubMenuItems, new Insets(-10, 0, 0, 0));
+        walletSubMenuItems.setPadding(new Insets(0, 0, 16, 0));
+
+        wallet = createNavigationButton(Res.get("wallet"),
                 ImageUtil.getImageViewById("nav-wallet"),
-                NavigationTarget.WALLET);
+                NavigationTarget.WALLET_BITCOIN);
+        LeftNavSubButton bitcoinWallet = createSecondaryNavigationButton(Res.get("bitcoin.wallet"),
+                NavigationTarget.WALLET_BITCOIN);
+        LeftNavSubButton lBtcWallet = createSecondaryNavigationButton(Res.get("lbtc.wallet"),
+                NavigationTarget.WALLET_LBTC);
+        walletSubMenuItems.getChildren().addAll(bitcoinWallet, lBtcWallet);
+
         LeftNavButton support = createNavigationButton(Res.get("support"),
                 ImageUtil.getImageViewById("nav-support"),
                 NavigationTarget.SUPPORT);
@@ -156,7 +168,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(social, trade, tradeSubMenuItems, markets, wallet, support, settings);
+        mainMenuItems.getChildren().addAll(social, trade, tradeSubMenuItems, markets,
+                wallet, walletSubMenuItems, support, settings);
         mainMenuItems.setLayoutY(menuTop);
         root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, mainMenuItems, expandIcon, collapseIcon, networkInfoBox);
     }
@@ -298,20 +311,30 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             double targetY = menuTop + selectedLeftNavButton.getBoundsInParent().getMinY();
             if (selectedLeftNavButton instanceof LeftNavSubButton) {
                 targetY += tradeSubMenuItems.getLayoutY();
+                targetY += walletSubMenuItems.getLayoutY();
             }
             Transitions.animateNavigationButtonMarks(selectionMarker, selectedLeftNavButton.getHeight(), targetY);
-            maybeHighlightTradeSubmenu();
+            maybeHighlightTradeOrWalletSubmenu();
         });
     }
-    
-    private void maybeHighlightTradeSubmenu() {
+
+    private void maybeHighlightTradeOrWalletSubmenu() {
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
-        boolean isSubmenuItemSelected = selectedLeftNavButton instanceof LeftNavSubButton;
-        trade.setHighlighted(isSubmenuItemSelected);
+
+        boolean isTradeSubmenuItemSelected = selectedLeftNavButton == trade;
+        trade.setHighlighted(isTradeSubmenuItemSelected);
         Layout.toggleStyleClass(
-                tradeSubMenuItems, 
-                "bisq-dark-bg", 
-                isSubmenuItemSelected || selectedLeftNavButton.navigationTarget == NavigationTarget.TRADE
+                tradeSubMenuItems,
+                "bisq-dark-bg",
+                isTradeSubmenuItemSelected || selectedLeftNavButton.navigationTarget == NavigationTarget.TRADE
+        );
+
+        boolean isWalletSubmenuItemSelected = selectedLeftNavButton == wallet;
+        wallet.setHighlighted(isTradeSubmenuItemSelected);
+        Layout.toggleStyleClass(
+                walletSubMenuItems,
+                "bisq-dark-bg",
+                isWalletSubmenuItemSelected || selectedLeftNavButton.navigationTarget == NavigationTarget.WALLET_BITCOIN
         );
     }
 

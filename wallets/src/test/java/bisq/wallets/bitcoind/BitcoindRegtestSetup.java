@@ -19,13 +19,13 @@ package bisq.wallets.bitcoind;
 
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.AbstractRegtestSetup;
-import bisq.wallets.AddressType;
+import bisq.wallets.RpcConfig;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponseEntry;
+import bisq.wallets.model.AddressType;
 import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
-import bisq.wallets.rpc.RpcConfig;
 import bisq.wallets.rpc.WalletRpcClient;
 import lombok.Getter;
 
@@ -95,8 +95,7 @@ public class BitcoindRegtestSetup
     }
 
     private BitcoindWallet newWallet(Path walletPath) throws MalformedURLException {
-        RpcConfig walletRpcConfig = new RpcConfig.Builder(rpcConfig).build();
-        WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(walletRpcConfig, walletPath);
+        WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletPath);
         return new BitcoindWallet(rpcClient);
     }
 
@@ -145,7 +144,7 @@ public class BitcoindRegtestSetup
 
     private RpcConfig createRpcConfig() {
         int port = NetworkUtils.findFreeSystemPort();
-        return new RpcConfig.Builder()
+        return RpcConfig.builder()
                 .hostname("127.0.0.1")
                 .user("bisq")
                 .password("bisq")

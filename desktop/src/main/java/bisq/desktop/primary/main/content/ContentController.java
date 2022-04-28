@@ -31,7 +31,8 @@ import bisq.desktop.primary.main.content.settings.SettingsController;
 import bisq.desktop.primary.main.content.social.SocialController;
 import bisq.desktop.primary.main.content.support.SupportController;
 import bisq.desktop.primary.main.content.trade.TradeController;
-import bisq.desktop.primary.main.content.wallet.WalletController;
+import bisq.desktop.primary.main.content.wallet.BitcoinWalletController;
+import bisq.desktop.primary.main.content.wallet.LBtcWalletController;
 import bisq.desktop.primary.main.content.xmr.XmrSwapController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -92,8 +93,11 @@ public class ContentController extends NavigationController {
             case MARKETS -> {
                 return Optional.of(new MarketsController(applicationService));
             }
-            case WALLET -> {
-                return Optional.of(new WalletController(applicationService));
+            case WALLET_BITCOIN -> {
+                return Optional.of(new BitcoinWalletController(applicationService));
+            }
+            case WALLET_LBTC -> {
+                return Optional.of(new LBtcWalletController(applicationService));
             }
             case SUPPORT -> {
                 return Optional.of(new SupportController(applicationService));

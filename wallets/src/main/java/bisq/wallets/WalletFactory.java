@@ -26,7 +26,6 @@ import bisq.wallets.elementsd.rpc.ElementsdWallet;
 import bisq.wallets.exceptions.WalletInitializationFailedException;
 import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
-import bisq.wallets.rpc.RpcConfig;
 import bisq.wallets.rpc.WalletRpcClient;
 import bisq.wallets.stores.BitcoinWalletStore;
 import bisq.wallets.stores.LiquidWalletStore;
@@ -39,22 +38,20 @@ import java.util.List;
 
 public class WalletFactory {
 
-    static BitcoinWallet createBitcoinWallet(WalletConfig walletConfig,
-                                             Path walletsDataDir,
-                                             BitcoinWalletStore bitcoinWalletStore) {
+    public static BitcoinWallet createBitcoinWallet(RpcConfig rpcConfig,
+                                                    Path walletsDataDir,
+                                                    BitcoinWalletStore bitcoinWalletStore) {
         Path bitcoindDataDir = walletsDataDir.resolve("bitcoind"); // directory name for bitcoind wallet
-        RpcConfig rpcConfig = createRpcConfigFromWalletConfig(walletConfig);
 
         BitcoindDaemon daemon = createBitcoindDaemon(rpcConfig);
         ZmqConnection zmqConnection = initializeBitcoindZeroMq(daemon);
-        return new BitcoinWallet(bitcoindDataDir, rpcConfig, daemon, bitcoinWalletStore, zmqConnection);
+        return new BitcoinWallet(bitcoindDataDir, rpcConfig, daemon, bitcoinWalletStore.getReceiveAddresses(), zmqConnection);
     }
 
-    static LiquidWallet createLiquidWallet(WalletConfig walletConfig,
-                                           Path walletsDataDir,
-                                           LiquidWalletStore liquidWalletStore) {
+    public static LiquidWallet createLiquidWallet(RpcConfig rpcConfig,
+                                                  Path walletsDataDir,
+                                                  LiquidWalletStore liquidWalletStore) {
         Path walletDir = walletsDataDir.resolve("elementsd"); // directory name for bitcoind wallet
-        RpcConfig rpcConfig = createRpcConfigFromWalletConfig(walletConfig);
 
         ElementsdDaemon elementsdDaemon = createElementsdDaemon(rpcConfig);
         ElementsdWallet elementsdWallet = createElementsdWallet(rpcConfig, walletDir);
@@ -63,21 +60,12 @@ public class WalletFactory {
         return new LiquidWallet(walletDir, elementsdDaemon, elementsdWallet, liquidWalletStore, zmqConnection);
     }
 
-    private static RpcConfig createRpcConfigFromWalletConfig(WalletConfig walletConfig) {
-        return new RpcConfig.Builder()
-                .hostname(walletConfig.getHostname())
-                .port(walletConfig.getPort())
-                .user(walletConfig.getUser())
-                .password(walletConfig.getPassword())
-                .build();
-    }
-
     private static BitcoindDaemon createBitcoindDaemon(RpcConfig rpcConfig) {
         try {
             DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
             return new BitcoindDaemon(rpcClient);
         } catch (MalformedURLException e) {
-            throw new WalletInitializationFailedException("Couldn't initialize WalletService", e);
+            throw new WalletInitializationFailedException("Couldn't initialize BitcoinWalletService", e);
         }
     }
 
@@ -86,7 +74,7 @@ public class WalletFactory {
             DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
             return new ElementsdDaemon(rpcClient);
         } catch (MalformedURLException e) {
-            throw new WalletInitializationFailedException("Couldn't initialize WalletService", e);
+            throw new WalletInitializationFailedException("Couldn't initialize BitcoinWalletService", e);
         }
     }
 
@@ -95,7 +83,7 @@ public class WalletFactory {
             WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletPath);
             return new ElementsdWallet(rpcClient);
         } catch (MalformedURLException e) {
-            throw new WalletInitializationFailedException("Couldn't initialize WalletService", e);
+            throw new WalletInitializationFailedException("Couldn't initialize BitcoinWalletService", e);
         }
     }
 

@@ -19,6 +19,7 @@ package bisq.wallets.bitcoind;
 
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
+import bisq.wallets.RpcConfig;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.exceptions.RpcCallFailureException;
 import bisq.wallets.exceptions.WalletShutdownFailedException;
@@ -27,7 +28,6 @@ import bisq.wallets.process.DaemonProcess;
 import bisq.wallets.process.ProcessConfig;
 import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
-import bisq.wallets.rpc.RpcConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,10 +63,10 @@ public class BitcoindRegtestProcess implements DaemonProcess {
                         "-bind=127.0.0.1:" + NetworkUtils.findFreeSystemPort(),
                         "-whitelist=127.0.0.1",
 
-                        "-rpcbind=127.0.0.1:" + rpcConfig.port(),
+                        "-rpcbind=127.0.0.1:" + rpcConfig.getPort(),
                         "-rpcallowip=127.0.0.1",
-                        "-rpcuser=" + rpcConfig.user(),
-                        "-rpcpassword=" + rpcConfig.password(),
+                        "-rpcuser=" + rpcConfig.getUser(),
+                        "-rpcpassword=" + rpcConfig.getPassword(),
 
                         "-zmqpubhashblock=tcp://127.0.0.1:" + zmqPort,
                         "-zmqpubrawtx=tcp://127.0.0.1:" + zmqPort,

@@ -21,34 +21,46 @@ import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import bisq.wallets.RpcConfig;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
 public class BitcoinWalletStore implements PersistableStore<BitcoinWalletStore> {
+    @Getter
+    @Setter
+    private Optional<RpcConfig> rpcConfig = Optional.empty();
     @Getter
     private final ObservableSet<String> receiveAddresses = new ObservableSet<>();
 
     public BitcoinWalletStore() {
     }
 
-    private BitcoinWalletStore(Set<String> receiveAddresses) {
+    private BitcoinWalletStore(Optional<RpcConfig> rpcConfig, Set<String> receiveAddresses) {
+        this.rpcConfig = rpcConfig;
         this.receiveAddresses.addAll(receiveAddresses);
     }
 
     @Override
     public bisq.wallets.protobuf.BitcoinWalletStore toProto() {
-        return bisq.wallets.protobuf.BitcoinWalletStore.newBuilder()
-                .addAllReceiveAddresses(receiveAddresses)
-                .build();
+        bisq.wallets.protobuf.BitcoinWalletStore.Builder builder =
+                bisq.wallets.protobuf.BitcoinWalletStore.newBuilder()
+                        .addAllReceiveAddresses(receiveAddresses);
+
+        rpcConfig.ifPresent(config -> builder.setRpcConfig(config.toProto()));
+        return builder.build();
     }
 
     public static BitcoinWalletStore fromProto(bisq.wallets.protobuf.BitcoinWalletStore proto) {
-        return new BitcoinWalletStore(new HashSet<>(proto.getReceiveAddressesList()));
+        Optional<RpcConfig> rpcConfig = proto.hasRpcConfig() ? Optional.of(RpcConfig.fromProto(proto.getRpcConfig()))
+                : Optional.empty();
+        return new BitcoinWalletStore(rpcConfig, new HashSet<>(proto.getReceiveAddressesList()));
     }
 
     @Override
@@ -64,11 +76,12 @@ public class BitcoinWalletStore implements PersistableStore<BitcoinWalletStore> 
 
     @Override
     public BitcoinWalletStore getClone() {
-        return new BitcoinWalletStore(receiveAddresses);
+        return new BitcoinWalletStore(rpcConfig, receiveAddresses);
     }
 
     @Override
     public void applyPersisted(BitcoinWalletStore persisted) {
+        rpcConfig = persisted.rpcConfig;
         receiveAddresses.clear();
         receiveAddresses.addAll(persisted.getReceiveAddresses());
     }

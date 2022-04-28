@@ -18,6 +18,7 @@
 package bisq.wallets.rpc;
 
 import bisq.common.encoding.Base64;
+import bisq.wallets.RpcConfig;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 
 import java.net.MalformedURLException;
@@ -45,8 +46,8 @@ public class RpcClientFactory {
 
     private static JsonRpcHttpClient createJsonRpcClientWithUrlSuffix(RpcConfig rpcConfig, Optional<String> urlSuffix)
             throws MalformedURLException {
-        String hostname = rpcConfig.hostname();
-        int port = rpcConfig.port();
+        String hostname = rpcConfig.getHostname();
+        int port = rpcConfig.getPort();
         var url = "http://" + hostname + ":" + port;
         if (urlSuffix.isPresent()) {
             url += urlSuffix.get();
@@ -55,7 +56,7 @@ public class RpcClientFactory {
     }
 
     private static Map<String, String> createAuthHeader(RpcConfig rpcConfig) {
-        String auth = rpcConfig.user() + ":" + rpcConfig.password();
+        String auth = rpcConfig.getUser() + ":" + rpcConfig.getPassword();
         String base64Auth = Base64.encode(auth.getBytes(StandardCharsets.UTF_8));
 
         Map<String, String> map = new HashMap<>();

@@ -19,7 +19,6 @@ package bisq.wallets;
 
 import bisq.common.util.FileUtils;
 import bisq.wallets.process.BisqProcess;
-import bisq.wallets.rpc.RpcConfig;
 
 import java.io.IOException;
 import java.net.MalformedURLException;

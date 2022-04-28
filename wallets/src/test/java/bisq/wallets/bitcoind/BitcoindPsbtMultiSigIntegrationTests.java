@@ -17,7 +17,7 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.wallets.AddressType;
+import bisq.wallets.model.AddressType;
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOptions;
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOutput;
 import bisq.wallets.bitcoind.rpc.responses.*;

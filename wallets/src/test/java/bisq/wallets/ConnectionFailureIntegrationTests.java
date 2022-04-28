@@ -22,7 +22,6 @@ import bisq.wallets.exceptions.InvalidRpcCredentialsException;
 import bisq.wallets.process.BisqProcess;
 import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
-import bisq.wallets.rpc.RpcConfig;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -54,10 +53,10 @@ public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess, W
     @Test
     void wrongRpcCredentialsTest() throws IOException {
         RpcConfig validRpcConfig = regtestSetup.getRpcConfig();
-        RpcConfig wrongRpcConfig = new RpcConfig.Builder()
-                .hostname(validRpcConfig.hostname())
-                .port(validRpcConfig.port())
-                .user(validRpcConfig.user())
+        RpcConfig wrongRpcConfig = RpcConfig.builder()
+                .hostname(validRpcConfig.getHostname())
+                .port(validRpcConfig.getPort())
+                .user(validRpcConfig.getUser())
                 .password("WRONG_PASSWORD")
                 .build();
 
@@ -71,10 +70,10 @@ public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess, W
     @Test
     void verifyInvalidRpcConfigTest() {
         RpcConfig validRpcConfig = regtestSetup.getRpcConfig();
-        RpcConfig wrongRpcConfig = new RpcConfig.Builder()
-                .hostname(validRpcConfig.hostname())
-                .port(validRpcConfig.port())
-                .user(validRpcConfig.user())
+        RpcConfig wrongRpcConfig = RpcConfig.builder()
+                .hostname(validRpcConfig.getHostname())
+                .port(validRpcConfig.getPort())
+                .user(validRpcConfig.getUser())
                 .password("WRONG_PASSWORD")
                 .build();
 

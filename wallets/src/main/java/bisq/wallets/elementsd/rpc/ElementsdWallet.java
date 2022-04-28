@@ -17,7 +17,7 @@
 
 package bisq.wallets.elementsd.rpc;
 
-import bisq.wallets.AddressType;
+import bisq.wallets.model.AddressType;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindGetNewAddressRpcCall;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindSignMessageRpcCall;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindVerifyMessageRpcCall;

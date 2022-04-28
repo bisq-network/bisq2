@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.wallet.transactions;
 
-import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.wallets.WalletService;
@@ -31,8 +30,8 @@ public class WalletTransactionsController implements Controller {
     @Getter
     private final WalletTransactionsView view;
 
-    public WalletTransactionsController(DefaultApplicationService applicationService) {
-        walletService = applicationService.getWalletService();
+    public WalletTransactionsController(WalletService walletService) {
+        this.walletService = walletService;
         model = new WalletTransactionsModel();
         view = new WalletTransactionsView(model, this);
     }

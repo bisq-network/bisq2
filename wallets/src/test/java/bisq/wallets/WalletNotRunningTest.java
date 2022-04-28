@@ -21,7 +21,6 @@ import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
-import bisq.wallets.rpc.RpcConfig;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -34,7 +33,7 @@ public class WalletNotRunningTest {
     void notRunningTest() throws IOException {
         int freePort = NetworkUtils.findFreeSystemPort();
 
-        RpcConfig rpcConfig = new RpcConfig.Builder()
+        RpcConfig rpcConfig = new RpcConfig.RpcConfigBuilder()
                 .hostname("127.0.0.1")
                 .user("bisq")
                 .password("bisq")

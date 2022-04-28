@@ -17,6 +17,7 @@
 
 package bisq.wallets.bitcoind.rpc;
 
+import bisq.wallets.RpcConfig;
 import bisq.wallets.bitcoind.rpc.calls.*;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindFinalizePsbtResponse;
@@ -24,7 +25,6 @@ import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.exceptions.InvalidRpcCredentialsException;
 import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
-import bisq.wallets.rpc.RpcConfig;
 
 import java.net.MalformedURLException;
 import java.nio.file.Path;

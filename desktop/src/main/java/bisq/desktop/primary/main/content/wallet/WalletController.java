@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.wallet;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.wallet.config.WalletConfigPopup;
@@ -32,22 +31,22 @@ import lombok.Getter;
 
 import java.util.Optional;
 
-public class WalletController extends TabController<WalletModel> implements Controller {
+public abstract class WalletController extends TabController<WalletModel> implements Controller {
     @Getter
     private final WalletView view;
-    private final DefaultApplicationService applicationService;
+    protected final DefaultApplicationService applicationService;
     private final WalletConfigPopup walletConfigPopup;
-    private final WalletService walletService;
+    protected final WalletService walletService;
 
-    public WalletController(DefaultApplicationService applicationService) {
-        super(new WalletModel(), NavigationTarget.WALLET);
+    public WalletController(DefaultApplicationService applicationService, NavigationTarget navigationTarget) {
+        super(new WalletModel(), navigationTarget);
 
         this.applicationService = applicationService;
-        walletService = applicationService.getWalletService();
+        walletService = getWalletService();
 
         view = new WalletView(model, this);
 
-        walletConfigPopup = new WalletConfigPopup(applicationService, this::onConfigPopupClosed);
+        walletConfigPopup = new WalletConfigPopup(walletService, this::onConfigPopupClosed);
     }
 
     @Override
@@ -67,30 +66,36 @@ public class WalletController extends TabController<WalletModel> implements Cont
             return Optional.empty();
         }
 
-        switch (navigationTarget) {
-            case WALLET_TRANSACTIONS -> {
-                return Optional.of(new WalletTransactionsController(applicationService));
-            }
-            case WALLET_SEND -> {
-                return Optional.of(new WalletSendController(applicationService));
-            }
-            case WALLET_RECEIVE -> {
-                return Optional.of(new WalletReceiveController(applicationService));
-            }
-            case WALLET_UTXOS -> {
-                return Optional.of(new WalletUtxosController(applicationService));
-            }
-            default -> {
-                return Optional.empty();
-            }
+        if (navigationTarget == getTransactionsTabNavigationTarget()) {
+            return Optional.of(new WalletTransactionsController(walletService));
+
+        } else if (navigationTarget == getSendTabNavigationTarget()) {
+            return Optional.of(new WalletSendController(walletService));
+
+        } else if (navigationTarget == getReceiveTabNavigationTarget()) {
+            return Optional.of(new WalletReceiveController(walletService));
+
+        } else if (navigationTarget == getUtxoTabNavigationTarget()) {
+            return Optional.of(new WalletUtxosController(walletService));
+
+        } else {
+            return Optional.empty();
         }
     }
 
-    private boolean isWalletReady() {
+    public abstract WalletService getWalletService();
+
+    public abstract NavigationTarget getTransactionsTabNavigationTarget();
+
+    public abstract NavigationTarget getSendTabNavigationTarget();
+
+    public abstract NavigationTarget getReceiveTabNavigationTarget();
+
+    public abstract NavigationTarget getUtxoTabNavigationTarget();
+
+    protected boolean isWalletReady() {
         return walletService.isWalletReady();
     }
 
-    private void onConfigPopupClosed() {
-        Navigation.navigateTo(NavigationTarget.WALLET_TRANSACTIONS);
-    }
+    protected abstract void onConfigPopupClosed();
 }

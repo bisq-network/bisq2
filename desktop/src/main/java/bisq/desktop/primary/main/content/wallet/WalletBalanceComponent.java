@@ -22,7 +22,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.wallets.WalletService;
+import bisq.wallets.services.BitcoinWalletService;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -36,8 +36,8 @@ import lombok.Getter;
 public class WalletBalanceComponent {
     private final Controller controller;
 
-    public WalletBalanceComponent(WalletService walletService) {
-        controller = new Controller(walletService);
+    public WalletBalanceComponent(BitcoinWalletService bitcoinWalletService) {
+        controller = new Controller(bitcoinWalletService);
     }
 
     public Pane getRootPane() {
@@ -48,18 +48,18 @@ public class WalletBalanceComponent {
         private final Model model;
         @Getter
         private final View view;
-        private final WalletService walletService;
+        private final BitcoinWalletService bitcoinWalletService;
         private Pin balancePin;
 
-        private Controller(WalletService walletService) {
-            this.walletService = walletService;
+        private Controller(BitcoinWalletService bitcoinWalletService) {
+            this.bitcoinWalletService = bitcoinWalletService;
             model = new Model();
             view = new View(model, this);
         }
 
         @Override
         public void onActivate() {
-            balancePin = FxBindings.bind(model.balanceAsCoinProperty).to(walletService.getObservableBalanceAsCoin());
+            balancePin = FxBindings.bind(model.balanceAsCoinProperty).to(bitcoinWalletService.getObservableBalanceAsCoin());
         }
 
         @Override

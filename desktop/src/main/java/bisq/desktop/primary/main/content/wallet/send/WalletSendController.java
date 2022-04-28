@@ -28,8 +28,8 @@ public class WalletSendController implements Controller {
     @Getter
     private final WalletSendView view;
 
-    public WalletSendController(DefaultApplicationService applicationService) {
-        walletService = applicationService.getWalletService();
+    public WalletSendController(WalletService walletService) {
+        this.walletService = walletService;
         model = new WalletSendModel();
         view = new WalletSendView(model, this);
     }

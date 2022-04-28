@@ -17,7 +17,7 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.wallets.AddressType;
+import bisq.wallets.model.AddressType;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindListTransactionsResponseEntry;
 import org.junit.jupiter.api.Test;

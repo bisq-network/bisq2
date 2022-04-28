@@ -17,18 +17,8 @@
 
 package bisq.wallets;
 
-import lombok.Builder;
-import lombok.Getter;
+import bisq.wallets.zmq.ZmqConnection;
 
-import java.nio.file.Path;
-import java.util.Optional;
-
-@Builder
-@Getter
-public class WalletConfig {
-    private final WalletBackend walletBackend;
-    private final String hostname;
-    private final int port;
-    private final String user;
-    private final String password;
+public interface ZmqWallet {
+    ZmqConnection getZmqConnection();
 }

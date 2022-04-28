@@ -18,18 +18,17 @@
 package bisq.wallets.bitcoind;
 
 import bisq.common.observable.ObservableSet;
-import bisq.wallets.AddressType;
+import bisq.wallets.RpcConfig;
+import bisq.wallets.ZmqWallet;
+import bisq.wallets.model.AddressType;
 import bisq.wallets.Wallet;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.exceptions.WalletInitializationFailedException;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
-import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
-import bisq.wallets.rpc.RpcConfig;
 import bisq.wallets.rpc.WalletRpcClient;
-import bisq.wallets.stores.BitcoinWalletStore;
 import bisq.wallets.zmq.ZmqConnection;
 import lombok.Getter;
 
@@ -38,14 +37,14 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
-public class BitcoinWallet implements Wallet {
+public class BitcoinWallet implements Wallet, ZmqWallet {
     private final Path walletPath;
 
     private final BitcoindDaemon daemon;
     private final BitcoindWallet wallet;
 
     @Getter
-    private final BitcoinWalletStore bitcoinWalletStore;
+    private final ObservableSet<String> receiveAddresses;
 
     @Getter
     private final ZmqConnection zmqConnection;
@@ -53,18 +52,18 @@ public class BitcoinWallet implements Wallet {
     public BitcoinWallet(Path walletPath,
                          RpcConfig rpcConfig,
                          BitcoindDaemon daemon,
-                         BitcoinWalletStore bitcoinWalletStore,
+                         ObservableSet<String> receiveAddresses,
                          ZmqConnection zmqConnection) {
         this.walletPath = walletPath;
         this.daemon = daemon;
-        this.bitcoinWalletStore = bitcoinWalletStore;
+        this.receiveAddresses = receiveAddresses;
         this.zmqConnection = zmqConnection;
 
         try {
             WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletPath);
             wallet = new BitcoindWallet(rpcClient);
         } catch (MalformedURLException e) {
-            throw new WalletInitializationFailedException("Couldn't initialize WalletService", e);
+            throw new WalletInitializationFailedException("Couldn't initialize BitcoinWalletService", e);
         }
     }
 
@@ -87,13 +86,8 @@ public class BitcoinWallet implements Wallet {
     @Override
     public String getNewAddress(AddressType addressType, String label) {
         String newAddress = wallet.getNewAddress(addressType, label);
-        bitcoinWalletStore.getReceiveAddresses().add(newAddress);
+        receiveAddresses.add(newAddress);
         return newAddress;
-    }
-
-    @Override
-    public ObservableSet<String> getReceiveAddresses() {
-        return bitcoinWalletStore.getReceiveAddresses();
     }
 
     @Override
