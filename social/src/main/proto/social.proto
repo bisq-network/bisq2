@@ -76,12 +76,18 @@ message Reputation {
   Proof proof = 2;
 }
 
-message ChatUserProfile {
+message ChatUser {
   string nickName = 1;
   network.NetworkId networkId = 2;
   repeated Reputation reputation = 3;
   repeated Role roles = 4;
 }
+
+message ChatUserIdentity {
+  identity.Identity identity = 1;
+  ChatUser chatUser = 2;
+}
+
 message QuotedMessage {
   string profileId = 1;
   string nickName = 2;
@@ -109,7 +115,7 @@ message PublicTradeChatMessage {
 message ChatMessage {
   string channelId = 1;
   optional string text = 2;
-  ChatUserProfile author = 3;
+  ChatUser author = 3;
   optional QuotedMessage quotedMessage = 4;
   uint64 date = 5;
   bool wasEdited = 6;
@@ -128,19 +134,14 @@ enum NotificationSetting {
   NEVER = 2;
 }
 
-message ChatUserIdentity {
-  identity.Identity identity = 1;
-  ChatUserProfile chatUserProfile = 2;
-}
-
 // Channels
 message PrivateDiscussionChannel {
-  ChatUserProfile peer = 1;
+  ChatUser peer = 1;
   ChatUserIdentity myChatUserIdentity = 2;
   repeated ChatMessage chatMessages = 3;
 }
 message PrivateTradeChannel {
-  ChatUserProfile peer = 1;
+  ChatUser peer = 1;
   ChatUserIdentity myChatUserIdentity = 2;
   repeated ChatMessage chatMessages = 3;
 }
@@ -152,8 +153,8 @@ message PublicTradeChannel {
 message PublicDiscussionChannel {
   string channelName = 1;
   string description = 2;
-  ChatUserProfile channelAdmin = 3;
-  repeated ChatUserProfile channelModerators = 4;
+  ChatUser channelAdmin = 3;
+  repeated ChatUser channelModerators = 4;
   bool isVisible = 5;
 }
 message Channel {

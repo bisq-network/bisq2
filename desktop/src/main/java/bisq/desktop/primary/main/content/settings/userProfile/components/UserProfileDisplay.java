@@ -22,7 +22,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.UserProfileService;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -69,11 +69,11 @@ public class UserProfileDisplay {
             pin = FxBindings.subscribe(userProfileService.getSelectedUserProfile(),
                     userProfile -> {
                         model.userName.set(userProfile.getIdentity().domainId());
-                        model.id.set(Res.get("social.createUserProfile.id", userProfile.getChatUserProfile().getId()));
-                        String entitledRoles = userProfile.getChatUserProfile().getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
+                        model.id.set(Res.get("social.createUserProfile.id", userProfile.getChatUser().getId()));
+                        String entitledRoles = userProfile.getChatUser().getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
                         model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
-                        model.entitlementsVisible.set(!userProfile.getChatUserProfile().getRoles().isEmpty());
-                        model.roboHashNode.set(RoboHash.getImage(new ByteArray(userProfile.getChatUserProfile().getPubKeyHash())));
+                        model.entitlementsVisible.set(!userProfile.getChatUser().getRoles().isEmpty());
+                        model.roboHashNode.set(RoboHash.getImage(new ByteArray(userProfile.getChatUser().getPubKeyHash())));
                     });
         }
 

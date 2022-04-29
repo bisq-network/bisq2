@@ -31,7 +31,7 @@ import bisq.security.DigestUtil;
 import bisq.social.user.entitlement.Role;
 import bisq.social.user.proof.Proof;
 import bisq.social.user.proof.ProofOfBurnProof;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.UserProfileService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;

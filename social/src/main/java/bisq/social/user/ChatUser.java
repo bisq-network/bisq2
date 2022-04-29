@@ -23,7 +23,6 @@ import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.security.DigestUtil;
 import bisq.social.user.entitlement.Role;
-import bisq.social.user.profile.NymGenerator;
 import bisq.social.user.reputation.Reputation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -42,7 +41,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 @Slf4j
 @Getter
-public class ChatUserProfile implements Proto {
+public class ChatUser implements Proto {
     private final String nickName;
     private final NetworkId networkId;
     private final Set<Reputation> reputation;
@@ -51,11 +50,11 @@ public class ChatUserProfile implements Proto {
     private transient final String id;
     private transient final String nym;
 
-    public ChatUserProfile(String nickName, NetworkId networkId) {
+    public ChatUser(String nickName, NetworkId networkId) {
         this(nickName, networkId, new HashSet<>(), new HashSet<>());
     }
 
-    public ChatUserProfile(String nickName, NetworkId networkId, Set<Reputation> reputation, Set<Role> roles) {
+    public ChatUser(String nickName, NetworkId networkId, Set<Reputation> reputation, Set<Role> roles) {
         this.nickName = nickName;
         this.networkId = networkId;
         this.reputation = reputation;
@@ -66,8 +65,8 @@ public class ChatUserProfile implements Proto {
         nym = NymGenerator.fromHash(pubKeyHash);
     }
 
-    public bisq.social.protobuf.ChatUserProfile toProto() {
-        return bisq.social.protobuf.ChatUserProfile.newBuilder()
+    public bisq.social.protobuf.ChatUser toProto() {
+        return bisq.social.protobuf.ChatUser.newBuilder()
                 .setNickName(nickName)
                 .setNetworkId(networkId.toProto())
                 .addAllReputation(reputation.stream()
@@ -81,14 +80,14 @@ public class ChatUserProfile implements Proto {
                 .build();
     }
 
-    public static ChatUserProfile fromProto(bisq.social.protobuf.ChatUserProfile proto) {
+    public static ChatUser fromProto(bisq.social.protobuf.ChatUser proto) {
         Set<Reputation> reputation = proto.getReputationList().stream()
                 .map(Reputation::fromProto)
                 .collect(Collectors.toSet());
         Set<Role> roles = proto.getRolesList().stream()
                 .map(Role::fromProto)
                 .collect(Collectors.toSet());
-        return new ChatUserProfile(proto.getNickName(), NetworkId.fromProto(proto.getNetworkId()), reputation, roles);
+        return new ChatUser(proto.getNickName(), NetworkId.fromProto(proto.getNetworkId()), reputation, roles);
     }
 
     public boolean hasEntitlementType(Role.Type type) {

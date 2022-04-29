@@ -17,12 +17,12 @@
 
 package bisq.social.chat.channels;
 
-import bisq.social.user.ChatUserProfile;
+import bisq.social.user.ChatUser;
 
 public interface PrivateChannel {
     String CHANNEL_DELIMITER = "@PC@";
 
-    ChatUserProfile getPeer();
+    ChatUser getPeer();
 
     static String createChannelId(String peersProfileId, String myProfileId) {
         if (peersProfileId.compareTo(myProfileId) < 0) {

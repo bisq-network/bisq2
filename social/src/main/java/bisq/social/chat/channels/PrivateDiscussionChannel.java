@@ -20,8 +20,8 @@ package bisq.social.chat.channels;
 import bisq.common.observable.ObservableSet;
 import bisq.social.chat.NotificationSetting;
 import bisq.social.chat.messages.PrivateDiscussionChatMessage;
-import bisq.social.user.ChatUserProfile;
-import bisq.social.user.profile.ChatUserIdentity;
+import bisq.social.user.ChatUser;
+import bisq.social.user.ChatUserIdentity;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -33,11 +33,11 @@ import java.util.stream.Collectors;
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class PrivateDiscussionChannel extends Channel<PrivateDiscussionChatMessage> implements PrivateChannel {
-    private final ChatUserProfile peer;
+    private final ChatUser peer;
     private final ChatUserIdentity myProfile;
     private final ObservableSet<PrivateDiscussionChatMessage> chatMessages = new ObservableSet<>();
 
-    public PrivateDiscussionChannel(ChatUserProfile peer, ChatUserIdentity myProfile) {
+    public PrivateDiscussionChannel(ChatUser peer, ChatUserIdentity myProfile) {
         this(PrivateChannel.createChannelId(peer.getNym(), myProfile.getProfileId()),
                 peer,
                 myProfile,
@@ -45,12 +45,12 @@ public class PrivateDiscussionChannel extends Channel<PrivateDiscussionChatMessa
                 new HashSet<>());
     }
 
-    public PrivateDiscussionChannel(String id, ChatUserProfile peer, ChatUserIdentity myProfile) {
+    public PrivateDiscussionChannel(String id, ChatUser peer, ChatUserIdentity myProfile) {
         this(id, peer, myProfile, NotificationSetting.ALL, new HashSet<>());
     }
 
     private PrivateDiscussionChannel(String id,
-                                     ChatUserProfile peer,
+                                     ChatUser peer,
                                      ChatUserIdentity myProfile,
                                      NotificationSetting notificationSetting,
                                      Set<PrivateDiscussionChatMessage> chatMessages) {
@@ -72,7 +72,7 @@ public class PrivateDiscussionChannel extends Channel<PrivateDiscussionChatMessa
                                                      bisq.social.protobuf.PrivateDiscussionChannel proto) {
         return new PrivateDiscussionChannel(
                 baseProto.getId(),
-                ChatUserProfile.fromProto(proto.getPeer()),
+                ChatUser.fromProto(proto.getPeer()),
                 ChatUserIdentity.fromProto(proto.getMyChatUserIdentity()),
                 NotificationSetting.fromProto(baseProto.getNotificationSetting()),
                 proto.getChatMessagesList().stream()

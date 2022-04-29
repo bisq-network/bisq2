@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user.profile;
+package bisq.social.user;
 
 import bisq.common.data.Pair;
 import bisq.common.encoding.Hex;
@@ -35,7 +35,6 @@ import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.KeyPairService;
 import bisq.security.SignatureUtil;
-import bisq.social.user.ChatUserProfile;
 import bisq.social.user.entitlement.Role;
 import bisq.social.user.proof.*;
 import bisq.social.user.reputation.Reputation;
@@ -119,8 +118,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                                                                                Set<Role> roles) {
         return identityService.createNewInitializedIdentity(profileId, keyId, keyPair)
                 .thenApply(identity -> {
-                    ChatUserProfile chatUserProfile = new ChatUserProfile(nickName, identity.getNodeIdAndKeyPair().networkId(), reputation, roles);
-                    ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUserProfile);
+                    ChatUser chatUser = new ChatUser(nickName, identity.getNodeIdAndKeyPair().networkId(), reputation, roles);
+                    ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUser);
                     synchronized (lock) {
                         persistableStore.getChatUserIdentities().add(chatUserIdentity);
                         persistableStore.getSelectedChatUserIdentity().set(chatUserIdentity);
@@ -139,7 +138,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         return persistableStore.getChatUserIdentities().isEmpty();
     }
 
-    public CompletableFuture<Optional<ChatUserProfile.BurnInfo>> findBurnInfoAsync(byte[] pubKeyHash, Set<Role> roles) {
+    public CompletableFuture<Optional<ChatUser.BurnInfo>> findBurnInfoAsync(byte[] pubKeyHash, Set<Role> roles) {
         if (roles.stream().noneMatch(e -> e.type() == Role.Type.LIQUIDITY_PROVIDER)) {
             return CompletableFuture.completedFuture(Optional.empty());
         }
@@ -161,7 +160,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                                 .mapToLong(ProofOfBurnProof::burntAmount)
                                 .sum();
                         long firstBurnDate = proofs.get(0).date();
-                        return Optional.of(new ChatUserProfile.BurnInfo(totalBsqBurned, firstBurnDate));
+                        return Optional.of(new ChatUser.BurnInfo(totalBsqBurned, firstBurnDate));
                     }
                 });
     }

@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.settings.userProfile;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
 import bisq.identity.IdentityService;
-import bisq.social.user.profile.ChatUserIdentity;
+import bisq.social.user.ChatUserIdentity;
 import javafx.beans.property.*;
 import javafx.scene.Node;
 import lombok.Getter;

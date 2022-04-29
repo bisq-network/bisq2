@@ -19,7 +19,7 @@ package bisq.desktop.primary.onboarding;
 
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

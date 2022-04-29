@@ -19,7 +19,7 @@ package bisq.social.chat.messages;
 
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.social.user.ChatUserProfile;
+import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode(callSuper = true)
 public class PublicDiscussionChatMessage extends ChatMessage implements DistributedData {
     public PublicDiscussionChatMessage(String channelId,
-                                       ChatUserProfile sender,
+                                       ChatUser sender,
                                        String text,
                                        Optional<Quotation> quotedMessage,
                                        long date,
@@ -50,7 +50,7 @@ public class PublicDiscussionChatMessage extends ChatMessage implements Distribu
     }
 
     protected PublicDiscussionChatMessage(String channelId,
-                                          ChatUserProfile sender,
+                                          ChatUser sender,
                                           Optional<String> text,
                                           Optional<Quotation> quotedMessage,
                                           long date,
@@ -75,7 +75,7 @@ public class PublicDiscussionChatMessage extends ChatMessage implements Distribu
                 Optional.empty();
         return new PublicDiscussionChatMessage(
                 baseProto.getChannelId(),
-                ChatUserProfile.fromProto(baseProto.getAuthor()),
+                ChatUser.fromProto(baseProto.getAuthor()),
                 Optional.of(baseProto.getText()),
                 quotedMessage,
                 baseProto.getDate(),

@@ -25,7 +25,7 @@ import bisq.desktop.primary.main.content.settings.userProfile.components.UserPro
 import bisq.desktop.primary.main.content.settings.userProfile.components.UserProfileSelectionAtSettings;
 import bisq.social.chat.ChatService;
 import bisq.social.user.entitlement.Role;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -68,7 +68,7 @@ public class UserProfileController implements Controller {
         model.channelAdminVisible.set(true);
         selectedUserProfileSubscription = EasyBind.subscribe(userProfileSelection.getSelectedUserProfile(),
                 userProfile -> {
-                    model.channelAdminVisible.set(userProfile.getChatUserProfile().hasEntitlementType(Role.Type.CHANNEL_ADMIN));
+                    model.channelAdminVisible.set(userProfile.getChatUser().hasEntitlementType(Role.Type.CHANNEL_ADMIN));
                 });
     }
 

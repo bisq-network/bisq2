@@ -24,9 +24,9 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.social.user.ChatUserProfile;
+import bisq.social.user.ChatUser;
 import bisq.social.user.entitlement.Role;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.UserProfileService;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
@@ -56,15 +56,15 @@ public class ChatUserIcon extends Pane {
         getChildren().addAll(roboIcon, entitlement);
     }
 
-    public void setChatUser(ChatUserProfile chatUserProfile, UserProfileService userProfileService) {
-        roboIcon.setImage(RoboHash.getImage(new ByteArray(chatUserProfile.getPubKeyHash())));
+    public void setChatUser(ChatUser chatUser, UserProfileService userProfileService) {
+        roboIcon.setImage(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
 
-        if (chatUserProfile.hasEntitlementType(Role.Type.LIQUIDITY_PROVIDER)) {
+        if (chatUser.hasEntitlementType(Role.Type.LIQUIDITY_PROVIDER)) {
             entitlement.setId("chat-trust");
 
             // We get asynchronous the verified burnInfo results. It is cached in the userProfileService
             // So we should get fast results in most cases.
-            userProfileService.findBurnInfoAsync(chatUserProfile.getPubKeyHash(), chatUserProfile.getRoles())
+            userProfileService.findBurnInfoAsync(chatUser.getPubKeyHash(), chatUser.getRoles())
                     .whenComplete((optionalBurnInfo, t) -> {
                         optionalBurnInfo.ifPresent(burnInfo -> {
                             UIThread.run(() -> {
@@ -77,11 +77,11 @@ public class ChatUserIcon extends Pane {
                             });
                         });
                     });
-        } else if (chatUserProfile.hasEntitlementType(Role.Type.CHANNEL_ADMIN)) {
+        } else if (chatUser.hasEntitlementType(Role.Type.CHANNEL_ADMIN)) {
             //trustIconImageView.setId("chat-trust"); //todo define icon
             entitlement.setVisible(true);
             entitlement.setManaged(true);
-        } else if (chatUserProfile.hasEntitlementType(Role.Type.CHANNEL_MODERATOR)) {
+        } else if (chatUser.hasEntitlementType(Role.Type.CHANNEL_MODERATOR)) {
             //entitlement.setId("chat-trust"); //todo define icon
             entitlement.setVisible(true);
             entitlement.setManaged(true);

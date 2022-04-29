@@ -44,7 +44,7 @@ import bisq.settings.SettingsService;
 import bisq.social.SocialService;
 import bisq.social.chat.ChatService;
 import bisq.social.offer.TradeChatOfferService;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.UserProfileService;
 import bisq.social.user.reputation.ReputationService;
 import bisq.wallets.NetworkType;
 import bisq.wallets.WalletBackend;
@@ -54,7 +54,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;

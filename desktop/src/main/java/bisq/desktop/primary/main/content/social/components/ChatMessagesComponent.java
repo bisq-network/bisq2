@@ -40,9 +40,9 @@ import bisq.presentation.formatters.TimeFormatter;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
-import bisq.social.user.ChatUserProfile;
-import bisq.social.user.profile.ChatUserIdentity;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.ChatUser;
+import bisq.social.user.ChatUserIdentity;
+import bisq.social.user.UserProfileService;
 import bisq.social.user.reputation.ReputationScore;
 import bisq.social.user.reputation.ReputationService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -92,19 +92,19 @@ public class ChatMessagesComponent {
         return controller.view.getRoot();
     }
 
-    public void mentionUser(ChatUserProfile chatUserProfile) {
-        controller.mentionUser(chatUserProfile);
+    public void mentionUser(ChatUser chatUser) {
+        controller.mentionUser(chatUser);
     }
 
     public FilteredList<ChatMessageListItem<? extends ChatMessage>> getFilteredChatMessages() {
         return controller.model.getFilteredChatMessages();
     }
 
-    public void setOnShowChatUserDetails(Consumer<ChatUserProfile> handler) {
+    public void setOnShowChatUserDetails(Consumer<ChatUser> handler) {
         controller.model.showChatUserDetailsHandler = Optional.of(handler);
     }
 
-    public void openPrivateChannel(ChatUserProfile peer) {
+    public void openPrivateChannel(ChatUser peer) {
         controller.createAndSelectPrivateChannel(peer);
     }
 
@@ -265,8 +265,8 @@ public class ChatMessagesComponent {
             }
         }
 
-        public void onMention(ChatUserProfile chatUserProfile) {
-            mentionUser(chatUserProfile);
+        public void onMention(ChatUser chatUser) {
+            mentionUser(chatUser);
         }
 
         public void onShowChatUserDetails(ChatMessage chatMessage) {
@@ -290,7 +290,7 @@ public class ChatMessagesComponent {
             createAndSelectPrivateChannel(chatMessage.getAuthor());
         }
 
-        private void createAndSelectPrivateChannel(ChatUserProfile peer) {
+        private void createAndSelectPrivateChannel(ChatUser peer) {
             if (model.isDiscussionsChat) {
                 chatService.createPrivateDiscussionChannel(peer)
                         .ifPresent(chatService::selectTradeChannel);
@@ -299,7 +299,7 @@ public class ChatMessagesComponent {
             }
         }
 
-        private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(ChatUserProfile peer) {
+        private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(ChatUser peer) {
             Optional<PrivateTradeChannel> privateTradeChannel = chatService.createPrivateTradeChannel(peer);
             privateTradeChannel.ifPresent(chatService::selectTradeChannel);
             return privateTradeChannel;
@@ -366,12 +366,12 @@ public class ChatMessagesComponent {
 
         }
 
-        private void mentionUser(ChatUserProfile chatUserProfile) {
+        private void mentionUser(ChatUser chatUser) {
             String existingText = model.getTextInput().get();
             if (!existingText.isEmpty() && !existingText.endsWith(" ")) {
                 existingText += " ";
             }
-            model.getTextInput().set(existingText + "@" + chatUserProfile.getUserName() + " ");
+            model.getTextInput().set(existingText + "@" + chatUser.getUserName() + " ");
         }
 
         public void onTakeOffer(PublicTradeChatMessage marketChatMessage) {
@@ -403,7 +403,7 @@ public class ChatMessagesComponent {
         private final boolean isDiscussionsChat;
         private final ObservableList<String> customTags = FXCollections.observableArrayList();
         private final BooleanProperty allowEditing = new SimpleBooleanProperty();
-        private Optional<Consumer<ChatUserProfile>> showChatUserDetailsHandler = Optional.empty();
+        private Optional<Consumer<ChatUser>> showChatUserDetailsHandler = Optional.empty();
 
         private Model(ChatService chatService,
                       UserProfileService userProfileService,
@@ -430,7 +430,7 @@ public class ChatMessagesComponent {
             return chatService.isMyMessage(chatMessage);
         }
 
-        public ReputationScore getReputationScore(ChatUserProfile author) {
+        public ReputationScore getReputationScore(ChatUser author) {
             return reputationService.getReputationScore(author);
         }
     }
@@ -698,7 +698,7 @@ public class ChatMessagesComponent {
                                 dateTooltip = new Tooltip(item.getDate());
                                 Tooltip.install(time, dateTooltip);
 
-                                ChatUserProfile author = item.getAuthor();
+                                ChatUser author = item.getAuthor();
                                 userNameLabel.setText(author.getUserName());
                                 userNameLabel.setOnMouseClicked(e -> controller.onMention(author));
 
@@ -829,7 +829,7 @@ public class ChatMessagesComponent {
         private final String time;
         private final String date;
         private final Optional<Quotation> quotedMessage;
-        private final ChatUserProfile author;
+        private final ChatUser author;
 
         public ChatMessageListItem(T chatMessage) {
             this.chatMessage = chatMessage;

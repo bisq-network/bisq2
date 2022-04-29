@@ -15,12 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user.profile;
+package bisq.social.user;
 
 import bisq.common.proto.Proto;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
-import bisq.social.user.ChatUserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -31,38 +30,38 @@ import lombok.Getter;
 @Getter
 public class ChatUserIdentity implements Proto {
     private final Identity identity;
-    private final ChatUserProfile chatUserProfile;
+    private final ChatUser chatUser;
 
-    public ChatUserIdentity(Identity identity, ChatUserProfile chatUserProfile) {
+    public ChatUserIdentity(Identity identity, ChatUser chatUser) {
         this.identity = identity;
-        this.chatUserProfile = chatUserProfile;
+        this.chatUser = chatUser;
     }
 
     public byte[] getPubKeyHash() {
-        return chatUserProfile.getPubKeyHash();
+        return chatUser.getPubKeyHash();
     }
 
     public String getTooltipString() {
-        return Res.get("social.chatUser.tooltip", chatUserProfile.getNickName(), getProfileId());
+        return Res.get("social.chatUser.tooltip", chatUser.getNickName(), getProfileId());
     }
 
     public bisq.social.protobuf.ChatUserIdentity toProto() {
         return bisq.social.protobuf.ChatUserIdentity.newBuilder()
                 .setIdentity(identity.toProto())
-                .setChatUserProfile(chatUserProfile.toProto())
+                .setChatUser(chatUser.toProto())
                 .build();
     }
 
     public static ChatUserIdentity fromProto(bisq.social.protobuf.ChatUserIdentity proto) {
         return new ChatUserIdentity(Identity.fromProto(proto.getIdentity()),
-                ChatUserProfile.fromProto(proto.getChatUserProfile()));
+                ChatUser.fromProto(proto.getChatUser()));
     }
 
     public String getProfileId() {
-        return chatUserProfile.getNym();
+        return chatUser.getNym();
     }
 
     public String getNickName() {
-        return chatUserProfile.getNickName();
+        return chatUser.getNickName();
     }
 }

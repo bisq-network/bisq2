@@ -24,7 +24,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.social.user.profile.ChatUserIdentity;
+import bisq.social.user.ChatUserIdentity;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

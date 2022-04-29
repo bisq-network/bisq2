@@ -18,6 +18,7 @@
 package bisq.social.user.profile;
 
 import bisq.security.DigestUtil;
+import bisq.social.user.NymGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
@@ -28,8 +29,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static bisq.social.user.profile.NymGenerator.fromHash;
-import static bisq.social.user.profile.NymGenerator.read;
+import static bisq.social.user.NymGenerator.fromHash;
+import static bisq.social.user.NymGenerator.read;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j

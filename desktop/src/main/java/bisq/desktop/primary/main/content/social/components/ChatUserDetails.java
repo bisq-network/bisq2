@@ -22,7 +22,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
-import bisq.social.user.ChatUserProfile;
+import bisq.social.user.ChatUser;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -45,19 +45,19 @@ import java.util.stream.Collectors;
 public class ChatUserDetails implements Comparable<ChatUserDetails> {
     private final Controller controller;
 
-    public ChatUserDetails(ChatService chatService, ChatUserProfile chatUserProfile) {
-        controller = new Controller(chatService, chatUserProfile);
+    public ChatUserDetails(ChatService chatService, ChatUser chatUser) {
+        controller = new Controller(chatService, chatUser);
     }
 
     public Pane getRoot() {
         return controller.view.getRoot();
     }
 
-    public void setOnMentionUser(Consumer<ChatUserProfile> handler) {
+    public void setOnMentionUser(Consumer<ChatUser> handler) {
         controller.model.mentionUserHandler = Optional.ofNullable(handler);
     }
 
-    public void setOnSendPrivateMessage(Consumer<ChatUserProfile> handler) {
+    public void setOnSendPrivateMessage(Consumer<ChatUser> handler) {
         controller.model.sendPrivateMessageHandler = Optional.ofNullable(handler);
     }
 
@@ -67,7 +67,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
     @Override
     public int compareTo(ChatUserDetails o) {
-        return controller.model.chatUserProfile.getNym().compareTo(o.controller.model.chatUserProfile.getNym());
+        return controller.model.chatUser.getNym().compareTo(o.controller.model.chatUser.getNym());
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -76,24 +76,24 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final View view;
 
 
-        private Controller(ChatService chatService, ChatUserProfile chatUserProfile) {
-            model = new Model(chatService, chatUserProfile);
+        private Controller(ChatService chatService, ChatUser chatUser) {
+            model = new Model(chatService, chatUser);
             view = new View(model, this);
         }
 
         @Override
         public void onActivate() {
-            ChatUserProfile chatUserProfile = model.chatUserProfile;
-            if (chatUserProfile == null) {
+            ChatUser chatUser = model.chatUser;
+            if (chatUser == null) {
                 return;
             }
 
-            model.id.set(Res.get("social.createUserProfile.id", chatUserProfile.getId()));
-            model.userName.set(chatUserProfile.getNym());
-            model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUserProfile.getPubKeyHash())));
-            String entitledRoles = chatUserProfile.getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
+            model.id.set(Res.get("social.createUserProfile.id", chatUser.getId()));
+            model.userName.set(chatUser.getNym());
+            model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
+            String entitledRoles = chatUser.getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
             model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
-            model.entitlementsVisible.set(!chatUserProfile.getRoles().isEmpty());
+            model.entitlementsVisible.set(!chatUser.getRoles().isEmpty());
         }
 
         @Override
@@ -101,29 +101,29 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         }
 
         public void onSendPrivateMessage() {
-            model.sendPrivateMessageHandler.ifPresent(handler -> handler.accept(model.chatUserProfile));
+            model.sendPrivateMessageHandler.ifPresent(handler -> handler.accept(model.chatUser));
         }
 
         public void onMentionUser() {
-            model.mentionUserHandler.ifPresent(handler -> handler.accept(model.chatUserProfile));
+            model.mentionUserHandler.ifPresent(handler -> handler.accept(model.chatUser));
         }
 
         public void onIgnoreUser() {
-            model.chatService.ignoreChatUser(model.chatUserProfile);
+            model.chatService.ignoreChatUser(model.chatUser);
             model.ignoreChatUserHandler.ifPresent(Runnable::run);
         }
 
         public void onReportUser() {
             // todo open popup for editing reason
-            model.chatService.reportChatUser(model.chatUserProfile, "");
+            model.chatService.reportChatUser(model.chatUser, "");
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatService chatService;
-        private final ChatUserProfile chatUserProfile;
-        private Optional<Consumer<ChatUserProfile>> mentionUserHandler = Optional.empty();
-        private Optional<Consumer<ChatUserProfile>> sendPrivateMessageHandler = Optional.empty();
+        private final ChatUser chatUser;
+        private Optional<Consumer<ChatUser>> mentionUserHandler = Optional.empty();
+        private Optional<Consumer<ChatUser>> sendPrivateMessageHandler = Optional.empty();
         private Optional<Runnable> ignoreChatUserHandler = Optional.empty();
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
@@ -131,9 +131,9 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
         private final StringProperty entitlements = new SimpleStringProperty();
 
-        private Model(ChatService chatService, ChatUserProfile chatUserProfile) {
+        private Model(ChatService chatService, ChatUser chatUser) {
             this.chatService = chatService;
-            this.chatUserProfile = chatUserProfile;
+            this.chatUser = chatUser;
         }
     }
 

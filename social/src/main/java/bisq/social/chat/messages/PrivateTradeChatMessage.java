@@ -21,7 +21,7 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
-import bisq.social.user.ChatUserProfile;
+import bisq.social.user.ChatUser;
 import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -43,7 +43,7 @@ public class PrivateTradeChatMessage extends ChatMessage implements MailboxMessa
     private final String receiversProfileId;
 
     public PrivateTradeChatMessage(String channelId,
-                                   ChatUserProfile sender,
+                                   ChatUser sender,
                                    String receiversProfileId,
                                    String text,
                                    Optional<Quotation> quotedMessage,
@@ -60,7 +60,7 @@ public class PrivateTradeChatMessage extends ChatMessage implements MailboxMessa
     }
 
     private PrivateTradeChatMessage(String channelId,
-                                    ChatUserProfile sender,
+                                    ChatUser sender,
                                     String receiversProfileId,
                                     String text,
                                     Optional<Quotation> quotedMessage,
@@ -97,7 +97,7 @@ public class PrivateTradeChatMessage extends ChatMessage implements MailboxMessa
                 Optional.empty();
         return new PrivateTradeChatMessage(
                 baseProto.getChannelId(),
-                ChatUserProfile.fromProto(baseProto.getAuthor()),
+                ChatUser.fromProto(baseProto.getAuthor()),
                 baseProto.getPrivateTradeChatMessage().getReceiversProfileId(),
                 baseProto.getText(),
                 quotedMessage,

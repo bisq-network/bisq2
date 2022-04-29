@@ -26,7 +26,7 @@ import bisq.desktop.primary.main.content.social.components.*;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.Channel;
 import bisq.social.chat.messages.ChatMessage;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.UserProfileService;
 import bisq.social.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
