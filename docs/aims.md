@@ -85,7 +85,9 @@ Bisq v2 will be API-driven to enable new interfaces, bots, and integrations to b
 
 Bisq v1 uses a single path for dispute resolution (mediation, arbitration, and the DAO). Users had no choice but to use it in case of any issues. Bisq v2 seeks to make dispute resolution an add-on service for users who desire it (still integrated when desired/needed, but not as central to the trading experience).
 
-Multiple methods will be available, including none where appropriate:- None, since atomic swaps don’t need any kind of dispute resolution
+Multiple methods will be available, including none where appropriate:
+
+- None, since atomic swaps don’t need any kind of dispute resolution
 
 - Mediation, implemented through an open market of mediators across languages, time zones, etc.
   - Users seeking to use a mediation service can pay a fee directly to a service provider or perhaps even a service provider’s pool (sort of like an insurance).
@@ -109,7 +111,8 @@ Bisq v2 will offer more options:
 
 If any of this sounds interesting to you, please [get in touch with us in our Matrix room](https://matrix.to/#/#bisq.v2.dev:bitcoin.kyoto)!
 
-There are a ton of challenges for many kinds of developers, but especially for those interested in:- How to scale a complex peer-to-peer network
+There are a ton of challenges for many kinds of developers, but especially for those interested in:
+- How to scale a complex peer-to-peer network
 - How to guard such a peer-to-peer network against DoS attacks (rough concept involving proof-of-work outlined above, but specifics still needed)
 - How to handle distributed data in a peer-to-peer network of anonymous nodes where any node can be malicious
 - Designing trade protocols and trade execution engines on Bitcoin, Liquid, RSK, etc.
