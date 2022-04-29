@@ -26,8 +26,8 @@ import bisq.i18n.Res;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.social.chat.ChatService;
-import bisq.social.user.UserNameGenerator;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.NymGenerator;
+import bisq.social.user.ChatUserService;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -52,8 +52,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class CreateUserProfile {
     private final Controller controller;
 
-    public CreateUserProfile(ChatService chatService, UserProfileService userProfileService, KeyPairService keyPairService) {
-        controller = new Controller(chatService, userProfileService, keyPairService);
+    public CreateUserProfile(ChatService chatService, ChatUserService chatUserService, KeyPairService keyPairService) {
+        controller = new Controller(chatService, chatUserService, keyPairService);
     }
 
     public Pane getRoot() {
@@ -66,16 +66,16 @@ public class CreateUserProfile {
         @Getter
         private final View view;
         private final ChatService chatService;
-        private final UserProfileService userProfileService;
+        private final ChatUserService chatUserService;
         private final KeyPairService keyPairService;
         private final EntitlementSelection entitlementSelection;
 
-        private Controller(ChatService chatService, UserProfileService userProfileService, KeyPairService keyPairService) {
+        private Controller(ChatService chatService, ChatUserService chatUserService, KeyPairService keyPairService) {
             this.chatService = chatService;
-            this.userProfileService = userProfileService;
+            this.chatUserService = chatUserService;
             this.keyPairService = keyPairService;
             model = new Model();
-            entitlementSelection = new EntitlementSelection(userProfileService);
+            entitlementSelection = new EntitlementSelection(chatUserService);
 
             view = new View(model, this, entitlementSelection.getRoot());
         }
@@ -101,10 +101,11 @@ public class CreateUserProfile {
             model.generateNewIdentityButtonDisable.set(true);
             model.feedback.set(Res.get("social.createUserProfile.prepare"));
             String profileId = model.profileId.get();
-            userProfileService.createNewInitializedUserProfile(profileId,
+            chatUserService.createNewInitializedUserProfile(profileId,
                             model.nickName.get(),
                             model.tempKeyId,
                             model.tempKeyPair,
+                            new HashSet<>(),
                             new HashSet<>(entitlementSelection.getVerifiedEntitlements()))
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
@@ -120,7 +121,7 @@ public class CreateUserProfile {
             model.tempKeyPair = keyPairService.generateKeyPair();
             byte[] hash = DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded());
             model.roboHashNode.set(RoboHash.getImage(new ByteArray(hash)));
-            model.profileId.set(UserNameGenerator.fromHash(hash));
+            model.profileId.set(NymGenerator.fromHash(hash));
         }
 
         private void reset() {

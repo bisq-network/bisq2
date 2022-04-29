@@ -21,8 +21,8 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
-import bisq.social.user.profile.UserProfile;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.ChatUserIdentity;
+import bisq.social.user.ChatUserService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -40,8 +40,8 @@ public class ChannelAdmin {
 
     private final Controller controller;
 
-    public ChannelAdmin(UserProfileService userProfileService, ChatService chatService) {
-        controller = new Controller(userProfileService, chatService);
+    public ChannelAdmin(ChatUserService chatUserService, ChatService chatService) {
+        controller = new Controller(chatUserService, chatService);
     }
 
     public Pane getRoot() {
@@ -52,12 +52,12 @@ public class ChannelAdmin {
         private final Model model;
         @Getter
         private final View view;
-        private final UserProfileService userProfileService;
+        private final ChatUserService chatUserService;
         private final ChatService chatService;
         private Pin selectedUserProfilePin;
 
-        private Controller(UserProfileService userProfileService, ChatService chatService) {
-            this.userProfileService = userProfileService;
+        private Controller(ChatUserService chatUserService, ChatService chatService) {
+            this.chatUserService = chatUserService;
             this.chatService = chatService;
 
             model = new Model();
@@ -67,7 +67,7 @@ public class ChannelAdmin {
         @Override
         public void onActivate() {
             selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile)
-                    .to(userProfileService.getSelectedUserProfile());
+                    .to(chatUserService.getSelectedUserProfile());
         }
 
         @Override
@@ -75,9 +75,9 @@ public class ChannelAdmin {
             selectedUserProfilePin.unbind();
         }
 
-        public void onSelected(UserProfile value) {
+        public void onSelected(ChatUserIdentity value) {
             if (value != null) {
-                userProfileService.selectUserProfile(value);
+                chatUserService.selectUserProfile(value);
             }
         }
 
@@ -100,7 +100,7 @@ public class ChannelAdmin {
     private static class Model implements bisq.desktop.common.view.Model {
         final StringProperty channelName = new SimpleStringProperty();
         final StringProperty description = new SimpleStringProperty();
-        ObjectProperty<UserProfile> selectedUserProfile = new SimpleObjectProperty<>();
+        ObjectProperty<ChatUserIdentity> selectedUserProfile = new SimpleObjectProperty<>();
 
         private Model() {
         }

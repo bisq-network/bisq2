@@ -17,125 +17,137 @@
 
 package bisq.social.user;
 
-import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
-import bisq.common.proto.Proto;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
+import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
+import bisq.social.chat.messages.ChatMessage;
+import bisq.social.chat.messages.PublicTradeChatMessage;
+import bisq.social.user.entitlement.Role;
+import bisq.social.user.reputation.Reputation;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Publicly shared chat user data
- * We cache pubKey hash, id and generated profileId.
- * ChatUser is part of the ChatMessage so we have many instances from the same chat user and want to avoid
- * costs from hashing and the userame generation. We could also try to restructure the domain model to avoid that
- * the chat user is part of the message (e.g. use an id and reference to p2p network data for chat user).
+ * Publicly shared chat user profile.
  */
 @ToString
 @EqualsAndHashCode
 @Slf4j
-public class ChatUser implements Proto {
-    private static final transient Map<ByteArray, DerivedData> CACHE = new HashMap<>();
-    @Getter
+@Getter
+public class ChatUser implements DistributedData {
+    // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
+    private final static long TTL = Math.round(ChatMessage.TTL * 1.2);
+    
     private final String nickName;
-    @Getter
     private final NetworkId networkId;
-    @Getter
-    private final Set<Entitlement> entitlements;
-    private transient DerivedData derivedData;
+    private final Set<Reputation> reputation;
+    private final Set<Role> roles;
+    private transient final byte[] pubKeyHash;
+    private final MetaData metaData;
+    private transient final String id;
+    private transient final String nym;
 
-    //todo add profileId
     public ChatUser(String nickName, NetworkId networkId) {
-        this(nickName, networkId, new HashSet<>());
+        this(nickName, networkId,
+                new HashSet<>(),
+                new HashSet<>());
     }
 
-    public ChatUser(String nickName, NetworkId networkId, Set<Entitlement> entitlements) {
+    public ChatUser(String nickName, NetworkId networkId, Set<Reputation> reputation, Set<Role> roles) {
+        this(nickName, networkId,
+                reputation,
+                roles,
+                new MetaData(TTL, 100000, PublicTradeChatMessage.class.getSimpleName()));
+    }
+
+    public ChatUser(String nickName, NetworkId networkId, Set<Reputation> reputation, Set<Role> roles, MetaData metaData) {
         this.nickName = nickName;
         this.networkId = networkId;
-        this.entitlements = entitlements;
+        this.reputation = reputation;
+        this.roles = roles;
+
+        pubKeyHash = DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded());
+        this.metaData = metaData;
+        id = Hex.encode(pubKeyHash);
+        nym = NymGenerator.fromHash(pubKeyHash);
     }
 
     public bisq.social.protobuf.ChatUser toProto() {
         return bisq.social.protobuf.ChatUser.newBuilder()
                 .setNickName(nickName)
                 .setNetworkId(networkId.toProto())
-                .addAllEntitlements(entitlements.stream()
+                .addAllReputation(reputation.stream()
                         .sorted()
-                        .map(Entitlement::toProto)
+                        .map(Reputation::toProto)
                         .collect(Collectors.toList()))
+                .addAllRoles(roles.stream()
+                        .sorted()
+                        .map(Role::toProto)
+                        .collect(Collectors.toList()))
+                .setMetaData(metaData.toProto())
                 .build();
     }
 
     public static ChatUser fromProto(bisq.social.protobuf.ChatUser proto) {
-        Set<Entitlement> set = proto.getEntitlementsList().stream()
-                .map(Entitlement::fromProto)
+        Set<Reputation> reputation = proto.getReputationList().stream()
+                .map(Reputation::fromProto)
                 .collect(Collectors.toSet());
-        return new ChatUser(proto.getNickName(), NetworkId.fromProto(proto.getNetworkId()), set);
+        Set<Role> roles = proto.getRolesList().stream()
+                .map(Role::fromProto)
+                .collect(Collectors.toSet());
+        return new ChatUser(proto.getNickName(),
+                NetworkId.fromProto(proto.getNetworkId()),
+                reputation,
+                roles,
+                MetaData.fromProto(proto.getMetaData()));
     }
 
-    public boolean hasEntitlementType(Entitlement.Type type) {
-        return entitlements.stream().anyMatch(e -> e.entitlementType() == type);
+
+    public static ProtoResolver<DistributedData> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.social.protobuf.ChatUser.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
-    // Delegates
-    public String getId() {
-        return getDerivedData().id();
+    public boolean hasEntitlementType(Role.Type type) {
+        return roles.stream().anyMatch(e -> e.type() == type);
     }
 
     public String getTooltipString() {
-        return Res.get("social.chatUser.tooltip", nickName, getProfileId());
-    }
-
-    public String getProfileId() {
-        return getDerivedData().profileId;
+        return Res.get("social.chatUser.tooltip", nickName, nym);
     }
 
     public String getUserName() {
-        return UserNameLookup.getUserName(getProfileId(), nickName);
+        return NymLookup.getUserName(nym, nickName);
     }
 
-    public byte[] getPubKeyHash() {
-        return getDerivedData().pubKeyHash().getBytes();
+    @Override
+    public MetaData getMetaData() {
+        return metaData;
     }
 
-    public ByteArray getPubKeyHashAsByteArray() {
-        return getDerivedData().pubKeyHash();
+    @Override
+    public boolean isDataInvalid() {
+        return false;
     }
 
-    private DerivedData getDerivedData() {
-        if (derivedData == null) {
-            // todo sometimes we get derivedData = null. not clear why...
-            //log.warn("derivedData is null. we call getDerivedData()");
-            derivedData = ChatUser.getDerivedData(networkId.getPubKey().publicKey().getEncoded());
-        }
-        return derivedData;
-    }
-
-    private static DerivedData getDerivedData(byte[] pubKeyBytes) {
-        ByteArray mapKey = new ByteArray(pubKeyBytes);
-        if (!CACHE.containsKey(mapKey)) {
-            byte[] pubKeyHash = DigestUtil.hash(pubKeyBytes);
-            String id = Hex.encode(pubKeyHash);
-            String profileId = UserNameGenerator.fromHash(pubKeyHash);
-            DerivedData derivedData = new DerivedData(new ByteArray(pubKeyHash), id, profileId);
-            CACHE.put(mapKey, derivedData);
-        }
-        return CACHE.get(mapKey);
-    }
-
-    private static record DerivedData(ByteArray pubKeyHash, String id, String profileId) {
-    }
-
+    //todo
     public static record BurnInfo(long totalBsqBurned, long firstBurnDate) {
     }
 }

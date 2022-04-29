@@ -22,7 +22,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.ChatUserService;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -42,8 +42,8 @@ import java.util.stream.Collectors;
 public class UserProfileDisplay {
     private final Controller controller;
 
-    public UserProfileDisplay(UserProfileService userProfileService) {
-        controller = new Controller(userProfileService);
+    public UserProfileDisplay(ChatUserService chatUserService) {
+        controller = new Controller(chatUserService);
     }
 
     public Pane getRoot() {
@@ -54,11 +54,11 @@ public class UserProfileDisplay {
         private final Model model;
         @Getter
         private final View view;
-        private final UserProfileService userProfileService;
+        private final ChatUserService chatUserService;
         private Pin pin;
 
-        private Controller(UserProfileService userProfileService) {
-            this.userProfileService = userProfileService;
+        private Controller(ChatUserService chatUserService) {
+            this.chatUserService = chatUserService;
 
             model = new Model();
             view = new View(model, this);
@@ -66,13 +66,13 @@ public class UserProfileDisplay {
 
         @Override
         public void onActivate() {
-            pin = FxBindings.subscribe(userProfileService.getSelectedUserProfile(),
+            pin = FxBindings.subscribe(chatUserService.getSelectedUserProfile(),
                     userProfile -> {
                         model.userName.set(userProfile.getIdentity().domainId());
                         model.id.set(Res.get("social.createUserProfile.id", userProfile.getChatUser().getId()));
-                        String entitledRoles = userProfile.getEntitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
+                        String entitledRoles = userProfile.getChatUser().getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
                         model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
-                        model.entitlementsVisible.set(!userProfile.getEntitlements().isEmpty());
+                        model.entitlementsVisible.set(!userProfile.getChatUser().getRoles().isEmpty());
                         model.roboHashNode.set(RoboHash.getImage(new ByteArray(userProfile.getChatUser().getPubKeyHash())));
                     });
         }

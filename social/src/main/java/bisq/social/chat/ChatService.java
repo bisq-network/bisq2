@@ -39,17 +39,16 @@ import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
 import bisq.social.offer.TradeChatOffer;
 import bisq.social.user.ChatUser;
-import bisq.social.user.Entitlement;
-import bisq.social.user.profile.UserProfile;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.ChatUserIdentity;
+import bisq.social.user.ChatUserService;
+import bisq.social.user.entitlement.Role;
+import bisq.social.user.proof.BondedRoleProof;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Manages chatChannels and persistence of the chatModel.
@@ -61,7 +60,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class ChatService implements PersistenceClient<ChatStore>, MessageListener, DataService.Listener {
     private final ChatStore persistableStore = new ChatStore();
     private final Persistence<ChatStore> persistence;
-    private final UserProfileService userProfileService;
+    private final ChatUserService chatUserService;
     private final PersistenceService persistenceService;
     private final IdentityService identityService;
     private final NetworkService networkService;
@@ -69,12 +68,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public ChatService(PersistenceService persistenceService,
                        IdentityService identityService,
                        NetworkService networkService,
-                       UserProfileService userProfileService) {
+                       ChatUserService chatUserService) {
         this.persistenceService = persistenceService;
         this.identityService = identityService;
         this.networkService = networkService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        this.userProfileService = userProfileService;
+        this.chatUserService = chatUserService;
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -115,7 +114,32 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicTradeChatMessage message) {
+        if (distributedData instanceof ChatUser chatUser) {
+            // It might be that we received the chat message before the chat user. In that case the 
+            // message would not be displayed. To avoid this situation we check if there are messages containing the 
+            // new chat user and if so, we remove and later add the messages to trigger an update for the clients.
+            Set<PublicDiscussionChatMessage> publicDiscussionChatMessages = getPublicDiscussionChannels().stream()
+                    .flatMap(c -> c.getChatMessages().stream())
+                    .filter(msg -> msg.getAuthorId().equals(chatUser.getId()))
+                    .collect(Collectors.toSet());
+            Set<PublicTradeChatMessage> publicTradeChatMessages = getPublicTradeChannels().stream()
+                    .flatMap(c -> c.getChatMessages().stream())
+                    .filter(msg -> msg.getAuthorId().equals(chatUser.getId()))
+                    .collect(Collectors.toSet());
+            // Remove chat messages containing that chatUser
+            publicDiscussionChatMessages.forEach(m ->
+                    findPublicDiscussionChannel(m.getChannelId()).ifPresent(c -> removePublicDiscussionChatMessage(m, c)));
+            publicTradeChatMessages.forEach(m ->
+                    findPublicTradeChannel(m.getChannelId()).ifPresent(c -> removePublicTradeChatMessage(m, c)));
+
+            addChatUser(chatUser);
+
+            // Now we add them again
+            publicDiscussionChatMessages.forEach(m ->
+                    findPublicDiscussionChannel(m.getChannelId()).ifPresent(c -> addPublicDiscussionChatMessage(m, c)));
+            publicTradeChatMessages.forEach(m ->
+                    findPublicTradeChannel(m.getChannelId()).ifPresent(c -> addPublicTradeChatMessage(m, c)));
+        } else if (distributedData instanceof PublicTradeChatMessage message) {
             findPublicTradeChannel(message.getChannelId())
                     .ifPresent(channel -> addPublicTradeChatMessage(message, channel));
         } else if (distributedData instanceof PublicDiscussionChatMessage message) {
@@ -123,7 +147,6 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                     .ifPresent(channel -> addPublicDiscussionChatMessage(message, channel));
         }
     }
-
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
@@ -159,60 +182,58 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatTextMessage(String text,
                                                                                           Optional<Quotation> quotedMessage,
                                                                                           PublicTradeChannel publicTradeChannel,
-                                                                                          UserProfile userProfile) {
+                                                                                          ChatUserIdentity chatUserIdentity) {
+        ChatUser chatUser = chatUserIdentity.getChatUser();
         PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
-                userProfile.getChatUser(),
+                chatUser.getId(),
                 Optional.empty(),
                 Optional.of(text),
                 quotedMessage,
                 new Date().getTime(),
                 false);
-        return networkService.publishAuthenticatedData(chatMessage, userProfile.getIdentity().getNodeIdAndKeyPair());
+        return chatUserService.maybePublishChatUser(chatUser, chatUserIdentity.getIdentity())
+                .thenCompose(result -> networkService.publishAuthenticatedData(chatMessage, chatUserIdentity.getIdentity().getNodeIdAndKeyPair()));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatOffer(TradeChatOffer tradeChatOffer,
                                                                                     PublicTradeChannel publicTradeChannel,
-                                                                                    UserProfile userProfile) {
+                                                                                    ChatUserIdentity chatUserIdentity) {
+        ChatUser chatUser = chatUserIdentity.getChatUser();
         PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
-                userProfile.getChatUser(),
+                chatUser.getId(),
                 Optional.of(tradeChatOffer),
                 Optional.empty(),
                 Optional.empty(),
                 new Date().getTime(),
                 false);
-        return networkService.publishAuthenticatedData(chatMessage, userProfile.getIdentity().getNodeIdAndKeyPair());
+        return chatUserService.maybePublishChatUser(chatUser, chatUserIdentity.getIdentity())
+                .thenCompose(result -> networkService.publishAuthenticatedData(chatMessage, chatUserIdentity.getIdentity().getNodeIdAndKeyPair()));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishEditedTradeChatMessage(PublicTradeChatMessage originalChatMessage,
                                                                                             String editedText,
-                                                                                            UserProfile userProfile) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
-        checkArgument(originalChatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
-                "NetworkId must match");
+                                                                                            ChatUserIdentity chatUserIdentity) {
+        NetworkIdWithKeyPair nodeIdAndKeyPair = chatUserIdentity.getIdentity().getNodeIdAndKeyPair();
         return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
-                .whenComplete((result, throwable) -> {
-                    if (throwable == null) {
-                        // We do not support editing the MarketChatOffer directly but remove it and replace it with 
-                        // the edited text.
-                        PublicTradeChatMessage newChatMessage = new PublicTradeChatMessage(originalChatMessage.getChannelId(),
-                                userProfile.getChatUser(),
-                                Optional.empty(),
-                                Optional.of(editedText),
-                                originalChatMessage.getQuotedMessage(),
-                                originalChatMessage.getDate(),
-                                true);
-                        networkService.publishAuthenticatedData(newChatMessage, nodeIdAndKeyPair);
-                    } else {
-                        log.error("Error at deleting old message", throwable);
-                    }
+                .thenCompose(result -> {
+                    // We do not support editing the MarketChatOffer directly but remove it and replace it with 
+                    // the edited text.
+                    ChatUser chatUser = chatUserIdentity.getChatUser();
+                    PublicTradeChatMessage newChatMessage = new PublicTradeChatMessage(originalChatMessage.getChannelId(),
+                            chatUser.getId(),
+                            Optional.empty(),
+                            Optional.of(editedText),
+                            originalChatMessage.getQuotation(),
+                            originalChatMessage.getDate(),
+                            true);
+                    return chatUserService.maybePublishChatUser(chatUser, chatUserIdentity.getIdentity())
+                            .thenCompose(r -> networkService.publishAuthenticatedData(newChatMessage, nodeIdAndKeyPair));
                 });
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> deletePublicTradeChatMessage(PublicTradeChatMessage chatMessage,
-                                                                                           UserProfile userProfile) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
-        checkArgument(chatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
-                "NetworkId must match");
+                                                                                           ChatUserIdentity chatUserIdentity) {
+        NetworkIdWithKeyPair nodeIdAndKeyPair = chatUserIdentity.getIdentity().getNodeIdAndKeyPair();
         return networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair);
     }
 
@@ -245,33 +266,33 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                                                                            Optional<Quotation> quotedMessage,
                                                                                            PrivateTradeChannel privateTradeChannel) {
         String channelId = privateTradeChannel.getId();
-        UserProfile userProfile = privateTradeChannel.getMyProfile();
+        ChatUserIdentity chatUserIdentity = privateTradeChannel.getMyProfile();
         ChatUser peer = privateTradeChannel.getPeer();
         PrivateTradeChatMessage chatMessage = new PrivateTradeChatMessage(channelId,
-                userProfile.getChatUser(),
-                peer.getProfileId(),
+                chatUserIdentity.getChatUser(),
+                peer.getNym(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
                 false);
         addPrivateTradeChatMessage(chatMessage, privateTradeChannel);
         NetworkId receiverNetworkId = peer.getNetworkId();
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = chatUserIdentity.getIdentity().getNodeIdAndKeyPair();
         return networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
     }
 
     public Optional<PrivateTradeChannel> getOrCreatePrivateTradeChannel(PrivateTradeChatMessage privateTradeChatMessage) {
         return findPrivateTradeChannel(privateTradeChatMessage.getChannelId())
-                .or(() -> createPrivateTradeChannel(privateTradeChatMessage.getAuthor(), privateTradeChatMessage.getReceiversProfileId()));
+                .or(() -> createPrivateTradeChannel(privateTradeChatMessage.getAuthor(), privateTradeChatMessage.getReceiversNym()));
     }
 
     public Optional<PrivateTradeChannel> createPrivateTradeChannel(ChatUser peer) {
-        return Optional.ofNullable(userProfileService.getSelectedUserProfile().get())
-                .flatMap(e -> createPrivateTradeChannel(peer, e.getProfileId()));
+        return Optional.ofNullable(chatUserService.getSelectedUserProfile().get())
+                .flatMap(userProfile -> createPrivateTradeChannel(peer, userProfile.getProfileId()));
     }
 
     public Optional<PrivateTradeChannel> createPrivateTradeChannel(ChatUser peer, String receiversProfileId) {
-        return userProfileService.findUserProfile(receiversProfileId)
+        return chatUserService.findUserProfile(receiversProfileId)
                 .map(myUserProfile -> {
                             PrivateTradeChannel privateTradeChannel = new PrivateTradeChannel(peer, myUserProfile);
                             getPrivateTradeChannels().add(privateTradeChannel);
@@ -321,24 +342,25 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     // Public Discussion domain
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Optional<PublicDiscussionChannel>> addPublicDiscussionChannel(UserProfile userProfile,
+    public CompletableFuture<Optional<PublicDiscussionChannel>> addPublicDiscussionChannel(ChatUserIdentity chatUserIdentity,
                                                                                            String channelName,
                                                                                            String description) {
-        return userProfile.getEntitlements().stream()
-                .filter(entitlement -> entitlement.entitlementType() == Entitlement.Type.CHANNEL_ADMIN)
-                .filter(entitlement -> entitlement.proof() instanceof Entitlement.BondedRoleProof)
-                .map(entitlement -> (Entitlement.BondedRoleProof) entitlement.proof())
-                .map(bondedRoleProof -> userProfileService.verifyBondedRole(bondedRoleProof.txId(),
+        return chatUserIdentity.getChatUser().getRoles().stream()
+                .filter(entitlement -> entitlement.type() == Role.Type.CHANNEL_ADMIN)
+                .filter(entitlement -> entitlement.proof() instanceof BondedRoleProof)
+                .map(entitlement -> (BondedRoleProof) entitlement.proof())
+                .map(bondedRoleProof -> chatUserService.verifyBondedRole(bondedRoleProof.txId(),
                         bondedRoleProof.signature(),
-                        userProfile.getChatUser().getId()))
+                        chatUserIdentity.getChatUser().getId()))
                 .map(future -> future.thenApply(optionalProof -> optionalProof.map(e -> {
-                            ChatUser chatUser = new ChatUser(userProfile.getNickName(),
-                                    userProfile.getIdentity().networkId(),
-                                    userProfile.getEntitlements());
+                            ChatUser chatUser = new ChatUser(chatUserIdentity.getChatUser().getNickName(),
+                                    chatUserIdentity.getIdentity().networkId(),
+                                    chatUserIdentity.getChatUser().getReputation(),
+                                    chatUserIdentity.getChatUser().getRoles());
                             PublicDiscussionChannel publicDiscussionChannel = new PublicDiscussionChannel(StringUtils.createUid(),
                                     channelName,
                                     description,
-                                    chatUser,
+                                    chatUser.getId(),
                                     new HashSet<>());
                             getPublicDiscussionChannels().add(publicDiscussionChannel);
                             persist();
@@ -352,43 +374,39 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public CompletableFuture<DataService.BroadCastDataResult> publishDiscussionChatMessage(String text,
                                                                                            Optional<Quotation> quotedMessage,
                                                                                            PublicDiscussionChannel publicDiscussionChannel,
-                                                                                           UserProfile userProfile) {
+                                                                                           ChatUserIdentity chatUserIdentity) {
+        ChatUser chatUser = chatUserIdentity.getChatUser();
         PublicDiscussionChatMessage chatMessage = new PublicDiscussionChatMessage(publicDiscussionChannel.getId(),
-                userProfile.getChatUser(),
+                chatUser.getId(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
                 false);
-        return networkService.publishAuthenticatedData(chatMessage, userProfile.getIdentity().getNodeIdAndKeyPair());
+        return chatUserService.maybePublishChatUser(chatUser, chatUserIdentity.getIdentity())
+                .thenCompose(r -> networkService.publishAuthenticatedData(chatMessage, chatUserIdentity.getIdentity().getNodeIdAndKeyPair()));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishEditedDiscussionChatMessage(PublicDiscussionChatMessage originalChatMessage,
                                                                                                  String editedText,
-                                                                                                 UserProfile userProfile) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
-        checkArgument(originalChatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
-                "NetworkId must match");
+                                                                                                 ChatUserIdentity chatUserIdentity) {
+        NetworkIdWithKeyPair nodeIdAndKeyPair = chatUserIdentity.getIdentity().getNodeIdAndKeyPair();
         return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
-                .whenComplete((result, throwable) -> {
-                    if (throwable == null) {
-                        PublicDiscussionChatMessage newChatMessage = new PublicDiscussionChatMessage(originalChatMessage.getChannelId(),
-                                userProfile.getChatUser(),
-                                editedText,
-                                originalChatMessage.getQuotedMessage(),
-                                originalChatMessage.getDate(),
-                                true);
-                        networkService.publishAuthenticatedData(newChatMessage, nodeIdAndKeyPair);
-                    } else {
-                        log.error("Error at deleting old message", throwable);
-                    }
+                .thenCompose(result -> {
+                    ChatUser chatUser = chatUserIdentity.getChatUser();
+                    PublicDiscussionChatMessage newChatMessage = new PublicDiscussionChatMessage(originalChatMessage.getChannelId(),
+                            chatUser.getId(),
+                            editedText,
+                            originalChatMessage.getQuotation(),
+                            originalChatMessage.getDate(),
+                            true);
+                    return chatUserService.maybePublishChatUser(chatUser, chatUserIdentity.getIdentity())
+                            .thenCompose(r -> networkService.publishAuthenticatedData(newChatMessage, nodeIdAndKeyPair));
                 });
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> deletePublicDiscussionChatMessage(PublicDiscussionChatMessage chatMessage,
-                                                                                                UserProfile userProfile) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
-        checkArgument(chatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
-                "NetworkId must match");
+                                                                                                ChatUserIdentity chatUserIdentity) {
+        NetworkIdWithKeyPair nodeIdAndKeyPair = chatUserIdentity.getIdentity().getNodeIdAndKeyPair();
         return networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair);
     }
 
@@ -421,33 +439,33 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                                                                                 Optional<Quotation> quotedMessage,
                                                                                                 PrivateDiscussionChannel privateDiscussionChannel) {
         String channelId = privateDiscussionChannel.getId();
-        UserProfile userProfile = privateDiscussionChannel.getMyProfile();
+        ChatUserIdentity chatUserIdentity = privateDiscussionChannel.getMyProfile();
         ChatUser peer = privateDiscussionChannel.getPeer();
         PrivateDiscussionChatMessage chatMessage = new PrivateDiscussionChatMessage(channelId,
-                userProfile.getChatUser(),
-                peer.getProfileId(),
+                chatUserIdentity.getChatUser(),
+                peer.getNym(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
                 false);
         addPrivateDiscussionChatMessage(chatMessage, privateDiscussionChannel);
         NetworkId receiverNetworkId = peer.getNetworkId();
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = userProfile.getIdentity().getNodeIdAndKeyPair();
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = chatUserIdentity.getIdentity().getNodeIdAndKeyPair();
         return networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
     }
 
     public Optional<PrivateDiscussionChannel> getOrCreatePrivateDiscussionChannel(PrivateDiscussionChatMessage message) {
         return findPrivateDiscussionChannel(message.getChannelId())
-                .or(() -> createPrivateDiscussionChannel(message.getAuthor(), message.getReceiversProfileId()));
+                .or(() -> createPrivateDiscussionChannel(message.getAuthor(), message.getReceiversNym()));
     }
 
     public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(ChatUser peer) {
-        return Optional.ofNullable(userProfileService.getSelectedUserProfile().get())
+        return Optional.ofNullable(chatUserService.getSelectedUserProfile().get())
                 .flatMap(e -> createPrivateDiscussionChannel(peer, e.getProfileId()));
     }
 
     public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(ChatUser peer, String receiversProfileId) {
-        return userProfileService.findUserProfile(receiversProfileId)
+        return chatUserService.findUserProfile(receiversProfileId)
                 .map(myUserProfile -> {
                             PrivateDiscussionChannel privateDiscussionChannel = new PrivateDiscussionChannel(peer, myUserProfile);
                             getPrivateDiscussionChannels().add(privateDiscussionChannel);
@@ -536,14 +554,23 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return markets;
     }
 
+    public Optional<ChatUser> findChatUser(String chatUserId) {
+        return Optional.ofNullable(persistableStore.getChatUserById().get(chatUserId));
+    }
+
+    private void addChatUser(ChatUser chatUser) {
+        persistableStore.getChatUserById().put(chatUser.getId(), chatUser);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean isMyMessage(ChatMessage chatMessage) {
-        String chatId = chatMessage.getAuthor().getId();
-        return userProfileService.getUserProfiles().stream()
-                .anyMatch(userprofile -> userprofile.getChatUser().getId().equals(chatId));
+        String authorId = chatMessage.getAuthorId();
+        return chatUserService.getUserProfiles().stream()
+                .anyMatch(userprofile -> userprofile.getChatUser().getId().equals(authorId));
     }
 
     private void maybeAddDefaultChannels() {
@@ -567,12 +594,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
         // Dummy admin
         Identity channelAdminIdentity = identityService.getOrCreateIdentity(IdentityService.DEFAULT).join();
-        ChatUser channelAdmin = new ChatUser("Admin", channelAdminIdentity.networkId());
+        String channelAdminId = new ChatUser("Admin", channelAdminIdentity.networkId()).getId();
 
         PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BISQ_ID.name(),
                 "Discussions Bisq",
                 "Channel for discussions about Bisq",
-                channelAdmin,
+                channelAdminId,
                 new HashSet<>()
         );
         selectDiscussionChannel(defaultDiscussionChannel);
@@ -580,31 +607,31 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BITCOIN_ID.name(),
                 "Discussions Bitcoin",
                 "Channel for discussions about Bitcoin",
-                channelAdmin,
+                channelAdminId,
                 new HashSet<>()
         ));
         getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.MONERO_ID.name(),
                 "Discussions Monero",
                 "Channel for discussions about Monero",
-                channelAdmin,
+                channelAdminId,
                 new HashSet<>()
         ));
         getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.PRICE_ID.name(),
                 "Price",
                 "Channel for discussions about market price",
-                channelAdmin,
+                channelAdminId,
                 new HashSet<>()
         ));
         getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.ECONOMY_ID.name(),
                 "Economy",
                 "Channel for discussions about economy",
-                channelAdmin,
+                channelAdminId,
                 new HashSet<>()
         ));
         getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.OFF_TOPIC_ID.name(),
                 "Off-topic",
                 "Channel for anything else",
-                channelAdmin,
+                channelAdminId,
                 new HashSet<>()
         ));
 

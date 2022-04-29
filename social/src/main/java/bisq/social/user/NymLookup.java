@@ -29,27 +29,27 @@ import java.util.Set;
 // add weak references and use bindings
 // persist profileIdsByNickName as well
 @Slf4j
-public class UserNameLookup {
+public class NymLookup {
     private static final String SEPARATOR_START = " [";
     private static final String SEPARATOR_END = "]";
-    private static final int MAX_PROFILE_ID_LENGTH = Integer.MAX_VALUE;
-    private static final Map<String, Set<String>> profileIdsByNickName = new HashMap<>();
+    private static final int MAX_NYM_LENGTH = Integer.MAX_VALUE;
+    private static final Map<String, Set<String>> nymByNickName = new HashMap<>();
 
-    public static String getUserName(String profileId, String nickName) {
-        return getUserName(profileId, nickName, SEPARATOR_START, SEPARATOR_END, MAX_PROFILE_ID_LENGTH);
+    public static String getUserName(String nym, String nickName) {
+        return getUserName(nym, nickName, SEPARATOR_START, SEPARATOR_END, MAX_NYM_LENGTH);
     }
 
-    public static String getUserName(String profileId, String nickName, String separatorStart, String separatorEnd, int maxProfileIdLength) {
-        if (!profileIdsByNickName.containsKey(nickName)) {
-            profileIdsByNickName.put(nickName, new HashSet<>());
+    public static String getUserName(String nym, String nickName, String separatorStart, String separatorEnd, int maxNymLength) {
+        if (!nymByNickName.containsKey(nickName)) {
+            nymByNickName.put(nickName, new HashSet<>());
         }
 
-        Set<String> profileIds = profileIdsByNickName.get(nickName);
-        profileIds.add(profileId);
+        Set<String> profileIds = nymByNickName.get(nickName);
+        profileIds.add(nym);
         if (profileIds.size() == 1) {
             return nickName;
         } else {
-            return nickName + separatorStart + StringUtils.truncate(profileId, maxProfileIdLength) + separatorEnd;
+            return nickName + separatorStart + StringUtils.truncate(nym, maxNymLength) + separatorEnd;
         }
     }
 }

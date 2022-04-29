@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user;
+package bisq.social.user.proof;
 
 import bisq.common.data.Pair;
 import bisq.common.util.DateUtils;

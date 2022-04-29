@@ -29,7 +29,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 /**
  * PrivateChatMessage is sent as direct message to peer and in case peer is not online it can be stores as
@@ -40,41 +39,43 @@ import java.util.concurrent.TimeUnit;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class PrivateTradeChatMessage extends ChatMessage implements MailboxMessage {
-    private final String receiversProfileId;
+    private final ChatUser author;
+    private final String receiversNym;
 
     public PrivateTradeChatMessage(String channelId,
-                                   ChatUser sender,
-                                   String receiversProfileId,
+                                   ChatUser author,
+                                   String receiversNym,
                                    String text,
                                    Optional<Quotation> quotedMessage,
                                    long date,
                                    boolean wasEdited) {
         this(channelId,
-                sender,
-                receiversProfileId,
+                author,
+                receiversNym,
                 text,
                 quotedMessage,
                 date,
                 wasEdited,
-                new MetaData(TimeUnit.DAYS.toMillis(1), 100000, PrivateTradeChatMessage.class.getSimpleName()));
+                new MetaData(ChatMessage.TTL, 100000, PrivateTradeChatMessage.class.getSimpleName()));
     }
 
     private PrivateTradeChatMessage(String channelId,
-                                    ChatUser sender,
-                                    String receiversProfileId,
+                                    ChatUser author,
+                                    String receiversNym,
                                     String text,
                                     Optional<Quotation> quotedMessage,
                                     long date,
                                     boolean wasEdited,
                                     MetaData metaData) {
         super(channelId,
-                sender,
+                author.getId(),
                 Optional.of(text),
                 quotedMessage,
                 date,
                 wasEdited,
                 metaData);
-        this.receiversProfileId = receiversProfileId;
+        this.author = author;
+        this.receiversNym = receiversNym;
     }
 
     @Override
@@ -87,18 +88,20 @@ public class PrivateTradeChatMessage extends ChatMessage implements MailboxMessa
     public bisq.social.protobuf.ChatMessage toChatMessageProto() {
         return getChatMessageBuilder()
                 .setPrivateTradeChatMessage(bisq.social.protobuf.PrivateTradeChatMessage.newBuilder()
-                        .setReceiversProfileId(receiversProfileId))
+                        .setReceiversNym(receiversNym)
+                        .setAuthor(author.toProto()))
                 .build();
     }
 
     public static PrivateTradeChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
-        Optional<Quotation> quotedMessage = baseProto.hasQuotedMessage() ?
-                Optional.of(Quotation.fromProto(baseProto.getQuotedMessage())) :
+        Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
+                Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
+        bisq.social.protobuf.PrivateTradeChatMessage privateTradeChatMessage = baseProto.getPrivateTradeChatMessage();
         return new PrivateTradeChatMessage(
                 baseProto.getChannelId(),
-                ChatUser.fromProto(baseProto.getAuthor()),
-                baseProto.getPrivateTradeChatMessage().getReceiversProfileId(),
+                ChatUser.fromProto(privateTradeChatMessage.getAuthor()),
+                privateTradeChatMessage.getReceiversNym(),
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),

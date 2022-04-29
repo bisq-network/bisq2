@@ -19,22 +19,22 @@ package bisq.desktop.primary.onboarding;
 
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class OnboardingModel extends NavigationModel {
-    private final UserProfileService userProfileService;
+    private final ChatUserService chatUserService;
 
-    public OnboardingModel(UserProfileService userProfileService) {
-        this.userProfileService = userProfileService;
+    public OnboardingModel(ChatUserService chatUserService) {
+        this.chatUserService = chatUserService;
     }
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return userProfileService.isDefaultUserProfileMissing() ?
+        return chatUserService.isDefaultUserProfileMissing() ?
                 NavigationTarget.INIT_USER_PROFILE :
                 NavigationTarget.EXCHANGE;
     }

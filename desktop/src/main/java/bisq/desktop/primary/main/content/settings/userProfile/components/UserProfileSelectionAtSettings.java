@@ -22,8 +22,8 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.i18n.Res;
-import bisq.social.user.profile.UserProfile;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.ChatUserIdentity;
+import bisq.social.user.ChatUserService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -44,15 +44,15 @@ public class UserProfileSelectionAtSettings {
 
     private final Controller controller;
 
-    public UserProfileSelectionAtSettings(UserProfileService userProfileService) {
-        controller = new Controller(userProfileService);
+    public UserProfileSelectionAtSettings(ChatUserService chatUserService) {
+        controller = new Controller(chatUserService);
     }
 
     public Pane getRoot() {
         return controller.view.getRoot();
     }
 
-    public ReadOnlyObjectProperty<UserProfile> getSelectedUserProfile() {
+    public ReadOnlyObjectProperty<ChatUserIdentity> getSelectedUserProfile() {
         return controller.model.selectedUserProfile;
     }
 
@@ -60,11 +60,11 @@ public class UserProfileSelectionAtSettings {
         private final Model model;
         @Getter
         private final View view;
-        private final UserProfileService userProfileService;
+        private final ChatUserService chatUserService;
         private Pin userProfilesPin, selectedUserProfilePin;
 
-        private Controller(UserProfileService userProfileService) {
-            this.userProfileService = userProfileService;
+        private Controller(ChatUserService chatUserService) {
+            this.chatUserService = chatUserService;
 
             model = new Model();
             view = new View(model, this);
@@ -72,8 +72,8 @@ public class UserProfileSelectionAtSettings {
 
         @Override
         public void onActivate() {
-            userProfilesPin = FxBindings.<UserProfile, UserProfile>bind(model.userProfiles).to(userProfileService.getUserProfiles());
-            selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(userProfileService.getSelectedUserProfile());
+            userProfilesPin = FxBindings.<ChatUserIdentity, ChatUserIdentity>bind(model.chatUserIdentities).to(chatUserService.getUserProfiles());
+            selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(chatUserService.getSelectedUserProfile());
         }
 
         @Override
@@ -82,16 +82,16 @@ public class UserProfileSelectionAtSettings {
             selectedUserProfilePin.unbind();
         }
 
-        public void onSelected(UserProfile value) {
+        public void onSelected(ChatUserIdentity value) {
             if (value != null) {
-                userProfileService.selectUserProfile(value);
+                chatUserService.selectUserProfile(value);
             }
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        ObjectProperty<UserProfile> selectedUserProfile = new SimpleObjectProperty<>();
-        ObservableList<UserProfile> userProfiles = FXCollections.observableArrayList();
+        ObjectProperty<ChatUserIdentity> selectedUserProfile = new SimpleObjectProperty<>();
+        ObservableList<ChatUserIdentity> chatUserIdentities = FXCollections.observableArrayList();
 
         private Model() {
         }
@@ -99,7 +99,7 @@ public class UserProfileSelectionAtSettings {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final AutoCompleteComboBox<UserProfile> comboBox;
+        private final AutoCompleteComboBox<ChatUserIdentity> comboBox;
         private Subscription subscription;
 
         private View(Model model, Controller controller) {
@@ -109,15 +109,15 @@ public class UserProfileSelectionAtSettings {
             Label headline = new Label(Res.get("social.userProfileSelection.headline"));
             headline.getStyleClass().add("titled-group-bg-label-active");
 
-            comboBox = new AutoCompleteComboBox<>(model.userProfiles);
+            comboBox = new AutoCompleteComboBox<>(model.chatUserIdentities);
             comboBox.setConverter(new StringConverter<>() {
                 @Override
-                public String toString(UserProfile userProfile) {
-                    return userProfile != null ? userProfile.getChatUser().getUserName() : "";
+                public String toString(ChatUserIdentity chatUserIdentity) {
+                    return chatUserIdentity != null ? chatUserIdentity.getChatUser().getUserName() : "";
                 }
 
                 @Override
-                public UserProfile fromString(String string) {
+                public ChatUserIdentity fromString(String string) {
                     return null;
                 }
             });
