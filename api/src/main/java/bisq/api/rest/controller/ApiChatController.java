@@ -43,7 +43,7 @@ class ApiChatController extends ApiController {
 
     public ApiChatController(ApiApplicationService apiApplicationService) {
         chatService = apiApplicationService.getChatService();
-        chatUserService = apiApplicationService.getUserProfileService();
+        chatUserService = apiApplicationService.getChatUserService();
         identityService = apiApplicationService.getIdentityService();
     }
 
