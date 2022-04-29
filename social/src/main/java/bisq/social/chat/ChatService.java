@@ -429,6 +429,11 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public ObservableSet<PublicDiscussionChannel> getPublicDiscussionChannels() {
         return persistableStore.getPublicDiscussionChannels();
     }
+    
+    public Collection<? extends Channel> getMentionableChannels() {
+        // TODO: implement logic
+        return getPublicDiscussionChannels();
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////

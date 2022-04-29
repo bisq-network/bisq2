@@ -34,21 +34,30 @@ public class BisqPopup extends PopupControl {
     @Setter
     protected Node contentNode;
 
+    @Setter
+    protected Alignment alignment = Alignment.RIGHT;
+
     public BisqPopup() {
         super();
-        root.getStyleClass().add("bisq-popup");
+        getStyleClass().add("bisq-popup");
         setAutoHide(true);
-
-        setOnShown(evt -> {
-            Bounds bounds = root.getBoundsInParent();
-            setAnchorX(getAnchorX() + bounds.getMinX() - contentNode.prefWidth(-1));
-            setAnchorY(getAnchorY() - bounds.getMinY() - bounds.getMaxY());
-        });
     }
 
     public final void show(Node owner) {
         Bounds bounds = owner.localToScreen(owner.getBoundsInLocal());
-        super.show(owner, bounds.getMaxX(), bounds.getMinY() - 4);
+        double anchorX = 0;
+        if (alignment == Alignment.RIGHT) {
+            setAnchorLocation(AnchorLocation.WINDOW_BOTTOM_RIGHT);
+            anchorX = bounds.getMaxX();
+        } else if (alignment == Alignment.LEFT) {
+            setAnchorLocation(AnchorLocation.WINDOW_BOTTOM_LEFT);
+            anchorX = bounds.getMinX();
+        }
+        super.show(owner, anchorX, bounds.getMinY());
+    }
+
+    public enum Alignment {
+        LEFT, RIGHT
     }
 
     @Override
