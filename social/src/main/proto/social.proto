@@ -39,45 +39,70 @@ message InvitationProof {
   string invitationCode = 1;
 }
 message Proof {
+  enum Type {
+    PROOF_OF_BURN = 0;
+    BONDED_ROLE = 1;
+    CHANNEL_ADMIN_INVITATION = 2;
+  }
   oneof message {
     ProofOfBurnProof proofOfBurnProof = 1;
     BondedRoleProof bondedRoleProof = 2;
     InvitationProof invitationProof = 3;
   }
 }
-message Entitlement {
+
+message Role {
   enum Type {
-    LIQUIDITY_PROVIDER = 0;
-    CHANNEL_ADMIN = 1;
-    CHANNEL_MODERATOR = 2;
-    MEDIATOR = 3;
+    CHANNEL_ADMIN = 0;
+    CHANNEL_MODERATOR = 1;
+    MEDIATOR = 2;
   }
-  enum ProofType {
-    PROOF_OF_BURN = 0;
-    BONDED_ROLE = 1;
-    CHANNEL_ADMIN_INVITATION = 2;
+ 
+  string type = 1;
+  Proof proof = 2;
+}
+
+
+message Reputation {
+  enum Type {
+    BURNED_BSQ = 0;
+    BURNED_BSQ_AGE = 1;
+    IDENTITY_AGE = 2;
+    BISQ1_ACCOUNT_AGE = 3;
+    BISQ1_SIGNED_ACCOUNT_AGE_WITNESS = 4;
   }
-  string entitlementType = 1;
+
+  string type = 1;
   Proof proof = 2;
 }
 
 message ChatUser {
   string nickName = 1;
   network.NetworkId networkId = 2;
-  repeated Entitlement entitlements = 3;
+  repeated Reputation reputation = 3;
+  repeated Role roles = 4;
+  network.MetaData metaData = 5;
 }
-message QuotedMessage {
-  string profileId = 1;
+
+message ChatUserIdentity {
+  identity.Identity identity = 1;
+  ChatUser chatUser = 2;
+}
+
+message Quotation {
+  string nym = 1;
   string nickName = 2;
   common.ByteArray pubKeyHash = 3;
   string message = 4;
 }
 
 message PrivateTradeChatMessage {
-  string receiversProfileId = 1;
+  string receiversNym = 1;
+  ChatUser author = 2;
 }
 message PrivateDiscussionChatMessage {
-  string receiversProfileId = 1;
+  string receiversNym = 1;
+  ChatUser author = 2;
 }
 message PublicDiscussionChatMessage {
 }
@@ -93,8 +118,8 @@ message PublicTradeChatMessage {
 message ChatMessage {
   string channelId = 1;
   optional string text = 2;
-  ChatUser author = 3;
-  optional QuotedMessage quotedMessage = 4;
+  string authorId = 3;
+  optional Quotation quotation = 4;
   uint64 date = 5;
   bool wasEdited = 6;
   network.MetaData metaData = 7;
@@ -112,21 +137,15 @@ enum NotificationSetting {
   NEVER = 2;
 }
 
-message UserProfile {
-  identity.Identity identity = 1;
-  string nickName = 2;
-  repeated Entitlement entitlements = 3;
-}
-
 // Channels
 message PrivateDiscussionChannel {
   ChatUser peer = 1;
-  UserProfile myProfile = 2;
+  ChatUserIdentity myChatUserIdentity = 2;
   repeated ChatMessage chatMessages = 3;
 }
 message PrivateTradeChannel {
   ChatUser peer = 1;
-  UserProfile myProfile = 2;
+  ChatUserIdentity myChatUserIdentity = 2;
   repeated ChatMessage chatMessages = 3;
 }
 
@@ -137,8 +156,9 @@ message PublicTradeChannel {
 message PublicDiscussionChannel {
   string channelName = 1;
   string description = 2;
-  ChatUser channelAdmin = 3;
-  repeated ChatUser channelModerators = 4;
+  string channelAdminId = 3;
+  repeated string channelModeratorIds = 4;
+  bool isVisible = 5;
 }
 message Channel {
   string id = 1;
@@ -152,9 +172,9 @@ message Channel {
 }
 
 // Stores
-message UserProfileStore {
-  repeated UserProfile userProfiles = 1;
-  UserProfile selectedUserProfile = 2;
+message ChatUserStore {
+  repeated ChatUserIdentity chatUserIdentities = 1;
+  ChatUserIdentity selectedChatUserIdentity = 2;
   map<string, Proof> verifiedProofOfBurnProofs = 3;
 }
 
@@ -166,7 +186,7 @@ message ChatStore {
   Channel selectedTradeChannel = 5;
   Channel selectedDiscussionChannel = 6;
   repeated string customTags = 7;
-  repeated string ignoredChatUserIds = 8;
+  repeated string ignoredChatUserProfileIds = 8;
 }
 
 message TradeChatOfferStore {

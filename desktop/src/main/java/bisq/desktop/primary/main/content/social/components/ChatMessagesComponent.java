@@ -41,8 +41,8 @@ import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
 import bisq.social.user.ChatUser;
-import bisq.social.user.profile.UserProfile;
-import bisq.social.user.profile.UserProfileService;
+import bisq.social.user.ChatUserIdentity;
+import bisq.social.user.ChatUserService;
 import bisq.social.user.reputation.ReputationScore;
 import bisq.social.user.reputation.ReputationService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -82,10 +82,10 @@ public class ChatMessagesComponent {
     private final Controller controller;
 
     public ChatMessagesComponent(ChatService chatService,
-                                 UserProfileService userProfileService,
+                                 ChatUserService chatUserService,
                                  ReputationService reputationService,
                                  boolean isDiscussionsChat) {
-        controller = new Controller(chatService, userProfileService, reputationService, isDiscussionsChat);
+        controller = new Controller(chatService, chatUserService, reputationService, isDiscussionsChat);
     }
 
     public Pane getRoot() {
@@ -118,22 +118,22 @@ public class ChatMessagesComponent {
         @Getter
         private final View view;
         private final ChatService chatService;
-        private final UserProfileService userProfileService;
+        private final ChatUserService chatUserService;
         private final ReputationService reputationService;
         private final QuotedMessageBlock quotedMessageBlock;
         private ListChangeListener<ChatMessagesComponent.ChatMessageListItem<? extends ChatMessage>> messageListener;
         private Pin selectedChannelPin, chatMessagesPin;
 
         private Controller(ChatService chatService,
-                           UserProfileService userProfileService,
+                           ChatUserService chatUserService,
                            ReputationService reputationService,
                            boolean isDiscussionsChat) {
             this.chatService = chatService;
-            this.userProfileService = userProfileService;
+            this.chatUserService = chatUserService;
             this.reputationService = reputationService;
-            quotedMessageBlock = new QuotedMessageBlock();
+            quotedMessageBlock = new QuotedMessageBlock(chatService);
 
-            model = new Model(chatService, userProfileService, reputationService, isDiscussionsChat);
+            model = new Model(chatService, chatUserService, reputationService, isDiscussionsChat);
             view = new View(model, this, quotedMessageBlock.getRoot());
         }
 
@@ -147,12 +147,12 @@ public class ChatMessagesComponent {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicDiscussionChannel publicDiscussionChannel) {
                         chatMessagesPin = FxBindings.<PublicDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                                .map(ChatMessageListItem::new)
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService))
                                 .to(publicDiscussionChannel.getChatMessages());
                         model.allowEditing.set(true);
                     } else if (channel instanceof PrivateDiscussionChannel privateDiscussionChannel) {
                         chatMessagesPin = FxBindings.<PrivateDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                                .map(ChatMessageListItem::new)
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService))
                                 .to(privateDiscussionChannel.getChatMessages());
                         model.allowEditing.set(false);
                     }
@@ -162,12 +162,12 @@ public class ChatMessagesComponent {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicTradeChannel publicTradeChannel) {
                         chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                                .map(ChatMessageListItem::new)
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService))
                                 .to(publicTradeChannel.getChatMessages());
                         model.allowEditing.set(true);
                     } else if (channel instanceof PrivateTradeChannel privateTradeChannel) {
                         chatMessagesPin = FxBindings.<PrivateTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                                .map(ChatMessageListItem::new)
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService))
                                 .to(privateTradeChannel.getChatMessages());
                         model.allowEditing.set(false);
                     }
@@ -249,12 +249,12 @@ public class ChatMessagesComponent {
         void onSendMessage(String text) {
             if (text != null && !text.isEmpty()) {
                 Channel<? extends ChatMessage> channel = model.selectedChannel.get();
-                UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
+                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
                 if (channel instanceof PublicTradeChannel publicTradeChannel) {
-                    chatService.publishTradeChatTextMessage(text, quotation, publicTradeChannel, userProfile);
+                    chatService.publishTradeChatTextMessage(text, quotation, publicTradeChannel, chatUserIdentity);
                 } else if (channel instanceof PublicDiscussionChannel publicDiscussionChannel) {
-                    chatService.publishDiscussionChatMessage(text, quotation, publicDiscussionChannel, userProfile);
+                    chatService.publishDiscussionChatMessage(text, quotation, publicDiscussionChannel, chatUserIdentity);
                 } else if (channel instanceof PrivateTradeChannel privateTradeChannel) {
                     chatService.sendPrivateTradeChatMessage(text, quotation, privateTradeChannel);
                 } else if (channel instanceof PrivateDiscussionChannel privateDiscussionChannel) {
@@ -269,7 +269,8 @@ public class ChatMessagesComponent {
         }
 
         public void onShowChatUserDetails(ChatMessage chatMessage) {
-            model.showChatUserDetailsHandler.ifPresent(handler -> handler.accept(chatMessage.getAuthor()));
+            chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author ->
+                    model.showChatUserDetailsHandler.ifPresent(handler -> handler.accept(author)));
         }
 
         public void onOpenEmojiSelector(ChatMessage chatMessage) {
@@ -286,7 +287,7 @@ public class ChatMessagesComponent {
             if (chatService.isMyMessage(chatMessage)) {
                 return;
             }
-            createAndSelectPrivateChannel(chatMessage.getAuthor());
+            chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(this::createAndSelectPrivateChannel);
         }
 
         private void createAndSelectPrivateChannel(ChatUser peer) {
@@ -313,22 +314,22 @@ public class ChatMessagesComponent {
                 return;
             }
             if (chatMessage instanceof PublicTradeChatMessage marketChatMessage) {
-                UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
-                chatService.publishEditedTradeChatMessage(marketChatMessage, editedText, userProfile);
+                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
+                chatService.publishEditedTradeChatMessage(marketChatMessage, editedText, chatUserIdentity);
             } else if (chatMessage instanceof PublicDiscussionChatMessage publicDiscussionChatMessage) {
-                UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
-                chatService.publishEditedDiscussionChatMessage(publicDiscussionChatMessage, editedText, userProfile);
+                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
+                chatService.publishEditedDiscussionChatMessage(publicDiscussionChatMessage, editedText, chatUserIdentity);
             }
             //todo editing private message not supported yet
         }
 
         public void onDeleteMessage(ChatMessage chatMessage) {
             if (chatService.isMyMessage(chatMessage)) {
-                UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
+                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
                 if (chatMessage instanceof PublicTradeChatMessage marketChatMessage) {
-                    chatService.deletePublicTradeChatMessage(marketChatMessage, userProfile);
+                    chatService.deletePublicTradeChatMessage(marketChatMessage, chatUserIdentity);
                 } else if (chatMessage instanceof PublicDiscussionChatMessage publicDiscussionChatMessage) {
-                    chatService.deletePublicDiscussionChatMessage(publicDiscussionChatMessage, userProfile);
+                    chatService.deletePublicDiscussionChatMessage(publicDiscussionChatMessage, chatUserIdentity);
                 }
                 //todo delete private message
             }
@@ -350,13 +351,13 @@ public class ChatMessagesComponent {
 
             if (!chatService.isMyMessage(chatMessage)) {
                 items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"), () -> {
-                    chatService.ignoreChatUser(chatMessage.getAuthor());
+                    chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(chatService::ignoreChatUser);
                 }));
                 items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.reportUser"), () -> {
-                    chatService.reportChatUser(chatMessage.getAuthor(), "");
+                    chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author -> chatService.reportChatUser(author, ""));
                 }));
             }
-            
+
             BisqPopupMenu menu = new BisqPopupMenu(items, onClose);
             menu.show(reactionsBox);
         }
@@ -373,13 +374,13 @@ public class ChatMessagesComponent {
             model.getTextInput().set(existingText + "@" + chatUser.getUserName() + " ");
         }
 
-        public void onTakeOffer(PublicTradeChatMessage marketChatMessage) {
-            if (model.isMyMessage(marketChatMessage) || marketChatMessage.getTradeChatOffer().isEmpty()) {
+        public void onTakeOffer(PublicTradeChatMessage chatMessage) {
+            if (model.isMyMessage(chatMessage) || chatMessage.getTradeChatOffer().isEmpty()) {
                 return;
             }
-            createAndSelectPrivateTradeChannel(marketChatMessage.getAuthor())
-                    .ifPresent(privateTradeChannel -> {
-                        String chatMessageText = marketChatMessage.getTradeChatOffer().get().getChatMessageText();
+            chatService.findChatUser(chatMessage.getAuthorId())
+                    .flatMap(this::createAndSelectPrivateTradeChannel).ifPresent(privateTradeChannel -> {
+                        String chatMessageText = chatMessage.getTradeChatOffer().get().getChatMessageText();
                         chatService.sendPrivateTradeChatMessage(
                                 Res.get("satoshisquareapp.chat.takeOffer.takerRequest", chatMessageText),
                                 Optional.empty(),
@@ -391,7 +392,7 @@ public class ChatMessagesComponent {
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatService chatService;
-        private final UserProfileService userProfileService;
+        private final ChatUserService chatUserService;
         private final ReputationService reputationService;
         private final ObjectProperty<Channel<?>> selectedChannel = new SimpleObjectProperty<>();
         private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
@@ -406,14 +407,15 @@ public class ChatMessagesComponent {
         private Optional<Consumer<ChatUser>> showChatUserDetailsHandler = Optional.empty();
 
         private Model(ChatService chatService,
-                      UserProfileService userProfileService,
+                      ChatUserService chatUserService,
                       ReputationService reputationService,
                       boolean isDiscussionsChat) {
             this.chatService = chatService;
-            this.userProfileService = userProfileService;
+            this.chatUserService = chatUserService;
             this.reputationService = reputationService;
             this.isDiscussionsChat = isDiscussionsChat;
-            ignoredChatUserPredicate = item -> !chatService.getIgnoredChatUserIds().contains(item.getAuthor().getId());
+            ignoredChatUserPredicate = item -> item.getAuthor().isPresent() &&
+                    !chatService.getIgnoredChatUserIds().contains(item.getAuthor().get().getId());
             filteredChatMessages.setPredicate(ignoredChatUserPredicate);
         }
 
@@ -498,7 +500,7 @@ public class ChatMessagesComponent {
             inputField.setOnKeyPressed(null);
             model.getSortedChatMessages().removeListener(messagesListener);
         }
-        
+
         private Callback<ListView<ChatMessageListItem<? extends ChatMessage>>, ListCell<ChatMessageListItem<? extends ChatMessage>>> getCellFactory() {
             return new Callback<>() {
                 @Override
@@ -614,7 +616,7 @@ public class ChatMessagesComponent {
                             HBox.setMargin(userIconTimeBox, new Insets(10, 0, 0, -10));
                             this.hBox = Layout.hBoxWith(userIconTimeBox, vBox);
                         }
-                        
+
                         private void hideHoverOverlay() {
                             time.setVisible(false);
                             time.setManaged(false);
@@ -634,7 +636,7 @@ public class ChatMessagesComponent {
                                     quotedMessageBox.setManaged(true);
                                     Quotation quotation = optionalQuotation.get();
                                     if (quotation.nickName() != null &&
-                                            quotation.profileId() != null &&
+                                            quotation.nym() != null &&
                                             quotation.pubKeyHash() != null &&
                                             quotation.message() != null) {
                                         Region verticalLine = new Region();
@@ -698,16 +700,18 @@ public class ChatMessagesComponent {
                                 dateTooltip = new Tooltip(item.getDate());
                                 Tooltip.install(time, dateTooltip);
 
-                                ChatUser author = item.getAuthor();
-                                userNameLabel.setText(author.getUserName());
-                                userNameLabel.setOnMouseClicked(e -> controller.onMention(author));
+                                item.getAuthor().ifPresent(author -> {
+                                    userNameLabel.setText(author.getUserName());
+                                    userNameLabel.setOnMouseClicked(e -> controller.onMention(author));
 
-                                chatUserIcon.setChatUser(author, model.getUserProfileService());
-                                chatUserIcon.setCursor(Cursor.HAND);
-                                chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(chatMessage));
-                                Tooltip.install(chatUserIcon, new Tooltip(author.getTooltipString()));
+                                    chatUserIcon.setCursor(Cursor.HAND);
+                                    chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(chatMessage));
+                                    chatUserIcon.setChatUser(author, model.getChatUserService());
+                                    Tooltip.install(chatUserIcon, new Tooltip(author.getTooltipString()));
 
-                                reputationScoreDisplay.applyReputationScore(model.getReputationScore(author));
+                                    reputationScoreDisplay.applyReputationScore(model.getReputationScore(author));
+                                });
+
                                 setOnMouseEntered(e -> {
                                     if (model.moreOptionsVisibleMessage.get() != null) {
                                         return;
@@ -829,16 +833,28 @@ public class ChatMessagesComponent {
         private final String time;
         private final String date;
         private final Optional<Quotation> quotedMessage;
-        private final ChatUser author;
+        private final Optional<ChatUser> author;
+        private final String nym;
+        private final String nickName;
 
-        public ChatMessageListItem(T chatMessage) {
+        public ChatMessageListItem(T chatMessage, ChatService chatService) {
             this.chatMessage = chatMessage;
-            author = chatMessage.getAuthor();
+            
+            if (chatMessage instanceof PrivateTradeChatMessage privateTradeChatMessage) {
+                author = Optional.of(privateTradeChatMessage.getAuthor());
+            } else if (chatMessage instanceof PrivateDiscussionChatMessage privateDiscussionChatMessage) {
+                author = Optional.of(privateDiscussionChatMessage.getAuthor());
+            } else {
+                author = chatService.findChatUser(chatMessage.getAuthorId());
+            }
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getText() + editPostFix;
-            quotedMessage = chatMessage.getQuotedMessage();
+            quotedMessage = chatMessage.getQuotation();
             time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
             date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));
+
+            nym = author.map(ChatUser::getNym).orElse("");
+            nickName = author.map(ChatUser::getNickName).orElse("");
         }
 
         @Override
@@ -851,8 +867,8 @@ public class ChatMessagesComponent {
             return filterString == null ||
                     filterString.isEmpty() ||
                     StringUtils.containsIgnoreCase(message, filterString) ||
-                    StringUtils.containsIgnoreCase(author.getProfileId(), filterString) ||
-                    StringUtils.containsIgnoreCase(author.getNickName(), filterString) ||
+                    StringUtils.containsIgnoreCase(nym, filterString) ||
+                    StringUtils.containsIgnoreCase(nickName, filterString) ||
                     StringUtils.containsIgnoreCase(date, filterString);
         }
     }

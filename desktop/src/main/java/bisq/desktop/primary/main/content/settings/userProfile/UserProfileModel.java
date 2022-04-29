@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.settings.userProfile;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
 import bisq.identity.IdentityService;
-import bisq.social.user.profile.UserProfile;
+import bisq.social.user.ChatUserIdentity;
 import javafx.beans.property.*;
 import javafx.scene.Node;
 import lombok.Getter;
@@ -34,7 +34,7 @@ public class UserProfileModel implements Model {
     final IdentityService identityService;
     String keyId;
     final ObjectProperty<Node> roboHashNode = new SimpleObjectProperty<>();
-    final ObjectProperty<UserProfile> userProfile = new SimpleObjectProperty<>();
+    final ObjectProperty<ChatUserIdentity> userProfile = new SimpleObjectProperty<>();
     final StringProperty successText = new SimpleStringProperty();
     KeyPair keyPair;
     final BooleanProperty createUserProfileVisible = new SimpleBooleanProperty();

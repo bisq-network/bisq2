@@ -21,7 +21,7 @@ import bisq.common.observable.ObservableSet;
 import bisq.social.chat.NotificationSetting;
 import bisq.social.chat.messages.PrivateTradeChatMessage;
 import bisq.social.user.ChatUser;
-import bisq.social.user.profile.UserProfile;
+import bisq.social.user.ChatUserIdentity;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -34,24 +34,24 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class PrivateTradeChannel extends Channel<PrivateTradeChatMessage> implements PrivateChannel {
     private final ChatUser peer;
-    private final UserProfile myProfile;
+    private final ChatUserIdentity myProfile;
     private final ObservableSet<PrivateTradeChatMessage> chatMessages = new ObservableSet<>();
 
-    public PrivateTradeChannel(ChatUser peer, UserProfile myProfile) {
-        this(PrivateChannel.createChannelId(peer.getProfileId(), myProfile.getProfileId()),
+    public PrivateTradeChannel(ChatUser peer, ChatUserIdentity myProfile) {
+        this(PrivateChannel.createChannelId(peer.getNym(), myProfile.getProfileId()),
                 peer,
                 myProfile,
                 NotificationSetting.ALL,
                 new HashSet<>());
     }
 
-    public PrivateTradeChannel(String id, ChatUser peer, UserProfile myProfile) {
+    public PrivateTradeChannel(String id, ChatUser peer, ChatUserIdentity myProfile) {
         this(id, peer, myProfile, NotificationSetting.ALL, new HashSet<>());
     }
 
     private PrivateTradeChannel(String id,
                                 ChatUser peer,
-                                UserProfile myProfile,
+                                ChatUserIdentity myProfile,
                                 NotificationSetting notificationSetting,
                                 Set<PrivateTradeChatMessage> chatMessages) {
         super(id, notificationSetting);
@@ -63,7 +63,7 @@ public class PrivateTradeChannel extends Channel<PrivateTradeChatMessage> implem
     public bisq.social.protobuf.Channel toProto() {
         return getChannelBuilder().setPrivateTradeChannel(bisq.social.protobuf.PrivateTradeChannel.newBuilder()
                         .setPeer(peer.toProto())
-                        .setMyProfile(myProfile.toProto())
+                        .setMyChatUserIdentity(myProfile.toProto())
                         .addAllChatMessages(chatMessages.stream().map(this::getChatMessageProto).collect(Collectors.toList())))
                 .build();
     }
@@ -73,7 +73,7 @@ public class PrivateTradeChannel extends Channel<PrivateTradeChatMessage> implem
         return new PrivateTradeChannel(
                 baseProto.getId(),
                 ChatUser.fromProto(proto.getPeer()),
-                UserProfile.fromProto(proto.getMyProfile()),
+                ChatUserIdentity.fromProto(proto.getMyChatUserIdentity()),
                 NotificationSetting.fromProto(baseProto.getNotificationSetting()),
                 proto.getChatMessagesList().stream()
                         .map(PrivateTradeChatMessage::fromProto)

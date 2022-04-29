@@ -108,7 +108,7 @@ public class PrimaryStageController extends NavigationController {
 
     public void onDomainInitialized() {
         // After the domain is initialized we show the application content
-        if (applicationService.getUserProfileService().isDefaultUserProfileMissing()) {
+        if (applicationService.getChatUserService().isDefaultUserProfileMissing()) {
             Navigation.navigateTo(NavigationTarget.ONBOARDING);
         } else {
             String value = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);

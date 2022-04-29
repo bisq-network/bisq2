@@ -24,6 +24,7 @@ import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.Offer;
 import bisq.oracle.daobridge.DaoBridgeData;
 import bisq.social.chat.messages.ChatMessage;
+import bisq.social.user.ChatUser;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,7 @@ public abstract class ServiceProvider {
    
         // Register resolvers for distributedData 
         DistributedDataResolver.addResolver("social.ChatMessage", ChatMessage.getDistributedDataResolver());
+        DistributedDataResolver.addResolver("social.ChatUser", ChatUser.getResolver());
         DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
         DistributedDataResolver.addResolver("oracle.DaoBridgeData", DaoBridgeData.getResolver());
         DistributedDataResolver.addResolver("account.AccountAgeWitnessData", AccountAgeWitnessData.getResolver());

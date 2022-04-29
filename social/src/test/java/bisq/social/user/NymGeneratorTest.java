@@ -28,12 +28,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static bisq.social.user.UserNameGenerator.fromHash;
-import static bisq.social.user.UserNameGenerator.read;
+import static bisq.social.user.NymGenerator.fromHash;
+import static bisq.social.user.NymGenerator.read;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
-public class UserNameGeneratorTest {
+public class NymGeneratorTest {
     @Test
     void testFromHash() {
         List<String> adverbs, adjectives, nouns;

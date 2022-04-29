@@ -42,7 +42,7 @@ public class OnboardingController extends NavigationController {
         super(NavigationTarget.ONBOARDING);
 
         this.applicationService = applicationService;
-        model = new OnboardingModel(applicationService.getUserProfileService());
+        model = new OnboardingModel(applicationService.getChatUserService());
         view = new OnboardingView(model, this);
     }
 

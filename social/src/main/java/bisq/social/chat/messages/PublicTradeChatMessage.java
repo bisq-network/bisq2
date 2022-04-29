@@ -20,14 +20,12 @@ package bisq.social.chat.messages;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.offer.TradeChatOffer;
-import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
@@ -37,24 +35,24 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
     private final Optional<TradeChatOffer> tradeChatOffer;
 
     public PublicTradeChatMessage(String channelId,
-                                  ChatUser sender,
+                                  String authorId,
                                   Optional<TradeChatOffer> tradeChatOffer,
                                   Optional<String> text,
                                   Optional<Quotation> quotedMessage,
                                   long date,
                                   boolean wasEdited) {
         this(channelId,
-                sender,
+                authorId,
                 tradeChatOffer,
                 text,
                 quotedMessage,
                 date,
                 wasEdited,
-                new MetaData(TimeUnit.DAYS.toMillis(1), 100000, PublicTradeChatMessage.class.getSimpleName()));
+                new MetaData(ChatMessage.TTL, 100000, PublicTradeChatMessage.class.getSimpleName()));
     }
 
     public PublicTradeChatMessage(String channelId,
-                                  ChatUser sender,
+                                  String authorId,
                                   Optional<TradeChatOffer> tradeChatOffer,
                                   Optional<String> text,
                                   Optional<Quotation> quotedMessage,
@@ -62,7 +60,7 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
                                   boolean wasEdited,
                                   MetaData metaData) {
         super(channelId,
-                sender,
+                authorId,
                 text,
                 quotedMessage,
                 date,
@@ -78,8 +76,8 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
     }
 
     public static PublicTradeChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
-        Optional<Quotation> quotedMessage = baseProto.hasQuotedMessage() ?
-                Optional.of(Quotation.fromProto(baseProto.getQuotedMessage())) :
+        Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
+                Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
         Optional<String> text = baseProto.hasText() ?
                 Optional.of(baseProto.getText()) :
@@ -89,7 +87,7 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
                 Optional.empty();
         return new PublicTradeChatMessage(
                 baseProto.getChannelId(),
-                ChatUser.fromProto(baseProto.getAuthor()),
+                baseProto.getAuthorId(),
                 tradeChatOffer,
                 text,
                 quotedMessage,

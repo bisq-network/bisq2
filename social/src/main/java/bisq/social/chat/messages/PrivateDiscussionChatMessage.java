@@ -28,7 +28,6 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 /**
  * PrivateChatMessage is sent as direct message to peer and in case peer is not online it can be stores as
@@ -38,41 +37,43 @@ import java.util.concurrent.TimeUnit;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class PrivateDiscussionChatMessage extends ChatMessage implements MailboxMessage {
-    private final String receiversProfileId;
+    private final String receiversNym;
+    private final ChatUser author;
 
     public PrivateDiscussionChatMessage(String channelId,
-                                        ChatUser sender,
-                                        String receiversProfileId,
+                                        ChatUser author,
+                                        String receiversNym,
                                         String text,
                                         Optional<Quotation> quotedMessage,
                                         long date,
                                         boolean wasEdited) {
         this(channelId,
-                sender,
-                receiversProfileId,
+                author,
+                receiversNym,
                 text,
                 quotedMessage,
                 date,
                 wasEdited,
-                new MetaData(TimeUnit.DAYS.toMillis(1), 100000, PrivateDiscussionChatMessage.class.getSimpleName()));
+                new MetaData(ChatMessage.TTL, 100000, PrivateDiscussionChatMessage.class.getSimpleName()));
     }
 
     private PrivateDiscussionChatMessage(String channelId,
-                                         ChatUser sender,
-                                         String receiversProfileId,
+                                         ChatUser author,
+                                         String receiversNym,
                                          String text,
                                          Optional<Quotation> quotedMessage,
                                          long date,
                                          boolean wasEdited,
                                          MetaData metaData) {
         super(channelId,
-                sender,
+                author.getId(),
                 Optional.of(text),
                 quotedMessage,
                 date,
                 wasEdited,
                 metaData);
-        this.receiversProfileId = receiversProfileId;
+        this.receiversNym = receiversNym;
+        this.author = author;
     }
 
     @Override
@@ -85,18 +86,20 @@ public class PrivateDiscussionChatMessage extends ChatMessage implements Mailbox
     public bisq.social.protobuf.ChatMessage toChatMessageProto() {
         return getChatMessageBuilder()
                 .setPrivateDiscussionChatMessage(bisq.social.protobuf.PrivateDiscussionChatMessage.newBuilder()
-                        .setReceiversProfileId(receiversProfileId))
+                        .setReceiversNym(receiversNym)
+                        .setAuthor(author.toProto()))
                 .build();
     }
 
     public static PrivateDiscussionChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
-        Optional<Quotation> quotedMessage = baseProto.hasQuotedMessage() ?
-                Optional.of(Quotation.fromProto(baseProto.getQuotedMessage())) :
+        Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
+                Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
+        bisq.social.protobuf.PrivateDiscussionChatMessage privateDiscussionChatMessage = baseProto.getPrivateDiscussionChatMessage();
         return new PrivateDiscussionChatMessage(
                 baseProto.getChannelId(),
-                ChatUser.fromProto(baseProto.getAuthor()),
-                baseProto.getPrivateDiscussionChatMessage().getReceiversProfileId(),
+                ChatUser.fromProto(privateDiscussionChatMessage.getAuthor()),
+                privateDiscussionChatMessage.getReceiversNym(),
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),
