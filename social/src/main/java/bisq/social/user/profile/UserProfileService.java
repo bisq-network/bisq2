@@ -35,7 +35,7 @@ import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.KeyPairService;
 import bisq.security.SignatureUtil;
-import bisq.social.user.ChatUser;
+import bisq.social.user.ChatUserProfile;
 import bisq.social.user.entitlement.Role;
 import bisq.social.user.proof.*;
 import bisq.social.user.reputation.Reputation;
@@ -119,8 +119,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                                                                                Set<Role> roles) {
         return identityService.createNewInitializedIdentity(profileId, keyId, keyPair)
                 .thenApply(identity -> {
-                    ChatUser chatUser = new ChatUser(nickName, identity.getNodeIdAndKeyPair().networkId(), reputation, roles);
-                    ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUser);
+                    ChatUserProfile chatUserProfile = new ChatUserProfile(nickName, identity.getNodeIdAndKeyPair().networkId(), reputation, roles);
+                    ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUserProfile);
                     synchronized (lock) {
                         persistableStore.getUserProfiles().add(chatUserIdentity);
                         persistableStore.getSelectedUserProfile().set(chatUserIdentity);
@@ -139,7 +139,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         return persistableStore.getUserProfiles().isEmpty();
     }
 
-    public CompletableFuture<Optional<ChatUser.BurnInfo>> findBurnInfoAsync(byte[] pubKeyHash, Set<Role> roles) {
+    public CompletableFuture<Optional<ChatUserProfile.BurnInfo>> findBurnInfoAsync(byte[] pubKeyHash, Set<Role> roles) {
         if (roles.stream().noneMatch(e -> e.type() == Role.Type.LIQUIDITY_PROVIDER)) {
             return CompletableFuture.completedFuture(Optional.empty());
         }
@@ -161,7 +161,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                                 .mapToLong(ProofOfBurnProof::burntAmount)
                                 .sum();
                         long firstBurnDate = proofs.get(0).date();
-                        return Optional.of(new ChatUser.BurnInfo(totalBsqBurned, firstBurnDate));
+                        return Optional.of(new ChatUserProfile.BurnInfo(totalBsqBurned, firstBurnDate));
                     }
                 });
     }

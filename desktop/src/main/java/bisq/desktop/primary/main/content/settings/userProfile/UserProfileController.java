@@ -68,7 +68,7 @@ public class UserProfileController implements Controller {
         model.channelAdminVisible.set(true);
         selectedUserProfileSubscription = EasyBind.subscribe(userProfileSelection.getSelectedUserProfile(),
                 userProfile -> {
-                    model.channelAdminVisible.set(userProfile.getChatUser().hasEntitlementType(Role.Type.CHANNEL_ADMIN));
+                    model.channelAdminVisible.set(userProfile.getChatUserProfile().hasEntitlementType(Role.Type.CHANNEL_ADMIN));
                 });
     }
 

@@ -21,7 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
-import bisq.social.user.ChatUser;
+import bisq.social.user.ChatUserProfile;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -43,12 +43,12 @@ import java.util.stream.Collectors;
 public class ChatUserOverview implements Comparable<ChatUserOverview> {
     private final Controller controller;
 
-    public ChatUserOverview(ChatUser chatUser) {
-        this(chatUser, false);
+    public ChatUserOverview(ChatUserProfile chatUserProfile) {
+        this(chatUserProfile, false);
     }
 
-    public ChatUserOverview(ChatUser chatUser, boolean ignored) {
-        controller = new Controller(chatUser);
+    public ChatUserOverview(ChatUserProfile chatUserProfile, boolean ignored) {
+        controller = new Controller(chatUserProfile);
         controller.model.ignored = ignored;
     }
 
@@ -60,13 +60,13 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
         return controller.model.ignored;
     }
 
-    public ChatUser getChatUser() {
-        return controller.model.chatUser;
+    public ChatUserProfile getChatUser() {
+        return controller.model.chatUserProfile;
     }
 
     @Override
     public int compareTo(ChatUserOverview o) {
-        return controller.model.chatUser.getProfileId().compareTo(o.controller.model.chatUser.getProfileId());
+        return controller.model.chatUserProfile.getProfileId().compareTo(o.controller.model.chatUserProfile.getProfileId());
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -74,24 +74,24 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
         @Getter
         private final View view;
 
-        private Controller(ChatUser chatUser) {
-            model = new Model(chatUser);
+        private Controller(ChatUserProfile chatUserProfile) {
+            model = new Model(chatUserProfile);
             view = new View(model, this);
         }
 
         @Override
         public void onActivate() {
-            ChatUser chatUser = model.chatUser;
-            if (chatUser == null) {
+            ChatUserProfile chatUserProfile = model.chatUserProfile;
+            if (chatUserProfile == null) {
                 return;
             }
 
-            model.id.set(chatUser.getId());
-            model.userName.set(chatUser.getUserName());
-            model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
-            String entitledRoles = chatUser.getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
+            model.id.set(chatUserProfile.getId());
+            model.userName.set(chatUserProfile.getUserName());
+            model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUserProfile.getPubKeyHash())));
+            String entitledRoles = chatUserProfile.getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
             model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
-            model.entitlementsVisible.set(!chatUser.getRoles().isEmpty());
+            model.entitlementsVisible.set(!chatUserProfile.getRoles().isEmpty());
         }
 
         @Override
@@ -100,7 +100,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ChatUser chatUser;
+        private final ChatUserProfile chatUserProfile;
         private boolean ignored;
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
@@ -108,8 +108,8 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
         private final BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
         private final StringProperty entitlements = new SimpleStringProperty();
 
-        private Model(ChatUser chatUser) {
-            this.chatUser = chatUser;
+        private Model(ChatUserProfile chatUserProfile) {
+            this.chatUserProfile = chatUserProfile;
         }
     }
 
@@ -127,12 +127,12 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
             userName = new Label();
             userName.setMaxWidth(100);
-            Tooltip.install(userName, new Tooltip(model.chatUser.getTooltipString()));
+            Tooltip.install(userName, new Tooltip(model.chatUserProfile.getTooltipString()));
 
             roboIcon = new ImageView();
             roboIcon.setFitWidth(37.5);
             roboIcon.setFitHeight(37.5);
-            Tooltip.install(roboIcon, new Tooltip(model.chatUser.getTooltipString()));
+            Tooltip.install(roboIcon, new Tooltip(model.chatUserProfile.getTooltipString()));
 
             HBox hBox = Layout.hBoxWith(roboIcon, userName);
             hBox.setAlignment(Pos.CENTER_LEFT);

@@ -19,7 +19,7 @@ package bisq.social.user.reputation;
 
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
-import bisq.social.user.ChatUser;
+import bisq.social.user.ChatUserProfile;
 import bisq.social.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,7 +43,7 @@ public class ReputationService {
         return CompletableFuture.completedFuture(true);
     }
 
-    public ReputationScore getReputationScore(ChatUser chatUser) {
+    public ReputationScore getReputationScore(ChatUserProfile chatUserProfile) {
         //todo
         return new ReputationScore(new Random().nextInt(100), new Random().nextInt(10000), new Random().nextInt(100) / 100d);
     }

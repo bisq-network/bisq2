@@ -113,7 +113,7 @@ public class UserProfileSelectionAtSettings {
             comboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(ChatUserIdentity chatUserIdentity) {
-                    return chatUserIdentity != null ? chatUserIdentity.getChatUser().getUserName() : "";
+                    return chatUserIdentity != null ? chatUserIdentity.getChatUserProfile().getUserName() : "";
                 }
 
                 @Override

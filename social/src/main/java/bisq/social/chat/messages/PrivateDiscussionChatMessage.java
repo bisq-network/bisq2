@@ -21,7 +21,7 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
-import bisq.social.user.ChatUser;
+import bisq.social.user.ChatUserProfile;
 import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -41,7 +41,7 @@ public class PrivateDiscussionChatMessage extends ChatMessage implements Mailbox
     private final String receiversProfileId;
 
     public PrivateDiscussionChatMessage(String channelId,
-                                        ChatUser sender,
+                                        ChatUserProfile sender,
                                         String receiversProfileId,
                                         String text,
                                         Optional<Quotation> quotedMessage,
@@ -58,7 +58,7 @@ public class PrivateDiscussionChatMessage extends ChatMessage implements Mailbox
     }
 
     private PrivateDiscussionChatMessage(String channelId,
-                                         ChatUser sender,
+                                         ChatUserProfile sender,
                                          String receiversProfileId,
                                          String text,
                                          Optional<Quotation> quotedMessage,
@@ -95,7 +95,7 @@ public class PrivateDiscussionChatMessage extends ChatMessage implements Mailbox
                 Optional.empty();
         return new PrivateDiscussionChatMessage(
                 baseProto.getChannelId(),
-                ChatUser.fromProto(baseProto.getAuthor()),
+                ChatUserProfile.fromProto(baseProto.getAuthor()),
                 baseProto.getPrivateDiscussionChatMessage().getReceiversProfileId(),
                 baseProto.getText(),
                 quotedMessage,

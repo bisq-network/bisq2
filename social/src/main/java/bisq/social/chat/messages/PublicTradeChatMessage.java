@@ -20,7 +20,7 @@ package bisq.social.chat.messages;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.offer.TradeChatOffer;
-import bisq.social.user.ChatUser;
+import bisq.social.user.ChatUserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -37,7 +37,7 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
     private final Optional<TradeChatOffer> tradeChatOffer;
 
     public PublicTradeChatMessage(String channelId,
-                                  ChatUser sender,
+                                  ChatUserProfile sender,
                                   Optional<TradeChatOffer> tradeChatOffer,
                                   Optional<String> text,
                                   Optional<Quotation> quotedMessage,
@@ -54,7 +54,7 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
     }
 
     public PublicTradeChatMessage(String channelId,
-                                  ChatUser sender,
+                                  ChatUserProfile sender,
                                   Optional<TradeChatOffer> tradeChatOffer,
                                   Optional<String> text,
                                   Optional<Quotation> quotedMessage,
@@ -89,7 +89,7 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
                 Optional.empty();
         return new PublicTradeChatMessage(
                 baseProto.getChannelId(),
-                ChatUser.fromProto(baseProto.getAuthor()),
+                ChatUserProfile.fromProto(baseProto.getAuthor()),
                 tradeChatOffer,
                 text,
                 quotedMessage,

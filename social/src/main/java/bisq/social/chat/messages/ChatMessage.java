@@ -22,7 +22,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.social.user.ChatUser;
+import bisq.social.user.ChatUserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,7 +40,7 @@ public abstract class ChatMessage {
     protected final String channelId;
     protected final Optional<String> optionalText;
     @Getter
-    protected ChatUser author;
+    protected ChatUserProfile author;
     @Getter
     protected final Optional<Quotation> quotedMessage;
     @Getter
@@ -51,7 +51,7 @@ public abstract class ChatMessage {
     protected final MetaData metaData;
 
     protected ChatMessage(String channelId,
-                          ChatUser author,
+                          ChatUserProfile author,
                           Optional<String> text,
                           Optional<Quotation> quotedMessage,
                           long date,

@@ -20,7 +20,7 @@ package bisq.social.chat.channels;
 import bisq.common.observable.ObservableSet;
 import bisq.social.chat.NotificationSetting;
 import bisq.social.chat.messages.PublicDiscussionChatMessage;
-import bisq.social.user.ChatUser;
+import bisq.social.user.ChatUserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -47,15 +47,15 @@ public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage
     }
     private final String channelName;
     private final String description;
-    private final ChatUser channelAdmin;
-    private final Set<ChatUser> channelModerators;
+    private final ChatUserProfile channelAdmin;
+    private final Set<ChatUserProfile> channelModerators;
     private transient final ObservableSet<PublicDiscussionChatMessage> chatMessages = new ObservableSet<>();
 
     public PublicDiscussionChannel(String id,
                                    String channelName,
                                    String description,
-                                   ChatUser channelAdmin,
-                                   Set<ChatUser> channelModerators
+                                   ChatUserProfile channelAdmin,
+                                   Set<ChatUserProfile> channelModerators
     ) {
         this(id, channelName,
                 description,
@@ -68,8 +68,8 @@ public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage
     private PublicDiscussionChannel(String id,
                                     String channelName,
                                     String description,
-                                    ChatUser channelAdmin,
-                                    Set<ChatUser> channelModerators,
+                                    ChatUserProfile channelAdmin,
+                                    Set<ChatUserProfile> channelModerators,
                                     NotificationSetting notificationSetting) {
         super(id, notificationSetting);
 
@@ -86,7 +86,7 @@ public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage
                         .setDescription(description)
                         .setChannelAdmin(channelAdmin.toProto())
                         .addAllChannelModerators(channelModerators.stream()
-                                .map(ChatUser::toProto)
+                                .map(ChatUserProfile::toProto)
                                 .collect(Collectors.toList())))
                 .build();
     }
@@ -97,8 +97,8 @@ public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage
                 baseProto.getId(),
                 proto.getChannelName(),
                 proto.getDescription(),
-                ChatUser.fromProto(proto.getChannelAdmin()),
-                proto.getChannelModeratorsList().stream().map(ChatUser::fromProto).collect(Collectors.toSet()),
+                ChatUserProfile.fromProto(proto.getChannelAdmin()),
+                proto.getChannelModeratorsList().stream().map(ChatUserProfile::fromProto).collect(Collectors.toSet()),
                 NotificationSetting.fromProto(baseProto.getNotificationSetting()));
     }
 

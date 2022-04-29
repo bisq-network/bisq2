@@ -20,7 +20,7 @@ package bisq.social.user.profile;
 import bisq.common.proto.Proto;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
-import bisq.social.user.ChatUser;
+import bisq.social.user.ChatUserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -31,38 +31,38 @@ import lombok.Getter;
 @Getter
 public class ChatUserIdentity implements Proto {
     private final Identity identity;
-    private final ChatUser chatUser;
+    private final ChatUserProfile chatUserProfile;
 
-    public ChatUserIdentity(Identity identity, ChatUser chatUser) {
+    public ChatUserIdentity(Identity identity, ChatUserProfile chatUserProfile) {
         this.identity = identity;
-        this.chatUser = chatUser;
+        this.chatUserProfile = chatUserProfile;
     }
 
     public byte[] getPubKeyHash() {
-        return chatUser.getPubKeyHash();
+        return chatUserProfile.getPubKeyHash();
     }
 
     public String getTooltipString() {
-        return Res.get("social.chatUser.tooltip", chatUser.getNickName(), getProfileId());
+        return Res.get("social.chatUser.tooltip", chatUserProfile.getNickName(), getProfileId());
     }
 
     public bisq.social.protobuf.UserProfile toProto() {
         return bisq.social.protobuf.UserProfile.newBuilder()
                 .setIdentity(identity.toProto())
-                .setChatUser(chatUser.toProto())
+                .setChatUser(chatUserProfile.toProto())
                 .build();
     }
 
     public static ChatUserIdentity fromProto(bisq.social.protobuf.UserProfile proto) {
         return new ChatUserIdentity(Identity.fromProto(proto.getIdentity()),
-                ChatUser.fromProto(proto.getChatUser()));
+                ChatUserProfile.fromProto(proto.getChatUser()));
     }
 
     public String getProfileId() {
-        return chatUser.getProfileId();
+        return chatUserProfile.getProfileId();
     }
 
     public String getNickName() {
-        return chatUser.getNickName();
+        return chatUserProfile.getNickName();
     }
 }

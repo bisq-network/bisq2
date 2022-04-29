@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 @Slf4j
 @Getter
-public class ChatUser implements Proto {
+public class ChatUserProfile implements Proto {
     private final String nickName;
     private final NetworkId networkId;
     private final Set<Reputation> reputation;
@@ -54,11 +54,11 @@ public class ChatUser implements Proto {
     private transient final String id;
     private transient final String profileId;
 
-    public ChatUser(String nickName, NetworkId networkId) {
+    public ChatUserProfile(String nickName, NetworkId networkId) {
         this(nickName, networkId, new HashSet<>(), new HashSet<>());
     }
 
-    public ChatUser(String nickName, NetworkId networkId, Set<Reputation> reputation, Set<Role> roles) {
+    public ChatUserProfile(String nickName, NetworkId networkId, Set<Reputation> reputation, Set<Role> roles) {
         this.nickName = nickName;
         this.networkId = networkId;
         this.reputation = reputation;
@@ -84,14 +84,14 @@ public class ChatUser implements Proto {
                 .build();
     }
 
-    public static ChatUser fromProto(bisq.social.protobuf.ChatUser proto) {
+    public static ChatUserProfile fromProto(bisq.social.protobuf.ChatUser proto) {
         Set<Reputation> reputation = proto.getReputationList().stream()
                 .map(Reputation::fromProto)
                 .collect(Collectors.toSet());
         Set<Role> roles = proto.getRolesList().stream()
                 .map(Role::fromProto)
                 .collect(Collectors.toSet());
-        return new ChatUser(proto.getNickName(), NetworkId.fromProto(proto.getNetworkId()), reputation, roles);
+        return new ChatUserProfile(proto.getNickName(), NetworkId.fromProto(proto.getNetworkId()), reputation, roles);
     }
 
     public boolean hasEntitlementType(Role.Type type) {

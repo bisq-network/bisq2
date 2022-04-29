@@ -25,7 +25,7 @@ import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.Quotation;
-import bisq.social.user.ChatUser;
+import bisq.social.user.ChatUserProfile;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
@@ -67,11 +67,11 @@ public class QuotedMessageBlock {
 
     public Optional<Quotation> getQuotation() {
         String text = controller.model.quotation.get();
-        ChatUser chatUser = controller.model.author;
-        if (text == null || text.isEmpty() || chatUser == null) {
+        ChatUserProfile chatUserProfile = controller.model.author;
+        if (text == null || text.isEmpty() || chatUserProfile == null) {
             return Optional.empty();
         }
-        return Optional.of(new Quotation(chatUser.getProfileId(), chatUser.getNickName(), new ByteArray(chatUser.getPubKeyHash()), text));
+        return Optional.of(new Quotation(chatUserProfile.getProfileId(), chatUserProfile.getNickName(), new ByteArray(chatUserProfile.getPubKeyHash()), text));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -86,7 +86,7 @@ public class QuotedMessageBlock {
         }
 
         private void reply(ChatMessage chatMessage) {
-            ChatUser author = chatMessage.getAuthor();
+            ChatUserProfile author = chatMessage.getAuthor();
             model.author = author;
             model.userName.set(author.getProfileId());
             model.roboHashNode.set(RoboHash.getImage(new ByteArray(author.getPubKeyHash())));
@@ -113,7 +113,7 @@ public class QuotedMessageBlock {
         private final StringProperty quotation = new SimpleStringProperty("");
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
-        private ChatUser author;
+        private ChatUserProfile author;
 
         private Model() {
         }
