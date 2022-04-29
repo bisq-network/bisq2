@@ -29,11 +29,11 @@ import lombok.Getter;
  */
 @EqualsAndHashCode
 @Getter
-public class UserProfile implements Proto {
+public class ChatUserIdentity implements Proto {
     private final Identity identity;
     private final ChatUser chatUser;
 
-    public UserProfile(Identity identity, ChatUser chatUser) {
+    public ChatUserIdentity(Identity identity, ChatUser chatUser) {
         this.identity = identity;
         this.chatUser = chatUser;
     }
@@ -53,8 +53,8 @@ public class UserProfile implements Proto {
                 .build();
     }
 
-    public static UserProfile fromProto(bisq.social.protobuf.UserProfile proto) {
-        return new UserProfile(Identity.fromProto(proto.getIdentity()),
+    public static ChatUserIdentity fromProto(bisq.social.protobuf.UserProfile proto) {
+        return new ChatUserIdentity(Identity.fromProto(proto.getIdentity()),
                 ChatUser.fromProto(proto.getChatUser()));
     }
 

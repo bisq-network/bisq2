@@ -41,7 +41,7 @@ import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
 import bisq.social.user.ChatUser;
-import bisq.social.user.profile.UserProfile;
+import bisq.social.user.profile.ChatUserIdentity;
 import bisq.social.user.profile.UserProfileService;
 import bisq.social.user.reputation.ReputationScore;
 import bisq.social.user.reputation.ReputationService;
@@ -250,12 +250,12 @@ public class ChatMessagesComponent {
         void onSendMessage(String text) {
             if (text != null && !text.isEmpty()) {
                 Channel<? extends ChatMessage> channel = model.selectedChannel.get();
-                UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
+                ChatUserIdentity chatUserIdentity = userProfileService.getSelectedUserProfile().get();
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
                 if (channel instanceof PublicTradeChannel publicTradeChannel) {
-                    chatService.publishTradeChatTextMessage(text, quotation, publicTradeChannel, userProfile);
+                    chatService.publishTradeChatTextMessage(text, quotation, publicTradeChannel, chatUserIdentity);
                 } else if (channel instanceof PublicDiscussionChannel publicDiscussionChannel) {
-                    chatService.publishDiscussionChatMessage(text, quotation, publicDiscussionChannel, userProfile);
+                    chatService.publishDiscussionChatMessage(text, quotation, publicDiscussionChannel, chatUserIdentity);
                 } else if (channel instanceof PrivateTradeChannel privateTradeChannel) {
                     chatService.sendPrivateTradeChatMessage(text, quotation, privateTradeChannel);
                 } else if (channel instanceof PrivateDiscussionChannel privateDiscussionChannel) {
@@ -314,22 +314,22 @@ public class ChatMessagesComponent {
                 return;
             }
             if (chatMessage instanceof PublicTradeChatMessage marketChatMessage) {
-                UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
-                chatService.publishEditedTradeChatMessage(marketChatMessage, editedText, userProfile);
+                ChatUserIdentity chatUserIdentity = userProfileService.getSelectedUserProfile().get();
+                chatService.publishEditedTradeChatMessage(marketChatMessage, editedText, chatUserIdentity);
             } else if (chatMessage instanceof PublicDiscussionChatMessage publicDiscussionChatMessage) {
-                UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
-                chatService.publishEditedDiscussionChatMessage(publicDiscussionChatMessage, editedText, userProfile);
+                ChatUserIdentity chatUserIdentity = userProfileService.getSelectedUserProfile().get();
+                chatService.publishEditedDiscussionChatMessage(publicDiscussionChatMessage, editedText, chatUserIdentity);
             }
             //todo editing private message not supported yet
         }
 
         public void onDeleteMessage(ChatMessage chatMessage) {
             if (chatService.isMyMessage(chatMessage)) {
-                UserProfile userProfile = userProfileService.getSelectedUserProfile().get();
+                ChatUserIdentity chatUserIdentity = userProfileService.getSelectedUserProfile().get();
                 if (chatMessage instanceof PublicTradeChatMessage marketChatMessage) {
-                    chatService.deletePublicTradeChatMessage(marketChatMessage, userProfile);
+                    chatService.deletePublicTradeChatMessage(marketChatMessage, chatUserIdentity);
                 } else if (chatMessage instanceof PublicDiscussionChatMessage publicDiscussionChatMessage) {
-                    chatService.deletePublicDiscussionChatMessage(publicDiscussionChatMessage, userProfile);
+                    chatService.deletePublicDiscussionChatMessage(publicDiscussionChatMessage, chatUserIdentity);
                 }
                 //todo delete private message
             }

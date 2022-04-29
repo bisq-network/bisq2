@@ -104,33 +104,33 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<UserProfile> createNewInitializedUserProfile(String profileId,
-                                                                          String nickName,
-                                                                          String keyId,
-                                                                          KeyPair keyPair) {
+    public CompletableFuture<ChatUserIdentity> createNewInitializedUserProfile(String profileId,
+                                                                               String nickName,
+                                                                               String keyId,
+                                                                               KeyPair keyPair) {
         return createNewInitializedUserProfile(profileId, nickName, keyId, keyPair, new HashSet<>(), new HashSet<>());
     }
 
-    public CompletableFuture<UserProfile> createNewInitializedUserProfile(String profileId,
-                                                                          String nickName,
-                                                                          String keyId,
-                                                                          KeyPair keyPair,
-                                                                          Set<Reputation> reputation,
-                                                                          Set<Role> roles) {
+    public CompletableFuture<ChatUserIdentity> createNewInitializedUserProfile(String profileId,
+                                                                               String nickName,
+                                                                               String keyId,
+                                                                               KeyPair keyPair,
+                                                                               Set<Reputation> reputation,
+                                                                               Set<Role> roles) {
         return identityService.createNewInitializedIdentity(profileId, keyId, keyPair)
                 .thenApply(identity -> {
                     ChatUser chatUser = new ChatUser(nickName, identity.getNodeIdAndKeyPair().networkId(), reputation, roles);
-                    UserProfile userProfile = new UserProfile(identity, chatUser);
+                    ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUser);
                     synchronized (lock) {
-                        persistableStore.getUserProfiles().add(userProfile);
-                        persistableStore.getSelectedUserProfile().set(userProfile);
+                        persistableStore.getUserProfiles().add(chatUserIdentity);
+                        persistableStore.getSelectedUserProfile().set(chatUserIdentity);
                     }
                     persist();
-                    return userProfile;
+                    return chatUserIdentity;
                 });
     }
 
-    public void selectUserProfile(UserProfile value) {
+    public void selectUserProfile(ChatUserIdentity value) {
         persistableStore.getSelectedUserProfile().set(value);
         persist();
     }
@@ -293,15 +293,15 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     }
 
 
-    public Observable<UserProfile> getSelectedUserProfile() {
+    public Observable<ChatUserIdentity> getSelectedUserProfile() {
         return persistableStore.getSelectedUserProfile();
     }
 
-    public ObservableSet<UserProfile> getUserProfiles() {
+    public ObservableSet<ChatUserIdentity> getUserProfiles() {
         return persistableStore.getUserProfiles();
     }
 
-    public Optional<UserProfile> findUserProfile(String profileId) {
+    public Optional<ChatUserIdentity> findUserProfile(String profileId) {
         return getUserProfiles().stream().filter(userProfile -> userProfile.getProfileId().equals(profileId)).findAny();
     }
 

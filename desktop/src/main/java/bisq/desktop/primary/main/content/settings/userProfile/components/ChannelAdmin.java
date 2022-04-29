@@ -21,7 +21,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
-import bisq.social.user.profile.UserProfile;
+import bisq.social.user.profile.ChatUserIdentity;
 import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -75,7 +75,7 @@ public class ChannelAdmin {
             selectedUserProfilePin.unbind();
         }
 
-        public void onSelected(UserProfile value) {
+        public void onSelected(ChatUserIdentity value) {
             if (value != null) {
                 userProfileService.selectUserProfile(value);
             }
@@ -100,7 +100,7 @@ public class ChannelAdmin {
     private static class Model implements bisq.desktop.common.view.Model {
         final StringProperty channelName = new SimpleStringProperty();
         final StringProperty description = new SimpleStringProperty();
-        ObjectProperty<UserProfile> selectedUserProfile = new SimpleObjectProperty<>();
+        ObjectProperty<ChatUserIdentity> selectedUserProfile = new SimpleObjectProperty<>();
 
         private Model() {
         }

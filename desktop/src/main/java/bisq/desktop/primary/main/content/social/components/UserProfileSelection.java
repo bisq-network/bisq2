@@ -24,7 +24,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.social.user.profile.UserProfile;
+import bisq.social.user.profile.ChatUserIdentity;
 import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -80,7 +80,7 @@ public class UserProfileSelection {
         public void onActivate() {
             selectedUserProfilePin = FxBindings.subscribe(userProfileService.getSelectedUserProfile(),
                     userProfile -> model.selectedUserProfile.set(new ListItem(userProfile)));
-            userProfilesPin = FxBindings.<UserProfile, ListItem>bind(model.userProfiles)
+            userProfilesPin = FxBindings.<ChatUserIdentity, ListItem>bind(model.userProfiles)
                     .map(ListItem::new)
                     .to(userProfileService.getUserProfiles());
         }
@@ -95,7 +95,7 @@ public class UserProfileSelection {
 
         private void onSelected(ListItem selectedItem) {
             if (selectedItem != null) {
-                userProfileService.selectUserProfile(selectedItem.userProfile);
+                userProfileService.selectUserProfile(selectedItem.chatUserIdentity);
             }
         }
     }
@@ -143,15 +143,15 @@ public class UserProfileSelection {
 
     @EqualsAndHashCode
     public static class ListItem {
-        private final UserProfile userProfile;
+        private final ChatUserIdentity chatUserIdentity;
 
-        private ListItem(UserProfile userProfile) {
-            this.userProfile = userProfile;
+        private ListItem(ChatUserIdentity chatUserIdentity) {
+            this.chatUserIdentity = chatUserIdentity;
         }
 
         @Override
         public String toString() {
-            return userProfile.getNickName();
+            return chatUserIdentity.getNickName();
         }
     }
 
@@ -184,8 +184,8 @@ public class UserProfileSelection {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
-                        imageView.setImage(RoboHash.getImage(new ByteArray(item.userProfile.getPubKeyHash())));
-                        label.setText(item.userProfile.getNickName());
+                        imageView.setImage(RoboHash.getImage(new ByteArray(item.chatUserIdentity.getPubKeyHash())));
+                        label.setText(item.chatUserIdentity.getNickName());
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);
@@ -221,11 +221,11 @@ public class UserProfileSelection {
             control.getSelectionModel().selectedItemProperty().addListener(new WeakReference<>(
                     (ChangeListener<ListItem>) (observable, oldValue, newValue) -> {
                         if (newValue != null) {
-                            UserProfile userProfile = newValue.userProfile;
-                            imageView.setImage(RoboHash.getImage(new ByteArray(userProfile.getPubKeyHash())));
-                            textInputBox.setText(userProfile.getNickName());
+                            ChatUserIdentity chatUserIdentity = newValue.chatUserIdentity;
+                            imageView.setImage(RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
+                            textInputBox.setText(chatUserIdentity.getNickName());
                             Tooltip.install(buttonPane,
-                                    new Tooltip(userProfile.getTooltipString()));
+                                    new Tooltip(chatUserIdentity.getTooltipString()));
                         }
                     }).get());
         }

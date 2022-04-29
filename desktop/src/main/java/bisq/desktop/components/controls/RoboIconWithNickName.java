@@ -19,7 +19,7 @@ package bisq.desktop.components.controls;
 
 import bisq.common.data.ByteArray;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.social.user.profile.UserProfile;
+import bisq.social.user.profile.ChatUserIdentity;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -51,7 +51,7 @@ public class RoboIconWithNickName extends HBox {
         this(null, Size.MEDIUM);
     }
 
-    public RoboIconWithNickName(@Nullable UserProfile userProfile, Size size) {
+    public RoboIconWithNickName(@Nullable ChatUserIdentity chatUserIdentity, Size size) {
         setAlignment(Pos.CENTER);
         setSpacing(10);
 
@@ -68,8 +68,8 @@ public class RoboIconWithNickName extends HBox {
         // nickNameLabel.getStyleClass().add("bisq-large-profile-id-label");
 
         getChildren().addAll(imageView, nickNameLabel);
-        if (userProfile != null) {
-            setUserProfile(userProfile);
+        if (chatUserIdentity != null) {
+            setUserProfile(chatUserIdentity);
         }
     }
 
@@ -81,9 +81,9 @@ public class RoboIconWithNickName extends HBox {
         imageView.setImage(roboIconImage);
     }
 
-    public void setUserProfile(UserProfile userProfile) {
-        imageView.setImage(RoboHash.getImage(new ByteArray(userProfile.getPubKeyHash())));
-        nickNameLabel.setText(userProfile.getNickName());
-        Tooltip.install(this, new Tooltip(userProfile.getTooltipString()));
+    public void setUserProfile(ChatUserIdentity chatUserIdentity) {
+        imageView.setImage(RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
+        nickNameLabel.setText(chatUserIdentity.getNickName());
+        Tooltip.install(this, new Tooltip(chatUserIdentity.getTooltipString()));
     }
 }

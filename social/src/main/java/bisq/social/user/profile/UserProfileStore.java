@@ -37,19 +37,19 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class UserProfileStore implements PersistableStore<UserProfileStore> {
-    private final Observable<UserProfile> selectedUserProfile = new Observable<>();
-    private final ObservableSet<UserProfile> userProfiles;
+    private final Observable<ChatUserIdentity> selectedUserProfile = new Observable<>();
+    private final ObservableSet<ChatUserIdentity> chatUserIdentities;
     private final Map<String, ProofOfBurnProof> verifiedProofOfBurnProofs = new HashMap<>();
 
     public UserProfileStore() {
-        userProfiles = new ObservableSet<>();
+        chatUserIdentities = new ObservableSet<>();
     }
 
-    private UserProfileStore(UserProfile selectedUserProfile,
-                             Set<UserProfile> userProfiles,
+    private UserProfileStore(ChatUserIdentity selectedChatUserIdentity,
+                             Set<ChatUserIdentity> chatUserIdentities,
                              Map<String, ProofOfBurnProof> verifiedProofOfBurnProofs) {
-        this.selectedUserProfile.set(selectedUserProfile);
-        this.userProfiles = new ObservableSet<>(userProfiles);
+        this.selectedUserProfile.set(selectedChatUserIdentity);
+        this.chatUserIdentities = new ObservableSet<>(chatUserIdentities);
         this.verifiedProofOfBurnProofs.putAll(verifiedProofOfBurnProofs);
     }
 
@@ -57,16 +57,16 @@ public class UserProfileStore implements PersistableStore<UserProfileStore> {
     public bisq.social.protobuf.UserProfileStore toProto() {
         return bisq.social.protobuf.UserProfileStore.newBuilder()
                 .setSelectedUserProfile(selectedUserProfile.get().toProto())
-                .addAllUserProfiles(userProfiles.stream().map(UserProfile::toProto).collect(Collectors.toSet()))
+                .addAllUserProfiles(chatUserIdentities.stream().map(ChatUserIdentity::toProto).collect(Collectors.toSet()))
                 .putAllVerifiedProofOfBurnProofs(verifiedProofOfBurnProofs.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto())))
                 .build();
     }
 
     public static UserProfileStore fromProto(bisq.social.protobuf.UserProfileStore proto) {
-        return new UserProfileStore(UserProfile.fromProto(proto.getSelectedUserProfile()),
+        return new UserProfileStore(ChatUserIdentity.fromProto(proto.getSelectedUserProfile()),
                 proto.getUserProfilesList().stream()
-                        .map(UserProfile::fromProto)
+                        .map(ChatUserIdentity::fromProto)
                         .collect(Collectors.toSet()),
                 proto.getVerifiedProofOfBurnProofsMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
@@ -86,22 +86,22 @@ public class UserProfileStore implements PersistableStore<UserProfileStore> {
 
     @Override
     public UserProfileStore getClone() {
-        return new UserProfileStore(selectedUserProfile.get(), userProfiles, verifiedProofOfBurnProofs);
+        return new UserProfileStore(selectedUserProfile.get(), chatUserIdentities, verifiedProofOfBurnProofs);
     }
 
     @Override
     public void applyPersisted(UserProfileStore persisted) {
         selectedUserProfile.set(persisted.getSelectedUserProfile().get());
-        userProfiles.addAll(persisted.getUserProfiles());
+        chatUserIdentities.addAll(persisted.getUserProfiles());
         verifiedProofOfBurnProofs.putAll(persisted.getVerifiedProofOfBurnProofs());
     }
 
-    Observable<UserProfile> getSelectedUserProfile() {
+    Observable<ChatUserIdentity> getSelectedUserProfile() {
         return selectedUserProfile;
     }
 
-    ObservableSet<UserProfile> getUserProfiles() {
-        return userProfiles;
+    ObservableSet<ChatUserIdentity> getUserProfiles() {
+        return chatUserIdentities;
     }
 
     Map<String, ProofOfBurnProof> getVerifiedProofOfBurnProofs() {
