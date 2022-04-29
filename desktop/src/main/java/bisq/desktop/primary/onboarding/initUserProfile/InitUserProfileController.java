@@ -29,7 +29,7 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.social.chat.ChatService;
-import bisq.social.user.profile.ProfileIdGenerator;
+import bisq.social.user.profile.NymGenerator;
 import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -91,6 +91,6 @@ public class InitUserProfileController implements Controller {
         model.tempKeyPair = keyPairService.generateKeyPair();
         byte[] hash = DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded());
         model.roboHashNode.set(RoboHash.getImage(new ByteArray(hash)));
-        model.profileId.set(ProfileIdGenerator.fromHash(hash));
+        model.profileId.set(NymGenerator.fromHash(hash));
     }
 }

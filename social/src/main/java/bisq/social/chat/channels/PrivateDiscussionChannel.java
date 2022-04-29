@@ -38,7 +38,7 @@ public class PrivateDiscussionChannel extends Channel<PrivateDiscussionChatMessa
     private final ObservableSet<PrivateDiscussionChatMessage> chatMessages = new ObservableSet<>();
 
     public PrivateDiscussionChannel(ChatUserProfile peer, ChatUserIdentity myProfile) {
-        this(PrivateChannel.createChannelId(peer.getProfileId(), myProfile.getProfileId()),
+        this(PrivateChannel.createChannelId(peer.getNym(), myProfile.getProfileId()),
                 peer,
                 myProfile,
                 NotificationSetting.ALL,
@@ -63,7 +63,7 @@ public class PrivateDiscussionChannel extends Channel<PrivateDiscussionChatMessa
     public bisq.social.protobuf.Channel toProto() {
         return getChannelBuilder().setPrivateDiscussionChannel(bisq.social.protobuf.PrivateDiscussionChannel.newBuilder()
                         .setPeer(peer.toProto())
-                        .setMyProfile(myProfile.toProto())
+                        .setMyChatUserIdentity(myProfile.toProto())
                         .addAllChatMessages(chatMessages.stream().map(this::getChatMessageProto).collect(Collectors.toList())))
                 .build();
     }
@@ -73,7 +73,7 @@ public class PrivateDiscussionChannel extends Channel<PrivateDiscussionChatMessa
         return new PrivateDiscussionChannel(
                 baseProto.getId(),
                 ChatUserProfile.fromProto(proto.getPeer()),
-                ChatUserIdentity.fromProto(proto.getMyProfile()),
+                ChatUserIdentity.fromProto(proto.getMyChatUserIdentity()),
                 NotificationSetting.fromProto(baseProto.getNotificationSetting()),
                 proto.getChatMessagesList().stream()
                         .map(PrivateDiscussionChatMessage::fromProto)

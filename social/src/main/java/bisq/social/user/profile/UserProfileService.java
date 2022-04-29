@@ -122,8 +122,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                     ChatUserProfile chatUserProfile = new ChatUserProfile(nickName, identity.getNodeIdAndKeyPair().networkId(), reputation, roles);
                     ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUserProfile);
                     synchronized (lock) {
-                        persistableStore.getUserProfiles().add(chatUserIdentity);
-                        persistableStore.getSelectedUserProfile().set(chatUserIdentity);
+                        persistableStore.getChatUserIdentities().add(chatUserIdentity);
+                        persistableStore.getSelectedChatUserIdentity().set(chatUserIdentity);
                     }
                     persist();
                     return chatUserIdentity;
@@ -131,12 +131,12 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     }
 
     public void selectUserProfile(ChatUserIdentity value) {
-        persistableStore.getSelectedUserProfile().set(value);
+        persistableStore.getSelectedChatUserIdentity().set(value);
         persist();
     }
 
     public boolean isDefaultUserProfileMissing() {
-        return persistableStore.getUserProfiles().isEmpty();
+        return persistableStore.getChatUserIdentities().isEmpty();
     }
 
     public CompletableFuture<Optional<ChatUserProfile.BurnInfo>> findBurnInfoAsync(byte[] pubKeyHash, Set<Role> roles) {
@@ -294,11 +294,11 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
 
 
     public Observable<ChatUserIdentity> getSelectedUserProfile() {
-        return persistableStore.getSelectedUserProfile();
+        return persistableStore.getSelectedChatUserIdentity();
     }
 
     public ObservableSet<ChatUserIdentity> getUserProfiles() {
-        return persistableStore.getUserProfiles();
+        return persistableStore.getChatUserIdentities();
     }
 
     public Optional<ChatUserIdentity> findUserProfile(String profileId) {

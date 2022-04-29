@@ -75,7 +75,8 @@ message Reputation {
   string type = 1;
   Proof proof = 2;
 }
-message ChatUser {
+
+message ChatUserProfile {
   string nickName = 1;
   network.NetworkId networkId = 2;
   repeated Reputation reputation = 3;
@@ -108,7 +109,7 @@ message PublicTradeChatMessage {
 message ChatMessage {
   string channelId = 1;
   optional string text = 2;
-  ChatUser author = 3;
+  ChatUserProfile author = 3;
   optional QuotedMessage quotedMessage = 4;
   uint64 date = 5;
   bool wasEdited = 6;
@@ -127,20 +128,20 @@ enum NotificationSetting {
   NEVER = 2;
 }
 
-message UserProfile {
+message ChatUserIdentity {
   identity.Identity identity = 1;
-  ChatUser chatUser = 2;
+  ChatUserProfile chatUserProfile = 2;
 }
 
 // Channels
 message PrivateDiscussionChannel {
-  ChatUser peer = 1;
-  UserProfile myProfile = 2;
+  ChatUserProfile peer = 1;
+  ChatUserIdentity myChatUserIdentity = 2;
   repeated ChatMessage chatMessages = 3;
 }
 message PrivateTradeChannel {
-  ChatUser peer = 1;
-  UserProfile myProfile = 2;
+  ChatUserProfile peer = 1;
+  ChatUserIdentity myChatUserIdentity = 2;
   repeated ChatMessage chatMessages = 3;
 }
 
@@ -151,8 +152,9 @@ message PublicTradeChannel {
 message PublicDiscussionChannel {
   string channelName = 1;
   string description = 2;
-  ChatUser channelAdmin = 3;
-  repeated ChatUser channelModerators = 4;
+  ChatUserProfile channelAdmin = 3;
+  repeated ChatUserProfile channelModerators = 4;
+  bool isVisible = 5;
 }
 message Channel {
   string id = 1;
@@ -167,8 +169,8 @@ message Channel {
 
 // Stores
 message UserProfileStore {
-  repeated UserProfile userProfiles = 1;
-  UserProfile selectedUserProfile = 2;
+  repeated ChatUserIdentity chatUserIdentities = 1;
+  ChatUserIdentity selectedChatUserIdentity = 2;
   map<string, Proof> verifiedProofOfBurnProofs = 3;
 }
 
@@ -180,7 +182,7 @@ message ChatStore {
   Channel selectedTradeChannel = 5;
   Channel selectedDiscussionChannel = 6;
   repeated string customTags = 7;
-  repeated string ignoredChatUserIds = 8;
+  repeated string ignoredChatUserProfileIds = 8;
 }
 
 message TradeChatOfferStore {

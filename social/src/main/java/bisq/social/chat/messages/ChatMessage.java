@@ -31,8 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+//todo replace ChatUserProfile by ChatUserProfileId 
 @Slf4j
-
 @ToString
 @EqualsAndHashCode
 public abstract class ChatMessage {

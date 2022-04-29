@@ -23,7 +23,7 @@ import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.security.DigestUtil;
 import bisq.social.user.entitlement.Role;
-import bisq.social.user.profile.ProfileIdGenerator;
+import bisq.social.user.profile.NymGenerator;
 import bisq.social.user.reputation.Reputation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -34,12 +34,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+//todo publish to network
 /**
- * Publicly shared chat user data
- * We cache pubKey hash, id and generated profileId.
- * ChatUser is part of the ChatMessage so we have many instances from the same chat user and want to avoid
- * costs from hashing and the userame generation. We could also try to restructure the domain model to avoid that
- * the chat user is part of the message (e.g. use an id and reference to p2p network data for chat user).
+ * Publicly shared chat user profile.
  */
 @ToString
 @EqualsAndHashCode
@@ -52,7 +49,7 @@ public class ChatUserProfile implements Proto {
     private final Set<Role> roles;
     private transient final byte[] pubKeyHash;
     private transient final String id;
-    private transient final String profileId;
+    private transient final String nym;
 
     public ChatUserProfile(String nickName, NetworkId networkId) {
         this(nickName, networkId, new HashSet<>(), new HashSet<>());
@@ -66,11 +63,11 @@ public class ChatUserProfile implements Proto {
 
         pubKeyHash = DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded());
         id = Hex.encode(pubKeyHash);
-        profileId = ProfileIdGenerator.fromHash(pubKeyHash);
+        nym = NymGenerator.fromHash(pubKeyHash);
     }
 
-    public bisq.social.protobuf.ChatUser toProto() {
-        return bisq.social.protobuf.ChatUser.newBuilder()
+    public bisq.social.protobuf.ChatUserProfile toProto() {
+        return bisq.social.protobuf.ChatUserProfile.newBuilder()
                 .setNickName(nickName)
                 .setNetworkId(networkId.toProto())
                 .addAllReputation(reputation.stream()
@@ -84,7 +81,7 @@ public class ChatUserProfile implements Proto {
                 .build();
     }
 
-    public static ChatUserProfile fromProto(bisq.social.protobuf.ChatUser proto) {
+    public static ChatUserProfile fromProto(bisq.social.protobuf.ChatUserProfile proto) {
         Set<Reputation> reputation = proto.getReputationList().stream()
                 .map(Reputation::fromProto)
                 .collect(Collectors.toSet());
@@ -99,11 +96,11 @@ public class ChatUserProfile implements Proto {
     }
 
     public String getTooltipString() {
-        return Res.get("social.chatUser.tooltip", nickName, profileId);
+        return Res.get("social.chatUser.tooltip", nickName, nym);
     }
 
     public String getUserName() {
-        return NickNameLookup.getUserName(profileId, nickName);
+        return NickNameLookup.getUserName(nym, nickName);
     }
 
     //todo

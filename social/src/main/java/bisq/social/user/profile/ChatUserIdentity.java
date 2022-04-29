@@ -46,20 +46,20 @@ public class ChatUserIdentity implements Proto {
         return Res.get("social.chatUser.tooltip", chatUserProfile.getNickName(), getProfileId());
     }
 
-    public bisq.social.protobuf.UserProfile toProto() {
-        return bisq.social.protobuf.UserProfile.newBuilder()
+    public bisq.social.protobuf.ChatUserIdentity toProto() {
+        return bisq.social.protobuf.ChatUserIdentity.newBuilder()
                 .setIdentity(identity.toProto())
-                .setChatUser(chatUserProfile.toProto())
+                .setChatUserProfile(chatUserProfile.toProto())
                 .build();
     }
 
-    public static ChatUserIdentity fromProto(bisq.social.protobuf.UserProfile proto) {
+    public static ChatUserIdentity fromProto(bisq.social.protobuf.ChatUserIdentity proto) {
         return new ChatUserIdentity(Identity.fromProto(proto.getIdentity()),
-                ChatUserProfile.fromProto(proto.getChatUser()));
+                ChatUserProfile.fromProto(proto.getChatUserProfile()));
     }
 
     public String getProfileId() {
-        return chatUserProfile.getProfileId();
+        return chatUserProfile.getNym();
     }
 
     public String getNickName() {

@@ -250,7 +250,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         ChatUserProfile peer = privateTradeChannel.getPeer();
         PrivateTradeChatMessage chatMessage = new PrivateTradeChatMessage(channelId,
                 chatUserIdentity.getChatUserProfile(),
-                peer.getProfileId(),
+                peer.getNym(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
@@ -427,7 +427,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         ChatUserProfile peer = privateDiscussionChannel.getPeer();
         PrivateDiscussionChatMessage chatMessage = new PrivateDiscussionChatMessage(channelId,
                 chatUserIdentity.getChatUserProfile(),
-                peer.getProfileId(),
+                peer.getNym(),
                 text,
                 quotedMessage,
                 new Date().getTime(),

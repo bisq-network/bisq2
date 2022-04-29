@@ -76,7 +76,7 @@ public class ChatStore implements PersistableStore<ChatStore> {
                 .setSelectedTradeChannel(selectedTradeChannel.get().toProto())
                 .setSelectedDiscussionChannel(selectedDiscussionChannel.get().toProto())
                 .addAllCustomTags(customTags)
-                .addAllIgnoredChatUserIds(ignoredChatUserIds)
+                .addAllIgnoredChatUserProfileIds(ignoredChatUserIds)
                 .build();
     }
 
@@ -100,7 +100,7 @@ public class ChatStore implements PersistableStore<ChatStore> {
                 Channel.fromProto(proto.getSelectedTradeChannel()),
                 Channel.fromProto(proto.getSelectedDiscussionChannel()),
                 new HashSet<>(proto.getCustomTagsCount()),
-                new HashSet<>(proto.getIgnoredChatUserIdsList())
+                new HashSet<>(proto.getIgnoredChatUserProfileIdsList())
         );
     }
 

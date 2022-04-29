@@ -22,7 +22,7 @@ import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.PublicDiscussionChannel;
-import bisq.social.user.profile.ProfileIdGenerator;
+import bisq.social.user.profile.NymGenerator;
 import bisq.social.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -96,7 +96,7 @@ class ApiChatController extends ApiController {
     public String createUserProfile(@PathVariable("domainId") String domainId,
                                     @PathVariable("nickName") String nickName) {
         Identity identity = identityService.getOrCreateIdentity(domainId).join();
-        String profileId = ProfileIdGenerator.fromHash(identity.getNodeIdAndKeyPair().pubKey().publicKey().getEncoded());
+        String profileId = NymGenerator.fromHash(identity.getNodeIdAndKeyPair().pubKey().publicKey().getEncoded());
         return asJson(userProfileService.createNewInitializedUserProfile(profileId, nickName, "default", identity.keyPair()).join());
     }
 }

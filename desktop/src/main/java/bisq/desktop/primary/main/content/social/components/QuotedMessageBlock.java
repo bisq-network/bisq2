@@ -71,7 +71,7 @@ public class QuotedMessageBlock {
         if (text == null || text.isEmpty() || chatUserProfile == null) {
             return Optional.empty();
         }
-        return Optional.of(new Quotation(chatUserProfile.getProfileId(), chatUserProfile.getNickName(), new ByteArray(chatUserProfile.getPubKeyHash()), text));
+        return Optional.of(new Quotation(chatUserProfile.getNym(), chatUserProfile.getNickName(), new ByteArray(chatUserProfile.getPubKeyHash()), text));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -88,7 +88,7 @@ public class QuotedMessageBlock {
         private void reply(ChatMessage chatMessage) {
             ChatUserProfile author = chatMessage.getAuthor();
             model.author = author;
-            model.userName.set(author.getProfileId());
+            model.userName.set(author.getNym());
             model.roboHashNode.set(RoboHash.getImage(new ByteArray(author.getPubKeyHash())));
             model.quotation.set(chatMessage.getText());
             model.visible.set(true);

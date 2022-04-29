@@ -851,7 +851,7 @@ public class ChatMessagesComponent {
             return filterString == null ||
                     filterString.isEmpty() ||
                     StringUtils.containsIgnoreCase(message, filterString) ||
-                    StringUtils.containsIgnoreCase(author.getProfileId(), filterString) ||
+                    StringUtils.containsIgnoreCase(author.getNym(), filterString) ||
                     StringUtils.containsIgnoreCase(author.getNickName(), filterString) ||
                     StringUtils.containsIgnoreCase(date, filterString);
         }
