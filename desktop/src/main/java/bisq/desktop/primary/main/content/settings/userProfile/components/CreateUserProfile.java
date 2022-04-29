@@ -26,7 +26,7 @@ import bisq.i18n.Res;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.social.chat.ChatService;
-import bisq.social.user.UserNameGenerator;
+import bisq.social.user.profile.ProfileIdGenerator;
 import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
@@ -105,6 +105,7 @@ public class CreateUserProfile {
                             model.nickName.get(),
                             model.tempKeyId,
                             model.tempKeyPair,
+                            new HashSet<>(),
                             new HashSet<>(entitlementSelection.getVerifiedEntitlements()))
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
@@ -120,7 +121,7 @@ public class CreateUserProfile {
             model.tempKeyPair = keyPairService.generateKeyPair();
             byte[] hash = DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded());
             model.roboHashNode.set(RoboHash.getImage(new ByteArray(hash)));
-            model.profileId.set(UserNameGenerator.fromHash(hash));
+            model.profileId.set(ProfileIdGenerator.fromHash(hash));
         }
 
         private void reset() {

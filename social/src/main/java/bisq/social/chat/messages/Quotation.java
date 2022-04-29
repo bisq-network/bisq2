@@ -2,7 +2,7 @@ package bisq.social.chat.messages;
 
 import bisq.common.data.ByteArray;
 import bisq.common.proto.Proto;
-import bisq.social.user.UserNameLookup;
+import bisq.social.user.NickNameLookup;
 
 public record Quotation(String profileId, String nickName, ByteArray pubKeyHash, String message) implements Proto {
     public bisq.social.protobuf.QuotedMessage toProto() {
@@ -22,6 +22,6 @@ public record Quotation(String profileId, String nickName, ByteArray pubKeyHash,
     }
 
     public String getUserName() {
-        return UserNameLookup.getUserName(profileId, nickName);
+        return NickNameLookup.getUserName(profileId, nickName);
     }
 }

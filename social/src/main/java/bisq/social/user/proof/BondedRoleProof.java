@@ -15,24 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user.reputation.source;
+package bisq.social.user.proof;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+public record BondedRoleProof(String txId, String signature) implements Proof {
+    @Override
+    public bisq.social.protobuf.Proof toProto() {
+        return getProofBuilder().setBondedRoleProof(
+                        bisq.social.protobuf.BondedRoleProof.newBuilder()
+                                .setTxId(txId)
+                                .setSignature(signature))
+                .build();
+    }
 
-@EqualsAndHashCode
-@Getter
-public class BurnedBsqAge {
-    private final ReputationSource source= ReputationSource.BURNED_BSQ_AGE;
-    private final String txId;
-    private final byte[] pubKeyHash;
-    private final long amount;
-    private final long date;
-
-    public BurnedBsqAge(String txId, byte[] pubKeyHash, long amount, long date) {
-        this.txId = txId;
-        this.pubKeyHash = pubKeyHash;
-        this.amount = amount;
-        this.date = date;
+    public static BondedRoleProof fromProto(bisq.social.protobuf.BondedRoleProof proto) {
+        return new BondedRoleProof(proto.getTxId(), proto.getSignature());
     }
 }

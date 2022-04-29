@@ -29,7 +29,7 @@ import java.util.Set;
 // add weak references and use bindings
 // persist profileIdsByNickName as well
 @Slf4j
-public class UserNameLookup {
+public class NickNameLookup {
     private static final String SEPARATOR_START = " [";
     private static final String SEPARATOR_END = "]";
     private static final int MAX_PROFILE_ID_LENGTH = Integer.MAX_VALUE;

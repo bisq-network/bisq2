@@ -39,32 +39,47 @@ message InvitationProof {
   string invitationCode = 1;
 }
 message Proof {
+  enum Type {
+    PROOF_OF_BURN = 0;
+    BONDED_ROLE = 1;
+    CHANNEL_ADMIN_INVITATION = 2;
+  }
   oneof message {
     ProofOfBurnProof proofOfBurnProof = 1;
     BondedRoleProof bondedRoleProof = 2;
     InvitationProof invitationProof = 3;
   }
 }
-message Entitlement {
+
+message Role {
   enum Type {
-    LIQUIDITY_PROVIDER = 0;
-    CHANNEL_ADMIN = 1;
-    CHANNEL_MODERATOR = 2;
-    MEDIATOR = 3;
+    CHANNEL_ADMIN = 0;
+    CHANNEL_MODERATOR = 1;
+    MEDIATOR = 2;
   }
-  enum ProofType {
-    PROOF_OF_BURN = 0;
-    BONDED_ROLE = 1;
-    CHANNEL_ADMIN_INVITATION = 2;
-  }
-  string entitlementType = 1;
+ 
+  string type = 1;
   Proof proof = 2;
 }
 
+
+message Reputation {
+  enum Type {
+    BURNED_BSQ = 0;
+    BURNED_BSQ_AGE = 1;
+    IDENTITY_AGE = 2;
+    BISQ1_ACCOUNT_AGE = 3;
+    BISQ1_SIGNED_ACCOUNT_AGE_WITNESS = 4;
+  }
+
+  string type = 1;
+  Proof proof = 2;
+}
 message ChatUser {
   string nickName = 1;
   network.NetworkId networkId = 2;
-  repeated Entitlement entitlements = 3;
+  repeated Reputation reputation = 3;
+  repeated Role roles = 4;
 }
 message QuotedMessage {
   string profileId = 1;
@@ -114,8 +129,7 @@ enum NotificationSetting {
 
 message UserProfile {
   identity.Identity identity = 1;
-  string nickName = 2;
-  repeated Entitlement entitlements = 3;
+  ChatUser chatUser = 2;
 }
 
 // Channels

@@ -22,7 +22,8 @@ import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import bisq.social.user.Entitlement;
+import bisq.social.user.proof.Proof;
+import bisq.social.user.proof.ProofOfBurnProof;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,7 +39,7 @@ import java.util.stream.Collectors;
 public class UserProfileStore implements PersistableStore<UserProfileStore> {
     private final Observable<UserProfile> selectedUserProfile = new Observable<>();
     private final ObservableSet<UserProfile> userProfiles;
-    private final Map<String, Entitlement.ProofOfBurnProof> verifiedProofOfBurnProofs = new HashMap<>();
+    private final Map<String, ProofOfBurnProof> verifiedProofOfBurnProofs = new HashMap<>();
 
     public UserProfileStore() {
         userProfiles = new ObservableSet<>();
@@ -46,7 +47,7 @@ public class UserProfileStore implements PersistableStore<UserProfileStore> {
 
     private UserProfileStore(UserProfile selectedUserProfile,
                              Set<UserProfile> userProfiles,
-                             Map<String, Entitlement.ProofOfBurnProof> verifiedProofOfBurnProofs) {
+                             Map<String, ProofOfBurnProof> verifiedProofOfBurnProofs) {
         this.selectedUserProfile.set(selectedUserProfile);
         this.userProfiles = new ObservableSet<>(userProfiles);
         this.verifiedProofOfBurnProofs.putAll(verifiedProofOfBurnProofs);
@@ -69,7 +70,7 @@ public class UserProfileStore implements PersistableStore<UserProfileStore> {
                         .collect(Collectors.toSet()),
                 proto.getVerifiedProofOfBurnProofsMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> (Entitlement.ProofOfBurnProof) Entitlement.Proof.fromProto(e.getValue()))));
+                                e -> (ProofOfBurnProof) Proof.fromProto(e.getValue()))));
     }
 
     @Override
@@ -103,7 +104,7 @@ public class UserProfileStore implements PersistableStore<UserProfileStore> {
         return userProfiles;
     }
 
-    Map<String, Entitlement.ProofOfBurnProof> getVerifiedProofOfBurnProofs() {
+    Map<String, ProofOfBurnProof> getVerifiedProofOfBurnProofs() {
         return verifiedProofOfBurnProofs;
     }
 }

@@ -15,12 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user.reputation.source;
+package bisq.social.user.proof;
 
-public enum ReputationSource {
-    BURNED_BSQ,
-    BURNED_BSQ_AGE,
-    IDENTITY_AGE,
-    BISQ1_ACCOUNT_AGE,
-    BISQ1_SIGNED_ACCOUNT_AGE_WITNESS
+public record InvitationProof(String invitationCode) implements Proof {
+    @Override
+    public bisq.social.protobuf.Proof toProto() {
+        return getProofBuilder().setInvitationProof(
+                        bisq.social.protobuf.InvitationProof.newBuilder()
+                                .setInvitationCode(invitationCode))
+                .build();
+    }
+
+    public static InvitationProof fromProto(bisq.social.protobuf.InvitationProof proto) {
+        return new InvitationProof(proto.getInvitationCode());
+    }
 }

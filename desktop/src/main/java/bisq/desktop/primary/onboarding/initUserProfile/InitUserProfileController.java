@@ -29,14 +29,12 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.social.chat.ChatService;
-import bisq.social.user.UserNameGenerator;
+import bisq.social.user.profile.ProfileIdGenerator;
 import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import java.util.HashSet;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -78,8 +76,7 @@ public class InitUserProfileController implements Controller {
         userProfileService.createNewInitializedUserProfile(profileId,
                         model.getNickName().get(),
                         model.tempKeyId,
-                        model.tempKeyPair,
-                        new HashSet<>())
+                        model.tempKeyPair)
                 .thenAccept(userProfile -> {
                     UIThread.run(() -> {
                         checkArgument(userProfile.getIdentity().domainId().equals(profileId));
@@ -94,6 +91,6 @@ public class InitUserProfileController implements Controller {
         model.tempKeyPair = keyPairService.generateKeyPair();
         byte[] hash = DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded());
         model.roboHashNode.set(RoboHash.getImage(new ByteArray(hash)));
-        model.profileId.set(UserNameGenerator.fromHash(hash));
+        model.profileId.set(ProfileIdGenerator.fromHash(hash));
     }
 }

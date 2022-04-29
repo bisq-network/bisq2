@@ -20,15 +20,9 @@ package bisq.social.user.profile;
 import bisq.common.proto.Proto;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
-import bisq.security.DigestUtil;
 import bisq.social.user.ChatUser;
-import bisq.social.user.Entitlement;
-import bisq.social.user.UserNameGenerator;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Local user profile. Not shared over network.
@@ -37,17 +31,11 @@ import java.util.stream.Collectors;
 @Getter
 public class UserProfile implements Proto {
     private final Identity identity;
-    private final String nickName;
-    private final Set<Entitlement> entitlements;
-    private final String profileId;
     private final ChatUser chatUser;
 
-    public UserProfile(Identity identity, String nickName, Set<Entitlement> entitlements) {
+    public UserProfile(Identity identity, ChatUser chatUser) {
         this.identity = identity;
-        this.nickName = nickName;
-        this.entitlements = entitlements;
-        profileId = UserNameGenerator.fromHash(DigestUtil.hash(identity.networkId().getPubKey().publicKey().getEncoded()));
-        chatUser = new ChatUser(nickName, identity.networkId(), entitlements);
+        this.chatUser = chatUser;
     }
 
     public byte[] getPubKeyHash() {
@@ -55,20 +43,26 @@ public class UserProfile implements Proto {
     }
 
     public String getTooltipString() {
-        return Res.get("social.chatUser.tooltip", nickName, getProfileId());
+        return Res.get("social.chatUser.tooltip", chatUser.getNickName(), getProfileId());
     }
 
     public bisq.social.protobuf.UserProfile toProto() {
         return bisq.social.protobuf.UserProfile.newBuilder()
                 .setIdentity(identity.toProto())
-                .setNickName(nickName)
-                .addAllEntitlements(entitlements.stream().map(Entitlement::toProto).collect(Collectors.toList()))
+                .setChatUser(chatUser.toProto())
                 .build();
     }
 
     public static UserProfile fromProto(bisq.social.protobuf.UserProfile proto) {
         return new UserProfile(Identity.fromProto(proto.getIdentity()),
-                proto.getNickName(),
-                proto.getEntitlementsList().stream().map(Entitlement::fromProto).collect(Collectors.toSet()));
+                ChatUser.fromProto(proto.getChatUser()));
+    }
+
+    public String getProfileId() {
+        return chatUser.getProfileId();
+    }
+
+    public String getNickName() {
+        return chatUser.getNickName();
     }
 }

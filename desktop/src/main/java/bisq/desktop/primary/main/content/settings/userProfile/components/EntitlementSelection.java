@@ -28,7 +28,9 @@ import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.security.DigestUtil;
-import bisq.social.user.Entitlement;
+import bisq.social.user.entitlement.Role;
+import bisq.social.user.proof.Proof;
+import bisq.social.user.proof.ProofOfBurnProof;
 import bisq.social.user.profile.UserProfileService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -76,8 +78,8 @@ public class EntitlementSelection {
         controller.model.keyPair = keyPair;
     }
 
-    public Set<Entitlement> getVerifiedEntitlements() {
-        return controller.model.verifiedEntitlements;
+    public Set<Role> getVerifiedEntitlements() {
+        return controller.model.verifiedRoles;
     }
 
     @Slf4j
@@ -100,7 +102,7 @@ public class EntitlementSelection {
         }
 
         private void reset() {
-            model.verifiedEntitlements.clear();
+            model.verifiedRoles.clear();
             model.tableVisible.set(false);
         }
 
@@ -108,22 +110,22 @@ public class EntitlementSelection {
         public void onDeactivate() {
         }
 
-        private CompletableFuture<Optional<Entitlement.ProofOfBurnProof>> onVerifyProofOfBurn(EntitlementItem entitlementItem,
-                                                                                              String pubKeyHash,
-                                                                                              String proofOfBurnTxId) {
+        private CompletableFuture<Optional<ProofOfBurnProof>> onVerifyProofOfBurn(EntitlementItem entitlementItem,
+                                                                                  String pubKeyHash,
+                                                                                  String proofOfBurnTxId) {
             return userProfileService.verifyProofOfBurn(entitlementItem.getType(), proofOfBurnTxId, pubKeyHash)
                     .whenComplete((proof, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null && proof.isPresent()) {
-                                model.verifiedEntitlements.add(new Entitlement(entitlementItem.getType(), proof.get()));
+                                model.verifiedRoles.add(new Role(entitlementItem.getType(), proof.get()));
                             } else {
-                                log.warn("Error at entitlementType verification."); // todo 
+                                log.warn("Error at type verification."); // todo 
                             }
                         });
                     });
         }
 
-        private CompletableFuture<Optional<Entitlement.Proof>> onVerifyBondedRole(EntitlementItem entitlementItem, String bondedRoleTxId, String pubKeyHash, String bondedRoleSig) {
+        private CompletableFuture<Optional<Proof>> onVerifyBondedRole(EntitlementItem entitlementItem, String bondedRoleTxId, String pubKeyHash, String bondedRoleSig) {
             return userProfileService.verifyBondedRole(bondedRoleTxId,
                             bondedRoleSig,
                             pubKeyHash)
@@ -131,29 +133,29 @@ public class EntitlementSelection {
                         UIThread.run(() -> {
                             if (throwable == null) {
                                 if (proof.isPresent()) {
-                                    model.verifiedEntitlements.add(new Entitlement(entitlementItem.getType(), proof.get()));
+                                    model.verifiedRoles.add(new Role(entitlementItem.getType(), proof.get()));
                                 } else {
                                     log.warn("Entitlement verification failed."); // todo 
                                 }
                             } else {
-                                log.warn("Error at entitlementType verification."); // todo 
+                                log.warn("Error at type verification."); // todo 
                             }
                         });
                     });
         }
 
-        private CompletableFuture<Optional<Entitlement.Proof>> onVerifyModerator(EntitlementItem entitlementItem, String invitationCode) {
+        private CompletableFuture<Optional<Proof>> onVerifyModerator(EntitlementItem entitlementItem, String invitationCode) {
             return userProfileService.verifyModerator(invitationCode, model.keyPair.getPublic())
                     .whenComplete((proof, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null) {
                                 if (proof.isPresent()) {
-                                    model.verifiedEntitlements.add(new Entitlement(entitlementItem.getType(), proof.get()));
+                                    model.verifiedRoles.add(new Role(entitlementItem.getType(), proof.get()));
                                 } else {
                                     log.warn("Entitlement verification failed."); // todo 
                                 }
                             } else {
-                                log.warn("Error at entitlementType verification."); // todo 
+                                log.warn("Error at type verification."); // todo 
                             }
                         });
                     });
@@ -172,8 +174,8 @@ public class EntitlementSelection {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final Set<Entitlement> verifiedEntitlements = new HashSet<>();
-        private final ObservableList<EntitlementItem> observableList = FXCollections.observableArrayList(Stream.of(Entitlement.Type.values())
+        private final Set<Role> verifiedRoles = new HashSet<>();
+        private final ObservableList<EntitlementItem> observableList = FXCollections.observableArrayList(Stream.of(Role.Type.values())
                 .map(EntitlementItem::new)
                 .collect(Collectors.toList()));
         private final SortedList<EntitlementItem> sortedList = new SortedList<>(observableList);
@@ -250,11 +252,11 @@ public class EntitlementSelection {
     @Getter
     private static class EntitlementItem implements TableItem {
         private final String typeName;
-        private final Entitlement.Type type;
+        private final Role.Type type;
         @Setter
         private Button button;
 
-        private EntitlementItem(Entitlement.Type type) {
+        private EntitlementItem(Role.Type type) {
             this.type = type;
             String info = switch (type) {
                 case LIQUIDITY_PROVIDER -> Res.get("social.createUserProfile.liquidityProvider.info");
@@ -288,13 +290,13 @@ public class EntitlementSelection {
             this.model = model;
             this.entitlementItem = entitlementItem;
             headLine(Res.get("social.createUserProfile.entitlement.popup.headline"));
-            if (entitlementItem.getType().getProofTypes().contains(Entitlement.ProofType.CHANNEL_ADMIN_INVITATION)) {
+            if (entitlementItem.getType().getTypes().contains(Proof.Type.CHANNEL_ADMIN_INVITATION)) {
                 message(Res.get("social.createUserProfile.entitlement.popup.moderator.message"));
                 actionButtonText(Res.get("social.createUserProfile.table.entitlement.verify"));
-            } else if (entitlementItem.getType().getProofTypes().contains(Entitlement.ProofType.PROOF_OF_BURN)) {
+            } else if (entitlementItem.getType().getTypes().contains(Proof.Type.PROOF_OF_BURN)) {
                 message(Res.get("social.createUserProfile.entitlement.popup.proofOfBurn.message"));
                 actionButtonText(Res.get("social.createUserProfile.table.entitlement.liquidityProvider.confirmProofOfBurn"));
-            } else if (entitlementItem.getType().getProofTypes().contains(Entitlement.ProofType.BONDED_ROLE)) {
+            } else if (entitlementItem.getType().getTypes().contains(Proof.Type.BONDED_ROLE)) {
                 message(Res.get("social.createUserProfile.entitlement.popup.bondedRole.message"));
                 actionButtonText(Res.get("social.createUserProfile.table.entitlement.verify"));
             }

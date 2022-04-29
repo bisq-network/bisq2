@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user;
+package bisq.social.user.profile;
 
 import bisq.common.util.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
@@ -33,7 +33,7 @@ import java.util.Scanner;
  * Algorithm and word lists borrowed from: https://raw.githubusercontent.com/Reckless-Satoshi/robosats/main/api/nick_generator/
  */
 @Slf4j
-public class UserNameGenerator {
+public class ProfileIdGenerator {
     private static final BigInteger MAX_INTEGER = BigInteger.valueOf(Integer.MAX_VALUE);
     private static final String DEFAULT_SEPARATOR = "-";
 

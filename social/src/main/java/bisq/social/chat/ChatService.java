@@ -39,7 +39,8 @@ import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
 import bisq.social.offer.TradeChatOffer;
 import bisq.social.user.ChatUser;
-import bisq.social.user.Entitlement;
+import bisq.social.user.proof.BondedRoleProof;
+import bisq.social.user.entitlement.Role;
 import bisq.social.user.profile.UserProfile;
 import bisq.social.user.profile.UserProfileService;
 import lombok.Getter;
@@ -267,7 +268,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public Optional<PrivateTradeChannel> createPrivateTradeChannel(ChatUser peer) {
         return Optional.ofNullable(userProfileService.getSelectedUserProfile().get())
-                .flatMap(e -> createPrivateTradeChannel(peer, e.getProfileId()));
+                .flatMap(userProfile -> createPrivateTradeChannel(peer, userProfile.getProfileId()));
     }
 
     public Optional<PrivateTradeChannel> createPrivateTradeChannel(ChatUser peer, String receiversProfileId) {
@@ -324,17 +325,18 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public CompletableFuture<Optional<PublicDiscussionChannel>> addPublicDiscussionChannel(UserProfile userProfile,
                                                                                            String channelName,
                                                                                            String description) {
-        return userProfile.getEntitlements().stream()
-                .filter(entitlement -> entitlement.entitlementType() == Entitlement.Type.CHANNEL_ADMIN)
-                .filter(entitlement -> entitlement.proof() instanceof Entitlement.BondedRoleProof)
-                .map(entitlement -> (Entitlement.BondedRoleProof) entitlement.proof())
+        return userProfile.getChatUser().getRoles().stream()
+                .filter(entitlement -> entitlement.type() == Role.Type.CHANNEL_ADMIN)
+                .filter(entitlement -> entitlement.proof() instanceof BondedRoleProof)
+                .map(entitlement -> (BondedRoleProof) entitlement.proof())
                 .map(bondedRoleProof -> userProfileService.verifyBondedRole(bondedRoleProof.txId(),
                         bondedRoleProof.signature(),
                         userProfile.getChatUser().getId()))
                 .map(future -> future.thenApply(optionalProof -> optionalProof.map(e -> {
-                            ChatUser chatUser = new ChatUser(userProfile.getNickName(),
+                            ChatUser chatUser = new ChatUser(userProfile.getChatUser().getNickName(),
                                     userProfile.getIdentity().networkId(),
-                                    userProfile.getEntitlements());
+                                    userProfile.getChatUser().getReputation(),
+                                    userProfile.getChatUser().getRoles());
                             PublicDiscussionChannel publicDiscussionChannel = new PublicDiscussionChannel(StringUtils.createUid(),
                                     channelName,
                                     description,

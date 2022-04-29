@@ -70,9 +70,9 @@ public class UserProfileDisplay {
                     userProfile -> {
                         model.userName.set(userProfile.getIdentity().domainId());
                         model.id.set(Res.get("social.createUserProfile.id", userProfile.getChatUser().getId()));
-                        String entitledRoles = userProfile.getEntitlements().stream().map(e -> Res.get(e.entitlementType().name())).collect(Collectors.joining(", "));
+                        String entitledRoles = userProfile.getChatUser().getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
                         model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
-                        model.entitlementsVisible.set(!userProfile.getEntitlements().isEmpty());
+                        model.entitlementsVisible.set(!userProfile.getChatUser().getRoles().isEmpty());
                         model.roboHashNode.set(RoboHash.getImage(new ByteArray(userProfile.getChatUser().getPubKeyHash())));
                     });
         }

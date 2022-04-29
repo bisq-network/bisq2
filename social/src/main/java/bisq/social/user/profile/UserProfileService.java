@@ -35,10 +35,10 @@ import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.KeyPairService;
 import bisq.security.SignatureUtil;
-import bisq.social.user.BsqTxValidator;
-import bisq.social.user.BtcTxValidator;
 import bisq.social.user.ChatUser;
-import bisq.social.user.Entitlement;
+import bisq.social.user.entitlement.Role;
+import bisq.social.user.proof.*;
+import bisq.social.user.reputation.Reputation;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonSyntaxException;
@@ -104,15 +104,23 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //todo we added a nickname
+    public CompletableFuture<UserProfile> createNewInitializedUserProfile(String profileId,
+                                                                          String nickName,
+                                                                          String keyId,
+                                                                          KeyPair keyPair) {
+        return createNewInitializedUserProfile(profileId, nickName, keyId, keyPair, new HashSet<>(), new HashSet<>());
+    }
+
     public CompletableFuture<UserProfile> createNewInitializedUserProfile(String profileId,
                                                                           String nickName,
                                                                           String keyId,
                                                                           KeyPair keyPair,
-                                                                          Set<Entitlement> entitlements) {
+                                                                          Set<Reputation> reputation,
+                                                                          Set<Role> roles) {
         return identityService.createNewInitializedIdentity(profileId, keyId, keyPair)
                 .thenApply(identity -> {
-                    UserProfile userProfile = new UserProfile(identity, nickName, entitlements);
+                    ChatUser chatUser = new ChatUser(nickName, identity.getNodeIdAndKeyPair().networkId(), reputation, roles);
+                    UserProfile userProfile = new UserProfile(identity, chatUser);
                     synchronized (lock) {
                         persistableStore.getUserProfiles().add(userProfile);
                         persistableStore.getSelectedUserProfile().set(userProfile);
@@ -131,26 +139,26 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         return persistableStore.getUserProfiles().isEmpty();
     }
 
-    public CompletableFuture<Optional<ChatUser.BurnInfo>> findBurnInfoAsync(byte[] pubKeyHash, Set<Entitlement> entitlements) {
-        if (entitlements.stream().noneMatch(e -> e.entitlementType() == Entitlement.Type.LIQUIDITY_PROVIDER)) {
+    public CompletableFuture<Optional<ChatUser.BurnInfo>> findBurnInfoAsync(byte[] pubKeyHash, Set<Role> roles) {
+        if (roles.stream().noneMatch(e -> e.type() == Role.Type.LIQUIDITY_PROVIDER)) {
             return CompletableFuture.completedFuture(Optional.empty());
         }
-        return CompletableFutureUtils.allOf(entitlements.stream()
-                        .filter(e -> e.proof() instanceof Entitlement.ProofOfBurnProof)
-                        .map(e -> (Entitlement.ProofOfBurnProof) e.proof())
-                        .map(proof -> verifyProofOfBurn(Entitlement.Type.LIQUIDITY_PROVIDER, proof.txId(), pubKeyHash))
+        return CompletableFutureUtils.allOf(roles.stream()
+                        .filter(e -> e.proof() instanceof ProofOfBurnProof)
+                        .map(e -> (ProofOfBurnProof) e.proof())
+                        .map(proof -> verifyProofOfBurn(getMinBurnAmount(Role.Type.LIQUIDITY_PROVIDER), proof.txId(), pubKeyHash))
                 )
                 .thenApply(list -> {
-                    List<Entitlement.ProofOfBurnProof> proofs = list.stream()
+                    List<ProofOfBurnProof> proofs = list.stream()
                             .filter(Optional::isPresent)
                             .map(Optional::get)
-                            .sorted(Comparator.comparingLong(Entitlement.ProofOfBurnProof::date))
+                            .sorted(Comparator.comparingLong(ProofOfBurnProof::date))
                             .collect(Collectors.toList());
                     if (proofs.isEmpty()) {
                         return Optional.empty();
                     } else {
                         long totalBsqBurned = proofs.stream()
-                                .mapToLong(Entitlement.ProofOfBurnProof::burntAmount)
+                                .mapToLong(ProofOfBurnProof::burntAmount)
                                 .sum();
                         long firstBurnDate = proofs.get(0).date();
                         return Optional.of(new ChatUser.BurnInfo(totalBsqBurned, firstBurnDate));
@@ -158,13 +166,18 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                 });
     }
 
-    public CompletableFuture<Optional<Entitlement.ProofOfBurnProof>> verifyProofOfBurn(Entitlement.Type type, String proofOfBurnTxId, String pubKeyHash) {
-        return verifyProofOfBurn(type, proofOfBurnTxId, Hex.decode(pubKeyHash));
+    public CompletableFuture<Optional<ProofOfBurnProof>> verifyProofOfBurn(String proofOfBurnTxId, String pubKeyHash) {
+        return verifyProofOfBurn(0, proofOfBurnTxId, Hex.decode(pubKeyHash));
     }
 
-    public CompletableFuture<Optional<Entitlement.ProofOfBurnProof>> verifyProofOfBurn(Entitlement.Type type,
-                                                                                       String _txId,
-                                                                                       byte[] pubKeyHash) {
+
+    public CompletableFuture<Optional<ProofOfBurnProof>> verifyProofOfBurn(Role.Type type, String proofOfBurnTxId, String pubKeyHash) {
+        return verifyProofOfBurn(getMinBurnAmount(type), proofOfBurnTxId, Hex.decode(pubKeyHash));
+    }
+
+    public CompletableFuture<Optional<ProofOfBurnProof>> verifyProofOfBurn(long minBurnAmount,
+                                                                           String _txId,
+                                                                           byte[] pubKeyHash) {
         String txId;
         // We use as preImage in the DAO String.getBytes(Charsets.UTF_8) to get bytes from the input string (not hex 
         // as hex would be more restrictive for arbitrary inputs)
@@ -182,7 +195,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         }
         preImage = pubKeyHashAsHex.getBytes(Charsets.UTF_8);
 
-        Map<String, Entitlement.ProofOfBurnProof> verifiedProofOfBurnProofs = persistableStore.getVerifiedProofOfBurnProofs();
+        Map<String, ProofOfBurnProof> verifiedProofOfBurnProofs = persistableStore.getVerifiedProofOfBurnProofs();
         if (verifiedProofOfBurnProofs.containsKey(pubKeyHashAsHex)) {
             return CompletableFuture.completedFuture(Optional.of(verifiedProofOfBurnProofs.get(pubKeyHashAsHex)));
         } else {
@@ -194,7 +207,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                     checkArgument(BsqTxValidator.isBsqTx(httpClient.getBaseUrl()), txId + " is Nnt a valid Bsq tx");
                     checkArgument(BsqTxValidator.isProofOfBurn(jsonBsqTx), txId + " is not a proof of burn transaction");
                     long burntAmount = BsqTxValidator.getBurntAmount(jsonBsqTx);
-                    checkArgument(burntAmount >= getMinBurnAmount(type), "Insufficient BSQ burn. burntAmount=" + burntAmount);
+                    checkArgument(burntAmount >= minBurnAmount, "Insufficient BSQ burn. burntAmount=" + burntAmount);
                     String hashOfPreImage = Hex.encode(DigestUtil.hash(preImage));
                     BsqTxValidator.getOpReturnData(jsonBsqTx).ifPresentOrElse(
                             opReturnData -> {
@@ -208,7 +221,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                                 throw new IllegalArgumentException("no opReturn element found");
                             });
                     long date = BsqTxValidator.getValidatedTxDate(jsonBsqTx);
-                    Entitlement.ProofOfBurnProof verifiedProof = new Entitlement.ProofOfBurnProof(txId, burntAmount, date);
+                    ProofOfBurnProof verifiedProof = new ProofOfBurnProof(txId, burntAmount, date);
                     verifiedProofOfBurnProofs.put(pubKeyHashAsHex, verifiedProof);
                     persist();
                     return Optional.of(verifiedProof);
@@ -230,7 +243,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         }
     }
 
-    public CompletableFuture<Optional<Entitlement.Proof>> verifyBondedRole(String txId, String signature, String pubKeyHash) {
+    public CompletableFuture<Optional<Proof>> verifyBondedRole(String txId, String signature, String pubKeyHash) {
         // inputs: txid, signature from Bisq1
         // process: get txinfo, grab pubkey from 1st output
         // verify provided signature matches with pubkey from 1st output and hash of provided identity pubkey
@@ -248,7 +261,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
                 PublicKey signingPubKey = KeyGeneration.generatePublicFromCompressed(Hex.decode(signingPubkeyAsHex));
                 boolean signatureMatches = SignatureUtil.verify(formatMessageForSigning(pubKeyHash), bitcoinSigToDer(signature), signingPubKey);
                 checkArgument(signatureMatches, "signature");
-                return Optional.of(new Entitlement.BondedRoleProof(txId, signature));
+                return Optional.of(new BondedRoleProof(txId, signature));
             } catch (IllegalArgumentException e) {
                 log.warn("check failed: {}", e.getMessage(), e);
             } catch (IOException e) {
@@ -264,13 +277,13 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         });
     }
 
-    public CompletableFuture<Optional<Entitlement.Proof>> verifyModerator(String invitationCode, PublicKey publicKey) {
+    public CompletableFuture<Optional<Proof>> verifyModerator(String invitationCode, PublicKey publicKey) {
         //todo
-        return CompletableFuture.completedFuture(Optional.of(new Entitlement.InvitationProof(invitationCode)));
+        return CompletableFuture.completedFuture(Optional.of(new InvitationProof(invitationCode)));
     }
 
     //todo work out concept how to adjust those values
-    public long getMinBurnAmount(Entitlement.Type type) {
+    public long getMinBurnAmount(Role.Type type) {
         return switch (type) {
             //todo for dev testing reduced to 6 BSQ
             case LIQUIDITY_PROVIDER -> USE_DEV_TEST_POB_VALUES ? 600 : 5000;
