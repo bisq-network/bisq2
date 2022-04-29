@@ -30,13 +30,23 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
                                   Consumer<Runnable> executor) {
 
         public void add(M element) {
-            executor.accept(() -> collection.add(mapFunction.apply(element)));
+            executor.accept(() -> {
+                L item = mapFunction.apply(element);
+                if (!collection.contains(item)) {
+                    collection.add(item);
+                }
+            });
         }
 
         public void addAll(Collection<? extends M> values) {
-            executor.accept(() -> collection.addAll(values.stream()
-                    .map(mapFunction)
-                    .collect(Collectors.toList())));
+            executor.accept(() -> {
+                values.forEach(element -> {
+                    L item = mapFunction.apply(element);
+                    if (!collection.contains(item)) {
+                        collection.add(item);
+                    }
+                });
+            });
         }
 
         public void remove(Object element) {
