@@ -88,8 +88,8 @@ message ChatUserIdentity {
   ChatUser chatUser = 2;
 }
 
-message QuotedMessage {
-  string profileId = 1;
+message Quotation {
+  string nym = 1;
   string nickName = 2;
   common.ByteArray pubKeyHash = 3;
   string message = 4;
@@ -116,7 +116,7 @@ message ChatMessage {
   string channelId = 1;
   optional string text = 2;
   ChatUser author = 3;
-  optional QuotedMessage quotedMessage = 4;
+  optional Quotation quotation = 4;
   uint64 date = 5;
   bool wasEdited = 6;
   network.MetaData metaData = 7;

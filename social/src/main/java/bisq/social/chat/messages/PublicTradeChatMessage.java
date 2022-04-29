@@ -78,8 +78,8 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
     }
 
     public static PublicTradeChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
-        Optional<Quotation> quotedMessage = baseProto.hasQuotedMessage() ?
-                Optional.of(Quotation.fromProto(baseProto.getQuotedMessage())) :
+        Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
+                Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
         Optional<String> text = baseProto.hasText() ?
                 Optional.of(baseProto.getText()) :

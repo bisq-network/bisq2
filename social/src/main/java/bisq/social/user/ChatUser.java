@@ -99,7 +99,7 @@ public class ChatUser implements Proto {
     }
 
     public String getUserName() {
-        return NickNameLookup.getUserName(nym, nickName);
+        return NymLookup.getUserName(nym, nickName);
     }
 
     //todo

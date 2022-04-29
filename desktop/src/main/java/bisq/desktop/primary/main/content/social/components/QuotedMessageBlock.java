@@ -71,7 +71,7 @@ public class QuotedMessageBlock {
         if (text == null || text.isEmpty() || chatUser == null) {
             return Optional.empty();
         }
-        return Optional.of(new Quotation(chatUser.getNym(), chatUser.getNickName(), new ByteArray(chatUser.getPubKeyHash()), text));
+        return Optional.of(new Quotation(chatUser.getId(), chatUser.getNickName(), new ByteArray(chatUser.getPubKeyHash()), text));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {

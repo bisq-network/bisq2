@@ -42,7 +42,7 @@ public abstract class ChatMessage {
     @Getter
     protected ChatUser author;
     @Getter
-    protected final Optional<Quotation> quotedMessage;
+    protected final Optional<Quotation> quotation;
     @Getter
     protected final long date;
     @Getter
@@ -53,14 +53,14 @@ public abstract class ChatMessage {
     protected ChatMessage(String channelId,
                           ChatUser author,
                           Optional<String> text,
-                          Optional<Quotation> quotedMessage,
+                          Optional<Quotation> quotation,
                           long date,
                           boolean wasEdited,
                           MetaData metaData) {
         this.channelId = channelId;
         this.author = author;
         this.optionalText = text;
-        this.quotedMessage = quotedMessage;
+        this.quotation = quotation;
         this.date = date;
         this.wasEdited = wasEdited;
         this.metaData = metaData;
@@ -77,7 +77,7 @@ public abstract class ChatMessage {
                 .setDate(date)
                 .setWasEdited(wasEdited)
                 .setMetaData(metaData.toProto());
-        quotedMessage.ifPresent(quotedMessage -> builder.setQuotedMessage(quotedMessage.toProto()));
+        quotation.ifPresent(quotedMessage -> builder.setQuotation(quotedMessage.toProto()));
         optionalText.ifPresent(builder::setText);
         return builder;
     }

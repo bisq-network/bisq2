@@ -199,7 +199,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                 chatUserIdentity.getChatUser(),
                                 Optional.empty(),
                                 Optional.of(editedText),
-                                originalChatMessage.getQuotedMessage(),
+                                originalChatMessage.getQuotation(),
                                 originalChatMessage.getDate(),
                                 true);
                         networkService.publishAuthenticatedData(newChatMessage, nodeIdAndKeyPair);
@@ -376,7 +376,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                         PublicDiscussionChatMessage newChatMessage = new PublicDiscussionChatMessage(originalChatMessage.getChannelId(),
                                 chatUserIdentity.getChatUser(),
                                 editedText,
-                                originalChatMessage.getQuotedMessage(),
+                                originalChatMessage.getQuotation(),
                                 originalChatMessage.getDate(),
                                 true);
                         networkService.publishAuthenticatedData(newChatMessage, nodeIdAndKeyPair);

@@ -90,8 +90,8 @@ public class PrivateDiscussionChatMessage extends ChatMessage implements Mailbox
     }
 
     public static PrivateDiscussionChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
-        Optional<Quotation> quotedMessage = baseProto.hasQuotedMessage() ?
-                Optional.of(Quotation.fromProto(baseProto.getQuotedMessage())) :
+        Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
+                Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
         return new PrivateDiscussionChatMessage(
                 baseProto.getChannelId(),

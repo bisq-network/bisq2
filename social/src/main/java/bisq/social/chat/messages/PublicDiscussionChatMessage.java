@@ -70,8 +70,8 @@ public class PublicDiscussionChatMessage extends ChatMessage implements Distribu
     }
 
     public static PublicDiscussionChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
-        Optional<Quotation> quotedMessage = baseProto.hasQuotedMessage() ?
-                Optional.of(Quotation.fromProto(baseProto.getQuotedMessage())) :
+        Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
+                Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
         return new PublicDiscussionChatMessage(
                 baseProto.getChannelId(),

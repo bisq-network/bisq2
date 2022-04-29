@@ -634,7 +634,7 @@ public class ChatMessagesComponent {
                                     quotedMessageBox.setManaged(true);
                                     Quotation quotation = optionalQuotation.get();
                                     if (quotation.nickName() != null &&
-                                            quotation.profileId() != null &&
+                                            quotation.nym() != null &&
                                             quotation.pubKeyHash() != null &&
                                             quotation.message() != null) {
                                         Region verticalLine = new Region();
@@ -836,7 +836,7 @@ public class ChatMessagesComponent {
             author = chatMessage.getAuthor();
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getText() + editPostFix;
-            quotedMessage = chatMessage.getQuotedMessage();
+            quotedMessage = chatMessage.getQuotation();
             time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
             date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));
         }
