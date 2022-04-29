@@ -24,6 +24,7 @@ import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.PublicDiscussionChannel;
 import bisq.social.user.UserNameGenerator;
 import bisq.social.user.profile.UserProfileService;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,17 +50,17 @@ class ApiChatController extends ApiController {
     }
 
     @GetMapping(path = "/api/chat/get-public-trade-channels")
-    public List<String> getPublicTradeChannels() {
+    public List<JsonNode> getPublicTradeChannels() {
         return chatService.getPublicTradeChannels().stream().map(this::asJson).collect(Collectors.toList());
     }
 
     @GetMapping(path = "/api/chat/get-public-discussion-channels")
-    public List<String> getPublicDiscussionChannels() {
+    public List<JsonNode> getPublicDiscussionChannels() {
         return chatService.getPublicDiscussionChannels().stream().map(this::asJson).collect(Collectors.toList());
     }
 
     @GetMapping(path = "/api/chat/get-selected-trade-channel")
-    public String getSelectedTradeChannel() {
+    public JsonNode getSelectedTradeChannel() {
         return asJson(chatService.getSelectedTradeChannel().get());
     }
 
@@ -84,18 +85,18 @@ class ApiChatController extends ApiController {
     }
 
     @GetMapping(path = "/api/chat/get-selected-user-profile")
-    public String getSelectedUserProfile() {
+    public JsonNode getSelectedUserProfile() {
         return asJson(userProfileService.getSelectedUserProfile().get());
     }
 
     @GetMapping(path = "/api/chat/get-or-create-identity/{domainId}")
-    public String getOrCreateIdentity(@PathVariable("domainId") String domainId) {
+    public JsonNode getOrCreateIdentity(@PathVariable("domainId") String domainId) {
         return asJson(identityService.getOrCreateIdentity(domainId).join());
     }
 
     @PostMapping(path = "/api/chat/create-user-profile/{domainId}/{nickName}")
-    public String createUserProfile(@PathVariable("domainId") String domainId,
-                                    @PathVariable("nickName") String nickName) {
+    public JsonNode createUserProfile(@PathVariable("domainId") String domainId,
+                                      @PathVariable("nickName") String nickName) {
         Identity identity = identityService.getOrCreateIdentity(domainId).join();
         String profileId = UserNameGenerator.fromHash(identity.getNodeIdAndKeyPair().pubKey().publicKey().getEncoded());
         return asJson(userProfileService.createNewInitializedUserProfile(profileId,
