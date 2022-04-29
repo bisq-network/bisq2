@@ -25,7 +25,6 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 /**
  * PublicChatMessage is added as public data to the distributed network storage.
@@ -46,7 +45,7 @@ public class PublicDiscussionChatMessage extends ChatMessage implements Distribu
                 quotedMessage,
                 date,
                 wasEdited,
-                new MetaData(TimeUnit.DAYS.toMillis(1), 100000, PublicDiscussionChatMessage.class.getSimpleName()));
+                new MetaData(ChatMessage.TTL, 100000, PublicDiscussionChatMessage.class.getSimpleName()));
     }
 
     protected PublicDiscussionChatMessage(String channelId,

@@ -18,12 +18,18 @@
 package bisq.social.user;
 
 import bisq.common.encoding.Hex;
-import bisq.common.proto.Proto;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
+import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
+import bisq.social.chat.messages.ChatMessage;
+import bisq.social.chat.messages.PublicTradeChatMessage;
 import bisq.social.user.entitlement.Role;
 import bisq.social.user.reputation.Reputation;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -40,26 +46,40 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 @Slf4j
 @Getter
-public class ChatUser implements Proto {
+public class ChatUser implements DistributedData {
+    // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
+    private final static long TTL = Math.round(ChatMessage.TTL * 1.2);
+    
     private final String nickName;
     private final NetworkId networkId;
     private final Set<Reputation> reputation;
     private final Set<Role> roles;
     private transient final byte[] pubKeyHash;
+    private final MetaData metaData;
     private transient final String id;
     private transient final String nym;
 
     public ChatUser(String nickName, NetworkId networkId) {
-        this(nickName, networkId, new HashSet<>(), new HashSet<>());
+        this(nickName, networkId,
+                new HashSet<>(),
+                new HashSet<>());
     }
 
     public ChatUser(String nickName, NetworkId networkId, Set<Reputation> reputation, Set<Role> roles) {
+        this(nickName, networkId,
+                reputation,
+                roles,
+                new MetaData(TTL, 100000, PublicTradeChatMessage.class.getSimpleName()));
+    }
+
+    public ChatUser(String nickName, NetworkId networkId, Set<Reputation> reputation, Set<Role> roles, MetaData metaData) {
         this.nickName = nickName;
         this.networkId = networkId;
         this.reputation = reputation;
         this.roles = roles;
 
         pubKeyHash = DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded());
+        this.metaData = metaData;
         id = Hex.encode(pubKeyHash);
         nym = NymGenerator.fromHash(pubKeyHash);
     }
@@ -76,6 +96,7 @@ public class ChatUser implements Proto {
                         .sorted()
                         .map(Role::toProto)
                         .collect(Collectors.toList()))
+                .setMetaData(metaData.toProto())
                 .build();
     }
 
@@ -86,7 +107,22 @@ public class ChatUser implements Proto {
         Set<Role> roles = proto.getRolesList().stream()
                 .map(Role::fromProto)
                 .collect(Collectors.toSet());
-        return new ChatUser(proto.getNickName(), NetworkId.fromProto(proto.getNetworkId()), reputation, roles);
+        return new ChatUser(proto.getNickName(),
+                NetworkId.fromProto(proto.getNetworkId()),
+                reputation,
+                roles,
+                MetaData.fromProto(proto.getMetaData()));
+    }
+
+
+    public static ProtoResolver<DistributedData> getResolver() {
+        return any -> {
+            try {
+                return fromProto(any.unpack(bisq.social.protobuf.ChatUser.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
     }
 
     public boolean hasEntitlementType(Role.Type type) {
@@ -99,6 +135,16 @@ public class ChatUser implements Proto {
 
     public String getUserName() {
         return NymLookup.getUserName(nym, nickName);
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return metaData;
+    }
+
+    @Override
+    public boolean isDataInvalid() {
+        return false;
     }
 
     //todo

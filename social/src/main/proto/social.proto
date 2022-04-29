@@ -81,6 +81,7 @@ message ChatUser {
   network.NetworkId networkId = 2;
   repeated Reputation reputation = 3;
   repeated Role roles = 4;
+  network.MetaData metaData = 5;
 }
 
 message ChatUserIdentity {

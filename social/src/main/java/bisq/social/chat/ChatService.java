@@ -39,10 +39,10 @@ import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
 import bisq.social.offer.TradeChatOffer;
 import bisq.social.user.ChatUser;
-import bisq.social.user.proof.BondedRoleProof;
-import bisq.social.user.entitlement.Role;
 import bisq.social.user.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
+import bisq.social.user.entitlement.Role;
+import bisq.social.user.proof.BondedRoleProof;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -161,27 +161,31 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                                                                           Optional<Quotation> quotedMessage,
                                                                                           PublicTradeChannel publicTradeChannel,
                                                                                           ChatUserIdentity chatUserIdentity) {
+        ChatUser chatUser = chatUserIdentity.getChatUser();
         PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
-                chatUserIdentity.getChatUser(),
+                chatUser,
                 Optional.empty(),
                 Optional.of(text),
                 quotedMessage,
                 new Date().getTime(),
                 false);
-        return networkService.publishAuthenticatedData(chatMessage, chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
+        return chatUserService.maybePublishChatUser(chatUser, chatUserIdentity.getIdentity())
+                .thenCompose(result -> networkService.publishAuthenticatedData(chatMessage, chatUserIdentity.getIdentity().getNodeIdAndKeyPair()));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatOffer(TradeChatOffer tradeChatOffer,
                                                                                     PublicTradeChannel publicTradeChannel,
                                                                                     ChatUserIdentity chatUserIdentity) {
+        ChatUser chatUser = chatUserIdentity.getChatUser();
         PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
-                chatUserIdentity.getChatUser(),
+                chatUser,
                 Optional.of(tradeChatOffer),
                 Optional.empty(),
                 Optional.empty(),
                 new Date().getTime(),
                 false);
-        return networkService.publishAuthenticatedData(chatMessage, chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
+        return chatUserService.maybePublishChatUser(chatUser, chatUserIdentity.getIdentity())
+                .thenCompose(result -> networkService.publishAuthenticatedData(chatMessage, chatUserIdentity.getIdentity().getNodeIdAndKeyPair()));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishEditedTradeChatMessage(PublicTradeChatMessage originalChatMessage,
@@ -191,21 +195,19 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         checkArgument(originalChatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
                 "NetworkId must match");
         return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
-                .whenComplete((result, throwable) -> {
-                    if (throwable == null) {
-                        // We do not support editing the MarketChatOffer directly but remove it and replace it with 
-                        // the edited text.
-                        PublicTradeChatMessage newChatMessage = new PublicTradeChatMessage(originalChatMessage.getChannelId(),
-                                chatUserIdentity.getChatUser(),
-                                Optional.empty(),
-                                Optional.of(editedText),
-                                originalChatMessage.getQuotation(),
-                                originalChatMessage.getDate(),
-                                true);
-                        networkService.publishAuthenticatedData(newChatMessage, nodeIdAndKeyPair);
-                    } else {
-                        log.error("Error at deleting old message", throwable);
-                    }
+                .thenCompose(result -> {
+                    // We do not support editing the MarketChatOffer directly but remove it and replace it with 
+                    // the edited text.
+                    ChatUser chatUser = chatUserIdentity.getChatUser();
+                    PublicTradeChatMessage newChatMessage = new PublicTradeChatMessage(originalChatMessage.getChannelId(),
+                            chatUser,
+                            Optional.empty(),
+                            Optional.of(editedText),
+                            originalChatMessage.getQuotation(),
+                            originalChatMessage.getDate(),
+                            true);
+                    return chatUserService.maybePublishChatUser(chatUser, chatUserIdentity.getIdentity())
+                            .thenCompose(r -> networkService.publishAuthenticatedData(newChatMessage, nodeIdAndKeyPair));
                 });
     }
 
@@ -355,13 +357,15 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                                                                            Optional<Quotation> quotedMessage,
                                                                                            PublicDiscussionChannel publicDiscussionChannel,
                                                                                            ChatUserIdentity chatUserIdentity) {
+        ChatUser chatUser = chatUserIdentity.getChatUser();
         PublicDiscussionChatMessage chatMessage = new PublicDiscussionChatMessage(publicDiscussionChannel.getId(),
-                chatUserIdentity.getChatUser(),
+                chatUser,
                 text,
                 quotedMessage,
                 new Date().getTime(),
                 false);
-        return networkService.publishAuthenticatedData(chatMessage, chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
+        return chatUserService.maybePublishChatUser(chatUser, chatUserIdentity.getIdentity())
+                .thenCompose(r -> networkService.publishAuthenticatedData(chatMessage, chatUserIdentity.getIdentity().getNodeIdAndKeyPair()));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishEditedDiscussionChatMessage(PublicDiscussionChatMessage originalChatMessage,
@@ -371,18 +375,16 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         checkArgument(originalChatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
                 "NetworkId must match");
         return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
-                .whenComplete((result, throwable) -> {
-                    if (throwable == null) {
-                        PublicDiscussionChatMessage newChatMessage = new PublicDiscussionChatMessage(originalChatMessage.getChannelId(),
-                                chatUserIdentity.getChatUser(),
-                                editedText,
-                                originalChatMessage.getQuotation(),
-                                originalChatMessage.getDate(),
-                                true);
-                        networkService.publishAuthenticatedData(newChatMessage, nodeIdAndKeyPair);
-                    } else {
-                        log.error("Error at deleting old message", throwable);
-                    }
+                .thenCompose(result -> {
+                    ChatUser chatUser = chatUserIdentity.getChatUser();
+                    PublicDiscussionChatMessage newChatMessage = new PublicDiscussionChatMessage(originalChatMessage.getChannelId(),
+                            chatUser,
+                            editedText,
+                            originalChatMessage.getQuotation(),
+                            originalChatMessage.getDate(),
+                            true);
+                    return chatUserService.maybePublishChatUser(chatUser, chatUserIdentity.getIdentity())
+                            .thenCompose(r -> networkService.publishAuthenticatedData(newChatMessage, nodeIdAndKeyPair));
                 });
     }
 

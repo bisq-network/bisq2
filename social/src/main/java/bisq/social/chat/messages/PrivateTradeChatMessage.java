@@ -29,7 +29,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 /**
  * PrivateChatMessage is sent as direct message to peer and in case peer is not online it can be stores as
@@ -56,7 +55,7 @@ public class PrivateTradeChatMessage extends ChatMessage implements MailboxMessa
                 quotedMessage,
                 date,
                 wasEdited,
-                new MetaData(TimeUnit.DAYS.toMillis(1), 100000, PrivateTradeChatMessage.class.getSimpleName()));
+                new MetaData(ChatMessage.TTL, 100000, PrivateTradeChatMessage.class.getSimpleName()));
     }
 
     private PrivateTradeChatMessage(String channelId,

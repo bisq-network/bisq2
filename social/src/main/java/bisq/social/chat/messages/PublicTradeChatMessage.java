@@ -27,7 +27,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
@@ -50,7 +49,7 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
                 quotedMessage,
                 date,
                 wasEdited,
-                new MetaData(TimeUnit.DAYS.toMillis(1), 100000, PublicTradeChatMessage.class.getSimpleName()));
+                new MetaData(ChatMessage.TTL, 100000, PublicTradeChatMessage.class.getSimpleName()));
     }
 
     public PublicTradeChatMessage(String channelId,

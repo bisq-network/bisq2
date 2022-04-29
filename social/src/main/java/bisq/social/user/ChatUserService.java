@@ -23,11 +23,13 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.http.common.HttpException;
 import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.services.data.DataService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -50,6 +52,8 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static bisq.security.SignatureUtil.bitcoinSigToDer;
@@ -80,6 +84,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     private final NetworkService networkService;
     private final Object lock = new Object();
     private final Config config;
+    private final Map<String, Long> publishTimeByChatuserId = new ConcurrentHashMap<>();
 
     public ChatUserService(PersistenceService persistenceService,
                            Config config,
@@ -132,6 +137,25 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     public void selectUserProfile(ChatUserIdentity value) {
         persistableStore.getSelectedChatUserIdentity().set(value);
         persist();
+    }
+
+
+    public CompletableFuture<Boolean> maybePublishChatUser(ChatUser chatUser, Identity identity) {
+        String chatUserId = chatUser.getId();
+        long currentTimeMillis = System.currentTimeMillis();
+        if (!publishTimeByChatuserId.containsKey(chatUserId)) {
+            publishTimeByChatuserId.put(chatUserId, currentTimeMillis);
+        }
+        long passed = currentTimeMillis - publishTimeByChatuserId.get(chatUserId);
+        if (passed == 0 || passed > TimeUnit.HOURS.toMillis(5)) {
+            return publishChatUser(chatUser, identity).thenApply(r -> true);
+        } else {
+            return CompletableFuture.completedFuture(false);
+        }
+    }
+
+    public CompletableFuture<DataService.BroadCastDataResult> publishChatUser(ChatUser chatUser, Identity identity) {
+        return networkService.publishAuthenticatedData(chatUser, identity.getNodeIdAndKeyPair());
     }
 
     public boolean isDefaultUserProfileMissing() {
