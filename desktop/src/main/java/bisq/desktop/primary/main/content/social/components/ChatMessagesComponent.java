@@ -839,8 +839,7 @@ public class ChatMessagesComponent {
 
         public ChatMessageListItem(T chatMessage, ChatService chatService) {
             this.chatMessage = chatMessage;
-            log.error("chatMessage {} {}", chatMessage.getText(), chatMessage.getAuthorId());
-
+            
             if (chatMessage instanceof PrivateTradeChatMessage privateTradeChatMessage) {
                 author = Optional.of(privateTradeChatMessage.getAuthor());
             } else if (chatMessage instanceof PrivateDiscussionChatMessage privateDiscussionChatMessage) {

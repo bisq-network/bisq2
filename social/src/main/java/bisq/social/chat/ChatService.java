@@ -115,7 +115,30 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof ChatUser chatUser) {
+            // It might be that we received the chat message before the chat user. In that case the 
+            // message would not be displayed. To avoid this situation we check if there are messages containing the 
+            // new chat user and if so, we remove and later add the messages to trigger an update for the clients.
+            Set<PublicDiscussionChatMessage> publicDiscussionChatMessages = getPublicDiscussionChannels().stream()
+                    .flatMap(c -> c.getChatMessages().stream())
+                    .filter(msg -> msg.getAuthorId().equals(chatUser.getId()))
+                    .collect(Collectors.toSet());
+            Set<PublicTradeChatMessage> publicTradeChatMessages = getPublicTradeChannels().stream()
+                    .flatMap(c -> c.getChatMessages().stream())
+                    .filter(msg -> msg.getAuthorId().equals(chatUser.getId()))
+                    .collect(Collectors.toSet());
+            // Remove chat messages containing that chatUser
+            publicDiscussionChatMessages.forEach(m ->
+                    findPublicDiscussionChannel(m.getChannelId()).ifPresent(c -> removePublicDiscussionChatMessage(m, c)));
+            publicTradeChatMessages.forEach(m ->
+                    findPublicTradeChannel(m.getChannelId()).ifPresent(c -> removePublicTradeChatMessage(m, c)));
+
             addChatUser(chatUser);
+
+            // Now we add them again
+            publicDiscussionChatMessages.forEach(m ->
+                    findPublicDiscussionChannel(m.getChannelId()).ifPresent(c -> addPublicDiscussionChatMessage(m, c)));
+            publicTradeChatMessages.forEach(m ->
+                    findPublicTradeChannel(m.getChannelId()).ifPresent(c -> addPublicTradeChatMessage(m, c)));
         } else if (distributedData instanceof PublicTradeChatMessage message) {
             findPublicTradeChannel(message.getChannelId())
                     .ifPresent(channel -> addPublicTradeChatMessage(message, channel));
