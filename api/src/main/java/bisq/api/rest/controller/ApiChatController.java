@@ -95,7 +95,7 @@ class ApiChatController extends ApiController {
         return identityService.getOrCreateIdentity(domainId).join();
     }
 
-    @PostMapping(path = "/api/chat/create-user-profile/{domainId}/{nickName}")
+    @GetMapping(path = "/api/chat/create-user-profile/{domainId}/{nickName}")
     public ChatUserIdentity createUserProfile(@PathVariable("domainId") String domainId,
                                               @PathVariable("nickName") String nickName) {
         Identity identity = identityService.getOrCreateIdentity(domainId).join();

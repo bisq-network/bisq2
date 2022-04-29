@@ -19,7 +19,6 @@ package bisq.api.rest.controller;
 
 import bisq.api.rest.ApiApplicationService;
 import bisq.security.KeyPairService;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,8 +41,8 @@ class ApiKeyPairController extends ApiController {
      * @return The key pair.
      */
     @GetMapping(path = "/api/keypair/get-or-create/{keyId}")
-    public JsonNode getOrCreateKeyPair(@PathVariable("keyId") String keyId) {
-        return keyPairAsJson(keyPairService.getOrCreateKeyPair(keyId));
+    public KeyPair getOrCreateKeyPair(@PathVariable("keyId") String keyId) {
+        return keyPairService.getOrCreateKeyPair(keyId);
     }
 
     /**
@@ -51,10 +50,10 @@ class ApiKeyPairController extends ApiController {
      * @return The key pair if a key pair with that keyId exist, otherwise null.
      */
     @GetMapping(path = "/api/keypair/get/{keyId}")
-    public JsonNode findKeyPair(@PathVariable("keyId") String keyId) {
+    public KeyPair findKeyPair(@PathVariable("keyId") String keyId) {
         Optional<KeyPair> optionalKeyPair = keyPairService.findKeyPair(keyId);
         if (optionalKeyPair.isPresent()) {
-            return keyPairAsJson(optionalKeyPair.get());
+            return optionalKeyPair.get();
         } else {
             return null;
         }
