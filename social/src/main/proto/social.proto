@@ -169,7 +169,7 @@ message Channel {
 }
 
 // Stores
-message UserProfileStore {
+message ChatUserStore {
   repeated ChatUserIdentity chatUserIdentities = 1;
   ChatUserIdentity selectedChatUserIdentity = 2;
   map<string, Proof> verifiedProofOfBurnProofs = 3;

@@ -25,7 +25,7 @@ import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.social.user.ChatUserIdentity;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.ChatUserService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -53,8 +53,8 @@ import java.lang.ref.WeakReference;
 public class UserProfileSelection {
     private final Controller controller;
 
-    public UserProfileSelection(UserProfileService userProfileService) {
-        controller = new Controller(userProfileService);
+    public UserProfileSelection(ChatUserService chatUserService) {
+        controller = new Controller(chatUserService);
     }
 
     public Pane getRoot() {
@@ -65,12 +65,12 @@ public class UserProfileSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final UserProfileService userProfileService;
+        private final ChatUserService chatUserService;
         private Pin selectedUserProfilePin;
         private Pin userProfilesPin;
 
-        private Controller(UserProfileService userProfileService) {
-            this.userProfileService = userProfileService;
+        private Controller(ChatUserService chatUserService) {
+            this.chatUserService = chatUserService;
 
             model = new Model();
             view = new View(model, this);
@@ -78,11 +78,11 @@ public class UserProfileSelection {
 
         @Override
         public void onActivate() {
-            selectedUserProfilePin = FxBindings.subscribe(userProfileService.getSelectedUserProfile(),
+            selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedUserProfile(),
                     userProfile -> model.selectedUserProfile.set(new ListItem(userProfile)));
             userProfilesPin = FxBindings.<ChatUserIdentity, ListItem>bind(model.userProfiles)
                     .map(ListItem::new)
-                    .to(userProfileService.getUserProfiles());
+                    .to(chatUserService.getUserProfiles());
         }
 
         @Override
@@ -95,7 +95,7 @@ public class UserProfileSelection {
 
         private void onSelected(ListItem selectedItem) {
             if (selectedItem != null) {
-                userProfileService.selectUserProfile(selectedItem.chatUserIdentity);
+                chatUserService.selectUserProfile(selectedItem.chatUserIdentity);
             }
         }
     }

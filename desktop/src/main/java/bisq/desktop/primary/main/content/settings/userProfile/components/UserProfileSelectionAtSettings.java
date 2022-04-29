@@ -23,7 +23,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.i18n.Res;
 import bisq.social.user.ChatUserIdentity;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.ChatUserService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -44,8 +44,8 @@ public class UserProfileSelectionAtSettings {
 
     private final Controller controller;
 
-    public UserProfileSelectionAtSettings(UserProfileService userProfileService) {
-        controller = new Controller(userProfileService);
+    public UserProfileSelectionAtSettings(ChatUserService chatUserService) {
+        controller = new Controller(chatUserService);
     }
 
     public Pane getRoot() {
@@ -60,11 +60,11 @@ public class UserProfileSelectionAtSettings {
         private final Model model;
         @Getter
         private final View view;
-        private final UserProfileService userProfileService;
+        private final ChatUserService chatUserService;
         private Pin userProfilesPin, selectedUserProfilePin;
 
-        private Controller(UserProfileService userProfileService) {
-            this.userProfileService = userProfileService;
+        private Controller(ChatUserService chatUserService) {
+            this.chatUserService = chatUserService;
 
             model = new Model();
             view = new View(model, this);
@@ -72,8 +72,8 @@ public class UserProfileSelectionAtSettings {
 
         @Override
         public void onActivate() {
-            userProfilesPin = FxBindings.<ChatUserIdentity, ChatUserIdentity>bind(model.chatUserIdentities).to(userProfileService.getUserProfiles());
-            selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(userProfileService.getSelectedUserProfile());
+            userProfilesPin = FxBindings.<ChatUserIdentity, ChatUserIdentity>bind(model.chatUserIdentities).to(chatUserService.getUserProfiles());
+            selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(chatUserService.getSelectedUserProfile());
         }
 
         @Override
@@ -84,7 +84,7 @@ public class UserProfileSelectionAtSettings {
 
         public void onSelected(ChatUserIdentity value) {
             if (value != null) {
-                userProfileService.selectUserProfile(value);
+                chatUserService.selectUserProfile(value);
             }
         }
     }

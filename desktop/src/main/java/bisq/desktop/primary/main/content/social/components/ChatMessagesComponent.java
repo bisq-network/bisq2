@@ -42,7 +42,7 @@ import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
 import bisq.social.user.ChatUser;
 import bisq.social.user.ChatUserIdentity;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.ChatUserService;
 import bisq.social.user.reputation.ReputationScore;
 import bisq.social.user.reputation.ReputationService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -82,10 +82,10 @@ public class ChatMessagesComponent {
     private final Controller controller;
 
     public ChatMessagesComponent(ChatService chatService,
-                                 UserProfileService userProfileService,
+                                 ChatUserService chatUserService,
                                  ReputationService reputationService,
                                  boolean isDiscussionsChat) {
-        controller = new Controller(chatService, userProfileService, reputationService, isDiscussionsChat);
+        controller = new Controller(chatService, chatUserService, reputationService, isDiscussionsChat);
     }
 
     public Pane getRoot() {
@@ -118,7 +118,7 @@ public class ChatMessagesComponent {
         @Getter
         private final View view;
         private final ChatService chatService;
-        private final UserProfileService userProfileService;
+        private final ChatUserService chatUserService;
         private final ReputationService reputationService;
         private final QuotedMessageBlock quotedMessageBlock;
         private ListChangeListener<ChatMessagesComponent.ChatMessageListItem<? extends ChatMessage>> messageListener;
@@ -126,15 +126,15 @@ public class ChatMessagesComponent {
         private ChatMessage moreOptionsVisibleMessage = null;
 
         private Controller(ChatService chatService,
-                           UserProfileService userProfileService,
+                           ChatUserService chatUserService,
                            ReputationService reputationService,
                            boolean isDiscussionsChat) {
             this.chatService = chatService;
-            this.userProfileService = userProfileService;
+            this.chatUserService = chatUserService;
             this.reputationService = reputationService;
             quotedMessageBlock = new QuotedMessageBlock();
 
-            model = new Model(chatService, userProfileService, reputationService, isDiscussionsChat);
+            model = new Model(chatService, chatUserService, reputationService, isDiscussionsChat);
             view = new View(model, this, quotedMessageBlock.getRoot());
         }
 
@@ -250,7 +250,7 @@ public class ChatMessagesComponent {
         void onSendMessage(String text) {
             if (text != null && !text.isEmpty()) {
                 Channel<? extends ChatMessage> channel = model.selectedChannel.get();
-                ChatUserIdentity chatUserIdentity = userProfileService.getSelectedUserProfile().get();
+                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
                 if (channel instanceof PublicTradeChannel publicTradeChannel) {
                     chatService.publishTradeChatTextMessage(text, quotation, publicTradeChannel, chatUserIdentity);
@@ -314,10 +314,10 @@ public class ChatMessagesComponent {
                 return;
             }
             if (chatMessage instanceof PublicTradeChatMessage marketChatMessage) {
-                ChatUserIdentity chatUserIdentity = userProfileService.getSelectedUserProfile().get();
+                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
                 chatService.publishEditedTradeChatMessage(marketChatMessage, editedText, chatUserIdentity);
             } else if (chatMessage instanceof PublicDiscussionChatMessage publicDiscussionChatMessage) {
-                ChatUserIdentity chatUserIdentity = userProfileService.getSelectedUserProfile().get();
+                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
                 chatService.publishEditedDiscussionChatMessage(publicDiscussionChatMessage, editedText, chatUserIdentity);
             }
             //todo editing private message not supported yet
@@ -325,7 +325,7 @@ public class ChatMessagesComponent {
 
         public void onDeleteMessage(ChatMessage chatMessage) {
             if (chatService.isMyMessage(chatMessage)) {
-                ChatUserIdentity chatUserIdentity = userProfileService.getSelectedUserProfile().get();
+                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
                 if (chatMessage instanceof PublicTradeChatMessage marketChatMessage) {
                     chatService.deletePublicTradeChatMessage(marketChatMessage, chatUserIdentity);
                 } else if (chatMessage instanceof PublicDiscussionChatMessage publicDiscussionChatMessage) {
@@ -392,7 +392,7 @@ public class ChatMessagesComponent {
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatService chatService;
-        private final UserProfileService userProfileService;
+        private final ChatUserService chatUserService;
         private final ReputationService reputationService;
         private final ObjectProperty<Channel<?>> selectedChannel = new SimpleObjectProperty<>();
         private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
@@ -406,11 +406,11 @@ public class ChatMessagesComponent {
         private Optional<Consumer<ChatUser>> showChatUserDetailsHandler = Optional.empty();
 
         private Model(ChatService chatService,
-                      UserProfileService userProfileService,
+                      ChatUserService chatUserService,
                       ReputationService reputationService,
                       boolean isDiscussionsChat) {
             this.chatService = chatService;
-            this.userProfileService = userProfileService;
+            this.chatUserService = chatUserService;
             this.reputationService = reputationService;
             this.isDiscussionsChat = isDiscussionsChat;
             ignoredChatUserPredicate = item -> !chatService.getIgnoredChatUserIds().contains(item.getAuthor().getId());
@@ -702,7 +702,7 @@ public class ChatMessagesComponent {
                                 userNameLabel.setText(author.getUserName());
                                 userNameLabel.setOnMouseClicked(e -> controller.onMention(author));
 
-                                chatUserIcon.setChatUser(author, model.getUserProfileService());
+                                chatUserIcon.setChatUser(author, model.getChatUserService());
                                 chatUserIcon.setCursor(Cursor.HAND);
                                 chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(chatMessage));
                                 Tooltip.install(chatUserIcon, new Tooltip(author.getTooltipString()));

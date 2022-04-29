@@ -58,7 +58,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
-public class UserProfileService implements PersistenceClient<UserProfileStore> {
+public class ChatUserService implements PersistenceClient<ChatUserStore> {
     // For dev testing we use hard coded txId and a pubkeyhash to get real data from Bisq explorer
     private static final boolean USE_DEV_TEST_POB_VALUES = true;
 
@@ -67,25 +67,25 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         public static Config from(com.typesafe.config.Config typeSafeConfig) {
             List<String> btcMempoolProviders = typeSafeConfig.getStringList("btcMempoolProviders");
             List<String> bsqMempoolProviders = typeSafeConfig.getStringList("bsqMempoolProviders");
-            return new UserProfileService.Config(btcMempoolProviders, bsqMempoolProviders);
+            return new ChatUserService.Config(btcMempoolProviders, bsqMempoolProviders);
         }
     }
 
     @Getter
-    private final UserProfileStore persistableStore = new UserProfileStore();
+    private final ChatUserStore persistableStore = new ChatUserStore();
     @Getter
-    private final Persistence<UserProfileStore> persistence;
+    private final Persistence<ChatUserStore> persistence;
     private final KeyPairService keyPairService;
     private final IdentityService identityService;
     private final NetworkService networkService;
     private final Object lock = new Object();
     private final Config config;
 
-    public UserProfileService(PersistenceService persistenceService,
-                              Config config,
-                              KeyPairService keyPairService,
-                              IdentityService identityService,
-                              NetworkService networkService) {
+    public ChatUserService(PersistenceService persistenceService,
+                           Config config,
+                           KeyPairService keyPairService,
+                           IdentityService identityService,
+                           NetworkService networkService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.config = config;
         this.keyPairService = keyPairService;

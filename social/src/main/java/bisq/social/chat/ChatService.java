@@ -42,7 +42,7 @@ import bisq.social.user.ChatUser;
 import bisq.social.user.proof.BondedRoleProof;
 import bisq.social.user.entitlement.Role;
 import bisq.social.user.ChatUserIdentity;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,7 +62,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class ChatService implements PersistenceClient<ChatStore>, MessageListener, DataService.Listener {
     private final ChatStore persistableStore = new ChatStore();
     private final Persistence<ChatStore> persistence;
-    private final UserProfileService userProfileService;
+    private final ChatUserService chatUserService;
     private final PersistenceService persistenceService;
     private final IdentityService identityService;
     private final NetworkService networkService;
@@ -70,12 +70,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public ChatService(PersistenceService persistenceService,
                        IdentityService identityService,
                        NetworkService networkService,
-                       UserProfileService userProfileService) {
+                       ChatUserService chatUserService) {
         this.persistenceService = persistenceService;
         this.identityService = identityService;
         this.networkService = networkService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        this.userProfileService = userProfileService;
+        this.chatUserService = chatUserService;
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -267,12 +267,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public Optional<PrivateTradeChannel> createPrivateTradeChannel(ChatUser peer) {
-        return Optional.ofNullable(userProfileService.getSelectedUserProfile().get())
+        return Optional.ofNullable(chatUserService.getSelectedUserProfile().get())
                 .flatMap(userProfile -> createPrivateTradeChannel(peer, userProfile.getProfileId()));
     }
 
     public Optional<PrivateTradeChannel> createPrivateTradeChannel(ChatUser peer, String receiversProfileId) {
-        return userProfileService.findUserProfile(receiversProfileId)
+        return chatUserService.findUserProfile(receiversProfileId)
                 .map(myUserProfile -> {
                             PrivateTradeChannel privateTradeChannel = new PrivateTradeChannel(peer, myUserProfile);
                             getPrivateTradeChannels().add(privateTradeChannel);
@@ -329,7 +329,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 .filter(entitlement -> entitlement.type() == Role.Type.CHANNEL_ADMIN)
                 .filter(entitlement -> entitlement.proof() instanceof BondedRoleProof)
                 .map(entitlement -> (BondedRoleProof) entitlement.proof())
-                .map(bondedRoleProof -> userProfileService.verifyBondedRole(bondedRoleProof.txId(),
+                .map(bondedRoleProof -> chatUserService.verifyBondedRole(bondedRoleProof.txId(),
                         bondedRoleProof.signature(),
                         chatUserIdentity.getChatUser().getId()))
                 .map(future -> future.thenApply(optionalProof -> optionalProof.map(e -> {
@@ -444,12 +444,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(ChatUser peer) {
-        return Optional.ofNullable(userProfileService.getSelectedUserProfile().get())
+        return Optional.ofNullable(chatUserService.getSelectedUserProfile().get())
                 .flatMap(e -> createPrivateDiscussionChannel(peer, e.getProfileId()));
     }
 
     public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(ChatUser peer, String receiversProfileId) {
-        return userProfileService.findUserProfile(receiversProfileId)
+        return chatUserService.findUserProfile(receiversProfileId)
                 .map(myUserProfile -> {
                             PrivateDiscussionChannel privateDiscussionChannel = new PrivateDiscussionChannel(peer, myUserProfile);
                             getPrivateDiscussionChannels().add(privateDiscussionChannel);
@@ -544,7 +544,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public boolean isMyMessage(ChatMessage chatMessage) {
         String chatId = chatMessage.getAuthor().getId();
-        return userProfileService.getUserProfiles().stream()
+        return chatUserService.getUserProfiles().stream()
                 .anyMatch(userprofile -> userprofile.getChatUser().getId().equals(chatId));
     }
 

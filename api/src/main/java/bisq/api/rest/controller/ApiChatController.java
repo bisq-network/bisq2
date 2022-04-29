@@ -23,7 +23,7 @@ import bisq.identity.IdentityService;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.PublicDiscussionChannel;
 import bisq.social.user.NymGenerator;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.ChatUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,12 +38,12 @@ import java.util.stream.Collectors;
 @RestController
 class ApiChatController extends ApiController {
     private final ChatService chatService;
-    private final UserProfileService userProfileService;
+    private final ChatUserService chatUserService;
     private final IdentityService identityService;
 
     public ApiChatController(ApiApplicationService apiApplicationService) {
         chatService = apiApplicationService.getChatService();
-        userProfileService = apiApplicationService.getUserProfileService();
+        chatUserService = apiApplicationService.getUserProfileService();
         identityService = apiApplicationService.getIdentityService();
     }
 
@@ -75,7 +75,7 @@ class ApiChatController extends ApiController {
             chatService.publishDiscussionChatMessage(text,
                     Optional.empty(),
                     publicDiscussionChannel,
-                    userProfileService.getSelectedUserProfile().get());
+                    chatUserService.getSelectedUserProfile().get());
             return true;
         } else {
             return false;
@@ -84,7 +84,7 @@ class ApiChatController extends ApiController {
 
     @GetMapping(path = "/api/chat/get-selected-user-profile")
     public String getSelectedUserProfile() {
-        return asJson(userProfileService.getSelectedUserProfile().get());
+        return asJson(chatUserService.getSelectedUserProfile().get());
     }
 
     @GetMapping(path = "/api/chat/get-or-create-identity/{domainId}")
@@ -97,6 +97,6 @@ class ApiChatController extends ApiController {
                                     @PathVariable("nickName") String nickName) {
         Identity identity = identityService.getOrCreateIdentity(domainId).join();
         String profileId = NymGenerator.fromHash(identity.getNodeIdAndKeyPair().pubKey().publicKey().getEncoded());
-        return asJson(userProfileService.createNewInitializedUserProfile(profileId, nickName, "default", identity.keyPair()).join());
+        return asJson(chatUserService.createNewInitializedUserProfile(profileId, nickName, "default", identity.keyPair()).join());
     }
 }

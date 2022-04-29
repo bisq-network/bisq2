@@ -31,7 +31,7 @@ import bisq.security.DigestUtil;
 import bisq.social.user.entitlement.Role;
 import bisq.social.user.proof.Proof;
 import bisq.social.user.proof.ProofOfBurnProof;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.ChatUserService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -61,8 +61,8 @@ import java.util.stream.Stream;
 public class EntitlementSelection {
     private final Controller controller;
 
-    public EntitlementSelection(UserProfileService userProfileService) {
-        controller = new Controller(userProfileService);
+    public EntitlementSelection(ChatUserService chatUserService) {
+        controller = new Controller(chatUserService);
     }
 
     public Pane getRoot() {
@@ -87,10 +87,10 @@ public class EntitlementSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final UserProfileService userProfileService;
+        private final ChatUserService chatUserService;
 
-        private Controller(UserProfileService userProfileService) {
-            this.userProfileService = userProfileService;
+        private Controller(ChatUserService chatUserService) {
+            this.chatUserService = chatUserService;
 
             model = new Model();
             view = new View(model, this);
@@ -113,7 +113,7 @@ public class EntitlementSelection {
         private CompletableFuture<Optional<ProofOfBurnProof>> onVerifyProofOfBurn(EntitlementItem entitlementItem,
                                                                                   String pubKeyHash,
                                                                                   String proofOfBurnTxId) {
-            return userProfileService.verifyProofOfBurn(entitlementItem.getType(), proofOfBurnTxId, pubKeyHash)
+            return chatUserService.verifyProofOfBurn(entitlementItem.getType(), proofOfBurnTxId, pubKeyHash)
                     .whenComplete((proof, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null && proof.isPresent()) {
@@ -126,7 +126,7 @@ public class EntitlementSelection {
         }
 
         private CompletableFuture<Optional<Proof>> onVerifyBondedRole(EntitlementItem entitlementItem, String bondedRoleTxId, String pubKeyHash, String bondedRoleSig) {
-            return userProfileService.verifyBondedRole(bondedRoleTxId,
+            return chatUserService.verifyBondedRole(bondedRoleTxId,
                             bondedRoleSig,
                             pubKeyHash)
                     .whenComplete((proof, throwable) -> {
@@ -145,7 +145,7 @@ public class EntitlementSelection {
         }
 
         private CompletableFuture<Optional<Proof>> onVerifyModerator(EntitlementItem entitlementItem, String invitationCode) {
-            return userProfileService.verifyModerator(invitationCode, model.keyPair.getPublic())
+            return chatUserService.verifyModerator(invitationCode, model.keyPair.getPublic())
                     .whenComplete((proof, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null) {
@@ -166,7 +166,7 @@ public class EntitlementSelection {
         }
 
         public void onOpenProofWindow(EntitlementItem entitlementItem) {
-            model.minBurnAmount = AmountFormatter.formatAmountWithCode(Coin.of(userProfileService.getMinBurnAmount(entitlementItem.getType()), "BSQ"));
+            model.minBurnAmount = AmountFormatter.formatAmountWithCode(Coin.of(chatUserService.getMinBurnAmount(entitlementItem.getType()), "BSQ"));
             if (model.keyPair != null) {
                 new ProofPopup(this, model, entitlementItem).show();
             }

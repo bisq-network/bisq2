@@ -44,7 +44,7 @@ import bisq.settings.SettingsService;
 import bisq.social.SocialService;
 import bisq.social.chat.ChatService;
 import bisq.social.offer.TradeChatOfferService;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.ChatUserService;
 import bisq.social.user.reputation.ReputationService;
 import bisq.wallets.NetworkType;
 import bisq.wallets.WalletBackend;
@@ -104,7 +104,7 @@ public class DefaultApplicationService extends ServiceProvider {
     private final OfferBookService offerBookService;
     private final AccountService accountService;
     private final TradeChatOfferService tradeChatOfferService;
-    private final UserProfileService userProfileService;
+    private final ChatUserService chatUserService;
     private final ReputationService reputationService;
     private final WalletService walletService;
     private final OfferService offerService;
@@ -141,10 +141,10 @@ public class DefaultApplicationService extends ServiceProvider {
         accountAgeWitnessService = new AccountAgeWitnessService(networkService, identityService);
 
         socialService = new SocialService();
-        UserProfileService.Config userProfileServiceConfig = UserProfileService.Config.from(getConfig("bisq.userProfileServiceConfig"));
-        userProfileService = new UserProfileService(persistenceService, userProfileServiceConfig, keyPairService, identityService, networkService);
-        reputationService = new ReputationService(persistenceService, networkService, userProfileService);
-        chatService = new ChatService(persistenceService, identityService, networkService, userProfileService);
+        ChatUserService.Config userProfileServiceConfig = ChatUserService.Config.from(getConfig("bisq.userProfileServiceConfig"));
+        chatUserService = new ChatUserService(persistenceService, userProfileServiceConfig, keyPairService, identityService, networkService);
+        reputationService = new ReputationService(persistenceService, networkService, chatUserService);
+        chatService = new ChatService(persistenceService, identityService, networkService, chatUserService);
         tradeChatOfferService = new TradeChatOfferService(networkService, identityService, chatService, persistenceService);
 
         // add data use case is not available yet at networkService
@@ -201,7 +201,7 @@ public class DefaultApplicationService extends ServiceProvider {
                 .thenCompose(result -> setStateAfter(accountAgeWitnessService.initialize(), State.ACCOUNT_AGE_WITNESS_SERVICE_INITIALIZED))
                 .thenCompose(result -> setStateAfterList(protocolService.initialize(), State.PROTOCOL_SERVICE_INITIALIZED))
                 .thenCompose(result -> CompletableFutureUtils.allOf(
-                        userProfileService.initialize()
+                        chatUserService.initialize()
                                 .thenCompose(res -> reputationService.initialize()).
                                 thenCompose(res -> chatService.initialize()),
                         openOfferService.initialize(),

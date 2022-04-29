@@ -20,7 +20,7 @@ package bisq.social.user.reputation;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import bisq.social.user.ChatUser;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.ChatUserService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Random;
@@ -30,12 +30,12 @@ import java.util.concurrent.CompletableFuture;
 public class ReputationService {
     private final PersistenceService persistenceService;
     private final NetworkService networkService;
-    private final UserProfileService userProfileService;
+    private final ChatUserService chatUserService;
 
-    public ReputationService(PersistenceService persistenceService, NetworkService networkService, UserProfileService userProfileService) {
+    public ReputationService(PersistenceService persistenceService, NetworkService networkService, ChatUserService chatUserService) {
         this.persistenceService = persistenceService;
         this.networkService = networkService;
-        this.userProfileService = userProfileService;
+        this.chatUserService = chatUserService;
     }
 
     public CompletableFuture<Boolean> initialize() {

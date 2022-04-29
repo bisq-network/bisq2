@@ -35,7 +35,7 @@ public class SelectUserTypeController implements Controller {
     private final SelectUserTypeView view;
 
     public SelectUserTypeController(DefaultApplicationService applicationService) {
-        ChatUserIdentity chatUserIdentity = applicationService.getUserProfileService().getSelectedUserProfile().get();
+        ChatUserIdentity chatUserIdentity = applicationService.getChatUserService().getSelectedUserProfile().get();
         String profileId = chatUserIdentity.getProfileId();
         model = new SelectUserTypeModel(profileId, RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
         model.getUserTypes().addAll(SelectUserTypeModel.Type.NEWBIE, SelectUserTypeModel.Type.PRO_TRADER);

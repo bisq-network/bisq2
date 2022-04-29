@@ -26,7 +26,7 @@ import bisq.desktop.primary.main.content.social.components.*;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.Channel;
 import bisq.social.chat.messages.ChatMessage;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.ChatUserService;
 import bisq.social.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +42,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     private final ReputationService reputationService;
     @Getter
     protected V view;
-    protected final UserProfileService userProfileService;
+    protected final ChatUserService chatUserService;
     protected final DefaultApplicationService applicationService;
     protected final PrivateChannelSelection privateChannelSelection;
     protected final ChannelInfo channelInfo;
@@ -56,12 +56,12 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     public ChatController(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
         this.applicationService = applicationService;
         chatService = applicationService.getChatService();
-        userProfileService = applicationService.getUserProfileService();
+        chatUserService = applicationService.getChatUserService();
         reputationService = applicationService.getReputationService();
 
-        userProfileSelection = new UserProfileSelection(userProfileService);
+        userProfileSelection = new UserProfileSelection(chatUserService);
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
-        chatMessagesComponent = new ChatMessagesComponent(chatService, userProfileService, reputationService, isDiscussionsChat);
+        chatMessagesComponent = new ChatMessagesComponent(chatService, chatUserService, reputationService, isDiscussionsChat);
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
         quotedMessageBlock = new QuotedMessageBlock();

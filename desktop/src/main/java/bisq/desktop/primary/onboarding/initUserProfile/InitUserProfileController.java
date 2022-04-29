@@ -30,7 +30,7 @@ import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.social.chat.ChatService;
 import bisq.social.user.NymGenerator;
-import bisq.social.user.UserProfileService;
+import bisq.social.user.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -43,14 +43,14 @@ public class InitUserProfileController implements Controller {
     private final InitialUserProfileModel model;
     @Getter
     private final InitialUserProfileView view;
-    private final UserProfileService userProfileService;
+    private final ChatUserService chatUserService;
     private final KeyPairService keyPairService;
     private final ChatService chatService;
     private Subscription nickNameSubscription;
 
     public InitUserProfileController(DefaultApplicationService applicationService) {
         keyPairService = applicationService.getKeyPairService();
-        userProfileService = applicationService.getUserProfileService();
+        chatUserService = applicationService.getChatUserService();
         chatService = applicationService.getChatService();
 
         model = new InitialUserProfileModel();
@@ -73,7 +73,7 @@ public class InitUserProfileController implements Controller {
         model.createProfileButtonDisable.set(true);
         model.showProcessingPopup.set(true);
         String profileId = model.profileId.get();
-        userProfileService.createNewInitializedUserProfile(profileId,
+        chatUserService.createNewInitializedUserProfile(profileId,
                         model.getNickName().get(),
                         model.tempKeyId,
                         model.tempKeyPair)
