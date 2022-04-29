@@ -17,6 +17,7 @@
 package bisq.desktop.skins;
 
 import bisq.desktop.components.controls.BisqPopup;
+import javafx.beans.binding.Bindings;
 import javafx.scene.Node;
 import javafx.scene.control.Skin;
 import javafx.scene.layout.StackPane;
@@ -29,6 +30,7 @@ public class BisqPopupSkin implements Skin<BisqPopup> {
     public BisqPopupSkin(final BisqPopup popup) {
         this.skinnable = popup;
         popup.getRoot().getChildren().add(popup.getContentNode());
+        Bindings.bindContent(popup.getRoot().getStyleClass(), popup.getStyleClass());
     }
 
     @Override

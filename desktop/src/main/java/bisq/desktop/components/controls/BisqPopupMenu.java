@@ -25,7 +25,7 @@ import java.util.List;
 public class BisqPopupMenu extends BisqPopup {
     public BisqPopupMenu(List<BisqPopupMenuItem> items, Runnable onClose) {
         super();
-        getRoot().getStyleClass().add("bisq-popup-menu");
+        getStyleClass().add("bisq-popup-menu");
 
         VBox box = new VBox();
         box.setSpacing(5);
