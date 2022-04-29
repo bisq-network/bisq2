@@ -17,12 +17,19 @@
 
 package bisq.api.rest;
 
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class RestApi {
     public static void main(String[] args) {
         new SpringApplicationBuilder(RestApi.class).run(args);
+    }
+
+    @Bean
+    public SimpleModule createProtoModule() {
+        return new ProtoModule();
     }
 }

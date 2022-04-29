@@ -17,35 +17,8 @@
 
 package bisq.api.rest.controller;
 
-import bisq.common.proto.Proto;
-import bisq.security.KeyPairProtoUtil;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.util.JsonFormat;
-
-import java.security.KeyPair;
-
 public abstract class ApiController {
-    protected String asJson(Proto protoObject) {
-        if (protoObject == null) {
-            return "null";
-        }
-        try {
-            return JsonFormat.printer().print(protoObject.toProto());
-        } catch (InvalidProtocolBufferException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
 
-    protected String keyPairAsJson(KeyPair keyPair) {
-        if (keyPair == null) {
-            return "null";
-        }
-        try {
-            return JsonFormat.printer().print(KeyPairProtoUtil.toProto(keyPair));
-        } catch (InvalidProtocolBufferException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
+    //https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/html/howto.html#howto.spring-mvc.customize-jackson-objectmapper
+
 }
