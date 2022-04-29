@@ -50,8 +50,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 /**
  * Manages chatChannels and persistence of the chatModel.
  * ChatUser and ChatIdentity management is not implemented yet. Not 100% clear yet if ChatIdentity management should
@@ -116,7 +114,9 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicTradeChatMessage message) {
+        if (distributedData instanceof ChatUser chatUser) {
+            addChatUser(chatUser);
+        } else if (distributedData instanceof PublicTradeChatMessage message) {
             findPublicTradeChannel(message.getChannelId())
                     .ifPresent(channel -> addPublicTradeChatMessage(message, channel));
         } else if (distributedData instanceof PublicDiscussionChatMessage message) {
@@ -124,7 +124,6 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                     .ifPresent(channel -> addPublicDiscussionChatMessage(message, channel));
         }
     }
-
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
@@ -163,7 +162,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                                                                           ChatUserIdentity chatUserIdentity) {
         ChatUser chatUser = chatUserIdentity.getChatUser();
         PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
-                chatUser,
+                chatUser.getId(),
                 Optional.empty(),
                 Optional.of(text),
                 quotedMessage,
@@ -178,7 +177,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                                                                     ChatUserIdentity chatUserIdentity) {
         ChatUser chatUser = chatUserIdentity.getChatUser();
         PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
-                chatUser,
+                chatUser.getId(),
                 Optional.of(tradeChatOffer),
                 Optional.empty(),
                 Optional.empty(),
@@ -192,15 +191,13 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                                                                             String editedText,
                                                                                             ChatUserIdentity chatUserIdentity) {
         NetworkIdWithKeyPair nodeIdAndKeyPair = chatUserIdentity.getIdentity().getNodeIdAndKeyPair();
-        checkArgument(originalChatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
-                "NetworkId must match");
         return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
                 .thenCompose(result -> {
                     // We do not support editing the MarketChatOffer directly but remove it and replace it with 
                     // the edited text.
                     ChatUser chatUser = chatUserIdentity.getChatUser();
                     PublicTradeChatMessage newChatMessage = new PublicTradeChatMessage(originalChatMessage.getChannelId(),
-                            chatUser,
+                            chatUser.getId(),
                             Optional.empty(),
                             Optional.of(editedText),
                             originalChatMessage.getQuotation(),
@@ -214,8 +211,6 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public CompletableFuture<DataService.BroadCastDataResult> deletePublicTradeChatMessage(PublicTradeChatMessage chatMessage,
                                                                                            ChatUserIdentity chatUserIdentity) {
         NetworkIdWithKeyPair nodeIdAndKeyPair = chatUserIdentity.getIdentity().getNodeIdAndKeyPair();
-        checkArgument(chatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
-                "NetworkId must match");
         return networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair);
     }
 
@@ -265,7 +260,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public Optional<PrivateTradeChannel> getOrCreatePrivateTradeChannel(PrivateTradeChatMessage privateTradeChatMessage) {
         return findPrivateTradeChannel(privateTradeChatMessage.getChannelId())
-                .or(() -> createPrivateTradeChannel(privateTradeChatMessage.getAuthor(), privateTradeChatMessage.getReceiversProfileId()));
+                .or(() -> createPrivateTradeChannel(privateTradeChatMessage.getAuthor(), privateTradeChatMessage.getReceiversNym()));
     }
 
     public Optional<PrivateTradeChannel> createPrivateTradeChannel(ChatUser peer) {
@@ -342,7 +337,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                             PublicDiscussionChannel publicDiscussionChannel = new PublicDiscussionChannel(StringUtils.createUid(),
                                     channelName,
                                     description,
-                                    chatUser,
+                                    chatUser.getId(),
                                     new HashSet<>());
                             getPublicDiscussionChannels().add(publicDiscussionChannel);
                             persist();
@@ -359,7 +354,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                                                                            ChatUserIdentity chatUserIdentity) {
         ChatUser chatUser = chatUserIdentity.getChatUser();
         PublicDiscussionChatMessage chatMessage = new PublicDiscussionChatMessage(publicDiscussionChannel.getId(),
-                chatUser,
+                chatUser.getId(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
@@ -372,13 +367,11 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                                                                                                  String editedText,
                                                                                                  ChatUserIdentity chatUserIdentity) {
         NetworkIdWithKeyPair nodeIdAndKeyPair = chatUserIdentity.getIdentity().getNodeIdAndKeyPair();
-        checkArgument(originalChatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
-                "NetworkId must match");
         return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
                 .thenCompose(result -> {
                     ChatUser chatUser = chatUserIdentity.getChatUser();
                     PublicDiscussionChatMessage newChatMessage = new PublicDiscussionChatMessage(originalChatMessage.getChannelId(),
-                            chatUser,
+                            chatUser.getId(),
                             editedText,
                             originalChatMessage.getQuotation(),
                             originalChatMessage.getDate(),
@@ -391,8 +384,6 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public CompletableFuture<DataService.BroadCastDataResult> deletePublicDiscussionChatMessage(PublicDiscussionChatMessage chatMessage,
                                                                                                 ChatUserIdentity chatUserIdentity) {
         NetworkIdWithKeyPair nodeIdAndKeyPair = chatUserIdentity.getIdentity().getNodeIdAndKeyPair();
-        checkArgument(chatMessage.getAuthor().getNetworkId().equals(nodeIdAndKeyPair.networkId()),
-                "NetworkId must match");
         return networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair);
     }
 
@@ -442,7 +433,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public Optional<PrivateDiscussionChannel> getOrCreatePrivateDiscussionChannel(PrivateDiscussionChatMessage message) {
         return findPrivateDiscussionChannel(message.getChannelId())
-                .or(() -> createPrivateDiscussionChannel(message.getAuthor(), message.getReceiversProfileId()));
+                .or(() -> createPrivateDiscussionChannel(message.getAuthor(), message.getReceiversNym()));
     }
 
     public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(ChatUser peer) {
@@ -540,14 +531,23 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return markets;
     }
 
+    public Optional<ChatUser> findChatUser(String chatUserId) {
+        return Optional.ofNullable(persistableStore.getChatUserById().get(chatUserId));
+    }
+
+    private void addChatUser(ChatUser chatUser) {
+        persistableStore.getChatUserById().put(chatUser.getId(), chatUser);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean isMyMessage(ChatMessage chatMessage) {
-        String chatId = chatMessage.getAuthor().getId();
+        String authorId = chatMessage.getAuthorId();
         return chatUserService.getUserProfiles().stream()
-                .anyMatch(userprofile -> userprofile.getChatUser().getId().equals(chatId));
+                .anyMatch(userprofile -> userprofile.getChatUser().getId().equals(authorId));
     }
 
     private void maybeAddDefaultChannels() {
@@ -571,12 +571,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
         // Dummy admin
         Identity channelAdminIdentity = identityService.getOrCreateIdentity(IdentityService.DEFAULT).join();
-        ChatUser channelAdmin = new ChatUser("Admin", channelAdminIdentity.networkId());
+        String channelAdminId = new ChatUser("Admin", channelAdminIdentity.networkId()).getId();
 
         PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BISQ_ID.name(),
                 "Discussions Bisq",
                 "Channel for discussions about Bisq",
-                channelAdmin,
+                channelAdminId,
                 new HashSet<>()
         );
         selectDiscussionChannel(defaultDiscussionChannel);
@@ -584,31 +584,31 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BITCOIN_ID.name(),
                 "Discussions Bitcoin",
                 "Channel for discussions about Bitcoin",
-                channelAdmin,
+                channelAdminId,
                 new HashSet<>()
         ));
         getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.MONERO_ID.name(),
                 "Discussions Monero",
                 "Channel for discussions about Monero",
-                channelAdmin,
+                channelAdminId,
                 new HashSet<>()
         ));
         getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.PRICE_ID.name(),
                 "Price",
                 "Channel for discussions about market price",
-                channelAdmin,
+                channelAdminId,
                 new HashSet<>()
         ));
         getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.ECONOMY_ID.name(),
                 "Economy",
                 "Channel for discussions about economy",
-                channelAdmin,
+                channelAdminId,
                 new HashSet<>()
         ));
         getPublicDiscussionChannels().add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.OFF_TOPIC_ID.name(),
                 "Off-topic",
                 "Channel for anything else",
-                channelAdmin,
+                channelAdminId,
                 new HashSet<>()
         ));
 

@@ -20,7 +20,6 @@ package bisq.social.chat.messages;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.social.offer.TradeChatOffer;
-import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -36,14 +35,14 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
     private final Optional<TradeChatOffer> tradeChatOffer;
 
     public PublicTradeChatMessage(String channelId,
-                                  ChatUser sender,
+                                  String authorId,
                                   Optional<TradeChatOffer> tradeChatOffer,
                                   Optional<String> text,
                                   Optional<Quotation> quotedMessage,
                                   long date,
                                   boolean wasEdited) {
         this(channelId,
-                sender,
+                authorId,
                 tradeChatOffer,
                 text,
                 quotedMessage,
@@ -53,7 +52,7 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
     }
 
     public PublicTradeChatMessage(String channelId,
-                                  ChatUser sender,
+                                  String authorId,
                                   Optional<TradeChatOffer> tradeChatOffer,
                                   Optional<String> text,
                                   Optional<Quotation> quotedMessage,
@@ -61,7 +60,7 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
                                   boolean wasEdited,
                                   MetaData metaData) {
         super(channelId,
-                sender,
+                authorId,
                 text,
                 quotedMessage,
                 date,
@@ -88,7 +87,7 @@ public class PublicTradeChatMessage extends PublicDiscussionChatMessage implemen
                 Optional.empty();
         return new PublicTradeChatMessage(
                 baseProto.getChannelId(),
-                ChatUser.fromProto(baseProto.getAuthor()),
+                baseProto.getAuthorId(),
                 tradeChatOffer,
                 text,
                 quotedMessage,

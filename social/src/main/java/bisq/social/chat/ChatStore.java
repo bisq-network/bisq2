@@ -24,12 +24,15 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.ChatMessage;
+import bisq.social.user.ChatUser;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -44,7 +47,8 @@ public class ChatStore implements PersistableStore<ChatStore> {
     private final Observable<Channel<? extends ChatMessage>> selectedDiscussionChannel = new Observable<>();
     private final ObservableSet<String> customTags = new ObservableSet<>();
     private final ObservableSet<String> ignoredChatUserIds = new ObservableSet<>();
-
+    private final transient Map<String,ChatUser> ChatUserById = new ConcurrentHashMap<>();
+    
     public ChatStore() {
     }
 

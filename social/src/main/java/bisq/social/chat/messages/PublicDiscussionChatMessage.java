@@ -19,7 +19,6 @@ package bisq.social.chat.messages;
 
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -34,13 +33,13 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 public class PublicDiscussionChatMessage extends ChatMessage implements DistributedData {
     public PublicDiscussionChatMessage(String channelId,
-                                       ChatUser sender,
+                                       String authorId,
                                        String text,
                                        Optional<Quotation> quotedMessage,
                                        long date,
                                        boolean wasEdited) {
         this(channelId,
-                sender,
+                authorId,
                 Optional.of(text),
                 quotedMessage,
                 date,
@@ -49,14 +48,14 @@ public class PublicDiscussionChatMessage extends ChatMessage implements Distribu
     }
 
     protected PublicDiscussionChatMessage(String channelId,
-                                          ChatUser sender,
+                                          String authorId,
                                           Optional<String> text,
                                           Optional<Quotation> quotedMessage,
                                           long date,
                                           boolean wasEdited,
                                           MetaData metaData) {
         super(channelId,
-                sender,
+                authorId,
                 text,
                 quotedMessage,
                 date,
@@ -74,7 +73,7 @@ public class PublicDiscussionChatMessage extends ChatMessage implements Distribu
                 Optional.empty();
         return new PublicDiscussionChatMessage(
                 baseProto.getChannelId(),
-                ChatUser.fromProto(baseProto.getAuthor()),
+                baseProto.getAuthorId(),
                 Optional.of(baseProto.getText()),
                 quotedMessage,
                 baseProto.getDate(),

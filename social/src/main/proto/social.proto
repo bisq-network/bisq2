@@ -97,10 +97,12 @@ message Quotation {
 }
 
 message PrivateTradeChatMessage {
-  string receiversProfileId = 1;
+  string receiversNym = 1;
+  ChatUser author = 2;
 }
 message PrivateDiscussionChatMessage {
-  string receiversProfileId = 1;
+  string receiversNym = 1;
+  ChatUser author = 2;
 }
 message PublicDiscussionChatMessage {
 }
@@ -116,7 +118,7 @@ message PublicTradeChatMessage {
 message ChatMessage {
   string channelId = 1;
   optional string text = 2;
-  ChatUser author = 3;
+  string authorId = 3;
   optional Quotation quotation = 4;
   uint64 date = 5;
   bool wasEdited = 6;
@@ -154,8 +156,8 @@ message PublicTradeChannel {
 message PublicDiscussionChannel {
   string channelName = 1;
   string description = 2;
-  ChatUser channelAdmin = 3;
-  repeated ChatUser channelModerators = 4;
+  string channelAdminId = 3;
+  repeated string channelModeratorIds = 4;
   bool isVisible = 5;
 }
 message Channel {

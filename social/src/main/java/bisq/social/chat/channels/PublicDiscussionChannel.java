@@ -20,15 +20,14 @@ package bisq.social.chat.channels;
 import bisq.common.observable.ObservableSet;
 import bisq.social.chat.NotificationSetting;
 import bisq.social.chat.messages.PublicDiscussionChatMessage;
-import bisq.social.user.ChatUser;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
@@ -36,7 +35,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage> implements PublicChannel {
 
-    public enum ChannelId{
+    public enum ChannelId {
         BISQ_ID,
         BITCOIN_ID,
         MONERO_ID,
@@ -45,22 +44,23 @@ public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage
         OFF_TOPIC_ID
 
     }
+
     private final String channelName;
     private final String description;
-    private final ChatUser channelAdmin;
-    private final Set<ChatUser> channelModerators;
+    private final String channelAdminId;
+    private final Set<String> channelModeratorIds;
     private transient final ObservableSet<PublicDiscussionChatMessage> chatMessages = new ObservableSet<>();
 
     public PublicDiscussionChannel(String id,
                                    String channelName,
                                    String description,
-                                   ChatUser channelAdmin,
-                                   Set<ChatUser> channelModerators
+                                   String channelAdminId,
+                                   Set<String> channelModeratorIds
     ) {
         this(id, channelName,
                 description,
-                channelAdmin,
-                channelModerators,
+                channelAdminId,
+                channelModeratorIds,
                 NotificationSetting.MENTION
         );
     }
@@ -68,15 +68,15 @@ public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage
     private PublicDiscussionChannel(String id,
                                     String channelName,
                                     String description,
-                                    ChatUser channelAdmin,
-                                    Set<ChatUser> channelModerators,
+                                    String channelAdminId,
+                                    Set<String> channelModeratorIds,
                                     NotificationSetting notificationSetting) {
         super(id, notificationSetting);
 
         this.channelName = channelName;
         this.description = description;
-        this.channelAdmin = channelAdmin;
-        this.channelModerators = channelModerators;
+        this.channelAdminId = channelAdminId;
+        this.channelModeratorIds = channelModeratorIds;
     }
 
     public bisq.social.protobuf.Channel toProto() {
@@ -84,10 +84,8 @@ public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage
                 .setPublicDiscussionChannel(bisq.social.protobuf.PublicDiscussionChannel.newBuilder()
                         .setChannelName(channelName)
                         .setDescription(description)
-                        .setChannelAdmin(channelAdmin.toProto())
-                        .addAllChannelModerators(channelModerators.stream()
-                                .map(ChatUser::toProto)
-                                .collect(Collectors.toList())))
+                        .setChannelAdminId(channelAdminId)
+                        .addAllChannelModeratorIds(channelModeratorIds))
                 .build();
     }
 
@@ -97,8 +95,8 @@ public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage
                 baseProto.getId(),
                 proto.getChannelName(),
                 proto.getDescription(),
-                ChatUser.fromProto(proto.getChannelAdmin()),
-                proto.getChannelModeratorsList().stream().map(ChatUser::fromProto).collect(Collectors.toSet()),
+                proto.getChannelAdminId(),
+                new HashSet<>(proto.getChannelModeratorIdsList()),
                 NotificationSetting.fromProto(baseProto.getNotificationSetting()));
     }
 

@@ -64,7 +64,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
         chatMessagesComponent = new ChatMessagesComponent(chatService, chatUserService, reputationService, isDiscussionsChat);
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
-        quotedMessageBlock = new QuotedMessageBlock();
+        quotedMessageBlock = new QuotedMessageBlock(chatService);
 
         //todo
         filterBox = new FilterBox(chatMessagesComponent.getFilteredChatMessages());

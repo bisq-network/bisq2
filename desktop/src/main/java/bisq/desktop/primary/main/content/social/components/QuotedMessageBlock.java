@@ -23,6 +23,7 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
+import bisq.social.chat.ChatService;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.Quotation;
 import bisq.social.user.ChatUser;
@@ -49,8 +50,8 @@ import java.util.Optional;
 public class QuotedMessageBlock {
     private final Controller controller;
 
-    public QuotedMessageBlock() {
-        controller = new Controller();
+    public QuotedMessageBlock(ChatService chatService) {
+        controller = new Controller(chatService);
     }
 
     public Pane getRoot() {
@@ -78,20 +79,23 @@ public class QuotedMessageBlock {
         private final Model model;
         @Getter
         private final View view;
+        private final ChatService chatService;
 
 
-        private Controller() {
+        private Controller(ChatService chatService) {
+            this.chatService = chatService;
             model = new Model();
             view = new View(model, this);
         }
 
         private void reply(ChatMessage chatMessage) {
-            ChatUser author = chatMessage.getAuthor();
-            model.author = author;
-            model.userName.set(author.getNym());
-            model.roboHashNode.set(RoboHash.getImage(new ByteArray(author.getPubKeyHash())));
-            model.quotation.set(chatMessage.getText());
-            model.visible.set(true);
+            chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author -> {
+                model.author = author;
+                model.userName.set(author.getNym());
+                model.roboHashNode.set(RoboHash.getImage(new ByteArray(author.getPubKeyHash())));
+                model.quotation.set(chatMessage.getText());
+                model.visible.set(true);
+            });
         }
 
         private void close() {

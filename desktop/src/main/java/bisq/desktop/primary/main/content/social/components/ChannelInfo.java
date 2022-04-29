@@ -99,7 +99,7 @@ public class ChannelInfo {
             Set<String> ignoredChatUserIds = new HashSet<>(chatService.getIgnoredChatUserIds());
             model.channelName.set(channel.getDisplayString());
             model.members.setAll(channel.getChatMessages().stream()
-                    .map(ChatMessage::getAuthor)
+                    .flatMap(chatMessage -> chatService.findChatUser(chatMessage.getAuthorId()).stream())
                     .distinct()
                     .map((chatUser -> new ChatUserOverview(chatUser, ignoredChatUserIds.contains(chatUser.getId()))))
                     .sorted()
@@ -113,8 +113,9 @@ public class ChannelInfo {
             } else if (channel instanceof PublicDiscussionChannel publicDiscussionChannel) {
                 model.description.set(publicDiscussionChannel.getDescription());
                 model.descriptionVisible.set(true);
-                model.adminProfile = Optional.of(new ChatUserOverview(publicDiscussionChannel.getChannelAdmin()));
-                model.moderators.setAll(publicDiscussionChannel.getChannelModerators().stream()
+                model.adminProfile = chatService.findChatUser(publicDiscussionChannel.getChannelAdminId()).map(ChatUserOverview::new);
+                model.moderators.setAll(publicDiscussionChannel.getChannelModeratorIds().stream()
+                        .flatMap(id -> chatService.findChatUser(id).stream())
                         .map(ChatUserOverview::new)
                         .sorted()
                         .collect(Collectors.toList()));

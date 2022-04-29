@@ -22,7 +22,6 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.social.user.ChatUser;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -42,8 +41,10 @@ public abstract class ChatMessage {
     @Getter
     protected final String channelId;
     protected final Optional<String> optionalText;
+  /*  @Getter
+    protected ChatUser author;*/
     @Getter
-    protected ChatUser author;
+    protected String authorId;
     @Getter
     protected final Optional<Quotation> quotation;
     @Getter
@@ -54,14 +55,14 @@ public abstract class ChatMessage {
     protected final MetaData metaData;
 
     protected ChatMessage(String channelId,
-                          ChatUser author,
+                          String authorId,
                           Optional<String> text,
                           Optional<Quotation> quotation,
                           long date,
                           boolean wasEdited,
                           MetaData metaData) {
         this.channelId = channelId;
-        this.author = author;
+        this.authorId = authorId;
         this.optionalText = text;
         this.quotation = quotation;
         this.date = date;
@@ -76,7 +77,7 @@ public abstract class ChatMessage {
     public bisq.social.protobuf.ChatMessage.Builder getChatMessageBuilder() {
         bisq.social.protobuf.ChatMessage.Builder builder = bisq.social.protobuf.ChatMessage.newBuilder()
                 .setChannelId(channelId)
-                .setAuthor(author.toProto())
+                .setAuthorId(authorId)
                 .setDate(date)
                 .setWasEdited(wasEdited)
                 .setMetaData(metaData.toProto());

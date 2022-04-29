@@ -39,18 +39,19 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class PrivateTradeChatMessage extends ChatMessage implements MailboxMessage {
-    private final String receiversProfileId;
+    private final ChatUser author;
+    private final String receiversNym;
 
     public PrivateTradeChatMessage(String channelId,
-                                   ChatUser sender,
-                                   String receiversProfileId,
+                                   ChatUser author,
+                                   String receiversNym,
                                    String text,
                                    Optional<Quotation> quotedMessage,
                                    long date,
                                    boolean wasEdited) {
         this(channelId,
-                sender,
-                receiversProfileId,
+                author,
+                receiversNym,
                 text,
                 quotedMessage,
                 date,
@@ -59,21 +60,22 @@ public class PrivateTradeChatMessage extends ChatMessage implements MailboxMessa
     }
 
     private PrivateTradeChatMessage(String channelId,
-                                    ChatUser sender,
-                                    String receiversProfileId,
+                                    ChatUser author,
+                                    String receiversNym,
                                     String text,
                                     Optional<Quotation> quotedMessage,
                                     long date,
                                     boolean wasEdited,
                                     MetaData metaData) {
         super(channelId,
-                sender,
+                author.getId(),
                 Optional.of(text),
                 quotedMessage,
                 date,
                 wasEdited,
                 metaData);
-        this.receiversProfileId = receiversProfileId;
+        this.author = author;
+        this.receiversNym = receiversNym;
     }
 
     @Override
@@ -86,7 +88,8 @@ public class PrivateTradeChatMessage extends ChatMessage implements MailboxMessa
     public bisq.social.protobuf.ChatMessage toChatMessageProto() {
         return getChatMessageBuilder()
                 .setPrivateTradeChatMessage(bisq.social.protobuf.PrivateTradeChatMessage.newBuilder()
-                        .setReceiversProfileId(receiversProfileId))
+                        .setReceiversNym(receiversNym)
+                        .setAuthor(author.toProto()))
                 .build();
     }
 
@@ -94,10 +97,11 @@ public class PrivateTradeChatMessage extends ChatMessage implements MailboxMessa
         Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
+        bisq.social.protobuf.PrivateTradeChatMessage privateTradeChatMessage = baseProto.getPrivateTradeChatMessage();
         return new PrivateTradeChatMessage(
                 baseProto.getChannelId(),
-                ChatUser.fromProto(baseProto.getAuthor()),
-                baseProto.getPrivateTradeChatMessage().getReceiversProfileId(),
+                ChatUser.fromProto(privateTradeChatMessage.getAuthor()),
+                privateTradeChatMessage.getReceiversNym(),
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),
