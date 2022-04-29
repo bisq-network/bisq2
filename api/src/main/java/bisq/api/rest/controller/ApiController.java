@@ -17,46 +17,8 @@
 
 package bisq.api.rest.controller;
 
-import bisq.common.proto.Proto;
-import bisq.security.KeyPairProtoUtil;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.util.JsonFormat;
-
-import java.security.KeyPair;
-
 public abstract class ApiController {
-    protected ObjectMapper mapper = new ObjectMapper();
-    protected JsonFactory factory = mapper.getFactory();
 
+    //https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/html/howto.html#howto.spring-mvc.customize-jackson-objectmapper
 
-    protected JsonNode asJson(Proto protoObject) {
-        if (protoObject == null) {
-            return null;
-        }
-        try {
-            String json = JsonFormat.printer().print(protoObject.toProto());
-            JsonParser jsonParser = factory.createParser(json);
-            return mapper.readTree(jsonParser);
-        } catch (Throwable e) { // TODO exception handling
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected JsonNode keyPairAsJson(KeyPair keyPair) {
-        if (keyPair == null) {
-            return null;
-        }
-        try {
-            String json = JsonFormat.printer().print(KeyPairProtoUtil.toProto(keyPair));
-            JsonParser jsonParser = factory.createParser(json);
-            return mapper.readTree(jsonParser);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
 }
