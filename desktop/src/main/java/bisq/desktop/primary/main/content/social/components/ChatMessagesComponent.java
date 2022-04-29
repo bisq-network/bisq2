@@ -46,6 +46,7 @@ import bisq.social.user.ChatUserService;
 import bisq.social.user.reputation.ReputationScore;
 import bisq.social.user.reputation.ReputationService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -68,10 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -374,6 +372,18 @@ public class ChatMessagesComponent {
             model.getTextInput().set(existingText + "@" + chatUser.getUserName() + " ");
         }
 
+        public void fillUserMention(ChatUser user) {
+            String content = model.getTextInput().get().replaceAll("@[a-zA-Z0-9]*$", "@" + user.getNickName() + " ");
+            model.getTextInput().set(content);
+            view.inputField.positionCaret(content.length());
+        }
+
+        public void fillChannelMention(Channel channel) {
+            String content = model.getTextInput().get().replaceAll("#[a-zA-Z0-9]*$", "#" + channel.getDisplayString() + " ");
+            model.getTextInput().set(content);
+            view.inputField.positionCaret(content.length());
+        }
+
         public void onTakeOffer(PublicTradeChatMessage chatMessage) {
             if (model.isMyMessage(chatMessage) || chatMessage.getTradeChatOffer().isEmpty()) {
                 return;
@@ -405,6 +415,8 @@ public class ChatMessagesComponent {
         private final BooleanProperty allowEditing = new SimpleBooleanProperty();
         private final ObjectProperty<ChatMessage> moreOptionsVisibleMessage = new SimpleObjectProperty<>(null);
         private Optional<Consumer<ChatUser>> showChatUserDetailsHandler = Optional.empty();
+        private final ObservableList<ChatUser> mentionableUsers = FXCollections.observableArrayList();
+        private final ObservableList<Channel> mentionableChannels = FXCollections.observableArrayList();
 
         private Model(ChatService chatService,
                       ChatUserService chatUserService,
@@ -417,6 +429,9 @@ public class ChatMessagesComponent {
             ignoredChatUserPredicate = item -> item.getAuthor().isPresent() &&
                     !chatService.getIgnoredChatUserIds().contains(item.getAuthor().get().getId());
             filteredChatMessages.setPredicate(ignoredChatUserPredicate);
+            
+            mentionableUsers.setAll(chatUserService.getMentionableChatUsers());
+            mentionableChannels.setAll(chatService.getMentionableChannels());
         }
 
         void setSendMessageResult(String channelId, ConfidentialMessageService.Result result, BroadcastResult broadcastResult) {
@@ -444,6 +459,8 @@ public class ChatMessagesComponent {
 
         private final ListView<ChatMessageListItem<? extends ChatMessage>> messagesListView;
         private final BisqTextArea inputField;
+        private final ChatMentionPopupMenu<ChatUser> userMentionPopup;
+        private final ChatMentionPopupMenu<Channel> channelMentionPopup;
 
         private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
         private final HBox bottomBox;
@@ -464,6 +481,14 @@ public class ChatMessagesComponent {
             inputField.setPromptText(Res.get("social.chat.input.prompt"));
             inputField.setPrefWidth(300);
             HBox.setHgrow(inputField, Priority.ALWAYS);
+
+            userMentionPopup = new ChatMentionPopupMenu<>(inputField);
+            userMentionPopup.setItemDisplayConverter(ChatUser::getNickName);
+            userMentionPopup.setSelectionHandler(controller::fillUserMention);
+            
+            channelMentionPopup = new ChatMentionPopupMenu<>(inputField);
+            channelMentionPopup.setItemDisplayConverter(Channel::getDisplayString);
+            channelMentionPopup.setSelectionHandler(controller::fillChannelMention);
 
             // there will get added some controls for emojis so leave the box even its only 1 child yet
             bottomBox = Layout.hBoxWith(inputField);
@@ -491,6 +516,19 @@ public class ChatMessagesComponent {
                     }
                 }
             });
+
+            userMentionPopup.setItems(model.mentionableUsers);
+            userMentionPopup.filterProperty().bind(Bindings.createStringBinding(
+                    () -> StringUtils.deriveWordStartingWith(inputField.getText(), '@'),
+                    inputField.textProperty()
+            ));
+            
+            channelMentionPopup.setItems(model.mentionableChannels);
+            channelMentionPopup.filterProperty().bind(Bindings.createStringBinding(
+                    () -> StringUtils.deriveWordStartingWith(inputField.getText(), '#'),
+                    inputField.textProperty()
+            ));
+            
             model.getSortedChatMessages().addListener(messagesListener);
         }
 
@@ -498,6 +536,8 @@ public class ChatMessagesComponent {
         protected void onViewDetached() {
             inputField.textProperty().unbindBidirectional(model.getTextInput());
             inputField.setOnKeyPressed(null);
+            userMentionPopup.filterProperty().unbind();
+            channelMentionPopup.filterProperty().unbind();
             model.getSortedChatMessages().removeListener(messagesListener);
         }
 

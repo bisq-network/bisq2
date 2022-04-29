@@ -55,6 +55,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static bisq.security.SignatureUtil.bitcoinSigToDer;
 import static bisq.security.SignatureUtil.formatMessageForSigning;
@@ -322,6 +323,11 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
 
     public ObservableSet<ChatUserIdentity> getUserProfiles() {
         return persistableStore.getChatUserIdentities();
+    }
+    
+    public Collection<ChatUser> getMentionableChatUsers() {
+        // TODO: implement logic
+        return getUserProfiles().stream().map(ChatUserIdentity::getChatUser).toList();
     }
 
     public Optional<ChatUserIdentity> findUserProfile(String profileId) {

@@ -1237,3 +1237,13 @@ tree-table-view:focused {
     -fx-font-size: 0.85em;
 }
 
+.chat-mention-popup-menu {
+    -fx-min-width: 300;
+}
+
+.chat-mention-popup-menu-item {
+    -fx-background-color: -bisq-grey-2;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-alignment: center-left;
+    -fx-padding: 8 14 8 14;
+}
