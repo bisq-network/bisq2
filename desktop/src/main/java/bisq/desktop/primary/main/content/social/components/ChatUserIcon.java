@@ -25,7 +25,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.social.user.ChatUser;
-import bisq.social.user.entitlement.Role;
+import bisq.social.user.role.Role;
 import bisq.social.user.ChatUserService;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;

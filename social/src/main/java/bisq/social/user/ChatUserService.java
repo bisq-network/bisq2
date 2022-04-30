@@ -37,7 +37,7 @@ import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.KeyPairService;
 import bisq.security.SignatureUtil;
-import bisq.social.user.entitlement.Role;
+import bisq.social.user.role.Role;
 import bisq.social.user.proof.*;
 import bisq.social.user.reputation.Reputation;
 import com.google.common.base.Charsets;
@@ -55,7 +55,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static bisq.security.SignatureUtil.bitcoinSigToDer;
 import static bisq.security.SignatureUtil.formatMessageForSigning;
@@ -70,8 +69,8 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     public static record Config(List<String> btcMempoolProviders,
                                 List<String> bsqMempoolProviders) {
         public static Config from(com.typesafe.config.Config typeSafeConfig) {
-            List<String> btcMempoolProviders = typeSafeConfig.getStringList("btcMempoolProviders");
-            List<String> bsqMempoolProviders = typeSafeConfig.getStringList("bsqMempoolProviders");
+            List<String> btcMempoolProviders = typeSafeConfig.getStringList("btcMemPoolProviders");
+            List<String> bsqMempoolProviders = typeSafeConfig.getStringList("bsqMemPoolProviders");
             return new ChatUserService.Config(btcMempoolProviders, bsqMempoolProviders);
         }
     }

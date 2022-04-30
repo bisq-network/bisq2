@@ -28,7 +28,7 @@ import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.security.DigestUtil;
-import bisq.social.user.entitlement.Role;
+import bisq.social.user.role.Role;
 import bisq.social.user.proof.Proof;
 import bisq.social.user.proof.ProofOfBurnProof;
 import bisq.social.user.ChatUserService;
@@ -58,10 +58,10 @@ import java.util.stream.Stream;
 
 //todo missing validations
 @Slf4j
-public class EntitlementSelection {
+public class RoleSelection {
     private final Controller controller;
 
-    public EntitlementSelection(ChatUserService chatUserService) {
+    public RoleSelection(ChatUserService chatUserService) {
         controller = new Controller(chatUserService);
     }
 
@@ -110,14 +110,14 @@ public class EntitlementSelection {
         public void onDeactivate() {
         }
 
-        private CompletableFuture<Optional<ProofOfBurnProof>> onVerifyProofOfBurn(EntitlementItem entitlementItem,
+        private CompletableFuture<Optional<ProofOfBurnProof>> onVerifyProofOfBurn(RoleItem roleItem,
                                                                                   String pubKeyHash,
                                                                                   String proofOfBurnTxId) {
-            return chatUserService.verifyProofOfBurn(entitlementItem.getType(), proofOfBurnTxId, pubKeyHash)
+            return chatUserService.verifyProofOfBurn(roleItem.getType(), proofOfBurnTxId, pubKeyHash)
                     .whenComplete((proof, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null && proof.isPresent()) {
-                                model.verifiedRoles.add(new Role(entitlementItem.getType(), proof.get()));
+                                model.verifiedRoles.add(new Role(roleItem.getType(), proof.get()));
                             } else {
                                 log.warn("Error at type verification."); // todo 
                             }
@@ -125,7 +125,7 @@ public class EntitlementSelection {
                     });
         }
 
-        private CompletableFuture<Optional<Proof>> onVerifyBondedRole(EntitlementItem entitlementItem, String bondedRoleTxId, String pubKeyHash, String bondedRoleSig) {
+        private CompletableFuture<Optional<Proof>> onVerifyBondedRole(RoleItem roleItem, String bondedRoleTxId, String pubKeyHash, String bondedRoleSig) {
             return chatUserService.verifyBondedRole(bondedRoleTxId,
                             bondedRoleSig,
                             pubKeyHash)
@@ -133,7 +133,7 @@ public class EntitlementSelection {
                         UIThread.run(() -> {
                             if (throwable == null) {
                                 if (proof.isPresent()) {
-                                    model.verifiedRoles.add(new Role(entitlementItem.getType(), proof.get()));
+                                    model.verifiedRoles.add(new Role(roleItem.getType(), proof.get()));
                                 } else {
                                     log.warn("Entitlement verification failed."); // todo 
                                 }
@@ -144,13 +144,13 @@ public class EntitlementSelection {
                     });
         }
 
-        private CompletableFuture<Optional<Proof>> onVerifyModerator(EntitlementItem entitlementItem, String invitationCode) {
+        private CompletableFuture<Optional<Proof>> onVerifyModerator(RoleItem roleItem, String invitationCode) {
             return chatUserService.verifyModerator(invitationCode, model.keyPair.getPublic())
                     .whenComplete((proof, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null) {
                                 if (proof.isPresent()) {
-                                    model.verifiedRoles.add(new Role(entitlementItem.getType(), proof.get()));
+                                    model.verifiedRoles.add(new Role(roleItem.getType(), proof.get()));
                                 } else {
                                     log.warn("Entitlement verification failed."); // todo 
                                 }
@@ -161,24 +161,24 @@ public class EntitlementSelection {
                     });
         }
 
-        private void onShowInfo(EntitlementItem entitlementItem) {
+        private void onShowInfo(RoleItem roleItem) {
             //todo
         }
 
-        public void onOpenProofWindow(EntitlementItem entitlementItem) {
-            model.minBurnAmount = AmountFormatter.formatAmountWithCode(Coin.of(chatUserService.getMinBurnAmount(entitlementItem.getType()), "BSQ"));
+        public void onOpenProofWindow(RoleItem roleItem) {
+            model.minBurnAmount = AmountFormatter.formatAmountWithCode(Coin.of(chatUserService.getMinBurnAmount(roleItem.getType()), "BSQ"));
             if (model.keyPair != null) {
-                new ProofPopup(this, model, entitlementItem).show();
+                new ProofPopup(this, model, roleItem).show();
             }
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final Set<Role> verifiedRoles = new HashSet<>();
-        private final ObservableList<EntitlementItem> observableList = FXCollections.observableArrayList(Stream.of(Role.Type.values())
-                .map(EntitlementItem::new)
+        private final ObservableList<RoleItem> observableList = FXCollections.observableArrayList(Stream.of(Role.Type.values())
+                .map(RoleItem::new)
                 .collect(Collectors.toList()));
-        private final SortedList<EntitlementItem> sortedList = new SortedList<>(observableList);
+        private final SortedList<RoleItem> sortedList = new SortedList<>(observableList);
         private final BooleanProperty tableVisible = new SimpleBooleanProperty();
         private KeyPair keyPair;
         private String minBurnAmount;
@@ -193,7 +193,7 @@ public class EntitlementSelection {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqTableView<EntitlementItem> tableView;
+        private final BisqTableView<RoleItem> tableView;
         private final Label headline;
 
         private View(Model model, Controller controller) {
@@ -228,19 +228,19 @@ public class EntitlementSelection {
         }
 
         private void configTableView() {
-            tableView.getColumns().add(new BisqTableColumn.Builder<EntitlementItem>()
+            tableView.getColumns().add(new BisqTableColumn.Builder<RoleItem>()
                     .title(Res.get("social.createUserProfile.entitlement.table.header.typeName"))
                     .minWidth(400)
-                    .valueSupplier(EntitlementItem::getTypeName)
+                    .valueSupplier(RoleItem::getTypeName)
                     .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<EntitlementItem>()
+            tableView.getColumns().add(new BisqTableColumn.Builder<RoleItem>()
                     .title(Res.get("social.createUserProfile.entitlement.table.header.proof"))
                     .fixWidth(160)
                     .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
                     .actionHandler(controller::onOpenProofWindow)
                     .value(Res.get("social.createUserProfile.entitlement.table.proof.button"))
                     .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<EntitlementItem>()
+            tableView.getColumns().add(new BisqTableColumn.Builder<RoleItem>()
                     .fixWidth(120)
                     .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
                     .actionHandler(controller::onShowInfo)
@@ -250,13 +250,13 @@ public class EntitlementSelection {
     }
 
     @Getter
-    private static class EntitlementItem implements TableItem {
+    private static class RoleItem implements TableItem {
         private final String typeName;
         private final Role.Type type;
         @Setter
         private Button button;
 
-        private EntitlementItem(Role.Type type) {
+        private RoleItem(Role.Type type) {
             this.type = type;
             String info = switch (type) {
                 case LIQUIDITY_PROVIDER -> Res.get("social.createUserProfile.liquidityProvider.info");
@@ -279,24 +279,24 @@ public class EntitlementSelection {
     private static class ProofPopup extends Popup {
         private final Controller controller;
         private final Model model;
-        private final EntitlementItem entitlementItem;
+        private final RoleItem roleItem;
         private TextField firstField, secondField;
         private BisqTextFieldWithCopyIcon pubKeyHashField;
 
         //todo missing validations
-        public ProofPopup(Controller controller, Model model, EntitlementItem entitlementItem) {
+        public ProofPopup(Controller controller, Model model, RoleItem roleItem) {
             super();
             this.controller = controller;
             this.model = model;
-            this.entitlementItem = entitlementItem;
+            this.roleItem = roleItem;
             headLine(Res.get("social.createUserProfile.entitlement.popup.headline"));
-            if (entitlementItem.getType().getTypes().contains(Proof.Type.CHANNEL_ADMIN_INVITATION)) {
+            if (roleItem.getType().getTypes().contains(Proof.Type.CHANNEL_ADMIN_INVITATION)) {
                 message(Res.get("social.createUserProfile.entitlement.popup.moderator.message"));
                 actionButtonText(Res.get("social.createUserProfile.table.entitlement.verify"));
-            } else if (entitlementItem.getType().getTypes().contains(Proof.Type.PROOF_OF_BURN)) {
+            } else if (roleItem.getType().getTypes().contains(Proof.Type.PROOF_OF_BURN)) {
                 message(Res.get("social.createUserProfile.entitlement.popup.proofOfBurn.message"));
                 actionButtonText(Res.get("social.createUserProfile.table.entitlement.liquidityProvider.confirmProofOfBurn"));
-            } else if (entitlementItem.getType().getTypes().contains(Proof.Type.BONDED_ROLE)) {
+            } else if (roleItem.getType().getTypes().contains(Proof.Type.BONDED_ROLE)) {
                 message(Res.get("social.createUserProfile.entitlement.popup.bondedRole.message"));
                 actionButtonText(Res.get("social.createUserProfile.table.entitlement.verify"));
             }
@@ -316,12 +316,12 @@ public class EntitlementSelection {
             String pubKeyHash = model.getPubKeyHash();
             gridPane.addTextFieldWithCopyIcon(Res.get("social.createUserProfile.entitlement.popup.pubKeyHash"), pubKeyHash);
             firstField = gridPane.addTextField("", "");
-            switch (entitlementItem.getType()) {
+            switch (roleItem.getType()) {
                 case LIQUIDITY_PROVIDER -> {
                     firstField.setPromptText(Res.get("social.createUserProfile.entitlement.popup.proofOfBurn"));
                     onAction(() -> {
                                 actionButton.setDisable(true); //todo add busy animation
-                                controller.onVerifyProofOfBurn(entitlementItem, pubKeyHash, firstField.getText())
+                                controller.onVerifyProofOfBurn(roleItem, pubKeyHash, firstField.getText())
                                         .whenComplete((proof, throwable) -> {
                                             UIThread.run(() -> {
                                                 if (throwable == null && proof.isPresent()) {
@@ -343,7 +343,7 @@ public class EntitlementSelection {
                     secondField = gridPane.addTextField(Res.get("social.createUserProfile.entitlement.popup.bondedRole.sig"), "");
                     onAction(() -> {
                                 actionButton.setDisable(true); //todo add busy animation
-                                controller.onVerifyBondedRole(entitlementItem, firstField.getText(), model.getPubKeyHash(), secondField.getText())
+                                controller.onVerifyBondedRole(roleItem, firstField.getText(), model.getPubKeyHash(), secondField.getText())
                                         .whenComplete((proof, throwable) -> {
                                             UIThread.run(() -> {
                                                 if (throwable == null && proof.isPresent()) {
@@ -364,7 +364,7 @@ public class EntitlementSelection {
                     firstField.setPromptText(Res.get("social.createUserProfile.entitlement.popup.moderator.code"));
                     onAction(() -> {
                                 actionButton.setDisable(true); //todo add busy animation
-                                controller.onVerifyModerator(entitlementItem, firstField.getText())
+                                controller.onVerifyModerator(roleItem, firstField.getText())
                                         .whenComplete((proof, throwable) -> {
                                             UIThread.run(() -> {
                                                 if (throwable == null && proof.isPresent()) {
