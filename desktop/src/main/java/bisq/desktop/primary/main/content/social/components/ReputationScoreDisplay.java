@@ -28,6 +28,7 @@ import javafx.scene.layout.HBox;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class ReputationScoreDisplay extends HBox {
@@ -38,6 +39,7 @@ public class ReputationScoreDisplay extends HBox {
         tooltip.setStyle("-fx-text-fill: black; -fx-background-color: -bisq-grey-11;");
         tooltip.setMaxWidth(300);
         tooltip.setWrapText(true);
+        Tooltip.install(this, tooltip);
 
         String fontSize = "0.9em";
         stars = List.of(Icons.getIcon(AwesomeIcon.STAR, fontSize),
@@ -53,16 +55,23 @@ public class ReputationScoreDisplay extends HBox {
         getChildren().addAll(stars);
     }
 
-    public void applyReputationScore(ReputationScore reputationScore) {
-       // int ranking, int score, double relativeScore
-        int target = (int) Math.floor((stars.size() + 1) * reputationScore.getRelativeScore()) - 1;
+    public void applyReputationScore(Optional<ReputationScore> optionalReputationScore) {
+        double relativeScore = 0;
+        int ranking = 0;
+        long score = 0;
+        if (optionalReputationScore.isPresent()) {
+            ReputationScore reputationScore = optionalReputationScore.get();
+            relativeScore = reputationScore.getRelativeScore();
+            ranking = reputationScore.getRanking();
+            score = reputationScore.getTotalScore();
+        }
+
+        int target = (int) Math.floor((stars.size() + 1) * relativeScore) - 1;
         for (int i = 0; i < stars.size(); i++) {
             stars.get(i).setOpacity(i <= target ? 1 : 0.1);
         }
 
-        long percent = Math.round(reputationScore.getRelativeScore() * 10000) / 100;
-        tooltip.setText(Res.get("reputation.score.tooltip",
-                reputationScore.getRanking(), reputationScore.getScore(), percent));
-        Tooltip.install(this, tooltip);
+        long percent = Math.round(relativeScore * 10000) / 100;
+        tooltip.setText(Res.get("reputation.score.tooltip", ranking, score, percent));
     }
 }

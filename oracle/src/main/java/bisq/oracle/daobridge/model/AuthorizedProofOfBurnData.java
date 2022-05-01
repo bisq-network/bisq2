@@ -29,10 +29,12 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @EqualsAndHashCode
 @ToString
 @Getter
@@ -45,19 +47,22 @@ public class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
             100000,
             AuthorizedProofOfBurnData.class.getSimpleName());
 
+    private final String txId;
     private final long burnedAmount;
     private final int blockHeight;
     private final long time;
     private final byte[] hash;
 
     public static AuthorizedProofOfBurnData from(ProofOfBurnDto proofOfBurnDto) {
-        return new AuthorizedProofOfBurnData(proofOfBurnDto.getBurnedAmount(),
+        return new AuthorizedProofOfBurnData(proofOfBurnDto.getTxId(),
+                proofOfBurnDto.getBurnedAmount(),
                 proofOfBurnDto.getBlockHeight(),
                 proofOfBurnDto.getTime(),
                 Hex.decode(proofOfBurnDto.getHash()));
     }
 
-    public AuthorizedProofOfBurnData(long burnedAmount, int blockHeight, long time, byte[] hash) {
+    public AuthorizedProofOfBurnData(String txId, long burnedAmount, int blockHeight, long time, byte[] hash) {
+        this.txId = txId;
         this.burnedAmount = burnedAmount;
         this.blockHeight = blockHeight;
         this.time = time;
@@ -67,6 +72,7 @@ public class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
     @Override
     public bisq.oracle.protobuf.AuthorizedProofOfBurnData toProto() {
         return bisq.oracle.protobuf.AuthorizedProofOfBurnData.newBuilder()
+                .setTxId(txId)
                 .setBurnedAmount(burnedAmount)
                 .setBlockHeight(blockHeight)
                 .setTime(time)
@@ -75,7 +81,11 @@ public class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
     }
 
     public static AuthorizedProofOfBurnData fromProto(bisq.oracle.protobuf.AuthorizedProofOfBurnData proto) {
-        return new AuthorizedProofOfBurnData(proto.getBurnedAmount(), proto.getBlockHeight(), proto.getTime(), proto.getHash().toByteArray());
+        return new AuthorizedProofOfBurnData(proto.getTxId(),
+                proto.getBurnedAmount(),
+                proto.getBlockHeight(),
+                proto.getTime(),
+                proto.getHash().toByteArray());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

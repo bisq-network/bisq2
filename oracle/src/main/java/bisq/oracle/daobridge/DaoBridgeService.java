@@ -21,8 +21,6 @@ import bisq.common.encoding.Hex;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.oracle.daobridge.dto.ProofOfBurnDto;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.security.KeyGeneration;
@@ -45,7 +43,7 @@ import java.util.concurrent.CompletableFuture;
  * -Dbisq.oracle.daoBridge.publicKey=3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63
  */
 @Slf4j
-public class DaoBridgeService implements DataService.Listener {
+public class DaoBridgeService {
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final Config daoBridgeConfig;
@@ -56,8 +54,6 @@ public class DaoBridgeService implements DataService.Listener {
         this.networkService = networkService;
         this.identityService = identityService;
         this.daoBridgeConfig = daoBridgeConfig;
-
-        networkService.addDataServiceListener(this);
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -95,13 +91,6 @@ public class DaoBridgeService implements DataService.Listener {
         } catch (Throwable e) {
             e.printStackTrace();
             return CompletableFuture.completedFuture(false);
-        }
-    }
-
-    @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedProofOfBurnData authorizedProofOfBurnData) {
-            log.info("Received ProofOfBurnData {}", authorizedProofOfBurnData);
         }
     }
 }

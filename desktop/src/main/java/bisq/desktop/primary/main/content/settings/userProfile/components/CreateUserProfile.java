@@ -68,16 +68,16 @@ public class CreateUserProfile {
         private final ChatService chatService;
         private final ChatUserService chatUserService;
         private final KeyPairService keyPairService;
-        private final EntitlementSelection entitlementSelection;
+        private final RoleSelection roleSelection;
 
         private Controller(ChatService chatService, ChatUserService chatUserService, KeyPairService keyPairService) {
             this.chatService = chatService;
             this.chatUserService = chatUserService;
             this.keyPairService = keyPairService;
             model = new Model();
-            entitlementSelection = new EntitlementSelection(chatUserService);
+            roleSelection = new RoleSelection(chatUserService);
 
-            view = new View(model, this, entitlementSelection.getRoot());
+            view = new View(model, this, roleSelection.getRoot());
         }
 
         @Override
@@ -106,7 +106,7 @@ public class CreateUserProfile {
                             model.tempKeyId,
                             model.tempKeyPair,
                             new HashSet<>(),
-                            new HashSet<>(entitlementSelection.getVerifiedEntitlements()))
+                            new HashSet<>(roleSelection.getVerifiedEntitlements()))
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
                             checkArgument(userProfile.getIdentity().domainId().equals(profileId));
@@ -132,11 +132,11 @@ public class CreateUserProfile {
             model.tempKeyId = null;
             model.tempKeyPair = null;
             model.roboHashNode.set(null);
-            entitlementSelection.reset();
+            roleSelection.reset();
         }
 
         private void onShowEntitlementSelection() {
-            entitlementSelection.show(model.tempKeyPair);
+            roleSelection.show(model.tempKeyPair);
             model.entitlementSelectionVisible.set(true);
         }
     }

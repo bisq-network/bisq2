@@ -41,7 +41,7 @@ import bisq.social.offer.TradeChatOffer;
 import bisq.social.user.ChatUser;
 import bisq.social.user.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
-import bisq.social.user.entitlement.Role;
+import bisq.social.user.role.Role;
 import bisq.social.user.proof.BondedRoleProof;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

@@ -18,38 +18,57 @@
 package bisq.social.user.reputation;
 
 import bisq.common.data.ByteArray;
+import bisq.common.observable.Observable;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
 import bisq.social.user.ChatUser;
 import bisq.social.user.ChatUserService;
+import com.google.common.base.Charsets;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Random;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Getter
 @Slf4j
 public class ReputationService implements DataService.Listener {
     private final PersistenceService persistenceService;
     private final NetworkService networkService;
     private final ChatUserService chatUserService;
-    private final Map<ByteArray, AuthorizedProofOfBurnData> authorizedProofOfBurnDataByHash = new ConcurrentHashMap<>();
+    private final Map<ByteArray, Set<AuthorizedProofOfBurnData>> authorizedProofOfBurnDataSetByHash = new ConcurrentHashMap<>();
+    private final Observable<Integer> reputationChanged = new Observable<>(0);
+    private boolean isBatchProcessing;
 
     public ReputationService(PersistenceService persistenceService, NetworkService networkService, ChatUserService chatUserService) {
         this.persistenceService = persistenceService;
         this.networkService = networkService;
         this.chatUserService = chatUserService;
-
-
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         networkService.addDataServiceListener(this);
+        isBatchProcessing = true;
+        networkService.getDataService()
+                .ifPresent(dataService -> dataService.getAllAuthenticatedPayload()
+                        .forEach(this::onAuthenticatedDataAdded));
+        isBatchProcessing = false;
+        if (!authorizedProofOfBurnDataSetByHash.isEmpty()) {
+            authorizedProofOfBurnDataSetByHash.keySet().forEach(pubKeyHash -> {
+                findAuthorizedProofOfBurnDataSet(pubKeyHash)
+                        .ifPresent(set -> ReputationScoreCalculation.addTotalScore(pubKeyHash, set));
+            });
+            reputationChanged.set(reputationChanged.get() + 1);
+        }
         return CompletableFuture.completedFuture(true);
     }
 
@@ -57,16 +76,36 @@ public class ReputationService implements DataService.Listener {
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof AuthorizedProofOfBurnData authorizedProofOfBurnData) {
             addAuthorizedProofOfBurnData(authorizedProofOfBurnData);
+
+            if (!isBatchProcessing) {
+                ByteArray hash = new ByteArray(authorizedProofOfBurnData.getHash());
+                findAuthorizedProofOfBurnDataSet(hash)
+                        .ifPresent(set -> {
+                            ReputationScoreCalculation.addTotalScore(hash, set);
+                            reputationChanged.set(reputationChanged.get() + 1);
+                        });
+            }
         }
     }
 
+    private Optional<Set<AuthorizedProofOfBurnData>> findAuthorizedProofOfBurnDataSet(ByteArray hash) {
+        return Optional.ofNullable(authorizedProofOfBurnDataSetByHash.get(hash));
+    }
+
+    public Optional<ReputationScore> findReputationScore(ChatUser chatUser) {
+        // We use the UTF8 bytes from the string preImage at the Bisq 1 proof of work tool
+        byte[] preImage =  chatUser.getId().getBytes(Charsets.UTF_8);
+        byte[] hashOfPreImage = DigestUtil.hash(preImage);
+        ByteArray hash = new ByteArray(hashOfPreImage);
+        return findAuthorizedProofOfBurnDataSet(hash)
+                .map(set -> ReputationScoreCalculation.getReputationScore(hash));
+    }
+
     private void addAuthorizedProofOfBurnData(AuthorizedProofOfBurnData authorizedProofOfBurnData) {
-        authorizedProofOfBurnDataByHash.put(new ByteArray(authorizedProofOfBurnData.getHash()), authorizedProofOfBurnData);
+        ByteArray key = new ByteArray(authorizedProofOfBurnData.getHash());
+        if (!authorizedProofOfBurnDataSetByHash.containsKey(key)) {
+            authorizedProofOfBurnDataSetByHash.put(key, new HashSet<>());
+        }
+        authorizedProofOfBurnDataSetByHash.get(key).add(authorizedProofOfBurnData);
     }
-
-    public ReputationScore getReputationScore(ChatUser chatUser) {
-        //todo
-        return new ReputationScore(new Random().nextInt(100), new Random().nextInt(10000), new Random().nextInt(100) / 100d);
-    }
-
 }

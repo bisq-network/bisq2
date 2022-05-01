@@ -24,7 +24,7 @@ import bisq.desktop.primary.main.content.settings.userProfile.components.CreateU
 import bisq.desktop.primary.main.content.settings.userProfile.components.UserProfileDisplay;
 import bisq.desktop.primary.main.content.settings.userProfile.components.UserProfileSelectionAtSettings;
 import bisq.social.chat.ChatService;
-import bisq.social.user.entitlement.Role;
+import bisq.social.user.role.Role;
 import bisq.social.user.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

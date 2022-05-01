@@ -27,7 +27,7 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.PublicTradeChatMessage;
-import bisq.social.user.entitlement.Role;
+import bisq.social.user.role.Role;
 import bisq.social.user.reputation.Reputation;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;

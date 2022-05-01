@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user.entitlement;
+package bisq.social.user.role;
 
 import bisq.common.proto.Proto;
 import bisq.common.proto.ProtoEnum;

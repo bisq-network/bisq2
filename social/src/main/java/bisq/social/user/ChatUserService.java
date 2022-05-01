@@ -37,7 +37,7 @@ import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.KeyPairService;
 import bisq.security.SignatureUtil;
-import bisq.social.user.entitlement.Role;
+import bisq.social.user.role.Role;
 import bisq.social.user.proof.*;
 import bisq.social.user.reputation.Reputation;
 import com.google.common.base.Charsets;
@@ -55,7 +55,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static bisq.security.SignatureUtil.bitcoinSigToDer;
 import static bisq.security.SignatureUtil.formatMessageForSigning;
@@ -67,12 +66,12 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     // For dev testing we use hard coded txId and a pubkeyhash to get real data from Bisq explorer
     private static final boolean USE_DEV_TEST_POB_VALUES = true;
 
-    public static record Config(List<String> btcMempoolProviders,
-                                List<String> bsqMempoolProviders) {
+    public static record Config(List<String> btcMemPoolProviders,
+                                List<String> bsqMemPoolProviders) {
         public static Config from(com.typesafe.config.Config typeSafeConfig) {
-            List<String> btcMempoolProviders = typeSafeConfig.getStringList("btcMempoolProviders");
-            List<String> bsqMempoolProviders = typeSafeConfig.getStringList("bsqMempoolProviders");
-            return new ChatUserService.Config(btcMempoolProviders, bsqMempoolProviders);
+            List<String> btcMemPoolProviders = typeSafeConfig.getStringList("btcMemPoolProviders");
+            List<String> bsqMemPoolProviders = typeSafeConfig.getStringList("bsqMemPoolProviders");
+            return new ChatUserService.Config(btcMemPoolProviders, bsqMemPoolProviders);
         }
     }
 
@@ -225,7 +224,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
         } else {
             return supplyAsync(() -> {
                 try {
-                    BaseHttpClient httpClient = getApiHttpClient(config.bsqMempoolProviders());
+                    BaseHttpClient httpClient = getApiHttpClient(config.bsqMemPoolProviders());
                     String jsonBsqTx = httpClient.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
                     Preconditions.checkArgument(BsqTxValidator.initialSanityChecks(txId, jsonBsqTx), txId + "Bsq tx sanity check failed");
                     checkArgument(BsqTxValidator.isBsqTx(httpClient.getBaseUrl()), txId + " is Nnt a valid Bsq tx");
@@ -273,8 +272,8 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
         // verify provided signature matches with pubkey from 1st output and hash of provided identity pubkey
         return supplyAsync(() -> {
             try {
-                BaseHttpClient httpClientBsq = getApiHttpClient(config.bsqMempoolProviders());
-                BaseHttpClient httpClientBtc = getApiHttpClient(config.btcMempoolProviders());
+                BaseHttpClient httpClientBsq = getApiHttpClient(config.bsqMemPoolProviders());
+                BaseHttpClient httpClientBtc = getApiHttpClient(config.btcMemPoolProviders());
                 String jsonBsqTx = httpClientBsq.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClientBsq.userAgent)));
                 String jsonBtcTx = httpClientBtc.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClientBtc.userAgent)));
                 checkArgument(BsqTxValidator.initialSanityChecks(txId, jsonBsqTx), "bsq tx sanity checks");
