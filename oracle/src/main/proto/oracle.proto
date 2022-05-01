@@ -3,6 +3,9 @@ package oracle;
 option java_package = "bisq.oracle.protobuf";
 option java_multiple_files = true;
 
-message DaoBridgeData {
-  string txId = 1;
+message AuthorizedProofOfBurnData {
+  uint64 burnedAmount = 1;
+  uint32 blockHeight = 2;
+  uint64 time = 3;
+  bytes hash = 4;
 }

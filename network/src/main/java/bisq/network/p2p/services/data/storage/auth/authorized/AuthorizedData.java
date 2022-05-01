@@ -32,7 +32,7 @@ import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
 /**
- * Used for verifying if data publisher is authorized to publish this data (e.g. DaoBridgeData, Filter, Alert, DisputeAgent...).
+ * Used for verifying if data publisher is authorized to publish this data (e.g. ProofOfBurnData, Filter, Alert, DisputeAgent...).
  * We use the provided signature and pubkey and check if the pubKey is in the set of provided authorized puKeys from 
  * the authorizedDistributedData object, which will return a hard coded set of pubKeys.
  */

@@ -22,6 +22,7 @@ dependencies {
     implementation project(':network')
     implementation project(':identity')
     implementation project(':settings')
+    implementation project(':oracle')
     implementation project(':presentation')
 
     implementation 'com.github.chimp1984:jsocks'
