@@ -50,7 +50,7 @@ public class Bisq1BridgeClient {
     private AtomicInteger lastRequestedBlockHeight = new AtomicInteger(0);
 
     public Bisq1BridgeClient(String[] args) {
-        applicationService = new DefaultApplicationService(args);
+        applicationService = new DefaultApplicationService(new String[]{"--appName=Bisq1BridgeClient"});
         applicationService.readAllPersisted().join();
         networkService = applicationService.getNetworkService();
         daoBridgeService = applicationService.getDaoBridgeService();

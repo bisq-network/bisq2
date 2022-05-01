@@ -43,7 +43,7 @@ public abstract class ServiceProvider {
         DistributedDataResolver.addResolver("social.ChatMessage", ChatMessage.getDistributedDataResolver());
         DistributedDataResolver.addResolver("social.ChatUser", ChatUser.getResolver());
         DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
-        DistributedDataResolver.addResolver("oracle.ProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
+        DistributedDataResolver.addResolver("oracle.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
         DistributedDataResolver.addResolver("account.AccountAgeWitnessData", AccountAgeWitnessData.getResolver());
 
         // Register resolvers for networkMessages 

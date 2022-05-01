@@ -69,7 +69,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -447,8 +450,8 @@ public class ChatMessagesComponent {
             return chatService.isMyMessage(chatMessage);
         }
 
-        public ReputationScore getReputationScore(ChatUser author) {
-            return reputationService.getReputationScore(author);
+        public Optional<ReputationScore> getReputationScore(ChatUser author) {
+            return reputationService.findReputationScore(author);
         }
     }
 

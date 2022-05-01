@@ -19,19 +19,22 @@ package bisq.social.user.reputation;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
+@ToString
 @Slf4j
 @EqualsAndHashCode
 @Getter
 public class ReputationScore {
-    private final int ranking;
-    private final int score;
+    private final long totalScore;
     private final double relativeScore;
+    private final int ranking;
+    private final double relativeRanking;
 
-    public ReputationScore(int ranking, int score, double relativeScore) {
-        this.ranking = ranking;
-        this.score = score;
+    public ReputationScore(long totalScore, double relativeScore, int ranking, double relativeRanking) {
+        this.totalScore = totalScore;
         this.relativeScore = relativeScore;
+        this.ranking = ranking;
+        this.relativeRanking = relativeRanking;
     }
 }
