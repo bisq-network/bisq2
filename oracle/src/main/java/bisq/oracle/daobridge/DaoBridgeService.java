@@ -18,16 +18,20 @@
 package bisq.oracle.daobridge;
 
 import bisq.common.encoding.Hex;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.oracle.daobridge.dto.ProofOfBurnDto;
+import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.security.KeyGeneration;
 import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -57,26 +61,33 @@ public class DaoBridgeService implements DataService.Listener {
     }
 
     public CompletableFuture<Boolean> initialize() {
-        //todo for testing we use the initialize method, but should be triggered by an UI event later
+        return CompletableFuture.completedFuture(true);
+    }
+
+    public CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnDtoSet) {
         String privateKey = daoBridgeConfig.getString("privateKey");
         if (privateKey == null || privateKey.isEmpty()) {
-            return CompletableFuture.completedFuture(true);
+            return CompletableFuture.completedFuture(false);
         }
         String publicKey = daoBridgeConfig.getString("publicKey");
         if (publicKey == null || publicKey.isEmpty()) {
-            return CompletableFuture.completedFuture(true);
+            return CompletableFuture.completedFuture(false);
         }
-        return addDaoBridgeAuthorizedData(privateKey, publicKey);
+
+        return CompletableFutureUtils.allOf(proofOfBurnDtoSet.stream()
+                        .map(AuthorizedProofOfBurnData::from)
+                        .map(authorizedProofOfBurnData -> publishProofOfBurnData(authorizedProofOfBurnData, privateKey, publicKey)))
+                .thenApply(results -> !results.contains(false));
     }
 
-    public CompletableFuture<Boolean> addDaoBridgeAuthorizedData(String authorizedPrivateKeyAsHex,
-                                                                 String authorizedPublicKeyAsHex) {
+    public CompletableFuture<Boolean> publishProofOfBurnData(AuthorizedProofOfBurnData authorizedProofOfBurnData,
+                                                             String authorizedPrivateKeyAsHex,
+                                                             String authorizedPublicKeyAsHex) {
         try {
             PrivateKey authorizedPrivateKey = KeyGeneration.generatePrivate(Hex.decode(authorizedPrivateKeyAsHex));
             PublicKey authorizedPublicKey = KeyGeneration.generatePublic(Hex.decode(authorizedPublicKeyAsHex));
-            DaoBridgeData daoBridgeData = new DaoBridgeData("test tx id");
             return identityService.getOrCreateIdentity(IdentityService.DEFAULT)
-                    .thenCompose(identity -> networkService.publishAuthorizedData(daoBridgeData,
+                    .thenCompose(identity -> networkService.publishAuthorizedData(authorizedProofOfBurnData,
                             identity.getNodeIdAndKeyPair(),
                             authorizedPrivateKey,
                             authorizedPublicKey))
@@ -89,8 +100,8 @@ public class DaoBridgeService implements DataService.Listener {
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof DaoBridgeData daoBridgeData) {
-            log.info("Received daoBridgeData {}", daoBridgeData);
+        if (authenticatedData.getDistributedData() instanceof AuthorizedProofOfBurnData authorizedProofOfBurnData) {
+            log.info("Received ProofOfBurnData {}", authorizedProofOfBurnData);
         }
     }
 }

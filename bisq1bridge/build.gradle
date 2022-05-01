@@ -1,0 +1,50 @@
+plugins {
+    id 'bisq.java-library'
+    id 'application'
+    alias(libs.plugins.shadow)
+}
+
+apply from: '../buildSrc/bisq-version.gradle'
+apply from: '../buildSrc/logging-dependencies.gradle'
+
+application {
+    project.mainClassName = 'bisq.bisq1bridge.Bisq1bridgeMain'
+}
+
+ext {
+    jacksonVersion = '2.13.2'
+}
+
+run {
+    // Pass command-line properties to application
+    // Normally they'd only be applied to the gradle process, but we need them in the started application
+    // See https://stackoverflow.com/a/23689696
+    systemProperties System.getProperties()
+}
+
+dependencies {
+    api platform(project(':platforms:common-platform'))
+    api platform(project(':platforms:network-platform'))
+
+    implementation project(':common')
+    implementation project(':i18n')
+    implementation project(':persistence')
+    implementation project(':security')
+    implementation project(':network')
+    implementation project(':identity')
+    implementation project(':settings')
+    implementation project(':oracle')
+    implementation project(':application')
+
+    implementation libs.protobuf.java
+    implementation libs.google.gson
+    implementation libs.google.guava
+    implementation libs.typesafe.config
+
+    implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+
+    implementation 'com.google.protobuf:protobuf-java-util:3.20.0'
+
+}
