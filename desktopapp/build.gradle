@@ -135,16 +135,10 @@ tasks.jpackage {
         icon = "package/macosx/Bisq 2.icns"
         resourceDir = "package/macosx"
 
-        // Env variable can be set by calling "export BISQ2_PACKAGE_SIGNING_IDENTITY='Some value'"
-        // See "man codesign" for details about the expected signing identity
-        String envVariableSigningID = "$System.env.BISQ2_PACKAGE_SIGNING_IDENTITY"
-        println "Environment variable BISQ2_PACKAGE_SIGNING_IDENTITY is: ${envVariableSigningID}"
-        ant.input(message: "Sign the app using the above signing identity? (y=yes, n=no)",
-                addproperty: "macos-sign-check",
-                validargs: "y,n")
-
-        if (ant.properties['macos-sign-check'] == 'y') {
+        if (project.hasProperty("signBinary")) {
             macSign = true
+            // Env variable can be set by calling "export BISQ2_PACKAGE_SIGNING_IDENTITY='Some value'"
+            String envVariableSigningID = "$System.env.BISQ2_PACKAGE_SIGNING_IDENTITY"
             // e.g. network.bisq2.CAT is used when binaries are built by @ripcurlx
             String envVariablePrimaryBundleId = "$System.env.BISQ2_PRIMARY_BUNDLE_ID"
             macPackageIdentifier = "${envVariablePrimaryBundleId}"
@@ -177,7 +171,7 @@ tasks.jpackage {
         FileCollection collection = layout.files { binariesFolderPath.listFiles() }
         collection.collect { it.path }.sort().each { println it }
 
-        if (ant.properties['macos-sign-check'] == 'y') {
+        if (project.hasProperty("signBinary")) {
 
             // e.g. network.bisq2.CAT is used when binaries are built by @ripcurlx
             String envVariablePrimaryBundleId = "$System.env.BISQ2_PRIMARY_BUNDLE_ID"
