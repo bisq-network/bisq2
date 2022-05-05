@@ -17,13 +17,10 @@
 
 package bisq.wallets.rpc;
 
-import bisq.wallets.NetworkType;
-
 import java.nio.file.Path;
 import java.util.Objects;
 
-public record RpcConfig(NetworkType networkType,
-                        String hostname,
+public record RpcConfig(String hostname,
                         int port,
                         String user,
                         String password,
@@ -31,8 +28,6 @@ public record RpcConfig(NetworkType networkType,
 
     public static class Builder {
         private static final int INVALID_PORT = -1;
-
-        private NetworkType networkType;
 
         private String hostname;
         private Integer port = INVALID_PORT;
@@ -46,7 +41,6 @@ public record RpcConfig(NetworkType networkType,
         }
 
         public Builder(RpcConfig configTemplate) {
-            this.networkType = configTemplate.networkType();
             this.hostname = configTemplate.hostname();
             this.port = configTemplate.port();
 
@@ -56,7 +50,6 @@ public record RpcConfig(NetworkType networkType,
         }
 
         public RpcConfig build() {
-            Objects.requireNonNull(networkType);
             Objects.requireNonNull(hostname);
 
             if (port == INVALID_PORT) {
@@ -67,12 +60,7 @@ public record RpcConfig(NetworkType networkType,
             Objects.requireNonNull(password);
             Objects.requireNonNull(walletPath);
 
-            return new RpcConfig(networkType, hostname, port, user, password, walletPath);
-        }
-
-        public RpcConfig.Builder networkType(NetworkType networkType) {
-            this.networkType = networkType;
-            return this;
+            return new RpcConfig(hostname, port, user, password, walletPath);
         }
 
         public RpcConfig.Builder hostname(String hostname) {

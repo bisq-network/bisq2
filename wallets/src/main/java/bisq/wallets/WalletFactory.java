@@ -69,7 +69,6 @@ public class WalletFactory {
                 .orElseGet(() -> walletConfig.getWalletBackend() == WalletBackend.BITCOIND ? 18443 : 7040);
 
         return new RpcConfig.Builder()
-                .networkType(NetworkType.REGTEST)
                 .hostname(hostname)
                 .port(port)
                 .user(walletConfig.getUser())
