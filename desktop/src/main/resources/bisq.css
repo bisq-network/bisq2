@@ -259,7 +259,6 @@
 
 .bisq-text-2 {
     -fx-text-fill: -bisq-grey-13;
-    -fx-font-family: "IBM Plex Sans Regular";
     -fx-font-size: 1.35em;
     -fx-line-spacing: .45em;
 }
@@ -268,7 +267,6 @@
     -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 1.2em;
     -fx-line-spacing: 0.5em;
-    -fx-font-family: "IBM Plex Sans Regular";
 }
 
 .wrap-text {
