@@ -41,11 +41,11 @@ import java.util.List;
 import java.util.function.Function;
 
 @Slf4j
-public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverviewController> implements TabViewChild {
+public class TradeOverviewListView extends View<VBox, TradeOverviewModel, TradeOverviewListController> implements TabViewChild {
     private final BisqTableView<ProtocolListItem> tableView;
     private Callback<TableColumn<ProtocolListItem, ProtocolListItem>, TableCell<ProtocolListItem, ProtocolListItem>> cellFactory;
 
-    public TradeOverviewView(TradeOverviewModel model, TradeOverviewController controller) {
+    public TradeOverviewListView(TradeOverviewModel model, TradeOverviewListController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(30);

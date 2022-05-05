@@ -24,7 +24,7 @@ import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.trade.closedTrades.GlobalClosedTradesController;
 import bisq.desktop.primary.main.content.trade.offerbook.GlobalOfferbookController;
 import bisq.desktop.primary.main.content.trade.openoffers.GlobalOpenOffersController;
-import bisq.desktop.primary.main.content.trade.overview.TradeOverviewController;
+import bisq.desktop.primary.main.content.trade.overview.TradeOverviewListController;
 import bisq.desktop.primary.main.content.trade.overview.TradeOverviewGridController;
 import bisq.desktop.primary.main.content.trade.pendingTrades.GlobalPendingTradesController;
 import lombok.Getter;
@@ -57,8 +57,8 @@ public class TradeController extends TabController<TradeModel> implements Contro
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case TRADE_OVERVIEW -> {
-                return Optional.of(new TradeOverviewController(applicationService));
+            case TRADE_OVERVIEW_LIST -> {
+                return Optional.of(new TradeOverviewListController(applicationService));
             }
             case TRADE_OVERVIEW_GRID -> {
                 return Optional.of(new TradeOverviewGridController(applicationService));
