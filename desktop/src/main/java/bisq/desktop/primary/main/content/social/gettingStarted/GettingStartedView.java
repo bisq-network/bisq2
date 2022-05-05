@@ -96,7 +96,7 @@ public class GettingStartedView extends View<VBox, GettingStartedModel, GettingS
         contentLabel.setAlignment(Pos.TOP_LEFT);
 
         Button button = new Button(buttonLabel);
-        button.getStyleClass().add("bisq-primary-button");
+        button.getStyleClass().add("bisq-big-green-button");
         button.setOnAction(e -> Navigation.navigateTo(target));
         button.setPrefWidth(400);
         

@@ -474,8 +474,8 @@
     -fx-background-color: -bisq-content-bg;
 }
 
-/* Primary green button */
-.bisq-primary-button {
+/* Big green button */
+.bisq-big-green-button {
     -fx-background-color: -bisq-dark-green;
     -fx-text-fill: -fx-light-text-color;
     -fx-padding: 28;
@@ -484,7 +484,7 @@
     -fx-cursor: hand;
 }
 
-.bisq-primary-button:hover {
+.bisq-big-green-button:hover {
     -fx-background-color: -bisq-logo-green;
 }
 
