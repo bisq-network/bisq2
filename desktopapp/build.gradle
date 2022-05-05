@@ -1,3 +1,5 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
 plugins {
     id 'bisq.java-library'
     id 'application'
@@ -102,25 +104,17 @@ tasks.jpackage {
     destination = "$buildDir/$distsDirName"
     input = "$buildDir/$libsDirName"
     licenseFile = "../LICENSE"
-//    resourceDir = --resource-dir <resource dir path> // TODO
     runtimeImage = System.getProperty("java.home")
     temp = jpackageTempDir
 //    launchers = --add-launcher <name>=<property file> // TODO add multiple launchers? desktopapp / satoshiapp
 
     winMenu = true
     winDirChooser = true
-//    winUpgradeUuid = win-upgrade-uuid <id string> // TODO
-//    winMenuGroup = --win-menu-group <menu group name> // TODO
     winShortcut = true
-    winPerUserInstall = true
+    winPerUserInstall = false
     winConsole = false
 
-//    macPackageIdentifier = --mac-package-identifier <ID string> // TODO
-//    macPackageName = --mac-package-name <name string> // TODO
-//    macPackageSigningPrefix = --mac-package-signing-prefix <prefix string> // TODO
-    macSign = false
-//    macSigningKeychain = --mac-signing-keychain <file path> // TODO
-//    macSigningKeyUserName = --mac-signing-key-user-name <team name> // TODO
+    macPackageName = 'Bisq 2'
 
     linuxPackageName = 'bisq2'
     linuxDebMaintainer = 'noreply@bisq.network'
@@ -135,7 +129,18 @@ tasks.jpackage {
     mac {
         // Avoid error "The first number in an app-version cannot be zero or negative."
         appVersion = appVersion.startsWith('0') ? '1.0.0' : appVersion
-//        icon = "icons/icons.icns" // TODO
+        icon = "package/macosx/Bisq 2.icns"
+        resourceDir = "package/macosx"
+
+        if (project.hasProperty("signBinary")) {
+            macSign = true
+            // Env variable can be set by calling "export BISQ2_PACKAGE_SIGNING_IDENTITY='Some value'"
+            String envVariableSigningID = "$System.env.BISQ2_PACKAGE_SIGNING_IDENTITY"
+            // e.g. network.bisq2.CAT is used when binaries are built by @ripcurlx
+            String envVariablePrimaryBundleId = "$System.env.BISQ2_PRIMARY_BUNDLE_ID"
+            macPackageIdentifier = "${envVariablePrimaryBundleId}"
+            macSigningKeyUserName = "${envVariableSigningID}"
+        }
     }
 
     linux {
@@ -144,6 +149,11 @@ tasks.jpackage {
         // Worked well when using IntelliJ IDEA SDKs (File > Project Structure > SDKs > + > Download JDK)
         runtimeImage = "/home/user/.jdks/openjdk-17.0.2"
 //        icon = "icons/icons.ico" // TODO
+    }
+
+    windows {
+        icon = "package/windows/Bisq 2.ico"
+        resourceDir = "package/windows"
     }
 
     additionalParameters = ['--verbose']
@@ -162,5 +172,102 @@ tasks.jpackage {
         println "The binaries and checksums are ready:"
         FileCollection collection = layout.files { binariesFolderPath.listFiles() }
         collection.collect { it.path }.sort().each { println it }
+
+        if(project.hasProperty("signBinary")) {
+
+            String packagePath = "${destination}/${appName}-${appVersion}"
+
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                packagePath += ".exe"
+
+                // Set the necessary permissions before calling signtool
+                executeCmd("\"attrib -R \"${packagePath}\"\"")
+
+                // In addition to the groovy quotes around the string, the entire Windows command must also be surrounded
+                // by quotes, plus each path inside the command has to be quoted as well
+                // Reason for this is that the path to the called executable contains spaces
+                // See https://stackoverflow.com/questions/6376113/how-do-i-use-spaces-in-the-command-prompt/6378038#6378038
+                executeCmd("\"\"C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit\\signtool.exe\" sign /v /fd SHA256 /a \"${packagePath}\"\"")
+            } else if (Os.isFamily(Os.FAMILY_MAC)) {
+
+                // e.g. network.bisq2.CAT is used when binaries are built by @ripcurlx
+                String envVariablePrimaryBundleId = "$System.env.BISQ2_PRIMARY_BUNDLE_ID"
+
+                // Upload for notarization
+                // See https://developer.apple.com/documentation/xcode/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow#3087734
+                String envVariableAcUsername = "$System.env.BISQ2_PACKAGE_NOTARIZATION_AC_USERNAME"
+                String envVariableAscProvider = "$System.env.BISQ2_PACKAGE_NOTARIZATION_ASC_PROVIDER"
+                packagePath += ".dmg"
+
+                def uploadForNotarizationOutput = executeCmd("xcrun altool --notarize-app" +
+                        " --primary-bundle-id '${envVariablePrimaryBundleId}'" +
+                        " --username '${envVariableAcUsername}'" +
+                        " --password '@keychain:AC_PASSWORD'" +
+                        " --asc-provider '${envVariableAscProvider}'" +
+                        " --file '${packagePath}'")
+
+                def requestUUID = uploadForNotarizationOutput.split('RequestUUID = ')[1].trim()
+                println "Extracted RequestUUID: " + requestUUID
+
+                // Every 1 minute, check the status
+                def notarizationEndedInSuccess = false
+                def notarizationEndedInFailure = false
+                while (!(notarizationEndedInSuccess || notarizationEndedInFailure)) {
+                    println "Current time is:"
+                    executeCmd('date')
+                    println "Waiting for 1 minute..."
+                    sleep(1 * 60 * 1000)
+
+                    println "Checking notarization status"
+
+                    def checkNotarizationStatusOutput = executeCmd("xcrun altool --notarization-info" +
+                            " '${requestUUID}'" +
+                            " --username '${envVariableAcUsername}'" +
+                            " --password '@keychain:AC_PASSWORD'")
+
+                    notarizationEndedInSuccess = checkNotarizationStatusOutput.contains('success')
+                    notarizationEndedInFailure = checkNotarizationStatusOutput.contains('invalid')
+                }
+
+                if (notarizationEndedInFailure) {
+                    ant.fail('Notarization failed, aborting')
+                }
+
+                if (notarizationEndedInSuccess) {
+                    println "Notarization was successful"
+
+                    // Staple ticket on dmg
+                    executeCmd("xcrun stapler staple" +
+                            " '${packagePath}'")
+                }
+            }
+        }
     }
+}
+
+def executeCmd(String cmd) {
+    String shell
+    String shellArg
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        shell = 'cmd'
+        shellArg = '/c'
+    } else {
+        shell = 'bash'
+        shellArg = '-c'
+    }
+
+    println "Executing command:\n${cmd}\n"
+    // See "Executing External Processes" section of
+    // http://docs.groovy-lang.org/next/html/documentation/
+    def commands = [shell, shellArg, cmd]
+    def process = commands.execute(null, project.rootDir)
+    def result
+    if (process.waitFor() == 0) {
+        result = process.text
+        println "Command output (stdout):\n${result}"
+    } else {
+        result = process.err.text
+        println "Command output (stderr):\n${result}"
+    }
+    return result
 }
