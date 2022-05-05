@@ -104,17 +104,14 @@ tasks.jpackage {
     destination = "$buildDir/$distsDirName"
     input = "$buildDir/$libsDirName"
     licenseFile = "../LICENSE"
-//    resourceDir = --resource-dir <resource dir path> // TODO
     runtimeImage = System.getProperty("java.home")
     temp = jpackageTempDir
 //    launchers = --add-launcher <name>=<property file> // TODO add multiple launchers? desktopapp / satoshiapp
 
     winMenu = true
     winDirChooser = true
-//    winUpgradeUuid = win-upgrade-uuid <id string> // TODO
-//    winMenuGroup = --win-menu-group <menu group name> // TODO
     winShortcut = true
-    winPerUserInstall = true
+    winPerUserInstall = false
     winConsole = false
 
     macPackageName = 'Bisq 2'
@@ -154,6 +151,11 @@ tasks.jpackage {
 //        icon = "icons/icons.ico" // TODO
     }
 
+    windows {
+        icon = "package/windows/Bisq 2.ico"
+        resourceDir = "package/windows"
+    }
+
     additionalParameters = ['--verbose']
 
     javaOptions = []
@@ -171,57 +173,73 @@ tasks.jpackage {
         FileCollection collection = layout.files { binariesFolderPath.listFiles() }
         collection.collect { it.path }.sort().each { println it }
 
-        if (project.hasProperty("signBinary")) {
+        if(project.hasProperty("signBinary")) {
 
-            // e.g. network.bisq2.CAT is used when binaries are built by @ripcurlx
-            String envVariablePrimaryBundleId = "$System.env.BISQ2_PRIMARY_BUNDLE_ID"
+            String packagePath = "${destination}/${appName}-${appVersion}"
 
-            // Upload for notarization
-            // See https://developer.apple.com/documentation/xcode/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow#3087734
-            String envVariableAcUsername = "$System.env.BISQ2_PACKAGE_NOTARIZATION_AC_USERNAME"
-            String envVariableAscProvider = "$System.env.BISQ2_PACKAGE_NOTARIZATION_ASC_PROVIDER"
-            String imagePath = "${destination}/${appName}-${appVersion}.dmg"
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                packagePath += ".exe"
 
-            def uploadForNotarizationOutput = executeCmd("xcrun altool --notarize-app" +
-                    " --primary-bundle-id '${envVariablePrimaryBundleId}'" +
-                    " --username '${envVariableAcUsername}'" +
-                    " --password '@keychain:AC_PASSWORD'" +
-                    " --asc-provider '${envVariableAscProvider}'" +
-                    " --file '${imagePath}'")
+                // Set the necessary permissions before calling signtool
+                executeCmd("\"attrib -R \"${packagePath}\"\"")
 
-            def requestUUID = uploadForNotarizationOutput.split('RequestUUID = ')[1].trim()
-            println "Extracted RequestUUID: " + requestUUID
+                // In addition to the groovy quotes around the string, the entire Windows command must also be surrounded
+                // by quotes, plus each path inside the command has to be quoted as well
+                // Reason for this is that the path to the called executable contains spaces
+                // See https://stackoverflow.com/questions/6376113/how-do-i-use-spaces-in-the-command-prompt/6378038#6378038
+                executeCmd("\"\"C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit\\signtool.exe\" sign /v /fd SHA256 /a \"${packagePath}\"\"")
+            } else if (Os.isFamily(Os.FAMILY_MAC)) {
 
-            // Every 1 minute, check the status
-            def notarizationEndedInSuccess = false
-            def notarizationEndedInFailure = false
-            while (!(notarizationEndedInSuccess || notarizationEndedInFailure)) {
-                println "Current time is:"
-                executeCmd('date')
-                println "Waiting for 1 minute..."
-                sleep(1 * 60 * 1000)
+                // e.g. network.bisq2.CAT is used when binaries are built by @ripcurlx
+                String envVariablePrimaryBundleId = "$System.env.BISQ2_PRIMARY_BUNDLE_ID"
 
-                println "Checking notarization status"
+                // Upload for notarization
+                // See https://developer.apple.com/documentation/xcode/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow#3087734
+                String envVariableAcUsername = "$System.env.BISQ2_PACKAGE_NOTARIZATION_AC_USERNAME"
+                String envVariableAscProvider = "$System.env.BISQ2_PACKAGE_NOTARIZATION_ASC_PROVIDER"
+                packagePath += ".dmg"
 
-                def checkNotarizationStatusOutput = executeCmd("xcrun altool --notarization-info" +
-                        " '${requestUUID}'" +
+                def uploadForNotarizationOutput = executeCmd("xcrun altool --notarize-app" +
+                        " --primary-bundle-id '${envVariablePrimaryBundleId}'" +
                         " --username '${envVariableAcUsername}'" +
-                        " --password '@keychain:AC_PASSWORD'")
+                        " --password '@keychain:AC_PASSWORD'" +
+                        " --asc-provider '${envVariableAscProvider}'" +
+                        " --file '${packagePath}'")
 
-                notarizationEndedInSuccess = checkNotarizationStatusOutput.contains('success')
-                notarizationEndedInFailure = checkNotarizationStatusOutput.contains('invalid')
-            }
+                def requestUUID = uploadForNotarizationOutput.split('RequestUUID = ')[1].trim()
+                println "Extracted RequestUUID: " + requestUUID
 
-            if (notarizationEndedInFailure) {
-                ant.fail('Notarization failed, aborting')
-            }
+                // Every 1 minute, check the status
+                def notarizationEndedInSuccess = false
+                def notarizationEndedInFailure = false
+                while (!(notarizationEndedInSuccess || notarizationEndedInFailure)) {
+                    println "Current time is:"
+                    executeCmd('date')
+                    println "Waiting for 1 minute..."
+                    sleep(1 * 60 * 1000)
 
-            if (notarizationEndedInSuccess) {
-                println "Notarization was successful"
+                    println "Checking notarization status"
 
-                // Staple ticket on dmg
-                executeCmd("xcrun stapler staple" +
-                        " '${imagePath}'")
+                    def checkNotarizationStatusOutput = executeCmd("xcrun altool --notarization-info" +
+                            " '${requestUUID}'" +
+                            " --username '${envVariableAcUsername}'" +
+                            " --password '@keychain:AC_PASSWORD'")
+
+                    notarizationEndedInSuccess = checkNotarizationStatusOutput.contains('success')
+                    notarizationEndedInFailure = checkNotarizationStatusOutput.contains('invalid')
+                }
+
+                if (notarizationEndedInFailure) {
+                    ant.fail('Notarization failed, aborting')
+                }
+
+                if (notarizationEndedInSuccess) {
+                    println "Notarization was successful"
+
+                    // Staple ticket on dmg
+                    executeCmd("xcrun stapler staple" +
+                            " '${packagePath}'")
+                }
             }
         }
     }
