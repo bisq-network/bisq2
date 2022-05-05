@@ -108,3 +108,28 @@
 #welcome-profile {
     -fx-image: url("images/welcome-profile.png");
 }
+
+/* Protocols */
+#protocol-bisq {
+    -fx-image: url("images/protocols/protocol-bisq.png");
+}
+
+#protocol-bsq {
+    -fx-image: url("images/protocols/protocol-bsq.png");
+}
+
+#protocol-lightning {
+    -fx-image: url("images/protocols/protocol-lightning.png");
+}
+
+#protocol-liquid {
+    -fx-image: url("images/protocols/protocol-liquid.png");
+}
+
+#protocol-monero {
+    -fx-image: url("images/protocols/protocol-monero.png");
+}
+
+#protocol-satoshi-square {
+    -fx-image: url("images/protocols/protocol-satoshi-square.png");
+}

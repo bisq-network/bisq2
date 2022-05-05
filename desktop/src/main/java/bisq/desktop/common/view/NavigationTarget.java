@@ -50,6 +50,7 @@ public enum NavigationTarget {
 
     TRADE(CONTENT, false),
     TRADE_OVERVIEW(TRADE),
+    TRADE_OVERVIEW_GRID(TRADE),
     OFFERBOOK(TRADE),
     OPEN_OFFERS(TRADE),
     PENDING_TRADES(TRADE),

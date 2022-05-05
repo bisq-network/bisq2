@@ -33,6 +33,7 @@ public class ProtocolListItem implements TableItem {
 
     private final SwapProtocol.Type swapProtocolType;
     private final NavigationTarget navigationTarget;
+    private final String basicInfo;
     private final String markets;
     private final String marketsInfo;
     private final String securityInfo;
@@ -43,9 +44,11 @@ public class ProtocolListItem implements TableItem {
     private final String speedInfo;
     private final String releaseDate;
     private final String protocolsName;
+    private final String iconId;
 
     ProtocolListItem(SwapProtocol.Type swapProtocolType,
                      NavigationTarget navigationTarget,
+                     String basicInfo,
                      String markets,
                      String marketsInfo,
                      String securityInfo,
@@ -54,11 +57,13 @@ public class ProtocolListItem implements TableItem {
                      String convenienceInfo,
                      String costInfo,
                      String speedInfo,
-                     String releaseDate
+                     String releaseDate,
+                     String iconId
 
     ) {
         this.swapProtocolType = swapProtocolType;
         this.navigationTarget = navigationTarget;
+        this.basicInfo = basicInfo;
         this.markets = markets;
         this.marketsInfo = marketsInfo;
         this.securityInfo = securityInfo;
@@ -68,6 +73,7 @@ public class ProtocolListItem implements TableItem {
         this.costInfo = costInfo;
         this.speedInfo = speedInfo;
         this.releaseDate = releaseDate;
+        this.iconId = iconId;
         protocolsName = Res.get("trade.protocols." + swapProtocolType.name());
     }
 

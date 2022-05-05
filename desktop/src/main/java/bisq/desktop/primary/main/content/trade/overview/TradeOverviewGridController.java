@@ -26,20 +26,20 @@ import bisq.i18n.Res;
 import bisq.protocol.SwapProtocol;
 import lombok.Getter;
 
-public class TradeOverviewController implements Controller {
+public class TradeOverviewGridController implements Controller {
     @Getter
     private final TradeOverviewModel model;
     @Getter
-    private final TradeOverviewView view;
+    private final TradeOverviewGridView view;
 
-    public TradeOverviewController(DefaultApplicationService applicationService) {
+    public TradeOverviewGridController(DefaultApplicationService applicationService) {
         model = new TradeOverviewModel();
-        view = new TradeOverviewView(model, this);
+        view = new TradeOverviewGridView(model, this);
     }
 
     @Override
     public void onActivate() {
-        model.initialize();;
+        model.initialize();
     }
 
     @Override

@@ -17,7 +17,11 @@
 
 package bisq.desktop.primary.main.content.trade.overview;
 
+import bisq.common.data.Pair;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.i18n.Res;
+import bisq.protocol.SwapProtocol;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -29,4 +33,93 @@ public class TradeOverviewModel implements Model {
     final ObservableList<ProtocolListItem> listItems = FXCollections.observableArrayList();
     final FilteredList<ProtocolListItem> filteredItems = new FilteredList<>(listItems);
     final SortedList<ProtocolListItem> sortedItems = new SortedList<>(filteredItems);
+    
+    public void initialize() {
+        listItems.setAll(
+                new ProtocolListItem(SwapProtocol.Type.SATOSHI_SQUARE,
+                        NavigationTarget.SATOSHI_SQUARE,
+                        Res.get("trade.protocols.basic.info.SATOSHI_SQUARE"),
+                        Res.get("trade.protocols.markets.SATOSHI_SQUARE"),
+                        Res.get("trade.protocols.markets.info.SATOSHI_SQUARE"),
+                        Res.get("trade.protocols.security.info.SATOSHI_SQUARE"),
+                        new Pair<>(10000L, 700000L),
+                        Res.get("trade.protocols.privacy.info.SATOSHI_SQUARE"),
+                        Res.get("trade.protocols.convenience.info.SATOSHI_SQUARE"),
+                        Res.get("trade.protocols.costs.info.SATOSHI_SQUARE"),
+                        Res.get("trade.protocols.speed.info.SATOSHI_SQUARE"),
+                        "",
+                        "protocol-satoshi-square"
+                ),
+                new ProtocolListItem(SwapProtocol.Type.LIQUID_SWAP,
+                        NavigationTarget.LIQUID_SWAP,
+                        Res.get("trade.protocols.basic.info.LIQUID_SWAP"),
+                        Res.get("trade.protocols.markets.LIQUID_SWAP"),
+                        Res.get("trade.protocols.markets.info.LIQUID_SWAP"),
+                        Res.get("trade.protocols.security.info.LIQUID_SWAP"),
+                        new Pair<>(10000L, 700000L),
+                        Res.get("trade.protocols.privacy.info.LIQUID_SWAP"),
+                        Res.get("trade.protocols.convenience.info.LIQUID_SWAP"),
+                        Res.get("trade.protocols.costs.info.LIQUID_SWAP"),
+                        Res.get("trade.protocols.speed.info.LIQUID_SWAP"),
+                        "Q2/22",
+                        "protocol-liquid"
+                ),
+                new ProtocolListItem(SwapProtocol.Type.ATOMIC_CROSS_CHAIN_SWAP,
+                        NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP,
+                        Res.get("trade.protocols.basic.info.ATOMIC_CROSS_CHAIN_SWAP"),
+                        Res.get("trade.protocols.markets.ATOMIC_CROSS_CHAIN_SWAP"),
+                        Res.get("trade.protocols.markets.info.ATOMIC_CROSS_CHAIN_SWAP"),
+                        Res.get("trade.protocols.security.info.ATOMIC_CROSS_CHAIN_SWAP"),
+                        new Pair<>(10000L, 700000L),
+                        Res.get("trade.protocols.privacy.info.ATOMIC_CROSS_CHAIN_SWAP"),
+                        Res.get("trade.protocols.convenience.info.ATOMIC_CROSS_CHAIN_SWAP"),
+                        Res.get("trade.protocols.costs.info.ATOMIC_CROSS_CHAIN_SWAP"),
+                        Res.get("trade.protocols.speed.info.ATOMIC_CROSS_CHAIN_SWAP"),
+                        "Q3/22",
+                        "protocol-monero"
+                ),
+                new ProtocolListItem(SwapProtocol.Type.BISQ_MULTI_SIG,
+                        NavigationTarget.BISQ_MULTI_SIG,
+                        Res.get("trade.protocols.basic.info.BISQ_MULTI_SIG"),
+                        Res.get("trade.protocols.markets.BISQ_MULTI_SIG"),
+                        Res.get("trade.protocols.markets.info.BISQ_MULTI_SIG"),
+                        Res.get("trade.protocols.security.info.BISQ_MULTI_SIG"),
+                        new Pair<>(10000L, 700000L),
+                        Res.get("trade.protocols.privacy.info.BISQ_MULTI_SIG"),
+                        Res.get("trade.protocols.convenience.info.BISQ_MULTI_SIG"),
+                        Res.get("trade.protocols.costs.info.BISQ_MULTI_SIG"),
+                        Res.get("trade.protocols.speed.info.BISQ_MULTI_SIG"),
+                        "Q3/22",
+                        "protocol-bisq"
+                ),
+                new ProtocolListItem(SwapProtocol.Type.BSQ_SWAP,
+                        NavigationTarget.BSQ_SWAP,
+                        Res.get("trade.protocols.basic.info.BSQ_SWAP"),
+                        Res.get("trade.protocols.markets.BSQ_SWAP"),
+                        Res.get("trade.protocols.markets.info.BSQ_SWAP"),
+                        Res.get("trade.protocols.security.info.BSQ_SWAP"),
+                        new Pair<>(10000L, 700000L),
+                        Res.get("trade.protocols.privacy.info.BSQ_SWAP"),
+                        Res.get("trade.protocols.convenience.info.BSQ_SWAP"),
+                        Res.get("trade.protocols.costs.info.BSQ_SWAP"),
+                        Res.get("trade.protocols.speed.info.BSQ_SWAP"),
+                        "Q4/22",
+                        "protocol-bsq"
+                ),
+                new ProtocolListItem(SwapProtocol.Type.LN_3_PARTY,
+                        NavigationTarget.LN_3_PARTY,
+                        Res.get("trade.protocols.basic.info.LN_3_PARTY"),
+                        Res.get("trade.protocols.markets.LN_3_PARTY"),
+                        Res.get("trade.protocols.markets.info.LN_3_PARTY"),
+                        Res.get("trade.protocols.security.info.LN_3_PARTY"),
+                        new Pair<>(10000L, 700000L),
+                        Res.get("trade.protocols.privacy.info.LN_3_PARTY"),
+                        Res.get("trade.protocols.convenience.info.LN_3_PARTY"),
+                        Res.get("trade.protocols.costs.info.LN_3_PARTY"),
+                        Res.get("trade.protocols.speed.info.LN_3_PARTY"),
+                        "Q4/22",
+                        "protocol-lightning"
+                )
+        );
+    }
 }
