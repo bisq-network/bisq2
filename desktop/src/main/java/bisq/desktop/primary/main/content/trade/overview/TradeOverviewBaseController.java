@@ -18,24 +18,24 @@
 package bisq.desktop.primary.main.content.trade.overview;
 
 import bisq.common.data.Pair;
-import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.protocol.SwapProtocol;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 
-@Getter
-public class TradeOverviewModel implements Model {
-    final ObservableList<ProtocolListItem> listItems = FXCollections.observableArrayList();
-    final FilteredList<ProtocolListItem> filteredItems = new FilteredList<>(listItems);
-    final SortedList<ProtocolListItem> sortedItems = new SortedList<>(filteredItems);
-    
-    public void initialize() {
-        listItems.setAll(
+public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseModel> implements Controller {
+    @Getter
+    protected final M model;
+
+    public TradeOverviewBaseController(M model) {
+        this.model = model;
+    }
+
+    @Override
+    public void onActivate() {
+        model.getListItems().setAll(
                 new ProtocolListItem(SwapProtocol.Type.SATOSHI_SQUARE,
                         NavigationTarget.SATOSHI_SQUARE,
                         Res.get("trade.protocols.basic.info.SATOSHI_SQUARE"),
@@ -121,5 +121,9 @@ public class TradeOverviewModel implements Model {
                         "protocol-lightning"
                 )
         );
+    }
+
+    public void onSelect(ProtocolListItem protocolListItem) {
+        Navigation.navigateTo(protocolListItem.getNavigationTarget());
     }
 }

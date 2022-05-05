@@ -18,35 +18,18 @@
 package bisq.desktop.primary.main.content.trade.overview;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.data.Pair;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.i18n.Res;
-import bisq.protocol.SwapProtocol;
 import lombok.Getter;
 
-public class TradeOverviewGridController implements Controller {
-    @Getter
-    private final TradeOverviewModel model;
+public class TradeOverviewGridController extends TradeOverviewBaseController<TradeOverviewGridModel> {
     @Getter
     private final TradeOverviewGridView view;
 
     public TradeOverviewGridController(DefaultApplicationService applicationService) {
-        model = new TradeOverviewModel();
-        view = new TradeOverviewGridView(model, this);
+        super(new TradeOverviewGridModel());
+
+        this.view = new TradeOverviewGridView(model, this);
     }
 
     @Override
-    public void onActivate() {
-        model.initialize();
-    }
-
-    @Override
-    public void onDeactivate() {
-    }
-
-    public void onSelect(ProtocolListItem protocolListItem) {
-        Navigation.navigateTo(protocolListItem.getNavigationTarget());
-    }
+    public void onDeactivate() {}
 }

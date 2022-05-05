@@ -38,7 +38,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
-public class TradeOverviewViewOld extends View<VBox, TradeOverviewModel, TradeOverviewListController> {
+public class TradeOverviewViewOld extends View<VBox, TradeOverviewBaseModel, TradeOverviewListController> {
     private static final int MARGIN = 44;
     private static final int TEXT_SPACE = 22;
     private static final int SCROLLBAR_WIDTH = 12;
@@ -49,7 +49,7 @@ public class TradeOverviewViewOld extends View<VBox, TradeOverviewModel, TradeOv
     @Nullable
     private Parent parent;
 
-    public TradeOverviewViewOld(TradeOverviewModel model, TradeOverviewListController controller) {
+    public TradeOverviewViewOld(TradeOverviewBaseModel model, TradeOverviewListController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(MARGIN);

@@ -19,8 +19,6 @@ package bisq.desktop.primary.main.content.trade.overview;
 
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.view.TabViewChild;
-import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -32,9 +30,9 @@ import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeOverviewGridView extends View<GridPane, TradeOverviewModel, TradeOverviewGridController> implements TabViewChild {
+public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, TradeOverviewGridModel, TradeOverviewGridController> {
 
-    public TradeOverviewGridView(TradeOverviewModel model, TradeOverviewGridController controller) {
+    public TradeOverviewGridView(TradeOverviewGridModel model, TradeOverviewGridController controller) {
         super(new GridPane(), model, controller);
         getRoot().setHgap(32);
         getRoot().setVgap(32);

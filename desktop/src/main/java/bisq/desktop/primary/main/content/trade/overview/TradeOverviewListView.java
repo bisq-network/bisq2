@@ -18,8 +18,6 @@
 package bisq.desktop.primary.main.content.trade.overview;
 
 import bisq.desktop.common.utils.Icons;
-import bisq.desktop.common.view.TabViewChild;
-import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -41,11 +39,11 @@ import java.util.List;
 import java.util.function.Function;
 
 @Slf4j
-public class TradeOverviewListView extends View<VBox, TradeOverviewModel, TradeOverviewListController> implements TabViewChild {
+public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOverviewBaseModel, TradeOverviewListController> {
     private final BisqTableView<ProtocolListItem> tableView;
     private Callback<TableColumn<ProtocolListItem, ProtocolListItem>, TableCell<ProtocolListItem, ProtocolListItem>> cellFactory;
 
-    public TradeOverviewListView(TradeOverviewModel model, TradeOverviewListController controller) {
+    public TradeOverviewListView(TradeOverviewBaseModel model, TradeOverviewListController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(30);
