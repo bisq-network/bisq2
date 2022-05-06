@@ -34,7 +34,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         implements TransitionedView {
     protected final Label headlineLabel;
     protected final HBox tabs;
-    private final Region selectionMarker, line;
+    protected final Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
     private final ScrollPane scrollPane;
     private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;

@@ -32,6 +32,7 @@
 
     /* Colors */
     -bisq-green: #56ae48;
+    -bisq-darker-green: #249131;
     -bisq-dark-green: #2ea33c;
     -bisq-logo-green: #25b135;
     -bisq-darkest-green: derive(-bisq-logo-green, -50%);
@@ -117,7 +118,23 @@
 }
 
 .super-large-text {
-    -fx-font-size: 4.1em;
+    -fx-font-size: 5em !important;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Borders                                                                     *
+ *                                                                             *
+ ******************************************************************************/
+
+.border-right {
+    -fx-border-color: -bisq-grey-17;
+    -fx-border-width: 0 1 0 0;
+}
+
+.border-bottom {
+    -fx-border-color: -bisq-grey-17;
+    -fx-border-width: 0 0 1 0;
 }
 
 /*******************************************************************************
@@ -235,10 +252,34 @@
     -fx-font-size: 2em;
 }
 
+.bisq-text-headline-3 {
+    -fx-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 2.35em;
+    -fx-line-spacing: -0.2em;
+}
+
 .bisq-text-1 {
     -fx-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1.35em;
+}
+
+.bisq-text-2 {
+    -fx-text-fill: -bisq-grey-13;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-font-size: 1.5em;
+    -fx-line-spacing: .2em;
+}
+
+.bisq-text-3 {
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 1.4em;
+    -fx-line-spacing: -0.15em;
+}
+
+.wrap-text {
+    -fx-wrap-text: true;    
 }
 
 
@@ -438,6 +479,20 @@
 .bisq-border-button:hover {
     -fx-border-color: -bisq-border-color-grey-hover;
     -fx-background-color: -bisq-content-bg;
+}
+
+/* Big green button */
+.bisq-big-green-button {
+    -fx-background-color: -bisq-darker-green;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-padding: 30 10;
+    -fx-font-size: 2em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-cursor: hand;
+}
+
+.bisq-big-green-button:hover {
+    -fx-background-color: -bisq-logo-green;
 }
 
 

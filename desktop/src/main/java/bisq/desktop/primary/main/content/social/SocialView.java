@@ -19,16 +19,18 @@ package bisq.desktop.primary.main.content.social;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabView;
+import bisq.desktop.primary.main.content.social.gettingStarted.GettingStartedView;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class SocialView extends TabView<SocialModel, SocialController> {
-
+    private Subscription selectedViewSubscription;
+    
     public SocialView(SocialModel model, SocialController controller) {
         super(model, controller);
-
-        headlineLabel.setText(Res.get("welcome"));
 
         addTab(Res.get("social.gettingStarted"), NavigationTarget.GETTING_STARTED);
         addTab(Res.get("social.discuss"), NavigationTarget.DISCUSS);
@@ -38,9 +40,23 @@ public class SocialView extends TabView<SocialModel, SocialController> {
 
     @Override
     protected void onViewAttached() {
+        selectedViewSubscription = EasyBind.subscribe(model.getView(), view -> {
+            if (view instanceof GettingStartedView) {
+                headlineLabel.setText(Res.get("welcome"));
+                if (!headlineLabel.getStyleClass().contains("super-large-text")) {
+                    headlineLabel.getStyleClass().add("super-large-text");
+                }
+                line.setOpacity(0);
+            } else {
+                headlineLabel.setText(Res.get("social"));
+                headlineLabel.getStyleClass().remove("super-large-text");
+                line.setOpacity(1);
+            }
+        });
     }
 
     @Override
     protected void onViewDetached() {
+        selectedViewSubscription.unsubscribe();
     }
 }

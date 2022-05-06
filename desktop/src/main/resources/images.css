@@ -100,3 +100,11 @@
 #governance {
     -fx-image: url("images/navigation/governance.png");
 }
+
+#welcome-community {
+    -fx-image: url("images/welcome-community.png");
+}
+
+#welcome-profile {
+    -fx-image: url("images/welcome-profile.png");
+}

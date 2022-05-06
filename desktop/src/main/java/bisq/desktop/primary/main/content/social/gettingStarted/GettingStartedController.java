@@ -35,17 +35,11 @@ public class GettingStartedController implements Controller {
 
     @Override
     public void onActivate() {
+    
     }
 
     @Override
     public void onDeactivate() {
-    }
-
-    public void onOpenSatoshiSquare() {
-        Navigation.navigateTo(NavigationTarget.SATOSHI_SQUARE);
-    }
-
-    public void onOpenTradeOverview() {
-        Navigation.navigateTo(NavigationTarget.TRADE_OVERVIEW);
+    
     }
 }
