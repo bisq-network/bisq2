@@ -34,20 +34,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GettingStartedView extends View<VBox, GettingStartedModel, GettingStartedController> implements TabViewChild {
-    private static final int HORIZONTAL_MARGIN = 44;
+    private static final int HORIZONTAL_MARGIN = 52;
     private static final int VERTICAL_MARGIN = 34;
     
     public GettingStartedView(GettingStartedModel model, GettingStartedController controller) {
         super(new VBox(), model, controller);
-
-//        Label headlineLabel = new Label(Res.get("social.start.headline"));
-//        headlineLabel.getStyleClass().add("bisq-text-headline-1");
-//        root.getChildren().add(headlineLabel);
         
         Label contentLabel = new Label(Res.get("social.start.content"));
         contentLabel.getStyleClass().addAll("bisq-text-2", "wrap-text");
         contentLabel.setMaxWidth(500);
-        contentLabel.setMinHeight(120);
+        contentLabel.setMinHeight(125);
         contentLabel.setAlignment(Pos.TOP_LEFT);
         root.getChildren().add(contentLabel);
         
@@ -86,24 +82,25 @@ public class GettingStartedView extends View<VBox, GettingStartedModel, GettingS
     
     private VBox getWidgetBox(String imageId, String headline, String content, String buttonLabel, NavigationTarget target) {
         Label headlineLabel = new Label(headline, ImageUtil.getImageViewById(imageId));
-        headlineLabel.setMaxWidth(345);
-        headlineLabel.getStyleClass().addAll("bisq-text-headline-2",  "wrap-text");
+        headlineLabel.setGraphicTextGap(20.0);
+        headlineLabel.setMaxWidth(355);
+        headlineLabel.getStyleClass().addAll("bisq-text-headline-3",  "wrap-text");
         
         Label contentLabel = new Label(content);
         contentLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
         contentLabel.setMaxWidth(340);
-        contentLabel.setMinHeight(90);
+        contentLabel.setMinHeight(100);
         contentLabel.setAlignment(Pos.TOP_LEFT);
 
         Button button = new Button(buttonLabel);
         button.getStyleClass().add("bisq-big-green-button");
         button.setOnAction(e -> Navigation.navigateTo(target));
-        button.setPrefWidth(400);
+        button.setPrefWidth(455);
         
         VBox box = new VBox(18, headlineLabel, contentLabel, button);
         box.setPadding(new Insets(VERTICAL_MARGIN, HORIZONTAL_MARGIN, 0, HORIZONTAL_MARGIN));
-        box.setMinWidth(400);
-        box.setPrefWidth(400);
+        box.setMinWidth(455);
+        box.setPrefWidth(455);
         HBox.setHgrow(box, Priority.ALWAYS);
         return box;
     }
