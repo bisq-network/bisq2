@@ -27,8 +27,8 @@ import java.util.Optional;
 @Getter
 public class WalletConfig {
     private final WalletBackend walletBackend;
-    private final Optional<String> hostname;
-    private final Optional<Integer> port;
+    private final String hostname;
+    private final int port;
     private final String user;
     private final String password;
 }

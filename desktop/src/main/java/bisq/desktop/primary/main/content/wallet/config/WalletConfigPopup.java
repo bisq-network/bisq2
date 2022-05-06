@@ -110,8 +110,8 @@ public class WalletConfigPopup extends Popup {
         private WalletConfig createWalletConfigFromModel() {
             return WalletConfig.builder()
                     .walletBackend(model.selectedWalletBackend.get())
-                    .hostname(Optional.of(model.hostnameProperty.get()))
-                    .port(Optional.of(Integer.parseInt(model.portProperty.get())))
+                    .hostname(model.hostnameProperty.get())
+                    .port(Integer.parseInt(model.portProperty.get()))
                     .user(model.usernameProperty.get())
                     .password(model.passwordProperty.get())
                     .build();
