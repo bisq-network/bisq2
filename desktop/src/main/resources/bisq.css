@@ -1,24 +1,32 @@
 @font-face {
     src: url("/fonts/IBMPlexSans-Regular.ttf");
+    font-family: "IBM Plex Sans";
+    font-weight: normal;
 }
 
 @font-face {
     src: url("/fonts/IBMPlexSans-Bold.ttf");
+    font-family: "IBM Plex Sans";
+    font-weight: bold;
 }
 
 @font-face {
     src: url("/fonts/IBMPlexSans-Medium.ttf");
+    font-family: "IBM Plex Sans Medium";
 }
 
 @font-face {
     src: url("/fonts/IBMPlexSans-Light.ttf");
+    font-family: "IBM Plex Sans Light";
 }
 
 @font-face {
     src: url("/fonts/IBMPlexMono-Regular.ttf");
+    font-family: "IBM Plex Mono";
 }
 
 .root {
+    -fx-font-family: "IBM Plex Sans";
     -fx-font-size: 13;
 
 
