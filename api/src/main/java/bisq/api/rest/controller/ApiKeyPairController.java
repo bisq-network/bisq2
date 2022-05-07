@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.KeyPair;
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -51,11 +50,6 @@ class ApiKeyPairController extends ApiController {
      */
     @GetMapping(path = "/api/keypair/get/{keyId}")
     public KeyPair findKeyPair(@PathVariable("keyId") String keyId) {
-        Optional<KeyPair> optionalKeyPair = keyPairService.findKeyPair(keyId);
-        if (optionalKeyPair.isPresent()) {
-            return optionalKeyPair.get();
-        } else {
-            return null;
-        }
+       return keyPairService.findKeyPair(keyId).orElse(null);
     }
 }
