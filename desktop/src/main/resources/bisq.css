@@ -509,6 +509,19 @@
     -fx-background-color: -bisq-logo-green;
 }
 
+/* Big transparent button */
+.bisq-transparent-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 1.4em;
+    -fx-cursor: hand;
+    -fx-padding: 8 16;
+}
+
+.bisq-transparent-button:hover {
+    -fx-background-color: rgba(255, 255, 255, .04);
+}
+
 
 /*******************************************************************************
  *                                                                             *

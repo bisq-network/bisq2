@@ -19,22 +19,21 @@ package bisq.desktop.primary.main.content.trade.overview;
 
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.view.Navigation;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, TradeOverviewGridModel, TradeOverviewGridController> {
-    private static final int VERTICAL_MARGIN = 32;
+    private static final int VERTICAL_MARGIN = 36;
     
     public TradeOverviewGridView(TradeOverviewGridModel model, TradeOverviewGridController controller) {
         super(new GridPane(), model, controller);
@@ -56,11 +55,14 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
     protected void onViewDetached() {
     }
 
-    private VBox getProtocolBox(ProtocolListItem protocol) {
+    private Pane getProtocolBox(ProtocolListItem protocol) {
+        StackPane pane = new StackPane();
+        pane.getStyleClass().add("bisq-box-2");
+        pane.setMinWidth(440);
+        GridPane.setHgrow(pane, Priority.ALWAYS);
+               
         VBox box = new VBox();
-        box.getStyleClass().add("bisq-box-2");
-        box.setMinWidth(400);
-        GridPane.setHgrow(box, Priority.ALWAYS);
+        pane.getChildren().add(box);
 
         Label headlineLabel = new Label(protocol.getProtocolsName());
         headlineLabel.setPadding(new Insets(24, VERTICAL_MARGIN, 0, VERTICAL_MARGIN));
@@ -72,7 +74,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         basicInfo.getStyleClass().addAll("bisq-text-3", "wrap-text");
         basicInfo.setPadding(new Insets(6, VERTICAL_MARGIN, 0, VERTICAL_MARGIN));
         basicInfo.setAlignment(Pos.TOP_LEFT);
-        basicInfo.setMaxWidth(460);
+        basicInfo.setMaxWidth(480);
         basicInfo.setMinHeight(80);
         box.getChildren().add(basicInfo);
 
@@ -132,7 +134,16 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         box.setCursor(Cursor.HAND);
         box.setOnMouseClicked(e -> controller.onSelect(protocol));
 
-        return box;
+        Button button = new Button(Res.get("hide"));
+        button.getStyleClass().add("bisq-transparent-button");
+        button.setOnAction(e -> {
+            log.info("Hide clicked"); // TODO: implement hide
+        });
+        StackPane.setAlignment(button, Pos.TOP_RIGHT);
+        StackPane.setMargin(button, new Insets(24, 16, 0, 0));
+        pane.getChildren().add(button);
+
+        return pane;
     }
     
 
