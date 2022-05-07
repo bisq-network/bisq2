@@ -138,6 +138,22 @@
 }
 
 /*******************************************************************************
+ *                                                                             *
+ * Borders                                                                     *
+ *                                                                             *
+ ******************************************************************************/
+
+.border-right {
+    -fx-border-color: -bisq-grey-17;
+    -fx-border-width: 0 1 0 0;
+}
+
+.border-bottom {
+    -fx-border-color: -bisq-grey-17;
+    -fx-border-width: 0 0 1 0;
+}
+
+/*******************************************************************************
  * Text based                                            *
  ******************************************************************************/
 
@@ -276,6 +292,20 @@
     -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 1.4em;
     -fx-line-spacing: -0.15em;
+}
+
+.bisq-text-4 {
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 1.1em;
+    -fx-line-spacing: 0.35em;
+    -fx-font-family: "IBM Plex Sans Regular";
+}
+
+.bisq-text-5 {
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 0.9em;
+    -fx-line-spacing: 0.35em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .wrap-text {

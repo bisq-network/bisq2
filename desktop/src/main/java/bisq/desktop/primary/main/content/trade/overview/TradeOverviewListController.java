@@ -17,16 +17,19 @@
 
 package bisq.desktop.primary.main.content.trade.overview;
 
-import bisq.desktop.common.view.Model;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
+import bisq.application.DefaultApplicationService;
 import lombok.Getter;
 
-@Getter
-public class TradeOverviewModel implements Model {
-    final ObservableList<ProtocolListItem> listItems = FXCollections.observableArrayList();
-    final FilteredList<ProtocolListItem> filteredItems = new FilteredList<>(listItems);
-    final SortedList<ProtocolListItem> sortedItems = new SortedList<>(filteredItems);
+public class TradeOverviewListController extends TradeOverviewBaseController<TradeOverviewListModel> {
+    @Getter
+    private final TradeOverviewListView view;
+    
+    public TradeOverviewListController(DefaultApplicationService applicationService) {
+        super(new TradeOverviewListModel());
+        
+        this.view = new TradeOverviewListView(model, this);
+    }
+
+    @Override
+    public void onDeactivate() {}
 }

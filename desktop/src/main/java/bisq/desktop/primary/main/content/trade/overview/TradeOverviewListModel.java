@@ -15,20 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade;
+package bisq.desktop.primary.main.content.trade.overview;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
-import lombok.Getter;
-
-@Getter
-public class TradeModel extends TabModel {
-
-    public TradeModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TRADE_OVERVIEW_LIST;
-    }
+public class TradeOverviewListModel extends TradeOverviewBaseModel {
+    
 }

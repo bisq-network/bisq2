@@ -68,7 +68,7 @@ public class GettingStartedView extends View<VBox, GettingStartedModel, GettingS
                 Res.get("social.start.newOffer.headline"),
                 Res.get("social.start.newOffer.content"),
                 Res.get("social.start.newOffer.button"),
-                NavigationTarget.TRADE_OVERVIEW
+                NavigationTarget.TRADE_OVERVIEW_LIST
         );
 
         HBox contentBox = new HBox(leftBox, rightBox);

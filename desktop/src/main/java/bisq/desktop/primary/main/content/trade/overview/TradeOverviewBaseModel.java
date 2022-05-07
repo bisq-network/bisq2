@@ -15,20 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade;
+package bisq.desktop.primary.main.content.trade.overview;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.common.view.Model;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 
 @Getter
-public class TradeModel extends TabModel {
-
-    public TradeModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TRADE_OVERVIEW_LIST;
-    }
+public class TradeOverviewBaseModel implements Model {
+    final ObservableList<ProtocolListItem> listItems = FXCollections.observableArrayList();
+    final FilteredList<ProtocolListItem> filteredItems = new FilteredList<>(listItems);
+    final SortedList<ProtocolListItem> sortedItems = new SortedList<>(filteredItems);
 }

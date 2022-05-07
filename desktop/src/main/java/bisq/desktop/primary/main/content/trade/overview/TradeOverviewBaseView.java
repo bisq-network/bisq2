@@ -15,20 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade;
+package bisq.desktop.primary.main.content.trade.overview;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
-import lombok.Getter;
+import bisq.desktop.common.view.TabViewChild;
+import bisq.desktop.common.view.View;
+import javafx.scene.layout.Region;
+import lombok.extern.slf4j.Slf4j;
 
-@Getter
-public class TradeModel extends TabModel {
+@Slf4j
+public abstract class TradeOverviewBaseView<R extends Region, M extends TradeOverviewBaseModel, C extends TradeOverviewBaseController> extends View<R, M, C> 
+        implements TabViewChild {
 
-    public TradeModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TRADE_OVERVIEW_LIST;
+    public TradeOverviewBaseView(R root, M model, C controller) {
+        super(root, model, controller);
     }
 }

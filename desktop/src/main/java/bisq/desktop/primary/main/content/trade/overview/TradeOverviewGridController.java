@@ -15,20 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade;
+package bisq.desktop.primary.main.content.trade.overview;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.application.DefaultApplicationService;
 import lombok.Getter;
 
-@Getter
-public class TradeModel extends TabModel {
+public class TradeOverviewGridController extends TradeOverviewBaseController<TradeOverviewGridModel> {
+    @Getter
+    private final TradeOverviewGridView view;
 
-    public TradeModel() {
+    public TradeOverviewGridController(DefaultApplicationService applicationService) {
+        super(new TradeOverviewGridModel());
+
+        this.view = new TradeOverviewGridView(model, this);
     }
 
     @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TRADE_OVERVIEW_LIST;
-    }
+    public void onDeactivate() {}
 }

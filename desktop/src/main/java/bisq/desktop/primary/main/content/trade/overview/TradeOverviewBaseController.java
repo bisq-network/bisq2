@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.trade.overview;
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.data.Pair;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -26,22 +25,20 @@ import bisq.i18n.Res;
 import bisq.protocol.SwapProtocol;
 import lombok.Getter;
 
-public class TradeOverviewController implements Controller {
+public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseModel> implements Controller {
     @Getter
-    private final TradeOverviewModel model;
-    @Getter
-    private final TradeOverviewView view;
+    protected final M model;
 
-    public TradeOverviewController(DefaultApplicationService applicationService) {
-        model = new TradeOverviewModel();
-        view = new TradeOverviewView(model, this);
+    public TradeOverviewBaseController(M model) {
+        this.model = model;
     }
 
     @Override
     public void onActivate() {
-        model.getListItems().addAll(
+        model.getListItems().setAll(
                 new ProtocolListItem(SwapProtocol.Type.SATOSHI_SQUARE,
                         NavigationTarget.SATOSHI_SQUARE,
+                        Res.get("trade.protocols.basic.info.SATOSHI_SQUARE"),
                         Res.get("trade.protocols.markets.SATOSHI_SQUARE"),
                         Res.get("trade.protocols.markets.info.SATOSHI_SQUARE"),
                         Res.get("trade.protocols.security.info.SATOSHI_SQUARE"),
@@ -50,10 +47,12 @@ public class TradeOverviewController implements Controller {
                         Res.get("trade.protocols.convenience.info.SATOSHI_SQUARE"),
                         Res.get("trade.protocols.costs.info.SATOSHI_SQUARE"),
                         Res.get("trade.protocols.speed.info.SATOSHI_SQUARE"),
-                        ""
+                        "",
+                        "protocol-satoshi-square"
                 ),
                 new ProtocolListItem(SwapProtocol.Type.LIQUID_SWAP,
                         NavigationTarget.LIQUID_SWAP,
+                        Res.get("trade.protocols.basic.info.LIQUID_SWAP"),
                         Res.get("trade.protocols.markets.LIQUID_SWAP"),
                         Res.get("trade.protocols.markets.info.LIQUID_SWAP"),
                         Res.get("trade.protocols.security.info.LIQUID_SWAP"),
@@ -62,10 +61,12 @@ public class TradeOverviewController implements Controller {
                         Res.get("trade.protocols.convenience.info.LIQUID_SWAP"),
                         Res.get("trade.protocols.costs.info.LIQUID_SWAP"),
                         Res.get("trade.protocols.speed.info.LIQUID_SWAP"),
-                        "Q2/22"
+                        "Q2/22",
+                        "protocol-liquid"
                 ),
                 new ProtocolListItem(SwapProtocol.Type.ATOMIC_CROSS_CHAIN_SWAP,
                         NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP,
+                        Res.get("trade.protocols.basic.info.ATOMIC_CROSS_CHAIN_SWAP"),
                         Res.get("trade.protocols.markets.ATOMIC_CROSS_CHAIN_SWAP"),
                         Res.get("trade.protocols.markets.info.ATOMIC_CROSS_CHAIN_SWAP"),
                         Res.get("trade.protocols.security.info.ATOMIC_CROSS_CHAIN_SWAP"),
@@ -74,10 +75,12 @@ public class TradeOverviewController implements Controller {
                         Res.get("trade.protocols.convenience.info.ATOMIC_CROSS_CHAIN_SWAP"),
                         Res.get("trade.protocols.costs.info.ATOMIC_CROSS_CHAIN_SWAP"),
                         Res.get("trade.protocols.speed.info.ATOMIC_CROSS_CHAIN_SWAP"),
-                        "Q3/22"
+                        "Q3/22",
+                        "protocol-monero"
                 ),
                 new ProtocolListItem(SwapProtocol.Type.BISQ_MULTI_SIG,
                         NavigationTarget.BISQ_MULTI_SIG,
+                        Res.get("trade.protocols.basic.info.BISQ_MULTI_SIG"),
                         Res.get("trade.protocols.markets.BISQ_MULTI_SIG"),
                         Res.get("trade.protocols.markets.info.BISQ_MULTI_SIG"),
                         Res.get("trade.protocols.security.info.BISQ_MULTI_SIG"),
@@ -86,10 +89,12 @@ public class TradeOverviewController implements Controller {
                         Res.get("trade.protocols.convenience.info.BISQ_MULTI_SIG"),
                         Res.get("trade.protocols.costs.info.BISQ_MULTI_SIG"),
                         Res.get("trade.protocols.speed.info.BISQ_MULTI_SIG"),
-                        "Q3/22"
+                        "Q3/22",
+                        "protocol-bisq"
                 ),
                 new ProtocolListItem(SwapProtocol.Type.BSQ_SWAP,
                         NavigationTarget.BSQ_SWAP,
+                        Res.get("trade.protocols.basic.info.BSQ_SWAP"),
                         Res.get("trade.protocols.markets.BSQ_SWAP"),
                         Res.get("trade.protocols.markets.info.BSQ_SWAP"),
                         Res.get("trade.protocols.security.info.BSQ_SWAP"),
@@ -98,10 +103,12 @@ public class TradeOverviewController implements Controller {
                         Res.get("trade.protocols.convenience.info.BSQ_SWAP"),
                         Res.get("trade.protocols.costs.info.BSQ_SWAP"),
                         Res.get("trade.protocols.speed.info.BSQ_SWAP"),
-                        "Q4/22"
+                        "Q4/22",
+                        "protocol-bsq"
                 ),
                 new ProtocolListItem(SwapProtocol.Type.LN_3_PARTY,
                         NavigationTarget.LN_3_PARTY,
+                        Res.get("trade.protocols.basic.info.LN_3_PARTY"),
                         Res.get("trade.protocols.markets.LN_3_PARTY"),
                         Res.get("trade.protocols.markets.info.LN_3_PARTY"),
                         Res.get("trade.protocols.security.info.LN_3_PARTY"),
@@ -110,13 +117,10 @@ public class TradeOverviewController implements Controller {
                         Res.get("trade.protocols.convenience.info.LN_3_PARTY"),
                         Res.get("trade.protocols.costs.info.LN_3_PARTY"),
                         Res.get("trade.protocols.speed.info.LN_3_PARTY"),
-                        "Q4/22"
+                        "Q4/22",
+                        "protocol-lightning"
                 )
         );
-    }
-
-    @Override
-    public void onDeactivate() {
     }
 
     public void onSelect(ProtocolListItem protocolListItem) {

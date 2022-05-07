@@ -30,11 +30,12 @@ public class TradeView extends TabView<TradeModel, TradeController> {
 
         headlineLabel.setText(Res.get("trade"));
 
-        addTab(Res.get("trade.overview"), NavigationTarget.TRADE_OVERVIEW);
-        addTab(Res.get("offerbook"), NavigationTarget.OFFERBOOK);
-        addTab(Res.get("openOffers"), NavigationTarget.OPEN_OFFERS);
-        addTab(Res.get("pendingTrades"), NavigationTarget.PENDING_TRADES);
-        addTab(Res.get("closedTrades"), NavigationTarget.CLOSED_TRADES);
+        addTab(Res.get("list"), NavigationTarget.TRADE_OVERVIEW_LIST);
+        addTab(Res.get("grid"), NavigationTarget.TRADE_OVERVIEW_GRID);
+//        addTab(Res.get("offerbook"), NavigationTarget.OFFERBOOK);
+//        addTab(Res.get("openOffers"), NavigationTarget.OPEN_OFFERS);
+//        addTab(Res.get("pendingTrades"), NavigationTarget.PENDING_TRADES);
+//        addTab(Res.get("closedTrades"), NavigationTarget.CLOSED_TRADES);
 
     }
 
