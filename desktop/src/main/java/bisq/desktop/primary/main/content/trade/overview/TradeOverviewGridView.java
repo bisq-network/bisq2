@@ -19,19 +19,23 @@ package bisq.desktop.primary.main.content.trade.overview;
 
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.view.Navigation;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, TradeOverviewGridModel, TradeOverviewGridController> {
-
+    private static final int VERTICAL_MARGIN = 32;
+    
     public TradeOverviewGridView(TradeOverviewGridModel model, TradeOverviewGridController controller) {
         super(new GridPane(), model, controller);
         getRoot().setHgap(32);
@@ -54,21 +58,21 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
 
     private VBox getProtocolBox(ProtocolListItem protocol) {
         VBox box = new VBox();
-        box.getStyleClass().add("bisq-box-1");
+        box.getStyleClass().add("bisq-box-2");
         box.setMinWidth(400);
         GridPane.setHgrow(box, Priority.ALWAYS);
 
         Label headlineLabel = new Label(protocol.getProtocolsName());
-        headlineLabel.setPadding(new Insets(24, 24, 0, 24));
+        headlineLabel.setPadding(new Insets(24, VERTICAL_MARGIN, 0, VERTICAL_MARGIN));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineLabel.setGraphic(ImageUtil.getImageViewById(protocol.getIconId()));
         box.getChildren().add(headlineLabel);
 
         Label basicInfo = new Label(protocol.getBasicInfo());
-        basicInfo.getStyleClass().addAll("bisq-text-4", "wrap-text");
-        basicInfo.setPadding(new Insets(12, 24, 0, 24));
+        basicInfo.getStyleClass().addAll("bisq-text-3", "wrap-text");
+        basicInfo.setPadding(new Insets(6, VERTICAL_MARGIN, 0, VERTICAL_MARGIN));
         basicInfo.setAlignment(Pos.TOP_LEFT);
-        basicInfo.setMaxWidth(420);
+        basicInfo.setMaxWidth(460);
         basicInfo.setMinHeight(80);
         box.getChildren().add(basicInfo);
 
@@ -77,8 +81,8 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         box.getChildren().add(line);
 
         GridPane paramsPane = new GridPane();
-        paramsPane.setPadding(new Insets(24));
-        paramsPane.setVgap(28);
+        paramsPane.setPadding(new Insets(28, VERTICAL_MARGIN, 24, VERTICAL_MARGIN));
+        paramsPane.setVgap(16);
         paramsPane.add(
                 getParameterPane(Res.get("markets"), protocol.getMarkets()), 
                 0, 
@@ -125,6 +129,8 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         );
 
         box.getChildren().add(paramsPane);
+        box.setCursor(Cursor.HAND);
+        box.setOnMouseClicked(e -> controller.onSelect(protocol));
 
         return box;
     }
@@ -141,10 +147,10 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
     }
     
     private VBox getParameterPane(String title, Node node) {
-        VBox box = new VBox(6);
+        VBox box = new VBox();
         GridPane.setHgrow(box, Priority.ALWAYS);
         Label titleLabel = new Label(title.toUpperCase());
-        titleLabel.getStyleClass().add("bisq-text-5");
+        titleLabel.getStyleClass().add("bisq-text-4");
         box.getChildren().addAll(titleLabel, node);
         
         return box;
@@ -152,11 +158,11 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
 
     private Node getStarsNode(int value, String tooltipText) {
         final HBox hBox = new HBox();
+        hBox.setPadding(new Insets(6, 0, 6, 0));
         hBox.setSpacing(5);
-        hBox.setAlignment(Pos.CENTER_LEFT);
 
         for (int i = 0; i < 3; i++) {
-            Label label = Icons.getIcon(AwesomeIcon.STAR, "1.3em");
+            Label label = Icons.getIcon(AwesomeIcon.STAR, "1.5em");
             label.setMouseTransparent(false);
             label.setOpacity(i <= value ? 1 : 0.2);
             hBox.getChildren().add(label);

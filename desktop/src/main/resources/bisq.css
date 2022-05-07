@@ -265,20 +265,13 @@
 .bisq-text-headline-2 {
     -fx-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 2em;
-}
-
-.bisq-text-headline-3 {
-    -fx-fill: -bisq-white;
-    -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 2.35em;
     -fx-line-spacing: -0.2em;
 }
 
 .bisq-text-1 {
     -fx-fill: -bisq-white;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.35em;
+    -fx-font-size: 1.5em;
 }
 
 .bisq-text-2 {
@@ -296,16 +289,7 @@
 
 .bisq-text-4 {
     -fx-text-fill: -bisq-grey-9;
-    -fx-font-size: 1.1em;
-    -fx-line-spacing: 0.35em;
-    -fx-font-family: "IBM Plex Sans Regular";
-}
-
-.bisq-text-5 {
-    -fx-text-fill: -bisq-grey-9;
-    -fx-font-size: 0.9em;
-    -fx-line-spacing: 0.35em;
-    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1em;
 }
 
 .wrap-text {
@@ -1086,6 +1070,11 @@ tree-table-view:focused {
 .bisq-box-1 {
     -fx-background-color: -bisq-bg-dark;
     -fx-background-radius: 5;
+}
+
+.bisq-box-2 {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8;
 }
 
 .bisq-darkest-bg {

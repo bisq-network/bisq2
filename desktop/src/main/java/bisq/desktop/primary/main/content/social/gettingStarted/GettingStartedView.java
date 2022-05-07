@@ -84,7 +84,7 @@ public class GettingStartedView extends View<VBox, GettingStartedModel, GettingS
         Label headlineLabel = new Label(headline, ImageUtil.getImageViewById(imageId));
         headlineLabel.setGraphicTextGap(20.0);
         headlineLabel.setMaxWidth(355);
-        headlineLabel.getStyleClass().addAll("bisq-text-headline-3",  "wrap-text");
+        headlineLabel.getStyleClass().addAll("bisq-text-headline-2",  "wrap-text");
         
         Label contentLabel = new Label(content);
         contentLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
