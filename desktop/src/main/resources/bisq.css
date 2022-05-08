@@ -340,15 +340,15 @@
 }
 
 .bisq-tab-button-label {
-    -fx-font-size: 0.9em;
+    -fx-font-size: 0.93em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-grey-8;
 }
 
 .bisq-tab-button-label-selected {
-    -fx-font-size: 0.9em;
+    -fx-font-size: 0.93em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-green;
+    -fx-text-fill: -bisq-logo-green;
 }
 
 .bisq-smaller-label {
@@ -1099,7 +1099,7 @@ tree-table-view:focused {
 }
 
 .bisq-green-line {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: -bisq-logo-green;
 }
 
 .bisq-grey-line {

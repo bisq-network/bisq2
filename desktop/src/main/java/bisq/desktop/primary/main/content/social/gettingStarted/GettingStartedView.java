@@ -29,6 +29,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -110,4 +111,10 @@ public class GettingStartedView extends View<VBox, GettingStartedModel, GettingS
 
     @Override
     protected void onViewDetached() {}
+
+    @Override
+    public void applyPadding(Region root) {
+        root.getStyleClass().add("bisq-content-bg");
+        root.setPadding(new Insets(16, 67, 0, 0));
+    }
 }
