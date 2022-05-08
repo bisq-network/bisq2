@@ -23,29 +23,27 @@ import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 public class RpcClientFactory {
 
-    public static RpcClient create(RpcConfig rpcConfig) throws MalformedURLException {
-        return new RpcClient(
-                createDaemonRpcClient(rpcConfig),
-                createWalletRpcClient(rpcConfig)
+    public static DaemonRpcClient createDaemonRpcClient(RpcConfig rpcConfig) throws MalformedURLException {
+        return new DaemonRpcClient(
+                createJsonRpcClientWithUrlSuffix(rpcConfig, Optional.empty())
         );
     }
 
-    private static JsonRpcHttpClient createDaemonRpcClient(RpcConfig rpcConfig) throws MalformedURLException {
-        return createRpcClientWithUrlSuffix(rpcConfig, Optional.empty());
+    public static WalletRpcClient createWalletRpcClient(RpcConfig rpcConfig, Path walletPath) throws MalformedURLException {
+        var urlSuffix = "/wallet/" + walletPath.toAbsolutePath();
+        return new WalletRpcClient(
+                createJsonRpcClientWithUrlSuffix(rpcConfig, Optional.of(urlSuffix))
+        );
     }
 
-    private static JsonRpcHttpClient createWalletRpcClient(RpcConfig rpcConfig) throws MalformedURLException {
-        var urlSuffix = "/wallet/" + rpcConfig.walletPath().toString();
-        return createRpcClientWithUrlSuffix(rpcConfig, Optional.of(urlSuffix));
-    }
-
-    private static JsonRpcHttpClient createRpcClientWithUrlSuffix(RpcConfig rpcConfig, Optional<String> urlSuffix)
+    private static JsonRpcHttpClient createJsonRpcClientWithUrlSuffix(RpcConfig rpcConfig, Optional<String> urlSuffix)
             throws MalformedURLException {
         String hostname = rpcConfig.hostname();
         int port = rpcConfig.port();

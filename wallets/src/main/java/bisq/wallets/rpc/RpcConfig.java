@@ -17,14 +17,12 @@
 
 package bisq.wallets.rpc;
 
-import java.nio.file.Path;
 import java.util.Objects;
 
 public record RpcConfig(String hostname,
                         int port,
                         String user,
-                        String password,
-                        Path walletPath) {
+                        String password) {
 
     public static class Builder {
         private static final int INVALID_PORT = -1;
@@ -35,7 +33,6 @@ public record RpcConfig(String hostname,
         private String user;
         private String password;
 
-        private Path walletPath;
 
         public Builder() {
         }
@@ -46,7 +43,6 @@ public record RpcConfig(String hostname,
 
             this.user = configTemplate.user();
             this.password = configTemplate.password();
-            this.walletPath = configTemplate.walletPath();
         }
 
         public RpcConfig build() {
@@ -58,9 +54,8 @@ public record RpcConfig(String hostname,
 
             Objects.requireNonNull(user);
             Objects.requireNonNull(password);
-            Objects.requireNonNull(walletPath);
 
-            return new RpcConfig(hostname, port, user, password, walletPath);
+            return new RpcConfig(hostname, port, user, password);
         }
 
         public RpcConfig.Builder hostname(String hostname) {
@@ -80,11 +75,6 @@ public record RpcConfig(String hostname,
 
         public RpcConfig.Builder port(int port) {
             this.port = port;
-            return this;
-        }
-
-        public RpcConfig.Builder walletPath(Path walletPath) {
-            this.walletPath = walletPath;
             return this;
         }
     }

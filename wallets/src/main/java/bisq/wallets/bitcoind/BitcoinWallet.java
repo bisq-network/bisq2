@@ -25,9 +25,10 @@ import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.exceptions.WalletInitializationFailedException;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
-import bisq.wallets.rpc.RpcClient;
+import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
 import bisq.wallets.rpc.RpcConfig;
+import bisq.wallets.rpc.WalletRpcClient;
 import bisq.wallets.stores.BitcoinWalletStore;
 import bisq.wallets.zmq.ZmqConnection;
 import lombok.Getter;
@@ -60,7 +61,7 @@ public class BitcoinWallet implements Wallet {
         this.zmqConnection = zmqConnection;
 
         try {
-            RpcClient rpcClient = RpcClientFactory.create(rpcConfig);
+            WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletPath);
             wallet = new BitcoindWallet(rpcClient);
         } catch (MalformedURLException e) {
             throw new WalletInitializationFailedException("Couldn't initialize WalletService", e);

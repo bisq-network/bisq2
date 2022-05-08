@@ -20,7 +20,7 @@ package bisq.wallets;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.exceptions.InvalidRpcCredentialsException;
 import bisq.wallets.process.BisqProcess;
-import bisq.wallets.rpc.RpcClient;
+import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
 import bisq.wallets.rpc.RpcConfig;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess, W
                 .password("WRONG_PASSWORD")
                 .build();
 
-        RpcClient rpcClient = RpcClientFactory.create(wrongRpcConfig);
+        DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(wrongRpcConfig);
         var minerChainBackend = new BitcoindDaemon(rpcClient);
 
         assertThatExceptionOfType(InvalidRpcCredentialsException.class)

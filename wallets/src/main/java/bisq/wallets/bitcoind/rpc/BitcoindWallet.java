@@ -23,7 +23,8 @@ import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtInput;
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOptions;
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOutput;
 import bisq.wallets.bitcoind.rpc.responses.*;
-import bisq.wallets.rpc.RpcClient;
+import bisq.wallets.rpc.DaemonRpcClient;
+import bisq.wallets.rpc.WalletRpcClient;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,9 +34,9 @@ import java.util.concurrent.TimeUnit;
 public class BitcoindWallet {
 
     public static final long DEFAULT_WALLET_TIMEOUT = TimeUnit.HOURS.toSeconds(24);
-    private final RpcClient rpcClient;
+    private final WalletRpcClient rpcClient;
 
-    public BitcoindWallet(RpcClient rpcClient) {
+    public BitcoindWallet(WalletRpcClient rpcClient) {
         this.rpcClient = rpcClient;
     }
 

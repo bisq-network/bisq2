@@ -25,7 +25,7 @@ import bisq.wallets.exceptions.WalletShutdownFailedException;
 import bisq.wallets.exceptions.WalletStartupFailedException;
 import bisq.wallets.process.DaemonProcess;
 import bisq.wallets.process.ProcessConfig;
-import bisq.wallets.rpc.RpcClient;
+import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
 import bisq.wallets.rpc.RpcConfig;
 import lombok.Getter;
@@ -90,7 +90,7 @@ public class BitcoindRegtestProcess implements DaemonProcess {
     @Override
     public void invokeStopRpcCall() throws IOException {
         try {
-            RpcClient rpcClient = RpcClientFactory.create(rpcConfig);
+            DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
             var chainBackend = new BitcoindDaemon(rpcClient);
             chainBackend.stop();
         } catch (RpcCallFailureException e) {

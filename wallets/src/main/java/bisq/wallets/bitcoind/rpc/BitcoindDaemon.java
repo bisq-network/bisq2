@@ -21,7 +21,7 @@ import bisq.wallets.bitcoind.rpc.calls.*;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindFinalizePsbtResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
-import bisq.wallets.rpc.RpcClient;
+import bisq.wallets.rpc.DaemonRpcClient;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -29,9 +29,9 @@ import java.util.List;
 import java.util.Optional;
 
 public class BitcoindDaemon {
-    private final RpcClient rpcClient;
+    private final DaemonRpcClient rpcClient;
 
-    public BitcoindDaemon(RpcClient rpcClient) {
+    public BitcoindDaemon(DaemonRpcClient rpcClient) {
         this.rpcClient = rpcClient;
     }
 
