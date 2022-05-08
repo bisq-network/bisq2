@@ -21,6 +21,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
@@ -30,7 +31,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<VBox, M, C>
+public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<StackPane, M, C>
         implements TransitionedView {
     protected final Label headlineLabel;
     protected final HBox tabs;
@@ -42,25 +43,29 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     private Subscription viewSubscription;
 
     public TabView(M model, C controller) {
-        super(new VBox(), model, controller);
-
-        root.setFillWidth(true);
+        super(new StackPane(), model, controller);
         root.setPadding(new Insets(0, -67, 0, 0));
-
+        
+        VBox box = new VBox();
+        box.setFillWidth(true);
+        
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-content-headline-label");
-        HBox.setMargin(headlineLabel, new Insets(-5, 0, 20, -2));
+        HBox.setMargin(headlineLabel, new Insets(-5, 0, 0, -2));
 
         tabs = new HBox();
         tabs.setFillHeight(true);
         tabs.setSpacing(46);
         tabs.getChildren().addAll(headlineLabel, Spacer.fillHBox());
-        tabs.setPadding(new Insets(0, 67, 2, 0));
+        tabs.setPadding(new Insets(0, 67, 0, 0));
+        tabs.setMinHeight(52);
 
         scrollPane = new ScrollPane();
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
+
+        box.getChildren().addAll(tabs, scrollPane);
 
         line = new Region();
         line.getStyleClass().add("bisq-darkest-bg");
@@ -74,9 +79,13 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         Pane lineAndMarker = new Pane();
         lineAndMarker.getChildren().addAll(line, selectionMarker);
         lineAndMarker.setMinHeight(lineHeight);
+        lineAndMarker.setMaxHeight(lineHeight);
         lineAndMarker.setPadding(new Insets(0, 67, 0, 0));
-
-        root.getChildren().addAll(tabs, lineAndMarker, scrollPane);
+        
+        StackPane.setAlignment(lineAndMarker, Pos.TOP_RIGHT);
+        StackPane.setMargin(lineAndMarker, new Insets(52, 0, 0, 0));
+        
+        root.getChildren().addAll(box, lineAndMarker);
     }
 
     @Override
