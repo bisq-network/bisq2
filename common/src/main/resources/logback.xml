@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <property name="LOG_ROOT" value="logs" />
+
     <appender name="CONSOLE_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%white(%d{HH:mm:ss.SSS}) %highlight(%-5level) %yellow([%thread]) %boldYellow(%logger{10}:) %highlight(%msg %xEx%n)
@@ -7,15 +9,50 @@
         </encoder>
     </appender>
 
+    <appender name="BISQ-MAIN-LOG" class="bisq.common.logging.BisqRollingFileAppender">
+        <file>${LOG_ROOT}/bisq2.log</file>
+    </appender>
+    <appender name="BISQ-MODULE-NETWORK" class="bisq.common.logging.BisqRollingFileAppender">
+        <file>${LOG_ROOT}/module-network.log</file>
+    </appender>
+    <appender name="BISQ-MODULE-DESKTOP" class="bisq.common.logging.BisqRollingFileAppender">
+        <file>${LOG_ROOT}/module-desktop.log</file>
+    </appender>
+    <appender name="BISQ-MODULE-PERSISTENCE" class="bisq.common.logging.BisqRollingFileAppender">
+        <file>${LOG_ROOT}/module-persistence.log</file>
+    </appender>
+    <appender name="BISQ-MODULE-PROTOCOL" class="bisq.common.logging.BisqRollingFileAppender">
+        <file>${LOG_ROOT}/module-protocol.log</file>
+    </appender>
+    <appender name="BISQ-MODULE-TOR" class="bisq.common.logging.BisqRollingFileAppender">
+        <file>${LOG_ROOT}/module-tor.log</file>
+    </appender>
+    <appender name="BISQ-MODULE-I2P" class="bisq.common.logging.BisqRollingFileAppender">
+        <file>${LOG_ROOT}/module-i2p.log</file>
+    </appender>
+
     <root level="DEBUG">
         <appender-ref ref="CONSOLE_APPENDER"/>
+        <appender-ref ref="BISQ-MAIN-LOG"/>
     </root>
 
-    <logger name="bisq.desktop" level="INFO"/>
-    <logger name="bisq.protocol" level="INFO"/>
-    <logger name="bisq.network" level="DEBUG"/>
-    <logger name="bisq.persistence" level="WARN"/>
-    <logger name="bisq.tor" level="INFO"/>
-    <logger name="bisq.i2p" level="INFO"/>
+    <logger name="bisq.desktop" level="INFO">
+        <appender-ref ref="BISQ-MODULE-DESKTOP" />
+    </logger>
+    <logger name="bisq.protocol" level="INFO">
+        <appender-ref ref="BISQ-MODULE-PROTOCOL" />
+    </logger>
+    <logger name="bisq.network" level="DEBUG">
+        <appender-ref ref="BISQ-MODULE-NETWORK" />
+    </logger>
+    <logger name="bisq.persistence" level="WARN">
+        <appender-ref ref="BISQ-MODULE-PERSISTENCE" />
+    </logger>
+    <logger name="bisq.tor" level="INFO">
+        <appender-ref ref="BISQ-MODULE-TOR" />
+    </logger>
+    <logger name="bisq.i2p" level="INFO">
+        <appender-ref ref="BISQ-MODULE-I2P" />
+    </logger>
 </configuration>
         
