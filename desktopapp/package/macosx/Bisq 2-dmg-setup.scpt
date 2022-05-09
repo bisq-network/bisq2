@@ -12,6 +12,7 @@ tell application "Finder"
     set theViewOptions to the icon view options of container window
     set arrangement of theViewOptions to not arranged
     set icon size of theViewOptions to 128
+    -- tiffutil -cathidpicheck dmg.png dmg@2x.png -out "Bisq 2-background.tiff" to add retina support
     set background picture of theViewOptions to file ".background:background.tiff"
 
     -- Create alias for install location
