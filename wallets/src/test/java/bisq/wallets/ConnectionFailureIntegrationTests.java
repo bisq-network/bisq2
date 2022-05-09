@@ -23,22 +23,41 @@ import bisq.wallets.process.BisqProcess;
 import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
 import bisq.wallets.rpc.RpcConfig;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess, W> {
+
+    private AbstractRegtestSetup<T, W> regtestSetup;
 
     protected abstract AbstractRegtestSetup<T, W> createRegtestSetup() throws IOException;
 
+    @BeforeAll
+    void setup() throws IOException {
+        regtestSetup = createRegtestSetup();
+        regtestSetup.start();
+    }
+
+    @AfterAll
+    void cleanUp() {
+        regtestSetup.shutdown();
+    }
+
     @Test
     void wrongRpcCredentialsTest() throws IOException {
-        AbstractRegtestSetup<T, W> regtestSetup = createRegtestSetup();
-        regtestSetup.start();
-
-        RpcConfig wrongRpcConfig = new RpcConfig.Builder(regtestSetup.getRpcConfig())
+        RpcConfig validRpcConfig = regtestSetup.getRpcConfig();
+        RpcConfig wrongRpcConfig = new RpcConfig.Builder()
+                .hostname(validRpcConfig.hostname())
+                .port(validRpcConfig.port())
+                .user(validRpcConfig.user())
                 .password("WRONG_PASSWORD")
                 .build();
 
@@ -47,7 +66,26 @@ public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess, W
 
         assertThatExceptionOfType(InvalidRpcCredentialsException.class)
                 .isThrownBy(minerChainBackend::listWallets);
+    }
 
-        regtestSetup.shutdown();
+    @Test
+    void verifyInvalidRpcConfigTest() {
+        RpcConfig validRpcConfig = regtestSetup.getRpcConfig();
+        RpcConfig wrongRpcConfig = new RpcConfig.Builder()
+                .hostname(validRpcConfig.hostname())
+                .port(validRpcConfig.port())
+                .user(validRpcConfig.user())
+                .password("WRONG_PASSWORD")
+                .build();
+
+        boolean isValid = BitcoindDaemon.verifyRpcConfig(wrongRpcConfig);
+        assertThat(isValid).isFalse();
+    }
+
+    @Test
+    void verifyValidRpcConfigTest() {
+        RpcConfig validRpcConfig = regtestSetup.getRpcConfig();
+        boolean isValid = BitcoindDaemon.verifyRpcConfig(validRpcConfig);
+        assertThat(isValid).isTrue();
     }
 }
