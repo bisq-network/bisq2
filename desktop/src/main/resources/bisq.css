@@ -118,7 +118,7 @@
 }
 
 .super-large-text {
-    -fx-font-size: 5em !important;
+    -fx-font-size: 4.1em !important;
 }
 
 /*******************************************************************************
@@ -265,31 +265,30 @@
 .bisq-text-headline-2 {
     -fx-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 2.35em;
-    -fx-line-spacing: -0.2em;
+    -fx-font-size: 1.9em;
+    -fx-line-spacing: -0.16em;
 }
 
 .bisq-text-1 {
     -fx-fill: -bisq-white;
-    -fx-font-size: 1.5em;
+    -fx-font-size: 1.25em;
 }
 
 .bisq-text-2 {
     -fx-text-fill: -bisq-grey-13;
-    -fx-font-family: "IBM Plex Sans Medium";
-    -fx-font-size: 1.5em;
+    -fx-font-size: 1.2em;
     -fx-line-spacing: .2em;
 }
 
 .bisq-text-3 {
     -fx-text-fill: -bisq-grey-9;
-    -fx-font-size: 1.4em;
-    -fx-line-spacing: -0.15em;
+    -fx-font-size: 1.1em;
+    -fx-line-spacing: -0.12em;
 }
 
 .bisq-text-4 {
     -fx-text-fill: -bisq-grey-9;
-    -fx-font-size: 1em;
+    -fx-font-size: 0.85em;
 }
 
 .wrap-text {
@@ -499,8 +498,8 @@
 .bisq-big-green-button {
     -fx-background-color: -bisq-darker-green;
     -fx-text-fill: -fx-light-text-color;
-    -fx-padding: 30 10;
-    -fx-font-size: 2em;
+    -fx-padding: 26 6;
+    -fx-font-size: 1.6em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-cursor: hand;
 }
@@ -513,9 +512,9 @@
 .bisq-transparent-button {
     -fx-background-color: transparent;
     -fx-text-fill: -bisq-grey-9;
-    -fx-font-size: 1.4em;
+    -fx-font-size: 1.1em;
     -fx-cursor: hand;
-    -fx-padding: 8 16;
+    -fx-padding: 6 14;
 }
 
 .bisq-transparent-button:hover {
