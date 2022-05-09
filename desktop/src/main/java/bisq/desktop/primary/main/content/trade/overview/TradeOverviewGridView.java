@@ -33,12 +33,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, TradeOverviewGridModel, TradeOverviewGridController> {
-    private static final int VERTICAL_MARGIN = 36;
+    private static final int VERTICAL_MARGIN = 30;
     
     public TradeOverviewGridView(TradeOverviewGridModel model, TradeOverviewGridController controller) {
         super(new GridPane(), model, controller);
-        getRoot().setHgap(32);
-        getRoot().setVgap(32);
+        getRoot().setHgap(26);
+        getRoot().setVgap(26);
     }
 
     @Override
@@ -58,24 +58,24 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
     private Pane getProtocolBox(ProtocolListItem protocol) {
         StackPane pane = new StackPane();
         pane.getStyleClass().add("bisq-box-2");
-        pane.setMinWidth(440);
+        pane.setMinWidth(360);
         GridPane.setHgrow(pane, Priority.ALWAYS);
                
         VBox box = new VBox();
         pane.getChildren().add(box);
 
         Label headlineLabel = new Label(protocol.getProtocolsName());
-        headlineLabel.setPadding(new Insets(24, VERTICAL_MARGIN, 0, VERTICAL_MARGIN));
+        headlineLabel.setPadding(new Insets(16, VERTICAL_MARGIN, 0, VERTICAL_MARGIN));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineLabel.setGraphic(ImageUtil.getImageViewById(protocol.getIconId()));
         box.getChildren().add(headlineLabel);
 
         Label basicInfo = new Label(protocol.getBasicInfo());
         basicInfo.getStyleClass().addAll("bisq-text-3", "wrap-text");
-        basicInfo.setPadding(new Insets(6, VERTICAL_MARGIN, 0, VERTICAL_MARGIN));
+        basicInfo.setPadding(new Insets(4, VERTICAL_MARGIN, 0, VERTICAL_MARGIN));
         basicInfo.setAlignment(Pos.TOP_LEFT);
-        basicInfo.setMaxWidth(480);
-        basicInfo.setMinHeight(80);
+        basicInfo.setMaxWidth(384);
+        basicInfo.setMinHeight(60);
         box.getChildren().add(basicInfo);
 
         Region line = new Region();
@@ -83,8 +83,8 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         box.getChildren().add(line);
 
         GridPane paramsPane = new GridPane();
-        paramsPane.setPadding(new Insets(28, VERTICAL_MARGIN, 24, VERTICAL_MARGIN));
-        paramsPane.setVgap(16);
+        paramsPane.setPadding(new Insets(24, VERTICAL_MARGIN, 20, VERTICAL_MARGIN));
+        paramsPane.setVgap(12);
         paramsPane.add(
                 getParameterPane(Res.get("markets"), protocol.getMarkets()), 
                 0, 
@@ -140,7 +140,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
             log.info("Hide clicked"); // TODO: implement hide
         });
         StackPane.setAlignment(button, Pos.TOP_RIGHT);
-        StackPane.setMargin(button, new Insets(24, 16, 0, 0));
+        StackPane.setMargin(button, new Insets(20, 14, 0, 0));
         pane.getChildren().add(button);
 
         return pane;
@@ -169,18 +169,18 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
 
     private Node getStarsNode(int value, String tooltipText) {
         final HBox hBox = new HBox();
-        hBox.setPadding(new Insets(6, 0, 6, 0));
+        hBox.setPadding(new Insets(5, 0, 5, 0));
         hBox.setSpacing(5);
 
         for (int i = 0; i < 3; i++) {
-            Label label = Icons.getIcon(AwesomeIcon.STAR, "1.5em");
+            Label label = Icons.getIcon(AwesomeIcon.STAR, "1.2em");
             label.setMouseTransparent(false);
             label.setOpacity(i <= value ? 1 : 0.2);
             hBox.getChildren().add(label);
         }
 
         final Tooltip tooltip = new Tooltip();
-        tooltip.setMaxWidth(300);
+        tooltip.setMaxWidth(240);
         tooltip.setWrapText(true);
         tooltip.setText(tooltipText);
         Tooltip.install(hBox, tooltip);

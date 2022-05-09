@@ -35,16 +35,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GettingStartedView extends View<VBox, GettingStartedModel, GettingStartedController> implements TabViewChild {
-    private static final int HORIZONTAL_MARGIN = 52;
-    private static final int VERTICAL_MARGIN = 34;
+    private static final int HORIZONTAL_MARGIN = 42;
+    private static final int VERTICAL_MARGIN = 24;
     
     public GettingStartedView(GettingStartedModel model, GettingStartedController controller) {
         super(new VBox(), model, controller);
         
         Label contentLabel = new Label(Res.get("social.start.content"));
         contentLabel.getStyleClass().addAll("bisq-text-2", "wrap-text");
-        contentLabel.setMaxWidth(500);
-        contentLabel.setMinHeight(125);
+        contentLabel.setMaxWidth(400);
+        contentLabel.setMinHeight(100);
         contentLabel.setAlignment(Pos.TOP_LEFT);
         root.getChildren().add(contentLabel);
         
@@ -77,31 +77,31 @@ public class GettingStartedView extends View<VBox, GettingStartedModel, GettingS
 
         VBox gridPane = new VBox(headerBox, contentBox);
         gridPane.getStyleClass().addAll("bisq-box-1");
-        gridPane.setPadding(new Insets(VERTICAL_MARGIN, HORIZONTAL_MARGIN, VERTICAL_MARGIN, HORIZONTAL_MARGIN));
+        gridPane.setPadding(new Insets(VERTICAL_MARGIN, HORIZONTAL_MARGIN, 2 * VERTICAL_MARGIN, HORIZONTAL_MARGIN));
         root.getChildren().add(gridPane);
     }
     
     private VBox getWidgetBox(String imageId, String headline, String content, String buttonLabel, NavigationTarget target) {
         Label headlineLabel = new Label(headline, ImageUtil.getImageViewById(imageId));
-        headlineLabel.setGraphicTextGap(20.0);
-        headlineLabel.setMaxWidth(355);
+        headlineLabel.setGraphicTextGap(16.0);
+        headlineLabel.setMaxWidth(284);
         headlineLabel.getStyleClass().addAll("bisq-text-headline-2",  "wrap-text");
         
         Label contentLabel = new Label(content);
         contentLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
-        contentLabel.setMaxWidth(340);
-        contentLabel.setMinHeight(100);
+        contentLabel.setMaxWidth(272);
+        contentLabel.setMinHeight(80);
         contentLabel.setAlignment(Pos.TOP_LEFT);
 
         Button button = new Button(buttonLabel);
         button.getStyleClass().add("bisq-big-green-button");
         button.setOnAction(e -> Navigation.navigateTo(target));
-        button.setPrefWidth(455);
+        button.setPrefWidth(360);
         
-        VBox box = new VBox(18, headlineLabel, contentLabel, button);
+        VBox box = new VBox(16, headlineLabel, contentLabel, button);
         box.setPadding(new Insets(VERTICAL_MARGIN, HORIZONTAL_MARGIN, 0, HORIZONTAL_MARGIN));
-        box.setMinWidth(455);
-        box.setPrefWidth(455);
+        box.setMinWidth(360);
+        box.setPrefWidth(360);
         HBox.setHgrow(box, Priority.ALWAYS);
         return box;
     }
