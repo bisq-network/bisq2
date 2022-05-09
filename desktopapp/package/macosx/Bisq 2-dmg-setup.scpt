@@ -7,7 +7,7 @@ tell application "Finder"
     set pathbar visible of container window to false
 
     -- size of window should match size of background (1034x641)
-    set the bounds of container window to {400, 100, 1434, 741}
+    set the bounds of container window to {400, 100, 1434, 769}
 
     set theViewOptions to the icon view options of container window
     set arrangement of theViewOptions to not arranged
@@ -22,10 +22,10 @@ tell application "Finder"
       set theFilePath to POSIX Path of theFile
       if theFilePath is "/Bisq 2.app"
         -- Position application location
-        set position of item theFile of container window to {345, 343}
+        set position of item theFile of container window to {298, 332}
       else if theFilePath is "/Applications"
         -- Position install location
-        set position of item theFile of container window to {677, 343}
+        set position of item theFile of container window to {746, 332}
       else
         -- Move all other files far enough to be not visible if user has "show hidden files" option set
         set position of item theFile of container window to {1000, 0}
