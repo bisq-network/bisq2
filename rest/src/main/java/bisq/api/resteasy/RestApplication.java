@@ -24,7 +24,7 @@ public class RestApplication extends Application {
         HttpContextBuilder contextBuilder = new HttpContextBuilder();
         contextBuilder.getDeployment().setApplication(new RestApplication());
         contextBuilder.getDeployment().getActualResourceClasses().add(PetResource.class);
-//        contextBuilder.getDeployment().getActualResourceClasses().add(AcceptHeaderOpenApiResource.class);
+        contextBuilder.getDeployment().getActualProviderClasses().add(MyContextResolver.class);
         HttpContext context = contextBuilder.bind(httpServer);
         context.getAttributes().put("some.config.info", "42");
         httpServer.start();
