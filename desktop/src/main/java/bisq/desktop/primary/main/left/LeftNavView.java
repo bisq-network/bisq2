@@ -24,6 +24,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.top.TopPanelView;
 import bisq.i18n.Res;
@@ -314,67 +315,59 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         );
     }
 
-    private static class NetworkInfoBox extends VBox {
+    private static class NetworkInfoBox extends HBox {
         private NetworkInfoBox(LeftNavModel model, Runnable handler) {
-            setOnMouseClicked(e -> handler.run());
-
-            HBox clearNetBox = getTransportTypeBox(
-                    model.getTorNumConnections(),
-                    model.getI2pNumConnections(),
-                    model.getTorEnabled(),
-                    model.getI2pEnabled()
-            );
-
-            Region line = new Region();
-            line.setMinHeight(1);
-            line.getStyleClass().add("bisq-grey-line");
+            getStyleClass().add("border-top");
             setMinHeight(LeftNavButton.HEIGHT);
             setMaxHeight(LeftNavButton.HEIGHT);
-            Insets insets = new Insets(21, 0, 0, 35);
-            VBox.setMargin(clearNetBox, insets);
-            getChildren().addAll(line, clearNetBox);
+            setPadding(new Insets(20, 24, 0, 24));
+            
+            setOnMouseClicked(e -> handler.run());
+            
+            getChildren().addAll(
+                    getNetworkBox(
+                            Res.get("peers"),
+                            "tor",
+                            model.getTorNumConnections(),
+                            model.getTorNumTargetConnections(),
+                            model.getTorEnabled()
+                    ),
+                    Spacer.fillHBox(),
+                    getNetworkBox(
+                            Res.get("i2p"),
+                            "i2p",
+                            model.getI2pNumConnections(),
+                            model.getI2pNumTargetConnections(),
+                            model.getI2pEnabled()
+                    )
+            );
         }
+                
+        private HBox getNetworkBox(String title,
+                String imageId,
+                StringProperty numConnections, 
+                StringProperty numTargetConnections,
+                BooleanProperty networkEnabled) {
 
-        private HBox getTransportTypeBox(StringProperty numConnectionsTor,
-                                         StringProperty numConnectionsI2p,
-                                         BooleanProperty torEnabled,
-                                         BooleanProperty i2pEnabled) {
-            HBox hBox = new HBox();
-            hBox.setSpacing(5);
-            hBox.setMinHeight(20);
-            hBox.setMaxHeight(hBox.getMinHeight());
+            Label titleLabel = new Label(title);
+            titleLabel.getStyleClass().add("bisq-small-dimmed-label");
 
-            Label peers = new Label(Res.get("peers"));
-            peers.getStyleClass().add("bisq-small-dimmed-label");
-
-            Label numConnectionsTorLabel = new Label();
-            numConnectionsTorLabel.getStyleClass().add("bisq-smaller-label");
-            numConnectionsTorLabel.textProperty().bind(numConnectionsTor);
+            Label numConnectionsLabel = new Label();
+            numConnectionsLabel.getStyleClass().add("bisq-smaller-label");
+            numConnectionsLabel.textProperty().bind(numConnections);
 
             Label separator = new Label("|");
             separator.getStyleClass().add("bisq-small-dimmed-label");
-            Label separator2 = new Label("|");
-            separator2.getStyleClass().add("bisq-small-dimmed-label");
 
-            Label numConnectionsI2pLabel = new Label();
-            numConnectionsI2pLabel.getStyleClass().add("bisq-smaller-label");
-            numConnectionsI2pLabel.textProperty().bind(numConnectionsI2p);
+            Label numTargetConnectionsLabel = new Label();
+            numTargetConnectionsLabel.getStyleClass().add("bisq-smaller-label");
+            numTargetConnectionsLabel.textProperty().bind(numTargetConnections);
 
-            ImageView torIcon = new ImageView();
-            torIcon.setId("tor");
-            ImageView i2pIcon = new ImageView();
-            i2pIcon.setId("i2p");
-
-            EasyBind.subscribe(torEnabled, value -> {
-                torIcon.setOpacity(value ? 1 : 0.15);
-            });
-            EasyBind.subscribe(i2pEnabled, value -> {
-                i2pIcon.setOpacity(value ? 0.7 : 0.1);
-            });
-
-            HBox.setMargin(torIcon, new Insets(0, 0, 0, 10));
-            hBox.getChildren().addAll(peers, numConnectionsTorLabel, separator, numConnectionsI2pLabel, torIcon, separator2, i2pIcon);
-            return hBox;
+            ImageView icon = ImageUtil.getImageViewById(imageId);
+            EasyBind.subscribe(networkEnabled, value -> icon.setOpacity(value ? 1 : 0.4));
+            HBox.setMargin(icon, new Insets(0, 0, 0, 2));
+            
+            return new HBox(5, titleLabel, numConnectionsLabel, separator, numTargetConnectionsLabel, icon);
         }
     }
 }
