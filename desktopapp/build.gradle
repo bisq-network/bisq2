@@ -148,7 +148,7 @@ tasks.jpackage {
         // runtimeImage can alternatively be set to a downloaded and extracted JDK
         // Worked well when using IntelliJ IDEA SDKs (File > Project Structure > SDKs > + > Download JDK)
         runtimeImage = "/home/user/.jdks/openjdk-17.0.2"
-//        icon = "icons/icons.ico" // TODO
+        icon = "package/linux/icon.png"
     }
 
     windows {
