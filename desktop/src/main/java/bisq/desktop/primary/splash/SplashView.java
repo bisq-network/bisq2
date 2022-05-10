@@ -19,6 +19,8 @@ package bisq.desktop.primary.splash;
 
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
+import bisq.network.p2p.ServiceNode;
+import com.google.common.base.Joiner;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -30,11 +32,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.ArrayList;
+
 @Slf4j
 public class SplashView extends View<VBox, SplashModel, SplashController> {
     private final ProgressBar progressBar;
     private final Label statusLabel;
-    private Subscription stateSubscription;
+    private final Label perNetworkStatusLabel;
+    private Subscription appStateSubscription;
+    private Subscription clearnetStateSubscription;
+    private Subscription torStateSubscription;
+    private Subscription i2pStateSubscription;
 
     public SplashView(SplashModel model, SplashController controller) {
         super(new VBox(), model, controller);
@@ -59,23 +67,78 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         Label connectingTitle = new Label(Res.get("satoshisquareapp.splash.connecting").toUpperCase());
         connectingTitle.getStyleClass().add("bisq-small-light-label-dimmed");
 
-        root.getChildren().addAll(logo, statusLabel, progressBar, connectingTitle);
+        perNetworkStatusLabel = new Label("");
+        perNetworkStatusLabel.getStyleClass().add("bisq-small-light-label-dimmed");
+
+        root.getChildren().addAll(logo, statusLabel, progressBar, connectingTitle, perNetworkStatusLabel);
     }
 
     @Override
     protected void onViewAttached() {
-        stateSubscription = EasyBind.subscribe(model.getState(),
+        appStateSubscription = EasyBind.subscribe(model.getApplicationState(),
                 state -> {
                     if (state != null) {
                         statusLabel.setText(Res.get("defaultApplicationService.state." + state.name()).toUpperCase());
                     }
                 });
+
+        clearnetStateSubscription = EasyBind.subscribe(model.getClearServiceNodeState(),
+                clearnetState -> {
+                    if (clearnetState != null) {
+                        String composite = getCompositeNetworkStatus(clearnetState, model.getTorServiceNodeState().get(), model.getI2pServiceNodeState().get());
+                        perNetworkStatusLabel.setText(composite);
+                    }
+                });
+
+        torStateSubscription = EasyBind.subscribe(model.getTorServiceNodeState(),
+                torState -> {
+                    if (torState != null) {
+                        String composite = getCompositeNetworkStatus(model.getClearServiceNodeState().get(), torState, model.getI2pServiceNodeState().get());
+                        perNetworkStatusLabel.setText(composite);
+                    }
+                });
+
+        i2pStateSubscription = EasyBind.subscribe(model.getI2pServiceNodeState(),
+                i2pState -> {
+                    if (i2pState != null) {
+                        String composite = getCompositeNetworkStatus(model.getClearServiceNodeState().get(), model.getTorServiceNodeState().get(), i2pState);
+                        perNetworkStatusLabel.setText(composite);
+                    }
+                });
+    }
+
+    private String getCompositeNetworkStatus(ServiceNode.State clearnetState, ServiceNode.State torState, ServiceNode.State i2pState) {
+        ArrayList<String> networkStatuses = new ArrayList<>();
+        if (clearnetState != null) {
+            networkStatuses.add( String.format("Clear %s%%", getServiceNodeStateProgress(clearnetState)) );
+        }
+        if (torState != null) {
+            networkStatuses.add( String.format("Tor %s%%", getServiceNodeStateProgress(torState)) );
+        }
+        if (i2pState != null) {
+            networkStatuses.add(  String.format("I2P %s%%", getServiceNodeStateProgress(i2pState)) );
+        }
+        return Joiner.on(" / ").join(networkStatuses).toUpperCase();
+    }
+
+    private String getServiceNodeStateProgress(ServiceNode.State state) {
+        return state == null ? "" :
+                "" + 100 * state.ordinal() / ServiceNode.State.PEER_GROUP_INITIALIZED.ordinal();
     }
 
     @Override
     protected void onViewDetached() {
-        if (stateSubscription != null) {
-            stateSubscription.unsubscribe();
+        if (appStateSubscription != null) {
+            appStateSubscription.unsubscribe();
+        }
+        if (clearnetStateSubscription != null) {
+            clearnetStateSubscription.unsubscribe();
+        }
+        if (torStateSubscription != null) {
+            torStateSubscription.unsubscribe();
+        }
+        if (i2pStateSubscription != null) {
+            i2pStateSubscription.unsubscribe();
         }
         progressBar.setProgress(0);
     }
