@@ -54,6 +54,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final static int EXPAND_ICON_SIZE = 18;
 
     private final ToggleGroup toggleGroup = new ToggleGroup();
+    LeftNavButton trade;
     @Getter
     private final NetworkInfoBox networkInfoBox;
     private final Label expandIcon, collapseIcon;
@@ -74,29 +75,30 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         mainMenuItems.setSpacing(6);
         Layout.pinToAnchorPane(mainMenuItems, menuTop, 0, 0, MARKER_WIDTH);
 
-        tradeSubMenuItems = new VBox();
-        tradeSubMenuItems.setSpacing(6);
+        tradeSubMenuItems = new VBox(2);
+        VBox.setMargin(tradeSubMenuItems, new Insets(-10, 0, 0, 0));
+        tradeSubMenuItems.setPadding(new Insets(0, 0, 16, 0));
 
-        LeftNavButton social = createNavigationButton(Res.get("social"),
-                ImageUtil.getImageViewById("home"),
+        LeftNavButton social = createNavigationButton(Res.get("community"),
+                ImageUtil.getImageViewById("nav-community"),
                 NavigationTarget.SOCIAL);
-        LeftNavButton trade = createNavigationButton(Res.get("trade"),
-                ImageUtil.getImageViewById("sell"),
+        trade = createNavigationButton(Res.get("trade"),
+                ImageUtil.getImageViewById("nav-trade"),
                 NavigationTarget.TRADE);
 
         LeftNavButton markets = createNavigationButton(Res.get("markets"),
-                ImageUtil.getImageViewById("market"),
+                ImageUtil.getImageViewById("nav-markets"),
                 NavigationTarget.MARKETS);
 
         //todo lower prio menu add design
         LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
-                ImageUtil.getImageViewById("wallet"),
+                ImageUtil.getImageViewById("nav-wallet"),
                 NavigationTarget.WALLET);
         LeftNavButton support = createNavigationButton(Res.get("support"),
-                ImageUtil.getImageViewById("support"),
+                ImageUtil.getImageViewById("nav-support"),
                 NavigationTarget.SUPPORT);
         LeftNavButton settings = createNavigationButton(Res.get("settings"),
-                ImageUtil.getImageViewById("settings"),
+                ImageUtil.getImageViewById("nav-settings"),
                 NavigationTarget.SETTINGS);
 
         LeftNavSubButton satoshiSquare = createSecondaryNavigationButton(Res.get("satoshiSquare"),
@@ -125,15 +127,15 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         // controller.onNavigationButtonCreated(NavigationTarget.NETWORK_INFO);
 
-        expandIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_RIGHT, "16");
+        expandIcon = Icons.getIcon(AwesomeIcon.PLUS_SIGN, "16");
         expandIcon.setCursor(Cursor.HAND);
-        expandIcon.setLayoutY(menuTop - EXPAND_ICON_SIZE - 3);
+        expandIcon.setLayoutY(menuTop + 3);
         expandIcon.setLayoutX(MARKER_WIDTH + COLLAPSED_WIDTH - EXPAND_ICON_SIZE);
         expandIcon.setOpacity(0);
 
-        collapseIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_LEFT, "16");
+        collapseIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN, "16");
         collapseIcon.setCursor(Cursor.HAND);
-        collapseIcon.setLayoutY(menuTop - EXPAND_ICON_SIZE - 3);
+        collapseIcon.setLayoutY(menuTop + 3);
         collapseIcon.setLayoutX(MARKER_WIDTH + EXPANDED_WIDTH - EXPAND_ICON_SIZE);
         collapseIcon.setOpacity(0);
 
@@ -296,9 +298,20 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             if (selectedLeftNavButton instanceof LeftNavSubButton) {
                 targetY += tradeSubMenuItems.getLayoutY();
             }
-            Transitions.animateNavigationButtonMarks(selectionMarker, selectedLeftNavButton.getHeight(),
-                    targetY);
+            Transitions.animateNavigationButtonMarks(selectionMarker, selectedLeftNavButton.getHeight(), targetY);
+            maybeHighlightTradeSubmenu();
         });
+    }
+    
+    private void maybeHighlightTradeSubmenu() {
+        LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
+        boolean isSubmenuItemSelected = selectedLeftNavButton instanceof LeftNavSubButton;
+        trade.setHighlighted(isSubmenuItemSelected);
+        Layout.toggleStyleClass(
+                tradeSubMenuItems, 
+                "bisq-dark-bg", 
+                isSubmenuItemSelected || selectedLeftNavButton.navigationTarget == NavigationTarget.TRADE
+        );
     }
 
     private static class NetworkInfoBox extends VBox {

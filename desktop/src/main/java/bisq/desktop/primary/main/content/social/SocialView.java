@@ -48,7 +48,7 @@ public class SocialView extends TabView<SocialModel, SocialController> {
                 }
                 line.setOpacity(0);
             } else {
-                headlineLabel.setText(Res.get("social"));
+                headlineLabel.setText(Res.get("community"));
                 headlineLabel.getStyleClass().remove("super-large-text");
                 line.setOpacity(1);
             }

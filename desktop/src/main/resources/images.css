@@ -51,8 +51,16 @@
     -fx-image: url("images/trust.png");
 }
 
+#buy {
+    -fx-image: url("images/navigation/buy.png");
+}
+
 #image-buy-white {
     -fx-image: url("images/buy_white.png");
+}
+
+#sell {
+    -fx-image: url("images/navigation/sell.png");
 }
 
 #image-sell-white {
@@ -61,36 +69,28 @@
 
 
 /*Left nav*/
-#home {
-    -fx-image: url("images/navigation/home.png");
+#nav-community {
+    -fx-image: url("images/navigation/nav-community.png");
 }
 
-#buy {
-    -fx-image: url("images/navigation/buy.png");
+#nav-trade {
+    -fx-image: url("images/navigation/nav-trade.png");
 }
 
-#sell {
-    -fx-image: url("images/navigation/sell.png");
+#nav-markets {
+    -fx-image: url("images/navigation/nav-markets.png");
 }
 
-#market {
-    -fx-image: url("images/navigation/market.png");
+#nav-wallet {
+    -fx-image: url("images/navigation/nav-wallet.png");
 }
 
-#portfolio {
-    -fx-image: url("images/navigation/portfolio.png");
+#nav-support {
+    -fx-image: url("images/navigation/nav-support.png");
 }
 
-#wallet {
-    -fx-image: url("images/navigation/btc.png");
-}
-
-#support {
-    -fx-image: url("images/navigation/support.png");
-}
-
-#settings {
-    -fx-image: url("images/navigation/settings.png");
+#nav-settings {
+    -fx-image: url("images/navigation/nav-settings.png");
 }
 
 #accounts {
