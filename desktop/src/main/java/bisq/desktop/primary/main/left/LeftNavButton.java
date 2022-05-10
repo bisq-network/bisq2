@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.left;
 
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.layout.Layout;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -37,11 +38,14 @@ import javax.annotation.Nullable;
 
 @Slf4j
 class LeftNavButton extends Pane implements Toggle {
+    protected final static double LABEL_X_POS_EXPANDED = 56;
     static final int HEIGHT = 40;
+    
     @Getter
     protected final NavigationTarget navigationTarget;
     protected final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
     protected final BooleanProperty selectedProperty = new SimpleBooleanProperty();
+    protected final BooleanProperty highlightedProperty = new SimpleBooleanProperty();
     protected final Label label;
     protected final Tooltip tooltip;
 
@@ -52,9 +56,8 @@ class LeftNavButton extends Pane implements Toggle {
         this.icon = icon;
         this.navigationTarget = navigationTarget;
 
-        setMinHeight(HEIGHT);
-        setMaxHeight(HEIGHT);
-        getStyleClass().add("bisq-darkest-bg");
+        setMinHeight(calculateHeight());
+        setMaxHeight(calculateHeight());
         setCursor(Cursor.HAND);
 
         setToggleGroup(toggleGroup);
@@ -71,8 +74,8 @@ class LeftNavButton extends Pane implements Toggle {
         }
 
         label = new Label(title);
-        label.setLayoutX(56);
-        label.setLayoutY(9.5);
+        label.setLayoutX(LABEL_X_POS_EXPANDED);
+        label.setLayoutY((calculateHeight() - 21) * 0.5);
         label.setMouseTransparent(true);
 
         getChildren().add(label);
@@ -81,27 +84,14 @@ class LeftNavButton extends Pane implements Toggle {
     }
 
     protected void applyStyle() {
-        if (selectedProperty.get()) {
-            getStyleClass().remove("bisq-darkest-bg");
-            getStyleClass().add("bisq-dark-bg");
-            label.getStyleClass().remove("bisq-nav-label");
-            label.getStyleClass().add("bisq-nav-label-selected");
-
-            if (icon != null) {
-                icon.setOpacity(1);
-            }
-        } else {
-            getStyleClass().remove("bisq-dark-bg");
-            getStyleClass().add("bisq-darkest-bg");
-            label.getStyleClass().remove("bisq-nav-label-selected");
-            label.getStyleClass().add("bisq-nav-label");
-
-            if (icon != null) {
-                icon.setOpacity(0.6);
-            }
+        boolean isHighlighted = isSelected() || isHighlighted();
+        Layout.chooseStyleClass(this, "bisq-dark-bg", "bisq-darkest-bg", isHighlighted);
+        Layout.chooseStyleClass(label, "bisq-nav-label-highlighted", "bisq-nav-label", isHighlighted);
+        
+        if (icon != null) {
+            icon.setOpacity(isHighlighted ? 1 : 0.6);
         }
     }
-
 
     public final void setOnAction(Runnable handler) {
         setOnMouseClicked(e -> handler.run());
@@ -120,6 +110,10 @@ class LeftNavButton extends Pane implements Toggle {
                 label.setManaged(false);
             });
         }
+    }
+
+    protected int calculateHeight() {
+        return HEIGHT;
     }
 
 
@@ -155,6 +149,16 @@ class LeftNavButton extends Pane implements Toggle {
     @Override
     public void setSelected(boolean selected) {
         selectedProperty.set(selected);
+        applyStyle();
+    }
+    
+    
+    public boolean isHighlighted() {
+        return highlightedProperty.get();
+    }
+
+    public void setHighlighted(boolean highlighted) {
+        highlightedProperty.set(highlighted);
         applyStyle();
     }
 }

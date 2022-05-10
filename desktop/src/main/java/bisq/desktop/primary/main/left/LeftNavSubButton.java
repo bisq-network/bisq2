@@ -19,37 +19,25 @@ package bisq.desktop.primary.main.left;
 
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.layout.Layout;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class LeftNavSubButton extends LeftNavButton {
-    private final static double LABEL_X_POS_EXPANDED = 71;
-    private final static double LABEL_X_POS_COLLAPSED = 33.5;
+    private final static double LABEL_X_POS_COLLAPSED = 31;
 
     private final String fullTitle;
 
     LeftNavSubButton(String title, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
         super(title, null, toggleGroup, navigationTarget);
         this.fullTitle = title;
-
-        label.setLayoutX(LABEL_X_POS_EXPANDED);
     }
 
     @Override
     protected void applyStyle() {
-        if (selectedProperty.get()) {
-            getStyleClass().remove("bisq-darkest-bg");
-            getStyleClass().add("bisq-dark-bg");
-            label.getStyleClass().remove("bisq-sub-nav-label");
-            label.getStyleClass().add("bisq-sub-nav-label-selected");
-        } else {
-            getStyleClass().remove("bisq-dark-bg");
-            getStyleClass().add("bisq-darkest-bg");
-            label.getStyleClass().remove("bisq-sub-nav-label-selected");
-            label.getStyleClass().add("bisq-sub-nav-label");
-        }
+        Layout.chooseStyleClass(label, "bisq-sub-nav-label-selected", "bisq-sub-nav-label", isSelected());
     }
 
     @Override
@@ -63,5 +51,10 @@ class LeftNavSubButton extends LeftNavButton {
             Transitions.animateLeftSubNavigation(label, LABEL_X_POS_COLLAPSED, duration);
             label.setText(fullTitle.substring(0, 1));
         }
+    }
+
+    @Override
+    protected int calculateHeight() {
+        return 28;
     }
 }
