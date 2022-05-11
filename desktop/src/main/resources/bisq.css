@@ -135,6 +135,11 @@
     -fx-border-width: 0 0 1 0;
 }
 
+.border-top {
+    -fx-border-color: -bisq-grey-5;
+    -fx-border-width: 1 0 0 0;
+}
+
 /*******************************************************************************
  *                                                                             *
  * Borders                                                                     *
@@ -1093,10 +1098,6 @@ tree-table-view:focused {
 
 .bisq-green-line {
     -fx-background-color: -bisq-logo-green;
-}
-
-.bisq-grey-line {
-    -fx-background-color: -bisq-grey-6;
 }
 
 .bisq-content-bg {
