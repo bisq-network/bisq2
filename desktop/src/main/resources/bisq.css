@@ -294,6 +294,12 @@
     -fx-font-size: 0.85em;
 }
 
+.bisq-text-5 {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.08em;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
 .wrap-text {
     -fx-wrap-text: true;    
 }
@@ -1175,6 +1181,30 @@ tree-table-view:focused {
     -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
+}
+
+.table-view.trade-overview-table-view .column-header {
+    -fx-pref-height: 68px;
+    -fx-border-width: 0 0 2 0;
+    -fx-border-color: -bisq-bg-dark;
+}
+
+.table-view.trade-overview-table-view .column-header .label {
+    -fx-font-weight: normal;
+}
+
+.table-view.trade-overview-table-view .table-row-cell {
+    -fx-pref-height: 68px;
+    -fx-border-width: 0 0 0 0;
+    -fx-font-size: 1.08em;
+}
+
+.table-view.trade-overview-table-view .table-row-cell .table-cell {
+    -fx-background-color: -bisq-content-bg;
+}
+
+.table-view.trade-overview-table-view .button {
+    -fx-padding: 6 20 6 20;
 }
 
 

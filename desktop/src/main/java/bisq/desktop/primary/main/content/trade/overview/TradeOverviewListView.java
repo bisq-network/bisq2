@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.overview;
 
 import bisq.desktop.common.utils.Icons;
-import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.i18n.Res;
@@ -34,6 +34,7 @@ import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
@@ -41,7 +42,6 @@ import java.util.function.Function;
 @Slf4j
 public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOverviewBaseModel, TradeOverviewListController> {
     private final BisqTableView<ProtocolListItem> tableView;
-    private Callback<TableColumn<ProtocolListItem, ProtocolListItem>, TableCell<ProtocolListItem, ProtocolListItem>> cellFactory;
 
     public TradeOverviewListView(TradeOverviewBaseModel model, TradeOverviewListController controller) {
         super(new VBox(), model, controller);
@@ -49,7 +49,8 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
         root.setSpacing(30);
 
         tableView = new BisqTableView<>(model.getSortedItems());
-        tableView.setMinHeight(200);
+        tableView.getStyleClass().add("trade-overview-table-view");
+        tableView.setMinHeight(500);
         VBox.setMargin(tableView, new Insets(-33, 0, 0, 0));
         configDataTableView();
 
@@ -67,31 +68,36 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
     private void configDataTableView() {
         BisqTableColumn<ProtocolListItem> column = new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.protocol"))
-                .minWidth(80)
+                .minWidth(180)
                 .isFirst()
-                .valueSupplier(ProtocolListItem::getProtocolsName)
+                .comparator(Comparator.comparing(ProtocolListItem::getProtocolsName))
+                .setCellFactory(getNameCellFactory())
                 .build();
         tableView.getColumns().add(column);
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.markets"))
                 .minWidth(80)
+                .isFirst()
                 .valueSupplier(ProtocolListItem::getMarkets)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.security"))
                 .minWidth(80)
+                .isFirst()
                 .comparator(Comparator.comparing(e -> e.getSwapProtocolType().getSecurity().ordinal()))
                 .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getSecurity().ordinal(), ProtocolListItem::getSecurityInfo))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.privacy"))
                 .minWidth(80)
+                .isFirst()
                 .comparator(Comparator.comparing(e -> e.getSwapProtocolType().getPrivacy().ordinal()))
                 .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getPrivacy().ordinal(), ProtocolListItem::getPrivacyInfo))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.convenience"))
                 .minWidth(80)
+                .isFirst()
                 .comparator(Comparator.comparing(e -> e.getSwapProtocolType().getConvenience().ordinal()))
                 .setCellFactory(getCellFactory(e -> e.getSwapProtocolType().getConvenience().ordinal(), ProtocolListItem::getConvenienceInfo))
                 .build());
@@ -108,19 +114,42 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.release"))
                 .minWidth(80)
+                .isFirst()
                 .valueSupplier(ProtocolListItem::getReleaseDate)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
+                .title(Res.get("trade.protocols.table.header.access"))
                 .fixWidth(150)
                 .value(Res.get("shared.select"))
                 .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
-                .buttonClass(BisqIconButton.class)
                 .actionHandler(controller::onSelect)
-                .isLast()
                 .build());
     }
 
-    public Callback<TableColumn<ProtocolListItem, ProtocolListItem>, TableCell<ProtocolListItem, ProtocolListItem>> getCellFactory(
+    private Callback<TableColumn<ProtocolListItem, ProtocolListItem>, TableCell<ProtocolListItem, ProtocolListItem>> getNameCellFactory() {
+        return column -> new TableCell<>() {
+            final Label label = new Label();
+            {
+                label.setGraphicTextGap(10);
+                label.getStyleClass().add("bisq-text-5");
+            }
+
+            @Override
+            public void updateItem(final ProtocolListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    label.setGraphic(ImageUtil.getImageViewById(item.getIconId()));
+                    label.setText(item.getProtocolsName());
+                    setGraphic(label);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<ProtocolListItem, ProtocolListItem>, TableCell<ProtocolListItem, ProtocolListItem>> getCellFactory(
             Function<ProtocolListItem, Integer> enumOrdinalSupplier,
             Function<ProtocolListItem, String> toolTipSupplier) {
         return new Callback<>() {
@@ -129,7 +158,7 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
                     ProtocolListItem> column) {
                 return new TableCell<>() {
                     final HBox hBox = new HBox();
-                    final List<Label> stars;
+                    final List<Label> stars = new ArrayList<>();
                     final Tooltip tooltip = new Tooltip();
 
                     {
@@ -139,15 +168,14 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
                         tooltip.setMaxWidth(300);
                         tooltip.setWrapText(true);
 
-                        String fontSize = "0.9em";
-                        stars = List.of(Icons.getIcon(AwesomeIcon.STAR, fontSize),
-                                Icons.getIcon(AwesomeIcon.STAR, fontSize),
-                                Icons.getIcon(AwesomeIcon.STAR, fontSize));
-                        for (Label label : stars) {
+                        for (int i = 0; i < 3; i++) {
+                            Label label = Icons.getIcon(AwesomeIcon.STAR, "1.2em");
                             label.setMouseTransparent(false);
+                            stars.add(label);
                         }
+                        
                         hBox.setSpacing(5);
-                        hBox.setAlignment(Pos.CENTER);
+                        hBox.setAlignment(Pos.CENTER_LEFT);
                         hBox.getChildren().addAll(stars);
                     }
 
@@ -172,5 +200,4 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
             }
         };
     }
-
 }
