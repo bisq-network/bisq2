@@ -17,7 +17,8 @@
 
 package bisq.wallets.elementsd;
 
-import bisq.wallets.rpc.RpcConfig;
+
+import bisq.wallets.RpcConfig;
 
 public record ElementsdConfig(RpcConfig bitcoindRpcConfig, RpcConfig elementsdRpcConfig) {
 }

@@ -32,8 +32,8 @@ public class WalletReceiveController implements Controller {
 
     private Pin receiveAddressListPin;
 
-    public WalletReceiveController(DefaultApplicationService applicationService) {
-        this.walletService = applicationService.getWalletService();
+    public WalletReceiveController(WalletService walletService) {
+        this.walletService = walletService;
         model = new WalletReceiveModel();
         view = new WalletReceiveView(model, this);
     }

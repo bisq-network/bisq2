@@ -17,23 +17,23 @@
 
 package bisq.wallets.elementsd.rpc;
 
-import bisq.wallets.AddressType;
+import bisq.wallets.model.AddressType;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindGetNewAddressRpcCall;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindSignMessageRpcCall;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindVerifyMessageRpcCall;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindWalletPassphraseRpcCall;
 import bisq.wallets.elementsd.rpc.calls.*;
 import bisq.wallets.elementsd.rpc.responses.*;
-import bisq.wallets.rpc.RpcClient;
+import bisq.wallets.rpc.WalletRpcClient;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 public class ElementsdWallet {
-    private final RpcClient rpcClient;
+    private final WalletRpcClient rpcClient;
 
-    public ElementsdWallet(RpcClient rpcClient) {
+    public ElementsdWallet(WalletRpcClient rpcClient) {
         this.rpcClient = rpcClient;
     }
 

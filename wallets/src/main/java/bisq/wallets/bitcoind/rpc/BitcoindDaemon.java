@@ -17,21 +17,25 @@
 
 package bisq.wallets.bitcoind.rpc;
 
+import bisq.wallets.RpcConfig;
 import bisq.wallets.bitcoind.rpc.calls.*;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindFinalizePsbtResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
-import bisq.wallets.rpc.RpcClient;
+import bisq.wallets.exceptions.InvalidRpcCredentialsException;
+import bisq.wallets.rpc.DaemonRpcClient;
+import bisq.wallets.rpc.RpcClientFactory;
 
+import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 public class BitcoindDaemon {
-    private final RpcClient rpcClient;
+    private final DaemonRpcClient rpcClient;
 
-    public BitcoindDaemon(RpcClient rpcClient) {
+    public BitcoindDaemon(DaemonRpcClient rpcClient) {
         this.rpcClient = rpcClient;
     }
 
@@ -87,6 +91,10 @@ public class BitcoindDaemon {
     }
 
     public List<String> listWallets() {
+        return listWalletsWithRpcClient(rpcClient);
+    }
+
+    private static List<String> listWalletsWithRpcClient(DaemonRpcClient rpcClient) {
         var rpcCall = new BitcoindListWalletsRpcCall();
         String[] wallets = rpcClient.invokeAndValidate(rpcCall);
         return Arrays.asList(wallets);
@@ -108,6 +116,16 @@ public class BitcoindDaemon {
         var request = new BitcoindUnloadWalletRpcCall.Request(absoluteWalletPath);
         var rpcCall = new BitcoindUnloadWalletRpcCall(request);
         rpcClient.invokeAndValidate(rpcCall);
+    }
+
+    public static boolean verifyRpcConfig(RpcConfig rpcConfig) {
+        try {
+            DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
+            listWalletsWithRpcClient(rpcClient); // Makes a listwallets RPC call
+            return true;
+        } catch (MalformedURLException | InvalidRpcCredentialsException e) {
+            return false;
+        }
     }
 
     private boolean doesWalletExist(Path walletPath) {

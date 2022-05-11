@@ -18,11 +18,12 @@
 package bisq.wallets.elementsd;
 
 import bisq.common.observable.ObservableSet;
-import bisq.wallets.AddressType;
 import bisq.wallets.Wallet;
+import bisq.wallets.ZmqWallet;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
+import bisq.wallets.model.AddressType;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
 import bisq.wallets.stores.LiquidWalletStore;
@@ -33,7 +34,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
-public class LiquidWallet implements Wallet {
+public class LiquidWallet implements Wallet, ZmqWallet {
     private final Path walletPath;
 
     private final ElementsdDaemon daemon;

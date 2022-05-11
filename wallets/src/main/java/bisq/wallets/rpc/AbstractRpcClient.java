@@ -20,52 +20,13 @@ package bisq.wallets.rpc;
 import bisq.wallets.exceptions.CannotConnectToWalletException;
 import bisq.wallets.exceptions.InvalidRpcCredentialsException;
 import bisq.wallets.exceptions.RpcCallFailureException;
-import bisq.wallets.rpc.call.DaemonRpcCall;
 import bisq.wallets.rpc.call.RpcCall;
-import bisq.wallets.rpc.call.WalletRpcCall;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 
 import java.net.ConnectException;
 
-public class RpcClient {
-
-    private final JsonRpcHttpClient daemonJsonRpcClient;
-    private final JsonRpcHttpClient walletJsonRpcClient;
-
-    RpcClient(JsonRpcHttpClient daemonJsonRpcClient, JsonRpcHttpClient walletJsonRpcClient) {
-        this.daemonJsonRpcClient = daemonJsonRpcClient;
-        this.walletJsonRpcClient = walletJsonRpcClient;
-    }
-
-    public <T, R> R invokeAndValidate(DaemonRpcCall<T, R> rpcCall) {
-        R response = invoke(rpcCall);
-        validateRpcCall(rpcCall, response);
-        return response;
-    }
-
-    public <T, R> R invokeAndValidate(WalletRpcCall<T, R> rpcCall) {
-        R response = invoke(rpcCall);
-        validateRpcCall(rpcCall, response);
-        return response;
-    }
-
-    private <T, R> R invoke(DaemonRpcCall<T, R> rpcCall) {
-        return invokeAndHandleExceptions(daemonJsonRpcClient, rpcCall);
-    }
-
-    private <T, R> R invoke(WalletRpcCall<T, R> rpcCall) {
-        return invokeAndHandleExceptions(walletJsonRpcClient, rpcCall);
-    }
-
-    private <T, R> void validateRpcCall(RpcCall<T, R> rpcCall, R response) {
-        boolean isValid = rpcCall.isResponseValid(response);
-        if (!isValid) {
-            throw new RpcCallFailureException("RPC Call to '" + rpcCall.getRpcMethodName() + "' failed. " +
-                    response.toString());
-        }
-    }
-
-    private <T, R> R invokeAndHandleExceptions(JsonRpcHttpClient jsonRpcHttpClient, RpcCall<T, R> rpcCall) {
+abstract class AbstractRpcClient {
+    protected  <T, R> R invokeAndHandleExceptions(JsonRpcHttpClient jsonRpcHttpClient, RpcCall<T, R> rpcCall) {
         String rpcCallMethodName = rpcCall.getRpcMethodName();
         try {
             return jsonRpcHttpClient.invoke(

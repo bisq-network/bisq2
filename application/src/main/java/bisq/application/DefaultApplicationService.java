@@ -46,9 +46,9 @@ import bisq.social.chat.ChatService;
 import bisq.social.offer.TradeChatOfferService;
 import bisq.social.user.ChatUserService;
 import bisq.social.user.reputation.ReputationService;
-import bisq.wallets.WalletBackend;
-import bisq.wallets.WalletConfig;
-import bisq.wallets.WalletService;
+import bisq.wallets.services.BitcoinWalletService;
+import bisq.wallets.services.LiquidWalletService;
+import bisq.wallets.RpcConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -105,7 +105,8 @@ public class DefaultApplicationService extends ServiceProvider {
     private final TradeChatOfferService tradeChatOfferService;
     private final ChatUserService chatUserService;
     private final ReputationService reputationService;
-    private final WalletService walletService;
+    private final BitcoinWalletService bitcoinWalletService;
+    private final LiquidWalletService lBtcWalletService;
     private final OfferService offerService;
     private final SocialService socialService;
     private final SecurityService securityService;
@@ -157,9 +158,17 @@ public class DefaultApplicationService extends ServiceProvider {
 
         protocolService = new ProtocolService(networkService, identityService, persistenceService, openOfferService);
 
-        Optional<WalletConfig> walletConfig = !isRegtestRun() ? Optional.empty() : createRegtestWalletConfig();
+
         Path walletsDataDir = Path.of(applicationConfig.baseDir() + File.separator + "wallets");
-        walletService = new WalletService(persistenceService, walletsDataDir, walletConfig);
+
+        // Bitcoin Wallet Service
+        Optional<RpcConfig> walletConfig = !applicationConfig.isBitcoindRegtest() ? Optional.empty()
+                : createRegtestWalletConfig();
+        bitcoinWalletService = new BitcoinWalletService(persistenceService, walletsDataDir, walletConfig);
+
+        // L-BTC Wallet Service
+        walletConfig = !applicationConfig.isElementsdRegtest() ? Optional.empty() : createRegtestWalletConfig();
+        lBtcWalletService = new LiquidWalletService(persistenceService, walletsDataDir, walletConfig);
 
         daoBridgeService = new DaoBridgeService(networkService, identityService, getConfig("bisq.oracle.daoBridge"));
     }
@@ -206,7 +215,8 @@ public class DefaultApplicationService extends ServiceProvider {
                         openOfferService.initialize(),
                         offerBookService.initialize(),
                         tradeChatOfferService.initialize(),
-                        walletService.initialize()))
+                        bitcoinWalletService.initialize(),
+                        lBtcWalletService.initialize()))
                 // TODO Needs to increase if using embedded I2P router (i2p internal bootstrap timeouts after 5 mins)
                 .orTimeout(5, TimeUnit.MINUTES)
                 .thenApply(list -> list.stream().allMatch(e -> e))
@@ -238,7 +248,10 @@ public class DefaultApplicationService extends ServiceProvider {
                                         }
                                     });
                         })
-                        .thenRun(walletService::shutdown)
+                        .thenRun(() -> {
+                            bitcoinWalletService.shutdown();
+                            lBtcWalletService.shutdown();
+                        })
                 , ExecutorFactory.newSingleThreadExecutor("Shutdown"));
     }
 
@@ -246,18 +259,10 @@ public class DefaultApplicationService extends ServiceProvider {
         return securityService.getKeyPairService();
     }
 
-    //todo move to wallet domain
-    private boolean isRegtestRun() {
-        return applicationConfig.isBitcoindRegtest() || applicationConfig.isElementsdRegtest();
-    }
+    private Optional<RpcConfig> createRegtestWalletConfig() {
+        int port = applicationConfig.isBitcoindRegtest() ? 18443 : 7040;
 
-    private Optional<WalletConfig> createRegtestWalletConfig() {
-        WalletBackend walletBackend = applicationConfig.isBitcoindRegtest() ?
-                WalletBackend.BITCOIND : WalletBackend.ELEMENTSD;
-        int port = walletBackend == WalletBackend.BITCOIND ? 18443 : 7040;
-
-        var walletConfig = WalletConfig.builder()
-                .walletBackend(walletBackend)
+        var walletConfig = RpcConfig.builder()
                 .hostname("localhost")
                 .port(port)
                 .user("bisq")

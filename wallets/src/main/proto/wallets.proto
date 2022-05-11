@@ -21,15 +21,19 @@ package wallets;
 option java_package = "bisq.wallets.protobuf";
 option java_multiple_files = true;
 
+message RpcConfig {
+  string hostname = 1;
+  int32 port = 2;
+  string user = 3;
+  string password = 4;
+}
+
 message BitcoinWalletStore {
-  repeated string receiveAddresses = 1;
+  optional RpcConfig rpcConfig = 1;
+  repeated string receiveAddresses = 2;
 }
 
 message LiquidWalletStore {
-  repeated string receiveAddresses = 1;
-}
-
-message WalletStore {
-  BitcoinWalletStore bitcoinWalletStore = 1;
-  LiquidWalletStore liquidWalletStore = 2;
+  optional RpcConfig rpcConfig = 1;
+  repeated string receiveAddresses = 2;
 }

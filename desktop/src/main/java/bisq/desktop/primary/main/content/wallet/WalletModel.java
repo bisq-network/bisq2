@@ -30,6 +30,6 @@ public class WalletModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.WALLET_TRANSACTIONS;
+        return NavigationTarget.WALLET_BITCOIN_TRANSACTIONS;
     }
 }

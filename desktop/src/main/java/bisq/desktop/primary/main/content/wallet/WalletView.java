@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.wallet;
 
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +27,10 @@ public class WalletView extends TabView<WalletModel, WalletController> {
     public WalletView(WalletModel model, WalletController controller) {
         super(model, controller);
 
-        addTab(Res.get("wallet.tab.transactions"), NavigationTarget.WALLET_TRANSACTIONS);
-        addTab(Res.get("send"), NavigationTarget.WALLET_SEND);
-        addTab(Res.get("wallet.tab.receive"), NavigationTarget.WALLET_RECEIVE);
-        addTab(Res.get("wallet.tab.utxos"), NavigationTarget.WALLET_UTXOS);
+        addTab(Res.get("wallet.tab.transactions"), controller.getTransactionsTabNavigationTarget());
+        addTab(Res.get("send"), controller.getSendTabNavigationTarget());
+        addTab(Res.get("wallet.tab.receive"), controller.getReceiveTabNavigationTarget());
+        addTab(Res.get("wallet.tab.utxos"), controller.getUtxoTabNavigationTarget());
 
         headlineLabel.setText(Res.get("wallet"));
     }

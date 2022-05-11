@@ -18,13 +18,13 @@
 package bisq.wallets.elementsd;
 
 import bisq.common.util.NetworkUtils;
+import bisq.wallets.RpcConfig;
 import bisq.wallets.bitcoind.BitcoindRegtestProcess;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.exceptions.RpcCallFailureException;
 import bisq.wallets.process.ProcessConfig;
-import bisq.wallets.rpc.RpcClient;
+import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
-import bisq.wallets.rpc.RpcConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -54,15 +54,15 @@ public class ElementsdRegtestProcess extends BitcoindRegtestProcess {
                         "-bind=127.0.0.1:" + NetworkUtils.findFreeSystemPort(),
                         "-whitelist=127.0.0.1",
 
-                        "-rpcbind=127.0.0.1:" + rpcConfig.port(),
+                        "-rpcbind=127.0.0.1:" + rpcConfig.getPort(),
                         "-rpcallowip=127.0.0.1",
-                        "-rpcuser=" + rpcConfig.user(),
-                        "-rpcpassword=" + rpcConfig.password(),
+                        "-rpcuser=" + rpcConfig.getUser(),
+                        "-rpcpassword=" + rpcConfig.getPassword(),
 
-                        "-mainchainrpchost=" + bitcoindRpcConfig.hostname(),
-                        "-mainchainrpcport=" + bitcoindRpcConfig.port(),
-                        "-mainchainrpcuser=" + bitcoindRpcConfig.user(),
-                        "-mainchainrpcpassword=" + bitcoindRpcConfig.password(),
+                        "-mainchainrpchost=" + bitcoindRpcConfig.getHostname(),
+                        "-mainchainrpcport=" + bitcoindRpcConfig.getPort(),
+                        "-mainchainrpcuser=" + bitcoindRpcConfig.getUser(),
+                        "-mainchainrpcpassword=" + bitcoindRpcConfig.getPassword(),
 
                         "-zmqpubhashblock=tcp://127.0.0.1:" + zmqPort,
                         "-zmqpubrawtx=tcp://127.0.0.1:" + zmqPort,
@@ -75,7 +75,7 @@ public class ElementsdRegtestProcess extends BitcoindRegtestProcess {
     @Override
     public void invokeStopRpcCall() throws IOException {
         try {
-            RpcClient rpcClient = RpcClientFactory.create(rpcConfig);
+            DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
             var chainBackend = new ElementsdDaemon(rpcClient);
             chainBackend.stop();
         } catch (RpcCallFailureException e) {

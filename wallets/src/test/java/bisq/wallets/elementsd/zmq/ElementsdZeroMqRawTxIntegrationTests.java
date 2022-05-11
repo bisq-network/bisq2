@@ -17,7 +17,7 @@
 
 package bisq.wallets.elementsd.zmq;
 
-import bisq.wallets.AddressType;
+import bisq.wallets.model.AddressType;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
 import bisq.wallets.elementsd.rpc.responses.ElementsdGetAddressInfoResponse;
 import org.junit.jupiter.api.Test;

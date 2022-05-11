@@ -31,8 +31,8 @@ public class WalletUtxosController implements Controller {
     @Getter
     private final WalletUtxosView view;
 
-    public WalletUtxosController(DefaultApplicationService applicationService) {
-        walletService = applicationService.getWalletService();
+    public WalletUtxosController(WalletService walletService) {
+        this.walletService = walletService;
         model = new WalletUtxosModel();
         view = new WalletUtxosView(model, this);
     }

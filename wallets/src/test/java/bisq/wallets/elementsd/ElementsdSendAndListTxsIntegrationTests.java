@@ -17,7 +17,7 @@
 
 package bisq.wallets.elementsd;
 
-import bisq.wallets.AddressType;
+import bisq.wallets.model.AddressType;
 import bisq.wallets.elementsd.rpc.responses.ElementsdListTransactionsResponseEntry;
 import org.junit.jupiter.api.Test;
 

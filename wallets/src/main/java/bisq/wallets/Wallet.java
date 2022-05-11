@@ -18,6 +18,7 @@
 package bisq.wallets;
 
 import bisq.common.observable.ObservableSet;
+import bisq.wallets.model.AddressType;
 import bisq.wallets.model.Transaction;
 import bisq.wallets.model.Utxo;
 

@@ -17,36 +17,26 @@
 
 package bisq.desktop.primary.main.content.wallet.config;
 
-import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.BisqGridPane;
-import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.wallets.WalletBackend;
-import bisq.wallets.WalletConfig;
+import bisq.wallets.RpcConfig;
 import bisq.wallets.WalletService;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.layout.Pane;
-import javafx.stage.DirectoryChooser;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class WalletConfigPopup extends Popup {
     private final Controller controller;
 
-    public WalletConfigPopup(DefaultApplicationService applicationService, Runnable closeHandler) {
+    public WalletConfigPopup(WalletService walletService, Runnable closeHandler) {
         super();
-        controller = new Controller(applicationService, this, closeHandler);
+        controller = new Controller(walletService, this, closeHandler);
     }
 
     @Override
@@ -65,8 +55,8 @@ public class WalletConfigPopup extends Popup {
         @Getter
         private final View view;
 
-        private Controller(DefaultApplicationService applicationService, Popup popup, Runnable closeHandler) {
-            this.walletService = applicationService.getWalletService();
+        private Controller(WalletService walletService, Popup popup, Runnable closeHandler) {
+            this.walletService = walletService;
             this.popup = popup;
             this.closeHandler = closeHandler;
 
@@ -88,8 +78,8 @@ public class WalletConfigPopup extends Popup {
                     : Optional.of(passphraseValue);
             model.walletPassphraseProperty.setValue(""); // Wipe passphrase from memory
 
-            WalletConfig walletConfig = createWalletConfigFromModel();
-            walletService.loadOrCreateWallet(walletConfig, passphrase)
+            RpcConfig rpcConfig = createWalletConfigFromModel();
+            walletService.initializeWallet(rpcConfig, passphrase)
                     .whenComplete((__, throwable) -> {
                         if (throwable == null) {
                             UIThread.run(() -> {
@@ -107,9 +97,8 @@ public class WalletConfigPopup extends Popup {
                     });
         }
 
-        private WalletConfig createWalletConfigFromModel() {
-            return WalletConfig.builder()
-                    .walletBackend(model.selectedWalletBackend.get())
+        private RpcConfig createWalletConfigFromModel() {
+            return RpcConfig.builder()
                     .hostname(model.hostnameProperty.get())
                     .port(Integer.parseInt(model.portProperty.get()))
                     .user(model.usernameProperty.get())
@@ -124,10 +113,6 @@ public class WalletConfigPopup extends Popup {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObservableList<WalletBackend> walletBackends = FXCollections.observableArrayList(WalletBackend.values());
-        private final ObjectProperty<WalletBackend> selectedWalletBackend =
-                new SimpleObjectProperty<>(this, "selectedWalletBackend", WalletBackend.BITCOIND);
-
         private final StringProperty hostnameProperty = new SimpleStringProperty(this, "hostname", "127.0.0.1");
         private final StringProperty portProperty = new SimpleStringProperty(this, "port", "18443");
         private final StringProperty usernameProperty = new SimpleStringProperty(this, "username", "bisq");
@@ -159,10 +144,6 @@ public class WalletConfigPopup extends Popup {
 
         private void addContent() {
             BisqGridPane gridPane = popup.getGridPane();
-
-            AutoCompleteComboBox<WalletBackend> walletBackendComboBox = gridPane.addComboBox(model.walletBackends);
-            walletBackendComboBox.setPromptText(Res.get("wallet.config.selectWallet"));
-            walletBackendComboBox.valueProperty().bindBidirectional(model.selectedWalletBackend);
 
             gridPane.addTextField(Res.get("wallet.config.enterHostname"), model.hostnameProperty);
             gridPane.addTextField(Res.get("wallet.config.enterPort"), model.portProperty);

@@ -17,19 +17,19 @@
 
 package bisq.wallets.elementsd;
 
-import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.AbstractRegtestSetup;
-import bisq.wallets.AddressType;
+import bisq.wallets.RpcConfig;
 import bisq.wallets.bitcoind.BitcoindRegtestSetup;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
 import bisq.wallets.elementsd.rpc.responses.ElementsdListUnspentResponseEntry;
+import bisq.wallets.model.AddressType;
 import bisq.wallets.process.MultiProcessCoordinator;
-import bisq.wallets.rpc.RpcClient;
+import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
-import bisq.wallets.rpc.RpcConfig;
+import bisq.wallets.rpc.WalletRpcClient;
 import lombok.Getter;
 
 import java.io.IOException;
@@ -141,15 +141,13 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
     }
 
     private ElementsdDaemon createDaemon() throws MalformedURLException {
-        RpcClient rpcClient = RpcClientFactory.create(elementsdConfig.elementsdRpcConfig());
+        DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(elementsdConfig.elementsdRpcConfig());
         return new ElementsdDaemon(rpcClient);
     }
 
     private ElementsdWallet newWallet(Path walletPath) throws MalformedURLException {
-        RpcConfig walletRpcConfig = new RpcConfig.Builder(elementsdConfig.elementsdRpcConfig())
-                .walletPath(walletPath)
-                .build();
-        RpcClient rpcClient = RpcClientFactory.create(walletRpcConfig);
+        RpcConfig walletRpcConfig = elementsdConfig.elementsdRpcConfig();
+        WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(walletRpcConfig, walletPath);
         return new ElementsdWallet(rpcClient);
     }
 
@@ -161,14 +159,12 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
         return new ElementsdConfig(bitcoindConfig, elementsdConfig);
     }
 
-    private RpcConfig createRpcConfigForPort(int port) throws IOException {
-        Path walletPath = FileUtils.createTempDir();
-        return new RpcConfig.Builder()
+    private RpcConfig createRpcConfigForPort(int port) {
+        return RpcConfig.builder()
                 .hostname("127.0.0.1")
                 .user("bisq")
                 .password("bisq")
                 .port(port)
-                .walletPath(walletPath)
                 .build();
     }
 }

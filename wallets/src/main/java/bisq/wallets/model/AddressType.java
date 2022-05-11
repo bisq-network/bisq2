@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets;
+package bisq.wallets.model;
 
 import lombok.Getter;
 

@@ -20,34 +20,71 @@ package bisq.wallets;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.exceptions.InvalidRpcCredentialsException;
 import bisq.wallets.process.BisqProcess;
-import bisq.wallets.rpc.RpcClient;
+import bisq.wallets.rpc.DaemonRpcClient;
 import bisq.wallets.rpc.RpcClientFactory;
-import bisq.wallets.rpc.RpcConfig;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess, W> {
+
+    private AbstractRegtestSetup<T, W> regtestSetup;
 
     protected abstract AbstractRegtestSetup<T, W> createRegtestSetup() throws IOException;
 
+    @BeforeAll
+    void setup() throws IOException {
+        regtestSetup = createRegtestSetup();
+        regtestSetup.start();
+    }
+
+    @AfterAll
+    void cleanUp() {
+        regtestSetup.shutdown();
+    }
+
     @Test
     void wrongRpcCredentialsTest() throws IOException {
-        AbstractRegtestSetup<T, W> regtestSetup = createRegtestSetup();
-        regtestSetup.start();
-
-        RpcConfig wrongRpcConfig = new RpcConfig.Builder(regtestSetup.getRpcConfig())
+        RpcConfig validRpcConfig = regtestSetup.getRpcConfig();
+        RpcConfig wrongRpcConfig = RpcConfig.builder()
+                .hostname(validRpcConfig.getHostname())
+                .port(validRpcConfig.getPort())
+                .user(validRpcConfig.getUser())
                 .password("WRONG_PASSWORD")
                 .build();
 
-        RpcClient rpcClient = RpcClientFactory.create(wrongRpcConfig);
+        DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(wrongRpcConfig);
         var minerChainBackend = new BitcoindDaemon(rpcClient);
 
         assertThatExceptionOfType(InvalidRpcCredentialsException.class)
                 .isThrownBy(minerChainBackend::listWallets);
+    }
 
-        regtestSetup.shutdown();
+    @Test
+    void verifyInvalidRpcConfigTest() {
+        RpcConfig validRpcConfig = regtestSetup.getRpcConfig();
+        RpcConfig wrongRpcConfig = RpcConfig.builder()
+                .hostname(validRpcConfig.getHostname())
+                .port(validRpcConfig.getPort())
+                .user(validRpcConfig.getUser())
+                .password("WRONG_PASSWORD")
+                .build();
+
+        boolean isValid = BitcoindDaemon.verifyRpcConfig(wrongRpcConfig);
+        assertThat(isValid).isFalse();
+    }
+
+    @Test
+    void verifyValidRpcConfigTest() {
+        RpcConfig validRpcConfig = regtestSetup.getRpcConfig();
+        boolean isValid = BitcoindDaemon.verifyRpcConfig(validRpcConfig);
+        assertThat(isValid).isTrue();
     }
 }
