@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
+import bisq.desktop.primary.main.content.education.overview.AcademyOverviewController;
 import lombok.Getter;
 
 import java.util.Optional;
@@ -28,9 +29,11 @@ import java.util.Optional;
 public class EducationController extends TabController<EducationModel> {
     @Getter
     private final EducationView view;
+    private final DefaultApplicationService applicationService;
 
     public EducationController(DefaultApplicationService applicationService) {
         super(new EducationModel(), NavigationTarget.LEARN);
+        this.applicationService = applicationService;
         view = new EducationView(model, this);
     }
 
@@ -46,9 +49,10 @@ public class EducationController extends TabController<EducationModel> {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-           /* case TRADE_OVERVIEW_LIST -> {
-                return Optional.of(new TradeOverviewListController(applicationService));
-            }*/
+            //todo add sub screns
+            case ACADEMY_OVERVIEW -> {
+                return Optional.of(new AcademyOverviewController(applicationService));
+            }
           
             default -> {
                 return Optional.empty();

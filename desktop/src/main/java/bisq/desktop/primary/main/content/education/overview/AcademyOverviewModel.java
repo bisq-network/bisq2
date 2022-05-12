@@ -15,14 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education;
+package bisq.desktop.primary.main.content.education.overview;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.common.view.Model;
 
-public class EducationModel extends TabModel {
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.ACADEMY_OVERVIEW;
-    }
+public class AcademyOverviewModel  implements Model {
 }
