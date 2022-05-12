@@ -15,18 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.satoshiSquare.exchange;
+package bisq.desktop.primary.main.content.dashboard;
 
-import bisq.desktop.primary.main.content.ChatModel;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@Getter
-public class ExchangeModel extends ChatModel {
-    private final boolean isDiscussionsChat;
+public class DashboardController implements Controller {
+    private final DashboardModel model;
+    @Getter
+    private final DashboardView view;
 
-    public ExchangeModel(boolean isDiscussionsChat) {
-        this.isDiscussionsChat = isDiscussionsChat;
+    public DashboardController(DefaultApplicationService applicationService) {
+        model = new DashboardModel();
+        view = new DashboardView(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+    
+    }
+
+    @Override
+    public void onDeactivate() {
+    
     }
 }

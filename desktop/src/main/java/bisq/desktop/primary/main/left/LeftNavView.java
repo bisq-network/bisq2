@@ -81,9 +81,19 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         VBox.setMargin(tradeSubMenuItems, new Insets(-10, 0, 0, 0));
         tradeSubMenuItems.setPadding(new Insets(0, 0, 16, 0));
 
-        LeftNavButton social = createNavigationButton(Res.get("community"),
+        LeftNavButton dashBoard = createNavigationButton(Res.get("dashboard"),
                 ImageUtil.getImageViewById("nav-community"),
-                NavigationTarget.SOCIAL);
+                NavigationTarget.DASHBOARD);
+       
+        LeftNavButton discuss = createNavigationButton(Res.get("discuss"),
+                ImageUtil.getImageViewById("sell"), //todo
+                NavigationTarget.DISCUSS);
+        LeftNavButton learn = createNavigationButton(Res.get("learn"),
+                ImageUtil.getImageViewById("buy"), //todo
+                NavigationTarget.LEARN);
+        LeftNavButton connect = createNavigationButton(Res.get("connect"),
+                ImageUtil.getImageViewById("nav-support"), //todo
+                NavigationTarget.CONNECT);
         trade = createNavigationButton(Res.get("trade"),
                 ImageUtil.getImageViewById("nav-trade"),
                 NavigationTarget.TRADE);
@@ -127,7 +137,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         LeftNavSubButton bsqSwap = createSecondaryNavigationButton(Res.get("bsqSwap"),
                 NavigationTarget.BSQ_SWAP);
         tradeSubMenuItems.getChildren().addAll(satoshiSquare, liquidSwap, multiSig, xmrSwap, lightning, bsqSwap);
-         /*  social.setOnAction(() -> {
+         /*  dashBoard.setOnAction(() -> {
             controller.onNavigationTargetSelected(NavigationTarget.SOCIAL);
             if (model.getMenuExpanded().get()) {
                 controller.onToggleExpandMenu();
@@ -168,8 +178,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(social, trade, tradeSubMenuItems, markets,
-                wallet, walletSubMenuItems, support, settings);
+        mainMenuItems.getChildren().addAll(dashBoard, learn, discuss, connect, trade, tradeSubMenuItems, /*markets,
+                wallet, walletSubMenuItems, support,*/ settings);
         mainMenuItems.setLayoutY(menuTop);
         root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, mainMenuItems, expandIcon, collapseIcon, networkInfoBox);
     }

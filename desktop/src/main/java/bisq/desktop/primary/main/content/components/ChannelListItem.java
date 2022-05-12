@@ -15,18 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.satoshiSquare.exchange;
+package bisq.desktop.primary.main.content.components;
 
-import bisq.desktop.primary.main.content.ChatModel;
+import bisq.social.chat.channels.Channel;
+import bisq.social.chat.messages.ChatMessage;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
+@EqualsAndHashCode
 @Getter
-public class ExchangeModel extends ChatModel {
-    private final boolean isDiscussionsChat;
+public class ChannelListItem<T extends Channel<? extends ChatMessage>> {
+    protected final T channel;
 
-    public ExchangeModel(boolean isDiscussionsChat) {
-        this.isDiscussionsChat = isDiscussionsChat;
+    public ChannelListItem(T channel) {
+        this.channel = channel;
     }
 }

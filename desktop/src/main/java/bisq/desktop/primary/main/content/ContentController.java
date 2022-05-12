@@ -22,13 +22,16 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.bsqSwap.BsqSwapController;
+import bisq.desktop.primary.main.content.discussion.DiscussionsController;
+import bisq.desktop.primary.main.content.education.EducationController;
+import bisq.desktop.primary.main.content.events.EventsController;
+import bisq.desktop.primary.main.content.dashboard.DashboardController;
 import bisq.desktop.primary.main.content.lightning.LightningController;
 import bisq.desktop.primary.main.content.liquid.LiquidSwapController;
 import bisq.desktop.primary.main.content.markets.MarketsController;
 import bisq.desktop.primary.main.content.multiSig.MultiSigController;
 import bisq.desktop.primary.main.content.satoshiSquare.SatoshiSquareController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
-import bisq.desktop.primary.main.content.social.SocialController;
 import bisq.desktop.primary.main.content.support.SupportController;
 import bisq.desktop.primary.main.content.trade.TradeController;
 import bisq.desktop.primary.main.content.wallet.BitcoinWalletController;
@@ -66,8 +69,17 @@ public class ContentController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case SOCIAL -> {
-                return Optional.of(new SocialController(applicationService));
+            case DASHBOARD -> {
+                return Optional.of(new DashboardController(applicationService));
+            }
+            case DISCUSS -> {
+                return Optional.of(new DiscussionsController(applicationService));
+            }
+            case LEARN -> {
+                return Optional.of(new EducationController(applicationService));
+            }
+            case CONNECT -> {
+                return Optional.of(new EventsController(applicationService));
             }
             case TRADE -> {
                 return Optional.of(new TradeController(applicationService));

@@ -15,18 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.satoshiSquare.exchange;
+package bisq.desktop.primary.main.content.events;
 
-import bisq.desktop.primary.main.content.ChatModel;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.common.view.Model;
 
-@Slf4j
-@Getter
-public class ExchangeModel extends ChatModel {
-    private final boolean isDiscussionsChat;
-
-    public ExchangeModel(boolean isDiscussionsChat) {
-        this.isDiscussionsChat = isDiscussionsChat;
-    }
+public class EventsModel implements Model {
 }

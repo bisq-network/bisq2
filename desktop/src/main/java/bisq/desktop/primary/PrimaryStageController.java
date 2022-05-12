@@ -113,19 +113,16 @@ public class PrimaryStageController extends NavigationController {
         } else {
             String value = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
             if (value != null && !value.isEmpty()) {
-                NavigationTarget persisted = NavigationTarget.valueOf(value);
-                Navigation.applyPersisted(persisted);
-                Navigation.navigateTo(persisted);
+                try {
+                    NavigationTarget persisted = NavigationTarget.valueOf(value);
+                    Navigation.applyPersisted(persisted);
+                    Navigation.navigateTo(persisted);
+                } catch (Throwable t) {
+                    Navigation.navigateTo(NavigationTarget.DASHBOARD);
+                }
             } else {
-                Navigation.navigateTo(NavigationTarget.GETTING_STARTED);
+                Navigation.navigateTo(NavigationTarget.DASHBOARD);
             }
-          /*  String persisted = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
-            log.error("persisted {}", persisted);
-            if (persisted != null && NavigationTarget.valueOf(persisted) != NavigationTarget.SPLASH) {
-                Navigation.navigateTo(NavigationTarget.valueOf(persisted));
-            } else {
-                Navigation.navigateTo(NavigationTarget.MAIN);
-            }*/
         }
     }
 

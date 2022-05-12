@@ -15,26 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.satoshiSquare.exchange;
+package bisq.desktop.primary.main.content.discussion;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.data.ByteArray;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;
-import bisq.desktop.primary.main.content.components.PublicTradeChannelSelection;
+import bisq.desktop.primary.main.content.components.PublicDiscussionChannelSelection;
 import bisq.social.chat.channels.Channel;
-import bisq.social.chat.channels.PrivateTradeChannel;
+import bisq.social.chat.channels.PrivateDiscussionChannel;
 import bisq.social.chat.messages.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
 @Slf4j
-public class ExchangeController extends ChatController<ExchangeView, ExchangeModel> implements Controller {
-    private PublicTradeChannelSelection publicTradeChannelSelection;
+public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> implements Controller {
+    private PublicDiscussionChannelSelection publicDiscussionChannelSelection;
 
-    public ExchangeController(DefaultApplicationService applicationService) {
-        super(applicationService, false);
+    public DiscussionsController(DefaultApplicationService applicationService) {
+        super(applicationService, true);
     }
 
     @Override
@@ -43,31 +43,31 @@ public class ExchangeController extends ChatController<ExchangeView, ExchangeMod
 
         notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
                 value -> {
-                    Channel<? extends ChatMessage> channel = chatService.getSelectedTradeChannel().get();
+                    Channel<? extends ChatMessage> channel = chatService.getSelectedDiscussionChannel().get();
                     if (channel != null) {
                         chatService.setNotificationSetting(channel, value);
                     }
                 });
 
-        selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(this::handleChannelChange);
+        selectedChannelPin = chatService.getSelectedDiscussionChannel().addObserver(this::handleChannelChange);
     }
 
     @Override
     public void createComponents() {
-        publicTradeChannelSelection = new PublicTradeChannelSelection(applicationService);
+        publicDiscussionChannelSelection = new PublicDiscussionChannelSelection(applicationService);
     }
 
     @Override
-    public ExchangeModel getChatModel(boolean isDiscussionsChat) {
-        return new ExchangeModel(isDiscussionsChat);
+    public DiscussionsModel getChatModel(boolean isDiscussionsChat) {
+        return new DiscussionsModel(isDiscussionsChat);
     }
 
     @Override
-    public ExchangeView getChatView() {
-        return new ExchangeView(model,
+    public DiscussionsView getChatView() {
+        return new DiscussionsView(model,
                 this,
                 userProfileSelection.getRoot(),
-                publicTradeChannelSelection.getRoot(),
+                publicDiscussionChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 notificationsSettings.getRoot(),
@@ -79,10 +79,10 @@ public class ExchangeController extends ChatController<ExchangeView, ExchangeMod
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
 
-        if (channel instanceof PrivateTradeChannel privateTradeChannel) {
-            model.getPeersRoboIconImage().set(RoboHash.getImage(new ByteArray(privateTradeChannel.getPeer().getPubKeyHash())));
+        if (channel instanceof PrivateDiscussionChannel privateDiscussionChannel) {
+            model.getPeersRoboIconImage().set(RoboHash.getImage(new ByteArray(privateDiscussionChannel.getPeer().getPubKeyHash())));
             model.getPeersRoboIconVisible().set(true);
-            publicTradeChannelSelection.deSelectChannel();
+            publicDiscussionChannelSelection.deSelectChannel();
         } else {
             model.getPeersRoboIconVisible().set(false);
             privateChannelSelection.deSelectChannel();
