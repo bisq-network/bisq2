@@ -136,7 +136,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 NavigationTarget.LN_3_PARTY);
         LeftNavSubButton bsqSwap = createSecondaryNavigationButton(Res.get("bsqSwap"),
                 NavigationTarget.BSQ_SWAP);
-        tradeSubMenuItems.getChildren().addAll(satoshiSquare/*, liquidSwap, multiSig, xmrSwap, lightning, bsqSwap*/);
+        tradeSubMenuItems.getChildren().addAll(satoshiSquare, liquidSwap, multiSig, xmrSwap, lightning, bsqSwap);
          /*  dashBoard.setOnAction(() -> {
             controller.onNavigationTargetSelected(NavigationTarget.SOCIAL);
             if (model.getMenuExpanded().get()) {
