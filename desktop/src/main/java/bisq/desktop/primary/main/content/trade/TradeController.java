@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class TradeController extends TabController<TradeModel> implements Controller {
+public class TradeController extends TabController<TradeModel> {
     private final DefaultApplicationService applicationService;
     @Getter
     private final TradeView view;

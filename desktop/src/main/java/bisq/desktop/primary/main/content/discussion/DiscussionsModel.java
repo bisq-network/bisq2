@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.satoshiSquare.exchange;
+package bisq.desktop.primary.main.content.discussion;
 
 import bisq.desktop.primary.main.content.ChatModel;
 import lombok.Getter;
@@ -23,10 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class ExchangeModel extends ChatModel {
+public class DiscussionsModel extends ChatModel {
     private final boolean isDiscussionsChat;
 
-    public ExchangeModel(boolean isDiscussionsChat) {
+    public DiscussionsModel(boolean isDiscussionsChat) {
         this.isDiscussionsChat = isDiscussionsChat;
     }
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.satoshiSquare.exchange;
+package bisq.desktop.primary.main.content.discussion;
 
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.ChatView;
@@ -23,16 +23,16 @@ import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ExchangeView extends ChatView {
-    public ExchangeView(ExchangeModel model,
-                        ExchangeController controller,
-                        Pane userProfileSelection,
-                        Pane marketChannelSelection,
-                        Pane privateChannelSelection,
-                        Pane chatMessagesComponent,
-                        Pane notificationsSettings,
-                        Pane channelInfo,
-                        FilterBox filterBox) {
+public class DiscussionsView extends ChatView {
+    public DiscussionsView(DiscussionsModel model,
+                           DiscussionsController controller,
+                           Pane userProfileSelection,
+                           Pane marketChannelSelection,
+                           Pane privateChannelSelection,
+                           Pane chatMessagesComponent,
+                           Pane notificationsSettings,
+                           Pane channelInfo,
+                           FilterBox filterBox) {
         super(model,
                 controller,
                 userProfileSelection,
@@ -43,5 +43,4 @@ public class ExchangeView extends ChatView {
                 channelInfo,
                 filterBox);
     }
-
 }

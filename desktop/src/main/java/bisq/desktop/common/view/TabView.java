@@ -37,7 +37,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected final HBox tabs;
     protected final Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
-    private final ScrollPane scrollPane;
+    protected final ScrollPane scrollPane;
     private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
     private boolean transitionStarted;
     private Subscription viewSubscription;
@@ -45,10 +45,10 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     public TabView(M model, C controller) {
         super(new StackPane(), model, controller);
         root.setPadding(new Insets(0, -67, 0, 0));
-        
+
         VBox box = new VBox();
         box.setFillWidth(true);
-        
+
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-content-headline-label");
         HBox.setMargin(headlineLabel, new Insets(-5, 0, 0, -2));
@@ -81,10 +81,10 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         lineAndMarker.setMinHeight(lineHeight);
         lineAndMarker.setMaxHeight(lineHeight);
         lineAndMarker.setPadding(new Insets(0, 67, 0, 0));
-        
+
         StackPane.setAlignment(lineAndMarker, Pos.TOP_RIGHT);
         StackPane.setMargin(lineAndMarker, new Insets(52, 0, 0, 0));
-        
+
         root.getChildren().addAll(box, lineAndMarker);
     }
 
