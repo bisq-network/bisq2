@@ -21,7 +21,6 @@ application {
 
 apply plugin: "org.springframework.boot"
 apply plugin: 'io.spring.dependency-management'
-apply from: '../buildSrc/logging-dependencies.gradle'
 
 ext {
     jacksonVersion = '2.13.2'

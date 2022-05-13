@@ -8,8 +8,6 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
-apply from: '../buildSrc/logging-dependencies.gradle'
-
 dependencies {
     api platform(project(':platforms:common-platform'))
     api platform(project(':platforms:network-platform'))

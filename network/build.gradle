@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.protobuf)
 }
 
-apply from: '../buildSrc/logging-dependencies.gradle'
 apply from: '../buildSrc/gen-protos.gradle'
 
 dependencies {

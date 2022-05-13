@@ -40,8 +40,6 @@ javafx {
     modules = ['javafx.base', 'javafx.controls', 'javafx.graphics']
 }
 
-apply from: '../buildSrc/logging-dependencies.gradle'
-
 dependencies {
     api platform(project(':platforms:common-platform'))
 

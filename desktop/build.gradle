@@ -3,8 +3,6 @@ plugins {
     alias(libs.plugins.openjfx)
 }
 
-apply from: '../buildSrc/logging-dependencies.gradle'
-
 javafx {
     version = '17.0.1'
     modules = ['javafx.base', 'javafx.controls', 'javafx.graphics']
