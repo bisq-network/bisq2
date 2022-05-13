@@ -1,5 +1,4 @@
 plugins {
-    alias(libs.plugins.protobuf)
     id 'signing'
     id 'maven-publish'
 }
@@ -11,10 +10,4 @@ repositories {
 
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-}
-
-jar {
-    // Exclude .proto files from generated jars.
-    exclude '*.proto'
-    includeEmptyDirs false
 }

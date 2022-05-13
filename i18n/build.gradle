@@ -1,11 +1,10 @@
 plugins {
     id 'bisq.java-library'
-    alias(libs.plugins.protobuf)
+    id 'bisq.protobuf'
 }
 
 dependencies {
     api platform(project(':platforms:common-platform'))
 
-    implementation libs.protobuf.java
     implementation libs.google.guava
 }

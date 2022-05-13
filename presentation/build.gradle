@@ -1,6 +1,6 @@
 plugins {
     id 'bisq.java-library'
-    alias(libs.plugins.protobuf)
+    id 'bisq.protobuf'
 }
 
 dependencies {

@@ -33,7 +33,6 @@ dependencies {
     implementation project(':oracle')
     implementation project(':application')
 
-    implementation libs.protobuf.java
     implementation libs.google.gson
     implementation libs.google.guava
     implementation libs.typesafe.config
