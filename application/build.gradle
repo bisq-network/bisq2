@@ -21,7 +21,8 @@ dependencies {
     implementation project(':social')
     implementation project(':support')
     implementation project(':presentation')
-    implementation project(':wallets')
+
+    implementation("bisq.wallets:api")
 
     implementation libs.google.guava
     implementation libs.typesafe.config

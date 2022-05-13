@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.wallet.transactions;
 
 import bisq.desktop.components.table.TableItem;
-import bisq.wallets.model.Transaction;
+import bisq.wallets.core.model.Transaction;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 

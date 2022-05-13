@@ -21,7 +21,7 @@ dependencies {
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
 
-    api platform(project(':platforms:common-platform'))
+    api platform('bisq.platforms:common-platform')
     implementation libs.slf4j.api
     implementation libs.logback.core
     implementation libs.logback.classic

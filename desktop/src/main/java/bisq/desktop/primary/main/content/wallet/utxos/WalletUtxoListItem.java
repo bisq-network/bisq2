@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.wallet.utxos;
 
-import bisq.wallets.model.Utxo;
+import bisq.wallets.core.model.Utxo;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;

@@ -1,0 +1,15 @@
+plugins {
+    id 'bisq.java-library'
+}
+
+dependencies {
+    implementation "bisq:common"
+    implementation "bisq:persistence"
+
+    implementation project(':core')
+    implementation project(':bitcoind')
+
+    implementation libs.junit.jupiter
+    implementation libs.google.guava
+    implementation "org.assertj:assertj-core:3.22.0"
+}

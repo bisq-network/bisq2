@@ -36,7 +36,8 @@ include 'social'
 include 'support'
 include 'tools'
 include 'tor'
-include 'wallets'
+
+includeBuild('wallets')
 
 import org.gradle.util.GradleVersion
 

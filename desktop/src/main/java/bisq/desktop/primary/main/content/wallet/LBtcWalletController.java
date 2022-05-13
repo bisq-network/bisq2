@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.wallet;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.wallets.WalletService;
+import bisq.wallets.core.WalletService;
 
 public class LBtcWalletController extends WalletController {
 

@@ -58,8 +58,9 @@ dependencies {
     implementation project(':social')
     implementation project(':presentation')
     implementation project(':application')
-    implementation project(':wallets')
     implementation project(':desktop')
+
+    implementation("bisq.wallets:api")
 
     implementation libs.google.guava
 

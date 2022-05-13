@@ -17,9 +17,8 @@
 
 package bisq.desktop.primary.main.content.wallet.send;
 
-import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.wallets.WalletService;
+import bisq.wallets.core.WalletService;
 import lombok.Getter;
 
 public class WalletSendController implements Controller {

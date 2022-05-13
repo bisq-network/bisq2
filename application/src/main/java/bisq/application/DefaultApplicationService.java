@@ -46,9 +46,9 @@ import bisq.social.chat.ChatService;
 import bisq.social.offer.TradeChatOfferService;
 import bisq.social.user.ChatUserService;
 import bisq.social.user.reputation.ReputationService;
-import bisq.wallets.services.BitcoinWalletService;
-import bisq.wallets.services.LiquidWalletService;
-import bisq.wallets.RpcConfig;
+import bisq.wallets.bitcoind.BitcoinWalletService;
+import bisq.wallets.core.RpcConfig;
+import bisq.wallets.elementsd.LiquidWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

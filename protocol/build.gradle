@@ -15,7 +15,8 @@ dependencies {
     implementation project(':contract')
     implementation project(':oracle')
     implementation project(':network')
-    implementation project(':wallets')
+
+    implementation("bisq.wallets:api")
 
     implementation libs.google.guava
     implementation libs.typesafe.config

@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.wallet.transactions;
 
 import bisq.desktop.common.view.Model;
-import bisq.wallets.model.Transaction;
+import bisq.wallets.core.model.Transaction;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;

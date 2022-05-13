@@ -3,7 +3,6 @@ plugins {
     id 'maven-publish'
 }
 
-
 // As a platform, this enforces the versions defined below on ALL dependencies (incl. transitive)
 // https://docs.gradle.org/7.4.1/userguide/platforms.html#sub:platforms-vs-catalog
 // Note: this doesn't support constraints on plugin versions
