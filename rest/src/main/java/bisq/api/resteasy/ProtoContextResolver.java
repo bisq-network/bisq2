@@ -5,10 +5,10 @@ import jakarta.ws.rs.ext.ContextResolver;
 import jakarta.ws.rs.ext.Provider;
 
 @Provider
-public class MyContextResolver implements ContextResolver<ObjectMapper> {
+public class ProtoContextResolver implements ContextResolver<ObjectMapper> {
     ObjectMapper mapper;
 
-    public MyContextResolver() {
+    public ProtoContextResolver() {
         mapper = new ObjectMapper();
 //        mapper.registerModule()
 
