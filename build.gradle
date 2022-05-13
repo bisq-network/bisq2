@@ -9,5 +9,4 @@ repositories {
     mavenCentral()
 }
 
-apply from: 'buildSrc/bisq-version.gradle'
 apply from: 'buildSrc/os-arch.gradle'

@@ -9,8 +9,6 @@ plugins {
     alias(libs.plugins.shadow)
 }
 
-apply from: '../buildSrc/bisq-version.gradle'
-
 application {
     project.mainClassName = 'bisq.desktopapp.Main'
     applicationDefaultJvmArgs = []

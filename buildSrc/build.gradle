@@ -9,8 +9,6 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
-apply from: 'bisq-version.gradle'
-
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
