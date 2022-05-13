@@ -1,0 +1,96 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url "https://jitpack.io" }
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+}
+
+plugins {
+    id 'bisq.java-library'
+    id 'application'
+//    id "io.swagger.core.v3.swagger-gradle-plugin" version "2.1.13"
+    alias(libs.plugins.shadow)
+}
+
+ext {
+    restEasyVersion = '6.0.1.Final'
+    swaggerVersion = '2.1.13'
+}
+
+application {
+    project.mainClassName = 'bisq.api.resteasy.RestApplication'
+}
+
+apply from: '../buildSrc/bisq-version.gradle'
+apply from: '../buildSrc/logging-dependencies.gradle'
+
+version '0.0.2-SNAPSHOT'
+
+ext {
+//    jacksonVersion = '2.13.2'
+    jacksonVersion = '2.12.6'
+}
+
+repositories {
+    mavenCentral()
+}
+dependencies {
+    api platform(project(':platforms:common-platform'))
+
+    implementation project(':common')
+    implementation project(':persistence')
+    implementation project(':i18n')
+    implementation project(':security')
+    implementation project(':identity')
+    implementation project(':network')
+    implementation project(':account')
+    implementation project(':offer')
+    implementation project(':contract')
+    implementation project(':protocol')
+    implementation project(':oracle')
+    implementation project(':settings')
+    implementation project(':social')
+    implementation project(':presentation')
+    implementation project(':application')
+    implementation project(':wallets')
+
+    implementation libs.google.guava
+
+    implementation("org.jboss.resteasy:resteasy-jdk-http:$restEasyVersion")
+    implementation("org.jboss.resteasy:resteasy-jackson2-provider:$restEasyVersion")
+
+    // cant upgrade, see https://github.com/resteasy/resteasy/discussions/3097
+    implementation ('com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider') {
+        version {
+            strictly '2.12.6'
+        }
+    }
+    implementation( 'com.fasterxml.jackson.core:jackson-core') {
+        version {
+            strictly '2.12.6'
+        }
+    }
+    implementation ('com.fasterxml.jackson.core:jackson-databind') {
+        version {
+            strictly '2.12.6.1'
+        }
+    }
+    implementation ('com.fasterxml.jackson.core:jackson-annotations') {
+        version {
+            strictly '2.12.6'
+        }
+    }
+
+    implementation ("io.swagger.core.v3:swagger-jaxrs2-jakarta:$swaggerVersion")
+}
+
+//resolve {
+//    openApiFile = file("build/resources/main/openapi-configuration.json")
+//    outputFormat = 'JSON'
+//    prettyPrint = 'TRUE'
+//    classpath = sourceSets.main.runtimeClasspath
+////    resourcePackages = ['bisq.api.resteasy']
+//    resourceClasses = ['bisq.api.resteasy.PetResource']
+//    outputDir = file(project.buildDir)
+//}

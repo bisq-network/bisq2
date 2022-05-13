@@ -1,9 +1,11 @@
 package bisq.api.resteasy;
 
+import bisq.application.DefaultApplicationService;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
+import lombok.Getter;
 import org.jboss.resteasy.plugins.server.sun.http.HttpContextBuilder;
 
 import java.io.IOException;
@@ -13,6 +15,15 @@ import java.util.Set;
 
 @ApplicationPath("/rest")
 public class RestApplication extends Application {
+
+    @Getter
+    protected final DefaultApplicationService applicationService;
+
+    public RestApplication() {
+        applicationService = new DefaultApplicationService(new String[]{"--appName=bisq2_API"});
+        applicationService.initialize().join();
+    }
+
     private static Set<Class<?>> resourceClasses = new HashSet<>() {{
         add(PetResource.class);
         add(SwaggerResource.class);
@@ -38,6 +49,7 @@ public class RestApplication extends Application {
 //        contextBuilder.getDeployment().getActualProviderClasses().add(ProtoContextResolver.class);
         HttpContext context = contextBuilder.bind(httpServer);
         httpServer.start();
+
     }
 
     @Override
