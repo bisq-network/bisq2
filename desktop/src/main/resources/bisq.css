@@ -135,6 +135,11 @@
     -fx-border-width: 0 0 1 0;
 }
 
+.border-bottom-2 {
+    -fx-border-color: -bisq-grey-6;
+    -fx-border-width: 0 0 1 0;
+}
+
 .border-top {
     -fx-border-color: -bisq-grey-5;
     -fx-border-width: 1 0 0 0;
@@ -304,6 +309,10 @@
     -fx-wrap-text: true;    
 }
 
+.text-underline {
+    -fx-underline: true;
+}
+
 
 /*******************************************************************************
  *                                                                             *
@@ -339,6 +348,12 @@
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-grey-13;
+}
+
+.bisq-small-light-label-dimmed-2 {
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-grey-9;
 }
 
 .bisq-content-headline-label {
@@ -516,8 +531,6 @@
 /* Big transparent button */
 .bisq-transparent-button {
     -fx-background-color: transparent;
-    -fx-text-fill: -bisq-grey-9;
-    -fx-font-size: 1.1em;
     -fx-cursor: hand;
     -fx-padding: 6 14;
 }

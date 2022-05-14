@@ -26,6 +26,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.overlay.BasicOverlay;
 import bisq.desktop.overlay.Notification;
 import bisq.desktop.overlay.Overlay;
 import bisq.desktop.primary.main.MainController;
@@ -72,6 +73,7 @@ public class PrimaryStageController extends NavigationController {
                 applicationService.getApplicationConfig().baseDir(),
                 displaySettings,
                 this::shutdown);
+        BasicOverlay.init(view.getRoot(), displaySettings);
 
         // Here we start to attach the view hierarchy to the stage.
         view.showStage();

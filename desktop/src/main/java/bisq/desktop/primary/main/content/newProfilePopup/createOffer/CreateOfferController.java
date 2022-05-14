@@ -15,38 +15,35 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.dashboard;
+package bisq.desktop.primary.main.content.newProfilePopup.createOffer;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.newProfilePopup.NewProfilePopup;
+import bisq.desktop.primary.main.content.newProfilePopup.NewProfilePopupModel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class DashboardController implements Controller {
-    private final DashboardModel model;
+@Slf4j
+public class CreateOfferController implements Controller {
+    private final CreateOfferModel model;
     @Getter
-    private final DashboardView view;
+    private final CreateOfferView view;
+    private final NewProfilePopupModel popupModel;
 
-    private final NewProfilePopup newProfilePopup;
+    public CreateOfferController(DefaultApplicationService applicationService, NewProfilePopupModel popupModel) {
+        this.popupModel = popupModel;
 
-    public DashboardController(DefaultApplicationService applicationService) {
-        model = new DashboardModel();
-        view = new DashboardView(model, this);
-
-        newProfilePopup = new NewProfilePopup(applicationService);
+        model = new CreateOfferModel();
+        view = new CreateOfferView(model, this);
     }
 
     @Override
     public void onActivate() {
-        
     }
 
     @Override
     public void onDeactivate() {
-    
     }
 
-    public void showNewProfilePopup() {
-        newProfilePopup.show();
-    }
+    
 }
