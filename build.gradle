@@ -9,7 +9,7 @@ buildscript {
 
 plugins {
     id 'java'
-    id 'bisq.gradle.BisqPlugin'
+    id 'bisq.gradle.regtest.BisqRegtestPlugin'
 }
 
 group 'bisq'
