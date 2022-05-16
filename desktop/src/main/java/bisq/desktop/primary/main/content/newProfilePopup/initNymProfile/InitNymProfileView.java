@@ -67,11 +67,11 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
         roboIconView.setFitWidth(128);
         roboIconView.setFitHeight(128);
         
-        VBox hashIdBox = getValueBox(Res.get("initNymProfile.uniqueHashId"));
+        VBox hashIdBox = getValueBox(Res.get("initNymProfile.uniqueHashId"), "bisq-text-white");
         VBox.setMargin(hashIdBox, new Insets(0, 0, 16, 0));
         hashIdValue = (Label) hashIdBox.getChildren().get(1);
 
-        VBox profileIdBox = getValueBox(Res.get("initNymProfile.customProfileNickname"));
+        VBox profileIdBox = getValueBox(Res.get("initNymProfile.customProfileNickname"), "bisq-text-1");
         VBox.setMargin(profileIdBox, new Insets(0, 0, 16, 0));
         profileIdValue = (Label) profileIdBox.getChildren().get(1);
         
@@ -126,12 +126,12 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
         roboHashNodeSubscription.unsubscribe();
     }
     
-    private VBox getValueBox(String title) {
+    private VBox getValueBox(String title, String valueClass) {
         Label titleLabel = new Label(title.toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-4");
 
         Label valueLabel = new Label();
-        valueLabel.getStyleClass().add("bisq-text-1");
+        valueLabel.getStyleClass().add(valueClass);
         
         VBox box = new VBox(titleLabel, valueLabel);
         box.setAlignment(Pos.CENTER);

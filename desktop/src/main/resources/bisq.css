@@ -404,10 +404,10 @@
     -fx-text-fill: -bisq-grey-13;
 }
 
-/*.bisq-label-white {
+.bisq-text-white {
     -fx-text-fill: -bisq-white;
 }
-
+/*
 .bisq-label-white:selected {
     -fx-text-fill: -bisq-green;
 }*/
