@@ -41,7 +41,7 @@ public class NewProfilePopupController implements Controller {
 
     public NewProfilePopupController(NewProfilePopup popup, DefaultApplicationService applicationService) {
         model = new NewProfilePopupModel();
-        view = new NewProfilePopupView(model, this, popup, applicationService);
+        view = new NewProfilePopupView(model, this, popup);
         this.popup = popup;
 
         stepsControllers = List.of(

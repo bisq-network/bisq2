@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.newProfilePopup;
 
-import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.View;
 import bisq.desktop.layout.Layout;
 import bisq.desktop.overlay.BasicOverlay;
@@ -27,7 +26,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -37,8 +39,7 @@ public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewPro
 
     public NewProfilePopupView(NewProfilePopupModel model, 
                                NewProfilePopupController controller, 
-                               NewProfilePopup popup, 
-                               DefaultApplicationService applicationService) {
+                               NewProfilePopup popup) {
         super(new Pane(), model, controller);
         this.popup = popup;
     }
