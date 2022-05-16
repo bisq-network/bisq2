@@ -15,38 +15,36 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.dashboard;
+package bisq.desktop.primary.main.content.newProfilePopup;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.newProfilePopup.NewProfilePopup;
-import lombok.Getter;
+import bisq.desktop.overlay.BasicPopup;
+import lombok.extern.slf4j.Slf4j;
 
-public class DashboardController implements Controller {
-    private final DashboardModel model;
-    @Getter
-    private final DashboardView view;
+@Slf4j
+public class NewProfilePopup extends BasicPopup {
+    private final NewProfilePopupController controller;
 
-    private final NewProfilePopup newProfilePopup;
-
-    public DashboardController(DefaultApplicationService applicationService) {
-        model = new DashboardModel();
-        view = new DashboardView(model, this);
-
-        newProfilePopup = new NewProfilePopup(applicationService);
+    public NewProfilePopup(DefaultApplicationService applicationService) {
+        super();
+        controller = new NewProfilePopupController(this, applicationService);
     }
 
     @Override
-    public void onActivate() {
-        
+    protected void onShow() {
+        super.onShow();
+        controller.onActivate();
     }
 
     @Override
-    public void onDeactivate() {
-    
+    protected void onHidden() {
+        super.onHidden();
+        controller.onDeactivate();
     }
 
-    public void showNewProfilePopup() {
-        newProfilePopup.show();
+    @Override
+    public void addContent() {
+        super.addContent();
+        controller.addContent();
     }
 }

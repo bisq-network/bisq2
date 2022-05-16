@@ -60,7 +60,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
                 Res.get("social.start.explore.headline"),
                 Res.get("social.start.explore.content"),
                 Res.get("social.start.explore.button"),
-                NavigationTarget.SATOSHI_SQUARE
+                () -> Navigation.navigateTo(NavigationTarget.SATOSHI_SQUARE)
         );
         leftBox.getStyleClass().add("border-right");
         
@@ -69,7 +69,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
                 Res.get("social.start.newOffer.headline"),
                 Res.get("social.start.newOffer.content"),
                 Res.get("social.start.newOffer.button"),
-                NavigationTarget.TRADE_OVERVIEW_LIST
+                controller::showNewProfilePopup
         );
 
         HBox contentBox = new HBox(leftBox, rightBox);
@@ -81,7 +81,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         root.getChildren().add(gridPane);
     }
     
-    private VBox getWidgetBox(String imageId, String headline, String content, String buttonLabel, NavigationTarget target) {
+    private VBox getWidgetBox(String imageId, String headline, String content, String buttonLabel, Runnable onAction) {
         Label headlineLabel = new Label(headline, ImageUtil.getImageViewById(imageId));
         headlineLabel.setGraphicTextGap(16.0);
         headlineLabel.setMaxWidth(284);
@@ -95,7 +95,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
 
         Button button = new Button(buttonLabel);
         button.getStyleClass().add("bisq-big-green-button");
-        button.setOnAction(e -> Navigation.navigateTo(target));
+        button.setOnAction(e -> onAction.run());
         button.setPrefWidth(360);
         
         VBox box = new VBox(16, headlineLabel, contentLabel, button);
