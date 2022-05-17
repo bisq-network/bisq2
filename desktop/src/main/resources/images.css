@@ -101,6 +101,32 @@
     -fx-image: url("images/navigation/governance.png");
 }
 
+/*Tabs icons*/
+#nav-grid {
+    -fx-image: url("images/navigation/nav-grid.png");
+}
+
+#nav-grid-active {
+    -fx-image: url("images/navigation/nav-grid-active.png");
+}
+
+#nav-grid-hover {
+    -fx-image: url("images/navigation/nav-grid-hover.png");
+}
+
+#nav-list {
+    -fx-image: url("images/navigation/nav-list.png");
+}
+
+#nav-list-active {
+    -fx-image: url("images/navigation/nav-list-active.png");
+}
+
+#nav-list-hover {
+    -fx-image: url("images/navigation/nav-list-hover.png");
+}
+
+/*Dashboard*/
 #welcome-community {
     -fx-image: url("images/welcome-community.png");
 }

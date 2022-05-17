@@ -152,7 +152,11 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     }
 
     protected void addTab(String text, NavigationTarget navigationTarget) {
-        TabButton tabButton = new TabButton(text, toggleGroup, navigationTarget);
+        addTab(text, navigationTarget, null);
+    }
+    
+    protected void addTab(String text, NavigationTarget navigationTarget, String icon) {
+        TabButton tabButton = new TabButton(text, toggleGroup, navigationTarget, icon);
         controller.onTabButtonCreated(tabButton);
         tabs.getChildren().addAll(tabButton);
     }
