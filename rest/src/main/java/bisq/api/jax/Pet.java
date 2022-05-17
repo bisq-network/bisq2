@@ -1,4 +1,4 @@
-package bisq.api.resteasy;
+package bisq.api.jax;
 public class Pet {
     String name;
     public String getName() {

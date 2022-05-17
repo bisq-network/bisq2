@@ -28,7 +28,7 @@ import java.security.KeyPair;
 
 @Slf4j
 @RestController
-class ApiKeyPairController extends ApiController {
+class ApiKeyPairController {
     private final KeyPairService keyPairService;
 
     public ApiKeyPairController(ApiApplicationService apiApplicationService) {

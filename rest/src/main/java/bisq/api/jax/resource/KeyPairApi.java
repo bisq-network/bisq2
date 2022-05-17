@@ -15,14 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.resteasy.resource;
+package bisq.api.jax.resource;
 
-import bisq.api.resteasy.RestApplication;
+import bisq.api.jax.RestApplication;
 import bisq.security.KeyPairService;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Application;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
@@ -32,11 +33,11 @@ import java.security.KeyPair;
 @Slf4j
 @Path("/api/v1/KeyPair")
 @Produces(MediaType.APPLICATION_JSON)
-class KeyPairApi {
+public class KeyPairApi {
     private final KeyPairService keyPairService;
 
-    public KeyPairApi(@Context RestApplication app) {
-        keyPairService = app.getApplicationService().getSecurityService().getKeyPairService();
+    public KeyPairApi(@Context Application app) {
+        keyPairService = ((RestApplication) app).getApplicationService().getSecurityService().getKeyPairService();
     }
 
     /**

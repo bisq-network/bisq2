@@ -13,6 +13,7 @@ include 'platforms:network-platform'
 include 'platforms:test-platform'
 
 include 'account'
+//include 'api'
 include 'application'
 include 'common'
 include 'bisq1bridge'

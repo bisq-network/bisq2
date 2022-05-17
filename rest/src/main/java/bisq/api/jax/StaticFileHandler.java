@@ -1,4 +1,4 @@
-package bisq.api.resteasy;
+package bisq.api.jax;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;

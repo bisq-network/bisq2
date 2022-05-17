@@ -39,7 +39,7 @@ import java.util.Optional;
 
 @Slf4j
 @RestController
-class ApiChatController extends ApiController {
+class ApiChatController {
     private final ChatService chatService;
     private final ChatUserService chatUserService;
     private final IdentityService identityService;

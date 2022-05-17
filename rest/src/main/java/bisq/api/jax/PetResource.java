@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package bisq.api.resteasy;
+package bisq.api.jax;
 
 import jakarta.ws.rs.*;
 

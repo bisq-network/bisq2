@@ -27,7 +27,9 @@ import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import java.util.Collections;
-
+/*
+http://localhost:8080/swagger-ui
+ */
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {

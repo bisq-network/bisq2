@@ -9,8 +9,7 @@ buildscript {
 plugins {
     id 'bisq.java-library'
     id 'application'
-//    id "io.swagger.core.v3.swagger-gradle-plugin" version "2.1.13"
-    alias(libs.plugins.shadow)
+     alias(libs.plugins.shadow)
 }
 
 ext {
@@ -28,8 +27,8 @@ apply from: '../buildSrc/logging-dependencies.gradle'
 version '0.0.2-SNAPSHOT'
 
 ext {
-//    jacksonVersion = '2.13.2'
-    jacksonVersion = '2.12.6'
+    swaggerVersion = '2.2.0'
+    jerseyVersion = '3.0.4'
 }
 
 repositories {
@@ -57,40 +56,13 @@ dependencies {
 
     implementation libs.google.guava
 
-    implementation("org.jboss.resteasy:resteasy-jdk-http:$restEasyVersion")
-    implementation("org.jboss.resteasy:resteasy-jackson2-provider:$restEasyVersion")
+    implementation("org.glassfish.jersey.containers:jersey-container-jdk-http:$jerseyVersion")
+    implementation("org.glassfish.jersey.media:jersey-media-json-jackson:$jerseyVersion")
+    implementation("org.glassfish.jersey.inject:jersey-hk2:$jerseyVersion")
+    implementation("org.glassfish.jaxb:jaxb-runtime:3.0.2")
 
-    // cant upgrade, see https://github.com/resteasy/resteasy/discussions/3097
-    implementation ('com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider') {
-        version {
-            strictly '2.12.6'
-        }
-    }
-    implementation( 'com.fasterxml.jackson.core:jackson-core') {
-        version {
-            strictly '2.12.6'
-        }
-    }
-    implementation ('com.fasterxml.jackson.core:jackson-databind') {
-        version {
-            strictly '2.12.6.1'
-        }
-    }
-    implementation ('com.fasterxml.jackson.core:jackson-annotations') {
-        version {
-            strictly '2.12.6'
-        }
-    }
+    implementation ("com.google.protobuf:protobuf-java-util:3.20.0")
 
     implementation ("io.swagger.core.v3:swagger-jaxrs2-jakarta:$swaggerVersion")
 }
 
-//resolve {
-//    openApiFile = file("build/resources/main/openapi-configuration.json")
-//    outputFormat = 'JSON'
-//    prettyPrint = 'TRUE'
-//    classpath = sourceSets.main.runtimeClasspath
-////    resourcePackages = ['bisq.api.resteasy']
-//    resourceClasses = ['bisq.api.resteasy.PetResource']
-//    outputDir = file(project.buildDir)
-//}
