@@ -27,58 +27,80 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DashboardView extends View<VBox, DashboardModel, DashboardController> implements TabViewChild {
-    private static final int HORIZONTAL_MARGIN = 42;
-    private static final int VERTICAL_MARGIN = 24;
-    
     public DashboardView(DashboardModel model, DashboardController controller) {
-        super(new VBox(), model, controller);
+        super(new VBox(16), model, controller);
         
-       /* Label contentLabel = new Label(Res.get("social.start.content"));
-        contentLabel.getStyleClass().addAll("bisq-text-2", "wrap-text");
-        contentLabel.setMaxWidth(400);
-        contentLabel.setMinHeight(100);
-        contentLabel.setAlignment(Pos.TOP_LEFT);
-        root.getChildren().add(contentLabel);*/
+        VBox tradesBox = getValueBox(Res.get("dashboard.tradesCompleted"), 3249);
+        VBox peersBox1 = getValueBox(Res.get("dashboard.peersOnline"), 84213);
+        VBox peersBox2 = getValueBox(Res.get("dashboard.peersOnline"), 84213);
+        root.getChildren().add(new HBox(16, tradesBox, peersBox1, peersBox2));
         
-        Label gettingStartedLabel = new Label(Res.get("social.start.howToGetStarted"));
-        gettingStartedLabel.getStyleClass().add("bisq-text-3");
+        VBox firstBitcoinBox = getBigWidgetBox(
+                Res.get("dashboard.myFirstBitcoin.headline"),
+                Res.get("dashboard.myFirstBitcoin.content"),
+                Res.get("dashboard.myFirstBitcoin.button"),
+                () -> {}
+        );
+        VBox.setMargin(firstBitcoinBox, new Insets(20, 0, 0, 0));
+
+        root.getChildren().add(firstBitcoinBox);
         
-        HBox headerBox = new HBox(gettingStartedLabel);
-        headerBox.setPadding(new Insets(0, 0, VERTICAL_MARGIN, 0));
-        headerBox.getStyleClass().addAll("border-bottom");
-        
-        VBox leftBox = getWidgetBox(
+        VBox communityBox = getWidgetBox(
                 "welcome-community",
-                Res.get("social.start.explore.headline"),
-                Res.get("social.start.explore.content"),
-                Res.get("social.start.explore.button"),
+                Res.get("dashboard.explore.headline"),
+                Res.get("dashboard.explore.content"),
+                Res.get("dashboard.explore.button"),
                 () -> Navigation.navigateTo(NavigationTarget.SATOSHI_SQUARE)
         );
-        leftBox.getStyleClass().add("border-right");
         
-        VBox rightBox = getWidgetBox(
+        VBox profileBox = getWidgetBox(
                 "welcome-profile",
-                Res.get("social.start.newOffer.headline"),
-                Res.get("social.start.newOffer.content"),
-                Res.get("social.start.newOffer.button"),
+                Res.get("dashboard.newOffer.headline"),
+                Res.get("dashboard.newOffer.content"),
+                Res.get("dashboard.newOffer.button"),
                 controller::showNewProfilePopup
         );
+        root.getChildren().add(new HBox(16, communityBox, profileBox));
+    }
 
-        HBox contentBox = new HBox(leftBox, rightBox);
-        contentBox.setPadding(new Insets(0, -HORIZONTAL_MARGIN, 0, -HORIZONTAL_MARGIN));
+    private VBox getValueBox(String title, int value) {
+        Label titleLabel = new Label(title);
+        titleLabel.getStyleClass().add("bisq-text-7");
+        
+        Label valueLabel = new Label(String.format("%,d", value));
+        valueLabel.getStyleClass().add("bisq-text-headline-3");
 
-        VBox gridPane = new VBox(headerBox, contentBox);
-        gridPane.getStyleClass().addAll("bisq-box-1");
-        gridPane.setPadding(new Insets(VERTICAL_MARGIN, HORIZONTAL_MARGIN, 2 * VERTICAL_MARGIN, HORIZONTAL_MARGIN));
-        root.getChildren().add(gridPane);
+        VBox box = new VBox(titleLabel, valueLabel);
+        box.setAlignment(Pos.TOP_CENTER);
+        HBox.setHgrow(box, Priority.ALWAYS);
+        return box;
+    }
+
+    private VBox getBigWidgetBox(String headline, String content, String buttonLabel, Runnable onAction) {
+        Label headlineLabel = new Label(headline);
+        headlineLabel.getStyleClass().add("bisq-text-headline-4");
+        
+        Label contentLabel = new Label(content);
+        contentLabel.getStyleClass().addAll("bisq-text-6", "wrap-text");
+        contentLabel.setAlignment(Pos.TOP_LEFT);
+        contentLabel.setMinHeight(58);
+        contentLabel.setMaxWidth(400);
+        
+        Button button = new Button(buttonLabel);
+        button.getStyleClass().add("bisq-big-white-button");
+        button.setOnAction(e -> onAction.run());
+        button.setMaxWidth(Double.MAX_VALUE);
+
+        VBox box = new VBox(8, headlineLabel, contentLabel, button);
+        box.getStyleClass().add("bisq-box-2");
+        box.setPadding(new Insets(32, 48, 44, 48));
+        
+        return box;
     }
     
     private VBox getWidgetBox(String imageId, String headline, String content, String buttonLabel, Runnable onAction) {
@@ -96,12 +118,13 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         Button button = new Button(buttonLabel);
         button.getStyleClass().add("bisq-big-green-button");
         button.setOnAction(e -> onAction.run());
-        button.setPrefWidth(360);
+        button.setMaxWidth(Double.MAX_VALUE);
         
         VBox box = new VBox(16, headlineLabel, contentLabel, button);
-        box.setPadding(new Insets(VERTICAL_MARGIN, HORIZONTAL_MARGIN, 0, HORIZONTAL_MARGIN));
-        box.setMinWidth(360);
-        box.setPrefWidth(360);
+        box.getStyleClass().add("bisq-box-1");
+        box.setPadding(new Insets(36, 48, 52, 48));
+        box.setMinWidth(420);
+        box.setPrefWidth(420);
         HBox.setHgrow(box, Priority.ALWAYS);
         return box;
     }
