@@ -23,7 +23,13 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.bsqSwap.BsqSwapController;
 import bisq.desktop.primary.main.content.discussion.DiscussionsController;
+import bisq.desktop.primary.main.content.education.bisq.BisqAcademyController;
+import bisq.desktop.primary.main.content.education.bitcoin.BitcoinAcademyController;
+import bisq.desktop.primary.main.content.education.openSource.OpenSourceAcademyController;
 import bisq.desktop.primary.main.content.education.EducationController;
+import bisq.desktop.primary.main.content.education.privacy.PrivacyAcademyController;
+import bisq.desktop.primary.main.content.education.security.SecurityAcademyController;
+import bisq.desktop.primary.main.content.education.wallets.WalletsAcademyController;
 import bisq.desktop.primary.main.content.events.EventsController;
 import bisq.desktop.primary.main.content.dashboard.DashboardController;
 import bisq.desktop.primary.main.content.lightning.LightningController;
@@ -77,6 +83,24 @@ public class ContentController extends NavigationController {
             }
             case LEARN -> {
                 return Optional.of(new EducationController(applicationService));
+            }
+            case BISQ_ACADEMY -> {
+                return Optional.of(new BisqAcademyController(applicationService));
+            }
+            case BITCOIN_ACADEMY -> {
+                return Optional.of(new BitcoinAcademyController(applicationService));
+            }
+            case SECURITY_ACADEMY -> {
+                return Optional.of(new SecurityAcademyController(applicationService));
+            }
+            case PRIVACY_ACADEMY -> {
+                return Optional.of(new PrivacyAcademyController(applicationService));
+            }
+            case WALLETS_ACADEMY -> {
+                return Optional.of(new WalletsAcademyController(applicationService));
+            }
+            case OPEN_SOURCE_ACADEMY -> {
+                return Optional.of(new OpenSourceAcademyController(applicationService));
             }
             case CONNECT -> {
                 return Optional.of(new EventsController(applicationService));

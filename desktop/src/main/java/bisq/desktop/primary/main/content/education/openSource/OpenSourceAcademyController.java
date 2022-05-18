@@ -15,9 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education;
+package bisq.desktop.primary.main.content.education.openSource;
 
-import bisq.desktop.common.view.Model;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
 
-public class EducationModel implements Model {
+public class OpenSourceAcademyController implements Controller {
+    @Getter
+    private final OpenSourceAcademyView view;
+    private final OpenSourceAcademyModel model;
+
+    public OpenSourceAcademyController(DefaultApplicationService applicationService) {
+       model= new OpenSourceAcademyModel();
+        view = new OpenSourceAcademyView(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
 }
