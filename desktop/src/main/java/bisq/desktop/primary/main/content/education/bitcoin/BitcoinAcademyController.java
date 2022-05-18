@@ -15,9 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education;
+package bisq.desktop.primary.main.content.education.bitcoin;
 
-import bisq.desktop.common.view.Model;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
 
-public class EducationModel implements Model {
+public class BitcoinAcademyController implements Controller {
+    @Getter
+    private final BitcoinAcademyView view;
+    private final BitcoinAcademyModel model;
+
+    public BitcoinAcademyController(DefaultApplicationService applicationService) {
+       model= new BitcoinAcademyModel();
+        view = new BitcoinAcademyView(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
 }

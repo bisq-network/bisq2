@@ -15,9 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education;
+package bisq.desktop.primary.main.content.education.privacy;
 
-import bisq.desktop.common.view.Model;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
 
-public class EducationModel implements Model {
+public class PrivacyAcademyController implements Controller {
+    @Getter
+    private final PrivacyAcademyView view;
+    private final PrivacyAcademyModel model;
+
+    public PrivacyAcademyController(DefaultApplicationService applicationService) {
+       model= new PrivacyAcademyModel();
+        view = new PrivacyAcademyView(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
 }

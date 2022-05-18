@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education;
+package bisq.desktop.primary.main.content.education.privacy;
 
 import bisq.desktop.common.view.Model;
 
-public class EducationModel implements Model {
+public class PrivacyAcademyModel implements Model {
 }

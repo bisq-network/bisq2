@@ -56,13 +56,14 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     private final ToggleGroup toggleGroup = new ToggleGroup();
     LeftNavButton trade;
+    LeftNavButton learn;
     LeftNavButton wallet;
     @Getter
     private final NetworkInfoBox networkInfoBox;
     private final Label expandIcon, collapseIcon;
     private final ImageView logoExpanded, logoCollapsed;
     private final Region selectionMarker;
-    private final VBox mainMenuItems, tradeSubMenuItems, walletSubMenuItems;
+    private final VBox mainMenuItems, learnSubMenuItems, tradeSubMenuItems, walletSubMenuItems;
     private final int menuTop;
     private Subscription navigationTargetSubscription, menuExpandedSubscription;
 
@@ -77,45 +78,58 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         mainMenuItems.setSpacing(6);
         Layout.pinToAnchorPane(mainMenuItems, menuTop, 0, 0, MARKER_WIDTH);
 
-        tradeSubMenuItems = new VBox(2);
-        VBox.setMargin(tradeSubMenuItems, new Insets(-10, 0, 0, 0));
-        tradeSubMenuItems.setPadding(new Insets(0, 0, 16, 0));
-
         LeftNavButton dashBoard = createNavigationButton(Res.get("dashboard"),
                 ImageUtil.getImageViewById("nav-community"),
                 NavigationTarget.DASHBOARD);
-       
+        
+        learn = createNavigationButton(Res.get("learn"),
+                ImageUtil.getImageViewById("buy"), //todo
+                NavigationTarget.LEARN);
+        
+        learnSubMenuItems = createSubmenu(
+                createSubmenuNavigationButton(Res.get("academy.bisq"), NavigationTarget.BISQ_ACADEMY),
+                createSubmenuNavigationButton(Res.get("academy.bitcoin"), NavigationTarget.BITCOIN_ACADEMY),
+                createSubmenuNavigationButton(Res.get("academy.security"), NavigationTarget.SECURITY_ACADEMY),
+                createSubmenuNavigationButton(Res.get("academy.privacy"), NavigationTarget.PRIVACY_ACADEMY),
+                createSubmenuNavigationButton(Res.get("academy.wallets"), NavigationTarget.WALLETS_ACADEMY),
+                createSubmenuNavigationButton(Res.get("academy.openSource"), NavigationTarget.OPEN_SOURCE_ACADEMY)
+        );
+
         LeftNavButton discuss = createNavigationButton(Res.get("discuss"),
                 ImageUtil.getImageViewById("sell"), //todo
                 NavigationTarget.DISCUSS);
-        LeftNavButton learn = createNavigationButton(Res.get("learn"),
-                ImageUtil.getImageViewById("buy"), //todo
-                NavigationTarget.LEARN);
+        
         LeftNavButton connect = createNavigationButton(Res.get("connect"),
                 ImageUtil.getImageViewById("nav-support"), //todo
                 NavigationTarget.CONNECT);
+        
         trade = createNavigationButton(Res.get("trade"),
                 ImageUtil.getImageViewById("nav-trade"),
                 NavigationTarget.TRADE);
 
+        tradeSubMenuItems = createSubmenu(
+                createSubmenuNavigationButton(Res.get("satoshiSquare"), NavigationTarget.SATOSHI_SQUARE),
+                createSubmenuNavigationButton(Res.get("liquidSwap"), NavigationTarget.LIQUID_SWAP),
+                createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTI_SIG),
+                createSubmenuNavigationButton(Res.get("xmrSwap"), NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP),
+                createSubmenuNavigationButton(Res.get("lightning"), NavigationTarget.LN_3_PARTY),
+                createSubmenuNavigationButton(Res.get("bsqSwap"), NavigationTarget.BSQ_SWAP)
+        );
+/*
         LeftNavButton markets = createNavigationButton(Res.get("markets"),
                 ImageUtil.getImageViewById("nav-markets"),
                 NavigationTarget.MARKETS);
+*/
 
         //todo lower prio menu add design
-
-        walletSubMenuItems = new VBox(2);
-        VBox.setMargin(walletSubMenuItems, new Insets(-10, 0, 0, 0));
-        walletSubMenuItems.setPadding(new Insets(0, 0, 16, 0));
-
         wallet = createNavigationButton(Res.get("wallet"),
                 ImageUtil.getImageViewById("nav-wallet"),
                 NavigationTarget.WALLET_BITCOIN);
-        LeftNavSubButton bitcoinWallet = createSecondaryNavigationButton(Res.get("bitcoin.wallet"),
-                NavigationTarget.WALLET_BITCOIN);
-        LeftNavSubButton lBtcWallet = createSecondaryNavigationButton(Res.get("lbtc.wallet"),
-                NavigationTarget.WALLET_LBTC);
-        walletSubMenuItems.getChildren().addAll(bitcoinWallet, lBtcWallet);
+
+        walletSubMenuItems = createSubmenu(
+                createSubmenuNavigationButton(Res.get("bitcoin.wallet"), NavigationTarget.WALLET_BITCOIN),
+                createSubmenuNavigationButton(Res.get("lbtc.wallet"), NavigationTarget.WALLET_LBTC)
+        );
 
         LeftNavButton support = createNavigationButton(Res.get("support"),
                 ImageUtil.getImageViewById("nav-support"),
@@ -123,20 +137,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         LeftNavButton settings = createNavigationButton(Res.get("settings"),
                 ImageUtil.getImageViewById("nav-settings"),
                 NavigationTarget.SETTINGS);
-
-        LeftNavSubButton satoshiSquare = createSecondaryNavigationButton(Res.get("satoshiSquare"),
-                NavigationTarget.SATOSHI_SQUARE);
-        LeftNavSubButton liquidSwap = createSecondaryNavigationButton(Res.get("liquidSwap"),
-                NavigationTarget.LIQUID_SWAP);
-        LeftNavSubButton multiSig = createSecondaryNavigationButton(Res.get("multiSig"),
-                NavigationTarget.BISQ_MULTI_SIG);
-        LeftNavSubButton xmrSwap = createSecondaryNavigationButton(Res.get("xmrSwap"),
-                NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP);
-        LeftNavSubButton lightning = createSecondaryNavigationButton(Res.get("lightning"),
-                NavigationTarget.LN_3_PARTY);
-        LeftNavSubButton bsqSwap = createSecondaryNavigationButton(Res.get("bsqSwap"),
-                NavigationTarget.BSQ_SWAP);
-        tradeSubMenuItems.getChildren().addAll(satoshiSquare, liquidSwap, multiSig, xmrSwap, lightning, bsqSwap);
+        
          /*  dashBoard.setOnAction(() -> {
             controller.onNavigationTargetSelected(NavigationTarget.SOCIAL);
             if (model.getMenuExpanded().get()) {
@@ -178,7 +179,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, learn, discuss, connect, trade, tradeSubMenuItems, /*markets,
+        mainMenuItems.getChildren().addAll(dashBoard, learn, learnSubMenuItems, discuss, connect, trade, tradeSubMenuItems, /*markets,
                 wallet, walletSubMenuItems, support,*/ settings);
         mainMenuItems.setLayoutY(menuTop);
         root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, mainMenuItems, expandIcon, collapseIcon, networkInfoBox);
@@ -294,10 +295,19 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         return button;
     }
 
-    private LeftNavSubButton createSecondaryNavigationButton(String title, NavigationTarget navigationTarget) {
+    private LeftNavSubButton createSubmenuNavigationButton(String title, NavigationTarget navigationTarget) {
         LeftNavSubButton button = new LeftNavSubButton(title, toggleGroup, navigationTarget);
         setupButtonHandler(navigationTarget, button);
         return button;
+    }
+    
+    private VBox createSubmenu(LeftNavSubButton... items) {
+        VBox submenu = new VBox(2);
+        VBox.setMargin(submenu, new Insets(-10, 0, 0, 0));
+        submenu.setPadding(new Insets(0, 0, 16, 0));
+        submenu.getChildren().setAll(items);
+        
+        return submenu;
     }
 
     private void setupButtonHandler(NavigationTarget navigationTarget, LeftNavButton button) {
@@ -320,18 +330,31 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         UIThread.runOnNextRenderFrame(() -> {
             double targetY = menuTop + selectedLeftNavButton.getBoundsInParent().getMinY();
             if (selectedLeftNavButton instanceof LeftNavSubButton) {
-                targetY += tradeSubMenuItems.getLayoutY();
-                targetY += walletSubMenuItems.getLayoutY();
+                if (learnSubMenuItems.getChildren().contains(selectedLeftNavButton)) {
+                    targetY += learnSubMenuItems.getLayoutY();
+                } else if (tradeSubMenuItems.getChildren().contains(selectedLeftNavButton)) {
+                    targetY += tradeSubMenuItems.getLayoutY();   
+                } else if (walletSubMenuItems.getChildren().contains(selectedLeftNavButton)) {
+                    targetY += walletSubMenuItems.getLayoutY();
+                }
             }
             Transitions.animateNavigationButtonMarks(selectionMarker, selectedLeftNavButton.getHeight(), targetY);
-            maybeHighlightTradeOrWalletSubmenu();
+            maybeHighlightSubmenu();
         });
     }
 
-    private void maybeHighlightTradeOrWalletSubmenu() {
+    private void maybeHighlightSubmenu() {
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
 
-        boolean isTradeSubmenuItemSelected = selectedLeftNavButton == trade;
+        boolean isLearnSubmenuItemSelected = learnSubMenuItems.getChildren().contains(selectedLeftNavButton);
+        learn.setHighlighted(isLearnSubmenuItemSelected);
+        Layout.toggleStyleClass(
+                learnSubMenuItems,
+                "bisq-dark-bg",
+                isLearnSubmenuItemSelected || selectedLeftNavButton.navigationTarget == NavigationTarget.LEARN
+        );
+        
+        boolean isTradeSubmenuItemSelected = tradeSubMenuItems.getChildren().contains(selectedLeftNavButton);
         trade.setHighlighted(isTradeSubmenuItemSelected);
         Layout.toggleStyleClass(
                 tradeSubMenuItems,
@@ -339,8 +362,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 isTradeSubmenuItemSelected || selectedLeftNavButton.navigationTarget == NavigationTarget.TRADE
         );
 
-        boolean isWalletSubmenuItemSelected = selectedLeftNavButton == wallet;
-        wallet.setHighlighted(isTradeSubmenuItemSelected);
+        boolean isWalletSubmenuItemSelected = walletSubMenuItems.getChildren().contains(selectedLeftNavButton);
+        wallet.setHighlighted(isWalletSubmenuItemSelected);
         Layout.toggleStyleClass(
                 walletSubMenuItems,
                 "bisq-dark-bg",
