@@ -365,13 +365,7 @@
 .bisq-tab-button-label {
     -fx-font-size: 0.93em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-grey-8;
-}
-
-.bisq-tab-button-label-selected {
-    -fx-font-size: 0.93em;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-logo-green;
+    -fx-graphic-text-gap: 8;
 }
 
 .bisq-smaller-label {
@@ -406,6 +400,14 @@
 
 .bisq-text-white {
     -fx-text-fill: -bisq-white;
+}
+
+.bisq-text-logo-green {
+    -fx-text-fill: -bisq-logo-green;
+}
+
+.bisq-text-grey-9 {
+    -fx-text-fill: -bisq-grey-9;
 }
 /*
 .bisq-label-white:selected {
