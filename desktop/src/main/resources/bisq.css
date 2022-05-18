@@ -35,6 +35,7 @@
     -bisq-logo-green: #25b135;
     -bisq-darkest-green: derive(-bisq-logo-green, -50%);
     -bisq-white: white;
+    -bisq-black: #000000;
     -bisq-turquoise: #2cacaf;
     -bisq-buy: #006600;
     -bisq-sell: #660000;
@@ -125,11 +126,6 @@
  *                                                                             *
  ******************************************************************************/
 
-.border-right {
-    -fx-border-color: -bisq-grey-17;
-    -fx-border-width: 0 1 0 0;
-}
-
 .border-bottom {
     -fx-border-color: -bisq-grey-17;
     -fx-border-width: 0 0 1 0;
@@ -143,22 +139,6 @@
 .border-top {
     -fx-border-color: -bisq-grey-5;
     -fx-border-width: 1 0 0 0;
-}
-
-/*******************************************************************************
- *                                                                             *
- * Borders                                                                     *
- *                                                                             *
- ******************************************************************************/
-
-.border-right {
-    -fx-border-color: -bisq-grey-17;
-    -fx-border-width: 0 1 0 0;
-}
-
-.border-bottom {
-    -fx-border-color: -bisq-grey-17;
-    -fx-border-width: 0 0 1 0;
 }
 
 /*******************************************************************************
@@ -277,6 +257,18 @@
     -fx-line-spacing: -0.16em;
 }
 
+.bisq-text-headline-3 {
+    -fx-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 3.92em;
+}
+
+.bisq-text-headline-4 {
+    -fx-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 3.15em;
+}
+
 .bisq-text-1 {
     -fx-fill: -bisq-white;
     -fx-font-size: 1.25em;
@@ -303,6 +295,16 @@
     -fx-text-fill: -bisq-white;
     -fx-font-size: 1.08em;
     -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.bisq-text-6 {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.08em;
+}
+
+.bisq-text-7 {
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 0.92em;
 }
 
 .wrap-text {
@@ -528,6 +530,21 @@
 
 .bisq-big-green-button:hover {
     -fx-background-color: -bisq-logo-green;
+}
+
+/* Big white button */
+.bisq-big-white-button {
+    -fx-background-color: -bisq-white;
+    -fx-text-fill: -bisq-black;
+    -fx-padding: 26 6;
+    -fx-font-size: 1.6em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-effect: dropshadow(gaussian, -bisq-dark-green, 0, 0, 0, 2);
+    -fx-cursor: hand;
+}
+
+.bisq-big-white-button:hover {
+    -fx-background-color: -bisq-grey-11;
 }
 
 /* Big transparent button */
