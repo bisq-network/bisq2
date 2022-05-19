@@ -101,6 +101,15 @@
     -fx-image: url("images/navigation/governance.png");
 }
 
+/*Left nav collapse / expand*/
+#expand {
+    -fx-image: url("images/expand.png");
+}
+
+#collapse {
+    -fx-image: url("images/collapse.png");
+}
+
 /*Tabs icons*/
 #nav-grid {
     -fx-image: url("images/navigation/nav-grid.png");

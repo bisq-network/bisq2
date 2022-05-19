@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.left;
 
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.layout.Layout;
@@ -51,8 +52,15 @@ class LeftNavButton extends Pane implements Toggle {
 
     @Nullable
     protected final ImageView icon;
+    
+    @Nullable
+    protected ImageView submenuActionIcon;
 
-    LeftNavButton(String title, @Nullable ImageView icon, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
+    LeftNavButton(String title, 
+                  @Nullable ImageView icon,
+                  ToggleGroup toggleGroup,
+                  NavigationTarget navigationTarget, 
+                  boolean hasSubmenu) {
         this.icon = icon;
         this.navigationTarget = navigationTarget;
 
@@ -79,6 +87,13 @@ class LeftNavButton extends Pane implements Toggle {
         label.setMouseTransparent(true);
 
         getChildren().add(label);
+        
+        if (hasSubmenu) {
+            submenuActionIcon = ImageUtil.getImageViewById("expand");
+            submenuActionIcon.setLayoutX(200);
+            submenuActionIcon.setLayoutY(16);
+            getChildren().add(submenuActionIcon);
+        }
 
         applyStyle();
     }
@@ -91,6 +106,10 @@ class LeftNavButton extends Pane implements Toggle {
         if (icon != null) {
             icon.setOpacity(isHighlighted ? 1 : 0.6);
         }
+        
+        if (submenuActionIcon != null) {
+            submenuActionIcon.setId(isHighlighted ? "collapse" : "expand");
+        }
     }
 
     public final void setOnAction(Runnable handler) {
@@ -102,13 +121,25 @@ class LeftNavButton extends Pane implements Toggle {
             Tooltip.uninstall(this, tooltip);
             label.setVisible(true);
             label.setManaged(true);
+            if (submenuActionIcon != null) {
+                submenuActionIcon.setVisible(true);
+                submenuActionIcon.setManaged(true);
+            }
             Transitions.fadeIn(label, duration);
+            Transitions.fadeIn(submenuActionIcon, duration);
         } else {
             Tooltip.install(this, tooltip);
             Transitions.fadeOut(label, duration, () -> {
                 label.setVisible(false);
                 label.setManaged(false);
             });
+
+            if (submenuActionIcon != null) {
+                Transitions.fadeOut(submenuActionIcon, duration, () -> {
+                    submenuActionIcon.setVisible(false);
+                    submenuActionIcon.setManaged(false);
+                });
+            }
         }
     }
 

@@ -27,12 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class LeftNavSubButton extends LeftNavButton {
     private final static double LABEL_X_POS_COLLAPSED = 31;
+    static final int HEIGHT = 28;
 
     private final String fullTitle;
 
     LeftNavSubButton(String title, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
-        super(title, null, toggleGroup, navigationTarget);
+        super(title, null, toggleGroup, navigationTarget, false);
         this.fullTitle = title;
+        setMinHeight(0);
     }
 
     @Override
@@ -55,6 +57,6 @@ class LeftNavSubButton extends LeftNavButton {
 
     @Override
     protected int calculateHeight() {
-        return 28;
+        return HEIGHT;
     }
 }

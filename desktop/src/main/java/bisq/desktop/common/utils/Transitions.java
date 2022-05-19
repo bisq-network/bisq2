@@ -34,6 +34,8 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
 import lombok.Setter;
@@ -549,6 +551,22 @@ public class Transitions {
         } else {
             node.setLayoutX(targetX);
             node.setPrefWidth(targetWidth);
+        }
+    }
+
+    public static void animateHeight(Region node, double targetHeight) {
+        if (displaySettings.isUseAnimations()) {
+            double duration = getDuration(DEFAULT_DURATION / 2);
+            double startHeight = node.getHeight();
+            Timeline timeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(node.prefHeightProperty(), startHeight, Interpolator.LINEAR)
+            ));
+            keyFrames.add(new KeyFrame(Duration.millis(duration),
+                    new KeyValue(node.prefHeightProperty(), targetHeight, Interpolator.EASE_OUT)
+            ));
+            timeline.play();
         }
     }
 }
