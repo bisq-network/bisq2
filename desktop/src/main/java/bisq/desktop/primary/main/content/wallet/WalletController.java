@@ -26,7 +26,7 @@ import bisq.desktop.primary.main.content.wallet.receive.WalletReceiveController;
 import bisq.desktop.primary.main.content.wallet.send.WalletSendController;
 import bisq.desktop.primary.main.content.wallet.transactions.WalletTransactionsController;
 import bisq.desktop.primary.main.content.wallet.utxos.WalletUtxosController;
-import bisq.wallets.WalletService;
+import bisq.wallets.core.WalletService;
 import lombok.Getter;
 
 import java.util.Optional;

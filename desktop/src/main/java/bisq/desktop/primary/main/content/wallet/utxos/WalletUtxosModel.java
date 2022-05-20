@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.wallet.utxos;
 
 import bisq.desktop.common.view.Model;
-import bisq.wallets.model.Utxo;
+import bisq.wallets.core.model.Utxo;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 

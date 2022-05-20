@@ -1,0 +1,25 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+    includeBuild('../build-logic')
+}
+
+dependencyResolutionManagement {
+    versionCatalogs {
+        libs {
+            from(files("../gradle/libs.versions.toml"))
+        }
+    }
+}
+
+includeBuild('..')
+include 'api'
+include 'core'
+
+include 'bitcoind'
+include 'elementsd'
+
+include 'regtest'
+
+rootProject.name = 'bisq.wallets'

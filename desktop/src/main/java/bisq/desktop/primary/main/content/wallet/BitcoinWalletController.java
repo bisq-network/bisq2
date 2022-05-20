@@ -18,16 +18,9 @@
 package bisq.desktop.primary.main.content.wallet;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.wallet.receive.WalletReceiveController;
-import bisq.desktop.primary.main.content.wallet.send.WalletSendController;
-import bisq.desktop.primary.main.content.wallet.transactions.WalletTransactionsController;
-import bisq.desktop.primary.main.content.wallet.utxos.WalletUtxosController;
-import bisq.wallets.WalletService;
-
-import java.util.Optional;
+import bisq.wallets.core.WalletService;
 
 public class BitcoinWalletController extends WalletController {
 

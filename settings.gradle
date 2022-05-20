@@ -1,3 +1,10 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+    includeBuild('build-logic')
+}
+
 rootProject.name = 'bisq'
 
 include 'platforms:cli-platform'
@@ -29,7 +36,8 @@ include 'social'
 include 'support'
 include 'tools'
 include 'tor'
-include 'wallets'
+
+includeBuild('wallets')
 
 import org.gradle.util.GradleVersion
 

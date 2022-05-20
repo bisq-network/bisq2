@@ -1,10 +1,7 @@
 plugins {
     id 'bisq.java-library'
-    alias(libs.plugins.protobuf)
+    id 'bisq.protobuf'
 }
-
-apply from: '../buildSrc/bisq-version.gradle'
-apply from: '../buildSrc/logging-dependencies.gradle'
 
 dependencies {
     api platform(project(':platforms:common-platform'))
@@ -18,30 +15,11 @@ dependencies {
     implementation project(':contract')
     implementation project(':oracle')
     implementation project(':network')
-    implementation project(':wallets')
 
-    implementation libs.protobuf.java
+    implementation("bisq.wallets:api")
+
     implementation libs.google.guava
     implementation libs.typesafe.config
 
     implementation("org.jeasy:easy-states:2.0.0")
-}
-
-ext {
-    generatedProtoSrcDir = 'build/generated/source/main/java'
-}
-
-sourceSets.main {
-    java.srcDirs += [generatedProtoSrcDir]
-}
-
-protobuf {
-    protoc {
-        // Append 'osxArch' property to workaround M1 Mac bug.
-        artifact = "com.google.protobuf:protoc:3.19.4${osxArch}"
-    }
-    generateProtoTasks {
-        all()*.plugins {}
-    }
-    generatedFilesBaseDir = "$projectDir/build/generated/source"
 }

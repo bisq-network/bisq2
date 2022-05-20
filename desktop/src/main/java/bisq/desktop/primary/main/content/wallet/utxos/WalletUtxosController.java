@@ -17,10 +17,9 @@
 
 package bisq.desktop.primary.main.content.wallet.utxos;
 
-import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.wallets.WalletService;
+import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

@@ -3,9 +3,6 @@ plugins {
     alias(libs.plugins.openjfx)
 }
 
-apply from: '../buildSrc/bisq-version.gradle'
-apply from: '../buildSrc/logging-dependencies.gradle'
-
 javafx {
     version = '17.0.1'
     modules = ['javafx.base', 'javafx.controls', 'javafx.graphics']
@@ -29,7 +26,8 @@ dependencies {
     implementation project(':social')
     implementation project(':presentation')
     implementation project(':application')
-    implementation project(':wallets')
+
+    implementation("bisq.wallets:api")
 
     implementation libs.google.guava
 

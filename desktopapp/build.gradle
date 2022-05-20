@@ -9,8 +9,6 @@ plugins {
     alias(libs.plugins.shadow)
 }
 
-apply from: '../buildSrc/bisq-version.gradle'
-
 application {
     project.mainClassName = 'bisq.desktopapp.Main'
     applicationDefaultJvmArgs = []
@@ -42,8 +40,6 @@ javafx {
     modules = ['javafx.base', 'javafx.controls', 'javafx.graphics']
 }
 
-apply from: '../buildSrc/logging-dependencies.gradle'
-
 dependencies {
     api platform(project(':platforms:common-platform'))
 
@@ -62,8 +58,9 @@ dependencies {
     implementation project(':social')
     implementation project(':presentation')
     implementation project(':application')
-    implementation project(':wallets')
     implementation project(':desktop')
+
+    implementation("bisq.wallets:api")
 
     implementation libs.google.guava
 

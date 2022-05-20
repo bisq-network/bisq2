@@ -1,0 +1,37 @@
+import static org.gradle.internal.os.OperatingSystem.current
+
+plugins {
+    id 'com.google.protobuf'
+}
+
+dependencies {
+    implementation libs.protobuf.java
+}
+
+ext {
+    generatedProtoSrcDir = 'build/generated/source/main/java'
+}
+
+sourceSets.main {
+    java.srcDirs += [generatedProtoSrcDir]
+}
+
+ext {
+    def operatingSystem = current()
+    osFamily = operatingSystem.familyName
+    osArch = System.getProperty("os.arch")
+    // Extra OSX Arch property needed to workaround lack of protobuf support in M1 Mac system.
+    osxArch = System.getProperty('os.arch') == 'aarch64' ? ':osx-x86_64' : ''
+    osDescription = operatingSystem.toString()
+}
+
+protobuf {
+    protoc {
+        // Append 'osxArch' property to workaround M1 Mac bug.
+        artifact = "com.google.protobuf:protoc:3.19.4${osxArch}"
+    }
+    generateProtoTasks {
+        all()*.plugins {}
+    }
+    generatedFilesBaseDir = "$projectDir/build/generated/source"
+}
