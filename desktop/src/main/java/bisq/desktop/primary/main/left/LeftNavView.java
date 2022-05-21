@@ -33,13 +33,11 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -55,15 +53,12 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final static int EXPAND_ICON_SIZE = 18;
 
     private final ToggleGroup toggleGroup = new ToggleGroup();
-    LeftNavButton trade;
-    LeftNavButton learn;
-    LeftNavButton wallet;
     @Getter
     private final NetworkInfoBox networkInfoBox;
     private final Label expandIcon, collapseIcon;
     private final ImageView logoExpanded, logoCollapsed;
     private final Region selectionMarker;
-    private final VBox mainMenuItems, learnSubMenuItems, tradeSubMenuItems, walletSubMenuItems;
+    private final VBox mainMenuItems;
     private final int menuTop;
     private Subscription navigationTargetSubscription, menuExpandedSubscription;
 
@@ -80,13 +75,13 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         LeftNavButton dashBoard = createNavigationButton(Res.get("dashboard"),
                 ImageUtil.getImageViewById("nav-community"),
-                NavigationTarget.DASHBOARD);
-        
-        learn = createNavigationButton(Res.get("learn"),
+                NavigationTarget.DASHBOARD, false);
+
+        LeftNavButton learn = createNavigationButton(Res.get("learn"),
                 ImageUtil.getImageViewById("buy"), //todo
-                NavigationTarget.LEARN);
-        
-        learnSubMenuItems = createSubmenu(
+                NavigationTarget.LEARN, true);
+
+        VBox learnSubMenuItems = createSubmenu(
                 createSubmenuNavigationButton(Res.get("academy.bisq"), NavigationTarget.BISQ_ACADEMY),
                 createSubmenuNavigationButton(Res.get("academy.bitcoin"), NavigationTarget.BITCOIN_ACADEMY),
                 createSubmenuNavigationButton(Res.get("academy.security"), NavigationTarget.SECURITY_ACADEMY),
@@ -97,17 +92,17 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         LeftNavButton discuss = createNavigationButton(Res.get("discuss"),
                 ImageUtil.getImageViewById("sell"), //todo
-                NavigationTarget.DISCUSS);
-        
+                NavigationTarget.DISCUSS, false);
+
         LeftNavButton connect = createNavigationButton(Res.get("connect"),
                 ImageUtil.getImageViewById("nav-support"), //todo
-                NavigationTarget.CONNECT);
-        
-        trade = createNavigationButton(Res.get("trade"),
-                ImageUtil.getImageViewById("nav-trade"),
-                NavigationTarget.TRADE);
+                NavigationTarget.CONNECT, false);
 
-        tradeSubMenuItems = createSubmenu(
+        LeftNavButton trade = createNavigationButton(Res.get("trade"),
+                ImageUtil.getImageViewById("nav-trade"),
+                NavigationTarget.TRADE, true);
+
+        VBox tradeSubMenuItems = createSubmenu(
                 createSubmenuNavigationButton(Res.get("satoshiSquare"), NavigationTarget.SATOSHI_SQUARE),
                 createSubmenuNavigationButton(Res.get("liquidSwap"), NavigationTarget.LIQUID_SWAP),
                 createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTI_SIG),
@@ -122,21 +117,21 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 */
 
         //todo lower prio menu add design
-        wallet = createNavigationButton(Res.get("wallet"),
+        LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
                 ImageUtil.getImageViewById("nav-wallet"),
-                NavigationTarget.WALLET_BITCOIN);
+                NavigationTarget.WALLET_BITCOIN, true);
 
-        walletSubMenuItems = createSubmenu(
+        VBox walletSubMenuItems = createSubmenu(
                 createSubmenuNavigationButton(Res.get("bitcoin.wallet"), NavigationTarget.WALLET_BITCOIN),
                 createSubmenuNavigationButton(Res.get("lbtc.wallet"), NavigationTarget.WALLET_LBTC)
         );
 
         LeftNavButton support = createNavigationButton(Res.get("support"),
                 ImageUtil.getImageViewById("nav-support"),
-                NavigationTarget.SUPPORT);
+                NavigationTarget.SUPPORT, false);
         LeftNavButton settings = createNavigationButton(Res.get("settings"),
                 ImageUtil.getImageViewById("nav-settings"),
-                NavigationTarget.SETTINGS);
+                NavigationTarget.SETTINGS, false);
         
          /*  dashBoard.setOnAction(() -> {
             controller.onNavigationTargetSelected(NavigationTarget.SOCIAL);
@@ -289,8 +284,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         root.setOnMouseExited(null);
     }
 
-    private LeftNavButton createNavigationButton(String title, ImageView icon, NavigationTarget navigationTarget) {
-        LeftNavButton button = new LeftNavButton(title, icon, toggleGroup, navigationTarget);
+    private LeftNavButton createNavigationButton(String title,
+                                                 ImageView icon,
+                                                 NavigationTarget navigationTarget,
+                                                 boolean hasSubmenu) {
+        LeftNavButton button = new LeftNavButton(title, icon, toggleGroup, navigationTarget, hasSubmenu);
         setupButtonHandler(navigationTarget, button);
         return button;
     }
@@ -298,6 +296,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private LeftNavSubButton createSubmenuNavigationButton(String title, NavigationTarget navigationTarget) {
         LeftNavSubButton button = new LeftNavSubButton(title, toggleGroup, navigationTarget);
         setupButtonHandler(navigationTarget, button);
+        VBox.setVgrow(button, Priority.ALWAYS);
         return button;
     }
     
@@ -305,6 +304,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         VBox submenu = new VBox(2);
         VBox.setMargin(submenu, new Insets(-10, 0, 0, 0));
         submenu.setPadding(new Insets(0, 0, 16, 0));
+        submenu.setMinHeight(0);
+        submenu.setPrefHeight(0);
         submenu.getChildren().setAll(items);
         
         return submenu;
@@ -330,12 +331,22 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         UIThread.runOnNextRenderFrame(() -> {
             double targetY = menuTop + selectedLeftNavButton.getBoundsInParent().getMinY();
             if (selectedLeftNavButton instanceof LeftNavSubButton) {
-                if (learnSubMenuItems.getChildren().contains(selectedLeftNavButton)) {
-                    targetY += learnSubMenuItems.getLayoutY();
-                } else if (tradeSubMenuItems.getChildren().contains(selectedLeftNavButton)) {
-                    targetY += tradeSubMenuItems.getLayoutY();   
-                } else if (walletSubMenuItems.getChildren().contains(selectedLeftNavButton)) {
-                    targetY += walletSubMenuItems.getLayoutY();
+                for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
+                    Node item = mainMenuItems.getChildren().get(i);
+                    if (item instanceof VBox submenu) {
+                        if (submenu.getChildren().contains(selectedLeftNavButton)) {
+                            targetY += submenu.getLayoutY();
+                            break;
+                        }
+                    }
+                }
+            } else {
+                int index = mainMenuItems.getChildren().indexOf(selectedLeftNavButton);
+                for (int i = 0; i < index; i++) {
+                    Node item = mainMenuItems.getChildren().get(i);
+                    if (item instanceof VBox submenu) {
+                        targetY -= submenu.getHeight();
+                    }
                 }
             }
             Transitions.animateNavigationButtonMarks(selectionMarker, selectedLeftNavButton.getHeight(), targetY);
@@ -346,29 +357,20 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private void maybeHighlightSubmenu() {
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
 
-        boolean isLearnSubmenuItemSelected = learnSubMenuItems.getChildren().contains(selectedLeftNavButton);
-        learn.setHighlighted(isLearnSubmenuItemSelected);
-        Layout.toggleStyleClass(
-                learnSubMenuItems,
-                "bisq-dark-bg",
-                isLearnSubmenuItemSelected || selectedLeftNavButton.navigationTarget == NavigationTarget.LEARN
-        );
-        
-        boolean isTradeSubmenuItemSelected = tradeSubMenuItems.getChildren().contains(selectedLeftNavButton);
-        trade.setHighlighted(isTradeSubmenuItemSelected);
-        Layout.toggleStyleClass(
-                tradeSubMenuItems,
-                "bisq-dark-bg",
-                isTradeSubmenuItemSelected || selectedLeftNavButton.navigationTarget == NavigationTarget.TRADE
-        );
-
-        boolean isWalletSubmenuItemSelected = walletSubMenuItems.getChildren().contains(selectedLeftNavButton);
-        wallet.setHighlighted(isWalletSubmenuItemSelected);
-        Layout.toggleStyleClass(
-                walletSubMenuItems,
-                "bisq-dark-bg",
-                isWalletSubmenuItemSelected || selectedLeftNavButton.navigationTarget == NavigationTarget.WALLET_BITCOIN
-        );
+        for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
+            Node item = mainMenuItems.getChildren().get(i);
+            if (item instanceof VBox submenu) {
+                LeftNavButton parentMenuItem = (LeftNavButton) mainMenuItems.getChildren().get(i - 1);
+                boolean isSubmenuActive = submenu.getChildren().contains(selectedLeftNavButton)
+                        || selectedLeftNavButton.navigationTarget == parentMenuItem.navigationTarget;
+                parentMenuItem.setHighlighted(isSubmenuActive);
+                Layout.toggleStyleClass(submenu, "bisq-dark-bg", isSubmenuActive);
+                Transitions.animateHeight(
+                        submenu,
+                        isSubmenuActive ? (LeftNavSubButton.HEIGHT + 2) * submenu.getChildren().size() : 0
+                );
+            }
+        }
     }
 
     private static class NetworkInfoBox extends HBox {
