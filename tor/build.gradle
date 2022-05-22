@@ -3,8 +3,6 @@ plugins {
 }
 
 dependencies {
-    api platform(project(':platforms:network-platform'))
-
     implementation libs.google.guava
     implementation libs.apache.commons.compress
 

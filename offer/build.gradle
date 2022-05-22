@@ -4,8 +4,6 @@ plugins {
 }
 
 dependencies {
-    api platform(project(':platforms:network-platform'))
-
     implementation project(':persistence')
     implementation project(':security')
     implementation project(':identity')

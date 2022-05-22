@@ -4,8 +4,6 @@ plugins {
 }
 
 dependencies {
-    api platform(project(':platforms:network-platform'))
-
     implementation project(':tor')
     implementation project(':i2p')
     implementation project(':security')

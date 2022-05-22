@@ -16,8 +16,6 @@ run {
 }
 
 dependencies {
-    api platform(project(':platforms:network-platform'))
-
     implementation project(':i18n')
     implementation project(':persistence')
     implementation project(':security')
