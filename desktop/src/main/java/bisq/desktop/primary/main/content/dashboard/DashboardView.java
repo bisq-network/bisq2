@@ -88,7 +88,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         Label contentLabel = new Label(content);
         contentLabel.getStyleClass().addAll("bisq-text-6", "wrap-text");
         contentLabel.setAlignment(Pos.TOP_LEFT);
-        contentLabel.setMinHeight(58);
+        contentLabel.setMinHeight(54);
         contentLabel.setMaxWidth(400);
         
         Button button = new Button(buttonLabel);
@@ -98,7 +98,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
 
         VBox box = new VBox(8, headlineLabel, contentLabel, button);
         box.getStyleClass().add("bisq-box-2");
-        box.setPadding(new Insets(32, 48, 44, 48));
+        box.setPadding(new Insets(30, 48, 44, 48));
         
         return box;
     }

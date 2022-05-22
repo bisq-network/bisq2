@@ -29,6 +29,6 @@ public class TradeModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TRADE_OVERVIEW_LIST;
+        return NavigationTarget.TRADE_OVERVIEW_GRID;
     }
 }
