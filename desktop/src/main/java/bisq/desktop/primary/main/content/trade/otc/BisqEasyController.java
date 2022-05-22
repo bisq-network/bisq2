@@ -30,10 +30,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
 @Slf4j
-public class OtcController extends ChatController<OtcView, OtcModel> implements Controller {
+public class BisqEasyController extends ChatController<BisqEasyView, BisqEasyModel> implements Controller {
     private PublicTradeChannelSelection publicTradeChannelSelection;
 
-    public OtcController(DefaultApplicationService applicationService) {
+    public BisqEasyController(DefaultApplicationService applicationService) {
         super(applicationService, false);
     }
 
@@ -58,13 +58,13 @@ public class OtcController extends ChatController<OtcView, OtcModel> implements 
     }
 
     @Override
-    public OtcModel getChatModel(boolean isDiscussionsChat) {
-        return new OtcModel(isDiscussionsChat);
+    public BisqEasyModel getChatModel(boolean isDiscussionsChat) {
+        return new BisqEasyModel(isDiscussionsChat);
     }
 
     @Override
-    public OtcView getChatView() {
-        return new OtcView(model,
+    public BisqEasyView getChatView() {
+        return new BisqEasyView(model,
                 this,
                 publicTradeChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),

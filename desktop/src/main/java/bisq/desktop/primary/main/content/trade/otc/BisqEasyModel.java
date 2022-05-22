@@ -23,10 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class OtcModel extends ChatModel {
+public class BisqEasyModel extends ChatModel {
     private final boolean isDiscussionsChat;
 
-    public OtcModel(boolean isDiscussionsChat) {
+    public BisqEasyModel(boolean isDiscussionsChat) {
         this.isDiscussionsChat = isDiscussionsChat;
     }
 }

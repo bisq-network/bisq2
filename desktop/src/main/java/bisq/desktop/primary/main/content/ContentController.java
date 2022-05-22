@@ -34,7 +34,7 @@ import bisq.desktop.primary.main.content.events.EventsController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
 import bisq.desktop.primary.main.content.trade.TradeController;
 import bisq.desktop.primary.main.content.trade.bsqSwap.BsqSwapController;
-import bisq.desktop.primary.main.content.trade.otc.OtcController;
+import bisq.desktop.primary.main.content.trade.otc.BisqEasyController;
 import bisq.desktop.primary.main.content.trade.lightning.LightningController;
 import bisq.desktop.primary.main.content.trade.liquidSwap.LiquidSwapController;
 import bisq.desktop.primary.main.content.trade.multiSig.MultiSigController;
@@ -106,8 +106,8 @@ public class ContentController extends NavigationController {
             case TRADE_OVERVIEW -> {
                 return Optional.of(new TradeController(applicationService));
             }
-            case OTC -> {
-                return Optional.of(new OtcController(applicationService));
+            case BISQ_EASY -> {
+                return Optional.of(new BisqEasyController(applicationService));
             }
             case LIQUID_SWAP -> {
                 return Optional.of(new LiquidSwapController(applicationService));

@@ -23,15 +23,15 @@ import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OtcView extends ChatView {
-    public OtcView(OtcModel model,
-                   OtcController controller,
-                   Pane marketChannelSelection,
-                   Pane privateChannelSelection,
-                   Pane chatMessagesComponent,
-                   Pane notificationsSettings,
-                   Pane channelInfo,
-                   FilterBox filterBox) {
+public class BisqEasyView extends ChatView {
+    public BisqEasyView(BisqEasyModel model,
+                        BisqEasyController controller,
+                        Pane marketChannelSelection,
+                        Pane privateChannelSelection,
+                        Pane chatMessagesComponent,
+                        Pane notificationsSettings,
+                        Pane channelInfo,
+                        FilterBox filterBox) {
         super(model,
                 controller,
                 marketChannelSelection,

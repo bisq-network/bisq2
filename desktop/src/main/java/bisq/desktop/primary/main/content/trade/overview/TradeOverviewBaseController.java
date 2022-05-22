@@ -37,7 +37,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
     public void onActivate() {
         model.getListItems().setAll(
                 new ProtocolListItem(SwapProtocol.Type.SATOSHI_SQUARE,
-                        NavigationTarget.OTC,
+                        NavigationTarget.BISQ_EASY,
                         Res.get("trade.protocols.basic.info.SATOSHI_SQUARE"),
                         Res.get("trade.protocols.markets.SATOSHI_SQUARE"),
                         Res.get("trade.protocols.markets.info.SATOSHI_SQUARE"),
