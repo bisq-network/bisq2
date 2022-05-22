@@ -50,7 +50,7 @@ public class RestApplication extends ResourceConfig {
         Runtime.getRuntime().addShutdownHook(new Thread(RestApplication::stopServer));
 
         System.out.println(
-                String.format("Server started at %1$s.%nStop the application using CTRL+C", BASE_URI));
+                String.format("Server started at %1$s", BASE_URI));
 
         // block and wait shut down signal, like CTRL+C
         Thread.currentThread().join();

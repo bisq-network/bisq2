@@ -99,7 +99,8 @@ public class ChatApi {
     public Identity getOrCreateIdentity(@PathParam("domainId") String domainId) {
         return identityService.getOrCreateIdentity(domainId).join();
     }
-
+//  bisq.identity.protobuf.Identity
+    
 //    @GET
 //    @Path("create-user-profile/{domainId}/{nickName}")
 //    public ChatUserIdentity createUserProfile(@PathParam("domainId") String domainId,
