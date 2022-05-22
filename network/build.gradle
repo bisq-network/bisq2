@@ -16,6 +16,6 @@ dependencies {
     implementation libs.google.guava
     implementation libs.typesafe.config
 
-    implementation 'com.github.chimp1984:jsocks'
-    implementation 'org.apache.httpcomponents:httpclient'
+    implementation libs.apache.httpcomponents.httpclient
+    implementation libs.chimp.jsocks
 }

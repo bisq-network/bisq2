@@ -3,15 +3,9 @@ plugins {
     id 'bisq.protobuf'
 }
 
-ext {
-    jsonrpc4jVersion = '1.6.0.bisq.2'
-    jacksonVersion = '2.13.2'
-    jeroMqVersion = '0.5.2'
-}
-
 dependencies {
     implementation("bisq:common")
-    implementation("com.github.bisq-network:jsonrpc4j:$jsonrpc4jVersion") {
+    implementation(libs.bisq.jsonrpc4j) {
         exclude(module: 'base64')
         exclude(module: 'httpcore-nio')
     }

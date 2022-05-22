@@ -22,7 +22,7 @@ dependencies {
     implementation project(':oracle')
     implementation project(':presentation')
 
-    implementation 'com.github.chimp1984:jsocks'
+    implementation libs.chimp.jsocks
     implementation libs.google.gson
     implementation libs.google.guava
     implementation libs.typesafe.config

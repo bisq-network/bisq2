@@ -22,11 +22,6 @@ application {
 apply plugin: "org.springframework.boot"
 apply plugin: 'io.spring.dependency-management'
 
-ext {
-    jacksonVersion = '2.13.2'
-    springWsVersion = '5.3.19'
-    springBootVersion = '2.6.6'
-}
 dependencies {
     api platform(project(':platforms:common-platform'))
 
@@ -49,16 +44,9 @@ dependencies {
     implementation("bisq.wallets:api")
 
     implementation libs.google.guava
+    implementation libs.bundles.jackson
+    implementation libs.protobuf.java.util
 
-    implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
-
-    implementation 'com.google.protobuf:protobuf-java-util:3.20.0'
-    
-    implementation 'org.springframework.boot:spring-boot-starter-web:2.5.6'
-    implementation 'io.springfox:springfox-boot-starter:3.0.0'
-
-    implementation 'io.springfox:springfox-swagger2:3.0.0'
-    implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+    implementation libs.spring.boot.starter.web
+    implementation libs.bundles.springfox.libs
 }
