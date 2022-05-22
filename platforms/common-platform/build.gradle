@@ -8,20 +8,6 @@ plugins {
 // Note: this doesn't support constraints on plugin versions
 dependencies {
     constraints {
-        /////////////////////////////////////////////////////////////////////////////////
-        // Typesafe configuration dependency constraints
-        /////////////////////////////////////////////////////////////////////////////////
-        api(libs.typesafe.config)
-
-        /////////////////////////////////////////////////////////////////////////////////
-        // Protobuf dependency constraints
-        /////////////////////////////////////////////////////////////////////////////////
-        api(libs.protobuf.java)
-
-        /////////////////////////////////////////////////////////////////////////////////
-        // Guava and transitive dependency constraints
-        /////////////////////////////////////////////////////////////////////////////////
-        api(libs.google.guava)
         // Declaring the guava dependency above will bring in the transitive dependencies below.
         // If some other dependency brings in other versions of the transitive dependencies below,
         // they should be excluded.
@@ -43,21 +29,5 @@ dependencies {
         api('com.google.guava:listenablefuture') {
             version { require '9999.0-empty-to-avoid-conflict-with-guava' }
         }
-
-        /////////////////////////////////////////////////////////////////////////////////
-        // Gson dependency constraints
-        /////////////////////////////////////////////////////////////////////////////////
-        api(libs.google.gson)
-
-        /////////////////////////////////////////////////////////////////////////////////
-        // Logging dependency constraints
-        /////////////////////////////////////////////////////////////////////////////////
-        api(libs.slf4j.api)
-        api(libs.logback.core)
-        api(libs.logback.classic)
-
-        // The runtime configuration should be used to declare
-        // constraints or dependencies which are visible at runtime.
-        runtime(libs.slf4j.api)
     }
 }
