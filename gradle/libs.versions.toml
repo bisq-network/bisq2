@@ -38,8 +38,8 @@ logback-lib = { strictly = '1.2.11' }
 lombok-lib = { strictly = '1.18.22' }
 openjfx-plugin = { strictly = '0.0.12' }
 
-protobuf-plugin = { strictly = '0.8.18' }
 protobuf-java-lib = { strictly = '3.19.4' }
+protobuf-gradle-plugin-lib = { strictly = '0.8.18' }
 
 shadow-plugin = { strictly = '7.1.2' }
 slf4j-lib = { strictly = '1.7.36' }
@@ -97,6 +97,7 @@ logback-classic = { module = 'ch.qos.logback:logback-classic', version.ref = 'lo
 lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok-lib' }
 
 protobuf-java = { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java-lib' }
+protobuf-gradle-plugin = { module = 'gradle.plugin.com.google.protobuf:protobuf-gradle-plugin', version.ref = 'protobuf-gradle-plugin-lib' }
 protobuf-java-util = { module = 'com.google.protobuf:protobuf-java-util', version.ref = 'protobuf-java-lib' }
 
 slf4j-api = { module = 'org.slf4j:slf4j-api', version.ref = 'slf4j-lib' }
@@ -126,5 +127,4 @@ springfox-libs = ['springfox-boot-starter', 'springfox-swagger2', 'springfox-swa
 kotlindsl = { id = 'org.gradle.kotlin.kotlin-dsl', version.ref = 'kotlindsl-plugin' }
 jpackage = { id = 'org.panteleyev.jpackageplugin', version.ref = 'jpackage-plugin' }
 openjfx = { id = 'org.openjfx.javafxplugin', version.ref = 'openjfx-plugin' }
-protobuf = { id = 'com.google.protobuf', version.ref = 'protobuf-plugin' }
 shadow = { id = 'com.github.johnrengelman.shadow', version.ref = 'shadow-plugin' }
