@@ -66,7 +66,6 @@ public class ExchangeController extends ChatController<ExchangeView, ExchangeMod
     public ExchangeView getChatView() {
         return new ExchangeView(model,
                 this,
-                userProfileSelection.getRoot(),
                 publicTradeChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),

@@ -48,7 +48,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     protected final ChannelInfo channelInfo;
     protected final NotificationsSettings notificationsSettings;
     protected final QuotedMessageBlock quotedMessageBlock;
-    protected final UserProfileSelection userProfileSelection;
     protected final ChatMessagesComponent chatMessagesComponent;
     protected Pin selectedChannelPin;
     protected Subscription notificationSettingSubscription;
@@ -58,8 +57,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
         chatService = applicationService.getChatService();
         chatUserService = applicationService.getChatUserService();
         reputationService = applicationService.getReputationService();
-
-        userProfileSelection = new UserProfileSelection(chatUserService);
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
         chatMessagesComponent = new ChatMessagesComponent(chatService, chatUserService, reputationService, isDiscussionsChat);
         channelInfo = new ChannelInfo(chatService);

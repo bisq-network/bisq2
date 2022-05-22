@@ -28,6 +28,7 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
 
     public TopPanelView(TopPanelModel model,
                         TopPanelController controller,
+                        Pane userProfileSelection,
                         Pane marketPriceBox) {
         super(new HBox(), model, controller);
 
@@ -37,7 +38,9 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
         root.setStyle("-fx-background-color: -bisq-bg-dark;");
         root.setPadding(new Insets(20, 67, 0, 67));
         marketPriceBox.setPadding(new Insets(-4.5, 0, 0, 0));
-        root.getChildren().addAll(Spacer.fillHBox(), marketPriceBox);
+        HBox.setMargin(userProfileSelection, new Insets(-17, 0, 0, 0));
+        userProfileSelection.setPrefWidth(220);
+        root.getChildren().addAll(Spacer.fillHBox(),/* marketPriceBox,*/ userProfileSelection);
     }
 
     @Override

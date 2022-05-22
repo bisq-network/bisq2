@@ -34,7 +34,7 @@ import java.util.Optional;
 
 @Slf4j
 @Getter
-public class ChatModel implements Model {
+public abstract class ChatModel implements Model {
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
     private final StringProperty selectedChannelAsString = new SimpleStringProperty("");

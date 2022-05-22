@@ -173,7 +173,7 @@ public class UserProfileSelection {
                     imageView = new ImageView();
                     imageView.setFitWidth(50);
                     imageView.setFitHeight(50);
-                    setStyle("-fx-pref-height: 50; -fx-padding: 0 0 0 0");
+                    setStyle("-fx-pref-height: 50; -fx-padding: 0 0 0 0;");
 
                     hBox = new HBox();
                     hBox.getChildren().addAll(imageView, label);

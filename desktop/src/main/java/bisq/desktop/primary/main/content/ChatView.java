@@ -42,10 +42,9 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class ChatView extends View<SplitPane, ChatModel, ChatController> implements TabViewChild {
+public abstract class ChatView extends View<SplitPane, ChatModel, ChatController> implements TabViewChild {
     private final Label selectedChannelLabel;
     private final Button searchButton, notificationsButton, infoButton, closeButton;
-    private final Pane userProfileSelection;
     private final VBox left, sideBar;
     private final TextField filterBoxRoot;
     private final Pane notificationsSettings;
@@ -59,7 +58,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> impleme
 
     public ChatView(ChatModel model,
                     ChatController controller,
-                    Pane userProfileSelection,
                     Pane marketChannelSelection,
                     Pane privateChannelSelection,
                     Pane chatMessagesComponent,
@@ -70,7 +68,6 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> impleme
 
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
-        this.userProfileSelection = userProfileSelection;
 
         // Left 
 
@@ -78,7 +75,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> impleme
         createOfferButton.setDefaultButton(true);
         createOfferButton.setPrefHeight(40);
         VBox.setMargin(createOfferButton, new Insets(0, 0, 1, 0));
-        left = Layout.vBoxWith(userProfileSelection,
+        left = Layout.vBoxWith(
                 marketChannelSelection,
                 privateChannelSelection,
                 Spacer.fillVBox(),

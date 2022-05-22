@@ -174,7 +174,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, learn, learnSubMenuItems, discuss, connect, trade, tradeSubMenuItems, /*markets,
+        mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems,  discuss, learn, learnSubMenuItems, connect,  /*markets,
                 wallet, walletSubMenuItems, support,*/ settings);
         mainMenuItems.setLayoutY(menuTop);
         root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, mainMenuItems, expandIcon, collapseIcon, networkInfoBox);

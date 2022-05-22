@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ExchangeView extends ChatView {
     public ExchangeView(ExchangeModel model,
                         ExchangeController controller,
-                        Pane userProfileSelection,
                         Pane marketChannelSelection,
                         Pane privateChannelSelection,
                         Pane chatMessagesComponent,
@@ -35,7 +34,6 @@ public class ExchangeView extends ChatView {
                         FilterBox filterBox) {
         super(model,
                 controller,
-                userProfileSelection,
                 marketChannelSelection,
                 privateChannelSelection,
                 chatMessagesComponent,
