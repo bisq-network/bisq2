@@ -23,7 +23,6 @@ apply plugin: "org.springframework.boot"
 apply plugin: 'io.spring.dependency-management'
 
 dependencies {
-    implementation project(':common')
     implementation project(':persistence')
     implementation project(':i18n')
     implementation project(':security')

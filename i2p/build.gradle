@@ -4,8 +4,6 @@ plugins {
 }
 
 dependencies {
-    implementation project(':common')
-
     implementation libs.google.guava
 
     // Exclude httpclient transitive dependency because it may override

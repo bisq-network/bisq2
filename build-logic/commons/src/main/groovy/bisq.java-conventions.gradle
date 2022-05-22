@@ -1,0 +1,32 @@
+plugins {
+    id 'java-library'
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://jitpack.io" }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+
+    implementation libs.slf4j.api
+    implementation libs.logback.core
+    implementation libs.logback.classic
+
+    testAnnotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+    testImplementation libs.junit.jupiter
+}
+
+test {
+    useJUnitPlatform()
+    exclude '**/**Integration*'
+}

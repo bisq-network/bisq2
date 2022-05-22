@@ -4,7 +4,6 @@ plugins {
 }
 
 dependencies {
-    implementation project(':common')
     implementation project(':network')
     implementation project(':account')
     implementation project(':contract')

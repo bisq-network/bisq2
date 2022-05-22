@@ -4,7 +4,6 @@ plugins {
 }
 
 dependencies {
-    implementation project(':common')
     implementation project(':persistence')
     implementation project(':identity')
     implementation project(':account')

@@ -4,7 +4,6 @@ plugins {
 }
 
 dependencies {
-    implementation("bisq:common")
     implementation("bisq:persistence")
 
     implementation project(':core')
