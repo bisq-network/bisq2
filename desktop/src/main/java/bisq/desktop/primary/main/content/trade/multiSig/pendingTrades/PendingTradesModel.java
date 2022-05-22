@@ -15,27 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.onboarding;
+package bisq.desktop.primary.main.content.trade.multiSig.pendingTrades;
 
-import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.social.user.ChatUserService;
+import bisq.desktop.common.view.Model;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class OnboardingModel extends NavigationModel {
-    private final ChatUserService chatUserService;
+@Setter
+public class PendingTradesModel implements Model {
+    final ObservableList<PendingTradeListItem> listItems = FXCollections.observableArrayList();
+    final FilteredList<PendingTradeListItem> filteredItems = new FilteredList<>(listItems);
+    final SortedList<PendingTradeListItem> sortedItems = new SortedList<>(filteredItems);
 
-    public OnboardingModel(ChatUserService chatUserService) {
-        this.chatUserService = chatUserService;
-    }
+    public PendingTradesModel() {
 
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return chatUserService.isDefaultUserProfileMissing() ?
-                NavigationTarget.INIT_USER_PROFILE :
-                NavigationTarget.CHAT_SQUARE;
     }
 }

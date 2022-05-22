@@ -15,20 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education.bisq;
+package bisq.desktop.primary.main.content.trade.lightning;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-public class BisqAcademyController implements Controller {
+public class LightningController implements Controller {
+    private final LightningModel model;
     @Getter
-    private final BisqAcademyView view;
-    private final BisqAcademyModel model;
+    private final LightningView view;
 
-    public BisqAcademyController(DefaultApplicationService applicationService) {
-        model = new BisqAcademyModel();
-        view = new BisqAcademyView(model, this);
+    public LightningController(DefaultApplicationService applicationService) {
+        model = new LightningModel();
+        view = new LightningView(model, this);
     }
 
     @Override

@@ -55,7 +55,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
                 Res.get("dashboard.explore.headline"),
                 Res.get("dashboard.explore.content"),
                 Res.get("dashboard.explore.button"),
-                () -> Navigation.navigateTo(NavigationTarget.SATOSHI_SQUARE)
+                () -> Navigation.navigateTo(NavigationTarget.CHAT_SQUARE)
         );
         
         VBox profileBox = getWidgetBox(

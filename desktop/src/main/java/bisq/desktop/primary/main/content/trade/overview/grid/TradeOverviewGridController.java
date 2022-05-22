@@ -15,27 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education.bisq;
+package bisq.desktop.primary.main.content.trade.overview.grid;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseController;
 import lombok.Getter;
 
-public class BisqAcademyController implements Controller {
+public class TradeOverviewGridController extends TradeOverviewBaseController<TradeOverviewGridModel> {
     @Getter
-    private final BisqAcademyView view;
-    private final BisqAcademyModel model;
+    private final TradeOverviewGridView view;
 
-    public BisqAcademyController(DefaultApplicationService applicationService) {
-        model = new BisqAcademyModel();
-        view = new BisqAcademyView(model, this);
+    public TradeOverviewGridController(DefaultApplicationService applicationService) {
+        super(new TradeOverviewGridModel());
+
+        this.view = new TradeOverviewGridView(model, this);
     }
 
     @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
-    }
+    public void onDeactivate() {}
 }

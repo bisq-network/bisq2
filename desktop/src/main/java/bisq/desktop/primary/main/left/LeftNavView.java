@@ -79,7 +79,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         LeftNavButton learn = createNavigationButton(Res.get("learn"),
                 ImageUtil.getImageViewById("buy"), //todo
-                NavigationTarget.LEARN, true);
+                NavigationTarget.EDUCATION, true);
 
         VBox learnSubMenuItems = createSubmenu(
                 createSubmenuNavigationButton(Res.get("academy.bisq"), NavigationTarget.BISQ_ACADEMY),
@@ -96,14 +96,14 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         LeftNavButton connect = createNavigationButton(Res.get("connect"),
                 ImageUtil.getImageViewById("nav-support"), //todo
-                NavigationTarget.CONNECT, false);
+                NavigationTarget.EVENTS, false);
 
         LeftNavButton trade = createNavigationButton(Res.get("trade"),
                 ImageUtil.getImageViewById("nav-trade"),
                 NavigationTarget.TRADE, true);
 
         VBox tradeSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("satoshiSquare"), NavigationTarget.SATOSHI_SQUARE),
+                createSubmenuNavigationButton(Res.get("satoshiSquare"), NavigationTarget.CHAT_SQUARE),
                 createSubmenuNavigationButton(Res.get("liquidSwap"), NavigationTarget.LIQUID_SWAP),
                 createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTI_SIG),
                 createSubmenuNavigationButton(Res.get("xmrSwap"), NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP),

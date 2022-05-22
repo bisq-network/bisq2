@@ -27,7 +27,7 @@ public class EducationController implements Controller {
     private final EducationModel model;
 
     public EducationController(DefaultApplicationService applicationService) {
-       model= new EducationModel();
+        model = new EducationModel();
         view = new EducationView(model, this);
     }
 

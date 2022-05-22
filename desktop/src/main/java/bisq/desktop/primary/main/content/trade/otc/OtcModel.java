@@ -15,27 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education.bisq;
+package bisq.desktop.primary.main.content.trade.otc;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.primary.main.content.ChatModel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class BisqAcademyController implements Controller {
-    @Getter
-    private final BisqAcademyView view;
-    private final BisqAcademyModel model;
+@Slf4j
+@Getter
+public class OtcModel extends ChatModel {
+    private final boolean isDiscussionsChat;
 
-    public BisqAcademyController(DefaultApplicationService applicationService) {
-        model = new BisqAcademyModel();
-        view = new BisqAcademyView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
+    public OtcModel(boolean isDiscussionsChat) {
+        this.isDiscussionsChat = isDiscussionsChat;
     }
 }

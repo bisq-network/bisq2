@@ -15,27 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.onboarding;
+package bisq.desktop.primary.main.content.trade.multiSig.closedTrades;
 
-import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.social.user.ChatUserService;
+import bisq.desktop.common.view.Model;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class OnboardingModel extends NavigationModel {
-    private final ChatUserService chatUserService;
+@Setter
+public class ClosedTradesModel implements Model {
 
-    public OnboardingModel(ChatUserService chatUserService) {
-        this.chatUserService = chatUserService;
-    }
+    final ObservableList<ClosedTradeListItem> listItems = FXCollections.observableArrayList();
+    final FilteredList<ClosedTradeListItem> filteredItems = new FilteredList<>(listItems);
+    final SortedList<ClosedTradeListItem> sortedItems = new SortedList<>(filteredItems);
 
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return chatUserService.isDefaultUserProfileMissing() ?
-                NavigationTarget.INIT_USER_PROFILE :
-                NavigationTarget.CHAT_SQUARE;
+    public ClosedTradesModel() {
     }
 }

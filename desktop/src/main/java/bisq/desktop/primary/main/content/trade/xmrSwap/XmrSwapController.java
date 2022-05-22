@@ -15,20 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education.bisq;
+package bisq.desktop.primary.main.content.trade.xmrSwap;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-public class BisqAcademyController implements Controller {
+public class XmrSwapController implements Controller {
+    private final XmrSwapModel model;
     @Getter
-    private final BisqAcademyView view;
-    private final BisqAcademyModel model;
+    private final XmrSwapView view;
 
-    public BisqAcademyController(DefaultApplicationService applicationService) {
-        model = new BisqAcademyModel();
-        view = new BisqAcademyView(model, this);
+    public XmrSwapController(DefaultApplicationService applicationService) {
+        model = new XmrSwapModel();
+        view = new XmrSwapView(model, this);
     }
 
     @Override
