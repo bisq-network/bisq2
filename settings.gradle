@@ -38,15 +38,3 @@ include 'tools'
 include 'tor'
 
 includeBuild('wallets')
-
-import org.gradle.util.GradleVersion
-
-def minGradleVersion = GradleVersion.version("7.4.1")
-if (GradleVersion.current() >= minGradleVersion) {
-    println "Building ${rootProject.name} module with ${GradleVersion.current()}."
-} else {
-    throw new GradleException(
-            "${GradleVersion.current()} is required to build ${rootProject.name}.")
-}
-
-
