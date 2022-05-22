@@ -134,11 +134,9 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         box.setCursor(Cursor.HAND);
         box.setOnMouseClicked(e -> controller.onSelect(protocol));
 
-        Button button = new Button(Res.get("hide"));
+        Button button = new Button(Res.get("select"));
         button.getStyleClass().setAll("bisq-transparent-button", "bisq-text-3");
-        button.setOnAction(e -> {
-            log.info("Hide clicked"); // TODO: implement hide
-        });
+        button.setOnAction(e -> controller.onSelect(protocol));
         StackPane.setAlignment(button, Pos.TOP_RIGHT);
         StackPane.setMargin(button, new Insets(20, 14, 0, 0));
         pane.getChildren().add(button);
