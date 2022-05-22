@@ -4,8 +4,6 @@ plugins {
 }
 
 dependencies {
-    api platform(project(':platforms:common-platform'))
-
     implementation libs.google.guava
     implementation libs.typesafe.config
     implementation libs.annotations

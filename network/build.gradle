@@ -4,7 +4,6 @@ plugins {
 }
 
 dependencies {
-    api platform(project(':platforms:common-platform'))
     api platform(project(':platforms:network-platform'))
 
     implementation project(':common')

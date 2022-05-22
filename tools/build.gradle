@@ -3,8 +3,6 @@ plugins {
 }
 
 dependencies {
-    api platform(project(':platforms:common-platform'))
-
     implementation project(':common')
     implementation project(':persistence')
     implementation project(':i18n')

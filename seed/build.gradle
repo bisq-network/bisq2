@@ -16,8 +16,6 @@ run {
 }
 
 dependencies {
-    api platform(project(':platforms:common-platform'))
-
     implementation project(':application')
 
     implementation libs.google.guava
