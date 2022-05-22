@@ -18,12 +18,5 @@ dependencies {
         api('org.apache.httpcomponents:httpclient') {
             version { require '4.5.13' }
         }
-
-        /////////////////////////////////////////////////////////////////////////////////
-        // Jsocks dependency constraint
-        /////////////////////////////////////////////////////////////////////////////////
-        api('com.github.chimp1984:jsocks') {
-            version { require '567e1cd6' }
-        }
     }
 }
