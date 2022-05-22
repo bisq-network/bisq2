@@ -22,21 +22,21 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.bsqSwap.BsqSwapController;
+import bisq.desktop.primary.main.content.dashboard.DashboardController;
 import bisq.desktop.primary.main.content.discussion.DiscussionsController;
+import bisq.desktop.primary.main.content.education.EducationController;
 import bisq.desktop.primary.main.content.education.bisq.BisqAcademyController;
 import bisq.desktop.primary.main.content.education.bitcoin.BitcoinAcademyController;
 import bisq.desktop.primary.main.content.education.openSource.OpenSourceAcademyController;
-import bisq.desktop.primary.main.content.education.EducationController;
 import bisq.desktop.primary.main.content.education.privacy.PrivacyAcademyController;
 import bisq.desktop.primary.main.content.education.security.SecurityAcademyController;
 import bisq.desktop.primary.main.content.education.wallets.WalletsAcademyController;
 import bisq.desktop.primary.main.content.events.EventsController;
-import bisq.desktop.primary.main.content.dashboard.DashboardController;
 import bisq.desktop.primary.main.content.lightning.LightningController;
 import bisq.desktop.primary.main.content.liquid.LiquidSwapController;
 import bisq.desktop.primary.main.content.markets.MarketsController;
 import bisq.desktop.primary.main.content.multiSig.MultiSigController;
-import bisq.desktop.primary.main.content.satoshiSquare.SatoshiSquareController;
+import bisq.desktop.primary.main.content.exchange.ExchangeController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
 import bisq.desktop.primary.main.content.support.SupportController;
 import bisq.desktop.primary.main.content.trade.TradeController;
@@ -109,7 +109,7 @@ public class ContentController extends NavigationController {
                 return Optional.of(new TradeController(applicationService));
             }
             case SATOSHI_SQUARE -> {
-                return Optional.of(new SatoshiSquareController(applicationService));
+                return Optional.of(new ExchangeController(applicationService));
             }
             case LIQUID_SWAP -> {
                 return Optional.of(new LiquidSwapController(applicationService));

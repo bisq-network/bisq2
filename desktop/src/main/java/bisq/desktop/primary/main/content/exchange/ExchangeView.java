@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.satoshiSquare.exchange;
+package bisq.desktop.primary.main.content.exchange;
 
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.ChatView;
