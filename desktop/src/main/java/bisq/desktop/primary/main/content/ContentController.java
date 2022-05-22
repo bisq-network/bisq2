@@ -21,28 +21,26 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.bsqSwap.BsqSwapController;
+import bisq.desktop.primary.main.content.dashboard.DashboardController;
 import bisq.desktop.primary.main.content.discussion.DiscussionsController;
+import bisq.desktop.primary.main.content.education.EducationController;
 import bisq.desktop.primary.main.content.education.bisq.BisqAcademyController;
 import bisq.desktop.primary.main.content.education.bitcoin.BitcoinAcademyController;
 import bisq.desktop.primary.main.content.education.openSource.OpenSourceAcademyController;
-import bisq.desktop.primary.main.content.education.EducationController;
 import bisq.desktop.primary.main.content.education.privacy.PrivacyAcademyController;
 import bisq.desktop.primary.main.content.education.security.SecurityAcademyController;
 import bisq.desktop.primary.main.content.education.wallets.WalletsAcademyController;
 import bisq.desktop.primary.main.content.events.EventsController;
-import bisq.desktop.primary.main.content.dashboard.DashboardController;
-import bisq.desktop.primary.main.content.lightning.LightningController;
-import bisq.desktop.primary.main.content.liquid.LiquidSwapController;
-import bisq.desktop.primary.main.content.markets.MarketsController;
-import bisq.desktop.primary.main.content.multiSig.MultiSigController;
-import bisq.desktop.primary.main.content.satoshiSquare.SatoshiSquareController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
-import bisq.desktop.primary.main.content.support.SupportController;
 import bisq.desktop.primary.main.content.trade.TradeController;
+import bisq.desktop.primary.main.content.trade.bsqSwap.BsqSwapController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.BisqEasyController;
+import bisq.desktop.primary.main.content.trade.lightning.LightningController;
+import bisq.desktop.primary.main.content.trade.liquidSwap.LiquidSwapController;
+import bisq.desktop.primary.main.content.trade.multiSig.MultiSigController;
+import bisq.desktop.primary.main.content.trade.xmrSwap.XmrSwapController;
 import bisq.desktop.primary.main.content.wallet.BitcoinWalletController;
 import bisq.desktop.primary.main.content.wallet.LBtcWalletController;
-import bisq.desktop.primary.main.content.xmr.XmrSwapController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -81,7 +79,7 @@ public class ContentController extends NavigationController {
             case DISCUSS -> {
                 return Optional.of(new DiscussionsController(applicationService));
             }
-            case LEARN -> {
+            case EDUCATION -> {
                 return Optional.of(new EducationController(applicationService));
             }
             case BISQ_ACADEMY -> {
@@ -102,14 +100,14 @@ public class ContentController extends NavigationController {
             case OPEN_SOURCE_ACADEMY -> {
                 return Optional.of(new OpenSourceAcademyController(applicationService));
             }
-            case CONNECT -> {
+            case EVENTS -> {
                 return Optional.of(new EventsController(applicationService));
             }
-            case TRADE -> {
+            case TRADE_OVERVIEW -> {
                 return Optional.of(new TradeController(applicationService));
             }
-            case SATOSHI_SQUARE -> {
-                return Optional.of(new SatoshiSquareController(applicationService));
+            case BISQ_EASY -> {
+                return Optional.of(new BisqEasyController(applicationService));
             }
             case LIQUID_SWAP -> {
                 return Optional.of(new LiquidSwapController(applicationService));
@@ -126,17 +124,11 @@ public class ContentController extends NavigationController {
             case LN_3_PARTY -> {
                 return Optional.of(new LightningController(applicationService));
             }
-            case MARKETS -> {
-                return Optional.of(new MarketsController(applicationService));
-            }
             case WALLET_BITCOIN -> {
                 return Optional.of(new BitcoinWalletController(applicationService));
             }
             case WALLET_LBTC -> {
                 return Optional.of(new LBtcWalletController(applicationService));
-            }
-            case SUPPORT -> {
-                return Optional.of(new SupportController(applicationService));
             }
             case SETTINGS -> {
                 return Optional.of(new SettingsController(applicationService));

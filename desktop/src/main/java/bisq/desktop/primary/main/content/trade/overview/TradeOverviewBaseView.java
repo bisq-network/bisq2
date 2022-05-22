@@ -23,7 +23,7 @@ import javafx.scene.layout.Region;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class TradeOverviewBaseView<R extends Region, M extends TradeOverviewBaseModel, C extends TradeOverviewBaseController> extends View<R, M, C> 
+public abstract class TradeOverviewBaseView<R extends Region, M extends TradeOverviewBaseModel, C extends TradeOverviewBaseController<?>> extends View<R, M, C> 
         implements TabViewChild {
 
     public TradeOverviewBaseView(R root, M model, C controller) {

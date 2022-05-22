@@ -303,6 +303,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             items = comboBox.getItems();
 
             textInputBox = new TextInputBox(description, prompt);
+            textInputBox.setStyle("-fx-background-color: transparent");
 
             arrow = ImageUtil.getImageViewById("arrow-down");
             arrow.setLayoutY(22);

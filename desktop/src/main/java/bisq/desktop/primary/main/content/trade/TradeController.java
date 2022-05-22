@@ -21,12 +21,8 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.trade.closedTrades.GlobalClosedTradesController;
-import bisq.desktop.primary.main.content.trade.offerbook.GlobalOfferbookController;
-import bisq.desktop.primary.main.content.trade.openoffers.GlobalOpenOffersController;
-import bisq.desktop.primary.main.content.trade.overview.TradeOverviewListController;
-import bisq.desktop.primary.main.content.trade.overview.TradeOverviewGridController;
-import bisq.desktop.primary.main.content.trade.pendingTrades.GlobalPendingTradesController;
+import bisq.desktop.primary.main.content.trade.overview.grid.TradeOverviewGridController;
+import bisq.desktop.primary.main.content.trade.overview.list.TradeOverviewListController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +35,7 @@ public class TradeController extends TabController<TradeModel> {
     private final TradeView view;
 
     public TradeController(DefaultApplicationService applicationService) {
-        super(new TradeModel(), NavigationTarget.TRADE);
+        super(new TradeModel(), NavigationTarget.TRADE_OVERVIEW);
 
         this.applicationService = applicationService;
 
@@ -62,18 +58,6 @@ public class TradeController extends TabController<TradeModel> {
             }
             case TRADE_OVERVIEW_GRID -> {
                 return Optional.of(new TradeOverviewGridController(applicationService));
-            }
-            case OFFERBOOK -> {
-                return Optional.of(new GlobalOfferbookController(applicationService));
-            }
-            case OPEN_OFFERS -> {
-                return Optional.of(new GlobalOpenOffersController(applicationService));
-            }
-            case PENDING_TRADES -> {
-                return Optional.of(new GlobalPendingTradesController(applicationService));
-            }
-            case CLOSED_TRADES -> {
-                return Optional.of(new GlobalClosedTradesController(applicationService));
             }
             default -> {
                 return Optional.empty();

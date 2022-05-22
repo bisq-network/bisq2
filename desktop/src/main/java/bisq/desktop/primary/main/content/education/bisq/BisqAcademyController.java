@@ -27,7 +27,7 @@ public class BisqAcademyController implements Controller {
     private final BisqAcademyModel model;
 
     public BisqAcademyController(DefaultApplicationService applicationService) {
-       model= new BisqAcademyModel();
+        model = new BisqAcademyModel();
         view = new BisqAcademyView(model, this);
     }
 

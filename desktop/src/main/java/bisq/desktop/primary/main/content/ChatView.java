@@ -42,24 +42,24 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class ChatView extends View<SplitPane, ChatModel, ChatController> implements TabViewChild {
+public abstract class ChatView extends View<SplitPane, ChatModel, ChatController<?, ?>> implements TabViewChild {
     private final Label selectedChannelLabel;
     private final Button searchButton, notificationsButton, infoButton, closeButton;
-    private final Pane userProfileSelection;
-    private final VBox left, sideBar;
+    private final VBox left, center, sideBar;
+    private final HBox messagesListAndSideBar;
     private final TextField filterBoxRoot;
+    private Pane channelOverview;
     private final Pane notificationsSettings;
     private final Pane channelInfo;
     private final Button createOfferButton;
-    private final HBox messagesListAndSideBar;
     private final ImageView peersRoboIconView;
-    private Subscription chatUserOverviewRootSubscription;
+    private final Button overviewButton;
     private Pane chatUserOverviewRoot;
-    private Subscription widthSubscription;
+    private Subscription widthSubscription, chatUserOverviewRootSubscription;
 
     public ChatView(ChatModel model,
-                    ChatController controller,
-                    Pane userProfileSelection,
+                    ChatController<?, ?> controller,
+                    Pane channelOverview,
                     Pane marketChannelSelection,
                     Pane privateChannelSelection,
                     Pane chatMessagesComponent,
@@ -67,10 +67,10 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> impleme
                     Pane channelInfo,
                     FilterBox filterBox) {
         super(new SplitPane(), model, controller);
+        this.channelOverview = channelOverview;
 
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
-        this.userProfileSelection = userProfileSelection;
 
         // Left 
 
@@ -78,7 +78,14 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> impleme
         createOfferButton.setDefaultButton(true);
         createOfferButton.setPrefHeight(40);
         VBox.setMargin(createOfferButton, new Insets(0, 0, 1, 0));
-        left = Layout.vBoxWith(userProfileSelection,
+
+        // Just temp until design for nav is impl
+        overviewButton = new Button(Res.get("overview"));
+        overviewButton.setAlignment(Pos.CENTER_LEFT);
+        overviewButton.setStyle("-fx-font-size: 1.25em; -fx-font-family: \"IBM Plex Sans Light\";");
+
+        left = Layout.vBoxWith(
+                overviewButton,
                 marketChannelSelection,
                 privateChannelSelection,
                 Spacer.fillVBox(),
@@ -87,6 +94,9 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> impleme
         left.setPadding(new Insets(0, 10, 0, 0));
         left.setPrefWidth(300);
         left.setMinWidth(220);
+        overviewButton.setMinWidth(285);
+        overviewButton.setPrefHeight(50);
+
 
         // Center toolbar
         // peersRoboIconView only visible for private channels
@@ -136,11 +146,14 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> impleme
 
         VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);
 
-        VBox center = Layout.vBoxWith(centerToolbar, filterBoxRoot, messagesListAndSideBar);
+        center = Layout.vBoxWith(centerToolbar, filterBoxRoot, messagesListAndSideBar);
         center.setStyle("-fx-background-color: transparent");
         messagesListAndSideBar.setStyle("-fx-background-color: transparent");
-
-        root.getItems().addAll(left, center);
+       
+        Pane centerContainer = new Pane();
+        centerContainer.getChildren().addAll(center, channelOverview);
+        
+        root.getItems().addAll(left, centerContainer);
     }
 
     @Override
@@ -158,12 +171,17 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> impleme
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
         createOfferButton.prefWidthProperty().bind(left.widthProperty());
+        channelOverview.visibleProperty().bind(model.getChannelOverviewVisible());
+        channelOverview.managedProperty().bind(model.getChannelOverviewVisible());
+        center.visibleProperty().bind(model.getChannelOverviewVisible().not());
+        center.managedProperty().bind(model.getChannelOverviewVisible().not());
 
         searchButton.setOnAction(e -> controller.onToggleFilterBox());
         notificationsButton.setOnAction(e -> controller.onToggleNotifications());
         infoButton.setOnAction(e -> controller.onToggleChannelInfo());
         closeButton.setOnAction(e -> controller.onCloseSideBar());
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
+        overviewButton.setOnAction(e -> controller.onOpenChannelOverview());
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
                 pane -> {
@@ -205,6 +223,10 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> impleme
         channelInfo.managedProperty().unbind();
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
+        channelOverview.visibleProperty().unbind();
+        channelOverview.managedProperty().unbind();
+        center.visibleProperty().unbind();
+        center.managedProperty().unbind();
         createOfferButton.prefWidthProperty().unbind();
 
         searchButton.setOnAction(null);
@@ -212,6 +234,7 @@ public class ChatView extends View<SplitPane, ChatModel, ChatController> impleme
         infoButton.setOnAction(null);
         closeButton.setOnAction(null);
         createOfferButton.setOnAction(null);
+        overviewButton.setOnAction(null);
 
         chatUserOverviewRootSubscription.unsubscribe();
         if (widthSubscription != null) {

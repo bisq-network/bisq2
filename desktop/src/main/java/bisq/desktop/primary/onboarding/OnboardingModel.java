@@ -36,6 +36,6 @@ public class OnboardingModel extends NavigationModel {
     public NavigationTarget getDefaultNavigationTarget() {
         return chatUserService.isDefaultUserProfileMissing() ?
                 NavigationTarget.INIT_USER_PROFILE :
-                NavigationTarget.EXCHANGE;
+                NavigationTarget.BISQ_EASY;
     }
 }

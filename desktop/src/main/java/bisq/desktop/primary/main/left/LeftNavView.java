@@ -79,7 +79,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         LeftNavButton learn = createNavigationButton(Res.get("learn"),
                 ImageUtil.getImageViewById("buy"), //todo
-                NavigationTarget.LEARN, true);
+                NavigationTarget.EDUCATION, true);
 
         VBox learnSubMenuItems = createSubmenu(
                 createSubmenuNavigationButton(Res.get("academy.bisq"), NavigationTarget.BISQ_ACADEMY),
@@ -94,16 +94,16 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 ImageUtil.getImageViewById("sell"), //todo
                 NavigationTarget.DISCUSS, false);
 
-        LeftNavButton connect = createNavigationButton(Res.get("connect"),
+        LeftNavButton events = createNavigationButton(Res.get("events"),
                 ImageUtil.getImageViewById("nav-support"), //todo
-                NavigationTarget.CONNECT, false);
+                NavigationTarget.EVENTS, false);
 
         LeftNavButton trade = createNavigationButton(Res.get("trade"),
                 ImageUtil.getImageViewById("nav-trade"),
-                NavigationTarget.TRADE, true);
+                NavigationTarget.TRADE_OVERVIEW, true);
 
         VBox tradeSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("satoshiSquare"), NavigationTarget.SATOSHI_SQUARE),
+                createSubmenuNavigationButton(Res.get("satoshiSquare"), NavigationTarget.BISQ_EASY),
                 createSubmenuNavigationButton(Res.get("liquidSwap"), NavigationTarget.LIQUID_SWAP),
                 createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTI_SIG),
                 createSubmenuNavigationButton(Res.get("xmrSwap"), NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP),
@@ -126,9 +126,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 createSubmenuNavigationButton(Res.get("lbtc.wallet"), NavigationTarget.WALLET_LBTC)
         );
 
-        LeftNavButton support = createNavigationButton(Res.get("support"),
-                ImageUtil.getImageViewById("nav-support"),
-                NavigationTarget.SUPPORT, false);
         LeftNavButton settings = createNavigationButton(Res.get("settings"),
                 ImageUtil.getImageViewById("nav-settings"),
                 NavigationTarget.SETTINGS, false);
@@ -174,7 +171,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, learn, learnSubMenuItems, discuss, connect, trade, tradeSubMenuItems, /*markets,
+        mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems,  discuss, learn, learnSubMenuItems, 
+                events,wallet, walletSubMenuItems,  /*markets,
                 wallet, walletSubMenuItems, support,*/ settings);
         mainMenuItems.setLayoutY(menuTop);
         root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, mainMenuItems, expandIcon, collapseIcon, networkInfoBox);

@@ -128,7 +128,7 @@ public class OnboardNewbieController implements Controller {
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         UIThread.run(() -> {
-                            Navigation.navigateTo(NavigationTarget.EXCHANGE);
+                            Navigation.navigateTo(NavigationTarget.BISQ_EASY);
                         });
                         
                        /* String channelName = chatService.findPublicChannelForMarket(model.getSelectedMarket()).orElseThrow().getMarket();
