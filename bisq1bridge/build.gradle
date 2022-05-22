@@ -8,10 +8,6 @@ application {
     project.mainClassName = 'bisq.bisq1bridge.Bisq1bridgeMain'
 }
 
-ext {
-    jacksonVersion = '2.13.2'
-}
-
 run {
     // Pass command-line properties to application
     // Normally they'd only be applied to the gradle process, but we need them in the started application
@@ -37,10 +33,7 @@ dependencies {
     implementation libs.google.guava
     implementation libs.typesafe.config
 
-    implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
-
-    implementation 'com.google.protobuf:protobuf-java-util:3.20.0'
+    implementation libs.bundles.jackson
+    implementation libs.protobuf.java.util
 
 }

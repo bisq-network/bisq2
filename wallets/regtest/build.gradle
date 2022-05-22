@@ -11,5 +11,5 @@ dependencies {
 
     implementation libs.junit.jupiter
     implementation libs.google.guava
-    implementation "org.assertj:assertj-core:3.22.0"
+    testImplementation libs.assertj.core
 }

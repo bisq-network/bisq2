@@ -3,21 +3,16 @@ plugins {
     id 'bisq.protobuf'
 }
 
-ext {
-    jacksonVersion = '2.13.2'
-    jeroMqVersion = '0.5.2'
-}
-
 dependencies {
     implementation("bisq:common")
     implementation("bisq:persistence")
 
     implementation project(':core')
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation libs.google.guava
-    implementation("org.zeromq:jeromq:$jeroMqVersion")
+    implementation libs.jackson.databind
+    implementation libs.jeromq
 
     testImplementation project(':regtest')
-    testImplementation("org.assertj:assertj-core:3.22.0")
+    testImplementation libs.assertj.core
 }

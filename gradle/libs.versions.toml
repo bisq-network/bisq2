@@ -5,46 +5,118 @@
 # Convention: mark all versions using 'strictly'. This ensures only one version is allowed in the dependency tree, even
 # when multiple versions are attempted to be brought in as transitive dependencies of other requirements.
 [versions]
-annotations-lib =       { strictly = '23.0.0' }
-bouncycastle-lib =      { strictly = '1.67' } # Oldest version without known CVEs
-google-gson-lib =       { strictly = '2.9.0' }
-google-guava-lib =      { strictly = '31.1-jre' }
-i2p-lib =               { strictly = '1.7.0' }
-jpackage-plugin =       { strictly = '1.3.1' }
-junit-jupiter-lib =     { strictly = '5.8.2' }
-kotlindsl-plugin =      { strictly = '2.1.7' }
-logback-lib =           { strictly = '1.2.11' }
-lombok-lib =            { strictly = '1.18.22' }
-openjfx-plugin =        { strictly = '0.0.12' }
-protobuf-plugin =       { strictly = '0.8.18' }
-protobuf-java-lib =     { strictly = '3.19.4' }
-shadow-plugin =         { strictly = '7.1.2' }
-slf4j-lib =             { strictly = '1.7.36' }
-typesafe-config-lib =   { strictly = '1.4.2' }
+annotations-lib = { strictly = '23.0.0' }
+
+apache-commons-compress-lib = { strictly = '1.21' }
+apache-httpcomponents-core-lib = { strictly = '4.4.13' }
+apache-httpcomponents-httpclient-lib = { strictly = '4.5.13' }
+
+assertj-core-lib = { strictly = '3.22.0' }
+bisq-tor-binary-lib = { strictly = 'b9c6227' }
+bisq-jsonrpc4j-lib = { strictly = '1.6.0.bisq.2' }
+bouncycastle-lib = { strictly = '1.67' } # Oldest version without known CVEs
+chimp-jtorctl-lib = { strictly = '9b5ba203' }
+
+fontawesomefx-lib = { strictly = '8.0.0' }
+fontawesomefx-commons-lib = { strictly = '9.1.2' }
+fontawesomefx-materialdesignfont-lib = { strictly = '2.0.26-9.1.2' }
+
+fxmisc-easybind-lib = { strictly = '1.0.3' }
+fxmisc-richtextfx-lib = { strictly = '0.10.9' }
+
+google-gson-lib = { strictly = '2.9.0' }
+google-guava-lib = { strictly = '31.1-jre' }
+
+i2p-lib = { strictly = '1.7.0' }
+jackson-lib = { strictly = '2.13.2' }
+jeasy-easy-states-lib = { strictly = '2.0.0' }
+jeromq-lib = { strictly = '0.5.2' }
+jpackage-plugin = { strictly = '1.3.1' }
+junit-jupiter-lib = { strictly = '5.8.2' }
+kotlindsl-plugin = { strictly = '2.1.7' }
+logback-lib = { strictly = '1.2.11' }
+lombok-lib = { strictly = '1.18.22' }
+openjfx-plugin = { strictly = '0.0.12' }
+
+protobuf-plugin = { strictly = '0.8.18' }
+protobuf-java-lib = { strictly = '3.19.4' }
+
+shadow-plugin = { strictly = '7.1.2' }
+slf4j-lib = { strictly = '1.7.36' }
+spring-boot-starter-web-lib = { strictly = '2.5.6' }
+springfox-lib = { strictly = '3.0.0' }
+typesafe-config-lib = { strictly = '1.4.2' }
 
 # Referenced in subproject's build.gradle > dependencies block in the form 'implementation libs.guava'
 # Note: keys can contain dash (protobuf-java) but the dash is replaced by dot when referenced
 # in a build.gradle ('implementation libs.protobuf.java')
 [libraries]
-annotations =       { module = 'org.jetbrains:annotations',         version.ref = 'annotations-lib' }
-bouncycastle =      { module = 'org.bouncycastle:bcprov-jdk15on',   version.ref = 'bouncycastle-lib' }
-google-gson =       { module = 'com.google.code.gson:gson',         version.ref = 'google-gson-lib' }
-google-guava =      { module = 'com.google.guava:guava',            version.ref = 'google-guava-lib' }
-i2p-streaming =     { module = 'net.i2p.client:streaming',          version.ref = 'i2p-lib' }
-i2p-core =          { module = 'net.i2p:i2p',                       version.ref = 'i2p-lib' }
-i2p-router =        { module = 'net.i2p:router',                    version.ref = 'i2p-lib' }
-junit-jupiter =     { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter-lib' }
-logback-core =      { module = 'ch.qos.logback:logback-core',       version.ref = 'logback-lib' }
-logback-classic =   { module = 'ch.qos.logback:logback-classic',    version.ref = 'logback-lib' }
-lombok =            { module = 'org.projectlombok:lombok',          version.ref = 'lombok-lib' }
-protobuf-java =     { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java-lib' }
-slf4j-api =         { module = 'org.slf4j:slf4j-api',               version.ref = 'slf4j-lib' }
-typesafe-config =   { module = 'com.typesafe:config',               version.ref = 'typesafe-config-lib' }
+apache-commons-compress = { module = 'org.apache.commons:commons-compress', version.ref = 'apache-commons-compress-lib' }
+apache-httpcomponents-core = { module = 'org.apache.httpcomponents:httpcore', version.ref = 'apache-httpcomponents-core-lib' }
+apache-httpcomponents-httpclient = { module = 'org.apache.httpcomponents:httpclient', version.ref = 'apache-httpcomponents-httpclient-lib' }
+assertj-core = { module = 'org.assertj:assertj-core', version.ref = 'assertj-core-lib' }
+
+annotations = { module = 'org.jetbrains:annotations', version.ref = 'annotations-lib' }
+bisq-jsonrpc4j = { module = 'com.github.bisq-network:jsonrpc4j', version.ref = 'bisq-jsonrpc4j-lib' }
+
+bisq-tor-binary-geoip = { module = 'com.github.bisq-network.tor-binary:tor-binary-geoip', version.ref = 'bisq-tor-binary-lib' }
+bisq-tor-binary-macos = { module = 'com.github.bisq-network.tor-binary:tor-binary-macos', version.ref = 'bisq-tor-binary-lib' }
+bisq-tor-binary-linux32 = { module = 'com.github.bisq-network.tor-binary:tor-binary-linux32', version.ref = 'bisq-tor-binary-lib' }
+bisq-tor-binary-linux64 = { module = 'com.github.bisq-network.tor-binary:tor-binary-linux64', version.ref = 'bisq-tor-binary-lib' }
+bisq-tor-binary-windows = { module = 'com.github.bisq-network.tor-binary:tor-binary-windows', version.ref = 'bisq-tor-binary-lib' }
+
+bouncycastle = { module = 'org.bouncycastle:bcprov-jdk15on', version.ref = 'bouncycastle-lib' }
+
+chimp-jsocks = { module = 'com.github.chimp1984:jsocks' }
+chimp-jtorctl = { module = 'com.github.chimp1984:jtorctl', version.ref = 'chimp-jtorctl-lib' }
+
+fontawesomefx = { module = 'de.jensd:fontawesomefx', version.ref = 'fontawesomefx-lib' }
+fontawesomefx-commons = { module = 'de.jensd:fontawesomefx-commons', version.ref = 'fontawesomefx-commons-lib' }
+fontawesomefx-materialdesignfont = { module = 'de.jensd:fontawesomefx-materialdesignfont', version.ref = 'fontawesomefx-materialdesignfont-lib' }
+
+fxmisc-easybind = { module = 'org.fxmisc.easybind:easybind', version.ref = 'fxmisc-easybind-lib' }
+fxmisc-richtextfx = { module = 'org.fxmisc.richtext:richtextfx', version.ref = 'fxmisc-richtextfx-lib' }
+
+google-gson = { module = 'com.google.code.gson:gson', version.ref = 'google-gson-lib' }
+google-guava = { module = 'com.google.guava:guava', version.ref = 'google-guava-lib' }
+
+i2p-streaming = { module = 'net.i2p.client:streaming', version.ref = 'i2p-lib' }
+i2p-core = { module = 'net.i2p:i2p', version.ref = 'i2p-lib' }
+i2p-router = { module = 'net.i2p:router', version.ref = 'i2p-lib' }
+
+jackson-core = { module = 'com.fasterxml.jackson.core:jackson-core', version.ref = 'jackson-lib' }
+jackson-annotations = { module = 'com.fasterxml.jackson.core:jackson-annotations', version.ref = 'jackson-lib' }
+jackson-databind = { module = 'com.fasterxml.jackson.core:jackson-databind', version.ref = 'jackson-lib' }
+
+jeasy-easy-states = { module = 'org.jeasy:easy-states', version.ref = 'jeasy-easy-states-lib' }
+jeromq = { module = 'org.zeromq:jeromq', version.ref = 'jeromq-lib' }
+junit-jupiter = { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter-lib' }
+
+logback-core = { module = 'ch.qos.logback:logback-core', version.ref = 'logback-lib' }
+logback-classic = { module = 'ch.qos.logback:logback-classic', version.ref = 'logback-lib' }
+lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok-lib' }
+
+protobuf-java = { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java-lib' }
+protobuf-java-util = { module = 'com.google.protobuf:protobuf-java-util', version.ref = 'protobuf-java-lib' }
+
+slf4j-api = { module = 'org.slf4j:slf4j-api', version.ref = 'slf4j-lib' }
+spring-boot-starter-web = { module = 'org.springframework.boot:spring-boot-starter-web', version.ref = 'spring-boot-starter-web-lib' }
+
+springfox-boot-starter = { module = 'io.springfox:springfox-boot-starter', version.ref = 'springfox-lib' }
+springfox-swagger2 = { module = 'io.springfox:springfox-swagger2', version.ref = 'springfox-lib' }
+springfox-swagger-ui = { module = 'io.springfox:springfox-swagger-ui', version.ref = 'springfox-lib' }
+
+typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-config-lib' }
 
 # Defines groups of libs that are commonly used together
 # Referenced in dependencies block as 'implementation libs.bundles.i2p'
 [bundles]
+bisq-tor-binaries = ['bisq-tor-binary-geoip', 'bisq-tor-binary-macos', 'bisq-tor-binary-linux32', 'bisq-tor-binary-linux64', 'bisq-tor-binary-windows']
+fontawesomefx = ['fontawesomefx', 'fontawesomefx-commons', 'fontawesomefx-materialdesignfont']
+fxmisc-libs = ['fxmisc-easybind', 'fxmisc-richtextfx']
 i2p = ['i2p-core', 'i2p-router', 'i2p-streaming']
+jackson = ['jackson-core', 'jackson-annotations', 'jackson-databind']
+springfox-libs = ['springfox-boot-starter', 'springfox-swagger2', 'springfox-swagger-ui']
 
 # Referenced in subproject's build.gradle > plugin block as alias: `alias(libs.plugins.protobuf)`
 # Note: plugin version constraints are not supported by the java-platform plugin, so cannot be enforced there. However,
