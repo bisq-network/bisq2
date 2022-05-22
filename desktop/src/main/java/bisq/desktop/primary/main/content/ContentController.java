@@ -103,10 +103,10 @@ public class ContentController extends NavigationController {
             case EVENTS -> {
                 return Optional.of(new EventsController(applicationService));
             }
-            case TRADE -> {
+            case TRADE_OVERVIEW -> {
                 return Optional.of(new TradeController(applicationService));
             }
-            case CHAT_SQUARE -> {
+            case OTC -> {
                 return Optional.of(new OtcController(applicationService));
             }
             case LIQUID_SWAP -> {

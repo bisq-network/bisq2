@@ -35,7 +35,7 @@ public class TradeController extends TabController<TradeModel> {
     private final TradeView view;
 
     public TradeController(DefaultApplicationService applicationService) {
-        super(new TradeModel(), NavigationTarget.TRADE);
+        super(new TradeModel(), NavigationTarget.TRADE_OVERVIEW);
 
         this.applicationService = applicationService;
 
