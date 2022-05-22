@@ -522,8 +522,8 @@
 .bisq-big-green-button {
     -fx-background-color: -bisq-darker-green;
     -fx-text-fill: -fx-light-text-color;
-    -fx-padding: 26 6;
-    -fx-font-size: 1.6em;
+    -fx-padding: 17;
+    -fx-font-size: 1.54em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-cursor: hand;
 }
@@ -536,8 +536,8 @@
 .bisq-big-white-button {
     -fx-background-color: -bisq-white;
     -fx-text-fill: -bisq-black;
-    -fx-padding: 26 6;
-    -fx-font-size: 1.6em;
+    -fx-padding: 17;
+    -fx-font-size: 1.54em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-effect: dropshadow(gaussian, -bisq-dark-green, 0, 0, 0, 2);
     -fx-cursor: hand;
