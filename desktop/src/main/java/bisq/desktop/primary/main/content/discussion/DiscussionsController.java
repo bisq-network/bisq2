@@ -66,6 +66,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     public DiscussionsView getChatView() {
         return new DiscussionsView(model,
                 this,
+                channelOverview.getRoot(),
                 publicDiscussionChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),

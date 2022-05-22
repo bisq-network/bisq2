@@ -47,7 +47,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
     protected void onViewAttached() {
         getRoot().getChildren().clear();
         int index = 0;
-        for (ProtocolListItem protocol: model.getListItems()) {
+        for (ProtocolListItem protocol: model.getSortedItems()) {
             getRoot().add(getProtocolBox(protocol), index % 2, index >> 1);
             index++;
         }

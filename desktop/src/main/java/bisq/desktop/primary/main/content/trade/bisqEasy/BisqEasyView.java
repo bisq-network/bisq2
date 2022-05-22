@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.otc;
+package bisq.desktop.primary.main.content.trade.bisqEasy;
 
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.ChatView;
@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BisqEasyView extends ChatView {
     public BisqEasyView(BisqEasyModel model,
                         BisqEasyController controller,
+                        Pane channelOverview,
                         Pane marketChannelSelection,
                         Pane privateChannelSelection,
                         Pane chatMessagesComponent,
@@ -34,6 +35,7 @@ public class BisqEasyView extends ChatView {
                         FilterBox filterBox) {
         super(model,
                 controller,
+                channelOverview,
                 marketChannelSelection,
                 privateChannelSelection,
                 chatMessagesComponent,

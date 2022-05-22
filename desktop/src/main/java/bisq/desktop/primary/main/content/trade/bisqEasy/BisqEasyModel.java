@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.otc;
+package bisq.desktop.primary.main.content.trade.bisqEasy;
 
 import bisq.desktop.primary.main.content.ChatModel;
 import lombok.Getter;

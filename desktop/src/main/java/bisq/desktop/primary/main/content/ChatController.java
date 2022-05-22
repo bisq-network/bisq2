@@ -49,6 +49,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     protected final NotificationsSettings notificationsSettings;
     protected final QuotedMessageBlock quotedMessageBlock;
     protected final ChatMessagesComponent chatMessagesComponent;
+    protected final ChannelOverview channelOverview;
     protected Pin selectedChannelPin;
     protected Subscription notificationSettingSubscription;
 
@@ -57,6 +58,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
         chatService = applicationService.getChatService();
         chatUserService = applicationService.getChatUserService();
         reputationService = applicationService.getReputationService();
+        channelOverview = new ChannelOverview(applicationService);
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
         chatMessagesComponent = new ChatMessagesComponent(chatService, chatUserService, reputationService, isDiscussionsChat);
         channelInfo = new ChannelInfo(chatService);
@@ -164,6 +166,10 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     public void onCreateOffer() {
         //todo
         new Popup().message("Not implemented yet").show();
+    }
+
+    public void onOpenChannelOverview() {
+        model.getChannelOverviewVisible().set(true);
     }
 
     protected void cleanupChatUserDetails() {
