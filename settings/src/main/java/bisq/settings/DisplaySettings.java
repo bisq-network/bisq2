@@ -18,26 +18,31 @@
 package bisq.settings;
 
 import bisq.common.proto.Proto;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
 public class DisplaySettings implements Proto {
     private boolean useAnimations = true;
 
     public DisplaySettings() {
     }
 
+    @Override
     public bisq.settings.protobuf.DisplaySettings toProto() {
         return bisq.settings.protobuf.DisplaySettings.newBuilder()
                 .setUseAnimations(useAnimations)
                 .build();
     }
 
-    public static DisplaySettings fromProto(bisq.settings.protobuf.DisplaySettings proto) {
+    static DisplaySettings fromProto(bisq.settings.protobuf.DisplaySettings proto) {
         DisplaySettings displaySettings = new DisplaySettings();
         displaySettings.setUseAnimations(proto.getUseAnimations());
         return displaySettings;
+    }
+
+    public boolean isUseAnimations() {
+        return useAnimations;
+    }
+
+    void setUseAnimations(boolean useAnimations) {
+        this.useAnimations = useAnimations;
     }
 }

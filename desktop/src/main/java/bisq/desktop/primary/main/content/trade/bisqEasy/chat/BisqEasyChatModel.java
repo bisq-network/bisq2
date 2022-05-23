@@ -15,20 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
-import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.main.content.ChatModel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Getter
+public class BisqEasyChatModel extends ChatModel {
+    private final boolean isDiscussionsChat;
 
-public class BisqEasyModel extends NavigationModel {
-    public BisqEasyModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.BISQ_EASY_ON_BOARDING;
+    public BisqEasyChatModel(boolean isDiscussionsChat) {
+        this.isDiscussionsChat = isDiscussionsChat;
     }
 }

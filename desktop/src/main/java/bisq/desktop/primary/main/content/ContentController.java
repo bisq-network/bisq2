@@ -33,8 +33,8 @@ import bisq.desktop.primary.main.content.education.wallets.WalletsAcademyControl
 import bisq.desktop.primary.main.content.events.EventsController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
 import bisq.desktop.primary.main.content.trade.TradeController;
-import bisq.desktop.primary.main.content.trade.bsqSwap.BsqSwapController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.BisqEasyController;
+import bisq.desktop.primary.main.content.trade.bsqSwap.BsqSwapController;
 import bisq.desktop.primary.main.content.trade.lightning.LightningController;
 import bisq.desktop.primary.main.content.trade.liquidSwap.LiquidSwapController;
 import bisq.desktop.primary.main.content.trade.multiSig.MultiSigController;

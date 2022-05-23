@@ -53,7 +53,7 @@ public class NetworkInfoModel implements Model {
     public NetworkInfoModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
         NavigationTarget persistedNavigationTarget = NavigationTarget.valueOf(
-                applicationService.getSettingsService().getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET));
+                applicationService.getSettingsService().getCookie().getValue(CookieKey.NAVIGATION_TARGET));
        /* if (persistedNavigationTarget.getParent().filter(parent -> parent == NavigationTarget.NETWORK_INFO).isPresent()) {
             navigationTarget = persistedNavigationTarget;
         }*/

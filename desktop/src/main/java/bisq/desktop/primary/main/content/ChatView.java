@@ -180,8 +180,10 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
                 // Lock to that initial position
                 SplitPane.setResizableWithParent(left, false);
                 UIThread.runOnNextRenderFrame(() -> {
-                    widthSubscription.unsubscribe();
-                    widthSubscription = null;
+                    if (widthSubscription != null) {
+                        widthSubscription.unsubscribe();
+                        widthSubscription = null;
+                    }
                 });
             }
         });

@@ -28,7 +28,6 @@ import bisq.desktop.overlay.ComboBoxOverlay;
 import bisq.i18n.Res;
 import bisq.social.chat.channels.PublicTradeChannel;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
