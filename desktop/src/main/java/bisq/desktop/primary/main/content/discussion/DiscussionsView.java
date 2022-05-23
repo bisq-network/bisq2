@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 public class DiscussionsView extends ChatView {
     public DiscussionsView(DiscussionsModel model,
                            DiscussionsController controller,
-                           Pane channelOverview,
                            Pane marketChannelSelection,
                            Pane privateChannelSelection,
                            Pane chatMessagesComponent,
@@ -35,7 +34,6 @@ public class DiscussionsView extends ChatView {
                            FilterBox filterBox) {
         super(model,
                 controller,
-                channelOverview,
                 marketChannelSelection,
                 privateChannelSelection,
                 chatMessagesComponent,
