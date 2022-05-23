@@ -1,35 +1,8 @@
 plugins {
-    id 'java-library'
-}
-
-repositories {
-    mavenCentral()
-    maven { url "https://jitpack.io" }
-}
-
-version '0.0.1-SNAPSHOT'
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
+    id 'bisq.java-conventions'
 }
 
 dependencies {
-    compileOnly(libs.lombok)
-    annotationProcessor(libs.lombok)
-    testCompileOnly(libs.lombok)
-    testAnnotationProcessor(libs.lombok)
-
     api platform('bisq.platforms:common-platform')
-    implementation libs.slf4j.api
-    implementation libs.logback.core
-    implementation libs.logback.classic
-
-    testImplementation(libs.junit.jupiter)
-}
-
-test {
-    useJUnitPlatform()
-    exclude '**/**Integration*'
+    implementation 'bisq:common'
 }

@@ -1,11 +1,9 @@
 plugins {
-    id 'bisq.java-library'
+    id 'bisq.java-conventions'
     id 'bisq.protobuf'
 }
 
 dependencies {
-    api platform(project(':platforms:common-platform'))
-
     implementation libs.google.guava
     implementation libs.typesafe.config
     implementation libs.annotations
