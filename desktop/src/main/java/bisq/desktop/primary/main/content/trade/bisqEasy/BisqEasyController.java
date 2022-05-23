@@ -66,7 +66,6 @@ public class BisqEasyController extends ChatController<BisqEasyView, BisqEasyMod
     public BisqEasyView getChatView() {
         return new BisqEasyView(model,
                 this,
-                channelOverview.getRoot(),
                 publicTradeChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
@@ -78,8 +77,6 @@ public class BisqEasyController extends ChatController<BisqEasyView, BisqEasyMod
     @Override
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
-
-        model.getChannelOverviewVisible().set(false);
 
         if (channel instanceof PrivateTradeChannel privateTradeChannel) {
             model.getPeersRoboIconImage().set(RoboHash.getImage(new ByteArray(privateTradeChannel.getPeer().getPubKeyHash())));
