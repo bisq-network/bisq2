@@ -51,16 +51,8 @@
     -fx-image: url("images/trust.png");
 }
 
-#buy {
-    -fx-image: url("images/navigation/buy.png");
-}
-
 #image-buy-white {
     -fx-image: url("images/buy_white.png");
-}
-
-#sell {
-    -fx-image: url("images/navigation/sell.png");
 }
 
 #image-sell-white {
@@ -69,37 +61,114 @@
 
 
 /*Left nav*/
+#nav-chat {
+    -fx-image: url("images/navigation/nav-chat.png");
+}
+
+#nav-chat-active {
+    -fx-image: url("images/navigation/nav-chat-active.png");
+}
+
+#nav-chat-hover {
+    -fx-image: url("images/navigation/nav-chat-hover.png");
+}
+
 #nav-community {
     -fx-image: url("images/navigation/nav-community.png");
 }
 
-#nav-trade {
-    -fx-image: url("images/navigation/nav-trade.png");
+#nav-community-active {
+    -fx-image: url("images/navigation/nav-community-active.png");
+}
+
+#nav-community-hover {
+    -fx-image: url("images/navigation/nav-community-hover.png");
+}
+
+#nav-events {
+    -fx-image: url("images/navigation/nav-events.png");
+}
+
+#nav-events-active {
+    -fx-image: url("images/navigation/nav-events-active.png");
+}
+
+#nav-events-hover {
+    -fx-image: url("images/navigation/nav-events-hover.png");
+}
+
+#nav-learn {
+    -fx-image: url("images/navigation/nav-learn.png");
+}
+
+#nav-learn-active {
+    -fx-image: url("images/navigation/nav-learn-active.png");
+}
+
+#nav-learn-hover {
+    -fx-image: url("images/navigation/nav-learn-hover.png");
 }
 
 #nav-markets {
     -fx-image: url("images/navigation/nav-markets.png");
 }
 
-#nav-wallet {
-    -fx-image: url("images/navigation/nav-wallet.png");
+#nav-markets-active {
+    -fx-image: url("images/navigation/nav-markets-active.png");
 }
 
-#nav-support {
-    -fx-image: url("images/navigation/nav-support.png");
+#nav-markets-hover {
+    -fx-image: url("images/navigation/nav-markets-hover.png");
 }
 
 #nav-settings {
     -fx-image: url("images/navigation/nav-settings.png");
 }
 
-#accounts {
-    -fx-image: url("images/navigation/accounts.png");
+#nav-settings-active {
+    -fx-image: url("images/navigation/nav-settings-active.png");
 }
 
-#governance {
-    -fx-image: url("images/navigation/governance.png");
+#nav-settings-hover {
+    -fx-image: url("images/navigation/nav-settings-hover.png");
 }
+
+#nav-support {
+    -fx-image: url("images/navigation/nav-support.png");
+}
+
+#nav-support-active {
+    -fx-image: url("images/navigation/nav-support-active.png");
+}
+
+#nav-support-hover {
+    -fx-image: url("images/navigation/nav-support-hover.png");
+}
+
+#nav-trade {
+    -fx-image: url("images/navigation/nav-trade.png");
+}
+
+#nav-trade-active {
+    -fx-image: url("images/navigation/nav-trade-active.png");
+}
+
+#nav-trade-hover {
+    -fx-image: url("images/navigation/nav-trade-hover.png");
+}
+
+#nav-wallet {
+    -fx-image: url("images/navigation/nav-wallet.png");
+}
+
+#nav-wallet-active {
+    -fx-image: url("images/navigation/nav-wallet-active.png");
+}
+
+#nav-wallet-hover {
+    -fx-image: url("images/navigation/nav-wallet-hover.png");
+}
+
 
 /*Left nav collapse / expand*/
 #expand {

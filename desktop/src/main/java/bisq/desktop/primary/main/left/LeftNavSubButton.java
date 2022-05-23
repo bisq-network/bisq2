@@ -39,7 +39,7 @@ class LeftNavSubButton extends LeftNavButton {
 
     @Override
     protected void applyStyle() {
-        Layout.chooseStyleClass(label, "bisq-sub-nav-label-selected", "bisq-sub-nav-label", isSelected());
+        Layout.chooseStyleClass(label, "bisq-text-logo-green", "bisq-text-grey-9", isSelected());
     }
 
     @Override

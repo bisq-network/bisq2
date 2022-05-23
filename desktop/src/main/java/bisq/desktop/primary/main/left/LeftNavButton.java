@@ -36,6 +36,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.List;
+import java.util.stream.Stream;
 
 @Slf4j
 class LeftNavButton extends Pane implements Toggle {
@@ -52,16 +54,22 @@ class LeftNavButton extends Pane implements Toggle {
 
     @Nullable
     protected final ImageView icon;
+    @Nullable
+    protected final ImageView iconActive;
+    @Nullable
+    protected final ImageView iconHover;
     
     @Nullable
     protected ImageView submenuActionIcon;
 
     LeftNavButton(String title, 
-                  @Nullable ImageView icon,
+                  @Nullable String iconId,
                   ToggleGroup toggleGroup,
                   NavigationTarget navigationTarget, 
                   boolean hasSubmenu) {
-        this.icon = icon;
+        this.icon = iconId != null ? ImageUtil.getImageViewById(iconId) : null;
+        this.iconActive = iconId != null ? ImageUtil.getImageViewById(iconId + "-active") : null;
+        this.iconHover = iconId != null ? ImageUtil.getImageViewById(iconId + "-hover") : null;
         this.navigationTarget = navigationTarget;
 
         setMinHeight(calculateHeight());
@@ -73,11 +81,12 @@ class LeftNavButton extends Pane implements Toggle {
         // selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
 
         tooltip = new Tooltip(title);
-        if (icon != null) {
-            icon.setMouseTransparent(true);
-            icon.setLayoutX(25);
-            icon.setLayoutY(10.5);
-            icon.setOpacity(0.5);
+        if (iconId != null) {
+            Stream.of(icon, iconActive, iconHover).forEach(icon -> {
+                icon.setMouseTransparent(true);
+                icon.setLayoutX(25);
+                icon.setLayoutY(10.5);
+            });
             getChildren().add(icon);
         }
 
@@ -96,15 +105,30 @@ class LeftNavButton extends Pane implements Toggle {
         }
 
         applyStyle();
+
+        hoverProperty().addListener((ov, wasHovered, isHovered) -> {
+            if (isSelected() || isHighlighted()) return;
+            Layout.chooseStyleClass(label, "bisq-text-white", "bisq-text-grey-9", isHovered);
+            if (icon != null) {
+                getChildren().set(0, isHovered ? iconHover : icon);
+            }
+        });
     }
 
     protected void applyStyle() {
         boolean isHighlighted = isSelected() || isHighlighted();
         Layout.chooseStyleClass(this, "bisq-dark-bg", "bisq-darkest-bg", isHighlighted);
-        Layout.chooseStyleClass(label, "bisq-nav-label-highlighted", "bisq-nav-label", isHighlighted);
+        Layout.toggleStyleClass(label, "bisq-text-logo-green", isSelected());
+        Layout.toggleStyleClass(label, "bisq-text-white", isHighlighted());
+        Layout.toggleStyleClass(label, "bisq-text-grey-9", !isHighlighted);
         
         if (icon != null) {
-            icon.setOpacity(isHighlighted ? 1 : 0.6);
+            getChildren().set(
+                    0,
+                    isSelected() 
+                            ? iconActive 
+                            : isHighlighted ? iconHover : icon
+            );
         }
         
         if (submenuActionIcon != null) {

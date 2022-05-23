@@ -74,11 +74,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         Layout.pinToAnchorPane(mainMenuItems, menuTop, 0, 0, MARKER_WIDTH);
 
         LeftNavButton dashBoard = createNavigationButton(Res.get("dashboard"),
-                ImageUtil.getImageViewById("nav-community"),
+                "nav-community",
                 NavigationTarget.DASHBOARD, false);
 
         LeftNavButton learn = createNavigationButton(Res.get("learn"),
-                ImageUtil.getImageViewById("buy"), //todo
+                "nav-learn",
                 NavigationTarget.EDUCATION, true);
 
         VBox learnSubMenuItems = createSubmenu(
@@ -90,16 +90,16 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 createSubmenuNavigationButton(Res.get("academy.openSource"), NavigationTarget.OPEN_SOURCE_ACADEMY)
         );
 
-        LeftNavButton discuss = createNavigationButton(Res.get("discuss"),
-                ImageUtil.getImageViewById("sell"), //todo
+        LeftNavButton chat = createNavigationButton(Res.get("chat"),
+                "nav-chat",
                 NavigationTarget.DISCUSS, false);
 
         LeftNavButton events = createNavigationButton(Res.get("events"),
-                ImageUtil.getImageViewById("nav-support"), //todo
+                "nav-support",
                 NavigationTarget.EVENTS, false);
 
         LeftNavButton trade = createNavigationButton(Res.get("trade"),
-                ImageUtil.getImageViewById("nav-trade"),
+                "nav-trade",
                 NavigationTarget.TRADE_OVERVIEW, true);
 
         VBox tradeSubMenuItems = createSubmenu(
@@ -118,7 +118,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         //todo lower prio menu add design
         LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
-                ImageUtil.getImageViewById("nav-wallet"),
+                "nav-wallet",
                 NavigationTarget.WALLET_BITCOIN, true);
 
         VBox walletSubMenuItems = createSubmenu(
@@ -127,7 +127,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         );
 
         LeftNavButton settings = createNavigationButton(Res.get("settings"),
-                ImageUtil.getImageViewById("nav-settings"),
+                "nav-settings",
                 NavigationTarget.SETTINGS, false);
         
          /*  dashBoard.setOnAction(() -> {
@@ -171,7 +171,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems,  discuss, learn, learnSubMenuItems, 
+        mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems,  chat, learn, learnSubMenuItems, 
                 events,wallet, walletSubMenuItems,  /*markets,
                 wallet, walletSubMenuItems, support,*/ settings);
         mainMenuItems.setLayoutY(menuTop);
@@ -283,10 +283,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     }
 
     private LeftNavButton createNavigationButton(String title,
-                                                 ImageView icon,
+                                                 String iconId,
                                                  NavigationTarget navigationTarget,
                                                  boolean hasSubmenu) {
-        LeftNavButton button = new LeftNavButton(title, icon, toggleGroup, navigationTarget, hasSubmenu);
+        LeftNavButton button = new LeftNavButton(title, iconId, toggleGroup, navigationTarget, hasSubmenu);
         setupButtonHandler(navigationTarget, button);
         return button;
     }
