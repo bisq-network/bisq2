@@ -17,14 +17,14 @@
 
 package bisq.settings;
 
+import bisq.common.currency.Market;
+import bisq.common.observable.ObservableSet;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
-import lombok.experimental.Delegate;
 
 public class SettingsService implements PersistenceClient<SettingsStore> {
-    @Delegate
     @Getter
     private final SettingsStore persistableStore = new SettingsStore();
     @Getter
@@ -41,6 +41,37 @@ public class SettingsService implements PersistenceClient<SettingsStore> {
 
     public void dontShowAgain(String key, boolean dontShowAgain) {
         persistableStore.getDontShowAgainMap().put(key, dontShowAgain);
+        persist();
+    }
+
+    public DisplaySettings getDisplaySettings() {
+        return persistableStore.getDisplaySettings();
+    }
+
+    public ObservableSet<Market> getMarkets() {
+        return persistableStore.getMarkets();
+    }
+
+    public Market getSelectedMarket() {
+        return persistableStore.getSelectedMarket();
+    }
+
+    public Cookie getCookie() {
+        return persistableStore.getCookie();
+    }
+
+    public void setCookie(CookieKey key, boolean value) {
+        getCookie().putAsBoolean(key, value);
+        persist();
+    }
+
+    public void setCookie(CookieKey key, double value) {
+        getCookie().putAsDouble(key, value);
+        persist();
+    }
+
+    public void setCookie(CookieKey key, String value) {
+        getCookie().put(key, value);
         persist();
     }
 }

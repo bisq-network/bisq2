@@ -17,29 +17,29 @@
 
 package bisq.desktop.primary.main.content.trade.bisqEasy;
 
-import bisq.desktop.components.table.FilterBox;
-import bisq.desktop.primary.main.content.ChatView;
-import javafx.scene.layout.Pane;
+import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.layout.Layout;
+import javafx.scene.layout.AnchorPane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyView extends ChatView {
-    public BisqEasyView(BisqEasyModel model,
-                        BisqEasyController controller,
-                        Pane marketChannelSelection,
-                        Pane privateChannelSelection,
-                        Pane chatMessagesComponent,
-                        Pane notificationsSettings,
-                        Pane channelInfo,
-                        FilterBox filterBox) {
-        super(model,
-                controller,
-                marketChannelSelection,
-                privateChannelSelection,
-                chatMessagesComponent,
-                notificationsSettings,
-                channelInfo,
-                filterBox);
+public class BisqEasyView extends NavigationView<AnchorPane, BisqEasyModel, BisqEasyController> {
+
+    public BisqEasyView(BisqEasyModel model, BisqEasyController controller) {
+        super(new AnchorPane(), model, controller);
+
+        model.getView().addListener((observable, oldValue, newValue) -> {
+            Layout.pinToAnchorPane(newValue.getRoot(), -34, 0, 0, -68);
+            root.getChildren().clear();
+            root.getChildren().add(newValue.getRoot());
+        });
     }
 
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
+    }
 }

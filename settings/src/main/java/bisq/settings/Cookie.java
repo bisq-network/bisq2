@@ -19,7 +19,6 @@ package bisq.settings;
 
 import bisq.common.proto.Proto;
 import bisq.settings.protobuf.CookieMapEntry;
-import lombok.Getter;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -32,7 +31,6 @@ import java.util.stream.Collectors;
  * Should not be over-used for domain specific data where type safety and data integrity is important.
  */
 public class Cookie implements Proto {
-    @Getter
     private final Map<CookieKey, String> map = new HashMap<>();
 
     public Cookie() {
@@ -42,6 +40,7 @@ public class Cookie implements Proto {
         this.map.putAll(map);
     }
 
+    @Override
     public bisq.settings.protobuf.Cookie toProto() {
         return bisq.settings.protobuf.Cookie.newBuilder()
                 .addAllCookieMapEntries(map.entrySet().stream()
@@ -52,28 +51,24 @@ public class Cookie implements Proto {
                 .build();
     }
 
-    public static Cookie fromProto(bisq.settings.protobuf.Cookie proto) {
+    static Cookie fromProto(bisq.settings.protobuf.Cookie proto) {
         return new Cookie(proto.getCookieMapEntriesList().stream()
                 .collect(Collectors.toMap(
                         e -> CookieKey.fromProto(e.getCookieKey()),
                         CookieMapEntry::getValue)));
     }
 
-    public void put(CookieKey key, String value) {
+    void put(CookieKey key, String value) {
         map.put(key, value);
     }
 
-    public void putAll(Map<CookieKey, String> map) {
+    void putAll(Map<CookieKey, String> map) {
         this.map.putAll(map);
     }
 
     @Nullable
     public String getValue(CookieKey key) {
         return map.get(key);
-    }
-
-    public void putAsDouble(CookieKey key, double value) {
-        map.put(key, String.valueOf(value));
     }
 
     public Optional<Double> getAsOptionalDouble(CookieKey key) {
@@ -86,13 +81,21 @@ public class Cookie implements Proto {
         }
     }
 
-    public void putAsBoolean(CookieKey key, boolean value) {
-        map.put(key, value ? "1" : "0");
-    }
-
     public Optional<Boolean> getAsOptionalBoolean(CookieKey key) {
         return map.containsKey(key) ?
                 Optional.of(map.get(key).equals("1")) :
                 Optional.empty();
+    }
+
+    void putAsBoolean(CookieKey key, boolean value) {
+        map.put(key, value ? "1" : "0");
+    }
+
+    void putAsDouble(CookieKey key, double value) {
+        map.put(key, String.valueOf(value));
+    }
+
+    Map<CookieKey, String> getMap() {
+        return map;
     }
 }

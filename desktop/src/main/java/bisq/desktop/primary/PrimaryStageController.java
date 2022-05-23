@@ -113,7 +113,7 @@ public class PrimaryStageController extends NavigationController {
         if (applicationService.getChatUserService().isDefaultUserProfileMissing()) {
             Navigation.navigateTo(NavigationTarget.ONBOARDING);
         } else {
-            String value = settingsService.getPersistableStore().getCookie().getValue(CookieKey.NAVIGATION_TARGET);
+            String value = settingsService.getCookie().getValue(CookieKey.NAVIGATION_TARGET);
             if (value != null && !value.isEmpty()) {
                 try {
                     NavigationTarget persisted = NavigationTarget.valueOf(value);
@@ -146,22 +146,18 @@ public class PrimaryStageController extends NavigationController {
     }
 
     public void onStageXChanged(double value) {
-        settingsService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_X, value);
-        settingsService.persist();
+        settingsService.setCookie(CookieKey.STAGE_X, value);
     }
 
     public void onStageYChanged(double value) {
-        settingsService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_Y, value);
-        settingsService.persist();
+        settingsService.setCookie(CookieKey.STAGE_Y, value);
     }
 
     public void onStageWidthChanged(double value) {
-        settingsService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_W, value);
-        settingsService.persist();
+        settingsService.setCookie(CookieKey.STAGE_W, value);
     }
 
     public void onStageHeightChanged(double value) {
-        settingsService.getPersistableStore().getCookie().putAsDouble(CookieKey.STAGE_H, value);
-        settingsService.persist();
+        settingsService.setCookie(CookieKey.STAGE_H, value);
     }
 }

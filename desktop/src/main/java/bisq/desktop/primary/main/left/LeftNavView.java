@@ -95,7 +95,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 NavigationTarget.DISCUSS, false);
 
         LeftNavButton events = createNavigationButton(Res.get("events"),
-                "nav-support",
+                "nav-events",
                 NavigationTarget.EVENTS, false);
 
         LeftNavButton trade = createNavigationButton(Res.get("trade"),
@@ -171,8 +171,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems,  chat, learn, learnSubMenuItems, 
-                events,wallet, walletSubMenuItems,  /*markets,
+        mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems, chat, learn, learnSubMenuItems,
+                events, wallet, walletSubMenuItems,  /*markets,
                 wallet, walletSubMenuItems, support,*/ settings);
         mainMenuItems.setLayoutY(menuTop);
         root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, mainMenuItems, expandIcon, collapseIcon, networkInfoBox);
@@ -286,9 +286,14 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                                                  String iconId,
                                                  NavigationTarget navigationTarget,
                                                  boolean hasSubmenu) {
-        LeftNavButton button = new LeftNavButton(title, iconId, toggleGroup, navigationTarget, hasSubmenu);
+
+        LeftNavButton button = new LeftNavButton(title, iconId, toggleGroup, navigationTarget, hasSubmenu, this::toggleSubMenu);
         setupButtonHandler(navigationTarget, button);
         return button;
+    }
+
+    private void toggleSubMenu() {
+        // todo toggle expand/collapse state of sub menu
     }
 
     private LeftNavSubButton createSubmenuNavigationButton(String title, NavigationTarget navigationTarget) {
@@ -297,7 +302,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         VBox.setVgrow(button, Priority.ALWAYS);
         return button;
     }
-    
+
     private VBox createSubmenu(LeftNavSubButton... items) {
         VBox submenu = new VBox(2);
         VBox.setMargin(submenu, new Insets(-10, 0, 0, 0));
@@ -305,7 +310,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         submenu.setMinHeight(0);
         submenu.setPrefHeight(0);
         submenu.getChildren().setAll(items);
-        
+
         return submenu;
     }
 
@@ -362,7 +367,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 boolean isSubmenuActive = submenu.getChildren().contains(selectedLeftNavButton)
                         || selectedLeftNavButton.navigationTarget == parentMenuItem.navigationTarget;
                 parentMenuItem.setHighlighted(isSubmenuActive);
-                Layout.toggleStyleClass(submenu, "bisq-dark-bg", isSubmenuActive);
+              
+              //  Layout.toggleStyleClass(submenu, "bisq-dark-bg", isSubmenuActive);
+               
                 Transitions.animateHeight(
                         submenu,
                         isSubmenuActive ? (LeftNavSubButton.HEIGHT + 2) * submenu.getChildren().size() : 0
@@ -377,9 +384,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             setMinHeight(LeftNavButton.HEIGHT);
             setMaxHeight(LeftNavButton.HEIGHT);
             setPadding(new Insets(20, 24, 0, 24));
-            
+
             setOnMouseClicked(e -> handler.run());
-            
+
             getChildren().addAll(
                     getNetworkBox(
                             Res.get("peers"),
@@ -398,12 +405,12 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                     )
             );
         }
-                
+
         private HBox getNetworkBox(String title,
-                String imageId,
-                StringProperty numConnections, 
-                StringProperty numTargetConnections,
-                BooleanProperty networkEnabled) {
+                                   String imageId,
+                                   StringProperty numConnections,
+                                   StringProperty numTargetConnections,
+                                   BooleanProperty networkEnabled) {
 
             Label titleLabel = new Label(title);
             titleLabel.getStyleClass().add("bisq-small-dimmed-label");
@@ -422,7 +429,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             ImageView icon = ImageUtil.getImageViewById(imageId);
             EasyBind.subscribe(networkEnabled, value -> icon.setOpacity(value ? 1 : 0.4));
             HBox.setMargin(icon, new Insets(0, 0, 0, 2));
-            
+
             return new HBox(5, titleLabel, numConnectionsLabel, separator, numTargetConnectionsLabel, icon);
         }
     }

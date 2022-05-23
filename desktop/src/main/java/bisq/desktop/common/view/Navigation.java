@@ -66,8 +66,7 @@ public class Navigation {
 
     static void persistNavigationTarget(NavigationTarget navigationTarget) {
         if (navigationTarget.isAllowPersistence()) {
-            settingsService.getPersistableStore().getCookie().put(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
-            settingsService.persist();
+            settingsService.setCookie(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
         }
     }
 

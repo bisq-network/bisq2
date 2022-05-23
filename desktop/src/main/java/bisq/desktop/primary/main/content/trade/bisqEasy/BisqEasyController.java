@@ -18,73 +18,61 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.data.ByteArray;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.primary.main.content.ChatController;
-import bisq.desktop.primary.main.content.components.PublicTradeChannelSelection;
-import bisq.social.chat.channels.Channel;
-import bisq.social.chat.channels.PrivateTradeChannel;
-import bisq.social.chat.messages.ChatMessage;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationController;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.BisqEasyChatController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.onboarding.BisqEasyOnBoardingController;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
+
+import java.util.Optional;
 
 @Slf4j
-public class BisqEasyController extends ChatController<BisqEasyView, BisqEasyModel> implements Controller {
-    private PublicTradeChannelSelection publicTradeChannelSelection;
+public class BisqEasyController extends NavigationController {
+    private final DefaultApplicationService applicationService;
+    @Getter
+    private final BisqEasyModel model;
+    @Getter
+    private final BisqEasyView view;
+    private final SettingsService settingsService;
 
     public BisqEasyController(DefaultApplicationService applicationService) {
-        super(applicationService, false);
+        super(NavigationTarget.BISQ_EASY);
+
+        this.applicationService = applicationService;
+        settingsService = applicationService.getSettingsService();
+        model = new BisqEasyModel();
+        view = new BisqEasyView(model, this);
     }
 
     @Override
     public void onActivate() {
-        super.onActivate();
-
-        notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
-                value -> {
-                    Channel<? extends ChatMessage> channel = chatService.getSelectedTradeChannel().get();
-                    if (channel != null) {
-                        chatService.setNotificationSetting(channel, value);
-                    }
-                });
-
-        selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(this::handleChannelChange);
+        Navigation.navigateTo(settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_EASY_ONBOARDED)
+                .filter(value -> value)
+                .map(value -> NavigationTarget.BISQ_EASY_CHAT)
+                .orElse(NavigationTarget.BISQ_EASY_ON_BOARDING));
     }
 
     @Override
-    public void createComponents() {
-        publicTradeChannelSelection = new PublicTradeChannelSelection(applicationService);
+    public void onDeactivate() {
     }
 
     @Override
-    public BisqEasyModel getChatModel(boolean isDiscussionsChat) {
-        return new BisqEasyModel(isDiscussionsChat);
-    }
-
-    @Override
-    public BisqEasyView getChatView() {
-        return new BisqEasyView(model,
-                this,
-                publicTradeChannelSelection.getRoot(),
-                privateChannelSelection.getRoot(),
-                chatMessagesComponent.getRoot(),
-                notificationsSettings.getRoot(),
-                channelInfo.getRoot(),
-                filterBox);
-    }
-
-    @Override
-    protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
-        super.handleChannelChange(channel);
-
-        if (channel instanceof PrivateTradeChannel privateTradeChannel) {
-            model.getPeersRoboIconImage().set(RoboHash.getImage(new ByteArray(privateTradeChannel.getPeer().getPubKeyHash())));
-            model.getPeersRoboIconVisible().set(true);
-            publicTradeChannelSelection.deSelectChannel();
-        } else {
-            model.getPeersRoboIconVisible().set(false);
-            privateChannelSelection.deSelectChannel();
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        switch (navigationTarget) {
+            case BISQ_EASY_CHAT -> {
+                return Optional.of(new BisqEasyChatController(applicationService));
+            }
+            case BISQ_EASY_ON_BOARDING -> {
+                return Optional.of(new BisqEasyOnBoardingController(applicationService));
+            }
+            default -> {
+                return Optional.empty();
+            }
         }
     }
 }
