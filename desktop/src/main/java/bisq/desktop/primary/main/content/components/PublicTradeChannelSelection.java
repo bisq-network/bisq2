@@ -181,48 +181,39 @@ public class PublicTradeChannelSelection extends ChannelSelection {
     }
 
     protected static class View extends ChannelSelection.View<Model, Controller> {
-        private final Label plusIcon;
-        private final ChangeListener<Number> widthListener;
+        private final Label gearsIcon;
 
         protected View(Model model, Controller controller) {
             super(model, controller);
 
-            plusIcon = Icons.getIcon(AwesomeIcon.PLUS_SIGN_ALT, "14");
-            plusIcon.setOpacity(0.6);
-            plusIcon.setLayoutY(15);
-            plusIcon.setCursor(Cursor.HAND);
+            gearsIcon = Icons.getIcon(AwesomeIcon.GEARS, "14");
+            gearsIcon.setOpacity(0.6);
+            gearsIcon.setLayoutY(22);
+            gearsIcon.setLayoutX(172);
+            gearsIcon.setCursor(Cursor.HAND);
 
-            titledPaneContainer.getChildren().add(plusIcon);
-            widthListener = (observableValue, oldValue, newValue) -> layout();
+            getRoot().getChildren().add(gearsIcon);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            layout();
-
-            plusIcon.setOnMouseClicked(e -> new ComboBoxOverlay<>(plusIcon,
+            gearsIcon.setOnMouseClicked(e -> new ComboBoxOverlay<>(gearsIcon,
                     model.allMarketsSortedList,
                     c -> getMarketListCell(),
                     controller::onShowMarket,
                     350, 5, 0).show());
-            titledPaneContainer.widthProperty().addListener(widthListener);
         }
 
         @Override
         protected void onViewDetached() {
-            titledPaneContainer.widthProperty().removeListener(widthListener);
-            plusIcon.setOnMouseClicked(null);
+            gearsIcon.setOnMouseClicked(null);
         }
 
         @Override
         protected String getHeadlineText() {
             return Res.get("social.marketChannels");
-        }
-
-        private void layout() {
-            plusIcon.setLayoutX(root.getWidth() - 25);
         }
 
         protected ListCell<View.MarketListItem> getMarketListCell() {

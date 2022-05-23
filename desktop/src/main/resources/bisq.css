@@ -307,6 +307,12 @@
     -fx-font-size: 0.92em;
 }
 
+.bisq-text-8 {
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bisq-grey-9;
+}
+
 .wrap-text {
     -fx-wrap-text: true;    
 }
@@ -394,6 +400,10 @@
 
 .bisq-text-grey-9 {
     -fx-text-fill: -bisq-grey-9;
+}
+
+.font-medium {
+    -fx-font-family: "IBM Plex Sans Medium";
 }
 /*
 .bisq-label-white:selected {
@@ -744,12 +754,30 @@
     -fx-text-fill: -bisq-white;
 }
 
-
 /*******************************************************************************
  *                                                                             *
- * Misc list based                                                             *
+ * Channel selection                                                           *
  *                                                                             *
  ******************************************************************************/
+.list-view.channel-selection-list-view {
+    -fx-background-color: transparent;
+}
+
+.list-view.channel-selection-list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.list-view.channel-selection-list-view .list-cell:selected {
+    -fx-background-color: -bisq-logo-green;
+}
+
+
+    /*******************************************************************************
+     *                                                                             *
+     * Misc list based                                                             *
+     *                                                                             *
+     ******************************************************************************/
 
 .list-view:focused,
 .tree-view:focused,
@@ -941,7 +969,7 @@ tree-table-view:focused {
  ******************************************************************************/
 
 .titled-pane {
-    -fx-background-color: -bisq-bg-dark;
+    -fx-background-color: null;
     -fx-text-fill: -bisq-white;
     -fx-label-padding: -30 0 0 0;
 }
@@ -950,8 +978,8 @@ tree-table-view:focused {
 }
 
 .titled-pane > .title {
-    -fx-background-color: -bisq-grey-12;
-    -fx-border-color: -bisq-bg-dark;;
+    -fx-background-color: null;
+    -fx-border-color: null;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-pref-height: 50;
@@ -1259,10 +1287,6 @@ tree-table-view:focused {
 .channel-settings-headline {
     -fx-font-size: 1.692em;
     -fx-text-fill: -bisq-grey-5;
-}
-
-#chat-messages-list-view {
-    -fx-background-color: transparent;
 }
 
 #chat-messages-text-area-input-field {

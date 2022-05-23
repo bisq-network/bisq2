@@ -33,10 +33,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -73,17 +70,19 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button").toUpperCase());
         createOfferButton.setDefaultButton(true);
         createOfferButton.setPrefHeight(40);
-        VBox.setMargin(createOfferButton, new Insets(0, 0, 1, 0));
+        VBox.setMargin(createOfferButton, new Insets(0, 0, 10, 0));
 
         left = Layout.vBoxWith(
                 marketChannelSelection,
+                Layout.separator(),
                 privateChannelSelection,
                 Spacer.fillVBox(),
                 createOfferButton
         );
-        left.setPadding(new Insets(0, 10, 0, 0));
-        left.setPrefWidth(300);
-        left.setMinWidth(220);
+        left.getStyleClass().add("bisq-dark-bg");
+        left.setPadding(new Insets(0, 10, 0, 10));
+        left.setPrefWidth(210);
+        left.setMinWidth(210);
 
         // Center toolbar
         // peersRoboIconView only visible for private channels

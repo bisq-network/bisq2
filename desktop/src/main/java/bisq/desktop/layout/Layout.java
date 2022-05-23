@@ -21,6 +21,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import javax.annotation.Nullable;
@@ -63,6 +64,12 @@ public class Layout {
         vBox.setSpacing(15);
         vBox.getChildren().addAll(nodes);
         return vBox;
+    }
+    
+    public static Region separator() {
+        Region separator = new Region();
+        separator.getStyleClass().addAll("border-bottom");
+        return separator;
     }
     
     public static void addStyleClass(Node node, String className) {

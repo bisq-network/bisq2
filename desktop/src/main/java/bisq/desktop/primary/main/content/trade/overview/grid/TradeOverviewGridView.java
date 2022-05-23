@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.trade.overview.grid;
 
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.content.trade.overview.ProtocolListItem;
 import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseView;
 import bisq.i18n.Res;
@@ -78,11 +79,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         basicInfo.setAlignment(Pos.TOP_LEFT);
         basicInfo.setMaxWidth(384);
         basicInfo.setMinHeight(60);
-        box.getChildren().add(basicInfo);
-
-        Region line = new Region();
-        line.getStyleClass().addAll("border-bottom");
-        box.getChildren().add(line);
+        box.getChildren().addAll(basicInfo, Layout.separator());
 
         GridPane paramsPane = new GridPane();
         paramsPane.setPadding(new Insets(24, VERTICAL_MARGIN, 20, VERTICAL_MARGIN));
