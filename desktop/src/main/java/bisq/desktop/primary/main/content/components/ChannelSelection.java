@@ -14,9 +14,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.geometry.Insets;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.TitledPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.EqualsAndHashCode;
@@ -29,12 +30,6 @@ import java.util.Comparator;
 
 @Slf4j
 public abstract class ChannelSelection {
-
-    public ChannelSelection() {
-    }
-
-    public abstract Pane getRoot();
-
     protected static abstract class Controller implements bisq.desktop.common.view.Controller {
         protected final ChatService chatService;
         protected Pin selectedChannelPin;
@@ -81,28 +76,25 @@ public abstract class ChannelSelection {
     }
 
     @Slf4j
-    public static abstract class View<M extends ChannelSelection.Model, C extends ChannelSelection.Controller> extends bisq.desktop.common.view.View<VBox, M, C> {
+    public static abstract class View<M extends ChannelSelection.Model, C extends ChannelSelection.Controller> extends bisq.desktop.common.view.View<Pane, M, C> {
         protected final ListView<ChannelItem> listView;
         private final InvalidationListener channelsChangedListener;
-        protected final Pane titledPaneContainer;
-        protected final TitledPane titledPane;
         protected Subscription listViewSelectedChannelSubscription, modelSelectedChannelSubscription;
 
         protected View(M model, C controller) {
-            super(new VBox(), model, controller);
-            root.setSpacing(10);
+            super(new Pane(), model, controller);
 
+            Label headline = new Label(getHeadlineText());
+            headline.getStyleClass().add("bisq-text-8");
+            VBox.setMargin(headline, new Insets(22, 0, 10, 22));
+            
             listView = new ListView<>(model.sortedList);
+            listView.getStyleClass().add("channel-selection-list-view");
             listView.setPrefHeight(100);
             listView.setFocusTraversable(false);
             listView.setCellFactory(p -> getListCell());
 
-            titledPane = new TitledPane(getHeadlineText(), listView);
-
-            titledPaneContainer = new Pane();
-            titledPaneContainer.getChildren().addAll(titledPane);
-
-            root.getChildren().addAll(titledPaneContainer);
+            root.getChildren().addAll(new VBox(10, headline, listView));
             channelsChangedListener = observable -> adjustHeight();
         }
 
@@ -110,7 +102,6 @@ public abstract class ChannelSelection {
 
         @Override
         protected void onViewAttached() {
-            titledPane.prefWidthProperty().bind(root.widthProperty());
             listViewSelectedChannelSubscription = EasyBind.subscribe(listView.getSelectionModel().selectedItemProperty(),
                     channel -> {
                         if (channel != null) {
@@ -131,7 +122,6 @@ public abstract class ChannelSelection {
 
         @Override
         protected void onViewDetached() {
-            titledPane.prefWidthProperty().unbind();
             listViewSelectedChannelSubscription.unsubscribe();
             modelSelectedChannelSubscription.unsubscribe();
             model.sortedList.removeListener(channelsChangedListener);
@@ -158,7 +148,7 @@ public abstract class ChannelSelection {
 
             public String getDisplayString() {
                 if (channel instanceof PublicTradeChannel publicTradeChannel) {
-                    return publicTradeChannel.getMarket().map(Market::toString).orElse(Res.get("tradeChat.addMarketChannel.any"));
+                    return publicTradeChannel.getMarket().map(Market::getCurrencyCodes).orElse(Res.get("tradeChat.addMarketChannel.any"));
                 } else {
                     return channel.getDisplayString();
                 }
