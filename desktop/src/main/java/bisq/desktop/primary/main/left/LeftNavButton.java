@@ -122,7 +122,8 @@ class LeftNavButton extends Pane implements Toggle {
 
     protected void applyStyle() {
         boolean isHighlighted = isSelected() || isHighlighted();
-        Layout.chooseStyleClass(this, "bisq-dark-bg", "bisq-darkest-bg", isHighlighted);
+        Layout.addStyleClass(this, "bisq-darkest-bg");
+        // Layout.chooseStyleClass(this, "bisq-dark-bg", "bisq-darkest-bg", isHighlighted);
         Layout.toggleStyleClass(label, "bisq-text-logo-green", isSelected());
         Layout.toggleStyleClass(label, "bisq-text-white", isHighlighted());
         Layout.toggleStyleClass(label, "bisq-text-grey-9", !isHighlighted);

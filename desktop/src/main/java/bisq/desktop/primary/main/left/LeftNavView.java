@@ -367,7 +367,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 boolean isSubmenuActive = submenu.getChildren().contains(selectedLeftNavButton)
                         || selectedLeftNavButton.navigationTarget == parentMenuItem.navigationTarget;
                 parentMenuItem.setHighlighted(isSubmenuActive);
-                Layout.toggleStyleClass(submenu, "bisq-dark-bg", isSubmenuActive);
+              
+              //  Layout.toggleStyleClass(submenu, "bisq-dark-bg", isSubmenuActive);
+               
                 Transitions.animateHeight(
                         submenu,
                         isSubmenuActive ? (LeftNavSubButton.HEIGHT + 2) * submenu.getChildren().size() : 0
