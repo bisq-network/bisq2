@@ -36,14 +36,13 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.stream.Stream;
 
 @Slf4j
 class LeftNavButton extends Pane implements Toggle {
     protected final static double LABEL_X_POS_EXPANDED = 56;
     static final int HEIGHT = 40;
-    
+
     @Getter
     protected final NavigationTarget navigationTarget;
     protected final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
@@ -58,15 +57,16 @@ class LeftNavButton extends Pane implements Toggle {
     protected final ImageView iconActive;
     @Nullable
     protected final ImageView iconHover;
-    
+
     @Nullable
     protected ImageView submenuActionIcon;
 
-    LeftNavButton(String title, 
+    LeftNavButton(String title,
                   @Nullable String iconId,
                   ToggleGroup toggleGroup,
-                  NavigationTarget navigationTarget, 
-                  boolean hasSubmenu) {
+                  NavigationTarget navigationTarget,
+                  boolean hasSubmenu,
+                  @Nullable Runnable toggleSubMenuHandler) {
         this.icon = iconId != null ? ImageUtil.getImageViewById(iconId) : null;
         this.iconActive = iconId != null ? ImageUtil.getImageViewById(iconId + "-active") : null;
         this.iconHover = iconId != null ? ImageUtil.getImageViewById(iconId + "-hover") : null;
@@ -78,7 +78,6 @@ class LeftNavButton extends Pane implements Toggle {
 
         setToggleGroup(toggleGroup);
         toggleGroup.getToggles().add(this);
-        // selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
 
         tooltip = new Tooltip(title);
         if (iconId != null) {
@@ -96,11 +95,17 @@ class LeftNavButton extends Pane implements Toggle {
         label.setMouseTransparent(true);
 
         getChildren().add(label);
-        
+
         if (hasSubmenu) {
             submenuActionIcon = ImageUtil.getImageViewById("expand");
             submenuActionIcon.setLayoutX(200);
             submenuActionIcon.setLayoutY(16);
+            submenuActionIcon.setOnMouseClicked(e -> {
+                e.consume();
+                if (toggleSubMenuHandler != null) {
+                    toggleSubMenuHandler.run();
+                }
+            });
             getChildren().add(submenuActionIcon);
         }
 
@@ -121,16 +126,16 @@ class LeftNavButton extends Pane implements Toggle {
         Layout.toggleStyleClass(label, "bisq-text-logo-green", isSelected());
         Layout.toggleStyleClass(label, "bisq-text-white", isHighlighted());
         Layout.toggleStyleClass(label, "bisq-text-grey-9", !isHighlighted);
-        
+
         if (icon != null) {
             getChildren().set(
                     0,
-                    isSelected() 
-                            ? iconActive 
+                    isSelected()
+                            ? iconActive
                             : isHighlighted ? iconHover : icon
             );
         }
-        
+
         if (submenuActionIcon != null) {
             submenuActionIcon.setId(isHighlighted ? "collapse" : "expand");
         }
@@ -206,8 +211,8 @@ class LeftNavButton extends Pane implements Toggle {
         selectedProperty.set(selected);
         applyStyle();
     }
-    
-    
+
+
     public boolean isHighlighted() {
         return highlightedProperty.get();
     }
