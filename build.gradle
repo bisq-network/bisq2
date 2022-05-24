@@ -1,5 +1,1 @@
-plugins {
-    id 'java'
-}
-
 group 'bisq'
