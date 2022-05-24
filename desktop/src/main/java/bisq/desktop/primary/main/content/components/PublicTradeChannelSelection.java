@@ -36,6 +36,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.EqualsAndHashCode;
@@ -45,6 +46,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -225,7 +227,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     setCursor(Cursor.HAND);
                     setPrefHeight(40);
                     setPadding(new Insets(0, 0, -20, 0));
-
+                    
                     badge.setTooltip(Res.get("social.marketChannels.numMessages"));
                     badge.setPosition(Pos.CENTER_RIGHT);
 
@@ -256,12 +258,15 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 private Subscription widthSubscription;
                 final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
                 final Label label = new Label();
+                final ImageView icon = new ImageView();
                 final HBox hBox = new HBox();
 
                 {
                     setCursor(Cursor.HAND);
                     setPrefHeight(40);
                     setPadding(new Insets(0, 0, -20, 0));
+                    
+                    label.setGraphic(icon);
 
                     hBox.setSpacing(10);
                     hBox.setAlignment(Pos.CENTER_LEFT);
@@ -275,6 +280,13 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel publicTradeChannel) {
+                        publicTradeChannel.getMarket()
+                                .ifPresent(market -> icon.setImage(
+                                        MarketImageGenerator.imageForMarket(
+                                                market.baseCurrencyCode().toLowerCase(), 
+                                                market.quoteCurrencyCode().toLowerCase()
+                                        )
+                                ));
                         label.setText(item.getDisplayString());
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {

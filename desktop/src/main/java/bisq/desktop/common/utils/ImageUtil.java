@@ -41,7 +41,10 @@ public class ImageUtil {
 
     public static Image getImageByPath(String path, int width, int height) {
         try (InputStream resourceAsStream = ImageView.class.getClassLoader().getResourceAsStream(path)) {
-            return new Image(Objects.requireNonNull(resourceAsStream), width, height, true, true);
+            if (resourceAsStream == null) {
+                return null;
+            }
+            return new Image(resourceAsStream, width, height, true, true);
         } catch (Exception e) {
             log.error("Loading image failed: path={}", path);
             e.printStackTrace();
