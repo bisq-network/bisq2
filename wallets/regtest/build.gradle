@@ -9,7 +9,8 @@ dependencies {
     implementation project(':core')
     implementation project(':bitcoind')
 
-    implementation libs.junit.jupiter
     implementation libs.google.guava
-    testImplementation libs.assertj.core
+
+    implementation libs.assertj.core
+    implementation libs.junit.jupiter
 }
