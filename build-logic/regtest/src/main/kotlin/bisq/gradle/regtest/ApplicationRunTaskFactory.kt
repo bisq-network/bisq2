@@ -29,9 +29,8 @@ object ApplicationRunTaskFactory {
         dataDir: Provider<Directory>,
         dependentTask: TaskProvider<out DefaultTask>?
     ) {
-        val desktopProject: Project = project.project("desktopapp")
         registerRunTaskToProject(
-            project = desktopProject,
+            project = project,
             taskName = taskName,
             descriptionText = description,
             cmdLineArgs = cmdLineArgs,
