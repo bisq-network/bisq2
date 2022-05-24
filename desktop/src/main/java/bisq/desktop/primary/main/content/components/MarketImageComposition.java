@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.stream.Stream;
 
 @Slf4j
-public class MarketImageGenerator {
+public class MarketImageComposition {
     // todo Better use normal composition instead of PixelWriter as rendered image does not has anti-alias and 
     // looks pixelated even with double scale
     public static ImageView imageViewForMarket(String baseCurrencyCode, String quoteCurrencyCode) {
