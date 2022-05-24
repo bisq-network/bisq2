@@ -31,6 +31,9 @@ public class ImageUtil {
     // Does not resolve the @2x automatically
     public static Image getImageByPath(String path) {
         try (InputStream resourceAsStream = ImageView.class.getClassLoader().getResourceAsStream(path)) {
+            if (resourceAsStream == null) {
+                return null;
+            }
             return new Image(Objects.requireNonNull(resourceAsStream));
         } catch (Exception e) {
             log.error("Loading image failed: path={}", path);
