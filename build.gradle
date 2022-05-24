@@ -1,6 +1,1 @@
-plugins {
-    id 'java'
-    id 'bisq.gradle.regtest.BisqRegtestPlugin'
-}
-
 group 'bisq'

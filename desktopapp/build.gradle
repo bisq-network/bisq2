@@ -2,6 +2,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
     id 'bisq.java-library'
+    id 'bisq.gradle.regtest.BisqRegtestPlugin'
     id 'application'
     /* id 'distribution'*/ //todo as long we dont need a jar we leave that out, speeds up build
     alias(libs.plugins.openjfx)
@@ -71,7 +72,6 @@ shadowDistZip.enabled = false
 shadowDistTar.enabled = false
 
 tasks.jpackage {
-    dependsOn rootProject.clean
     dependsOn tasks.clean // Ensure fresh buildDir for every jpackager binary build
     dependsOn tasks.jar, tasks.shadowJar
 
