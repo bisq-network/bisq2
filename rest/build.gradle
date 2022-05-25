@@ -21,11 +21,6 @@ application {
     project.mainClassName = 'bisq.api.resteasy.RestApplication'
 }
 
-apply from: '../buildSrc/bisq-version.gradle'
-apply from: '../buildSrc/logging-dependencies.gradle'
-
-version '0.0.2-SNAPSHOT'
-
 ext {
     swaggerVersion = '2.2.0'
     jerseyVersion = '3.0.4'
@@ -52,9 +47,7 @@ dependencies {
     implementation project(':social')
     implementation project(':presentation')
     implementation project(':application')
-    implementation project(':wallets')
 
-    implementation libs.google.guava
 
     implementation("org.glassfish.jersey.containers:jersey-container-jdk-http:$jerseyVersion")
     implementation("org.glassfish.jersey.media:jersey-media-json-jackson:$jerseyVersion")

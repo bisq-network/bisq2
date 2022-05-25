@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Produces(MediaType.APPLICATION_JSON)
 @Hidden
 public class SwaggerResource {
-    public static String swagger;
+    private static String swagger;
 
     @GET
 

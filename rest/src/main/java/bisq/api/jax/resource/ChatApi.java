@@ -21,6 +21,7 @@ import bisq.api.jax.RestApplication;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.social.chat.ChatService;
+import bisq.social.protobuf.Channel;
 import bisq.social.user.ChatUserService;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -29,6 +30,9 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Path("/api/v1/chat")
@@ -43,13 +47,13 @@ public class ChatApi {
         chatUserService = app.getApplicationService().getChatUserService();
         identityService = app.getApplicationService().getIdentityService();
     }
-//
-//    @GET
-//    @Path("/get-public-trade-channels")
-//    public ObservableSet<PublicTradeChannel> getPublicTradeChannels() {
-//        return chatService.getPublicTradeChannels();
-//    }
-//
+
+    @GET
+    @Path("/get-public-trade-channels")
+    public List<Channel> getPublicTradeChannels() {
+        return chatService.getPublicTradeChannels().stream().map(tc -> tc.toProto()).collect(Collectors.toList());
+    }
+
 //
 //    @GET
 //    @Path("/get-public-discussion-channels")
