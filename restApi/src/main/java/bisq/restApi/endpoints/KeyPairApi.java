@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.jax.resource.keypair;
+package bisq.restApi.endpoints;
 
-import bisq.api.jax.RestApplication;
-import bisq.api.jax.StatusException;
+import bisq.restApi.RestApiApplication;
+import bisq.restApi.error.StatusException;
+import bisq.restApi.dto.KeyPairDto;
 import bisq.security.KeyPairService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,35 +40,36 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 
 @Slf4j
-@Path("/KeyPair")
+@Path("/key-pair")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Key Pair API")
 public class KeyPairApi {
-    public static final String DESC_KEYID = "The ID for identifying the key which we look up or create in case it does not exist.";
+    public static final String DESC_KEY_ID = "The ID for identifying the key which we look up or create in case it does not exist.";
+    
     private final KeyPairService keyPairService;
 
-    public KeyPairApi(@Context Application app) {
-        keyPairService = ((RestApplication) app).getApplicationService().getSecurityService().getKeyPairService();
+    public KeyPairApi(@Context Application application) {
+        keyPairService = ((RestApiApplication) application).getApplicationService().getSecurityService().getKeyPairService();
     }
 
     /**
      * @param keyId The ID for identifying the key which we look up or create in case it does not exist.
      * @return The key pair.
      */
-    @Operation(description = "find the private and public key for given ID")
-    @ApiResponse(responseCode = "200", description = "the created or existing privat and public key for the given keyId",
+    @Operation(description = "find the key pair for given ID")
+    @ApiResponse(responseCode = "200", description = "the created or existing key pair for the given key-id",
             content = {
                     @Content(
                             mediaType = MediaType.APPLICATION_JSON,
-                            schema = @Schema(implementation = KeyPairDTO.class)
+                            schema = @Schema(implementation = KeyPairDto.class)
                     )}
     )
     @GET
-    @Path("get-or-create/{keyId}")
-    public KeyPairDTO getOrCreateKeyPair(
-            @Parameter(description = DESC_KEYID) @PathParam("keyId") String keyId) {
-        KeyPair k = keyPairService.getOrCreateKeyPair(keyId);
-        return new KeyPairDTO(k);
+    @Path("get-or-create/{key-id}")
+    public KeyPairDto getOrCreateKeyPair(
+            @Parameter(description = DESC_KEY_ID) @PathParam("key-id") String keyId) {
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        return new KeyPairDto(keyPair);
     }
 
     /**
@@ -75,19 +77,19 @@ public class KeyPairApi {
      * @return The key pair if a key pair with that keyId exist, otherwise null.
      */
 
-    @Operation(summary = "find the private and public key for given ID")
-    @ApiResponse(responseCode = "404", description = "keyId was not found")
-    @ApiResponse(responseCode = "200", description = "privat and public key for the keyId",
+    @Operation(summary = "find the key pair for given ID")
+    @ApiResponse(responseCode = "404", description = "key-id was not found")
+    @ApiResponse(responseCode = "200", description = "key pair for the key-id",
             content = {
                     @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = KeyPairDTO.class)
+                            schema = @Schema(implementation = KeyPairDto.class)
                     )}
     )
     @GET
-    @Path("get/{keyId}")
-    public KeyPairDTO findKeyPair(@Parameter(description = DESC_KEYID) @PathParam("keyId") String keyId) {
-        return new KeyPairDTO(keyPairService.findKeyPair(keyId)
-                .orElseThrow(() -> new StatusException(Response.Status.NOT_FOUND, "Could not find the key " + keyId)));
+    @Path("get/{key-id}")
+    public KeyPairDto findKeyPair(@Parameter(description = DESC_KEY_ID) @PathParam("key-id") String keyId) {
+        return new KeyPairDto(keyPairService.findKeyPair(keyId)
+                .orElseThrow(() -> new StatusException(Response.Status.NOT_FOUND, "Could not find the key pair for ID " + keyId)));
     }
 }

@@ -1,6 +1,5 @@
-package bisq.api.jax.resource;
+package bisq.restApi;
 
-import bisq.api.jax.RestApplication;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.jaxrs2.Reader;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -21,14 +20,14 @@ import lombok.extern.slf4j.Slf4j;
 @Path("openapi.json")
 @Produces(MediaType.APPLICATION_JSON)
 @Hidden
-public class SwaggerResource {
-    private static String swagger;
+public class SwaggerResolution {
+    private static String swaggerJson;
 
     @GET
-    public String swagIt(@Context Application app) {
-        if (swagger == null) {
+    public String swagIt(@Context Application application) {
+        if (swaggerJson == null) {
             try {
-                OpenAPI oas = new OpenAPI();
+                OpenAPI api = new OpenAPI();
                 Info info = new Info()
                         .title("Bisq v2 REST API")
                         .description("This is the rest API description for Bisq2, For more Information about Bisq, see https://bisq.network")
@@ -39,18 +38,17 @@ public class SwaggerResource {
                                 .name("GNU Affero General Public License")
                                 .url("https://github.com/bisq-network/bisq2/blob/main/LICENSE"));
 
-                oas.info(info).addServersItem(new Server().url(RestApplication.BASE_URL));
-                SwaggerConfiguration oasConfig = new SwaggerConfiguration().openAPI(oas);
-
-                Reader reader = new Reader(oasConfig);
-                OpenAPI openAPI = reader.read(app.getClasses());
-                swagger = Json.pretty(openAPI);
+                api.info(info).addServersItem(new Server().url(RestApiApplication.BASE_URL));
+                SwaggerConfiguration configuration = new SwaggerConfiguration().openAPI(api);
+                Reader reader = new Reader(configuration);
+                OpenAPI openAPI = reader.read(application.getClasses());
+                swaggerJson = Json.pretty(openAPI);
             } catch (RuntimeException e) {
                 log.error(e.getMessage(), e);
                 throw e;
             }
         }
 
-        return swagger;
+        return swaggerJson;
     }
 }
