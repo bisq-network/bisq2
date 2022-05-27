@@ -1,19 +1,25 @@
 package bisq.api.jax;
 
-import bisq.api.jax.resource.ChatApi;
-import bisq.api.jax.resource.KeyPairApi;
+import bisq.api.jax.resource.SwaggerResource;
+import bisq.api.jax.resource.keypair.KeyPairApi;
 import bisq.application.DefaultApplicationService;
 import com.sun.net.httpserver.HttpServer;
-import jakarta.ws.rs.ApplicationPath;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import java.net.URI;
 
-@ApplicationPath("/api")
+/**
+ * Application main to start and config the rest service.
+ * This creates and rest service at BASE_URL for clients to connect and for users to browse the documentation.
+ * <p>
+ * swagger doc are available at <a href="http://localhost:8082/doc/v1/index.html">REST documentation</a>
+ */
+@Slf4j
 public class RestApplication extends ResourceConfig {
-    public static final URI BASE_URI = URI.create("http://localhost:8082/rest");
+    public static final String BASE_URL = "http://localhost:8082/rest/v1";
 
     @Getter
     protected final DefaultApplicationService applicationService;
@@ -29,31 +35,31 @@ public class RestApplication extends ResourceConfig {
         startServer();
     }
 
-    private static void stopServer() {
-        httpServer.stop(0);
+    public static void stopServer() {
+        httpServer.stop(15);
     }
 
-    private static void startServer() throws Exception {
+    public static void startServer() throws Exception {
         // 'config' acts as application in jax-rs
         final ResourceConfig app = new RestApplication()
                 .register(CustomExceptionMapper.class)
-                .register(ProtoWriter.class)
-                .register(KeyPairWriter.class)
-                .register(ChatApi.class)
+                .register(StatusException.StatusExceptionMapper.class)
+//                .register(ProtoWriter.class)
+//                .register(KeyPairWriter.class)
                 .register(KeyPairApi.class)
                 .register(SwaggerResource.class);
 
-        httpServer = JdkHttpServerFactory.createHttpServer(BASE_URI, app);
+        httpServer = JdkHttpServerFactory.createHttpServer(URI.create(BASE_URL), app);
         httpServer.createContext("/doc", new StaticFileHandler("/doc/v1/"));
 
         // shut down hook
         Runtime.getRuntime().addShutdownHook(new Thread(RestApplication::stopServer));
 
-        System.out.println(
-                String.format("Server started at %1$s", BASE_URI));
+        log.info("Server started at {}.", BASE_URL);
 
         // block and wait shut down signal, like CTRL+C
         Thread.currentThread().join();
 
+        stopServer();
     }
 }

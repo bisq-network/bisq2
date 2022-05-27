@@ -1,24 +1,11 @@
-buildscript {
-    repositories {
-        mavenCentral()
-        maven { url "https://jitpack.io" }
-        maven { url "https://plugins.gradle.org/m2/" }
-    }
-}
-
 plugins {
     id 'bisq.java-library'
     id 'application'
      alias(libs.plugins.shadow)
 }
 
-ext {
-    restEasyVersion = '6.0.1.Final'
-    swaggerVersion = '2.1.13'
-}
-
 application {
-    project.mainClassName = 'bisq.api.resteasy.RestApplication'
+    project.mainClassName = 'bisq.api.jax.RestApplication'
 }
 
 ext {
@@ -48,13 +35,14 @@ dependencies {
     implementation project(':presentation')
     implementation project(':application')
 
+    implementation libs.google.guava
+    implementation libs.bundles.jackson
+    implementation libs.protobuf.java.util
 
     implementation("org.glassfish.jersey.containers:jersey-container-jdk-http:$jerseyVersion")
     implementation("org.glassfish.jersey.media:jersey-media-json-jackson:$jerseyVersion")
     implementation("org.glassfish.jersey.inject:jersey-hk2:$jerseyVersion")
     implementation("org.glassfish.jaxb:jaxb-runtime:3.0.2")
-
-    implementation ("com.google.protobuf:protobuf-java-util:3.20.0")
 
     implementation ("io.swagger.core.v3:swagger-jaxrs2-jakarta:$swaggerVersion")
 }

@@ -34,14 +34,14 @@ public class StaticFileHandler implements HttpHandler {
     protected String rootContext;
     ClassLoader cl = getClass().getClassLoader();
 
-    public void handle(HttpExchange t) throws IOException {
-        URI uri = t.getRequestURI();
+    public void handle(HttpExchange exchange) throws IOException {
+        URI uri = exchange.getRequestURI();
 
         log.debug("requesting: " + uri.getPath());
         String filename = uri.getPath();
         if (filename == null || !filename.startsWith(rootContext) ||
-                !Arrays.stream(VALID_SUFFIX).anyMatch(valid -> filename.endsWith(valid))) {
-            respond404(t);
+                !Arrays.stream(VALID_SUFFIX).anyMatch(filename::endsWith)) {
+            respond404(exchange);
             return;
         }
         // resource loading without leading slash
@@ -53,7 +53,7 @@ public class StaticFileHandler implements HttpHandler {
         // we are using getResourceAsStream to ultimately prevent load from parent directories
         try (InputStream resource = cl.getResourceAsStream(resourceName)) {
             if (resource == null) {
-                respond404(t);
+                respond404(exchange);
                 return;
             }
             log.debug("sending: " + resourceName);
@@ -64,11 +64,11 @@ public class StaticFileHandler implements HttpHandler {
             if (resourceName.endsWith(".css")) mime = "text/css";
             if (resourceName.endsWith(".png")) mime = "image/png";
 
-            Headers h = t.getResponseHeaders();
+            Headers h = exchange.getResponseHeaders();
             h.set("Content-Type", mime);
-            t.sendResponseHeaders(200, 0);
+            exchange.sendResponseHeaders(200, 0);
 
-            try (OutputStream os = t.getResponseBody()) {
+            try (OutputStream os = exchange.getResponseBody()) {
                 final byte[] buffer = new byte[ 0x10000 ];
                 int count = 0;
                 while ((count = resource.read(buffer)) >= 0) {
