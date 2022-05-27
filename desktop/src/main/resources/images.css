@@ -237,3 +237,16 @@
 #protocol-satoshi-square {
     -fx-image: url("images/protocols/protocol-satoshi-square.png");
 }
+
+/* Actions */
+#icon-bell {
+    -fx-image: url("images/actions/icon-bell.png");
+}
+
+#icon-info {
+    -fx-image: url("images/actions/icon-info.png");
+}
+
+#icon-search {
+    -fx-image: url("images/actions/icon-search.png");
+}

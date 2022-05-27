@@ -380,7 +380,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     private static class NetworkInfoBox extends HBox {
         private NetworkInfoBox(LeftNavModel model, Runnable handler) {
-            getStyleClass().add("border-top");
+            getStyleClass().add("border-top-grey-5");
             setMinHeight(LeftNavButton.HEIGHT);
             setMaxHeight(LeftNavButton.HEIGHT);
             setPadding(new Insets(20, 24, 0, 24));

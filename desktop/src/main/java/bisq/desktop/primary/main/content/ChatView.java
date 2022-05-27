@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content;
 
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -65,8 +66,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
 
-        // Left 
-
+        // Left
         createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button").toUpperCase());
         createOfferButton.setDefaultButton(true);
         createOfferButton.setPrefHeight(40);
@@ -93,20 +93,23 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
 
         selectedChannelLabel = new Label();
         selectedChannelLabel.setId("chat-messages-headline");
-        HBox.setMargin(selectedChannelLabel, new Insets(1, 0, 0, 20));
 
-        searchButton = BisqIconButton.createIconButton(AwesomeIcon.SEARCH);
-        searchButton.setOpacity(0.4);
-        notificationsButton = BisqIconButton.createIconButton(AwesomeIcon.BELL);
-        notificationsButton.setOpacity(0.4);
-        infoButton = BisqIconButton.createIconButton(AwesomeIcon.INFO_SIGN);
-        infoButton.setOpacity(0.4);
+        searchButton = BisqIconButton.createIconButton("icon-search");
+        notificationsButton = BisqIconButton.createIconButton("icon-bell");
+        infoButton = BisqIconButton.createIconButton("icon-info");
 
-        HBox centerToolbar = Layout.hBoxWith(peersRoboIconView, selectedChannelLabel, Spacer.fillHBox(), searchButton, notificationsButton, infoButton);
-        centerToolbar.setStyle("-fx-background-color: -bisq-bg-dark");
+        HBox centerToolbar = new HBox(
+                10,
+                peersRoboIconView, 
+                selectedChannelLabel, 
+                Spacer.fillHBox(),
+                searchButton,
+                notificationsButton, 
+                infoButton
+        );
         centerToolbar.setAlignment(Pos.CENTER);
         centerToolbar.setMinHeight(50);
-        VBox.setMargin(centerToolbar, new Insets(0, 0, 0, 10));
+        centerToolbar.setPadding(new Insets(0, 20, 0, 20));
 
 
         // sideBar
@@ -119,23 +122,17 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         sideBar.setMinWidth(340);
         sideBar.setPadding(new Insets(10, 20, 20, 20));
         sideBar.setFillWidth(true);
-        sideBar.setStyle("-fx-background-color: -bisq-bg-dark");
 
         filterBoxRoot = filterBox.getRoot();
-        filterBoxRoot.setStyle("-fx-background-color: -bisq-bg-dark;");
-        VBox.setMargin(filterBoxRoot, new Insets(0, 0, 0, 10));
-
-        HBox.setMargin(chatMessagesComponent, new Insets(0, 0, 10, 10));
+        
         HBox.setHgrow(chatMessagesComponent, Priority.ALWAYS);
         chatMessagesComponent.setMinWidth(650);
+        
         messagesListAndSideBar = Layout.hBoxWith(chatMessagesComponent, sideBar);
-
         VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);
 
         center = Layout.vBoxWith(centerToolbar, filterBoxRoot, messagesListAndSideBar);
-        center.setStyle("-fx-background-color: transparent");
-        messagesListAndSideBar.setStyle("-fx-background-color: transparent");
-
+        center.getStyleClass().add("border-top-grey-7");
         root.getItems().addAll(left, center);
     }
 
