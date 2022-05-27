@@ -1,4 +1,4 @@
-package bisq.api;
+package bisq.api.error;
 
 /**
  * Class to be returned to send an error message

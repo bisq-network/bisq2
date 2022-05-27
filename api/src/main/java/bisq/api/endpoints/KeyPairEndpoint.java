@@ -17,9 +17,9 @@
 
 package bisq.api.endpoints;
 
-import bisq.api.RestApplication;
-import bisq.api.StatusException;
-import bisq.api.dto.KeyPairDTO;
+import bisq.api.ApiMain;
+import bisq.api.error.StatusException;
+import bisq.api.dto.KeyPairDto;
 import bisq.security.KeyPairService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -48,7 +48,7 @@ public class KeyPairEndpoint {
     private final KeyPairService keyPairService;
 
     public KeyPairEndpoint(@Context Application app) {
-        keyPairService = ((RestApplication) app).getApplicationService().getSecurityService().getKeyPairService();
+        keyPairService = ((ApiMain) app).getApplicationService().getSecurityService().getKeyPairService();
     }
 
     /**
@@ -60,15 +60,15 @@ public class KeyPairEndpoint {
             content = {
                     @Content(
                             mediaType = MediaType.APPLICATION_JSON,
-                            schema = @Schema(implementation = KeyPairDTO.class)
+                            schema = @Schema(implementation = KeyPairDto.class)
                     )}
     )
     @GET
     @Path("get-or-create/{key-id}")
-    public KeyPairDTO getOrCreateKeyPair(
+    public KeyPairDto getOrCreateKeyPair(
             @Parameter(description = DESC_KEY_ID) @PathParam("key-id") String keyId) {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
-        return new KeyPairDTO(keyPair);
+        return new KeyPairDto(keyPair);
     }
 
     /**
@@ -82,13 +82,13 @@ public class KeyPairEndpoint {
             content = {
                     @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = KeyPairDTO.class)
+                            schema = @Schema(implementation = KeyPairDto.class)
                     )}
     )
     @GET
     @Path("get/{key-id}")
-    public KeyPairDTO findKeyPair(@Parameter(description = DESC_KEY_ID) @PathParam("key-id") String keyId) {
-        return new KeyPairDTO(keyPairService.findKeyPair(keyId)
+    public KeyPairDto findKeyPair(@Parameter(description = DESC_KEY_ID) @PathParam("key-id") String keyId) {
+        return new KeyPairDto(keyPairService.findKeyPair(keyId)
                 .orElseThrow(() -> new StatusException(Response.Status.NOT_FOUND, "Could not find the key pair for ID " + keyId)));
     }
 }

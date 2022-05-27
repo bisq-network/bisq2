@@ -5,11 +5,11 @@ import lombok.Getter;
 
 @Getter
 @Schema(title = "KeyPair")
-public class KeyPairDTO {
+public class KeyPairDto {
     byte[] publicKey;
     byte[] privateKey;
 
-    public KeyPairDTO(java.security.KeyPair k) {
+    public KeyPairDto(java.security.KeyPair k) {
         if (k != null) {
             publicKey = k.getPublic().getEncoded();
             privateKey = k.getPrivate().getEncoded();

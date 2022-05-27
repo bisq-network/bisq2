@@ -1,6 +1,9 @@
 package bisq.api;
 
 import bisq.api.endpoints.KeyPairEndpoint;
+import bisq.api.error.CustomExceptionMapper;
+import bisq.api.error.StatusException;
+import bisq.api.util.StaticFileHandler;
 import bisq.application.DefaultApplicationService;
 import com.sun.net.httpserver.HttpServer;
 import lombok.Getter;
@@ -17,13 +20,13 @@ import java.net.URI;
  * swagger doc are available at <a href="http://localhost:8082/doc/v1/index.html">REST documentation</a>
  */
 @Slf4j
-public class RestApplication extends ResourceConfig {
+public class ApiMain extends ResourceConfig {
     public static final String BASE_URL = "http://localhost:8082/rest/v1";
 
     @Getter
     protected final DefaultApplicationService applicationService;
 
-    public RestApplication() {
+    public ApiMain() {
         applicationService = new DefaultApplicationService(new String[]{"--appName=bisq2_API"});
         applicationService.initialize().join();
     }
@@ -40,19 +43,19 @@ public class RestApplication extends ResourceConfig {
 
     public static void startServer() throws Exception {
         // 'config' acts as application in jax-rs
-        ResourceConfig app = new RestApplication()
+        ResourceConfig app = new ApiMain()
                 .register(CustomExceptionMapper.class)
                 .register(StatusException.StatusExceptionMapper.class)
 //                .register(ProtoWriter.class)
 //                .register(KeyPairWriter.class)
                 .register(KeyPairEndpoint.class)
-                .register(SwaggerResource.class);
+                .register(SwaggerResolution.class);
 
         httpServer = JdkHttpServerFactory.createHttpServer(URI.create(BASE_URL), app);
         httpServer.createContext("/doc", new StaticFileHandler("/doc/v1/"));
 
         // shut down hook
-        Runtime.getRuntime().addShutdownHook(new Thread(RestApplication::stopServer));
+        Runtime.getRuntime().addShutdownHook(new Thread(ApiMain::stopServer));
 
         log.info("Server started at {}.", BASE_URL);
 

@@ -20,11 +20,11 @@ import lombok.extern.slf4j.Slf4j;
 @Path("openapi.json")
 @Produces(MediaType.APPLICATION_JSON)
 @Hidden
-public class SwaggerResource {
+public class SwaggerResolution {
     private static String swaggerJson;
 
     @GET
-    public String swagIt(@Context Application app) {
+    public String swagIt(@Context Application application) {
         if (swaggerJson == null) {
             try {
                 OpenAPI api = new OpenAPI();
@@ -38,10 +38,10 @@ public class SwaggerResource {
                                 .name("GNU Affero General Public License")
                                 .url("https://github.com/bisq-network/bisq2/blob/main/LICENSE"));
 
-                api.info(info).addServersItem(new Server().url(RestApplication.BASE_URL));
+                api.info(info).addServersItem(new Server().url(ApiMain.BASE_URL));
                 SwaggerConfiguration configuration = new SwaggerConfiguration().openAPI(api);
                 Reader reader = new Reader(configuration);
-                OpenAPI openAPI = reader.read(app.getClasses());
+                OpenAPI openAPI = reader.read(application.getClasses());
                 swaggerJson = Json.pretty(openAPI);
             } catch (RuntimeException e) {
                 log.error(e.getMessage(), e);

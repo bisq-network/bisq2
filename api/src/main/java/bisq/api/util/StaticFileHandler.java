@@ -1,4 +1,4 @@
-package bisq.api;
+package bisq.api.util;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;

@@ -1,6 +1,7 @@
-package bisq.api;
+package bisq.api.util;
 
 import bisq.common.proto.Proto;
+import bisq.security.KeyPairProtoUtil;
 import com.google.protobuf.util.JsonFormat;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
@@ -13,10 +14,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.security.KeyPair;
 
 @Provider
 @Produces(MediaType.APPLICATION_JSON)
-public class ProtoWriter implements MessageBodyWriter<Proto> {
+public class KeyPairWriter implements MessageBodyWriter<KeyPair> {
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -24,13 +26,13 @@ public class ProtoWriter implements MessageBodyWriter<Proto> {
     }
 
     @Override
-    public void writeTo(Proto proto,
+    public void writeTo(KeyPair keyPair,
                         Class<?> type,
                         Type genericType,
                         Annotation[] annotations,
                         MediaType mediaType,
                         MultivaluedMap<String, Object> httpHeaders,
                         OutputStream entityStream) throws IOException, WebApplicationException {
-        entityStream.write(JsonFormat.printer().print(proto.toProto()).getBytes());
+        entityStream.write(JsonFormat.printer().print(KeyPairProtoUtil.toProto(keyPair)).getBytes());
     }
 }
