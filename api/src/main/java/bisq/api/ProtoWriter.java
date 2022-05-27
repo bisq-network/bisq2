@@ -1,4 +1,4 @@
-package bisq.api.jax;
+package bisq.api;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.util.JsonFormat;

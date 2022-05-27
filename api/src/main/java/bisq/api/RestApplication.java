@@ -1,7 +1,6 @@
-package bisq.api.jax;
+package bisq.api;
 
-import bisq.api.jax.resource.SwaggerResource;
-import bisq.api.jax.resource.keypair.KeyPairApi;
+import bisq.api.endpoints.KeyPairEndpoint;
 import bisq.application.DefaultApplicationService;
 import com.sun.net.httpserver.HttpServer;
 import lombok.Getter;
@@ -46,7 +45,7 @@ public class RestApplication extends ResourceConfig {
                 .register(StatusException.StatusExceptionMapper.class)
 //                .register(ProtoWriter.class)
 //                .register(KeyPairWriter.class)
-                .register(KeyPairApi.class)
+                .register(KeyPairEndpoint.class)
                 .register(SwaggerResource.class);
 
         httpServer = JdkHttpServerFactory.createHttpServer(URI.create(BASE_URL), app);

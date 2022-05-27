@@ -1,4 +1,4 @@
-package bisq.api.jax;
+package bisq.api;
 
 import bisq.common.proto.Proto;
 import bisq.security.KeyPairProtoUtil;

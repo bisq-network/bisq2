@@ -5,7 +5,7 @@ plugins {
 }
 
 application {
-    project.mainClassName = 'bisq.api.jax.RestApplication'
+    project.mainClassName = 'bisq.api.RestApplication'
 }
 
 ext {

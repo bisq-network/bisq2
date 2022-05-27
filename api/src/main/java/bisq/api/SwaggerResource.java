@@ -1,6 +1,5 @@
-package bisq.api.jax.resource;
+package bisq.api;
 
-import bisq.api.jax.RestApplication;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.jaxrs2.Reader;
 import io.swagger.v3.oas.annotations.Hidden;

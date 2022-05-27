@@ -1,6 +1,5 @@
-package bisq.api.jax;
+package bisq.api;
 
-import bisq.api.jax.resource.ErrorMessage;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;

@@ -1,4 +1,4 @@
-package bisq.api.jax.resource.keypair;
+package bisq.api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;

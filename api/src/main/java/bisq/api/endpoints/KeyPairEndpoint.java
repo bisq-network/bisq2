@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.jax.resource.keypair;
+package bisq.api.endpoints;
 
-import bisq.api.jax.RestApplication;
-import bisq.api.jax.StatusException;
+import bisq.api.RestApplication;
+import bisq.api.StatusException;
+import bisq.api.dto.KeyPairDTO;
 import bisq.security.KeyPairService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,11 +43,11 @@ import java.security.KeyPair;
 @Path("/key-pair")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Key Pair API")
-public class KeyPairApi {
+public class KeyPairEndpoint {
     public static final String DESC_KEY_ID = "The ID for identifying the key which we look up or create in case it does not exist.";
     private final KeyPairService keyPairService;
 
-    public KeyPairApi(@Context Application app) {
+    public KeyPairEndpoint(@Context Application app) {
         keyPairService = ((RestApplication) app).getApplicationService().getSecurityService().getKeyPairService();
     }
 

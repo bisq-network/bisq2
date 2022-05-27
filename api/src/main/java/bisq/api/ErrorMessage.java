@@ -1,4 +1,4 @@
-package bisq.api.jax.resource;
+package bisq.api;
 
 /**
  * Class to be returned to send an error message
