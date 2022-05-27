@@ -35,11 +35,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
-class ApiChatController extends ApiController {
+class ApiChatController {
     private final ChatService chatService;
     private final ChatUserService chatUserService;
     private final IdentityService identityService;
@@ -50,20 +52,30 @@ class ApiChatController extends ApiController {
         identityService = apiApplicationService.getIdentityService();
     }
 
-    @GetMapping(path = "/api/chat/get-public-trade-channels")
-    public ObservableSet<PublicTradeChannel> getPublicTradeChannels() {
-        return chatService.getPublicTradeChannels();
-    }
-
     @GetMapping(path = "/api/chat/get-public-discussion-channels")
     public ObservableSet<PublicDiscussionChannel> getPublicDiscussionChannels() {
         return chatService.getPublicDiscussionChannels();
+    }
+
+    @GetMapping(path = "/api/chat/get-public-discussion-channels2")
+    public List<bisq.social.protobuf.Channel> getPublicDiscussionChannels2() {
+        return chatService.getPublicDiscussionChannels().stream().map(PublicDiscussionChannel::toProto).collect(Collectors.toList());
+    }
+
+    @GetMapping(path = "/api/chat/get-public-trade-channels")
+    public ObservableSet<PublicTradeChannel> getPublicTradeChannels() {
+        return chatService.getPublicTradeChannels();
     }
 
     @GetMapping(path = "/api/chat/get-selected-trade-channel")
     public Channel<? extends ChatMessage> getSelectedTradeChannel() {
         return chatService.getSelectedTradeChannel().get();
     }
+
+//    @GetMapping(path = "/api/chat/get-selected-trade-channel3")
+//    public bisq.social.protobuf.PublicTradeChannel getSelectedTradeChannel3() {
+//        return (bisq.social.protobuf.PublicTradeChannel) chatService.getSelectedTradeChannel().get().toProto();
+//    }
 
     @PostMapping(path = "/api/chat/select-public-discussion-channel/{channelId}")
     public boolean selectedPublicDiscussionChannel(@PathVariable("channelId") String channelId) {
