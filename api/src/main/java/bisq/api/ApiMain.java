@@ -14,14 +14,14 @@ import org.glassfish.jersey.server.ResourceConfig;
 import java.net.URI;
 
 /**
- * Application main to start and config the rest service.
+ * Application to start and config the rest service.
  * This creates and rest service at BASE_URL for clients to connect and for users to browse the documentation.
  * <p>
- * swagger doc are available at <a href="http://localhost:8082/doc/v1/index.html">REST documentation</a>
+ * Swagger doc are available at <a href="http://localhost:8082/doc/v1/index.html">REST API documentation</a>
  */
 @Slf4j
 public class ApiMain extends ResourceConfig {
-    public static final String BASE_URL = "http://localhost:8082/rest/v1";
+    public static final String BASE_URL = "http://localhost:8082/api/v1";
 
     @Getter
     protected final DefaultApplicationService applicationService;
